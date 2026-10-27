@@ -9,6 +9,7 @@ import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetween
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
+import { queryMandatoryPortPointIndex, type MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
 
 type Point = { x: number; y: number }
 export type SingleTransitionBoardContext = {
@@ -25,6 +26,8 @@ export type SingleTransitionBoardContext = {
   planarRoutes?: readonly HighDensityIntraNodeRoute[]
   routedPeerRoutes?: readonly HighDensityIntraNodeRoute[]
   mandatoryPortPoints?: readonly PortPoint[]
+  /** All cohort endpoints in WORLD coordinates, also during grow/shrink. */
+  mandatoryPortPointIndex?: MandatoryPortPointIndex
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
 }
@@ -60,6 +63,43 @@ const sameElectricalNet = (a: Pick<HighDensityIntraNodeRoute, "connectionName" |
     return JSON.stringify(net === undefined ? ["literal", root] : ["registered", net])
   }
   return owner(a) === owner(b)
+}
+
+/** Final admission for every candidate family, including regional optimizers. */
+export const areRoutesClearOfMandatoryPorts = (params: {
+  routes: readonly HighDensityIntraNodeRoute[]
+  context: SingleTransitionBoardContext
+  center: Point
+  traceThickness: number
+  viaDiameter: number
+}): boolean => {
+  const { context, center } = params, index = context.mandatoryPortPointIndex
+  if (!index) return true
+  const scale = context.coordinateScale
+  if (!Number.isFinite(scale) || scale <= 0) throw new Error("Invalid transition coordinate scale")
+  const world = (p: Point): Point => ({ x: center.x + (p.x - center.x) / scale, y: center.y + (p.y - center.y) / scale })
+  for (const route of params.routes) {
+    const geometry = getPipeline9RouteCopperGeometry(route, context)
+    for (const wire of geometry.wireSegments) {
+      const a = world(wire.start), b = world(wire.end)
+      const margin = wire.width / 2 + params.traceThickness / 2 + context.traceToPadClearance
+      const points = queryMandatoryPortPointIndex(index, { minX: Math.min(a.x, b.x) - margin,
+        maxX: Math.max(a.x, b.x) + margin, minY: Math.min(a.y, b.y) - margin, maxY: Math.max(a.y, b.y) + margin })
+      if (points.some((point) => point.z === wire.z && !sameElectricalNet(route, point, context.connMap) &&
+        pointToSegmentDistance(point, a, b) + EPSILON < margin)) return false
+    }
+    for (const via of geometry.viaSpans) {
+      const point = world(via.center), margin = Math.max(via.diameter, params.viaDiameter) / 2 +
+        params.traceThickness / 2 + context.traceToPadClearance
+      const minZ = context.allowBlindAndBuriedVias ? via.minZ : 0
+      const maxZ = context.allowBlindAndBuriedVias ? via.maxZ : context.layerCount - 1
+      const points = queryMandatoryPortPointIndex(index, { minX: point.x - margin, maxX: point.x + margin,
+        minY: point.y - margin, maxY: point.y + margin })
+      if (points.some((p) => p.z >= minZ && p.z <= maxZ && !sameElectricalNet(route, p, context.connMap) &&
+        Math.hypot(p.x - point.x, p.y - point.y) + EPSILON < margin)) return false
+    }
+  }
+  return true
 }
 
 /** Certifies the fixed planar part before using it as a peer obstacle. */
@@ -115,6 +155,17 @@ export const areSingleTransitionPlanarRoutesClear = (params: {
       for (const point of context.mandatoryPortPoints ?? []) {
         if (point.z !== start.z || sameElectricalNet(route, point, context.connMap)) continue
         if (pointToSegmentDistance(world(point), a, b) + EPSILON < radius * 2 + context.traceToPadClearance) return false
+      }
+      if (context.mandatoryPortPointIndex) {
+        const margin = radius * 2 + context.traceToPadClearance
+        const points = queryMandatoryPortPointIndex(context.mandatoryPortPointIndex, {
+          minX: Math.min(a.x, b.x) - margin, maxX: Math.max(a.x, b.x) + margin,
+          minY: Math.min(a.y, b.y) - margin, maxY: Math.max(a.y, b.y) + margin,
+        })
+        for (const point of points) {
+          if (point.z === start.z && !sameElectricalNet(route, point, context.connMap) &&
+            pointToSegmentDistance(point, a, b) + EPSILON < margin) return false
+        }
       }
       for (let k = 0; k < i; k++) {
         const peer = routes[k]!
@@ -203,6 +254,14 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   const minZ = context.allowBlindAndBuriedVias ? Math.min(params.start.z!, params.end.z!) : 0
   const maxZ = context.allowBlindAndBuriedVias ? Math.max(params.start.z!, params.end.z!) : context.layerCount - 1
   const viaRadius = params.viaDiameter / 2, traceRadius = params.traceThickness / 2
+  const indexedTerminals = (via: Point): readonly PortPoint[] => {
+    if (!context.mandatoryPortPointIndex) return []
+    const margin = Math.max(viaRadius + traceRadius, traceRadius * 2) + context.traceToPadClearance
+    return queryMandatoryPortPointIndex(context.mandatoryPortPointIndex, {
+      minX: Math.min(start.x, end.x, via.x) - margin, maxX: Math.max(start.x, end.x, via.x) + margin,
+      minY: Math.min(start.y, end.y, via.y) - margin, maxY: Math.max(start.y, end.y, via.y) + margin,
+    }).filter((point) => !sameElectricalNet(identity, point, context.connMap))
+  }
   const viaPeerMargin = (peer: PeerVia): number => {
     const annulusMargin = viaRadius + peer.radius + MINIMUM_VIA_EDGE_CLEARANCE
     const drillMargin = (context.viaHoleDiameter ?? params.viaDiameter) / 2 + peer.holeRadius +
@@ -242,6 +301,13 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
     }
     return result
   }
+  const terminalClear = (via: Point, point: Point & { z: number }): boolean => {
+    if (point.z >= minZ && point.z <= maxZ && Math.hypot(via.x - point.x, via.y - point.y) + EPSILON < viaRadius + traceRadius + context.traceToPadClearance) return false
+    const margin = traceRadius * 2 + context.traceToPadClearance
+    if (point.z === params.start.z && pointToSegmentDistance(point, start, via) + EPSILON < margin) return false
+    if (point.z === params.end.z && pointToSegmentDistance(point, end, via) + EPSILON < margin) return false
+    return true
+  }
   const peerClear = (via: Point): boolean => {
     for (const peer of peers) {
       if (peer.z >= minZ && peer.z <= maxZ && pointToSegmentDistance(via, peer.start, peer.end) + EPSILON < viaRadius + peer.radius + context.traceToPadClearance) return false
@@ -255,12 +321,8 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       if (params.start.z >= peer.minZ && params.start.z <= peer.maxZ && pointToSegmentDistance(peer.center, start, via) + EPSILON < margin) return false
       if (params.end.z >= peer.minZ && params.end.z <= peer.maxZ && pointToSegmentDistance(peer.center, end, via) + EPSILON < margin) return false
     }
-    for (const point of terminals) {
-      if (point.z >= minZ && point.z <= maxZ && Math.hypot(via.x - point.x, via.y - point.y) + EPSILON < viaRadius + traceRadius + context.traceToPadClearance) return false
-      const margin = traceRadius * 2 + context.traceToPadClearance
-      if (point.z === params.start.z && pointToSegmentDistance(point, start, via) + EPSILON < margin) return false
-      if (point.z === params.end.z && pointToSegmentDistance(point, end, via) + EPSILON < margin) return false
-    }
+    for (const point of terminals) if (!terminalClear(via, point)) return false
+    for (const point of indexedTerminals(via)) if (!terminalClear(via, point)) return false
     return true
   }
   const blocked = blockers(nominal)
@@ -315,7 +377,7 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
     ...terminals.filter((point) => point.z >= minZ && point.z <= maxZ)
       .map((point) => ({ center: point, margin: viaRadius + traceRadius + context.traceToPadClearance + 1e-6 })),
   ]
-  for (const circle of circles) {
+  const appendCircleCandidates = (circle: { center: Point; margin: number }): void => {
     const { center: point, margin } = circle
     for (const direction of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
       const p = { x: point.x + direction.x * margin, y: point.y + direction.y * margin }
@@ -327,6 +389,18 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       const p = { x: point.x + dx / distance * margin, y: point.y + dy / distance * margin }
       candidates.set(`${p.x},${p.y}`, p)
     }
+  }
+  for (const circle of circles) appendCircleCandidates(circle)
+  // Include fixed copper encountered anywhere along a proposed leg, rather
+  // than limiting the constraint to the original cell or nominal via.
+  const blockingPoints = new Map<string, PortPoint>()
+  for (const via of [nominal, ...candidates.values()]) {
+    for (const point of indexedTerminals(via)) {
+      if (!terminalClear(via, point)) blockingPoints.set(`${point.x},${point.y},${point.z}`, point)
+    }
+  }
+  for (const point of blockingPoints.values()) {
+    appendCircleCandidates({ center: point, margin: viaRadius + traceRadius + context.traceToPadClearance + 1e-6 })
   }
   const legal = [...candidates.values()].filter((via) => boardClear(via) && blockers(via).length === 0 && peerClear(via))
     .map((via) => ({ via, length: Math.hypot(via.x - start.x, via.y - start.y) + Math.hypot(via.x - end.x, via.y - end.y) }))

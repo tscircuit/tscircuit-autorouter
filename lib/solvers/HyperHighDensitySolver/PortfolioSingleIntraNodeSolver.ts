@@ -19,7 +19,7 @@ import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHea
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionWithPlanarRoutesSolver } from "../HighDensitySolver/SingleTransitionWithPlanarRoutesSolver"
-import type { SingleTransitionBoardContext } from "../HighDensitySolver/findSingleTransitionVia"
+import { areRoutesClearOfMandatoryPorts, type SingleTransitionBoardContext } from "../HighDensitySolver/findSingleTransitionVia"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
 import {
   precomputeIntraNodeRouteParams,
@@ -604,6 +604,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       viaToPadClearance: params.viaToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToPadClearance: params.traceToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToHoleClearance: params.traceToHoleClearance ?? params.obstacleMargin ?? 0.15,
+      mandatoryPortPointIndex: params.mandatoryPortPointIndex,
       viaHoleDiameter: params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
       boardGeometry: params.boardGeometry, coordinateScale: params.priorityCoordinateScale ?? 1,
@@ -813,6 +814,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.activeSubSolver = null
       this.stats.rejectedViaObstacleCandidateCount =
         (this.stats.rejectedViaObstacleCandidateCount ?? 0) + 1
+      return
+    }
+    const boardContext = this.getSingleTransitionBoardContext()
+    if (boardContext && !areRoutesClearOfMandatoryPorts({ routes: solvedRoutes, context: boardContext,
+      center: this.nodeWithPortPoints.center, traceThickness: params.traceWidth ?? 0.15, viaDiameter: params.viaDiameter ?? 0.3 })) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Candidate copper violates mandatory port clearance"
+      this.solved = false
+      this.winningSolver = undefined
+      this.activeSubSolver = null
+      this.stats.rejectedMandatoryPortCandidateCount = (this.stats.rejectedMandatoryPortCandidateCount ?? 0) + 1
       return
     }
     this.solvedRoutes = solvedRoutes
