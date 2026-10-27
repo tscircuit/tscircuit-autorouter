@@ -23,6 +23,7 @@ import {
   type PipelineStageTimingSource,
 } from "./benchmark-stage-timing"
 import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
+import { createSynchronousProgressStep } from "./synchronous-step-progress"
 
 type SubSolverInstance = {
   progress?: number
@@ -553,7 +554,24 @@ export const solveWithProgress = async (
     let runtime:
       | (SolverRuntimeExecutor & { dispose(): Promise<void> })
       | undefined
+    const observeSynchronousSteps =
+      process.env.SAMPLE24_SYNCHRONOUS_STEP_PROGRESS === "1" &&
+      typeof solver.step === "function"
+    const originalStepDescriptor = observeSynchronousSteps
+      ? Object.getOwnPropertyDescriptor(solver, "step")
+      : undefined
     try {
+      if (observeSynchronousSteps) {
+        solver.step = createSynchronousProgressStep(
+          solver.step!,
+          { solverName: task.solverName, scenarioName: task.scenarioName,
+            sampleNumber: task.sampleNumber, startTimeMs: start },
+          (progress): void => {
+            options.onProgress?.(progress)
+            console.error(`[sample24-step] ${JSON.stringify(progress)}`)
+          },
+        )
+      }
       if ((task.threads ?? 1) > 1) {
         const { createAutorouterSolverRuntime } = await import(
           "../../lib/runtime/bun"
@@ -565,6 +583,10 @@ export const solveWithProgress = async (
       }
       await solver.solveAsync(runtime)
     } finally {
+      if (observeSynchronousSteps) {
+        if (originalStepDescriptor) Object.defineProperty(solver, "step", originalStepDescriptor)
+        else delete solver.step
+      }
       if (interval) {
         clearInterval(interval)
       }

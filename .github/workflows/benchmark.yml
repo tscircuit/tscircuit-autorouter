@@ -104,7 +104,7 @@ jobs:
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
       )
     runs-on: ${{ inputs.sample24_source_bundle && 'blacksmith-32vcpu-ubuntu-2404-arm' || (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
-    timeout-minutes: ${{ inputs.long_benchmark && 480 || 120 }}
+    timeout-minutes: ${{ inputs.sample24_source_bundle && 180 || inputs.long_benchmark && 480 || 120 }}
 
     steps:
       - name: Parse benchmark command
@@ -417,6 +417,7 @@ jobs:
       - name: Run benchmark
         env:
           BENCHMARK_FINAL_SRJ_DIR: ${{ inputs.sample24_source_bundle && 'benchmark-final-srj' || '' }}
+          SAMPLE24_SYNCHRONOUS_STEP_PROGRESS: ${{ inputs.sample24_source_bundle && '1' || '' }}
           BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
           BENCHMARK_CONCURRENCY: ${{ steps.parse.outputs.benchmark_concurrency }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}

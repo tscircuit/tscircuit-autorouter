@@ -64,6 +64,8 @@ export type WorkerProgress = {
   solverIterations?: number
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
+  synchronousStepBoundary?: "ENTRY" | "RETURN"
+  synchronousStepSequence?: number
   stageTiming?: BenchmarkStageTimingBreakdown
 }
 

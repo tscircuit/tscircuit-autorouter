@@ -1,9 +1,9 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "f39b7a0a15aff5f714018b18b3d163f785f16026",
-  "rootLibTree": "399e3f5a4063f28b8f33b5246962190625d45021",
+  "rootSource": "7afea819030d521a80f1357b2527299cb2faa515",
+  "rootLibTree": "416dd7809310919cb77e0dce488189eb0bdaab11",
   "rootPackageBlob": "327eeecbab617b0de3d3631d85ceed28df54192a",
-  "localRuntimeReceiptSha256": "8539f339dd14deb828fa8336dcf847ffc2589e37486ae6f712d27aa02ab8fd49",
+  "localRuntimeReceiptSha256": "06ef3e90fcb5f3a1bfb91dc287eefbdb5690abd608787f3d83fab6f158516779",
   "bunVersion": "1.4.3",
   "packages": [
     {
@@ -1375,7 +1375,7 @@
     "--threads",
     "1",
     "--sample-timeout",
-    "3600s"
+    "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
   "bundleSha256": "6f5289e793e4e0f1d221fefefc83ee3214bc955698912b71bd0df035050a2b60"
