@@ -331,6 +331,7 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
+  sparsePhysicalSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -350,6 +351,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
+  sparsePhysicalSearch = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -371,7 +373,10 @@ export const createPipeline9RegularNodeSolver = ({
     nodePfById,
     obstacles,
     layerCount,
-    useGrowShrinkHighDensityIntraNodeSolver: true,
+    // Visibility edges carry actual copper radii. A coordinate-only relaxed
+    // search followed by shrinking changes that physical problem, so the owned
+    // sparse policy stays in the original board frame and can return UNKNOWN.
+    useGrowShrinkHighDensityIntraNodeSolver: !sparsePhysicalSearch,
     enableNegotiatedSearch: true,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
@@ -381,6 +386,7 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
+    sparsePhysicalSearch,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -684,6 +690,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      sparsePhysicalSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

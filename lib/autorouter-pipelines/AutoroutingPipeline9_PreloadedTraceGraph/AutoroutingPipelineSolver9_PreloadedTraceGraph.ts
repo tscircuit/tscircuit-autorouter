@@ -68,6 +68,7 @@ import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitch
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { Pipeline9TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -706,7 +707,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "traceSimplificationSolver",
-      TraceSimplificationSolver,
+      Pipeline9TraceSimplificationSolver,
       (cms) => {
         const preloadedHdRoutes = cms
           .getPreloadedTraceUpdatesAfterHighDensity()
@@ -762,7 +763,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "mutatedPreloadedTraceSimplificationSolver",
-      TraceSimplificationSolver,
+      Pipeline9TraceSimplificationSolver,
       (cms) => {
         const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
         const editableHdRoutes = preparedSections.sections.map(

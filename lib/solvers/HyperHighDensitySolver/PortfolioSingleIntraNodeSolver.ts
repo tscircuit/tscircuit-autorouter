@@ -199,7 +199,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
-    if (this.constructorParams.priorityDagSearch) {
+    if (this.constructorParams.sparsePhysicalSearch) {
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
         this.nodeWithPortPoints,
       )

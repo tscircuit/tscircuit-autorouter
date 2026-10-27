@@ -10,6 +10,7 @@ test("eligible owned portfolios replace their grid families and sparse routes pa
     const portfolio = new PortfolioSingleIntraNodeSolver({
       ...params,
       priorityDagSearch: true,
+      sparsePhysicalSearch: true,
     })
     expect(portfolio.getCombinationDefs()).toEqual([
       ["throughObstacle"],

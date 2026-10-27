@@ -23,6 +23,7 @@ test("priority policy activates in ordinary local Pipeline9 while the shared net
   }
   const sharedDefault = createPipeline9RegularNodeSolver(input)
   expect(sharedDefault.priorityDagOptions.priorityDagSearch).toBe(false)
+  expect(sharedDefault.priorityDagOptions.sparsePhysicalSearch).toBe(false)
   const solver = new Pipeline9HighDensitySolver({
     nodePortPoints: [params.nodeWithPortPoints],
     connMap,
@@ -41,6 +42,9 @@ test("priority policy activates in ordinary local Pipeline9 while the shared net
   expect(solver.activeRegularSolver?.priorityDagOptions.priorityDagSearch).toBe(
     true,
   )
+  expect(
+    solver.activeRegularSolver?.priorityDagOptions.sparsePhysicalSearch,
+  ).toBe(true)
   expect(solver.activeRegularSolver?.priorityDagOptions.viaHoleDiameter).toBe(
     0.15,
   )
