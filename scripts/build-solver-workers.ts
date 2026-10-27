@@ -12,7 +12,7 @@ for (const platform of ["bun", "node"] as const) {
     target: platform,
     format: platform === "bun" ? "esm" : "cjs",
     splitting: false,
-    minify: true,
+    minify: false,
   })
   if (!build.success) {
     throw new AggregateError(

@@ -21,6 +21,7 @@ jobs:
       - name: Profile the same route kernel in Node workers
         run: |
           mkdir -p worker-profiles
+          bun -e 'import source from "./lib/runtime/generated/nodeWorkerSource.ts"; await Bun.write("worker-profiles/worker-source.cjs", source)'
           node --cpu-prof --cpu-prof-dir=worker-profiles worker-profile.mjs 6 1
           node --cpu-prof --cpu-prof-dir=worker-profiles worker-profile.mjs 6 4
           node --cpu-prof --cpu-prof-dir=worker-profiles worker-profile.mjs 14 4
