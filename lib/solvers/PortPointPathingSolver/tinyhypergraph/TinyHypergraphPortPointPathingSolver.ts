@@ -1,3 +1,4 @@
+import { solveWithWasmRoutes, WasmRouteReadyTask } from "tiny-hypergraph/lib/core-parallel"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
@@ -21,10 +22,8 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
-  solveWithWasmRoutes,
   OutsideInPartialRipTinyHyperGraphSolver,
   DuplicateCongestedPortSolver,
-  WasmRouteReadyTask,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
