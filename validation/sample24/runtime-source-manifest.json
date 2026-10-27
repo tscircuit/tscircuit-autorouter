@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "03ca19048c90629d59a73620c90d7b6fcd4f20ce",
-  "rootLibTree": "af74d48e9a17b8fb409432ef8d96b007bbb304ad",
-  "rootPackageBlob": "7c1adb1d308d9a7907bbb7e6965119350c63f7fb",
-  "localRuntimeReceiptSha256": "0de4ca7e1cbec64c583d9dbcf2cf0327585902c0b7a747ce8356149241bfcd50",
+  "rootSource": "5d5ca622ad436cb0dac518cca5b3d5111c8ecd2d",
+  "rootLibTree": "eb3d7f27006d9eb03d5e99d9570368390090123a",
+  "rootPackageBlob": "3c44b8c73131ecb4c5048a0a0ed6a8863328aa32",
+  "localRuntimeReceiptSha256": "959f53b61f8049c5a16d8f3ed1d9b3d9c4927f940a2ce36521aff61704a725e0",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "e1a956eda93ba66d20e7d1073b7ddb6c6ea7f1a9",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#e1a956eda93ba66d20e7d1073b7ddb6c6ea7f1a9",
+      "revision": "7742637f90f0f2a53904d4ef32a1a312e3a446d8",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#7742637f90f0f2a53904d4ef32a1a312e3a446d8",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -135,9 +135,9 @@
         },
         {
           "path": "lib/find-distinct-owner-blocker-path.ts",
-          "gitBlobSha1": "d6ad106b5f7647e73a74d7109e2574f4ecb3a78a",
-          "sha256": "3b31861ad795a5e65dbe23874dee7ef25812e2538fffd42138599599128ebd18",
-          "bytes": 14173
+          "gitBlobSha1": "b713fd5c713ddbacc10a928237e3cb3c6f50aada",
+          "sha256": "1a4c5abac8f1b8cf3a79d43897a7041f68630f9c45e5dbe044cd2f9a5714fdf7",
+          "bytes": 19079
         },
         {
           "path": "lib/index.ts",
@@ -249,9 +249,9 @@
         },
         {
           "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "gitBlobSha1": "f508f8fb0cd97b7096430c2153b5f4c5b436d80c",
-          "sha256": "b0f218857563e8c32a4cd9118934b03eb5be5b5739e8c16820dab18f844a1cee",
-          "bytes": 38679
+          "gitBlobSha1": "30faf5f7b906d8874d79829995b6adccbc71635f",
+          "sha256": "83d7692124c351e90dee0efb99fd48f9c3ee1cfc6dca7b6a94cb3d60ec5bfc2e",
+          "bytes": 42804
         },
         {
           "path": "lib/selective-rerip/certifyMinimumTwoBlockerOwners.ts",
@@ -1396,5 +1396,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "d1647be83e8cc51d42be1db0c992f57e29314705fa772e4eb374fc4d79c3193d"
+  "bundleSha256": "ab9ab8e6ea120318b49f6a09898aa74fdf923e724313ac6561fdaa9d1e448a60"
 }
