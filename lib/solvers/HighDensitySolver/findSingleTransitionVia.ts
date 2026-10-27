@@ -50,16 +50,17 @@ const MINIMUM_VIA_EDGE_CLEARANCE = 0.1
 
 const sameElectricalNet = (a: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">,
   b: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">, connMap?: ConnectivityMap): boolean => {
-  const canonical = new Set(Object.keys(connMap?.netMap ?? {}))
+  const canonical = connMap?.netMap ?? {}
+  const hasCanonical = (key: string): boolean => typeof key === "string" && Object.prototype.propertyIsEnumerable.call(canonical, key)
   const owner = (route: typeof a): string => {
-    if (route.rootConnectionName !== undefined && canonical.has(route.rootConnectionName)) {
+    if (route.rootConnectionName !== undefined && hasCanonical(route.rootConnectionName)) {
       return JSON.stringify(["registered", route.rootConnectionName])
     }
-    if (canonical.has(route.connectionName)) return JSON.stringify(["registered", route.connectionName])
+    if (hasCanonical(route.connectionName)) return JSON.stringify(["registered", route.connectionName])
     const registered = connMap?.getNetConnectedToId(route.connectionName)
     if (registered !== undefined) return JSON.stringify(["registered", registered])
     const root = route.rootConnectionName ?? route.connectionName
-    const net = canonical.has(root) ? root : connMap?.getNetConnectedToId(root)
+    const net = hasCanonical(root) ? root : connMap?.getNetConnectedToId(root)
     return JSON.stringify(net === undefined ? ["literal", root] : ["registered", net])
   }
   return owner(a) === owner(b)
