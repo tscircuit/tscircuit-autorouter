@@ -21,6 +21,7 @@ import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSol
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
+import { BusLayerRoutingSolver } from "lib/solvers/BusLayerRoutingSolver"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -272,6 +273,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
+  busLayerRoutingSolver?: BusLayerRoutingSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -960,6 +962,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "busLayerRoutingSolver",
+      BusLayerRoutingSolver,
+      (cms) => [{
+        srj: {
+          ...cms.srj,
+          connections: cms.srjWithPointPairs!.connections,
+          traces: cms.getUpdatedPreloadedTraces(),
+        },
+        hdRoutes: cms.effortCleanupSolver!.getOutput(),
+        effort: cms.effort,
+      }],
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
@@ -988,7 +1003,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
+        const hdRoutes = cms.busLayerRoutingSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1232,7 +1247,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
-      pipelineStepDef.solverName === "effortCleanupSolver"
+      pipelineStepDef.solverName === "effortCleanupSolver" ||
+      pipelineStepDef.solverName === "busLayerRoutingSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1502,6 +1518,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.busLayerRoutingSolver?.solved
+        ? this.busLayerRoutingSolver.getOutput()
+        : undefined) ??
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
         : undefined) ??
