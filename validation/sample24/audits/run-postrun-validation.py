@@ -9,20 +9,20 @@ import shutil
 import subprocess
 import sys
 
-COHORT = {'runId': 40459675145,
+COHORT = {'runId': 40461694766,
  'branch': 'fix/srj24-duplicate-port-bounds-20261027',
- 'transportCommit': 'c847478703fff0024becbf4a531f3cf642875c07',
- 'source': 'eaeaae9b8936022a854bc4751837c205331654d4',
+ 'transportCommit': '56ea2a9ec734029dbd7ca29b24ec44d7b3b8f116',
+ 'source': '86f94f52beb47a5779feb4eae86b683a3f3e958c',
  'rootLibTree': '416dd7809310919cb77e0dce488189eb0bdaab11',
- 'rootPackageBlob': '646e0a37356211c05c169ce50081bc5cc38fd109',
- 'runtimeReceiptSha256': 'f4cc1f6c902ecbbfa47fd91e7bcf6c327e255028211ea25d83118fdd47062c45',
- 'runtimeBundleSha256': '229def2a6061157249b6aef90fff61b83e050518e73203151d72ce73c2c4bedd',
- 'runtimeManifestSha256': '4524dd5d3c1fee5835c4f267167a6887f602848f3ca2d2f823ff942a05d0cb52',
+ 'rootPackageBlob': '4d848c1e4a9aeb116b6a5782e484b585a789f0f5',
+ 'runtimeReceiptSha256': 'ac0f3f9c5aea7a011190e99cc0a1fd985dec19c99fe629200554045da1b9d52f',
+ 'runtimeBundleSha256': '3e1bd2cd44a3586e42c3344dff085ddc9b4f01493c759117d4e657794d1c708e',
+ 'runtimeManifestSha256': 'f2b914f166f9d87e6dfd6f9226bc0baa5618a354bc1e17c15af9571fb05641ac',
  'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
  'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
  'artifactNames': ['sample24-final-srj', 'sample24-reviewed-runtime-proof', 'benchmark-result']}
-AUDITOR_MANIFEST_SHA = 'f46b65192b8755c22533d29ce377dd4dd15051ba2a190b9f8ec648ec222fc977'
-OVERLAY_MANIFEST_SHA = '1fa4f5cbe5d311f6060417d0ab0539dbc6cf01927b8053eed9feee23f414ff35'
+AUDITOR_MANIFEST_SHA = 'fe20f6559f5b48d27b0b631f29eb1cdf5377e47e2bd16f87961123089eb6e0aa'
+OVERLAY_MANIFEST_SHA = '7d30dd28bbcbab0c6e0bdc78380eb518c21a0c9807695e4a0f1c2b63b04f43e9'
 SOLVER = 'AutoroutingPipelineSolver9_PreloadedTraceGraph'
 REQUIRED_ARGS = ['--pipeline', '9', '--dataset', '24', '--sample', '24', '--effort', '1',
                  '--concurrency', '1', '--threads', '1', '--sample-timeout', '7200s']
