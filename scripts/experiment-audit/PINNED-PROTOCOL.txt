@@ -1,0 +1,89 @@
+Pinned experiment protocol (prepared locally; publication belongs to root agent)
+
+Publish the listed controller files under scripts/experiment-audit/, the workflow
+under .github/workflows/, and a completed pinned-manifest.json. The template must
+be filled with the five final immutable candidate SHAs. Null, branch or tag refs
+are rejected. Publication must preserve the implementation PRs and their evidence.
+
+The workflow runs only on codex/deep-experiment-bench pushes or manual dispatch.
+An Ubuntu orchestration-only plan job validates runPrNumbers and fails on requested
+null/moving refs. Only those explicitly requested PRs are dispatched, each on both
+datasets. The whole campaign covers ten independent Blacksmith jobs for
+PR3198..3202 x SRJ18/SRJ24, possibly across progressive pushes. Each job
+checks out a pristine 637b6c581128238f6c61227a1c15be423d24baca harness plus separate
+baseline/candidate algorithm checkouts. It builds both. It does not dispatch or
+post PR comments, access additional services, or change the repository defaults.
+
+The source has no lockfile. Installs preserve git/archive source pins and use
+isolated dependency roots without editing package.json. Registry ranges resolve
+at job time; installed package versions and package.json hashes are retained.
+Identical direct declarations must resolve identically, and common critical
+validation/geometry inventories must match. Other transitive differences are
+reported. A pinned archive is not a claim of a fully locked transitive graph.
+
+The same baseline benchmark/ directory and benchmark.sh are copied into both
+algorithm checkouts. The run-task adapter changes only constructor selection,
+explicit options, cheap provenance/counter observations, and raw-output capture.
+It does not alter the original solve loop, elapsed-time calculation, official
+relaxed DRC, continuity checks, trace linting, or result interpretation. Five
+validation/input-conversion source files are hash-checked against pristine main.
+The actual adapted source and its hash remain in the checkout/provenance.
+
+Every sample gets an A (baseline) then B (candidate) attempt before any repeats.
+SRJ18 has16 samples; SRJ24 has26. Both arms load the full same ordered input
+population, effort1, and compare SHA256 of every normalized scenario before
+routing. Each official invocation selects exactly one sample, one worker, one
+routing thread, a fresh child process, 360s sample limit, and cacheProvider:null.
+The harness selector remains pipeline9, while the factory maps to the exact
+recorded constructor/module; PR3202 runs GeometryAutoroutingPipelineSolver.
+Its data is never presented as a changed Pipeline9 routing algorithm.
+
+The controller records original official routing elapsed separately from
+constructor time and external benchmark-process wall time (imports, orchestration,
+official validation and output capture). Build/install setup is outside these
+timings. Cheap progress snapshots use only existing official callbacks. Blocked
+synchronous solves may offer no later callbacks: missing counters mean unavailable,
+not inactive. Parent deadlines terminate the entire sample process group, so an
+orphaned Bun worker cannot contaminate the next arm.
+
+Raw original input, solver output, newly emitted traces and point-pair context are
+retained without simplification. Supplemental validation runs in a separate
+process after the official result, with its own deadline and elapsed time. It
+cannot consume the360s official routing budget or change its raw outcome.
+Supplemental screens include full preloaded/new copper and original-input board
+geometry using the existing0.1 reference trace clearance; library-wide routing,
+thickness, source-connectivity and board/via checks are reported separately.
+The exact declared input rule fields and checker configuration are serialized.
+An optional explicit defaultObstacleMargin screen is labeled search-margin
+sensitivity, not asserted to be the reference copper gap. Library/converter rule
+coverage has limits; point-only local SRJs can trigger dangling-pad assumptions.
+Input-only physical errors and expected unrouted-connectivity findings are kept
+separate. Error types, participant IDs, locations and messages remain in artifacts.
+
+Legacy route-via counts remain official. Supplemental metrics include owned unique
+physical via coordinate/spans using the converter's actual drill layers, foreign-
+owner coincident via sites, total emitted points, summed copper length and a
+separately labeled exact-segment deduplication. These do not remove raw duplicate
+or overlapping geometry from DRC. Exact-segment deduplication is not a general
+collinear union algorithm.
+
+The headline counts every sample once from its first AB pair. Clean completion
+counts, gains, regressions, missing attempts and timeouts accompany paired timing
+and via figures on the mutually clean subset. Failed fast routes never become
+timing/via improvements. Optional BA repeats are eligible only when the complete
+first round finishes before90min and conservative repeat duration fits the330min
+controller budget (360min job). Repeats are retained separately and never replace
+first-round failures. Incomplete matrix jobs remain explicitly incomplete.
+
+Machine-readable job logs use EXPERIMENT_ACTIVE_JSON, EXPERIMENT_RESULT_JSON,
+EXPERIMENT_REPEAT_SKIPPED_JSON and EXPERIMENT_SUMMARY_JSON. The artifact contains
+all reports/logs/raw copper/configuration/provenance and incremental results.jsonl.
+Use GitHub fetch_workflow_run_jobs + fetch_workflow_job_logs for compact remote
+review; fetch_workflow_run_artifacts + download_workflow_artifact retain full ZIPs.
+
+Local validation completed: Python compilation;9 protocol/controller tests including
+moving-ref/cache rejection, failure/censoring semantics, repeat invariance, direct
+and critical transitive mismatch rejection, process-group termination; pinned
+prepare/selector; actual official runTask on a tiny synthetic two-pin board;
+raw capture, input identity loading, and separate supplemental checker execution.
+Local smoke uses Bun1.4.3; remote workflow pins Bun1.4.2. No local timing claim.

@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "repository": "tscircuit/tscircuit-autorouter",
+  "baselineSha": "637b6c581128238f6c61227a1c15be423d24baca",
+  "datasets": {
+    "srj18": 16,
+    "srj24": 26
+  },
+  "sampleTimeoutSeconds": 360,
+  "firstRound": [
+    "A",
+    "B"
+  ],
+  "optionalSecondRound": [
+    "B",
+    "A"
+  ],
+  "optionalRepeatBeforeSeconds": 5400,
+  "jobBudgetSeconds": 19800,
+  "baseline": {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1
+    },
+    "evidencePaths": [
+      "stats",
+      "highDensityRouteSolver.benchmarkDiagnosticCounters"
+    ]
+  },
+  "experiments": [
+    {
+      "pr": 3198,
+      "candidateSha": "5a168b9213c0cfbb71659c1a92f14a7d8a5a2552",
+      "label": "connected-net-trees",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "usePhysicalNetForest": true
+      },
+      "evidencePaths": [
+        "physicalNetForestSolver.diagnostics",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    {
+      "pr": 3199,
+      "candidateSha": null,
+      "label": "joint-component-escape",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "jointComponentEscapePlanning": true
+      },
+      "evidencePaths": [
+        "jointComponentEscapePlannerSolver.stats",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    {
+      "pr": 3200,
+      "candidateSha": null,
+      "label": "ordered-sliding-portals",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "orderedPortals": true,
+        "coarsenBoundaries": false
+      },
+      "evidencePaths": [
+        "orderedPortalStats",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    {
+      "pr": 3201,
+      "candidateSha": null,
+      "label": "copper-conflict-learning",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "copperCandidateSearch": true
+      },
+      "evidencePaths": [
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    {
+      "pr": 3202,
+      "candidateSha": "cefb6bf3b7be31d1ac9dc678fb3fb1af128d0fac",
+      "label": "direct-geometry-engine",
+      "solverName": "GeometryAutoroutingPipelineSolver",
+      "solverModule": "lib/testing/GeometryAutoroutingPipelineSolver.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1
+      },
+      "evidencePaths": [
+        "stats"
+      ]
+    }
+  ],
+  "runPrNumbers": [
+    3198,
+    3202
+  ]
+}
