@@ -81,6 +81,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
   MAX_POSTROUTE_REPAIR_ATTEMPTS = 2
 
+  readonly deferClosedNeighborNodes: boolean
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
 
@@ -103,6 +104,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    deferClosedNeighborNodes?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
     priorityCoordinateScale?: number
@@ -125,6 +127,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.deferClosedNeighborNodes = params.deferClosedNeighborNodes ?? false
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -264,6 +267,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      deferClosedNeighborNodes: this.deferClosedNeighborNodes,
     }
   }
 
