@@ -922,6 +922,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useDeterministicRace = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -931,7 +932,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
-    {
+    if (useSelectiveReripRouting || useDeterministicRace) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
@@ -940,7 +941,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = RacingTinyHyperGraphSolver
+      solveGraphStep.solverClass = useDeterministicRace
+        ? RacingTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1062,7 +1065,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshotDirty = false
   private asyncRunning = false
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams & {
+      useDeterministicRace?: boolean
+    },
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1147,6 +1154,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.useDeterministicRace === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1513,6 +1521,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.useDeterministicRace === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

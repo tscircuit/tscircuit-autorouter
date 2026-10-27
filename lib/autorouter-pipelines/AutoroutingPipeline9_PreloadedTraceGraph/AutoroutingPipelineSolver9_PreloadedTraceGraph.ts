@@ -534,6 +534,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            useDeterministicRace: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,

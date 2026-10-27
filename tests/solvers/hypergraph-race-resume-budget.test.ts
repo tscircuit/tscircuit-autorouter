@@ -7,11 +7,11 @@ test("port-point racing obeys a finite step budget and resumes to the synchronou
     typeof TinyHypergraphPortPointPathingSolver
   >[0]
   const serial = new TinyHypergraphPortPointPathingSolver(
-    structuredClone(input) as Params,
+    { ...structuredClone(input), useDeterministicRace: true } as Params,
   )
   serial.solve()
   const resumed = new TinyHypergraphPortPointPathingSolver(
-    structuredClone(input) as Params,
+    { ...structuredClone(input), useDeterministicRace: true } as Params,
   )
   await resumed.solveAsync(undefined, 3)
   expect(resumed.iterations).toBe(3)
