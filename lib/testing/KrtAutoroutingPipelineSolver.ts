@@ -1,159 +1,21 @@
-import {
-  KiCadRoutingToolsAutorouter,
-  type KiCadRoutingToolsAutorouterOptions,
-} from "@tscircuit/krt-wasm"
+import type { KiCadRoutingToolsAutorouterOptions } from "@tscircuit/krt-wasm"
+import { routeSimpleRouteJson } from "@tscircuit/krt-wasm/pkg-node/grid_router.js"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type {
-  ConnectionPoint,
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-  SimplifiedPcbTraces,
-} from "lib/types"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { acceptKrtBranches } from "./acceptKrtBranches"
+import { prepareKrtBranches } from "./prepareKrtBranches"
 
 export interface KrtAutoroutingPipelineSolverOptions {
   effort?: number
   krtOptions?: KiCadRoutingToolsAutorouterOptions
 }
 
-type KrtConnectionStitch = {
-  connectionName: string
-  from: Extract<ConnectionPoint, { layer: string }>
-  to: Extract<ConnectionPoint, { layer: string }>
-}
-
-const getKrtClearance = (
-  srj: SimpleRouteJson,
-  opts: KrtAutoroutingPipelineSolverOptions,
-) => opts.krtOptions?.clearance ?? srj.defaultObstacleMargin ?? 0.2
-
-const isSingleLayerPoint = (
-  point: ConnectionPoint,
-): point is Extract<ConnectionPoint, { layer: string }> =>
-  typeof (point as { layer?: unknown }).layer === "string"
-
-const distanceBetweenPoints = (
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-) => Math.hypot(a.x - b.x, a.y - b.y)
-
-const normalizeSrjForKrt = (
-  srj: SimpleRouteJson,
-  clearance: number,
-): { srj: SimpleRouteJson; stitches: KrtConnectionStitch[] } => {
-  const closePointThreshold = srj.minTraceWidth + clearance
-  const stitches: KrtConnectionStitch[] = []
-
-  const connections = srj.connections.map((connection) => {
-    const pointsToConnect: ConnectionPoint[] = []
-
-    for (const point of connection.pointsToConnect) {
-      const closePoint =
-        isSingleLayerPoint(point) &&
-        pointsToConnect.find(
-          (
-            candidate,
-          ): candidate is Extract<ConnectionPoint, { layer: string }> =>
-            isSingleLayerPoint(candidate) &&
-            candidate.layer === point.layer &&
-            distanceBetweenPoints(candidate, point) <= closePointThreshold,
-        )
-
-      if (closePoint) {
-        stitches.push({
-          connectionName: connection.name,
-          from: point,
-          to: closePoint,
-        })
-      } else {
-        pointsToConnect.push(point)
-      }
-    }
-
-    return {
-      ...connection,
-      pointsToConnect,
-    }
-  })
-
-  return {
-    srj: {
-      ...srj,
-      connections,
-      obstacles: srj.obstacles.map((obstacle) =>
-        (obstacle as { type: string }).type === "oval"
-          ? {
-              ...obstacle,
-              type: "rect",
-            }
-          : obstacle,
-      ),
-    },
-    stitches,
-  }
-}
-
-const toWirePoint = (
-  point: Extract<ConnectionPoint, { layer: string }>,
-  width: number,
-): SimplifiedPcbTrace["route"][number] => ({
-  route_type: "wire",
-  x: point.x,
-  y: point.y,
-  layer: point.layer,
-  width,
-})
-
-const addStitchesToTraces = (
-  traces: SimplifiedPcbTraces,
-  stitches: KrtConnectionStitch[],
-  width: number,
-): SimplifiedPcbTraces => {
-  if (stitches.length === 0) return traces
-
-  const tracesWithStitches = structuredClone(traces)
-
-  for (const stitch of stitches) {
-    const trace = tracesWithStitches.find(
-      (candidate) => candidate.connection_name === stitch.connectionName,
-    )
-    if (!trace) continue
-
-    const firstRoutePoint = trace.route.find(
-      (point) => "x" in point && "y" in point,
-    )
-    const lastRoutePoint = [...trace.route]
-      .reverse()
-      .find((point) => "x" in point && "y" in point)
-
-    const stitchRoute = [
-      toWirePoint(stitch.from, width),
-      toWirePoint(stitch.to, width),
-    ]
-
-    if (
-      firstRoutePoint &&
-      (!lastRoutePoint ||
-        distanceBetweenPoints(stitch.to, firstRoutePoint) <=
-          distanceBetweenPoints(stitch.to, lastRoutePoint))
-    ) {
-      trace.route.unshift(...stitchRoute)
-    } else {
-      trace.route.push(...stitchRoute.reverse())
-    }
-  }
-
-  return tracesWithStitches
-}
-
 class KrtAutorouterSolver extends BaseSolver {
   MAX_ITERATIONS = 1
   traces: SimplifiedPcbTraces = []
-  private router?: KiCadRoutingToolsAutorouter
 
   constructor(
     public readonly srj: SimpleRouteJson,
@@ -162,34 +24,100 @@ class KrtAutorouterSolver extends BaseSolver {
     super()
   }
 
-  getConstructorParams() {
-    return [this.srj, this.opts] as const
+  getConstructorParams(): readonly [
+    SimpleRouteJson,
+    KrtAutoroutingPipelineSolverOptions,
+  ] {
+    return [this.srj, this.opts]
   }
 
-  _step() {
-    const effort = this.opts.effort ?? 1
-    const clearance = getKrtClearance(this.srj, this.opts)
-    const normalized = normalizeSrjForKrt(this.srj, clearance)
-    this.router = new KiCadRoutingToolsAutorouter(normalized.srj as any, {
-      clearance,
-      maxIterations: Math.max(300_000, Math.round(300_000 * effort)),
-      ...this.opts.krtOptions,
-    })
-    this.traces = addStitchesToTraces(
-      this.router.solveSync() as SimplifiedPcbTraces,
-      normalized.stitches,
-      this.srj.minTraceWidth,
+  _step(): void {
+    const preparationStarted = performance.now()
+    const prepared = prepareKrtBranches(this.srj)
+    const options = this.opts.krtOptions ?? {}
+    const gridStep = options.gridStep ?? 0.1
+    if (!Number.isFinite(gridStep) || gridStep <= 0) {
+      throw new Error("KRT gridStep must be finite and positive")
+    }
+    const clearance = Math.max(
+      options.clearance ?? 0.2,
+      this.srj.defaultObstacleMargin ?? 0,
+      this.srj.minTraceToHoleEdgeClearance ?? 0,
     )
+    const requestedWidth = Math.max(
+      this.srj.minTraceWidth,
+      ...prepared.srj.connections.map(
+        (connection) => connection.nominalTraceWidth ?? this.srj.minTraceWidth,
+      ),
+    )
+    const edgeInset =
+      Math.max(requestedWidth, getViaDimensions(this.srj).padDiameter) / 2 +
+      (this.srj.minBoardEdgeClearance ?? 0) +
+      gridStep / 2
+    const xs = this.srj.outline?.map((point) => point.x)
+    const ys = this.srj.outline?.map((point) => point.y)
+    const bounds = {
+      minX:
+        Math.max(
+          this.srj.bounds.minX,
+          xs?.length ? Math.min(...xs) : this.srj.bounds.minX,
+        ) + edgeInset,
+      maxX:
+        Math.min(
+          this.srj.bounds.maxX,
+          xs?.length ? Math.max(...xs) : this.srj.bounds.maxX,
+        ) - edgeInset,
+      minY:
+        Math.max(
+          this.srj.bounds.minY,
+          ys?.length ? Math.min(...ys) : this.srj.bounds.minY,
+        ) + edgeInset,
+      maxY:
+        Math.min(
+          this.srj.bounds.maxY,
+          ys?.length ? Math.max(...ys) : this.srj.bounds.maxY,
+        ) - edgeInset,
+    }
+    if (bounds.minX >= bounds.maxX || bounds.minY >= bounds.maxY) {
+      throw new Error("KRT has no routing bounds after original edge constraints")
+    }
+    this.stats.preparationMs = performance.now() - preparationStarted
+    this.stats.gridStep = gridStep
+    this.stats.branchCount = prepared.branches.length
+    const routingStarted = performance.now()
+    let proposed: unknown
+    try {
+      proposed = routeSimpleRouteJson(
+        { ...prepared.srj, bounds },
+        {
+          ...options,
+          gridStep,
+          clearance,
+          maxIterations:
+            options.maxIterations ??
+            Math.max(300_000, Math.round(300_000 * (this.opts.effort ?? 1))),
+        },
+      )
+    } finally {
+      this.stats.routingMs = performance.now() - routingStarted
+    }
+    const acceptanceStarted = performance.now()
+    try {
+      this.traces = acceptKrtBranches({
+        original: this.srj,
+        branches: prepared.branches,
+        proposed,
+        gridStep,
+      })
+    } finally {
+      this.stats.acceptanceMs = performance.now() - acceptanceStarted
+    }
     this.stats.traceCount = this.traces.length
-    this.stats.stitchCount = normalized.stitches.length
     this.solved = true
   }
 
   visualize(): GraphicsObject {
-    return convertSrjToGraphicsObject({
-      ...this.srj,
-      traces: this.traces,
-    })
+    return convertSrjToGraphicsObject({ ...this.srj, traces: this.traces })
   }
 }
 
@@ -215,16 +143,19 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
     public readonly opts: KrtAutoroutingPipelineSolverOptions = {},
   ) {
     super()
-    this.srj = addApproximatingRectsToSrj(filterObstaclesOutsideBoard(inputSrj))
+    this.srj = structuredClone(inputSrj)
   }
 
   srj: SimpleRouteJson
 
-  getConstructorParams() {
+  getConstructorParams(): readonly [
+    SimpleRouteJson,
+    KrtAutoroutingPipelineSolverOptions,
+  ] {
     return [this.inputSrj, this.opts] as const
   }
 
-  _step() {
+  _step(): void {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
@@ -249,13 +180,14 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
+    const solver = new pipelineStepDef.solverClass(...constructorParams)
+    this.activeSubSolver = solver
+    this.krtAutorouterSolver = solver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
+  solveUntilPhase(phase: string): void {
     while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
       this.step()
     }
@@ -274,7 +206,7 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
     return {
-      ...this.srj,
+      ...structuredClone(this.srj),
       traces: this.getOutputSimplifiedPcbTraces(),
     }
   }

@@ -100,7 +100,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   debug_nodePathToParentIntersectsObstacle: Set<number>
 
   debugEnabled: boolean
-  readonly deferClosedNeighborNodes: boolean
 
   initialNodeGridOffset: { x: number; y: number }
 
@@ -123,9 +122,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
-    /** Owned searches only: Nodes and grid state must be plain numeric data.
-     * Rejected neighbors no longer observe parent cost-field reads. */
-    deferClosedNeighborNodes?: boolean
   }) {
     super()
     this.bounds = opts.bounds
@@ -159,7 +155,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.debugEnabled = opts.captureSearchDebug ?? true
-    this.deferClosedNeighborNodes = opts.deferClosedNeighborNodes ?? false
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -714,27 +709,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
-        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
-        let neighborKey: number | undefined
-        // Owned searches use plain Nodes. Keep custom key hooks on their
-        // original full-Node path, including overrides installed after setup.
-        if (
-          this.deferClosedNeighborNodes &&
-          this.getNodeKey === originalGetNodeKey
-        ) {
-          const xIndex =
-            Math.round(neighborX / this.cellStep) - this.gridMinXIndex
-          const yIndex =
-            Math.round(neighborY / this.cellStep) - this.gridMinYIndex
-          neighborKey =
-            (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
-          if (this.exploredNodes.has(neighborKey)) continue
-        }
-
         const neighbor: Node = {
-          x: neighborX,
-          y: neighborY,
+          x: clamp(node.x + x * this.cellStep, minX, maxX),
+          y: clamp(node.y + y * this.cellStep, minY, maxY),
           z: node.z,
           g: node.g,
           h: node.h,
@@ -742,9 +719,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           parent: node,
         }
 
-        if (neighborKey === undefined) {
-          neighborKey = this.getNodeKey(neighbor)
-          if (this.exploredNodes.has(neighborKey)) continue
+        const neighborKey = this.getNodeKey(neighbor)
+
+        if (this.exploredNodes.has(neighborKey)) {
+          continue
         }
 
         if (!queriedPlanarNeighbors) {
@@ -796,17 +774,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
-      let viaKey: number | undefined
-      if (
-        this.deferClosedNeighborNodes &&
-        this.getNodeKey === originalGetNodeKey
-      ) {
-        const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
-        const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-        viaKey = (newZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
-        if (this.exploredNodes.has(viaKey)) continue
-      }
-
       const viaNeighbor: Node = {
         x: node.x,
         y: node.y,
@@ -818,8 +785,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       if (
-        (viaKey !== undefined ||
-          !this.exploredNodes.has(this.getNodeKey(viaNeighbor))) &&
+        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
@@ -1267,6 +1233,3 @@ function getPointToPrecomputedSegmentDistanceSquared(
   const dy = point.y - projectionY
   return dx * dx + dy * dy
 }
-
-// Capture once so later prototype edits cannot opt custom methods into scalar keys.
-const originalGetNodeKey = SingleHighDensityRouteSolver.prototype.getNodeKey

@@ -59,7 +59,7 @@
     "@tscircuit/fixed-via-hypergraph-solver": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
-    "@tscircuit/krt-wasm": "^0.1.0",
+    "@tscircuit/krt-wasm": "https://codeload.github.com/tscircuit/krt-wasm/tar.gz/dee4057770db600ff1c684240393a8dd46018199",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
