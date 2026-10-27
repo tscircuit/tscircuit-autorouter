@@ -72,8 +72,7 @@ test("repro: Pipeline9 drops a rotated boundary obstacle and routes through it",
         expect(end.layer).toBe("top")
         expect(start.width).toBeGreaterThanOrEqual(input.minTraceWidth)
         const endpointInside = [start, end].some(
-          (point) =>
-            point.x >= 1 && point.x <= 9 && Math.abs(point.y) <= 0.5,
+          (point) => point.x >= 1 && point.x <= 9 && Math.abs(point.y) <= 0.5,
         )
         minimumCenterlineDistance = Math.min(
           minimumCenterlineDistance,
