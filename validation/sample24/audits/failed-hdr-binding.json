@@ -1,0 +1,23 @@
+{
+  "runId": 40500285904,
+  "branch": "fix/srj24-duplicate-port-bounds-20261027",
+  "transportCommit": "5f581d928ed6549091e19d692f0db60b04f01efb",
+  "source": "5d5ca622ad436cb0dac518cca5b3d5111c8ecd2d",
+  "rootLibTree": "eb3d7f27006d9eb03d5e99d9570368390090123a",
+  "rootPackageBlob": "3c44b8c73131ecb4c5048a0a0ed6a8863328aa32",
+  "runtimeReceiptSha256": "959f53b61f8049c5a16d8f3ed1d9b3d9c4927f940a2ce36521aff61704a725e0",
+  "runtimeBundleSha256": "ab9ab8e6ea120318b49f6a09898aa74fdf923e724313ac6561fdaa9d1e448a60",
+  "runtimeManifestSha256": "1e3e7eacf346f5fdb5d2f493b1e6c05ca03f78bf126c290d549d869b8c2fa079",
+  "originalInputSha256": "ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7",
+  "originalInputCanonicalSha256": "70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0",
+  "artifactNames": [
+    "sample24-failed-hdr-input",
+    "sample24-reviewed-runtime-proof",
+    "benchmark-result"
+  ],
+  "expectedArtifactIds": {
+    "sample24-failed-hdr-input": 12733377708,
+    "sample24-reviewed-runtime-proof": 12731639720,
+    "benchmark-result": 12734085021
+  }
+}

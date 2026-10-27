@@ -13,6 +13,11 @@ on:
         required: false
         default: ""
         type: string
+      postrun_failed_hdr_diagnostic:
+        description: Inspect the owned actual sample24 HDR failure without rerouting
+        required: false
+        default: false
+        type: boolean
       sample24_source_bundle:
         description: Use the reviewed sample24 source bundle for this validation
         required: false
@@ -1845,7 +1850,7 @@ jobs:
 
   sample24-postrun-independent-validation:
     name: Validate actual sample24 routing artifact
-    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id != '' && inputs.postrun_failed_hdr_diagnostic != true
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -1915,6 +1920,81 @@ jobs:
             audit-results
             producer-run-binding.json
             controller/validation/sample24/audits/auditor-source-manifest.json
+          if-no-files-found: error
+
+  sample24-failed-hdr-diagnostic:
+    name: Inspect actual sample24 failed HDR constructor
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id != '' && inputs.postrun_failed_hdr_diagnostic == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: controller
+          persist-credentials: false
+          sparse-checkout: validation/sample24/audits
+      - name: Bind exact actual failed producer and artifacts
+        id: producer
+        uses: actions/github-script@v7
+        env:
+          PRODUCER_RUN_ID: ${{ inputs.postrun_audit_run_id }}
+        with:
+          script: |
+            await require(process.cwd() + '/controller/validation/sample24/audits/bind-failed-hdr-producer.cjs')({ github, context, core })
+      - name: Download actual failed HDR constructor
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: sample24-failed-hdr-input
+          path: producer-failed-hdr
+      - name: Download actual producer runtime and input proof
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: sample24-reviewed-runtime-proof
+          path: producer-proof
+      - name: Download actual benchmark result
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: benchmark-result
+          path: producer-benchmark
+      - name: Emit compact actual failed-node tasks and context without routing
+        run: python3 controller/validation/sample24/audits/extract-failed-hdr-diagnostic.py --capture-dir producer-failed-hdr --proof-dir producer-proof --benchmark-dir producer-benchmark --binding failed-hdr-run-binding.json --config controller/validation/sample24/audits/failed-hdr-binding.json --out-dir diagnostic-results
+      - name: Checkout exact producer source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.producer.outputs.sha }}
+          path: source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Verify same reviewed218 producer runtime and original input without routing
+        working-directory: source
+        run: |
+          sample24_diagnostic_args_json="$(node -e 'console.log(JSON.stringify(require("./validation/sample24/runtime-source-manifest.json").requiredBenchmarkArgs))')"
+          BENCHMARK_ARGS_JSON="$sample24_diagnostic_args_json" bun validation/sample24/install-runtime.ts
+          bun validation/sample24/verify-runtime.ts
+          bun validation/sample24/verify-input.ts
+      - name: Preserve actual failure diagnostics and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample24-failed-hdr-diagnostic
+          path: |
+            diagnostic-results
+            failed-hdr-run-binding.json
+            source/validation/sample24/runtime-verification.json
+            source/validation/sample24/input-verification.json
           if-no-files-found: error
 
   benchmark-history:
