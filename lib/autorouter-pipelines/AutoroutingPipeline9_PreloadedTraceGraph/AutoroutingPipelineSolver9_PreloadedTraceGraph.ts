@@ -14,6 +14,7 @@ import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/Necessar
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { createPortPointPositionValidator, createPortReservationNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortReservationNetIds"
+import { createPortConflictCsr } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortConflictCsr"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -548,6 +549,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
           layerCount: cms.originalSrj.layerCount,
         }
+        const minimumPortDistance = cms.minTraceWidth +
+          (cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1)
 
         return [
           {
@@ -561,6 +564,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             createPortReservations: (model) => createPortReservationNetIds({
               ...model, context: portReservationContext,
             }),
+            createPortConflicts: ({ topology }) => createPortConflictCsr(topology, minimumPortDistance),
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
