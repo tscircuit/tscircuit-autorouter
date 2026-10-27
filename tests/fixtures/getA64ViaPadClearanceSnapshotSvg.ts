@@ -53,7 +53,8 @@ export function getA64ViaPadClearanceSnapshotSvg({
   }
   const svg = getSvgFromGraphicsObject(graphics, { backgroundColor: "white" })
   const color = viaPadErrorCount === 0 ? "#166534" : "#b91c1c"
-  const minimum = inputSrj.minViaEdgeToPadEdgeClearance ?? inputSrj.defaultObstacleMargin
+  const minimum =
+    inputSrj.minViaEdgeToPadEdgeClearance ?? inputSrj.defaultObstacleMargin
   const legend = `<g><rect x="12" y="12" width="580" height="92" rx="6" fill="white" stroke="${color}"/><text x="24" y="38" font-family="Arial,sans-serif" font-size="18" fill="${color}">A64 CPU to DDR: via copper / pad clearance</text><text x="24" y="64" font-family="Arial,sans-serif" font-size="18" fill="${color}">Violations: ${viaPadErrorCount}; source minimum: ${minimum} mm</text><text x="24" y="90" font-family="Arial,sans-serif" font-size="16" fill="#334155">Whole input: ${inputSrj.connections.length} signals, ${inputSrj.obstacles.length} obstacles</text></g>`
   return svg.replace("</svg>", `${legend}</svg>`)
 }

@@ -25,18 +25,21 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing("reference DRC reports the real A64 DQ2 via copper too close to foreign pad U2.F3", (): void => {
-  expect(measured).toHaveLength(1)
-  expect(measured[0]!.actual_clearance).toBeCloseTo(0.0837135955, 8)
-  expect(measured[0]!.minimum_clearance).toBe(0.10668)
-  expect(reference.errors).toContainEqual(
-    expect.objectContaining({
-      type: "pcb_pad_pad_clearance_error",
-      pcb_trace_id: trace.pcb_trace_id,
-      pcb_via_ids: [expect.any(String)],
-      actual_clearance: measured[0]!.actual_clearance,
-      minimum_clearance: measured[0]!.minimum_clearance,
-    }),
-  )
-  expect(input).toEqual(fixture.srj)
-})
+test.failing(
+  "reference DRC reports the real A64 DQ2 via copper too close to foreign pad U2.F3",
+  (): void => {
+    expect(measured).toHaveLength(1)
+    expect(measured[0]!.actual_clearance).toBeCloseTo(0.0837135955, 8)
+    expect(measured[0]!.minimum_clearance).toBe(0.10668)
+    expect(reference.errors).toContainEqual(
+      expect.objectContaining({
+        type: "pcb_pad_pad_clearance_error",
+        pcb_trace_id: trace.pcb_trace_id,
+        pcb_via_ids: [expect.any(String)],
+        actual_clearance: measured[0]!.actual_clearance,
+        minimum_clearance: measured[0]!.minimum_clearance,
+      }),
+    )
+    expect(input).toEqual(fixture.srj)
+  },
+)
