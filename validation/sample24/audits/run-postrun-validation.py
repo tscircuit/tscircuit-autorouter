@@ -9,20 +9,20 @@ import shutil
 import subprocess
 import sys
 
-COHORT = {'runId': 40475841365,
+COHORT = {'runId': 40481382346,
  'branch': 'fix/srj24-duplicate-port-bounds-20261027',
- 'transportCommit': 'c84c9a0c984cb71f61c83877809867f1d1762950',
- 'source': '97587ed38ba9e63f09058588f80b36e496be5dd7',
- 'rootLibTree': 'e7d50fd867c7a68b17fe52e7506b85ffa537d087',
- 'rootPackageBlob': 'aaa0f8bfe7cccaa4da92946ac2ecb3dc244d8e37',
- 'runtimeReceiptSha256': '6d172a0d0d47aec8749372a8406c07baf63c49f02faa7933e5d7c2e7bd07d7e9',
- 'runtimeBundleSha256': '440adf260a538d9b5cecde4e08716f9b087d6b67873f43cd5a397c842c99d519',
- 'runtimeManifestSha256': '064b9fa0485bdd7fa7e2184f7ec06f99507a0ada7f8336be50a003561ec75a88',
+ 'transportCommit': 'eeabec9a856054654db8498edd7d239d3de09d51',
+ 'source': '22b42e135da168c73bbb36edf5ff0716a739a853',
+ 'rootLibTree': 'af74d48e9a17b8fb409432ef8d96b007bbb304ad',
+ 'rootPackageBlob': 'ef15b59ad1381b22a7c33fd97bed173b90ba768b',
+ 'runtimeReceiptSha256': 'b362ac912e0fa9c9f52bd3ff8c04546c86634bf7caf2dd68d89d15d238fac2d8',
+ 'runtimeBundleSha256': '00bdb31ce62461bfa48e00507fe303d960f5251aac2cadefb019cad1353b8ff5',
+ 'runtimeManifestSha256': 'fe464b43ff33d8d0c637852eb6754110730f81d8528ab259fbec715a58f82bd3',
  'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
  'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
  'artifactNames': ['sample24-final-srj', 'sample24-reviewed-runtime-proof', 'benchmark-result']}
-AUDITOR_MANIFEST_SHA = '5fa87abe18e73bc95497b0ec5f896224e5169aa563d9e0bd47a48828dd2ec484'
-OVERLAY_MANIFEST_SHA = '28494586ef74d8d33e91d33e11ba50c40fb701a455326ae9090bc6170ee748da'
+AUDITOR_MANIFEST_SHA = '469b6d6826ed92715c71094e99469c6c391db6be93968f8c7babeb61e40707f2'
+OVERLAY_MANIFEST_SHA = '47c3d78b4949b468fcff083428127526fa1695fdbee6583d8d3de634d9fda320'
 SOLVER = 'AutoroutingPipelineSolver9_PreloadedTraceGraph'
 REQUIRED_ARGS = ['--pipeline', '9', '--dataset', '24', '--sample', '24', '--effort', '1',
                  '--concurrency', '1', '--threads', '1', '--sample-timeout', '7200s']
@@ -76,7 +76,7 @@ def verify_runtime(report, label):
                 'bundleSha256': COHORT['runtimeBundleSha256'],
                 'manifestSha256': COHORT['runtimeManifestSha256']}
     require(all(report.get(key) == value for key, value in expected.items()), label + ' source/bundle differs')
-    require(report.get('runtimeSourceFiles') == 217 and report.get('actualNestedImports') == 25
+    require(report.get('runtimeSourceFiles') == 218 and report.get('actualNestedImports') == 25
             and report.get('physicalNestedResolutions') == 25 and report.get('bunVersion') == '1.4.3',
             label + ' source/import verification is incomplete')
 

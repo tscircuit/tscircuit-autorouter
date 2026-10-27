@@ -63,7 +63,7 @@
   "noBoardAudited": true,
   "noRemoteMutation": true,
   "scopeNote": "IncludesindependentALL1918ordinarywire/rawopaquecoverageinadditiontothroughmarkerchecks; correctedreferenceevaluatoroverlayisseparatefromproducercheckout.",
-  "producerSource": "97587ed38ba9e63f09058588f80b36e496be5dd7",
-  "producerTransportCommit": "c84c9a0c984cb71f61c83877809867f1d1762950",
-  "producerRunId": 40475841365
+  "producerSource": "22b42e135da168c73bbb36edf5ff0716a739a853",
+  "producerTransportCommit": "eeabec9a856054654db8498edd7d239d3de09d51",
+  "producerRunId": 40481382346
 }
