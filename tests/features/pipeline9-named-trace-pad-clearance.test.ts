@@ -51,7 +51,7 @@ test("P9 forwards authoritative pad and hole clearances while retaining via and 
   // Center-to-pad .155 leaves .105 copper edge clearance, above the raw .1 rule.
   expect(1.1 - 0.5 - 0.445 - 0.05).toBeCloseTo(0.105, 12)
   expect(defaultPortfolio.constructorParams.obstacleMargin).toBe(0.15)
-  expect(defaultPortfolio.constructorParams.viaToPadClearance).toBeUndefined()
+  expect(defaultPortfolio.constructorParams.viaToPadClearance).toBe(0.1)
   const legacy = new PortfolioSingleIntraNodeSolver({ ...defaultPortfolio.constructorParams,
     traceToPadClearance: undefined })
   expect(solve(legacy).failed).toBe(true)

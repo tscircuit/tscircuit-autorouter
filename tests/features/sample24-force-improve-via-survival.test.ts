@@ -9,7 +9,7 @@ test("source P9 HD, force improvement and repair preserve the legal external C74
   const node = structuredClone(fixture.node) as NodeWithPortPoints
   const input = {
     layerCount: 8, allowBlindAndBuriedVias: false, minTraceWidth: 0.1,
-    minViaDiameter: 0.3, minViaHoleDiameter: 0.15,
+    minViaDiameter: 0.3, minViaHoleDiameter: 0.15, minViaEdgeToPadEdgeClearance: 0.15,
     bounds: fixture.boardGeometry.bounds, outline: fixture.boardGeometry.outline,
     obstacles: structuredClone(fixture.obstacles), connections: [],
   } as unknown as SimpleRouteJson
