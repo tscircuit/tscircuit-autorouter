@@ -52,9 +52,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private inputNodesById = new Map<string, InputNodeWithPortPoints>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    for (const node of input.inputNodesWithPortPoints) {
+      if (!this.inputNodesById.has(node.capacityMeshNodeId)) {
+        this.inputNodesById.set(node.capacityMeshNodeId, node)
+      }
+    }
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -163,7 +169,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
+          inputNodesById: this.inputNodesById,
         })
       ) {
         family.push(portPoint)
