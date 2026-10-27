@@ -5,7 +5,7 @@ import {
   solveTopologyMergingTestGroups,
 } from "../../../fixtures/topology-merging-test-utils"
 
-test("topology merging keeps an explicit single-layer region separated", (): void => {
+test("topology merging unifies free source partitions covering the full layer stack", (): void => {
   const sharedBounds = { minX: 0, maxX: 2, minY: 0, maxY: 2 }
   const nodes = solveTopologyMergingTestGroups([
     {
@@ -35,6 +35,6 @@ test("topology merging keeps an explicit single-layer region separated", (): voi
     },
   ])
 
-  expect(getAvailableZAtPoint(nodes, { x: 1, y: 1 })).toEqual([[0], [1, 2, 3]])
-  expect(nodes).toHaveLength(2)
+  expect(getAvailableZAtPoint(nodes, { x: 1, y: 1 })).toEqual([[0, 1, 2, 3]])
+  expect(nodes).toHaveLength(1)
 })

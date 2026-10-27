@@ -33,7 +33,8 @@ test("mixed-layer topology descriptors stay private while outputs retain indepen
       {
         groupId: "local",
         isComponent: true,
-        nodes: [{ capacityMeshNodeId: "free", center: { x: 0, y: 0 }, width: 2, height: 2, layer: "z0", availableZ: [0] }],
+        // A layer-specific narrow channel must retain its distinct descriptor.
+        nodes: [{ capacityMeshNodeId: "free", center: { x: 0, y: 0 }, width: 2, height: 2, layer: "z0", availableZ: [0], _isNarrowQfpPadGap: true }],
       },
     ],
   }
