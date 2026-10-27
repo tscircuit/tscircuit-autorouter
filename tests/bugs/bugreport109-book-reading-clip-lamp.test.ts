@@ -46,5 +46,7 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 }, 900_000)
