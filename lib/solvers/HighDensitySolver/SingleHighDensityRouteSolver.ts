@@ -171,7 +171,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     let numXCells = this.boundsSize.width / this.cellStep
     let numYCells = this.boundsSize.height / this.cellStep
 
-    while (numXCells * numYCells > bestRowOrColumnCount ** 2) {
+    // Port spacing does not describe narrow corridors between raw obstacles.
+    while (!this.physicalGuards && numXCells * numYCells > bestRowOrColumnCount ** 2) {
       if (this.cellStep * 2 > opts.minDistBetweenEnteringPoints) {
         break
       }
