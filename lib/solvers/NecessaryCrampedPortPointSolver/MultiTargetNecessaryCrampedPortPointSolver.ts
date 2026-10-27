@@ -249,7 +249,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        if (this.shouldRetainCrampedPort(portPoint)) {
           return [
             {
               ...portPoint,
@@ -302,9 +302,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     }
   }
 
-  private isMultilayerEscapePort(portPoint: SegmentPortPoint): boolean {
-    return portPoint.nodeIds.some(
-      (nodeId) => (this.nodeMap.get(nodeId)?.availableZ.length ?? 0) > 1,
+  private shouldRetainCrampedPort(portPoint: SegmentPortPoint): boolean {
+    const nodes = portPoint.nodeIds.map((nodeId) => this.nodeMap.get(nodeId)!)
+    // Subdividing free space must not remove adjacency between routing cells.
+    return (
+      nodes.some((node) => node.availableZ.length > 1) ||
+      nodes.every((node) => !node._containsTarget && !node._containsObstacle)
     )
   }
 
