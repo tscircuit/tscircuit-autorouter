@@ -6,7 +6,7 @@ import { areSingleTransitionPlanarRoutesClear, type SingleTransitionBoardContext
 
 type Task = { connectionName: string; start: PortPoint; end: PortPoint }
 
-/** Finite board-aware placement for one transition beside fixed planar tasks. */
+/** Finite board-aware routing for transition tasks and optional planar peers. */
 export class SingleTransitionWithPlanarRoutesSolver extends BaseSolver {
   solvedRoutes: HighDensityIntraNodeRoute[] = []
 
@@ -34,9 +34,9 @@ export class SingleTransitionWithPlanarRoutesSolver extends BaseSolver {
     }
     const transitions = tasks.filter((task) => task.start.z !== task.end.z)
     const planar = tasks.filter((task) => task.start.z === task.end.z)
-    if (!boardContext || transitions.length !== 1 || planar.length === 0) {
+    if (!boardContext || transitions.length === 0) {
       this.failed = true
-      this.error = "Requires board context, exactly one transition and at least one planar task"
+      this.error = "Requires board context and at least one transition task"
       return
     }
     const planarRoutes: HighDensityIntraNodeRoute[] = planar.map((task) => ({
@@ -49,26 +49,39 @@ export class SingleTransitionWithPlanarRoutesSolver extends BaseSolver {
       vias: [],
     }))
     const allPlanarRoutes = [...(boardContext.planarRoutes ?? []), ...planarRoutes]
-    if (!areSingleTransitionPlanarRoutesClear({ routes: allPlanarRoutes, context: boardContext, center: node.center })) {
+    const mandatoryPortPoints = [...(boardContext.mandatoryPortPoints ?? []), ...node.portPoints]
+    if (!areSingleTransitionPlanarRoutesClear({ routes: allPlanarRoutes, context: { ...boardContext, mandatoryPortPoints }, center: node.center })) {
       this.failed = true
       this.error = "Planar tasks do not have clear direct copper"
       return
     }
-    const transition = transitions[0]!
-    const solver = new SingleTransitionIntraNodeSolver({
-      nodeWithPortPoints: { ...node, portPoints: [transition.start, transition.end], portPointsInPairs: [[transition.start, transition.end]] },
-      viaDiameter: params.viaDiameter,
-      traceThickness: params.traceThickness,
-      boardContext: { ...boardContext, planarRoutes: allPlanarRoutes },
-    })
-    if (!solver.solved || solver.failed) {
-      this.failed = true
-      this.error = solver.error ?? "No certified transition beside the planar tasks"
+    // Future tasks reserve only their actual endpoint copper, never guessed
+    // straight chords. Completed tasks contribute their full wires and vias.
+    const orders = transitions.length === 1 ? [transitions] : [transitions, [...transitions].reverse()]
+    for (const order of orders) {
+      const completed = new Map<Task, HighDensityIntraNodeRoute[]>()
+      for (const transition of order) {
+        const solver = new SingleTransitionIntraNodeSolver({
+          nodeWithPortPoints: { ...node, portPoints: [transition.start, transition.end], portPointsInPairs: [[transition.start, transition.end]] },
+          viaDiameter: params.viaDiameter,
+          traceThickness: params.traceThickness,
+          boardContext: { ...boardContext, planarRoutes: allPlanarRoutes, mandatoryPortPoints,
+            routedPeerRoutes: [...(boardContext.routedPeerRoutes ?? []), ...completed.values()].flat() },
+        })
+        if (!solver.solved || solver.failed) {
+          this.error = solver.error ?? "No certified finite transition placement"
+          break
+        }
+        completed.set(transition, solver.solvedRoutes.map((route) => ({
+          ...route, rootConnectionName: transition.start.rootConnectionName ?? transition.end.rootConnectionName,
+        })))
+      }
+      if (completed.size !== transitions.length) continue
+      this.solvedRoutes = [...planarRoutes, ...transitions.flatMap((task) => completed.get(task)!)]
+      this.error = null
+      this.solved = true
       return
     }
-    this.solvedRoutes = [...planarRoutes, ...solver.solvedRoutes.map((route) => ({
-      ...route, rootConnectionName: transition.start.rootConnectionName ?? transition.end.rootConnectionName,
-    }))]
-    this.solved = true
+    this.failed = true
   }
 }

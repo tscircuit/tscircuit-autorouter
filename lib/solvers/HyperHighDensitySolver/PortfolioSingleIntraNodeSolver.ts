@@ -604,6 +604,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       viaToPadClearance: params.viaToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToPadClearance: params.traceToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToHoleClearance: params.traceToHoleClearance ?? params.obstacleMargin ?? 0.15,
+      viaHoleDiameter: params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
       boardGeometry: params.boardGeometry, coordinateScale: params.priorityCoordinateScale ?? 1,
     }
   }
