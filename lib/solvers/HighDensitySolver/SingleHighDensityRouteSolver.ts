@@ -777,7 +777,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          // This edge is blocked; the point may be reached from another parent.
           continue
         }
 
