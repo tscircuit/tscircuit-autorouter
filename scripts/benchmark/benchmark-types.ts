@@ -75,6 +75,9 @@ export type TinyHypergraphBenchmarkMetrics = {
   speculativeRouteSearches?: number
   speculativeRouteExpansions?: number
   staleRouteSearches?: number
+  sharedScoreHits?: number
+  crossWorkerScoreHits?: number
+  sharedScoreMisses?: number
   parallelWorkerSearchMs?: number
   parallelWorkerSnapshotMs?: number
   parallelGraphSyncMs?: number
