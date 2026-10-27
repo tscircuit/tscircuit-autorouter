@@ -1,7 +1,7 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints, type PortPoint } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -30,6 +30,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  isPortPointPositionAllowed?: (point: PortPoint) => boolean
 }
 
 /**
@@ -136,6 +137,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (!sharedEdge) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    const isPositionAllowed = this.input.isPortPointPositionAllowed
+    if (isPositionAllowed) {
+      for (const point of familyRaw) {
+        if (!isPositionAllowed(point)) {
+          throw new Error(`Original port point ${point.portPointId} violates physical pad clearance`)
+        }
+      }
+    }
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
       sharedEdge,
       obstacles: this.input.obstacles,
@@ -176,10 +185,22 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
+    let redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
     })
+    if (isPositionAllowed) {
+      const inadmissibleLayers = new Set<number>()
+      for (const point of redistributed) {
+        if (!isPositionAllowed(point)) inadmissibleLayers.add(point.z)
+      }
+      if (inadmissibleLayers.size > 0) {
+        const originalById = new Map(family.map((point) => [point.portPointId, point]))
+        redistributed = redistributed.map((point) =>
+          inadmissibleLayers.has(point.z) ? originalById.get(point.portPointId)! : point,
+        )
+      }
+    }
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

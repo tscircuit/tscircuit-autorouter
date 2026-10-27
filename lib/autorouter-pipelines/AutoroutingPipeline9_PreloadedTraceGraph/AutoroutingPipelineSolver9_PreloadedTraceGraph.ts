@@ -13,7 +13,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { createPortReservationNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortReservationNetIds"
+import { createPortPointPositionValidator, createPortReservationNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortReservationNetIds"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -604,6 +604,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          isPortPointPositionAllowed: createPortPointPositionValidator({
+            obstacles: cms.originalSrj.obstacles,
+            connMap: cms.connMap,
+            traceWidth: cms.minTraceWidth,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            layerCount: cms.originalSrj.layerCount,
+          }),
         },
       ],
     ),
