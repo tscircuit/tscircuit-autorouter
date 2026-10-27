@@ -4,6 +4,7 @@ import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObsta
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 
 type ViaObstacleCollisionParams = {
   routes: HighDensityIntraNodeRoute[]
@@ -61,7 +62,8 @@ export const hasViaObstacleCollision = (
               Math.max(0, Math.abs(x) - obstacle.width / 2),
               Math.max(0, Math.abs(y) - obstacle.height / 2),
             )
-        if (distance + 1e-9 >= radius + params.viaToPadClearance) continue
+        const clearance = isOpaqueUnownedObstacle(obstacle) ? 0 : params.viaToPadClearance
+        if (distance + 1e-9 >= radius + clearance) continue
         if (!isObstacleConnectedToRoute(obstacle, route, params.connMap)) return true
       }
     }

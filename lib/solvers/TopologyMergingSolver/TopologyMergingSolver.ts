@@ -18,6 +18,7 @@ import {
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
   PreparedTopologyMergingNode,
+  TopologyMergingLayerTopology,
   TopologyMergingRegion,
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
@@ -39,6 +40,10 @@ export class TopologyMergingSolver extends BaseSolver {
   }
   private readonly xCoordinates: number[]
   private readonly atomicRegions: TopologyMergingRegion[] = []
+  private readonly layerTopologyByKey = new Map<
+    string,
+    TopologyMergingLayerTopology
+  >()
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
 
@@ -200,7 +205,8 @@ export class TopologyMergingSolver extends BaseSolver {
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
       })
-      for (const layerTopology of layerTopologies) {
+      for (const topology of layerTopologies) {
+        const layerTopology = this.internLayerTopology(topology)
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },
           availableZ: layerTopology.availableZ,
@@ -210,5 +216,17 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
+  }
+
+  private internLayerTopology(
+    topology: TopologyMergingLayerTopology,
+  ): TopologyMergingLayerTopology {
+    // The signature includes mode and ordered source keys, but not layers.
+    // These descriptors are only read after the layer builder returns.
+    const key = JSON.stringify([topology.topologySignature, topology.availableZ])
+    const existing = this.layerTopologyByKey.get(key)
+    if (existing) return existing
+    this.layerTopologyByKey.set(key, topology)
+    return topology
   }
 }
