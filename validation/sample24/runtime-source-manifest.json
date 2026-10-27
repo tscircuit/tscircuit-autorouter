@@ -1,9 +1,9 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "234d5e9cb3faee23ebaa77bdac20dff55b65924d",
-  "rootLibTree": "53128a5254f2cc2fc88b470d5f9fec43306b1c0e",
+  "rootSource": "f39b7a0a15aff5f714018b18b3d163f785f16026",
+  "rootLibTree": "399e3f5a4063f28b8f33b5246962190625d45021",
   "rootPackageBlob": "327eeecbab617b0de3d3631d85ceed28df54192a",
-  "localRuntimeReceiptSha256": "743921fa989dda11c0843b6d36a42e6362a9bd22ecb42c3d078b4c3b80ec96e1",
+  "localRuntimeReceiptSha256": "8539f339dd14deb828fa8336dcf847ffc2589e37486ae6f712d27aa02ab8fd49",
   "bunVersion": "1.4.3",
   "packages": [
     {
