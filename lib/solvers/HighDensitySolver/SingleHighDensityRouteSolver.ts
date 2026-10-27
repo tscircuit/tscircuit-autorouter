@@ -89,6 +89,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
   freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
+  private readonly gridPointKeys = new Map<string, number>()
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
 
@@ -104,7 +105,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   debugEnabled: boolean
 
-  initialNodeGridOffset: { x: number; y: number }
+  initialNodeGridOffset!: { x: number; y: number }
 
   constructor(opts: {
     connectionName: string
@@ -189,6 +190,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1
     this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
     this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
+    const initialNodePosition = {
+      x: Math.round(opts.A.x / (this.cellStep / 2)) * (this.cellStep / 2),
+      y: Math.round(opts.A.y / (this.cellStep / 2)) * (this.cellStep / 2),
+    }
+    this.initializeGridPhase(initialNodePosition)
 
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
@@ -209,18 +215,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.handleSimpleCases()
     }
 
-    const initialNodePosition = {
-      x: Math.round(opts.A.x / (this.cellStep / 2)) * (this.cellStep / 2),
-      y: Math.round(opts.A.y / (this.cellStep / 2)) * (this.cellStep / 2),
-    }
-    this.initialNodeGridOffset = {
-      x:
-        initialNodePosition.x -
-        Math.round(opts.A.x / this.cellStep) * this.cellStep,
-      y:
-        initialNodePosition.y -
-        Math.round(opts.A.y / this.cellStep) * this.cellStep,
-    }
     const initialParent = {
       ...opts.A,
       z: opts.A.z ?? 0,
@@ -247,9 +241,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
         this.doesPathToParentIntersectObstacle(roundedInitialNode))
 
+    if (shouldFallbackToExactStart) this.initializeGridPhase(opts.A)
     this.candidates = new SingleRouteCandidatePriorityQueue([
       shouldFallbackToExactStart ? initialParent : roundedInitialNode,
     ])
+  }
+
+  private initializeGridPhase(seed: { x: number; y: number }): void {
+    this.initialNodeGridOffset = {
+      x: seed.x - Math.round(seed.x / this.cellStep) * this.cellStep,
+      y: seed.y - Math.round(seed.y / this.cellStep) * this.cellStep,
+    }
   }
 
   handleSimpleCases() {
@@ -710,10 +712,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     node.f = this.computeF(node.g, node.h)
   }
 
-  getNodeKey(node: Node) {
-    const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
-    const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-    return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+  getNodeKey(node: Node): number {
+    // Rounded cells can alias half-step, exact-start, and clamped-boundary phases.
+    const coordinates = `${node.x},${node.y},${node.z}`
+    let key = this.gridPointKeys.get(coordinates)
+    if (key === undefined) {
+      key = this.gridPointKeys.size + 1
+      this.gridPointKeys.set(coordinates, key)
+    }
+    return key
   }
 
   getNeighbors(node: Node) {
@@ -913,12 +920,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
         key: currentNodeKey,
-        x:
-          Math.round(currentNode.x / this.cellStep) * this.cellStep +
-          this.initialNodeGridOffset.x,
-        y:
-          Math.round(currentNode.y / this.cellStep) * this.cellStep +
-          this.initialNodeGridOffset.y,
+        x: currentNode.x,
+        y: currentNode.y,
         z: currentNode.z,
       })
     }
