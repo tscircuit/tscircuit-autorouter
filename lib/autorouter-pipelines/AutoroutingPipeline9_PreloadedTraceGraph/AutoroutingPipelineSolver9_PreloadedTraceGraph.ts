@@ -22,6 +22,7 @@ import {
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
+import { createPortPointFamilyPositionGuard } from "lib/solvers/UniformPortDistributionSolver/createPortPointFamilyPositionGuard"
 import { getColorMap } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
@@ -598,13 +599,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
+      (cms) => {
+        const output = cms.portPointPathingSolver?.getOutput()
+        const nodes = output?.nodesWithPortPoints ?? []
+        return [{
+          nodeWithPortPoints: nodes,
+          inputNodesWithPortPoints: output?.inputNodeWithPortPoints ?? [],
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -618,8 +618,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
             layerCount: cms.originalSrj.layerCount,
           }),
-        },
-      ],
+          admitPortPointFamily: createPortPointFamilyPositionGuard({
+            nodes,
+            connMap: cms.connMap,
+            layerCount: cms.originalSrj.layerCount,
+            minimumCenterDistance: cms.minTraceWidth + (cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1),
+          }),
+        }]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
