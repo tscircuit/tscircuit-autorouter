@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { getMuseViaClearanceSnapshot } from "../fixtures/get-muse-via-clearance-snapshot"
@@ -35,6 +36,18 @@ test("Pipeline9 honors the Muse e-paper different-net via copper clearance", asy
     cacheProvider: null,
     effort: 1,
   })
+  // Keep the captured global topology to exercise the reported physical via
+  // pair. A different global route can eliminate this pair altogether.
+  solver.solveUntilPhase("portPointPathingSolver")
+  solver.step()
+  const originalPathing = solver.portPointPathingSolver
+  if (!originalPathing) throw new Error("Port-point stage was not initialized")
+  const fixedPathing = new TinyHypergraphPortPointPathingSolver({
+    ...originalPathing.getConstructorParams()[0],
+    useDeterministicRace: false,
+  })
+  solver.portPointPathingSolver = fixedPathing
+  solver.activeSubSolver = fixedPathing
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
