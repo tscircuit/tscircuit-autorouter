@@ -1,5 +1,7 @@
 # Parallel port-point pathing
 
+The requested Blacksmith dataset18 comparison measures **1.793x** faster port-point pathing at four threads, below the **2x** target. All 16 boards solve and pass DRC; every board records three acknowledged helpers alongside the caller.
+
 Pipeline9 uses the accelerated tiny-hypergraph backend with verified four-worker
 runtimes. Set `parallelPortPointPathing: false` to select the existing JavaScript
 implementation. Synchronous solving and runtimes without the verified worker
@@ -149,9 +151,29 @@ Local confirmation was requested after Blacksmith access was unavailable. The
 measurement environment uses Bun 1.4.4 with a four-CPU quota. Repository policy
 otherwise directs benchmark runs to Blacksmith.
 
-## Results
+## Blacksmith result against current main
 
-The overall target is met against the existing JavaScript phase: **2.072x** over all 16 boards and three repetitions. All 48 outcomes, output hashes, and logical iteration counts match.
+Command: `/benchmark --dataset 18 --threads 4`. [Workflow and raw artifact](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40452787870), [full report](https://github.com/tscircuit/tscircuit-autorouter/pull/3306#issuecomment-6434155173), and [extracted metrics](benchmarks/parallel-port-point-pathing-blacksmith.json).
+
+Both revisions ran sequentially on one 8-vCPU ARM runner with Bun 1.4.2. Base is `fb6c0f5`, implementation is `0f4e2d5`, and tiny-hypergraph is pinned to `fd1b884`. Subsequent autorouter changes only adjust test setup and record these results.
+
+| Metric across all 16 boards | Base 4T | PR 4T |
+| --- | ---: | ---: |
+| Port-point stage total | 145.594s | 81.198s |
+| Total routing elapsed time | 571.068s | 487.441s |
+| Completed / DRC passed | 16 / 16 | 16 / 16 |
+| Timeouts / DRC issues | 0 / 0 | 0 / 0 |
+| Peak resident memory P90 | 2613.8 MiB | 5785.9 MiB |
+
+The port-point phase improves **1.793x (44.2% less time)**. The 2x threshold is 72.797s; the observed total is 8.400s above it. Overall elapsed routing improves **1.172x (14.6% less time)**. Memory usage increases substantially. Phase iteration counts match on every board; outcome and via-count summaries show no regressions.
+
+Worker use is confirmed in the actual Blacksmith artifact: all 16 boards report `parallelRouteWorkers: 3`, after every helper acknowledges startup. The run performs 10,125 native route searches. Helpers build 1,022,329 owner-graph rows, 11,737,555 geometry pairs, 283,113 region cost tables and 192,605 port masks; 382 connectivity checks avoid 1,096,375 physical A* expansions while retaining logical budgets.
+
+These are unadjusted benchmark stage totals. The PR defers initialization so worker startup can overlap it; the existing pipeline stage clock starts after construction, so the PR includes initialization work that the base stage clock excludes. The inline stage totals are 141.776s (base) and 151.717s (PR). The four-thread measurement combines compiled execution and helper work; it does not establish 1.793x scaling over the compiled one-thread backend.
+
+## Historical local results
+
+Against the earlier JavaScript phase, the local result was: **2.072x** over all 16 boards and three repetitions. All 48 outcomes, output hashes, and logical iteration counts match.
 
 | Comparison | Reference total | 4T total | Speedup | Exact outputs |
 | --- | ---: | ---: | ---: | ---: |
@@ -204,5 +226,4 @@ cache versions, completion budgets, shared-runtime leases, and error propagation
 All 170 tiny-hypergraph tests pass; subprocess tests require Bun on `PATH`.
 Bun and Node worker bundles and autorouter declarations build successfully.
 Integration tests compare complete Pipeline9 outputs with both transports, and
-actual Node 24 full-pipeline and parallel-connectivity smoke tests also pass. Full-dataset validation compares
-the port-point phase outputs; the small integration fixture covers later stages.
+actual Node 24 full-pipeline and parallel-connectivity smoke tests also pass. All nine autorouter CI test shards pass. The historical local full-dataset checks compare exact port-point outputs; the Blacksmith comparison runs the entire pipeline on all 16 boards, checks outcomes and DRC, and records matching port-point iteration counts.
