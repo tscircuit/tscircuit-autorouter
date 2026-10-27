@@ -1,3 +1,4 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Bounds } from "@tscircuit/math-utils"
 import { MHPoint, PolyLine } from "./types1" // Assuming types1 has the necessary definitions
 
@@ -101,6 +102,7 @@ interface DcelFace {
 export function detectMultiConnectionClosedFacesWithoutVias(
   polyLines: PolyLine[],
   bounds: Bounds,
+  connMap?: ConnectivityMap,
 ): boolean {
   const allSegments: Segment[] = []
   const viaPoints = new Map<
@@ -433,11 +435,19 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       // Ensure face is valid and internal
       // Check 1: Does the face involve multiple non-boundary connections?
       // Note: All edges in a valid face should be on the same layer due to the intersection logic.
-      const actualConnectionNames = [...faceConnectionNames].filter(
-        (name) => name !== null,
-      )
+      const faceNetNames = new Set<string>()
+      const unmappedConnectionNames = new Set<string>()
+      for (const name of faceConnectionNames) {
+        if (name === null) continue
+        const connectedNetName = connMap?.getNetConnectedToId(name)
+        if (connectedNetName === undefined) {
+          unmappedConnectionNames.add(name)
+        } else {
+          faceNetNames.add(connectedNetName)
+        }
+      }
 
-      if (actualConnectionNames.length > 1) {
+      if (faceNetNames.size + unmappedConnectionNames.size > 1) {
         // Check 2: Is ANY vertex on this face's boundary a via?
         let viaFoundOnFace = false
         for (const vertex of faceVertices) {
@@ -451,7 +461,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         if (!viaFoundOnFace) {
           // This configuration is invalid because multiple nets form a closed loop
           // on the same layer without a via allowing a layer change.
-          // console.log(`Detected multi-connection face (ID: ${face.id}, Connections: ${actualConnectionNames.join(', ')}) on layer ${faceEdges[0]?.layer} without any vias on its boundary.`)
+          // console.log(`Detected multi-connection face (ID: ${face.id}, Connections: ${[...faceNetNames].join(', ')}) on layer ${faceEdges[0]?.layer} without any vias on its boundary.`)
           return true // Found the problematic configuration
         }
       }

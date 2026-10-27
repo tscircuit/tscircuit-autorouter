@@ -334,6 +334,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Points move only after all forces have been accumulated.
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
+        // Connected copper may overlap; drill spacing still applies below.
+        const connected =
+          this.connMap?.areIdsConnected(
+            polyLines[i].connectionName,
+            polyLines[j].connectionName,
+          ) === true
         const { segments: segments1, vias: vias1 } = geometry[i]!
         const { segments: segments2, vias: vias2 } = geometry[j]!
 
@@ -342,7 +348,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         // a) Segment <-> Segment
         for (const seg1 of segments1) {
           for (const seg2 of segments2) {
-            if (seg1.layer === seg2.layer) {
+            if (!connected && seg1.layer === seg2.layer) {
               // endpoints of s1 against s2
               endpointForce(seg1.p1, seg1.p1Idx, seg2, i, seg1.p1Force)
               endpointForce(seg1.p2, seg1.p2Idx, seg2, i, seg1.p2Force)
@@ -356,7 +362,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         // b) Via <-> Segment
         for (const via1 of vias1) {
           for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
+            if (!connected && via1.layers.includes(seg2.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via1.point,
                 seg2.p1,
@@ -414,7 +420,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         }
         for (const via2 of vias2) {
           for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
+            if (!connected && via2.layers.includes(seg1.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via2.point,
                 seg1.p1,
@@ -656,20 +662,26 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // Dampen force? Add friction? (Optional) - Applied before clamping/boundary force
 
-        // Check if the *total applied force* (including boundary) is significant
-        if (
+        // Boundary projection can move a regular point without collision force.
+        const negligibleForce =
           Math.abs(currentForceX) < EPSILON &&
           Math.abs(currentForceY) < EPSILON
+        if (
+          negligibleForce &&
+          Math.abs(mPoint.x - newX) <= EPSILON &&
+          Math.abs(mPoint.y - newY) <= EPSILON
         ) {
-          continue // No significant force applied in this step, skip update
+          continue // Neither collision force nor boundary projection moves it
         }
 
         // Limit maximum movement per step? (Optional)
         // const maxMove = this.cellSize;
-        const forceMag = Math.sqrt(
-          currentForceX * currentForceX + currentForceY * currentForceY,
-        )
-        magForceApplied += forceMag
+        if (!negligibleForce) {
+          const forceMag = Math.sqrt(
+            currentForceX * currentForceX + currentForceY * currentForceY,
+          )
+          magForceApplied += forceMag
+        }
         // Update position if moved significantly from original position
         // Use the calculated (and potentially clamped/boundary-forced) newX, newY
         if (

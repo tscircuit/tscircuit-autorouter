@@ -16,7 +16,6 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
 import { HighDensityHyperParameters } from "../HighDensityHyperParameters"
 import { computeViaCountVariants } from "./computeViaCountVariants"
 import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWithViaPositions"
@@ -49,6 +48,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   MAX_CANDIDATES = 50e3
 
   viaDiameter: number = 0.3
+  private readonly viaHoleDiameter: number
+  private readonly minimumHoleGap: number
   obstacleMargin: number = 0.1
   traceWidth: number = 0.15
   availableZ: number[] = []
@@ -70,6 +71,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
     viaDiameter?: number
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
   }) {
     super()
     this.MAX_ITERATIONS = 10e3
@@ -83,6 +86,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.BOUNDARY_PADDING = params.hyperParameters?.BOUNDARY_PADDING ?? 0.05
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
+    this.viaHoleDiameter = params.viaHoleDiameter ?? this.viaDiameter
+    this.minimumHoleGap = params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1
+    if (
+      !Number.isFinite(this.viaHoleDiameter) ||
+      this.viaHoleDiameter <= 0 ||
+      !Number.isFinite(this.minimumHoleGap) ||
+      this.minimumHoleGap < 0
+    ) {
+      throw new Error("Invalid polyline drill geometry")
+    }
 
     // TODO swap with more sophisticated grid in SingleHighDensityRouteSolver
     this.cellSize = this.nodeWithPortPoints.width / 1024
@@ -111,10 +124,21 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     ).size
     this.uniqueConnections = uniqueConnections
 
-    const { numSameLayerCrossings, numEntryExitLayerChanges } =
-      getIntraNodeCrossings(this.nodeWithPortPoints)
-
-    this.minViaCount = numSameLayerCrossings * 2 + numEntryExitLayerChanges
+    // Geometric crossings are an estimate, not an additive via lower bound:
+    // one layer excursion can pass several unrelated routes, and connected
+    // copper may cross without any excursion.
+    const firstLayerByConnection = new Map<string, number>()
+    const connectionsChangingLayer = new Set<string>()
+    for (const portPoint of this.nodeWithPortPoints.portPoints) {
+      if (!firstLayerByConnection.has(portPoint.connectionName)) {
+        firstLayerByConnection.set(portPoint.connectionName, portPoint.z)
+        continue
+      }
+      if (firstLayerByConnection.get(portPoint.connectionName) !== portPoint.z) {
+        connectionsChangingLayer.add(portPoint.connectionName)
+      }
+    }
+    this.minViaCount = connectionsChangingLayer.size
     this.maxViaCount = Math.min(
       Math.floor(areaInsideNode / areaPerVia),
       Math.ceil(uniqueConnections * 1.5),
@@ -128,7 +152,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
     if (
       this.minViaCount >
-      this.SEGMENTS_PER_POLYLINE * (uniqueConnections / 2)
+      this.SEGMENTS_PER_POLYLINE * uniqueConnections
     ) {
       this.failed = true
       this.error = `Not possible to solve problem with given SEGMENTS_PER_POLYLINE (${this.SEGMENTS_PER_POLYLINE}), atleast ${this.minViaCount} vias are required`
@@ -308,6 +332,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       this.SEGMENTS_PER_POLYLINE,
       this.maxViaCount,
       this.minViaCount,
+      this.connMap,
     )
 
     const possibleViaPositions = getPossibleInitialViaPositions({
@@ -367,7 +392,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         })
       }
       const hasClosedSameLayerFace =
-        detectMultiConnectionClosedFacesWithoutVias(polyLines, this.bounds)
+        detectMultiConnectionClosedFacesWithoutVias(
+          polyLines,
+          this.bounds,
+          this.connMap,
+        )
 
       if (hasClosedSameLayerFace) continue
 
@@ -470,6 +499,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     // 2. Calculate forces between all pairs of polylines
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
+        // Connected copper may overlap; drill spacing still applies below.
+        const connected =
+          this.connMap?.areIdsConnected(
+            polyLines[i].connectionName,
+            polyLines[j].connectionName,
+          ) === true
         const polyLine1 = polyLines[i]
         const polyLine2 = polyLines[j]
 
@@ -534,7 +569,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         // a) Segment <-> Segment
         for (const seg1 of segments1) {
           for (const seg2 of segments2) {
-            if (seg1.layer === seg2.layer) {
+            if (!connected && seg1.layer === seg2.layer) {
               const minDist = segmentToSegmentMinDistance(
                 seg1.p1,
                 seg1.p2,
@@ -668,7 +703,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         // b) Via <-> Segment
         for (const via1 of vias1) {
           for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
+            if (!connected && via1.layers.includes(seg2.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via1.point,
                 seg2.p1,
@@ -734,7 +769,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         }
         for (const via2 of vias2) {
           for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
+            if (!connected && via2.layers.includes(seg1.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via2.point,
                 seg1.p1,
@@ -1015,9 +1050,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
         if (
           Math.abs(netForce.fx) < EPSILON &&
-          Math.abs(netForce.fy) < EPSILON
+          Math.abs(netForce.fy) < EPSILON &&
+          Math.abs(mPoint.x - newX) <= EPSILON &&
+          Math.abs(mPoint.y - newY) <= EPSILON
         ) {
-          continue // No significant net force, skip update
+          continue // Neither collision force nor boundary projection moves it
         }
 
         // Limit maximum movement per step? (Optional)
@@ -1061,6 +1098,34 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     return [newNeighbor]
   }
 
+  private areViaDrillsSeparated(polyLines: PolyLine2[]): boolean {
+    const vias = polyLines.flatMap((polyLine) =>
+      [polyLine.start, ...polyLine.mPoints, polyLine.end]
+        .filter((point) => point.z1 !== point.z2)
+        .map((point) => ({ point, connectionName: polyLine.connectionName })),
+    )
+    for (let left = 0; left < vias.length; left++) {
+      for (let right = left + 1; right < vias.length; right++) {
+        const a = vias[left]!
+        const b = vias[right]!
+        const centerDistance = Math.hypot(
+          a.point.x - b.point.x,
+          a.point.y - b.point.y,
+        )
+        const connected =
+          a.connectionName === b.connectionName ||
+          this.connMap?.areIdsConnected(a.connectionName, b.connectionName) === true
+        // An identical same-net site reuses one drill. Distinct sites obey
+        // drill clearance even when their connected copper annuli overlap.
+        if (centerDistance === 0 && connected) continue
+        if (centerDistance < this.viaHoleDiameter + this.minimumHoleGap) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+
   checkIfSolved(candidate: Pick<Candidate, "polyLines" | "minGaps">) {
     const minGapsToOtherConnectionsValid = candidate.minGaps.every(
       (minGap) => minGap >= this.obstacleMargin,
@@ -1075,7 +1140,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       })
     })
 
-    return minGapsToOtherConnectionsValid && allPointsWithinBounds
+    return (
+      minGapsToOtherConnectionsValid &&
+      allPointsWithinBounds &&
+      this.areViaDrillsSeparated(candidate.polyLines)
+    )
   }
 
   // ------------------------------------------------------------------
@@ -1087,7 +1156,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (
       minGapTarget === undefined ||
       this.lastCandidate === null ||
-      this.lastCandidate.minGaps.length === 0
+      this.lastCandidate.minGaps.length === 0 ||
+      !this.areViaDrillsSeparated(this.lastCandidate.polyLines)
     )
       return
 
