@@ -1,0 +1,186 @@
+{
+  "provenance": {
+    "source": "OLIMEX A64-OLinuXino rev H",
+    "sourceCommit": "b48543c9674439c97a5bfa2024830f22a94d7a35",
+    "sourceBoardSha256": "3acf7af7d39d54ba87343845d78851b0245a6290841cb463c42c7e41696404f4",
+    "license": "CC-BY-SA-3.0-US",
+    "attribution": "Copyright OLIMEX Ltd.",
+    "sourceUrl": "https://github.com/OLIMEX/OLINUXINO/tree/b48543c9674439c97a5bfa2024830f22a94d7a35/HARDWARE/A64-OLinuXino",
+    "reduction": "Preserves both RAM pad geometries and the recorded DQ4 escape; cuts the inner1 copper at its existing (133.2,-85.4) vertex. Removes all other nets and pads. Does not move the remaining geometry or add PCB metadata."
+  },
+  "srj": {
+    "layerCount": 6,
+    "allowBlindAndBuriedVias": false,
+    "allowViaInPad": false,
+    "minTraceWidth": 0.1066,
+    "nominalTraceWidth": 0.127,
+    "minViaPadDiameter": 0.327,
+    "minViaHoleDiameter": 0.2,
+    "defaultObstacleMargin": 0.10668,
+    "bounds": {
+      "minX": 131.1,
+      "maxX": 133.8,
+      "minY": -86.3,
+      "maxY": -84.5
+    },
+    "obstacles": [
+      {
+        "obstacleId": "U2.E3",
+        "componentId": "U2",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 131.8,
+          "y": -85.4
+        },
+        "width": 0.4,
+        "height": 0.4,
+        "connectedTo": [
+          "/S0SDQ4",
+          "U2.E3"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U2",
+          "source_port_name": "E3"
+        },
+        "shape": "circle"
+      },
+      {
+        "obstacleId": "U2.D3",
+        "componentId": "U2",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 132.6,
+          "y": -85.4
+        },
+        "width": 0.4,
+        "height": 0.4,
+        "connectedTo": [
+          "/S0SDQM1",
+          "U2.D3"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U2",
+          "source_port_name": "D3"
+        },
+        "shape": "circle"
+      }
+    ],
+    "connections": [
+      {
+        "name": "/S0SDQ4",
+        "pointsToConnect": [
+          {
+            "x": 131.8,
+            "y": -85.4,
+            "pointId": "U2.E3",
+            "port_selector": "U2.E3",
+            "layer": "top"
+          },
+          {
+            "x": 133.2,
+            "y": -85.4,
+            "layer": "inner1",
+            "pointId": "cropped-inner1-end"
+          }
+        ],
+        "nominalTraceWidth": 0.127
+      }
+    ]
+  },
+  "trace": {
+    "type": "pcb_trace",
+    "pcb_trace_id": "/S0SDQ4_0",
+    "connection_name": "/S0SDQ4",
+    "connectsTo": [
+      "U2.E3",
+      "cropped-inner1-end"
+    ],
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 131.8,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.04993757802748,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.08,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.16,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.24,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.404,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "via",
+        "x": 132.404,
+        "y": -85.4,
+        "from_layer": "top",
+        "to_layer": "inner1",
+        "via_diameter": 0.327,
+        "via_hole_diameter": 0.2
+      },
+      {
+        "route_type": "wire",
+        "x": 132.404,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "inner1"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.72,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "inner1"
+      },
+      {
+        "route_type": "wire",
+        "x": 132.96,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "inner1"
+      },
+      {
+        "route_type": "wire",
+        "x": 133.2,
+        "y": -85.4,
+        "width": 0.1066,
+        "layer": "inner1"
+      }
+    ]
+  }
+}
