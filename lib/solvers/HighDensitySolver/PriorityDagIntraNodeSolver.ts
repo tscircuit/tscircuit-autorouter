@@ -7,6 +7,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import { SparsePhysicalSingleRouteSolver } from "./SparsePhysicalSingleRouteSolver"
 import { extendPriorityDag, type PriorityDagState } from "./priorityDagState"
 
 import {
@@ -21,6 +22,7 @@ type Witness = {
 type State = PriorityDagState<Witness>
 type Params = ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
   priorityFamilySize: number
+  sparsePhysicalSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -40,6 +42,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     PriorityDagIntraNodeSolver.detailedWorkDiagnostics
   readonly priorityDiagnostics: Record<string, number> = {}
   readonly familySize: number
+  readonly sparsePhysicalSearch: boolean
   readonly coordinateScale: number
   private terminalRecorded = false
   private readonly aggregate?: Record<string, number>
@@ -75,6 +78,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   constructor(params: Params) {
     super(params)
     this.aggregate = params.priorityDiagnostics
+    this.sparsePhysicalSearch = params.sparsePhysicalSearch ?? false
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
       throw new Error("Invalid priority coordinate scale")
@@ -287,7 +291,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         const witness = state.witnesses[i]
         if (!witness)
           throw new Error("Missing higher-priority physical witness")
-        if (this.owner[i] !== this.owner[task])
+        if (this.sparsePhysicalSearch || this.owner[i] !== this.owner[task])
           obstacleRoutes.push(witness.route)
       } else if (i !== task) futureConnections.push(this.tasks[i])
     }
@@ -308,7 +312,6 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
-      useFuturePointCertificates: this.useFuturePointCertificates,
     }
   }
 
@@ -336,6 +339,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       )
     this.currentTask = task
     if (
+      !this.sparsePhysicalSearch &&
       opts.A.x === opts.B.x &&
       opts.A.y === opts.B.y &&
       opts.A.z !== opts.B.z
@@ -362,8 +366,18 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     // As in native Intra, a rejected endpoint-via test continues to the SAME
     // native Single search. Both constructions and the failed check are paid.
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
-    this.activeSubSolver = new Native(opts)
-    this.record("priorityNativeSearches")
+    this.activeSubSolver = this.sparsePhysicalSearch
+      ? new SparsePhysicalSingleRouteSolver({
+          ...opts,
+          ...this.board,
+          viaHoleDiameter: this.viaHoleDiameter,
+          minViaHoleEdgeToViaHoleEdgeClearance: this.minimumHoleGap,
+          onWork: (count): void => this.charge("prioritySparseWork", count),
+        })
+      : new Native(opts)
+    this.record(
+      this.sparsePhysicalSearch ? "prioritySparseSearches" : "priorityNativeSearches",
+    )
   }
 
   private storeRoute(

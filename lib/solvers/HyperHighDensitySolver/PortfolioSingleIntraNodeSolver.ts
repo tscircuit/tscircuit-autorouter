@@ -70,6 +70,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly rejectOverlappingTerminals: boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
+  private sparsePhysicalMode = false
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
@@ -198,6 +199,35 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
+    if (this.constructorParams.priorityDagSearch) {
+      this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
+        this.nodeWithPortPoints,
+      )
+      const groups = [
+        ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
+      ].map(
+        ([connectionName, points]): Parameters<
+          typeof decomposePriorityTasks
+        >[0][number] => ({
+          connectionName,
+          rootConnectionName:
+            this.precomputedIntraNodeRouteParams!.rootConnectionNameByConnectionName.get(
+              connectionName,
+            ),
+          points,
+        }),
+      )
+      if (decomposePriorityTasks(groups, (): void => {}) !== null) {
+        this.sparsePhysicalMode = true
+        // This mode owns the entire eligible grid-search suffix. It retains the
+        // cheap physical special cases and replaces Native/A01/A03/A13 work.
+        return [
+          ["throughObstacle"],
+          ["singleLayerNoDifferentRootIntersections"],
+          ["sparsePhysical"],
+        ]
+      }
+    }
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
@@ -248,6 +278,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
     }
     return [
+      {
+        name: "sparsePhysical",
+        possibleValues: [
+          { SPARSE_PHYSICAL_SEARCH: true, PRIORITY_DAG_FAMILY_SIZE: 6 },
+        ],
+      },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -478,7 +514,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private expandAdaptiveSearch() {
-    if (this.adaptiveSearchExpanded) return
+    if (this.adaptiveSearchExpanded || this.sparsePhysicalMode) return
 
     this.adaptiveSearchExpanded = true
     for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
@@ -500,7 +536,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private shouldExpandPortfolio(): boolean {
-    if (this.adaptiveSearchExpanded) return false
+    if (this.adaptiveSearchExpanded || this.sparsePhysicalMode) return false
 
     const expansionWorkBudget = this.dynamicExpansionWorkBudget
     this.stats.dynamicExpansionWorkBudget = expansionWorkBudget
@@ -720,6 +756,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         ...this.constructorParams,
         hyperParameters,
         priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,
+        sparsePhysicalSearch: hyperParameters.SPARSE_PHYSICAL_SEARCH === true,
         precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
       })
     }
