@@ -7,6 +7,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
+import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 
 type Point = { x: number; y: number }
 export type SingleTransitionBoardContext = {
@@ -29,7 +30,7 @@ type Input = {
   traceThickness: number
   context: SingleTransitionBoardContext
 }
-type PreparedObstacle = { obstacle: Obstacle; layers: number[]; cosine: number; sine: number }
+type PreparedObstacle = { obstacle: Obstacle; layers: number[]; cosine: number; sine: number; viaMargin: number; traceMargin: number }
 const EPSILON = 1e-9
 
 const toLocal = (point: Point, prepared: PreparedObstacle): Point => {
@@ -72,13 +73,14 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       const cosine = Math.cos(angle)
       const sine = Math.sin(angle)
       const layers = obstacle.zLayers ?? obstacle.__zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, context.layerCount))
-      return { obstacle, cosine, sine, layers }
+      const opaque = isOpaqueUnownedObstacle(obstacle)
+      return { obstacle, cosine, sine, layers,
+        viaMargin: params.viaDiameter / 2 + (opaque ? 0 : context.viaToPadClearance),
+        traceMargin: params.traceThickness / 2 + (opaque ? 0 : context.traceToPadClearance) }
     })
   const minZ = context.allowBlindAndBuriedVias ? Math.min(params.start.z!, params.end.z!) : 0
   const maxZ = context.allowBlindAndBuriedVias ? Math.max(params.start.z!, params.end.z!) : context.layerCount - 1
   const viaRadius = params.viaDiameter / 2, traceRadius = params.traceThickness / 2
-  const viaMargin = viaRadius + context.viaToPadClearance
-  const traceMargin = traceRadius + context.traceToPadClearance
   const board = context.boardGeometry
   const boardClear = (via: Point): boolean => {
     if (!board) return true
@@ -105,9 +107,9 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   const blockers = (via: Point): PreparedObstacle[] => {
     const result: PreparedObstacle[] = []
     for (const prepared of foreign) {
-      const blockedVia = prepared.layers.some((z) => z >= minZ && z <= maxZ) && obstacleDistance(via, via, prepared) + EPSILON < viaMargin
-      const blockedStartWire = prepared.layers.includes(params.start.z!) && obstacleDistance(start, via, prepared) + EPSILON < traceMargin
-      const blockedEndWire = prepared.layers.includes(params.end.z!) && obstacleDistance(end, via, prepared) + EPSILON < traceMargin
+      const blockedVia = prepared.layers.some((z) => z >= minZ && z <= maxZ) && obstacleDistance(via, via, prepared) + EPSILON < prepared.viaMargin
+      const blockedStartWire = prepared.layers.includes(params.start.z!) && obstacleDistance(start, via, prepared) + EPSILON < prepared.traceMargin
+      const blockedEndWire = prepared.layers.includes(params.end.z!) && obstacleDistance(end, via, prepared) + EPSILON < prepared.traceMargin
       if (blockedVia || blockedStartWire || blockedEndWire) result.push(prepared)
     }
     return result
@@ -117,8 +119,8 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   const candidates = new Map<string, Point>()
   for (const prepared of blocked) {
     const obstacle = prepared.obstacle
-    const halfX = obstacle.width / 2 + viaMargin + 1e-6
-    const halfY = obstacle.height / 2 + viaMargin + 1e-6
+    const halfX = obstacle.width / 2 + prepared.viaMargin + 1e-6
+    const halfY = obstacle.height / 2 + prepared.viaMargin + 1e-6
     const localCandidates: Point[] = []
     for (const point of [nominal, start, end]) {
       const local = toLocal(point, prepared)

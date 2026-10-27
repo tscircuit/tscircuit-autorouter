@@ -21,7 +21,7 @@ test("constructive transition preserves valid nominal output and checks wires, o
 
   const node: NodeWithPortPoints = { capacityMeshNodeId: "wire-control", center: { x: 2, y: 0 }, width: 4, height: 2,
     availableZ: [0, 4], portPoints: [{ connectionName: "A", x: 0, y: 0, z: 0 }, { connectionName: "A", x: 4, y: 0, z: 4 }] }
-  const wireBlocker = { type: "rect" as const, center: { x: 1, y: 0 }, width: 0.2, height: 0.2, layers: ["top"], connectedTo: [] }
+  const wireBlocker = { type: "rect" as const, center: { x: 1, y: 0 }, width: 0.2, height: 0.2, layers: ["top"], connectedTo: ["foreign-pad"] }
   const wire = new SingleTransitionIntraNodeSolver({ nodeWithPortPoints: node, viaDiameter: 0.3, traceThickness: 0.1,
     boardContext: { ...context, boardGeometry: undefined, obstacles: [wireBlocker] } })
   expect(wire.solved).toBe(true)
