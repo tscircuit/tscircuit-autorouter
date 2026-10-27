@@ -11,7 +11,7 @@ import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import { queryMandatoryPortPointIndex, type MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
-import { areCopperRoutesOnSameNet as sameElectricalNet } from "./completedCopperWorldIndex"
+import { areRoutesClearOfCompletedCopper, queryCompletedCopperWorldIndex, type RoutedPeerWorldIndex, areCopperRoutesOnSameNet as sameElectricalNet } from "./completedCopperWorldIndex"
 
 type Point = { x: number; y: number }
 export type SingleTransitionBoardContext = {
@@ -27,6 +27,7 @@ export type SingleTransitionBoardContext = {
   /** Complete planar copper that a new through barrel and wire legs must clear. */
   planarRoutes?: readonly HighDensityIntraNodeRoute[]
   routedPeerRoutes?: readonly HighDensityIntraNodeRoute[]
+  routedPeerWorldIndex?: RoutedPeerWorldIndex
   mandatoryPortPoints?: readonly PortPoint[]
   /** All cohort endpoints in WORLD coordinates, also during grow/shrink. */
   mandatoryPortPointIndex?: MandatoryPortPointIndex
@@ -163,7 +164,8 @@ export const areSingleTransitionPlanarRoutesClear = (params: {
       }
     }
   }
-  return true
+  return !context.routedPeerWorldIndex || areRoutesClearOfCompletedCopper({ routes,
+    routedPeerWorldIndex: context.routedPeerWorldIndex, connMap: context.connMap, center, coordinateScale: scale })
 }
 
 const toLocal = (point: Point, prepared: PreparedObstacle): Point => {
@@ -325,6 +327,12 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
     }
     for (const point of terminals) if (!terminalClear(via, point)) return false
     for (const point of indexedTerminals(via)) if (!terminalClear(via, point)) return false
+    if (context.routedPeerWorldIndex && !areRoutesClearOfCompletedCopper({
+      routes: [{ ...identity, traceThickness: params.traceThickness, viaDiameter: params.viaDiameter,
+        vias: [via], route: [{ ...start, z: params.start.z }, { ...via, z: params.start.z },
+          { ...via, z: params.end.z }, { ...end, z: params.end.z }] }],
+      routedPeerWorldIndex: context.routedPeerWorldIndex, connMap: context.connMap,
+    })) return false
     return true
   }
   const blocked = blockers(nominal)
@@ -349,6 +357,24 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       const world = { x: obstacle.center.x + point.x * prepared.cosine - point.y * prepared.sine,
         y: obstacle.center.y + point.x * prepared.sine + point.y * prepared.cosine }
       candidates.set(`${world.x},${world.y}`, world)
+    }
+  }
+  if (context.routedPeerWorldIndex) {
+    // Ledger features are already WORLD copper, including geometry along
+    // either proposed leg outside the original cell. Never unscale them again.
+    const points = [nominal, start, end, ...candidates.values()]
+    const traceClearance = Math.max(context.traceToPadClearance, context.routedPeerWorldIndex.traceClearance)
+    const margin = Math.max(viaRadius + Math.max(.1, traceClearance), traceRadius + traceClearance,
+      (context.viaHoleDiameter ?? params.viaDiameter) / 2 + context.routedPeerWorldIndex.minViaHoleEdgeToViaHoleEdgeClearance)
+    const bounds = { minX: Math.min(...points.map((p) => p.x)) - margin,
+      maxX: Math.max(...points.map((p) => p.x)) + margin,
+      minY: Math.min(...points.map((p) => p.y)) - margin,
+      maxY: Math.max(...points.map((p) => p.y)) + margin }
+    for (const feature of queryCompletedCopperWorldIndex(context.routedPeerWorldIndex, bounds)) {
+      if (sameElectricalNet(identity, feature.route, context.connMap)) continue
+      if (feature.kind === "wire") peers.push({ start: feature.start, end: feature.end, z: feature.z, radius: feature.width / 2 })
+      else peerVias.push({ center: feature.center, minZ: feature.minZ, maxZ: feature.maxZ,
+        radius: feature.diameter / 2, holeRadius: feature.holeDiameter / 2 })
     }
   }
   for (const peer of peers) {
