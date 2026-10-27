@@ -24,6 +24,7 @@ import {
 } from "./benchmark-stage-timing"
 import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
 import { createSynchronousProgressStep } from "./synchronous-step-progress"
+import { captureFailedHdrInput } from "./capture-failed-hdr"
 
 type SubSolverInstance = {
   progress?: number
@@ -33,6 +34,7 @@ type SubSolverInstance = {
 }
 
 type HighDensityBenchmarkSource = {
+  params?: unknown
   iterations?: number
   stats?: Record<string, unknown>
   waitForAllRemoteRequests?: () => Promise<void>
@@ -691,6 +693,14 @@ export const runTask = async (
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
+    if (process.env.BENCHMARK_FAILED_HDR_DIR) {
+      await captureFailedHdrInput({
+        directory: process.env.BENCHMARK_FAILED_HDR_DIR,
+        header: { solverName: task.solverName, scenarioName: task.scenarioName, sampleNumber: task.sampleNumber },
+        source: solver.highDensityRouteSolver,
+        error: failureInfo.error,
+      })
+    }
     return {
       solverName: task.solverName,
       scenarioName: task.scenarioName,

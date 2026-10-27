@@ -417,6 +417,7 @@ jobs:
       - name: Run benchmark
         env:
           BENCHMARK_FINAL_SRJ_DIR: ${{ inputs.sample24_source_bundle && 'benchmark-final-srj' || '' }}
+          BENCHMARK_FAILED_HDR_DIR: ${{ inputs.sample24_source_bundle && 'benchmark-failed-hdr-input' || '' }}
           SAMPLE24_SYNCHRONOUS_STEP_PROGRESS: ${{ inputs.sample24_source_bundle && '1' || '' }}
           BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
           BENCHMARK_CONCURRENCY: ${{ steps.parse.outputs.benchmark_concurrency }}
@@ -530,6 +531,14 @@ jobs:
         with:
           name: sample24-final-srj
           path: benchmark-final-srj
+          if-no-files-found: warn
+
+      - name: Preserve actual failed sample24 HDR constructor
+        if: always() && inputs.sample24_source_bundle == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample24-failed-hdr-input
+          path: benchmark-failed-hdr-input
           if-no-files-found: warn
 
       - name: Write raw benchmark execution metadata
