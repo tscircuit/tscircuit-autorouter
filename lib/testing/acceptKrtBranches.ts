@@ -10,6 +10,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { z } from "zod"
 import { evaluateRelaxedDrc } from "./evaluate-relaxed-drc"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "./getDrcErrors"
+import { getOctilinearKrtTerminalConnector } from "./getOctilinearKrtTerminalConnector"
 import type { KrtBranch } from "./prepareKrtBranches"
 
 const wireSchema = z.object({
@@ -135,12 +136,18 @@ export const acceptKrtBranches = ({
         )
       }
     }
-    // Keep the actual path and its layer transitions intact. These short
-    // connectors undo only the backend's documented nearest-cell rounding.
+    // Keep the actual path and its layer transitions intact. Short axis/45deg
+    // connectors undo nearest-cell rounding without introducing odd angles.
     const route = [
-      { ...first, x: branch.points[0].x, y: branch.points[0].y },
+      ...getOctilinearKrtTerminalConnector({
+        terminal: branch.points[0],
+        gridPoint: first,
+      }),
       ...trace.route,
-      { ...last, x: branch.points[1].x, y: branch.points[1].y },
+      ...getOctilinearKrtTerminalConnector({
+        terminal: branch.points[1],
+        gridPoint: last,
+      }).reverse(),
     ]
     traces.push({
       ...trace,
