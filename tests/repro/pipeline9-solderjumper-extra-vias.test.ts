@@ -63,7 +63,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing(
+test(
   "Pipeline9 keeps Core's original two-via solderjumper routing limit",
   (): void => {
     expect(viaCount).toBeLessThanOrEqual(2)

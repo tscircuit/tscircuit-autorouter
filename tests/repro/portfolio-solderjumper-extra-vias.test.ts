@@ -62,7 +62,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing(
+test(
   "the real solderjumper node keeps the previous four-via routing quality",
   (): void => {
     expect(viaCount).toBeLessThanOrEqual(4)
