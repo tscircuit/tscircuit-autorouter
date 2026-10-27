@@ -1970,7 +1970,7 @@ jobs:
       - name: Emit compact actual failed-node tasks and context without routing
         run: python3 controller/validation/sample24/audits/extract-failed-hdr-diagnostic.py --capture-dir producer-failed-hdr --proof-dir producer-proof --benchmark-dir producer-benchmark --binding failed-hdr-run-binding.json --config controller/validation/sample24/audits/failed-hdr-binding.json --out-dir diagnostic-results
       - name: Emit actual neighboring port families and physical geometry hashes without routing
-        run: python3 controller/validation/sample24/audits/extract-failed-hdr-neighbors.py --capture-dir producer-failed-hdr --out-dir diagnostic-results
+        run: python3 controller/validation/sample24/audits/extract-failed-hdr-neighbors.py --capture-dir producer-failed-hdr --out-dir diagnostic-results --config controller/validation/sample24/audits/failed-hdr-binding.json
       - name: Checkout exact producer source
         uses: actions/checkout@v4
         with:

@@ -49,20 +49,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-dir", required=True)
     parser.add_argument("--out-dir", required=True)
+    parser.add_argument("--config", required=True)
     args = parser.parse_args()
     paths = list(Path(args.capture_dir).rglob("*.hdr.json"))
     assert len(paths) == 1
     raw = paths[0].read_bytes()
     capture = json.loads(raw)
     assert capture["kind"] == "ACTUAL_FAILED_HDR_RETAINED_CONSTRUCTOR_NOT_ROUTED_BOARD"
-    assert capture["failedNodeIds"] == ["topology_merge_77893"]
+    config = json.loads(Path(args.config).read_text())
+    assert capture["failedNodeIds"] == config["failedNodeIds"]
     params = capture["constructorParams"]
     failed = capture["matchingFailedNodes"][0]
-    proposed = {"x": 284.1912777321, "y": 69.4778520614}
-    bounds = {"minX": min(failed["center"]["x"] - failed["width"] / 2, proposed["x"]) - 1,
-              "maxX": max(failed["center"]["x"] + failed["width"] / 2, proposed["x"]) + 1,
-              "minY": min(failed["center"]["y"] - failed["height"] / 2, proposed["y"]) - 1,
-              "maxY": max(failed["center"]["y"] + failed["height"] / 2, proposed["y"]) + 1}
+    proposed = config.get("proposedViaForNeighborhoodOnly", failed["center"])
+    margin = config["neighborPortMargin"]
+    assert 0 < margin <= 2
+    bounds = {"minX": min(failed["center"]["x"] - failed["width"] / 2, proposed["x"]) - margin,
+              "maxX": max(failed["center"]["x"] + failed["width"] / 2, proposed["x"]) + margin,
+              "minY": min(failed["center"]["y"] - failed["height"] / 2, proposed["y"]) - margin,
+              "maxY": max(failed["center"]["y"] + failed["height"] / 2, proposed["y"]) + margin}
     selected = []
     for node in params["nodePortPoints"]:
         if any(bounds["minX"] <= point["x"] <= bounds["maxX"]
@@ -76,8 +80,8 @@ def main():
     conn = params["connMap"]
     report = {"kind": "ACTUAL_FAILED_HDR_NEIGHBOR_AND_GEOMETRY_HASH_DIAGNOSTIC",
               "captureSha256": hashlib.sha256(raw).hexdigest(), "failedNodeId": failed["capacityMeshNodeId"],
-              "proposedViaForNeighborhoodOnly": proposed, "selectionBounds": bounds,
-              "selectionRule": "All actual constructor nodes with any actual port inside failed-node/proposed-via union expanded 1 mm; every selected node retains all of its ports and pairs.",
+              "referencePointForNeighborhoodOnly": proposed, "neighborPortMargin": margin, "selectionBounds": bounds,
+              "selectionRule": "All actual constructor nodes with any actual port inside failed-node/proposed-via union expanded by the explicitly configured margin; every selected node retains all of its ports and pairs.",
               "selectedNodeCount": len(selected), "selectedActualNodes": selected,
               "connectivityEncodingShape": shape(conn),
               "physicalGeometryExcludedKeys": sorted(NON_GEOMETRY),

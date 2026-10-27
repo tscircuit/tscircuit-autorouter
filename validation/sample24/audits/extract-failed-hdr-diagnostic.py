@@ -60,7 +60,7 @@ def main():
     capture, path = read_one(args.capture_dir, "*.hdr.json")
     assert capture["kind"] == "ACTUAL_FAILED_HDR_RETAINED_CONSTRUCTOR_NOT_ROUTED_BOARD"
     assert capture["sampleNumber"] == 24 and capture["scenarioName"] == "sample024"
-    assert capture["failedNodeIds"] == ["topology_merge_77893"]
+    assert capture["failedNodeIds"] == config["failedNodeIds"]
     params = capture["constructorParams"]
     nodes = [n for n in params["nodePortPoints"] if n["capacityMeshNodeId"] in capture["failedNodeIds"]]
     assert len(nodes) == 1 and nodes == capture["matchingFailedNodes"]
