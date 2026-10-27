@@ -1,8 +1,24 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import {
+  nativeSingleRouteMethods,
+  SingleHighDensityRouteSolver,
+} from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
+const FUTURE_POINT_CERTIFICATE_LIMIT = 2 ** 20
+// For the bounded IEEE binary64 domain, each distance/score error is <2^-26.
+// This margin also covers both rounded subtractions in the certificate test.
+const FUTURE_POINT_CERTIFICATE_MARGIN = 2 ** -20
+const originalCertificateSqrt = Math.sqrt
+
+type FuturePointAnchor = {
+  x: number
+  y: number
+  pointIndex: number
+  runnerUp: number
+  viaPenaltyDistance: number
+}
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -22,9 +38,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private readonly useFuturePointCertificates: boolean
+  private certificateSceneEligible = false
+  private readonly futurePointAnchors: Array<FuturePointAnchor | undefined> = []
 
   constructor(
-    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
+    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] & {
+      // Owned searches keep endpoint coordinates and method prototypes immutable.
+      useFuturePointCertificates?: boolean
+    },
   ) {
     super({
       ...opts,
@@ -46,6 +68,20 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    this.useFuturePointCertificates =
+      opts.useFuturePointCertificates === true &&
+      Object.getPrototypeOf(this) ===
+        SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype &&
+      this.getNodeKey === nativeSingleRouteMethods.getNodeKey &&
+      !Object.hasOwn(this, "viaPenaltyDistance") &&
+      !Object.hasOwn(
+        SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype,
+        "viaPenaltyDistance",
+      ) &&
+      Object.getOwnPropertyDescriptor(
+        SingleHighDensityRouteSolver.prototype,
+        "viaPenaltyDistance",
+      )?.get === nativeSingleRouteMethods.viaPenaltyDistance
   }
 
   getClosestFutureConnectionPoint(node: Node) {
@@ -55,6 +91,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         this.futureConnectionPoints.length
     ) {
       this.closestFuturePointCacheIndices.fill(-2)
+      this.futurePointAnchors.length = 0
+      this.certificateSceneEligible =
+        this.useFuturePointCertificates &&
+        this.futureConnectionPoints.every(
+          (point) =>
+            Math.abs(point.x) <= FUTURE_POINT_CERTIFICATE_LIMIT &&
+            Math.abs(point.y) <= FUTURE_POINT_CERTIFICATE_LIMIT,
+        )
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
       this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
     }
@@ -80,21 +124,72 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         ? null
         : this.futureConnectionPoints[cachedPointIndex]
     }
+    const canUseCertificate =
+      this.certificateSceneEligible &&
+      this.getNodeKey === nativeSingleRouteMethods.getNodeKey &&
+      Math.sqrt === originalCertificateSqrt &&
+      Math.abs(node.x) <= FUTURE_POINT_CERTIFICATE_LIMIT &&
+      Math.abs(node.y) <= FUTURE_POINT_CERTIFICATE_LIMIT &&
+      viaPenaltyDistance >= 0 &&
+      viaPenaltyDistance <= FUTURE_POINT_CERTIFICATE_LIMIT &&
+      Number.isInteger(node.z) &&
+      node.z >= 0 &&
+      node.z < this.layerCount
+    const anchor = canUseCertificate
+      ? this.futurePointAnchors[node.z]
+      : undefined
     let minDist = Infinity
+    let runnerUp = Infinity
     let closestPoint = null
     let closestPointIndex = -1
-    let pointIndex = 0
-
-    for (const point of this.futureConnectionPoints) {
-      const dist =
+    if (anchor && anchor.viaPenaltyDistance === viaPenaltyDistance) {
+      const point = this.futureConnectionPoints[anchor.pointIndex]
+      const winnerScore =
         distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
-      if (dist < minDist) {
-        minDist = dist
+        (node.z !== point.z ? viaPenaltyDistance : 0)
+      if (
+        winnerScore <
+        anchor.runnerUp -
+          distance(node, anchor) -
+          FUTURE_POINT_CERTIFICATE_MARGIN
+      ) {
         closestPoint = point
-        closestPointIndex = pointIndex
+        closestPointIndex = anchor.pointIndex
       }
-      pointIndex++
+    }
+    if (closestPointIndex === -1) {
+      let pointIndex = 0
+      for (const point of this.futureConnectionPoints) {
+        const dist =
+          distance(node, point) +
+          (node.z !== point.z ? this.viaPenaltyDistance : 0)
+        if (dist < minDist) {
+          runnerUp = minDist
+          minDist = dist
+          closestPoint = point
+          closestPointIndex = pointIndex
+        } else if (dist < runnerUp) {
+          runnerUp = dist
+        }
+        pointIndex++
+      }
+      if (canUseCertificate && closestPointIndex >= 0) {
+        if (anchor) {
+          anchor.x = node.x
+          anchor.y = node.y
+          anchor.pointIndex = closestPointIndex
+          anchor.runnerUp = runnerUp
+          anchor.viaPenaltyDistance = viaPenaltyDistance
+        } else {
+          this.futurePointAnchors[node.z] = {
+            x: node.x,
+            y: node.y,
+            pointIndex: closestPointIndex,
+            runnerUp,
+            viaPenaltyDistance,
+          }
+        }
+      }
     }
 
     // A fixed workspace avoids retaining every explored coordinate in large

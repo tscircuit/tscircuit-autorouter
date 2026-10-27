@@ -1233,3 +1233,12 @@ function getPointToPrecomputedSegmentDistanceSquared(
   const dy = point.y - projectionY
   return dx * dx + dy * dy
 }
+
+// Capture owned implementation identities when the defining module evaluates.
+export const nativeSingleRouteMethods = Object.freeze({
+  getNodeKey: SingleHighDensityRouteSolver.prototype.getNodeKey,
+  viaPenaltyDistance: Object.getOwnPropertyDescriptor(
+    SingleHighDensityRouteSolver.prototype,
+    "viaPenaltyDistance",
+  )!.get,
+})
