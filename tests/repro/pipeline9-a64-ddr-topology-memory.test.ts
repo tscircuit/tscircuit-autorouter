@@ -3,7 +3,7 @@ import { expect, test } from "bun:test"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { loadA64DdrTopologyMemoryInput } from "../fixtures/loadA64DdrMemoryFixture"
 
-test.failing(
+test(
   "A64 topology merging releases construction regions after preserving its exact output",
   (): void => {
     const input = loadA64DdrTopologyMemoryInput()
