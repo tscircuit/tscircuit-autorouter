@@ -1463,7 +1463,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.MAX_ITERATIONS - this.iterations,
             pipeline.MAX_ITERATIONS - pipeline.iterations,
           )
-          await solveWithParallelSearch(search, runtime, previousIterations + remaining)
+          await solveWithParallelSearch(search, runtime, previousIterations + remaining, { maxRelativeCostIncrease: 0 })
           const terminal = search.solved || search.failed
           const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
           pipeline.iterations += consumed
