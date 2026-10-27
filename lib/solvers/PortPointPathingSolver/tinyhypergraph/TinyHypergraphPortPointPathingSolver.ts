@@ -1,3 +1,5 @@
+import { solveWithParallelSearch } from "tiny-hypergraph/lib/core-parallel"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -20,6 +22,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
+  OutsideInPartialRipTinyHyperGraphSolver,
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
@@ -1387,6 +1390,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
+      parallelRouteWorkers: solveGraphStats.parallelRouteWorkers,
+      parallelSearchMs: solveGraphStats.parallelSearchMs,
+      parallelRouteSearches: solveGraphStats.parallelRouteSearches,
+      parallelRouteExpansions: solveGraphStats.parallelRouteExpansions,
+      speculativeRouteSearches: solveGraphStats.speculativeRouteSearches,
+      speculativeRouteExpansions: solveGraphStats.speculativeRouteExpansions,
+      staleRouteSearches: solveGraphStats.staleRouteSearches,
+      parallelWorkerSearchMs: solveGraphStats.parallelWorkerSearchMs,
+      parallelWorkerSnapshotMs: solveGraphStats.parallelWorkerSnapshotMs,
+      parallelGraphSyncMs: solveGraphStats.parallelGraphSyncMs,
+      maximumConcurrentRouteSearches: solveGraphStats.maximumConcurrentRouteSearches,
+      maximumParticipatingSearchWorkers: solveGraphStats.maximumParticipatingSearchWorkers,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
@@ -1421,6 +1436,45 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solveGraphStats.outsideInForwardExpansionCount,
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
+    }
+  }
+
+  private asyncRunning = false
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Port-point solveAsync is already running")
+    if (this.solved || this.failed) return
+    const startTime = performance.now()
+    this.asyncRunning = true
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const pipeline = this.tinyPipelineSolver
+        const search = pipeline.activeSubSolver
+        if (runtime && search instanceof OutsideInPartialRipTinyHyperGraphSolver) {
+          const previousIterations = search.iterations
+          const remaining = Math.min(
+            stopAtIteration - this.iterations,
+            this.MAX_ITERATIONS - this.iterations,
+            pipeline.MAX_ITERATIONS - pipeline.iterations,
+          )
+          await solveWithParallelSearch(search, runtime, previousIterations + remaining)
+          const terminal = search.solved || search.failed
+          const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
+          pipeline.iterations += consumed
+          this.iterations += consumed
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Port-point asynchronous solve error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
     }
   }
 

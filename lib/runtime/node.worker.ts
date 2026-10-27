@@ -3,4 +3,6 @@ import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipelin
 import "../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSampleSolver"
 import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"
 
+import "../solvers/PortPointPathingSolver/tinyhypergraph/TinyHyperGraphRouteSearchTaskRegistration"
+
 SolverRuntime.listen()

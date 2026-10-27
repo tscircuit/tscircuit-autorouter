@@ -1,0 +1,47 @@
+name: Port-point parallel scaling
+
+on:
+  workflow_dispatch:
+    inputs:
+      samples:
+        description: "Dataset18 sample numbers, separated by commas"
+        default: "6"
+        type: string
+      repeats:
+        description: "Alternating one-worker/four-worker pairs"
+        default: "3"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  scaling:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install
+      - run: bun scripts/build-solver-workers.ts
+      - name: Compare the TypeScript backend with one and four workers
+        shell: bash
+        env:
+          SAMPLES: ${{ inputs.samples || '6' }}
+          REPEATS: ${{ inputs.repeats || '3' }}
+        run: |
+          bun scripts/benchmark/port-point-threading.ts \
+            --samples "$SAMPLES" --repeat "$REPEATS" \
+            --reference-threads 1 --threads 4 --isolate \
+            --out port-point-scaling.json | tee port-point-scaling.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: port-point-scaling
+          path: |
+            port-point-scaling.json
+            port-point-scaling.log
