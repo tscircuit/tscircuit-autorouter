@@ -1,0 +1,69 @@
+{
+  "kind": "PREPARED_PORTABLE_POSTRUN_INDEPENDENT_AUDITOR_BUNDLE_NOT_RUN",
+  "files": [
+    {
+      "name": "prepare-sample24-final-reference-audit.ts",
+      "originalSha256": "f321d6303e4d0481b47fa7e6b7681e6e2fefb200a74e9ef8315c200163ebb04b",
+      "portableSha256": "c04ab9fcb7c4e08dc5c33699005edd2a3b65d13953599aab42669d8480ceacea",
+      "productionPredicateUnchanged": true,
+      "onlyEdit": "Final immutable original-field guard binds exact source createSrjWithBoardValidObstacleLayers output; independently verifies all raw physical/nested fields unchanged and allows only absent derived obstacle layer caches. No DRC/physical predicate changed."
+    },
+    {
+      "name": "check-sample24-final-vias-raw.py",
+      "originalSha256": "070c3a8d5c925579cbd40dacbdab6e38771cb9da8d2a2982c7adbd01c156070a",
+      "portableSha256": "070c3a8d5c925579cbd40dacbdab6e38771cb9da8d2a2982c7adbd01c156070a",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "check-sample24-final-via-pairs.py",
+      "originalSha256": "3c9b11bca7f1a3595885a231e253476e411d18852ee77887741610cda7425484",
+      "portableSha256": "3c9b11bca7f1a3595885a231e253476e411d18852ee77887741610cda7425484",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "collect-through-obstacle-projections.ts",
+      "originalSha256": "88f1fa2564f797096cfc1fb1253fe465f953a37b958afbec40e455fb3b9a7a8c",
+      "portableSha256": "88f1fa2564f797096cfc1fb1253fe465f953a37b958afbec40e455fb3b9a7a8c",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "check-through-obstacle-physical-clearance.py",
+      "originalSha256": "5f6c87250e2884090c2acbe2d997eae412bba7653467c91fbf6b86ab08564a91",
+      "portableSha256": "5f6c87250e2884090c2acbe2d997eae412bba7653467c91fbf6b86ab08564a91",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "classify-sample24-final-clearances.py",
+      "originalSha256": "5388541431aa6d57d15facb22c3b0c1672da30682fb3b49214ffb541166d95cb",
+      "portableSha256": "5388541431aa6d57d15facb22c3b0c1672da30682fb3b49214ffb541166d95cb",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "verify-sample24-final-electrical.py",
+      "originalSha256": "082b857f0b8401246295fbef7e2acfdb388493adcecf1cd1fbc21261f944da85",
+      "portableSha256": "082b857f0b8401246295fbef7e2acfdb388493adcecf1cd1fbc21261f944da85",
+      "productionPredicateUnchanged": true
+    },
+    {
+      "name": "check-sample24-final-conductive-union.py",
+      "originalSha256": "ac231bcc3088a2346149f14e44b3167e9d36c6b2ebb6c2f39a0190574cd5acc3",
+      "portableSha256": "25719efc100c3fd13f8c2647bec78397fb07a6ea62b8d48956aec01fba4eafde",
+      "productionPredicateUnchanged": true,
+      "onlyEdit": "HERE fromoriginalworkspacepath toscriptdirectory"
+    },
+    {
+      "name": "check-sample24-final-ordinary-wires-opaque.py",
+      "originalSha256": "5493110b5590d9c96ce7c93059827186933995ad73d385890a665d651d51167b",
+      "portableSha256": "5493110b5590d9c96ce7c93059827186933995ad73d385890a665d651d51167b",
+      "productionPredicateUnchanged": true
+    }
+  ],
+  "rootProductionCodeUnchanged": true,
+  "runnerChanges": "Onlysource/inputpathsandBunPATHmadeexplicit; checkercommands/order/reportpreservation unchanged",
+  "noBoardAudited": true,
+  "noRemoteMutation": true,
+  "scopeNote": "IncludesindependentALL1918ordinarywire/rawopaquecoverageinadditiontothroughmarkerchecks; correctedreferenceevaluatoroverlayisseparatefromproducercheckout.",
+  "producerSource": "f47ccb1c0cd4b51f357f002d8c66eb39b174bf4f",
+  "producerTransportCommit": "6f6083f3a349fab21df6e3b9b3069b0f66e326a1",
+  "producerRunId": 40454241319
+}
