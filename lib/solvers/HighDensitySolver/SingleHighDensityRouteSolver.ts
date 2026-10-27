@@ -803,8 +803,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       ) {
         const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
         const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-        viaKey =
-          (newZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
+        viaKey = (newZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
         if (this.exploredNodes.has(viaKey)) continue
       }
 

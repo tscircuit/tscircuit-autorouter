@@ -4,16 +4,8 @@ import { createDeferredNeighborSolver } from "./createDeferredNeighborSolver"
 
 test("deferred neighbors preserve grid aliases and clamp edges", () => {
   const positions = [
-    -1,
-    -0.9999999999999999,
-    -0.075,
-    -0.025,
-    -0,
-    0,
-    0.025,
-    0.075,
-    0.9999999999999999,
-    1,
+    -1, -0.9999999999999999, -0.075, -0.025, -0, 0, 0.025, 0.075,
+    0.9999999999999999, 1,
   ]
   let comparisons = 0
   for (const cellStep of [0.05, 0.1, 0.3, Number.NaN, Infinity]) {
