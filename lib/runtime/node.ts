@@ -10,9 +10,10 @@ export type AutorouterSolverRuntimeOptions = Omit<
 /** The host owns this pool and reuses it across solves before disposing it. */
 export function createAutorouterSolverRuntime(
   options: AutorouterSolverRuntimeOptions,
-): SolverRuntime {
-  return new SolverRuntime({
+): SolverRuntime & { persistentWorkerCount?: number } {
+  const runtime = new SolverRuntime({
     ...options,
     workerSource,
   })
+  return Object.assign(runtime, { persistentWorkerCount: options.requireWorker === true ? options.workerCount : undefined })
 }

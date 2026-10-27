@@ -1,3 +1,5 @@
+import { solveWithWasmRoutes, WasmRouteReadyTask } from "tiny-hypergraph/lib/core-parallel"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -20,6 +22,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
+  OutsideInPartialRipTinyHyperGraphSolver,
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
@@ -1029,7 +1032,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private tinyPipelineSolver!: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1041,19 +1044,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
-  private inputNodeWithPortPoints: InputNodeWithPortPoints[]
-  private originalRegionById: Map<
+  private inputNodeWithPortPoints!: InputNodeWithPortPoints[]
+  private originalRegionById!: Map<
     CapacityMeshNodeId,
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
-  private originalRegionIds: Set<CapacityMeshNodeId>
-  private rootConnectionNameByConnectionId: Map<string, string | undefined>
-  private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
+  private originalRegionIds!: Set<CapacityMeshNodeId>
+  private rootConnectionNameByConnectionId!: Map<string, string | undefined>
+  private originalPreloadedSegmentKeysByConnectionId!: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
+  private initialized = false
+
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    if (!params.deferInitialization) this.initialize()
+  }
+
+  private initialize(prepared?: { serializedGraph: SerializedHyperGraph; solver: DuplicateCongestedPortSolver }): void {
+    if (this.initialized) return
+    const params = this.params
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1069,7 +1080,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
       ]),
     )
-    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const serializedGraph = prepared?.serializedGraph ?? buildSerializedTinyGraph({ ...params, connections })
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1088,23 +1099,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-      serializedGraph,
-      {
-        duplicatePortProximity: 0.05,
-        useSerializedPortPenalties: false,
-        routeSolveOptions: {
-          ...getTinyViaSizeOptions(params.minViaPadDiameter),
-          USE_SPARSE_CANDIDATE_STORAGE: false,
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-          GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
-          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-          STATIC_REACHABILITY_PRECHECK: true,
-        },
-      },
-    )
-    duplicateCongestedPortSolver.solve()
+    const duplicateCongestedPortSolver = prepared?.solver ?? this.createDuplicationSolver(serializedGraph)
+    if (!prepared) duplicateCongestedPortSolver.solve()
     if (duplicateCongestedPortSolver.failed) {
       this.duplicateCongestedPortError =
         duplicateCongestedPortSolver.error ?? "unknown error"
@@ -1174,6 +1170,45 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.statsSnapshotDirty = false
       },
     })
+    this.initialized = true
+  }
+
+  private createDuplicationSolver(serializedGraph: SerializedHyperGraph): DuplicateCongestedPortSolver {
+    const params = this.params
+    return new DuplicateCongestedPortSolver(
+      serializedGraph,
+      {
+        duplicatePortProximity: 0.05,
+        useSerializedPortPenalties: false,
+        routeSolveOptions: {
+          ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          USE_SPARSE_CANDIDATE_STORAGE: false,
+          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+          GREEDY_FINAL_ROUTE_ITERS: 4,
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+          STATIC_REACHABILITY_PRECHECK: true,
+        },
+      },
+    )
+  }
+
+  private async initializeAsync(runtime: SolverRuntimeExecutor): Promise<void> {
+    const startup = runtime.executeAsync(WasmRouteReadyTask, {}).then(
+      () => undefined, (error: unknown) => ({ error }),
+    )
+    // Allow pool startup to begin before synchronous graph preparation.
+    await Promise.resolve()
+    const params = this.params
+    const tinyConnections = getTinyRouteConnectionsOrThrow(params.connections)
+    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
+      ? orderConnectionsByNetCardinality(tinyConnections, getTinyRouteConnectionNetId) : tinyConnections
+    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const solver = this.createDuplicationSolver(serializedGraph)
+    solver.solve()
+    const failure = await startup
+    if (failure) throw failure.error
+    this.initialize({ serializedGraph, solver })
   }
 
   getSolverName(): string {
@@ -1359,6 +1394,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   getSolveGraphBenchmarkMetrics() {
+    if (!this.initialized) return undefined
     const solveGraphSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (!solveGraphSolver) return undefined
@@ -1387,6 +1423,19 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
+      parallelRouteWorkers: solveGraphStats.parallelRouteWorkers,
+      wasmRouteSearches: solveGraphStats.wasmRouteSearches,
+      wasmRouteExpansions: solveGraphStats.wasmRouteExpansions,
+      wasmRouteWaves: solveGraphStats.wasmRouteWaves,
+      parallelOwnerSearches: solveGraphStats.parallelOwnerSearches,
+      parallelOwnerGraphRows: solveGraphStats.parallelOwnerGraphRows,
+      parallelOwnerSearchMs: solveGraphStats.parallelOwnerSearchMs,
+      parallelRegionCostTables: solveGraphStats.parallelRegionCostTables,
+      parallelPortMasks: solveGraphStats.parallelPortMasks,
+      parallelConnectivityChecks: solveGraphStats.parallelConnectivityChecks,
+      parallelConnectivitySavedExpansions: solveGraphStats.parallelConnectivitySavedExpansions,
+      parallelGeometryPairs: solveGraphStats.parallelGeometryPairs,
+      geometryPairs: solveGraphStats.geometryPairs,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
@@ -1424,7 +1473,51 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  private asyncRunning = false
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Port-point solveAsync is already running")
+    if (this.solved || this.failed) return
+    const startTime = performance.now()
+    this.asyncRunning = true
+    try {
+      if (!this.initialized) {
+        if (runtime) await this.initializeAsync(runtime)
+        else this.initialize()
+      }
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const pipeline = this.tinyPipelineSolver
+        const search = pipeline.activeSubSolver
+        if (runtime && search instanceof OutsideInPartialRipTinyHyperGraphSolver) {
+          const previousIterations = search.iterations
+          const remaining = Math.min(
+            stopAtIteration - this.iterations,
+            this.MAX_ITERATIONS - this.iterations,
+            pipeline.MAX_ITERATIONS - pipeline.iterations,
+          )
+          await solveWithWasmRoutes(search, runtime, previousIterations + remaining)
+          const terminal = search.solved || search.failed
+          const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
+          pipeline.iterations += consumed
+          this.iterations += consumed
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Port-point asynchronous solve error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
+    }
+  }
+
   _step() {
+    if (!this.initialized) this.initialize()
     this.tinyPipelineSolver.step()
 
     if (
@@ -1783,6 +1876,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
+    if (!this.initialized) this.initialize()
     return this.tinyPipelineSolver.visualize()
   }
 }
