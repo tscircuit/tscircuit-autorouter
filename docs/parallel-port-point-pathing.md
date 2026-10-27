@@ -1,25 +1,27 @@
-# Parallel port-point pathing
+# Parallel port-point scoring
 
-Pipeline9 enables the optional TypeScript worker backend when the runtime requires four workers. Its public entry point is `tiny-hypergraph/lib/core-parallel`; the ordinary `lib/index` entry excludes worker code. The backend uses the original TypeScript A* implementation. It contains no WebAssembly kernels, embedded binaries or native build step.
+The optional TypeScript backend is isolated in `tiny-hypergraph/lib/core-parallel`. The normal library entry excludes worker code. No WASM kernels, binary payloads or native build tools are used.
 
 ## Work distribution
 
-Four persistent routing workers search different upcoming routes concurrently. The coordinator commits results in the original route order. Every worker copies a consistent graph snapshot using a shared epoch, then works on private assignment, congestion and intersection-cache data. It can refresh unread regions while searching if its entire existing read set remains unchanged. Static topology and problem data are sent once when a worker starts. Shared versioned cache rows avoid sending the entire graph for every route.
+Four persistent workers prepare exact region transition-cost tables. The original TypeScript A* queue and route commits run on the caller, preserving route order, paths and logical iteration budgets. This avoids speculative route searches and their invalidation/rework.
 
-A tracking candidate queue records every region expanded by a search. Before accepting a result, the coordinator checks that every recorded region still has the same version. Versions cover port assignments, congestion and region intersection caches. A stale result is discarded and the route is searched again against the current graph. This is optimistic concurrency control, not a recovery path for worker errors; transport or solver errors reject the solve.
+For each eligible region, workers compute a symmetric matrix of the marginal region cost of every pair of incident ports. The matrix represents a net that does not already occur in the region. It includes intersection, layer-transition and density costs; the caller adds congestion, port penalties and distance in the original arithmetic order. Regions containing the current route's net use the ordinary scorer, as do regions with more than 128 ports. The size threshold bounds quadratic storage.
 
-Searches may run ahead up to sixteen pending routes so workers can remain occupied while an earlier route takes longer. Only eligible whole-route searches run in workers; partial-route planning, selective rerips and final route acceptance stay with the coordinator. Route output, commit order and logical iteration budgets remain those of the serial solver. Unused speculative work does not consume the logical solver budget.
+Tables are cached by region version. Region changes queue new preparation work; unchanged tables are reused across routes and nets. Workers claim disjoint region jobs from a shared queue, and each worker receives an initial job when sufficient work exists. The coordinator waits for all workers before searching or mutating graph state. Shared cache arrays remain read-only until the barrier completes.
 
-The worker group acquires a runtime lease and releases all workers before the high-density stages. Completion searches use the same coordinator. Cancellation checkpoints stop obsolete or disposed jobs, and worker failures propagate to the caller.
+The serial solver exposes only an optional generic region-cost provider. The parallel pool and worker protocol remain under `lib/parallel/`. Runtime leases prevent competing solves from overcommitting persistent workers, and all workers are released before the later high-density stages. Completion candidates reuse tables when topology, problem and scoring settings match.
 
-## Metrics and verification
+## Verification
 
-`parallelRouteWorkers` records the number of workers that acknowledged startup. `maximumConcurrentRouteSearches` records concurrent dispatch, and `parallelRouteSearches` counts accepted route results. `speculativeRouteSearches`, `staleRouteSearches` and `speculativeRouteExpansions` expose work amplification and invalidation.
+`parallelRouteWorkers` records acknowledged workers. `maximumParticipatingCostWorkers` records workers that actually compute tables during a round. Metrics expose tables/cells prepared, worker and preparation time, cache hits/misses and caller search time.
 
-Tests cover overlapping routes, stale-result rejection, exact route/iteration parity, completion budgets, concurrent use of a shared runtime, worker errors and module isolation. The autorouter integration test uses the bundled Bun and Node workers and checks that four workers start and multiple route searches are dispatched concurrently.
+All 167 tiny-hypergraph tests pass, including exact scoring parity for owned nets, single-layer crossings, port penalties, congestion, density and cache changes. Twelve overlapping-net cases compare exact routes and iteration budgets. Tests also cover completion, failures, shared runtimes and module isolation. Bundled Bun and Node consumers are checked in the autorouter.
 
-## Performance
+## Performance status
 
-The previous WASM-assisted measurements do not apply to this implementation and have been removed. The first TypeScript prototype regressed by 18.4% on sample 6 despite correct output and four active workers. Commit-priority scheduling, early invalidation and safe refresh of unread regions address the observed wasted work; their performance is pending a new measurement. The TypeScript worker backend needs a fresh Blacksmith comparison with `/benchmark --dataset 18 --threads 4`. The target remains a 2x improvement in summed `portPointPathingSolver` time against the base at four threads, while retaining outcomes and iteration accounting.
+The WASM-assisted results do not apply and were removed. The first TypeScript route-speculation prototype regressed 23.2% on dataset18 despite correct outcomes and four active workers. Prioritizing commits and refreshing snapshots reduced wasted work but remained 6.7% slower on sample 6. Those results motivated moving parallel work to independent region scoring instead.
 
-A phase-only diagnostic harness is available at `scripts/benchmark/port-point-threading.ts`. `--reference-threads 0` selects the serial TypeScript solver; `--reference-threads 1` selects one TypeScript routing worker. Follow the repository policy requiring Blacksmith for benchmark runs.
+The region-scoring backend requires a fresh `/benchmark --dataset 18 --threads 4`. No speedup is claimed until that comparison completes. The target remains 2x faster summed `portPointPathingSolver` time against base at four threads, with unchanged outcomes.
+
+The phase-only harness is `scripts/benchmark/port-point-threading.ts`; `--reference-threads 0` selects ordinary serial TypeScript, and `--reference-threads 1` selects one scoring worker. Run benchmarks on Blacksmith per repository policy.

@@ -24,8 +24,8 @@ test("parallel port-point routing works with bundled Bun and Node workers and re
     expect(solver.getOutputSimpleRouteJson()).toEqual(baseline.getOutputSimpleRouteJson())
     expect(solver.iterations).toBe(baseline.iterations)
     const metrics = solver.portPointPathingSolver!.getSolveGraphBenchmarkMetrics()!
-    expect(metrics.parallelRouteSearches).toBeGreaterThan(0)
+    expect(metrics.parallelCostTables).toBeGreaterThan(0)
     expect(metrics.parallelRouteWorkers).toBe(4)
-    expect(metrics.maximumConcurrentRouteSearches).toBeGreaterThan(1)
+    expect(metrics.maximumParticipatingCostWorkers).toBeGreaterThan(1)
   }
 })
