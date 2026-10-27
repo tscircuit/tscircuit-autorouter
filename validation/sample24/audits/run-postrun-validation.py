@@ -9,20 +9,22 @@ import shutil
 import subprocess
 import sys
 
-COHORT = {'runId': 40492533608,
+COHORT = {'runId': 40500285904,
  'branch': 'fix/srj24-duplicate-port-bounds-20261027',
- 'transportCommit': 'f861002d69a8b7dc325bc2d025c36d6aa8357c29',
- 'source': '03ca19048c90629d59a73620c90d7b6fcd4f20ce',
- 'rootLibTree': 'af74d48e9a17b8fb409432ef8d96b007bbb304ad',
- 'rootPackageBlob': '7c1adb1d308d9a7907bbb7e6965119350c63f7fb',
- 'runtimeReceiptSha256': '0de4ca7e1cbec64c583d9dbcf2cf0327585902c0b7a747ce8356149241bfcd50',
- 'runtimeBundleSha256': 'd1647be83e8cc51d42be1db0c992f57e29314705fa772e4eb374fc4d79c3193d',
- 'runtimeManifestSha256': 'a3b881427e1b810bb7cb3f2b28311085594d0e85ffee46099d9669982adf0526',
+ 'transportCommit': '5f581d928ed6549091e19d692f0db60b04f01efb',
+ 'source': '5d5ca622ad436cb0dac518cca5b3d5111c8ecd2d',
+ 'rootLibTree': 'eb3d7f27006d9eb03d5e99d9570368390090123a',
+ 'rootPackageBlob': '3c44b8c73131ecb4c5048a0a0ed6a8863328aa32',
+ 'runtimeReceiptSha256': '959f53b61f8049c5a16d8f3ed1d9b3d9c4927f940a2ce36521aff61704a725e0',
+ 'runtimeBundleSha256': 'ab9ab8e6ea120318b49f6a09898aa74fdf923e724313ac6561fdaa9d1e448a60',
+ 'runtimeManifestSha256': '1e3e7eacf346f5fdb5d2f493b1e6c05ca03f78bf126c290d549d869b8c2fa079',
  'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
  'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
- 'artifactNames': ['sample24-final-srj', 'sample24-reviewed-runtime-proof', 'benchmark-result']}
-AUDITOR_MANIFEST_SHA = '826e346089f73e80fe259ec16ed11923ef6f51ff11f5d19e766308a49ec04ad0'
-OVERLAY_MANIFEST_SHA = '1b3995af29edd6172e04f9fbe3df46367989747c8e84715419652dfde8bec40a'
+ 'artifactNames': ['sample24-final-srj',
+                   'sample24-reviewed-runtime-proof',
+                   'benchmark-result']}
+AUDITOR_MANIFEST_SHA = '407874665a5cda647334ea59f25d92469c1864cff437967f983ec45ccbe7d9c7'
+OVERLAY_MANIFEST_SHA = '034a5263be0cff39766f5ed6452735a2c071452b0c3ca75eafe14e2ec773667a'
 SOLVER = 'AutoroutingPipelineSolver9_PreloadedTraceGraph'
 REQUIRED_ARGS = ['--pipeline', '9', '--dataset', '24', '--sample', '24', '--effort', '1',
                  '--concurrency', '1', '--threads', '1', '--sample-timeout', '7200s']
