@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1011",
+  "version": "0.0.1012",
   "type": "module",
   "repository": {
     "type": "git",
@@ -100,7 +100,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#a1d4d22e73900a6522cac4cfc8b7d50d39fbbb56",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#ec80c91ccbf6529bfd9ae5b205c1d24c7f40bef1",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
