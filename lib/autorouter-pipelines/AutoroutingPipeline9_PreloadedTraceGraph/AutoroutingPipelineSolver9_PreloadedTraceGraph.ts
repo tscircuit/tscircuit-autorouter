@@ -374,7 +374,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       MultiGraphTopologyPlannerSolver,
       (cms) => [
         {
-          inputSrj: cms.srjWithPointPairs!,
+          inputSrj: {
+            ...cms.srjWithPointPairs!,
+            // Unowned barriers have no terminal exception: free space must
+            // leave room for the trace radius as well as its centerline.
+            obstacles: cms.srjWithPointPairs!.obstacles.map((obstacle) =>
+              obstacle.connectedTo.length === 0
+                ? {
+                    ...obstacle,
+                    width: obstacle.width + cms.minTraceWidth,
+                    height: obstacle.height + cms.minTraceWidth,
+                  }
+                : obstacle,
+            ),
+          },
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
