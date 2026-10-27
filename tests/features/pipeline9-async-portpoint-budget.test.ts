@@ -48,9 +48,11 @@ test("async port-point routing respects the outer pipeline budget at the same se
     expect(parallel.iterations).toBe(serial.iterations)
     expect(parallel.solved).toBe(serial.solved)
     expect(parallel.failed).toBe(serial.failed)
-    const logicalStats = solvers.map(solver => {
+    const logicalStats = solvers.map((solver) => {
       const stats = structuredClone(solver.portPointPathingSolver!.stats)
-      for (const stage of Object.values(stats.stageStats) as Array<Record<string, unknown>>) {
+      for (const stage of Object.values(stats.stageStats) as Array<
+        Record<string, unknown>
+      >) {
         delete stage.timeSpent
       }
       return stats

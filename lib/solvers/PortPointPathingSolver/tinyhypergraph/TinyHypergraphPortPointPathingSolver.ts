@@ -940,10 +940,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        usePreparedPortPointRouting
-          ? PreparedPortPointRoutingSolver
-          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = usePreparedPortPointRouting
+        ? PreparedPortPointRoutingSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1508,17 +1507,31 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 
-  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
-    if (this.asyncRunning) throw new Error("Port-point solveAsync is already running")
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning)
+      throw new Error("Port-point solveAsync is already running")
     this.asyncRunning = true
     try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
         const phase = this.tinyPipelineSolver.activeSubSolver
         if (runtime && phase instanceof PreparedPortPointRoutingSolver) {
           const previousIterations = phase.iterations
-          await phase.solveAsync(runtime, previousIterations + Math.max(0, stopAtIteration - this.iterations))
+          await phase.solveAsync(
+            runtime,
+            previousIterations + Math.max(0, stopAtIteration - this.iterations),
+          )
           const terminal = phase.solved || phase.failed
-          const consumed = Math.max(0, phase.iterations - previousIterations - (terminal ? 1 : 0))
+          const consumed = Math.max(
+            0,
+            phase.iterations - previousIterations - (terminal ? 1 : 0),
+          )
           this.tinyPipelineSolver.iterations += consumed
           this.iterations += consumed
           if (this.iterations >= stopAtIteration) break
