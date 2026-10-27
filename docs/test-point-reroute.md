@@ -1,0 +1,13 @@
+# Test-point post-routing prototype
+
+`TestPointSolver(inputSrj, options)` adds exposed circular pad locations to explicitly designated existing PCB traces. `requests` specifies a unique name, `pcbTraceId`, outer layer, and diameter (mm). Clearance, minimum probe center spacing and maximum detour are explicit options. No other trace is moved; source endpoints and widths remain unchanged.
+
+The deterministic search tries inline locations before perpendicular offsets up to `maxDetour`. An offset replaces one constant-width segment with two segments through the pad. Swept-circle checks cover the pad and both new segments against other traces, vias, obstacles, board bounds/outline and already placed probes. Rotated obstacle rectangles use conservative enclosing boxes. Vias are conservatively treated as through-vias. Inputs must contain complete physical obstacles, including component envelopes for probe access and all relevant copper. Wire/via routes only; unsupported route geometry is rejected. This is a bounded search, not a completeness guarantee or global rip-up router. Long detours, inner-layer breakout vias, timing constraints, fixture mechanics and probe-tool collision envelopes are outside this prototype.
+
+A failed request throws and leaves no accessible successful output. On success, `getOutput()` returns preserved routes with new vertices, `testPoints` carrying stable trace/connection identity, and pad obstacles for downstream routing. The core integration materializes ports and exposed pads; SRJ alone is not a manufacturing file.
+
+The real-board fixture is [astra/pd-power-supply](https://tscircuit.com/astra/pd-power-supply), release `57387f49-bd91-4277-8a82-706b1575c5ed`, `dist/board/circuit.json`. It contains 219 routed traces on an 80 × 45 mm four-layer board. The fixture converter includes all 276 pads, 37 plated holes, 205 vias, 10 holes, 8 keepouts and 80 placed component envelopes. Copper pours are on inner layers only. Their omission does not affect the outer-layer-only placement search.
+
+Regenerate with `bun scripts/prepare-test-point-board.ts`; inspect the real board with the `fixtures/test-points/astra-pd-power-supply.page.tsx` Cosmos page. Export PNG/SVG/SRJ and probe targets with `bun scripts/export-test-point-board.ts <directory>`. Board coordinates are mm, +X right, +Y up; bottom targets are not mirrored into a fixture coordinate system.
+
+Validation: `bun test tests/test-points --timeout 9999999`. The board regression adds three bottom pads (SDA, SCL, OUTPUT_EN), checks all unaffected routes, and snapshots the full actual board. A separate crowded-channel case requires a local detour.

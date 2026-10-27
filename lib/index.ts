@@ -117,3 +117,6 @@ export {
   Pipeline9HighDensitySolver,
   type Pipeline9HighDensitySolverParams,
 } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+
+export { TestPointSolver } from "./solvers/TestPointSolver/TestPointSolver"
+export type { TestPointRequest, TestPointOptions, RoutedTestPoint, TestPointOutput } from "./solvers/TestPointSolver/TestPointSolver"
