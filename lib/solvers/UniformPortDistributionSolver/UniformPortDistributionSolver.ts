@@ -31,6 +31,8 @@ export interface UniformPortDistributionSolverInput {
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
   isPortPointPositionAllowed?: (point: PortPoint) => boolean
+  /** Final admission hook: commits accepted complete layer-family positions. */
+  admitPortPointFamily?: (points: readonly PortPoint[]) => boolean
 }
 
 /**
@@ -198,6 +200,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
         const originalById = new Map(family.map((point) => [point.portPointId, point]))
         redistributed = redistributed.map((point) =>
           inadmissibleLayers.has(point.z) ? originalById.get(point.portPointId)! : point,
+        )
+      }
+    }
+    if (this.input.admitPortPointFamily) {
+      const byLayer = new Map<number, PortPointWithOwnerPair[]>()
+      for (const point of redistributed) {
+        const layer = byLayer.get(point.z) ?? []
+        layer.push(point)
+        byLayer.set(point.z, layer)
+      }
+      const declinedLayers = new Set<number>()
+      for (const [z, points] of byLayer) {
+        if (!this.input.admitPortPointFamily(points)) declinedLayers.add(z)
+      }
+      if (declinedLayers.size > 0) {
+        const originalById = new Map(family.map((point) => [point.portPointId, point]))
+        redistributed = redistributed.map((point) =>
+          declinedLayers.has(point.z) ? originalById.get(point.portPointId)! : point,
         )
       }
     }

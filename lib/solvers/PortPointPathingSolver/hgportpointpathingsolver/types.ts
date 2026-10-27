@@ -15,6 +15,7 @@ import type {
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { PortReservationModel } from "../tinyhypergraph/createPortReservationNetIds"
+import type { PortConflictCsr } from "../tinyhypergraph/createPortConflictCsr"
 
 export type RawPort = {
   portId: string
@@ -101,6 +102,7 @@ export interface HgPortPointPathingSolverParams {
   minViaPadDiameter?: number
   allowBlindAndBuriedVias?: boolean
   createPortReservations?: (model: PortReservationModel) => Int32Array
+  createPortConflicts?: (model: PortReservationModel) => PortConflictCsr
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
