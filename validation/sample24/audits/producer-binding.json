@@ -1,14 +1,18 @@
 {
-  "runId": 40452086367,
+  "runId": 40454241319,
   "branch": "fix/srj24-duplicate-port-bounds-20261027",
-  "transportCommit": "5e9688bcbc85e806f2c7ba5388732a0f6f33b9ce",
-  "source": "7afea819030d521a80f1357b2527299cb2faa515",
+  "transportCommit": "6f6083f3a349fab21df6e3b9b3069b0f66e326a1",
+  "source": "f47ccb1c0cd4b51f357f002d8c66eb39b174bf4f",
   "rootLibTree": "416dd7809310919cb77e0dce488189eb0bdaab11",
-  "rootPackageBlob": "327eeecbab617b0de3d3631d85ceed28df54192a",
-  "runtimeReceiptSha256": "06ef3e90fcb5f3a1bfb91dc287eefbdb5690abd608787f3d83fab6f158516779",
-  "runtimeBundleSha256": "6f5289e793e4e0f1d221fefefc83ee3214bc955698912b71bd0df035050a2b60",
-  "runtimeManifestSha256": "4b8087806fe17732daea45d82a717916d62b2a678be6ce8a6775c3fe6bfe74d9",
+  "rootPackageBlob": "6ae64b6db2e5a4fe7b548e960c818f8f5d987d8d",
+  "runtimeReceiptSha256": "10db144dc1ca566bae470b54e793e4b548ca9314f737944bad796b951e58f37c",
+  "runtimeBundleSha256": "848399b3ffd0f8226560a55570f2a909203f1fd231bbddb42c9add51250028ca",
+  "runtimeManifestSha256": "b9f38f89e09f7a833d88311b91d708f8c9af7affe5dac96c3a25ce9b3b04c7e9",
   "originalInputSha256": "ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7",
   "originalInputCanonicalSha256": "70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0",
-  "artifactNames": ["sample24-final-srj", "sample24-reviewed-runtime-proof", "benchmark-result"]
+  "artifactNames": [
+    "sample24-final-srj",
+    "sample24-reviewed-runtime-proof",
+    "benchmark-result"
+  ]
 }
