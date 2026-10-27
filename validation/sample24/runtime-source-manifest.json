@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "75618e4027b2f1b9bae6cff4602c3edabf6942cf",
-  "rootLibTree": "6d2d626b1e0ee3d358e4cc522303ce800c5cf4ef",
-  "rootPackageBlob": "3c44b8c73131ecb4c5048a0a0ed6a8863328aa32",
-  "localRuntimeReceiptSha256": "ff441c8603a76c6fd4e0e28727e36cab4829b63f106e9201eb22adb5031df537",
+  "rootSource": "dce21405405987a19f9306c332c9fef959c8ccb6",
+  "rootLibTree": "fc602c83cd973a4c7a15f99aa428ad40e773526d",
+  "rootPackageBlob": "b8754698344969c64c581462d2da8cb64aae6ce1",
+  "localRuntimeReceiptSha256": "f3204e26e3f5e87d52c04ddc647289fbe6a7572a3c3b511dd4a25991d9398aa4",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "7742637f90f0f2a53904d4ef32a1a312e3a446d8",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#7742637f90f0f2a53904d4ef32a1a312e3a446d8",
+      "revision": "28bc13b3fd0a818c4caae0047a4d132d8eea5938",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#28bc13b3fd0a818c4caae0047a4d132d8eea5938",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -99,9 +99,9 @@
         },
         {
           "path": "lib/compat/loadSerializedHyperGraph.ts",
-          "gitBlobSha1": "63fbdfdd4335dda705ba677344813daa3730f48e",
-          "sha256": "0d2effa07c5b608eaaf3ee04acb98975ac524535400725ccf6ecb73e4c685fc5",
-          "bytes": 20187
+          "gitBlobSha1": "046b1aabc6b104874066ba54f3cf55a84302fec9",
+          "sha256": "c07a264d3c72c42dce2dacdbdf20efd4d732af834d13e505005e8b12397d4158",
+          "bytes": 20164
         },
         {
           "path": "lib/computeRegionCost.ts",
@@ -1396,5 +1396,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "ab9ab8e6ea120318b49f6a09898aa74fdf923e724313ac6561fdaa9d1e448a60"
+  "bundleSha256": "0731389e68aecb5fa2a3d5ea3ac96662e17e485a1725261878c21142c1fdcde3"
 }
