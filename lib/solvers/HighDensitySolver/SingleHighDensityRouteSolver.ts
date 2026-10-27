@@ -10,6 +10,8 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
+import type { PhysicalGridGuards } from './createPhysicalGridGuards'
+
 export type FutureConnection = {
   connectionName: string
   rootConnectionName?: string
@@ -37,6 +39,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return "SingleHighDensityRouteSolver"
   }
 
+  physicalGuards?: PhysicalGridGuards
   obstacleRoutes: HighDensityIntraNodeRoute[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
@@ -120,10 +123,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     futureConnections?: FutureConnection[]
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
+    physicalGuards?: PhysicalGridGuards
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
   }) {
     super()
+    this.physicalGuards = opts.physicalGuards
     this.bounds = opts.bounds
     this.connMap = opts.connMap
     this.hyperParameters = opts.hyperParameters ?? {}
@@ -247,7 +252,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   handleSimpleCases() {
-    this.solved = true
     const { A, B } = this
     const route =
       A.z === B.z
@@ -261,6 +265,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
+    if (this.physicalGuards) {
+      for (let i = 1; i < route.length; i++) {
+        const a = route[i - 1]!, b = route[i]!
+        if (a.z === b.z ? !this.physicalGuards.wireAllowed(a, b) : !this.physicalGuards.viaAllowed(b, a.z)) return
+      }
+    }
+    this.solved = true
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -282,12 +293,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
+    if (this.physicalGuards && (isVia
+      ? !this.physicalGuards.viaAllowed(node, node.parent?.z ?? node.z)
+      : !this.physicalGuards.wireAllowed(node, node))) return true
     margin ??= this.obstacleMargin
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)
       for (const via of viasInMyRoute) {
-        if (distance(node, via) < this.viaDiameter / 2 + margin) {
+        if (distance(node, via) < (this.physicalGuards?.minimumViaCenterDistance ?? this.viaDiameter / 2 + margin)) {
           return true
         }
       }
@@ -436,6 +450,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ) {
     const parent = node.parent
     if (!parent) return false
+    if (this.physicalGuards && (node.z === parent.z
+      ? !this.physicalGuards.wireAllowed(parent, node)
+      : !this.physicalGuards.viaAllowed(node, parent.z))) return true
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false

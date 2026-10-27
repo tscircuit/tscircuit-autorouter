@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { SingleTransitionIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
+import type { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import fixture from "../fixtures/sample24-constructive-transition-c74.json"
 
 test("the actual C74 transition constructs a legal external via before publishing its route", (): void => {
@@ -24,13 +25,14 @@ test("the actual C74 transition constructs a legal external via before publishin
   expect(params.nodeWithPortPoints.availableZ).toEqual([0, 1, 2, 3, 4, 5, 6])
   expect(new SingleTransitionIntraNodeSolver({ ...params, boardContext: { ...context, obstacles: [...context.obstacles].reverse() } }).solvedRoutes).toEqual(solver.solvedRoutes)
 
-  // Use the original GrowShrink frame creation and accepted-output conversion.
+  // Retain the legacy affine-frame regression; physical WORLD growth is tested separately.
   const grow = new GrowShrinkHighDensityIntraNodeSolver({ nodeWithPortPoints: structuredClone(fixture.node),
     obstacles: context.obstacles, layerCount: 8, allowBlindAndBuriedVias: false, traceWidth: 0.1,
     viaDiameter: 0.3, obstacleMargin: 0.15, boardGeometry: fixture.boardGeometry })
+  grow.physicalWorldBounds = false
   grow.scaleFactor = 8
   ;(grow as any).createActiveSubSolver()
-  const portfolio = grow.activeSubSolver!
+  const portfolio = grow.activeSubSolver! as PortfolioSingleIntraNodeSolver
   const candidate = portfolio.generateSolver({ CLOSED_FORM_SINGLE_TRANSITION: true })
   expect(candidate.solved).toBe(true)
   portfolio.supervisedSolvers = [{ solver: candidate, hyperParameters: {}, f: 0, g: 0, h: 0 }]

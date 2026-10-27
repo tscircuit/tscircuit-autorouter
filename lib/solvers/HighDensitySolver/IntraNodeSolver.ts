@@ -19,6 +19,11 @@ import {
   type PrecomputedIntraNodeRouteParams,
 } from "./precomputeIntraNodeRouteParams"
 
+import type { HighDensityBoardGeometry } from 'lib/types/high-density-board-geometry'
+import { createPhysicalGridGuards } from './createPhysicalGridGuards'
+import type { SingleTransitionBoardContext } from './findSingleTransitionVia'
+import type { RoutedPeerWorldIndex } from './completedCopperWorldIndex'
+
 type ConnectionPoint = { x: number; y: number; z: number }
 
 const connectionLabel = (
@@ -77,6 +82,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  physicalContext?: SingleTransitionBoardContext & { routedPeerWorldIndex?: RoutedPeerWorldIndex }
+  routingBounds?: { minX: number; maxX: number; minY: number; maxY: number }
+  physicalLayerCount?: number
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -106,6 +114,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     mandatoryPortPointIndex?: MandatoryPortPointIndex
+    routedPeerWorldIndex?: RoutedPeerWorldIndex
+    boardGeometry?: HighDensityBoardGeometry
+    routingBounds?: { minX: number; maxX: number; minY: number; maxY: number }
     layerCount?: number
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
@@ -130,6 +141,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.routingBounds = params.routingBounds
+    this.physicalLayerCount = params.layerCount
+    if (params.obstacles !== undefined && params.layerCount !== undefined) {
+      this.physicalContext = {
+        obstacles: params.obstacles, connMap: params.connMap, layerCount: params.layerCount,
+        allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+        traceToPadClearance: params.traceToPadClearance ?? this.obstacleMargin,
+        traceToHoleClearance: params.traceToHoleClearance ?? this.obstacleMargin,
+        viaToPadClearance: params.viaToPadClearance ?? this.obstacleMargin,
+        viaHoleDiameter: params.viaHoleDiameter,
+        minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
+        boardGeometry: params.boardGeometry, coordinateScale: params.priorityCoordinateScale ?? 1,
+        mandatoryPortPointIndex: params.mandatoryPortPointIndex, routedPeerWorldIndex: params.routedPeerWorldIndex,
+      }
+    }
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -231,12 +257,19 @@ export class IntraNodeRouteSolver extends BaseSolver {
     typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
   >[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const bounds = this.routingBounds ?? getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)
+    const physicalGuards = this.physicalContext && createPhysicalGridGuards({
+      context: { ...this.physicalContext, routedPeerRoutes: this.solvedRoutes }, bounds,
+      center: this.nodeWithPortPoints.center, connectionName, rootConnectionName,
+      traceWidth: this.traceWidth, viaDiameter: this.viaDiameter,
+    })
     return {
+      physicalGuards,
       connectionName,
       rootConnectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
-      bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
+      bounds,
       A: { x: points[0].x, y: points[0].y, z: points[0].z },
       B: {
         x: points[points.length - 1].x,
@@ -250,7 +283,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
+      layerCount: this.physicalLayerCount ?? this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),
         2,
       ),
@@ -267,7 +300,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceThickness: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
+      obstacleMargin: this.physicalContext?.traceToPadClearance ?? this.obstacleMargin,
+      nearbySegmentClearance: this.physicalContext ? this.traceWidth + this.physicalContext.traceToPadClearance : undefined,
       captureSearchDebug: this.captureSearchDebug,
     }
   }
@@ -609,7 +643,7 @@ const isEndpointViaSafe = (
   const viaNode = {
     x: viaPoint.x,
     y: viaPoint.y,
-    z: A.z,
+    z: B.z,
     parent: {
       x: A.x,
       y: A.y,

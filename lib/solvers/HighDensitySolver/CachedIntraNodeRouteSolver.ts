@@ -62,6 +62,9 @@ export class CachedIntraNodeRouteSolver
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
+    // Board copper and the completed-route ledger are external to the legacy
+    // cache key. Recompute physical searches rather than reuse stale context.
+    if (this.physicalContext) this.cacheProvider = null
     this.initialUnsolvedConnections = this.unsolvedConnections.map(
       (connection) => ({
         ...connection,

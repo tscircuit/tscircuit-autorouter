@@ -149,6 +149,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   isViaTooCloseToFutureConnectionTrace(node: Node) {
+    // Physical context reserves actual future endpoint disks; their paths
+    // have not been chosen and must not become fabricated hard obstacles.
+    if (this.physicalGuards) return false
     const minCenterlineDistance =
       this.viaDiameter / 2 +
       this.traceThickness / 2 +
