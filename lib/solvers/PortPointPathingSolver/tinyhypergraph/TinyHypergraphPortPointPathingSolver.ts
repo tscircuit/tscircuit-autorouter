@@ -208,6 +208,7 @@ type LoadedTinyGraph = {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
+    portReservationNetId?: Int32Array
     portPenalty?: Float64Array
     metadataPortPenaltiesApplied?: boolean
   }
@@ -919,6 +920,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly createPortReservations?: HgPortPointPathingSolverParams["createPortReservations"],
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -954,6 +956,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
     applyTerminalRegionNetIds(loaded)
     clearPreloadedEndpointRegionNetIds(loaded)
+    if (this.createPortReservations) {
+      loaded.problem.portReservationNetId = this.createPortReservations(loaded)
+    }
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
       metadataPortPenaltyCount,
@@ -1137,6 +1142,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.createPortReservations,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1452,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.createPortReservations,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

@@ -13,6 +13,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { createPortReservationNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortReservationNetIds"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -539,6 +540,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
+        const portReservationContext = {
+          obstacles: cms.originalSrj.obstacles,
+          connMap: cms.connMap,
+          traceWidth: cms.minTraceWidth,
+          traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+          layerCount: cms.originalSrj.layerCount,
+        }
 
         return [
           {
@@ -548,6 +556,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            createPortReservations: (model) => createPortReservationNetIds({
+              ...model, context: portReservationContext,
+            }),
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
