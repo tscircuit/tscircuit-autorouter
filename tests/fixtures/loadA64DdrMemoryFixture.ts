@@ -12,7 +12,10 @@ export function loadA64DdrHighDensityMemoryParams(): ConstructorParameters<
     gunzipSync(
       Uint8Array.from(
         readFileSync(
-          new URL("./assets/a64-ddr-high-density-memory.json.gz", import.meta.url),
+          new URL(
+            "./assets/a64-ddr-high-density-memory.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString(),
@@ -35,7 +38,9 @@ export function loadA64DdrRegionalMemoryParams(): ConstructorParameters<
   return {
     ...raw,
     connMap: new ConnectivityMap(raw.connMap),
-    movablePreloadedConnectionNames: new Set(raw.movablePreloadedConnectionNames),
+    movablePreloadedConnectionNames: new Set(
+      raw.movablePreloadedConnectionNames,
+    ),
   }
 }
 

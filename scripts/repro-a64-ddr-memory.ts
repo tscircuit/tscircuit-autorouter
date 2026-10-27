@@ -39,7 +39,8 @@ function measureSearchRetention(root: BaseSolver): RetentionSummary {
     const solver = value as Record<string, any>
     result.solverCount++
     result.portfolioCandidates += solver.supervisedSolvers?.length ?? 0
-    result.debugExplorationPoints += solver.debug_exploredNodesOrdered?.length ?? 0
+    result.debugExplorationPoints +=
+      solver.debug_exploredNodesOrdered?.length ?? 0
     result.planarPointCacheEntries += solver.freePlanarObstaclePoints?.size ?? 0
     result.retainedFailedRouteSearches += solver.failedSubSolvers?.length ?? 0
     if (solver.constructor.name === "GrowShrinkHighDensityIntraNodeSolver") {
@@ -52,13 +53,22 @@ function measureSearchRetention(root: BaseSolver): RetentionSummary {
       }
     }
     for (const key of [
-      "highDensityRouteSolver", "highDensitySolver", "activeSubSolver",
-      "activeRegularSolver", "activeB01Solver", "activeFallbackSolver",
-      "winningSolver", "activeSolver",
+      "highDensityRouteSolver",
+      "highDensitySolver",
+      "activeSubSolver",
+      "activeRegularSolver",
+      "activeB01Solver",
+      "activeFallbackSolver",
+      "winningSolver",
+      "activeSolver",
     ]) {
       pending.push(solver[key])
     }
-    for (const key of ["supervisedSolvers", "failedSolvers", "failedSubSolvers"]) {
+    for (const key of [
+      "supervisedSolvers",
+      "failedSolvers",
+      "failedSubSolvers",
+    ]) {
       if (Array.isArray(solver[key])) {
         pending.push(...solver[key].map((entry: any) => entry.solver ?? entry))
       }
@@ -80,15 +90,19 @@ const maxSteps = Number(values["max-steps"])
 const maxRssMiB = Number(values["max-rss-mib"])
 const maxSeconds = Number(values["max-seconds"])
 if (
-  !Number.isSafeInteger(maxSteps) || maxSteps < 1 ||
-  !Number.isFinite(maxRssMiB) || maxRssMiB <= 0 ||
-  !Number.isFinite(maxSeconds) || maxSeconds <= 0
+  !Number.isSafeInteger(maxSteps) ||
+  maxSteps < 1 ||
+  !Number.isFinite(maxRssMiB) ||
+  maxRssMiB <= 0 ||
+  !Number.isFinite(maxSeconds) ||
+  maxSeconds <= 0
 ) {
   throw new Error("Memory reproduction limits must be positive finite numbers")
 }
 const solver = values.full
   ? new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      loadA64FullDdrMemoryInput(), { effort: 1, cacheProvider: null },
+      loadA64FullDdrMemoryInput(),
+      { effort: 1, cacheProvider: null },
     )
   : new Pipeline9HighDensitySolver(loadA64DdrHighDensityMemoryParams())
 const started = performance.now()
@@ -111,8 +125,10 @@ for (let steps = 0; steps < maxSteps; steps++) {
       iterations: solver.iterations,
       rssBytes: memory.rss,
       heapUsedBytes: memory.heapUsed,
-      phase: solver instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
-        ? solver.getCurrentPhase() : "highDensityRouteSolver",
+      phase:
+        solver instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
+          ? solver.getCurrentPhase()
+          : "highDensityRouteSolver",
       retention: measureSearchRetention(solver),
     }
     observations.push(observation)
@@ -128,13 +144,17 @@ for (let steps = 0; steps < maxSteps; steps++) {
     nextObservation = now + 1000
   }
 }
-const highDensity = solver instanceof Pipeline9HighDensitySolver
-  ? solver : solver.highDensityRouteSolver
+const highDensity =
+  solver instanceof Pipeline9HighDensitySolver
+    ? solver
+    : solver.highDensityRouteSolver
 const routes = highDensity?.routes ?? []
 const result = {
   runtime: Bun.version,
   fullPipeline: values.full,
-  maxSteps, maxRssMiB, maxSeconds,
+  maxSteps,
+  maxRssMiB,
+  maxSeconds,
   stopReason,
   seconds: (performance.now() - started) / 1000,
   sampledPeakRssBytes,
@@ -144,11 +164,14 @@ const result = {
   failed: solver.failed,
   error: solver.error,
   localRouteCount: routes.length,
-  localRoutesSha256: createHash("sha256").update(JSON.stringify(routes)).digest("hex"),
+  localRoutesSha256: createHash("sha256")
+    .update(JSON.stringify(routes))
+    .digest("hex"),
   highDensityStats: highDensity?.stats,
   retention: measureSearchRetention(solver),
   observations,
 }
 if (values.report) writeFileSync(values.report, JSON.stringify(result, null, 2))
 console.log(JSON.stringify(result))
-if (stopReason === "memory_limit" || stopReason === "time_limit") process.exitCode = 2
+if (stopReason === "memory_limit" || stopReason === "time_limit")
+  process.exitCode = 2
