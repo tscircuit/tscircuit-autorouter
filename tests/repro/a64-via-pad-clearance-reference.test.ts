@@ -25,7 +25,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing(
+test(
   "reference DRC reports the real A64 DQ2 via copper too close to foreign pad U2.F3",
   (): void => {
     expect(measured).toHaveLength(1)
@@ -41,5 +41,26 @@ test.failing(
       }),
     )
     expect(input).toEqual(fixture.srj)
+
+    const genericPadRule = { ...input, minPadEdgeToPadEdgeClearance: 0.25 }
+    const genericReference = evaluateRelaxedDrc(
+      getA64Byte0ReferenceDrcInput({
+        inputSrj: genericPadRule,
+        routedTraces: [trace],
+      }),
+    )
+    expect(genericReference.errors).toContainEqual(
+      expect.objectContaining({
+        type: "pcb_pad_pad_clearance_error",
+        minimum_clearance: 0.25,
+      }),
+    )
+    const explicitViaRule = evaluateRelaxedDrc(
+      getA64Byte0ReferenceDrcInput({
+        inputSrj: { ...genericPadRule, minViaEdgeToPadEdgeClearance: 0.05 },
+        routedTraces: [trace],
+      }),
+    )
+    expect(explicitViaRule.errors).toEqual([])
   },
 )

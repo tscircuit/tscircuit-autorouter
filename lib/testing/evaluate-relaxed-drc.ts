@@ -89,6 +89,11 @@ export const evaluateRelaxedDrc = ({
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+      viaToPadClearance:
+        inputSrj.minViaEdgeToPadEdgeClearance ??
+        inputSrj.minPadEdgeToPadEdgeClearance ??
+        inputSrj.defaultObstacleMargin ??
+        RELAXED_DRC_OPTIONS.traceClearance,
       ...drcOptions,
     }),
   }
