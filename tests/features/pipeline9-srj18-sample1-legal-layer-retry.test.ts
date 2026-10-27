@@ -6,7 +6,8 @@ test("Pipeline9 retries an impossible SRJ18 node across legal layers", async ():
   const { scenario } = await loadScenarioBySampleNumber("srj18", 1)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // This regression targets the original native node's layer retry.
+    { cacheProvider: null, effort: 1, usePhysicalNetForest: false },
   )
 
   solver.solveUntilPhase("highDensityStitchSolver")

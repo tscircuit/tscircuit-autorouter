@@ -36,6 +36,8 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
+  /** Explicit null disables process-local route caches, including fallback work. */
+  cacheProvider?: null
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -315,6 +317,7 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
+  cacheProvider?: null
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -357,6 +360,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  cacheProvider,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -385,6 +389,7 @@ export const createPipeline9RegularNodeSolver = ({
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
+    cacheProvider,
   })
 
 /**
@@ -684,6 +689,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      cacheProvider: this.params.cacheProvider,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -746,6 +752,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      cacheProvider: this.params.cacheProvider,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,

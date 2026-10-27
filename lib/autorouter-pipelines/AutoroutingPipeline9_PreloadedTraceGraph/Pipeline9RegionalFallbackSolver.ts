@@ -16,6 +16,7 @@ import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVi
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
+  cacheProvider?: null
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
@@ -149,6 +150,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       repairCandidateRejectionCount: 0,
     }
     this.highDensitySolver = new HighDensitySolver({
+      cacheProvider: params.cacheProvider,
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
       connMap: params.connMap,

@@ -1,6 +1,7 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import type { CacheProvider } from "lib/cache/types"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
@@ -70,6 +71,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
+  readonly cacheProvider: CacheProvider | null
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
     viaHoleDiameter?: number
@@ -121,6 +123,7 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
+    cacheProvider,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -149,6 +152,7 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
+    cacheProvider?: CacheProvider | null
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -180,6 +184,7 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
+    this.cacheProvider = cacheProvider === undefined ? getGlobalInMemoryCache() : cacheProvider
     this.priorityDagOptions = {
       priorityDagSearch,
       viaHoleDiameter,
@@ -442,6 +447,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      cacheProvider: this.cacheProvider,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
@@ -450,9 +456,8 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private updateCacheStats() {
-    const cacheProvider = getGlobalInMemoryCache()
-    this.stats.intraNodeCacheHits = cacheProvider.cacheHits
-    this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
+    this.stats.intraNodeCacheHits = this.cacheProvider?.cacheHits ?? 0
+    this.stats.intraNodeCacheMisses = this.cacheProvider?.cacheMisses ?? 0
   }
 
   visualize(): GraphicsObject {

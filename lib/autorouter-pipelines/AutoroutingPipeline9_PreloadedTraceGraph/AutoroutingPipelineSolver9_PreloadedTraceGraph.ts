@@ -658,6 +658,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
+            cacheProvider: cms.cacheProvider === null ? null : undefined,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },
@@ -868,6 +869,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
+            generatedFixedTraceIds: new Set(
+              (cms.physicalNetForestSolver?.branches ?? []).map(
+                (trace) => trace.pcb_trace_id,
+              ),
+            ),
             mutatedPreloadedTraceIds: new Set(
               preloadedTraceUpdates.mutatedPreloadedTraces.map(
                 (trace) => trace.pcb_trace_id,
@@ -1671,18 +1677,30 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
   }
 
-  private getUpdatedPhysicalTraces(): SimplifiedPcbTraces {
+  private getAllUpdatedFixedTraces(): SimplifiedPcbTraces {
     return (
       this.pipeline9JointDrcRepairSolver?.getUpdatedPreloadedTraces() ??
       this.getPreloadedTraceUpdatesAfterHighDensity().updatedPreloadedTraces
     )
   }
 
+  private getUpdatedPhysicalTraces(): SimplifiedPcbTraces {
+    const originalIds = new Set(
+      (this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
+    )
+    return [
+      ...this.getUpdatedPreloadedTraces(),
+      ...this.getAllUpdatedFixedTraces().filter(
+        (trace) => !originalIds.has(trace.pcb_trace_id),
+      ),
+    ]
+  }
+
   getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
     const originalIds = new Set(
       (this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
     )
-    return this.getUpdatedPhysicalTraces().filter(
+    return this.getAllUpdatedFixedTraces().filter(
       (trace) => originalIds.has(trace.pcb_trace_id),
     )
   }
@@ -1741,7 +1759,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined ||
-          this.physicalNetForestSolver!.branches.some(
+          (this.physicalNetForestSolver?.branches ?? []).some(
             (branch) => branch.pcb_trace_id === trace.pcb_trace_id,
           ),
       ),

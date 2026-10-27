@@ -12,6 +12,8 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
     ),
   ).json()
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+    // Isolate the original Tiny timeout population and its exact work cap.
+    usePhysicalNetForest: false,
     effort: 0.01,
     cacheProvider: null,
   })

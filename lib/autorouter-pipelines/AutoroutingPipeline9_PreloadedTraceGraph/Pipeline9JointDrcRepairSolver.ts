@@ -1,6 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { prepareGeneratedForestBoundedRepairInput } from "./prepareGeneratedForestBoundedRepairInput"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
   AutoroutingDrcEngine,
@@ -68,6 +69,7 @@ type Pipeline9JointDrcRepairSolverParams = {
   newHdRoutes: HighDensityRoute[]
   updatedPreloadedTraces: SimplifiedPcbTrace[]
   mutatedPreloadedTraceIds: ReadonlySet<string>
+  generatedFixedTraceIds?: ReadonlySet<string>
   connMap: ConnectivityMap
   obstacles: Obstacle[]
   layerCount: number
@@ -650,6 +652,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
+  private readonly boundedRepairSrj: SimpleRouteJson
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
@@ -714,7 +717,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           new Pipeline9BoundedRegionalRepairSolver({
             connMap: this.params.connMap,
             originalSrj: {
-              ...this.params.originalSrj,
+              ...this.boundedRepairSrj,
               connections: [
                 ...this.params.originalSrj.connections,
                 ...this.params.newConnections,
@@ -804,6 +807,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     this.params = params
+    const generatedFixedTraceIds = params.generatedFixedTraceIds ?? new Set<string>()
+    const boundedInput = prepareGeneratedForestBoundedRepairInput({
+      originalSrj: params.originalSrj,
+      updatedPreloadedTraces: params.updatedPreloadedTraces,
+      generatedFixedTraceIds,
+      connMap: params.connMap,
+      defaultViaDiameter: params.defaultViaDiameter,
+    })
+    this.boundedRepairSrj = boundedInput.srj
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
 
@@ -943,6 +955,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       connMap: params.connMap,
     })) {
       candidateMovablePreloadedTraceIds.add(traceId)
+    }
+
+    // Forest junctions are already physically committed. Bounded/exact repair
+    // may move neighboring new copper, while these owned branches remain fixed.
+    for (const traceId of generatedFixedTraceIds) {
+      candidateMovablePreloadedTraceIds.delete(traceId)
     }
 
     // Through-obstacle connectivity belongs to the connected component
@@ -1099,6 +1117,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
+      generatedForestBoundedRepairTraceCount: boundedInput.projectedTraceCount,
+      generatedForestBoundedRepairPrimitiveCount: boundedInput.primitiveCount,
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
@@ -1597,8 +1617,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // Bounded repair does not own preloaded copper. Keep those boards on
     // their existing exact/preload repair stages without an extra search.
     if (
-      params.updatedPreloadedTraces.length > 0 ||
-      (params.originalSrj.traces?.length ?? 0) > 0
+      params.updatedPreloadedTraces.some((trace) => !generatedFixedTraceIds.has(trace.pcb_trace_id)) ||
+      (params.originalSrj.traces ?? []).some((trace) => !generatedFixedTraceIds.has(trace.pcb_trace_id))
     ) {
       this.pipelineDef.splice(1, 1)
     }
@@ -1936,7 +1956,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.boundedRegionalParams = {
       connMap: this.params.connMap,
       originalSrj: {
-        ...this.params.originalSrj,
+        ...this.boundedRepairSrj,
         connections: [
           ...this.params.originalSrj.connections,
           ...this.params.newConnections,

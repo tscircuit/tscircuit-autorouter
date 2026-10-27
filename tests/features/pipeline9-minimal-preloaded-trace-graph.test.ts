@@ -13,6 +13,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const srj = structuredClone(scenario) as SimpleRouteJson
   srj.minBoardEdgeClearance = 0.23
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+    // Compare preloaded versus trace-free topology with the same native demands.
+    usePhysicalNetForest: false,
     targetMinCapacity: 0.75,
     maxNodeDimension: 3,
     effort: 0.1,
@@ -20,6 +22,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const traceFreeSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     { ...structuredClone(srj), traces: undefined },
     {
+      usePhysicalNetForest: false,
       targetMinCapacity: 0.75,
       maxNodeDimension: 3,
       effort: 0.1,
@@ -106,7 +109,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 5)
   for (const stageName of [
     "highDensityRepairSolver",
     "highDensityStitchSolver",
