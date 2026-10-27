@@ -1874,16 +1874,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
     this.regionalB01Params = {
-      srj: {
-        ...this.params.srj,
-        connections: [
-          ...this.params.srj.connections,
-          ...this.movablePreloadedSections.map(
-            (section): SimpleRouteConnection =>
-              createSyntheticConnection(section, this.params.layerCount),
-          ),
-        ],
-      },
+      srj: this.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
@@ -1942,22 +1933,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ).length,
       this.params.effort,
     )
-    const movablePreloadedTraceIds = new Set(
-      this.movablePreloadedSections.map(
-        (section) => section.originalTrace.pcb_trace_id,
-      ),
-    )
-    const fixedPreloadedTraces = this.params.updatedPreloadedTraces.flatMap(
-      (trace): SimplifiedPcbTrace[] => {
-        if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) return [trace]
-        const fixedBarrels = trace.route.filter(
-          (point) => point.route_type === "through_obstacle",
-        )
-        return fixedBarrels.length === 0
-          ? []
-          : [{ ...trace, route: fixedBarrels }]
-      },
-    )
     this.boundedRegionalParams = {
       connMap: this.params.connMap,
       originalSrj: {
@@ -1965,15 +1940,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connections: [
           ...this.params.originalSrj.connections,
           ...this.params.newConnections,
-          ...this.movablePreloadedSections.map(
-            (section): SimpleRouteConnection =>
-              createSyntheticConnection(section, this.params.layerCount),
-          ),
         ],
-      },
-      fixedPreloadedContext: {
-        traces: fixedPreloadedTraces,
-        obstacleRoutes: this.fixedPreloadedObstacleRoutes,
       },
       routes: regionalB01RepairResult.routes,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,

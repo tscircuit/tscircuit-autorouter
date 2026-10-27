@@ -20,6 +20,7 @@ test("owned serial and native worker batches activate the same sparse physical s
     }),
   )
   const input = {
+    sparsePhysicalSearch: true,
     nodePortPoints,
     connMap: new ConnectivityMap({}),
     fixedHdRoutes: [],

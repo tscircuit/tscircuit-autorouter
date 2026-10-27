@@ -569,7 +569,6 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     if (!narrowestLimit) return undefined
-    narrowestLimit.width = Math.max(narrowestLimit.width, this.minTraceWidth)
     if (narrowestLimit.width >= traceWidth - COORDINATE_EPSILON) {
       return undefined
     }

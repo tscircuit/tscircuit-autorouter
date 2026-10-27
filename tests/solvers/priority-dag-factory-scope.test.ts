@@ -44,7 +44,7 @@ test("priority policy activates in ordinary local Pipeline9 while the shared net
   )
   expect(
     solver.activeRegularSolver?.priorityDagOptions.sparsePhysicalSearch,
-  ).toBe(true)
+  ).toBe(false)
   expect(solver.activeRegularSolver?.priorityDagOptions.viaHoleDiameter).toBe(
     0.15,
   )

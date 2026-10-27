@@ -11,6 +11,7 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { JointComponentEscapePlannerSolver } from "lib/solvers/JointComponentEscapePlannerSolver/JointComponentEscapePlannerSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -69,7 +70,6 @@ import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitch
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
-import { Pipeline9TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -107,6 +107,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  jointComponentEscapePlanning?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -280,6 +281,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
+  jointComponentEscapePlannerSolver?: JointComponentEscapePlannerSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   preloadedTraceGraphSolver?: PreloadedTraceGraphSolver
@@ -541,6 +543,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -586,6 +589,35 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "jointComponentEscapePlannerSolver",
+      JointComponentEscapePlannerSolver,
+      (cms) => {
+        const pathing = cms.portPointPathingSolver!.getOutput()
+        const components = cms.componentDetectionSolver!.getOutput()
+        const componentSrjs = cms.topologyPlanningSolver!.getOutput().componentNoConnectionSrjs
+        return [{
+          nodesWithPortPoints: cms.uniformPortDistributionSolver!.getOutput(),
+          inputNodesWithPortPoints: pathing.inputNodeWithPortPoints,
+          capacityNodes: cms.capacityNodes!,
+          componentAreas: components.map((component, index) => ({
+            componentId: component.componentId,
+            bounds: componentSrjs[index]!.bounds,
+          })),
+          connections: cms.srjWithPointPairs!.connections,
+          physicalConnections: cms.originalSrj.connections,
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+          traceWidth: cms.minTraceWidth,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance!,
+          padClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance!,
+          traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance,
+          connectivityNetMap: cms.connMap.netMap,
+          enabled: cms.opts.jointComponentEscapePlanning !== false,
+        }]
+      },
+    ),
+    definePipelineStep(
       "highDensityRouteSolver",
       Pipeline9HighDensitySolver,
       (cms) => {
@@ -597,7 +629,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         }
         const portPointPathingOutput = portPointPathingSolver.getOutput()
         const uniformNodes =
-          cms.uniformPortDistributionSolver?.getOutput() ?? []
+          cms.jointComponentEscapePlannerSolver!.getOutput()
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
@@ -638,14 +670,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
-            actualCopperClearance:
-              cms.originalSrj.minTraceToPadEdgeClearance ??
-              RELAXED_DRC_OPTIONS.traceClearance ??
-              0.1,
-            actualViaPadClearance:
-              cms.originalSrj.minPadEdgeToPadEdgeClearance ??
-              RELAXED_DRC_OPTIONS.viaClearance ??
-              0.1,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -716,7 +740,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "traceSimplificationSolver",
-      Pipeline9TraceSimplificationSolver,
+      TraceSimplificationSolver,
       (cms) => {
         const preloadedHdRoutes = cms
           .getPreloadedTraceUpdatesAfterHighDensity()
@@ -772,7 +796,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "mutatedPreloadedTraceSimplificationSolver",
-      Pipeline9TraceSimplificationSolver,
+      TraceSimplificationSolver,
       (cms) => {
         const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
         const editableHdRoutes = preparedSections.sections.map(
@@ -1162,6 +1186,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof
+            TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {

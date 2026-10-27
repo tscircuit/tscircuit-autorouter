@@ -36,6 +36,8 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
+  /** Retained sparse-kernel experiment; joint escape evaluation uses native physics. */
+  sparsePhysicalSearch?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -698,7 +700,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      sparsePhysicalSearch: true,
+      sparsePhysicalSearch: this.params.sparsePhysicalSearch ?? false,
       actualCopperClearance: this.params.actualCopperClearance,
       actualViaPadClearance: this.params.actualViaPadClearance,
     })
