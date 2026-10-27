@@ -1,0 +1,2311 @@
+{
+  "description": "Sequential separate-process A64 memory comparison; no forced GC. Three interleaved baseline/fixed high-density pairs, then one baseline/fixed full-pipeline prefix pair. All runs are intentionally incomplete and stop at identical outer-step budgets. RSS varies with the runtime/allocator; no speedup or full-route-completion claim.",
+  "runtime": "Bun 1.4.3",
+  "platform": "Linux x86_64",
+  "baselineProductionRevision": "637b6c581128238f6c61227a1c15be423d24baca",
+  "sourceSnapshots": {
+    "baseline": "fc67c33dab04ff3bd3424cbf220c2aeb4dd27ac6",
+    "fixed": "233e57801db9bdd8801f7037faa4558b8d85274f"
+  },
+  "sourceBlobIds": {
+    "baseline": {
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts": "83ce019c6e916da0df92101a71d8cbd71d35f767",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts": "ebf1b798c075575b3543d72a7ab0a760784eecb4",
+      "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts": "032ccd61f97a926df88984d728442f0d1c970284",
+      "lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts": "1fd693a0f06bab324721eaf849f4c55dc365e911",
+      "scripts/repro-a64-ddr-memory.ts": "fcfcce7974f2f62445fc94ad197a5713dee7eb83"
+    },
+    "fixed": {
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts": "686d5fcd57d11c8dcb0e49316555893629d788e8",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts": "03a299f8dba4d23dfe7cad97f2f34660fd3e4183",
+      "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts": "deaf5169c8fe5b0f31b4064fb22931d4a78356a2",
+      "lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts": "92bc61e450806a7214ea6eba965ce64eeb44f05b",
+      "scripts/repro-a64-ddr-memory.ts": "fcfcce7974f2f62445fc94ad197a5713dee7eb83"
+    }
+  },
+  "sourceNote": "Source snapshots identify the measured production and harness contents; fixture-only whitespace commits were applied during the measurement batch.",
+  "decompressedFixtureSha256": {
+    "a64-ddr-high-density-memory.json.gz": "fed69f08584352af00dfeb87fe88967336d4f6dbc7cf3bdfba47fd39954c1b46",
+    "a64-full-ddr-memory.srj.json.gz": "9d3e7417f6b1b1711ffc642c02fda5333cb33861d08bb1cc91228846bb751848",
+    "a64-ddr-topology-memory.json.gz": "d9963fdce4e1ffa3979dd134c36e6092ce889880439fdfe4bc18e15fe2205909",
+    "a64-ddr-regional-memory.json.gz": "fa6404132520a34c16fcbe168b9914e685a02038872dc3fb7bb48ccff23b143a"
+  },
+  "commands": [
+    "bun scripts/repro-a64-ddr-memory.ts --max-steps 100000 --report <report.json>",
+    "bun scripts/repro-a64-ddr-memory.ts --full --max-steps 2284662 --max-rss-mib 8192 --report <report.json>"
+  ],
+  "reports": {
+    "base-full-prefix-final.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": true,
+      "maxSteps": 2284662,
+      "maxRssMiB": 8192,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 59.46069476,
+      "sampledPeakRssBytes": 5030842368,
+      "processPeakRssBytes": 5030842368,
+      "iterations": 2284662,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 6,
+        "portfolioCandidates": 0,
+        "retiredGrowthPortfolios": 0,
+        "debugExplorationPoints": 0,
+        "retainedFailedRouteSearches": 0,
+        "planarPointCacheEntries": 0,
+        "typedBufferBytes": 0,
+        "topologyAtomicRegions": 515892
+      },
+      "observations": [
+        {
+          "seconds": 0.00016221400000000584,
+          "iterations": 1,
+          "rssBytes": 139157504,
+          "heapUsedBytes": 41391682,
+          "phase": "preprocessSimpleRouteJsonSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.000255303,
+          "iterations": 12332,
+          "rssBytes": 252178432,
+          "heapUsedBytes": 55307468,
+          "phase": "topologyPlanningSolver",
+          "retention": {
+            "solverCount": 5,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.00025758,
+          "iterations": 59732,
+          "rssBytes": 280768512,
+          "heapUsedBytes": 67140384,
+          "phase": "topologyPlanningSolver",
+          "retention": {
+            "solverCount": 5,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.0014870460000003,
+          "iterations": 91776,
+          "rssBytes": 414650368,
+          "heapUsedBytes": 137216937,
+          "phase": "topologyMergingSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 142477
+          }
+        },
+        {
+          "seconds": 13.769781035,
+          "iterations": 92935,
+          "rssBytes": 1322287104,
+          "heapUsedBytes": 375353455,
+          "phase": "nodeDimensionSubdivisionSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 15.217748939,
+          "iterations": 140404,
+          "rssBytes": 1345990656,
+          "heapUsedBytes": 449928624,
+          "phase": "availableSegmentPointSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 18.345312467,
+          "iterations": 140587,
+          "rssBytes": 2271936512,
+          "heapUsedBytes": 784047271,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 19.345560878,
+          "iterations": 293141,
+          "rssBytes": 2227855360,
+          "heapUsedBytes": 784047271,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 20.345567865999996,
+          "iterations": 662513,
+          "rssBytes": 2236854272,
+          "heapUsedBytes": 784047271,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 21.345568828,
+          "iterations": 1034971,
+          "rssBytes": 2259267584,
+          "heapUsedBytes": 784047271,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 22.345569868,
+          "iterations": 1407767,
+          "rssBytes": 2410524672,
+          "heapUsedBytes": 784047271,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 23.34557387,
+          "iterations": 1776609,
+          "rssBytes": 2410401792,
+          "heapUsedBytes": 948827996,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 34.571450305000006,
+          "iterations": 2140588,
+          "rssBytes": 2858147840,
+          "heapUsedBytes": 1305845244,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 35.632728442,
+          "iterations": 2140592,
+          "rssBytes": 2936066048,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 36.63689856800001,
+          "iterations": 2141647,
+          "rssBytes": 2933133312,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 37.638079936000004,
+          "iterations": 2142273,
+          "rssBytes": 2933133312,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 38.638878733000006,
+          "iterations": 2142736,
+          "rssBytes": 2933227520,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 39.642532745000004,
+          "iterations": 2143134,
+          "rssBytes": 2933227520,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 40.648461776000005,
+          "iterations": 2143443,
+          "rssBytes": 2933227520,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 41.650556577,
+          "iterations": 2143745,
+          "rssBytes": 2933227520,
+          "heapUsedBytes": 1305845244,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 42.65058369,
+          "iterations": 2149777,
+          "rssBytes": 3218083840,
+          "heapUsedBytes": 1520484364,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 35,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 188844,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 43.65144824000001,
+          "iterations": 2160556,
+          "rssBytes": 3255418880,
+          "heapUsedBytes": 1520484364,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 145,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 980,
+            "retainedFailedRouteSearches": 63,
+            "planarPointCacheEntries": 1147,
+            "typedBufferBytes": 643164,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 44.651738425000005,
+          "iterations": 2164575,
+          "rssBytes": 3120324608,
+          "heapUsedBytes": 1528415405,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 279,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 136709,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 28555,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 45.651748367,
+          "iterations": 2180436,
+          "rssBytes": 3148247040,
+          "heapUsedBytes": 1528415405,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 284,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 219059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 36914,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 46.651761788,
+          "iterations": 2210903,
+          "rssBytes": 3264319488,
+          "heapUsedBytes": 1607347306,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 284,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 219059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 36914,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 47.652104083000005,
+          "iterations": 2221229,
+          "rssBytes": 3280506880,
+          "heapUsedBytes": 1607347306,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 284,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 348031,
+            "retainedFailedRouteSearches": 105,
+            "planarPointCacheEntries": 42556,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 48.65223301100001,
+          "iterations": 2224094,
+          "rssBytes": 3325419520,
+          "heapUsedBytes": 1607347306,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 418,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 509676,
+            "retainedFailedRouteSearches": 145,
+            "planarPointCacheEntries": 107364,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 49.652491605,
+          "iterations": 2229545,
+          "rssBytes": 3415113728,
+          "heapUsedBytes": 1736964739,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 418,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 622514,
+            "retainedFailedRouteSearches": 152,
+            "planarPointCacheEntries": 163848,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 50.652494607,
+          "iterations": 2257192,
+          "rssBytes": 3460251648,
+          "heapUsedBytes": 1736964739,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 423,
+            "portfolioCandidates": 225,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 628114,
+            "retainedFailedRouteSearches": 152,
+            "planarPointCacheEntries": 164781,
+            "typedBufferBytes": 7169856,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 51.652516299000006,
+          "iterations": 2280935,
+          "rssBytes": 3522580480,
+          "heapUsedBytes": 1736964739,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 423,
+            "portfolioCandidates": 225,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 629514,
+            "retainedFailedRouteSearches": 152,
+            "planarPointCacheEntries": 165373,
+            "typedBufferBytes": 7169856,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 52.652932250000006,
+          "iterations": 2283239,
+          "rssBytes": 3549528064,
+          "heapUsedBytes": 1354369411,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 423,
+            "portfolioCandidates": 225,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 736533,
+            "retainedFailedRouteSearches": 165,
+            "planarPointCacheEntries": 214283,
+            "typedBufferBytes": 7169856,
+            "topologyAtomicRegions": 515892
+          }
+        },
+        {
+          "seconds": 59.460542781,
+          "iterations": 2284662,
+          "rssBytes": 5030842368,
+          "heapUsedBytes": 1397830265,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 6,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 515892
+          }
+        }
+      ]
+    },
+    "base-stage-final-1.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.775238043,
+      "sampledPeakRssBytes": 694988800,
+      "processPeakRssBytes": 779497472,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 421,
+        "portfolioCandidates": 225,
+        "retiredGrowthPortfolios": 2,
+        "debugExplorationPoints": 628114,
+        "retainedFailedRouteSearches": 152,
+        "planarPointCacheEntries": 164781,
+        "typedBufferBytes": 7169856,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0017067010000000097,
+          "iterations": 1,
+          "rssBytes": 176287744,
+          "heapUsedBytes": 43557384,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.001796975,
+          "iterations": 7035,
+          "rssBytes": 376078336,
+          "heapUsedBytes": 96783637,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.002119764,
+          "iterations": 17568,
+          "rssBytes": 418742272,
+          "heapUsedBytes": 134251967,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 47391,
+            "retainedFailedRouteSearches": 81,
+            "planarPointCacheEntries": 14560,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.0028861069999997,
+          "iterations": 24128,
+          "rssBytes": 459894784,
+          "heapUsedBytes": 210041499,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 201659,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 35366,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.002903211,
+          "iterations": 55874,
+          "rssBytes": 572841984,
+          "heapUsedBytes": 136337162,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 219059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 36914,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.003347643,
+          "iterations": 76771,
+          "rssBytes": 632545280,
+          "heapUsedBytes": 156989613,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 283939,
+            "retainedFailedRouteSearches": 97,
+            "planarPointCacheEntries": 41718,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.003529770999999,
+          "iterations": 79090,
+          "rssBytes": 646889472,
+          "heapUsedBytes": 208870501,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 474400,
+            "retainedFailedRouteSearches": 141,
+            "planarPointCacheEntries": 96861,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.004312688,
+          "iterations": 84098,
+          "rssBytes": 694988800,
+          "heapUsedBytes": 259366814,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 607953,
+            "retainedFailedRouteSearches": 151,
+            "planarPointCacheEntries": 163903,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "base-stage-final-2.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.754045733,
+      "sampledPeakRssBytes": 686952448,
+      "processPeakRssBytes": 768503808,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 421,
+        "portfolioCandidates": 225,
+        "retiredGrowthPortfolios": 2,
+        "debugExplorationPoints": 628114,
+        "retainedFailedRouteSearches": 152,
+        "planarPointCacheEntries": 164781,
+        "typedBufferBytes": 7169856,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0018220249999999964,
+          "iterations": 1,
+          "rssBytes": 179269632,
+          "heapUsedBytes": 44243917,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.001831175,
+          "iterations": 7094,
+          "rssBytes": 364494848,
+          "heapUsedBytes": 95963452,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.001853695,
+          "iterations": 17610,
+          "rssBytes": 420884480,
+          "heapUsedBytes": 126478847,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 51591,
+            "retainedFailedRouteSearches": 81,
+            "planarPointCacheEntries": 15360,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.002445002,
+          "iterations": 24379,
+          "rssBytes": 453271552,
+          "heapUsedBytes": 200157112,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 206759,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 35939,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.002445048999999,
+          "iterations": 57086,
+          "rssBytes": 602771456,
+          "heapUsedBytes": 132162475,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 219059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 36914,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.002651857000001,
+          "iterations": 76848,
+          "rssBytes": 622923776,
+          "heapUsedBytes": 150516800,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 291403,
+            "retainedFailedRouteSearches": 102,
+            "planarPointCacheEntries": 42086,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.002978194000001,
+          "iterations": 79227,
+          "rssBytes": 634105856,
+          "heapUsedBytes": 244483005,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 470404,
+            "retainedFailedRouteSearches": 143,
+            "planarPointCacheEntries": 91992,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.00300174,
+          "iterations": 84420,
+          "rssBytes": 686952448,
+          "heapUsedBytes": 310102200,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 605662,
+            "retainedFailedRouteSearches": 152,
+            "planarPointCacheEntries": 157290,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "base-stage-final-3.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.807946622,
+      "sampledPeakRssBytes": 700686336,
+      "processPeakRssBytes": 795860992,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 421,
+        "portfolioCandidates": 225,
+        "retiredGrowthPortfolios": 2,
+        "debugExplorationPoints": 628114,
+        "retainedFailedRouteSearches": 152,
+        "planarPointCacheEntries": 164781,
+        "typedBufferBytes": 7169856,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0015236550000000194,
+          "iterations": 1,
+          "rssBytes": 179974144,
+          "heapUsedBytes": 43548201,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.001775757,
+          "iterations": 7107,
+          "rssBytes": 380846080,
+          "heapUsedBytes": 91355025,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.0021183049999998,
+          "iterations": 17609,
+          "rssBytes": 413872128,
+          "heapUsedBytes": 120780834,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 51491,
+            "retainedFailedRouteSearches": 81,
+            "planarPointCacheEntries": 15351,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.002134803,
+          "iterations": 24344,
+          "rssBytes": 447234048,
+          "heapUsedBytes": 192403184,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 277,
+            "portfolioCandidates": 145,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 205159,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 35651,
+            "typedBufferBytes": 1651860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.002180363000001,
+          "iterations": 55405,
+          "rssBytes": 597000192,
+          "heapUsedBytes": 135422880,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 219059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 36914,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.002279704,
+          "iterations": 76702,
+          "rssBytes": 634462208,
+          "heapUsedBytes": 154943989,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 282,
+            "portfolioCandidates": 150,
+            "retiredGrowthPortfolios": 1,
+            "debugExplorationPoints": 278059,
+            "retainedFailedRouteSearches": 86,
+            "planarPointCacheEntries": 41282,
+            "typedBufferBytes": 2346860,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.002408441000001,
+          "iterations": 79044,
+          "rssBytes": 647688192,
+          "heapUsedBytes": 250574796,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 469800,
+            "retainedFailedRouteSearches": 141,
+            "planarPointCacheEntries": 95160,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.002768632,
+          "iterations": 83864,
+          "rssBytes": 700686336,
+          "heapUsedBytes": 318735744,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 416,
+            "portfolioCandidates": 220,
+            "retiredGrowthPortfolios": 2,
+            "debugExplorationPoints": 604553,
+            "retainedFailedRouteSearches": 151,
+            "planarPointCacheEntries": 163492,
+            "typedBufferBytes": 4347016,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "fix-full-prefix-final.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": true,
+      "maxSteps": 2284662,
+      "maxRssMiB": 8192,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 60.82601404099999,
+      "sampledPeakRssBytes": 3824099328,
+      "processPeakRssBytes": 3824230400,
+      "iterations": 2284662,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 6,
+        "portfolioCandidates": 0,
+        "retiredGrowthPortfolios": 0,
+        "debugExplorationPoints": 0,
+        "retainedFailedRouteSearches": 0,
+        "planarPointCacheEntries": 0,
+        "typedBufferBytes": 0,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.00018389700000000177,
+          "iterations": 1,
+          "rssBytes": 135208960,
+          "heapUsedBytes": 41204090,
+          "phase": "preprocessSimpleRouteJsonSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.000511127,
+          "iterations": 12129,
+          "rssBytes": 244498432,
+          "heapUsedBytes": 51685593,
+          "phase": "topologyPlanningSolver",
+          "retention": {
+            "solverCount": 5,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.000514614,
+          "iterations": 52196,
+          "rssBytes": 267931648,
+          "heapUsedBytes": 63601464,
+          "phase": "topologyPlanningSolver",
+          "retention": {
+            "solverCount": 5,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.0011032810000002,
+          "iterations": 91706,
+          "rssBytes": 396857344,
+          "heapUsedBytes": 128325581,
+          "phase": "topologyMergingSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 119076
+          }
+        },
+        {
+          "seconds": 14.888005895000001,
+          "iterations": 92935,
+          "rssBytes": 1352425472,
+          "heapUsedBytes": 394966099,
+          "phase": "nodeDimensionSubdivisionSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 16.431999808,
+          "iterations": 140404,
+          "rssBytes": 1394221056,
+          "heapUsedBytes": 471457383,
+          "phase": "availableSegmentPointSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 19.480324687,
+          "iterations": 140587,
+          "rssBytes": 1866625024,
+          "heapUsedBytes": 501608003,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 20.480324894000002,
+          "iterations": 320600,
+          "rssBytes": 1898201088,
+          "heapUsedBytes": 501608003,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 21.480328743,
+          "iterations": 679413,
+          "rssBytes": 2018156544,
+          "heapUsedBytes": 501608003,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 22.480352205,
+          "iterations": 1037933,
+          "rssBytes": 2169937920,
+          "heapUsedBytes": 501608003,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 23.480352997,
+          "iterations": 1409133,
+          "rssBytes": 2138017792,
+          "heapUsedBytes": 693958254,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 24.480359629000002,
+          "iterations": 1779547,
+          "rssBytes": 2143256576,
+          "heapUsedBytes": 693958254,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 4,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 3200932,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 35.915897652,
+          "iterations": 2140588,
+          "rssBytes": 2719657984,
+          "heapUsedBytes": 1083241120,
+          "phase": "portPointPathingSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 36.91599323,
+          "iterations": 2140622,
+          "rssBytes": 2903359488,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 37.917053114999995,
+          "iterations": 2141612,
+          "rssBytes": 2902548480,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 38.918411180999996,
+          "iterations": 2142239,
+          "rssBytes": 2904252416,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 39.918760846,
+          "iterations": 2142683,
+          "rssBytes": 2905563136,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 40.924281232999995,
+          "iterations": 2143080,
+          "rssBytes": 2906451968,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 41.93878858,
+          "iterations": 2143410,
+          "rssBytes": 2907238400,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 42.940095242,
+          "iterations": 2143703,
+          "rssBytes": 2908155904,
+          "heapUsedBytes": 1083241120,
+          "phase": "uniformPortDistributionSolver",
+          "retention": {
+            "solverCount": 3,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 43.940095936999995,
+          "iterations": 2149393,
+          "rssBytes": 3085623296,
+          "heapUsedBytes": 1352941059,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 37,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 207276,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 44.940102231,
+          "iterations": 2158871,
+          "rssBytes": 2959200256,
+          "heapUsedBytes": 1363280669,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 82,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 62556,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 45.940152762,
+          "iterations": 2164300,
+          "rssBytes": 3007799296,
+          "heapUsedBytes": 1363280669,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 117,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 25164,
+            "typedBufferBytes": 847640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 46.940159447,
+          "iterations": 2179559,
+          "rssBytes": 3173412864,
+          "heapUsedBytes": 1363280669,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 122,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34414,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 47.940175415999995,
+          "iterations": 2211465,
+          "rssBytes": 3198550016,
+          "heapUsedBytes": 1428266160,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 122,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34414,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 48.940369923999995,
+          "iterations": 2221271,
+          "rssBytes": 3215216640,
+          "heapUsedBytes": 1428266160,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 103,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 1367536,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 49.940404019999995,
+          "iterations": 2223597,
+          "rssBytes": 3344437248,
+          "heapUsedBytes": 1525343569,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 121,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 38848,
+            "typedBufferBytes": 1825052,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 50.940731452,
+          "iterations": 2229659,
+          "rssBytes": 3335372800,
+          "heapUsedBytes": 1525343569,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 114,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 71859,
+            "typedBufferBytes": 1760540,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 51.940756451999995,
+          "iterations": 2257948,
+          "rssBytes": 3386937344,
+          "heapUsedBytes": 1525343569,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 119,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 72382,
+            "typedBufferBytes": 4583380,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 52.940779739999996,
+          "iterations": 2281302,
+          "rssBytes": 3500564480,
+          "heapUsedBytes": 1525343569,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 119,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 72974,
+            "typedBufferBytes": 4583380,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 53.940783186999994,
+          "iterations": 2283444,
+          "rssBytes": 3456626688,
+          "heapUsedBytes": 1613472720,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 105,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 44080,
+            "typedBufferBytes": 4454356,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 60.825871256,
+          "iterations": 2284662,
+          "rssBytes": 3824099328,
+          "heapUsedBytes": 1664266460,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 6,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "fix-stage-final-1.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.848106473,
+      "sampledPeakRssBytes": 628600832,
+      "processPeakRssBytes": 693587968,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 117,
+        "portfolioCandidates": 75,
+        "retiredGrowthPortfolios": 0,
+        "debugExplorationPoints": 0,
+        "retainedFailedRouteSearches": 0,
+        "planarPointCacheEntries": 72382,
+        "typedBufferBytes": 4583380,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0017042680000000131,
+          "iterations": 1,
+          "rssBytes": 173498368,
+          "heapUsedBytes": 43614975,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.001927492,
+          "iterations": 6989,
+          "rssBytes": 355713024,
+          "heapUsedBytes": 89501739,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.002044485,
+          "iterations": 17469,
+          "rssBytes": 401743872,
+          "heapUsedBytes": 118305387,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 121,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 14399,
+            "typedBufferBytes": 902936,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.002046015,
+          "iterations": 24099,
+          "rssBytes": 428486656,
+          "heapUsedBytes": 176915153,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 115,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 32773,
+            "typedBufferBytes": 847640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.002053794,
+          "iterations": 54650,
+          "rssBytes": 491032576,
+          "heapUsedBytes": 119714793,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34414,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.002378471,
+          "iterations": 76664,
+          "rssBytes": 569425920,
+          "heapUsedBytes": 138881937,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 38535,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.002655906,
+          "iterations": 78948,
+          "rssBytes": 582320128,
+          "heapUsedBytes": 211271337,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 123,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 25770,
+            "typedBufferBytes": 1861916,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.003002835999999,
+          "iterations": 83597,
+          "rssBytes": 628600832,
+          "heapUsedBytes": 259000859,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 113,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 69694,
+            "typedBufferBytes": 1769756,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "fix-stage-final-2.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.755062113999999,
+      "sampledPeakRssBytes": 620363776,
+      "processPeakRssBytes": 672337920,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 117,
+        "portfolioCandidates": 75,
+        "retiredGrowthPortfolios": 0,
+        "debugExplorationPoints": 0,
+        "retainedFailedRouteSearches": 0,
+        "planarPointCacheEntries": 72382,
+        "typedBufferBytes": 4583380,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0015362839999999663,
+          "iterations": 1,
+          "rssBytes": 175411200,
+          "heapUsedBytes": 45748035,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.001832617,
+          "iterations": 7084,
+          "rssBytes": 371015680,
+          "heapUsedBytes": 91620985,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.007607212,
+          "iterations": 17652,
+          "rssBytes": 410849280,
+          "heapUsedBytes": 135109249,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 14764,
+            "typedBufferBytes": 893720,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.008036414,
+          "iterations": 24978,
+          "rssBytes": 432353280,
+          "heapUsedBytes": 176951489,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 115,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34119,
+            "typedBufferBytes": 847640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.008057546000001,
+          "iterations": 58532,
+          "rssBytes": 517677056,
+          "heapUsedBytes": 214496772,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34414,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.008086104999999,
+          "iterations": 76782,
+          "rssBytes": 509272064,
+          "heapUsedBytes": 125663852,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 109,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 15681,
+            "typedBufferBytes": 1441264,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.00809908,
+          "iterations": 79165,
+          "rssBytes": 580034560,
+          "heapUsedBytes": 199942389,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 123,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 32096,
+            "typedBufferBytes": 1861916,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.008144412,
+          "iterations": 84272,
+          "rssBytes": 620363776,
+          "heapUsedBytes": 242929236,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 113,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 72213,
+            "typedBufferBytes": 1769756,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    },
+    "fix-stage-final-3.json": {
+      "runtime": "1.4.3",
+      "fullPipeline": false,
+      "maxSteps": 100000,
+      "maxRssMiB": 4096,
+      "maxSeconds": 360,
+      "stopReason": "step_limit",
+      "seconds": 7.785163291999999,
+      "sampledPeakRssBytes": 627355648,
+      "processPeakRssBytes": 681385984,
+      "iterations": 100000,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "localRouteCount": 79,
+      "localRoutesSha256": "2aa31df365c4b80f8a143e4f65183c10864fce36916a95a63f0bb43d1c61fff6",
+      "highDensityStats": {
+        "nodeCount": 2780,
+        "solvedNodeCount": 58,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 2,
+        "regularNodeCount": 59,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "retention": {
+        "solverCount": 117,
+        "portfolioCandidates": 75,
+        "retiredGrowthPortfolios": 0,
+        "debugExplorationPoints": 0,
+        "retainedFailedRouteSearches": 0,
+        "planarPointCacheEntries": 72382,
+        "typedBufferBytes": 4583380,
+        "topologyAtomicRegions": 0
+      },
+      "observations": [
+        {
+          "seconds": 0.0017958750000000236,
+          "iterations": 1,
+          "rssBytes": 182132736,
+          "heapUsedBytes": 43657971,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 2,
+            "portfolioCandidates": 0,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 0,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 1.002074292,
+          "iterations": 7090,
+          "rssBytes": 381485056,
+          "heapUsedBytes": 91277342,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 29,
+            "portfolioCandidates": 22,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 0,
+            "typedBufferBytes": 151980,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 2.0024424,
+          "iterations": 17592,
+          "rssBytes": 411607040,
+          "heapUsedBytes": 116917865,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 13690,
+            "typedBufferBytes": 893720,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 3.002471098,
+          "iterations": 24364,
+          "rssBytes": 431603712,
+          "heapUsedBytes": 175780777,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 115,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 33151,
+            "typedBufferBytes": 847640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 4.002494168,
+          "iterations": 55129,
+          "rssBytes": 515784704,
+          "heapUsedBytes": 213788716,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 34414,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 5.0026147839999995,
+          "iterations": 76697,
+          "rssBytes": 506343424,
+          "heapUsedBytes": 128347358,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 120,
+            "portfolioCandidates": 75,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 38723,
+            "typedBufferBytes": 1542640,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 6.004160307,
+          "iterations": 79101,
+          "rssBytes": 577679360,
+          "heapUsedBytes": 167609198,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 123,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 32310,
+            "typedBufferBytes": 1861916,
+            "topologyAtomicRegions": 0
+          }
+        },
+        {
+          "seconds": 7.004599991999999,
+          "iterations": 83865,
+          "rssBytes": 627355648,
+          "heapUsedBytes": 244482080,
+          "phase": "highDensityRouteSolver",
+          "retention": {
+            "solverCount": 113,
+            "portfolioCandidates": 70,
+            "retiredGrowthPortfolios": 0,
+            "debugExplorationPoints": 0,
+            "retainedFailedRouteSearches": 0,
+            "planarPointCacheEntries": 71106,
+            "typedBufferBytes": 1769756,
+            "topologyAtomicRegions": 0
+          }
+        }
+      ]
+    }
+  }
+}
