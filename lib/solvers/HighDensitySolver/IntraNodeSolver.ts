@@ -12,6 +12,7 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import type { MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
   precomputeIntraNodeRouteParams,
@@ -104,6 +105,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacleMargin?: number
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
+    mandatoryPortPointIndex?: MandatoryPortPointIndex
     layerCount?: number
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean

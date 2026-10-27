@@ -21,6 +21,7 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { createMandatoryPortPointIndex, type MandatoryPortPointIndex } from "../../solvers/HighDensitySolver/mandatoryPortPointIndex"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -42,6 +43,7 @@ export type Pipeline9HighDensitySolverParams = {
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  mandatoryPortPointIndex?: MandatoryPortPointIndex
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
@@ -334,6 +336,7 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  mandatoryPortPointIndex?: MandatoryPortPointIndex
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
@@ -364,6 +367,7 @@ export const createPipeline9RegularNodeSolver = ({
   nodePfById,
   obstacles,
   boardGeometry,
+  mandatoryPortPointIndex,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
@@ -388,6 +392,7 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
+    mandatoryPortPointIndex,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -409,6 +414,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
   readonly boardGeometry?: HighDensityBoardGeometry
+  readonly mandatoryPortPointIndex: MandatoryPortPointIndex
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
@@ -448,6 +454,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
+    this.mandatoryPortPointIndex = params.mandatoryPortPointIndex ?? createMandatoryPortPointIndex(params.nodePortPoints)
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
@@ -554,6 +561,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         const promise = runtime
           .executeAsync(Pipeline9HighDensityBatchSolver, {
             ...params,
+            mandatoryPortPointIndex: this.mandatoryPortPointIndex,
             nodePortPoints: batch.nodes.map(({ node }) => node),
             nodePfById,
             connectivityNetMap: connMap.netMap,
@@ -695,6 +703,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
+      mandatoryPortPointIndex: this.mandatoryPortPointIndex,
       layerCount: this.layerCount,
       viaHoleDiameter: this.params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance:
@@ -774,6 +783,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
       boardObstacles: this.obstacles,
+      boardGeometry: this.boardGeometry,
+      mandatoryPortPointIndex: this.mandatoryPortPointIndex,
+      viaHoleDiameter: this.params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.params.minViaHoleEdgeToViaHoleEdgeClearance,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       traceToPadClearance: this.traceToPadClearance,
       traceToHoleClearance: this.traceToHoleClearance,

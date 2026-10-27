@@ -4,6 +4,9 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { areRoutesClearOfMandatoryPorts } from "lib/solvers/HighDensitySolver/findSingleTransitionVia"
+import type { MandatoryPortPointIndex } from "lib/solvers/HighDensitySolver/mandatoryPortPointIndex"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
@@ -20,6 +23,10 @@ type Pipeline9RegionalFallbackSolverParams = {
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  boardGeometry?: HighDensityBoardGeometry
+  mandatoryPortPointIndex?: MandatoryPortPointIndex
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -155,6 +162,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       colorMap: params.colorMap,
       connMap: params.connMap,
       viaDiameter: params.viaDiameter,
+      viaHoleDiameter: params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
+      boardGeometry: params.boardGeometry,
+      mandatoryPortPointIndex: params.mandatoryPortPointIndex,
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       traceToPadClearance: params.traceToPadClearance,
@@ -169,7 +180,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
-        params.boardObstacles &&
+        params.mandatoryPortPointIndex || params.boardObstacles &&
         params.movablePreloadedConnectionNames &&
         params.viaToPadClearance !== undefined
           ? (routes) => this.validateCandidateRoutes(routes)
@@ -184,6 +195,13 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (!areRoutesClearOfMandatoryPorts({ routes, center: this.params.nodeWithPortPoints.center,
+      traceThickness: this.params.traceWidth, viaDiameter: this.params.viaDiameter,
+      context: { obstacles: this.params.boardObstacles ?? this.params.obstacles, connMap: this.params.connMap,
+        layerCount: this.params.layerCount, allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+        traceToPadClearance: this.params.traceToPadClearance ?? this.params.obstacleMargin,
+        viaToPadClearance: this.params.viaToPadClearance ?? this.params.obstacleMargin,
+        mandatoryPortPointIndex: this.params.mandatoryPortPointIndex, coordinateScale: 1 } })) return false
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
