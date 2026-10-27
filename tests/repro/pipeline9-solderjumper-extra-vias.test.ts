@@ -17,9 +17,9 @@ beforeAll(async (): Promise<void> => {
   const rawInput = readFileSync(
     new URL("../fixtures/assets/solderjumper-core.srj.json", import.meta.url),
   )
-  expect(createHash("sha256").update(Uint8Array.from(rawInput)).digest("hex")).toBe(
-    "32a5afccabd7cf3abd0fc4f56a598823c46884713e3ffdbed795dda6083a354e",
-  )
+  expect(
+    createHash("sha256").update(Uint8Array.from(rawInput)).digest("hex"),
+  ).toBe("32a5afccabd7cf3abd0fc4f56a598823c46884713e3ffdbed795dda6083a354e")
   const inputSrj = JSON.parse(rawInput.toString("utf8")) as SimpleRouteJson
   const originalInput = structuredClone(inputSrj)
   expect(inputSrj.connections).toHaveLength(4)
@@ -63,6 +63,9 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing("Pipeline9 keeps Core's original two-via solderjumper routing limit", (): void => {
-  expect(viaCount).toBeLessThanOrEqual(2)
-})
+test.failing(
+  "Pipeline9 keeps Core's original two-via solderjumper routing limit",
+  (): void => {
+    expect(viaCount).toBeLessThanOrEqual(2)
+  },
+)
