@@ -1446,7 +1446,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
     this.asyncRunning = true
     try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
         const pipeline = this.tinyPipelineSolver
         const race = pipeline.activeSubSolver
         if (race instanceof RacingTinyHyperGraphSolver) {
@@ -1456,14 +1460,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             pipeline.MAX_ITERATIONS - pipeline.iterations,
             this.MAX_ITERATIONS - this.iterations,
           )
-          await race.solveAsync(runtime, previousIterations + Math.max(0, budget))
+          await race.solveAsync(
+            runtime,
+            previousIterations + Math.max(0, budget),
+          )
           const consumed = Math.max(
             0,
-            race.iterations - previousIterations - (race.solved || race.failed ? 1 : 0),
+            race.iterations -
+              previousIterations -
+              (race.solved || race.failed ? 1 : 0),
           )
           this.iterations += consumed
           pipeline.iterations += consumed
-          if (!race.solved && !race.failed && this.iterations >= stopAtIteration) {
+          if (
+            !race.solved &&
+            !race.failed &&
+            this.iterations >= stopAtIteration
+          ) {
             break
           }
         }
