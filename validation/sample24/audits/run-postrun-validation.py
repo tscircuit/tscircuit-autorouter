@@ -9,22 +9,20 @@ import shutil
 import subprocess
 import sys
 
-COHORT = {
-    'runId': 40454241319,
-    'branch': 'fix/srj24-duplicate-port-bounds-20261027',
-    'transportCommit': '6f6083f3a349fab21df6e3b9b3069b0f66e326a1',
-    'source': 'f47ccb1c0cd4b51f357f002d8c66eb39b174bf4f',
-    'rootLibTree': '416dd7809310919cb77e0dce488189eb0bdaab11',
-    'rootPackageBlob': '6ae64b6db2e5a4fe7b548e960c818f8f5d987d8d',
-    'runtimeReceiptSha256': '10db144dc1ca566bae470b54e793e4b548ca9314f737944bad796b951e58f37c',
-    'runtimeBundleSha256': '848399b3ffd0f8226560a55570f2a909203f1fd231bbddb42c9add51250028ca',
-    'runtimeManifestSha256': 'b9f38f89e09f7a833d88311b91d708f8c9af7affe5dac96c3a25ce9b3b04c7e9',
-    'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
-    'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
-    'artifactNames': ['sample24-final-srj', 'sample24-reviewed-runtime-proof', 'benchmark-result'],
-}
-AUDITOR_MANIFEST_SHA = '05ec04fac8ac3a2fe604d52213ca5c8cad94eee6d1fa8c5b875920c16263a840'
-OVERLAY_MANIFEST_SHA = 'f026f58d6183db2583b0dd0a3093f350a82cd78dfec3451205ed5cfbcbea6f3d'
+COHORT = {'runId': 40459675145,
+ 'branch': 'fix/srj24-duplicate-port-bounds-20261027',
+ 'transportCommit': 'c847478703fff0024becbf4a531f3cf642875c07',
+ 'source': 'eaeaae9b8936022a854bc4751837c205331654d4',
+ 'rootLibTree': '416dd7809310919cb77e0dce488189eb0bdaab11',
+ 'rootPackageBlob': '646e0a37356211c05c169ce50081bc5cc38fd109',
+ 'runtimeReceiptSha256': 'f4cc1f6c902ecbbfa47fd91e7bcf6c327e255028211ea25d83118fdd47062c45',
+ 'runtimeBundleSha256': '229def2a6061157249b6aef90fff61b83e050518e73203151d72ce73c2c4bedd',
+ 'runtimeManifestSha256': '4524dd5d3c1fee5835c4f267167a6887f602848f3ca2d2f823ff942a05d0cb52',
+ 'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
+ 'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
+ 'artifactNames': ['sample24-final-srj', 'sample24-reviewed-runtime-proof', 'benchmark-result']}
+AUDITOR_MANIFEST_SHA = 'f46b65192b8755c22533d29ce377dd4dd15051ba2a190b9f8ec648ec222fc977'
+OVERLAY_MANIFEST_SHA = '1fa4f5cbe5d311f6060417d0ab0539dbc6cf01927b8053eed9feee23f414ff35'
 SOLVER = 'AutoroutingPipelineSolver9_PreloadedTraceGraph'
 REQUIRED_ARGS = ['--pipeline', '9', '--dataset', '24', '--sample', '24', '--effort', '1',
                  '--concurrency', '1', '--threads', '1', '--sample-timeout', '7200s']
@@ -78,7 +76,7 @@ def verify_runtime(report, label):
                 'bundleSha256': COHORT['runtimeBundleSha256'],
                 'manifestSha256': COHORT['runtimeManifestSha256']}
     require(all(report.get(key) == value for key, value in expected.items()), label + ' source/bundle differs')
-    require(report.get('runtimeSourceFiles') == 215 and report.get('actualNestedImports') == 25
+    require(report.get('runtimeSourceFiles') == 216 and report.get('actualNestedImports') == 25
             and report.get('physicalNestedResolutions') == 25 and report.get('bunVersion') == '1.4.3',
             label + ' source/import verification is incomplete')
 
