@@ -545,6 +545,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           connMap: cms.connMap,
           traceWidth: cms.minTraceWidth,
           traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+          traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
           layerCount: cms.originalSrj.layerCount,
         }
 
@@ -609,6 +610,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             connMap: cms.connMap,
             traceWidth: cms.minTraceWidth,
             traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
             layerCount: cms.originalSrj.layerCount,
           }),
         },
@@ -669,6 +671,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,

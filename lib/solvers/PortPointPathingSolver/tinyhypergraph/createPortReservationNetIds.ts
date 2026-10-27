@@ -11,6 +11,7 @@ export type PortReservationContext = {
   connMap: ConnectivityMap
   traceWidth: number
   traceToPadClearance: number
+  traceToHoleClearance?: number
   layerCount: number
 }
 
@@ -39,20 +40,22 @@ type Pad = {
   cosine: number
   sine: number
   shape: string
+  margin: number
 }
 const EPSILON = 1e-9
 
 /** Prepares exact physical pad geometry once for repeated point proposals. */
 function createPadContactQuery(context: PortReservationContext): (point: Point) => readonly Obstacle[] {
-  const margin = context.traceWidth / 2 + context.traceToPadClearance
+  const holeClearance = context.traceToHoleClearance ?? 0.2
   if (!Number.isFinite(context.traceWidth) || context.traceWidth <= 0 ||
     !Number.isFinite(context.traceToPadClearance) || context.traceToPadClearance < 0 ||
+    !Number.isFinite(holeClearance) || holeClearance < 0 ||
     !Number.isInteger(context.layerCount) || context.layerCount < 1) {
     throw new Error("Invalid physical port reservation geometry")
   }
   const pads: Pad[] = []
   for (const obstacle of context.obstacles) {
-    if (obstacle.isNonPlatedHole || isOpaqueUnownedObstacle(obstacle)) continue
+    if (isOpaqueUnownedObstacle(obstacle)) continue
     const angle = (obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
     const shape: string = obstacle.shape ?? obstacle.type
     if (![obstacle.center.x, obstacle.center.y, obstacle.width, obstacle.height, angle].every(Number.isFinite) ||
@@ -65,12 +68,13 @@ function createPadContactQuery(context: PortReservationContext): (point: Point) 
     if (layers.length === 0 || layers.some((z) => !Number.isInteger(z) || z < 0 || z >= context.layerCount)) {
       throw new Error("Invalid physical pad layers for port reservations")
     }
-    pads.push({ obstacle, layers, shape, cosine: Math.cos(angle), sine: Math.sin(angle) })
+    const margin = context.traceWidth / 2 + (obstacle.isNonPlatedHole ? holeClearance : context.traceToPadClearance)
+    pads.push({ obstacle, layers, shape, cosine: Math.cos(angle), sine: Math.sin(angle), margin })
   }
   let index: Flatbush | undefined
   if (pads.length > 0) {
     index = new Flatbush(pads.length)
-    for (const { obstacle, cosine, sine } of pads) {
+    for (const { obstacle, cosine, sine, margin } of pads) {
       const halfX = (Math.abs(cosine) * obstacle.width + Math.abs(sine) * obstacle.height) / 2
       const halfY = (Math.abs(sine) * obstacle.width + Math.abs(cosine) * obstacle.height) / 2
       index.add(obstacle.center.x - halfX - margin, obstacle.center.y - halfY - margin,
@@ -103,7 +107,7 @@ function createPadContactQuery(context: PortReservationContext): (point: Point) 
       } else {
         distance = Math.hypot(Math.max(Math.abs(px) - halfX, 0), Math.max(Math.abs(py) - halfY, 0))
       }
-      if (distance + EPSILON < margin) contacts.push(obstacle)
+      if (distance + EPSILON < pad.margin) contacts.push(obstacle)
     }
     return contacts
   }
@@ -115,7 +119,7 @@ export function createPortPointPositionValidator(context: PortReservationContext
   return (point: PortPoint): boolean => {
     const contacts = getContacts(point)
     return contacts.every((obstacle) =>
-      isObstacleConnectedToRoute(obstacle, point, context.connMap),
+      !obstacle.isNonPlatedHole && isObstacleConnectedToRoute(obstacle, point, context.connMap),
     )
   }
 }
@@ -156,7 +160,11 @@ export function createPortReservationNetIds(input: ReservationInput): Int32Array
   }
   const padOwners = new Map<Obstacle, number>()
   for (const obstacle of context.obstacles) {
-    if (obstacle.isNonPlatedHole || isOpaqueUnownedObstacle(obstacle)) continue
+    if (isOpaqueUnownedObstacle(obstacle)) continue
+    if (obstacle.isNonPlatedHole) {
+      padOwners.set(obstacle, -2)
+      continue
+    }
     const owners = new Set<number>()
     for (const id of obstacle.connectedTo) {
       for (const owner of literalOwners.get(id) ?? []) owners.add(owner)

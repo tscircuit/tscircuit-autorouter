@@ -30,6 +30,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   boardObstacles?: Obstacle[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   traceToPadClearance?: number
+  traceToHoleClearance?: number
   viaToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
@@ -157,6 +158,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       traceToPadClearance: params.traceToPadClearance,
+      traceToHoleClearance: params.traceToHoleClearance,
       viaToPadClearance: params.viaToPadClearance,
       effort: params.effort,
       nodePfById: params.nodePfById,

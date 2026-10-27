@@ -7,7 +7,7 @@ import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolv
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("P9 forwards authoritative pad edge clearance without changing hole, via or generic margins", () => {
+test("P9 forwards authoritative pad and hole clearances while retaining via and generic margins", () => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "legal-near-pad", center: { x: 0, y: 0 }, width: 2, height: 2,
     availableZ: [0, 1, 2, 3, 4, 5, 6, 7], portPoints: [
@@ -18,9 +18,9 @@ test("P9 forwards authoritative pad edge clearance without changing hole, via or
   const pad: Obstacle = { type: "rect", center: { x: 1.1, y: 0 }, width: 1,
     height: 2, layers: ["inner1"], connectedTo: ["foreign-pad"],
     circuitJsonMetadata: { pcb_smtpad_id: "foreign-pad" } }
-  const createPortfolio = (clearance?: number): PortfolioSingleIntraNodeSolver => {
+  const createPortfolio = (clearance?: number, holeClearance?: number): PortfolioSingleIntraNodeSolver => {
     const srj: SimpleRouteJson = { layerCount: 8, minTraceWidth: 0.1,
-      minTraceToPadEdgeClearance: clearance, obstacles: [pad], connections: [],
+      minTraceToPadEdgeClearance: clearance, minTraceToHoleEdgeClearance: holeClearance, obstacles: [pad], connections: [],
       bounds: { minX: -2, maxX: 2, minY: -2, maxY: 2 } }
     const pipeline = new Pipeline9(srj)
     pipeline.connMap = new ConnectivityMap({ signal: ["signal"], other: ["foreign-pad"] })
@@ -29,14 +29,17 @@ test("P9 forwards authoritative pad edge clearance without changing hole, via or
     const step = pipeline.pipelineDef.find((stage) => stage.solverName === "highDensityRouteSolver")!
     const [params] = step.getConstructorParams(pipeline) as ConstructorParameters<typeof Pipeline9HighDensitySolver>
     expect(params.traceToPadClearance).toBe(clearance ?? 0.1)
+    expect(params.traceToHoleClearance).toBe(holeClearance ?? 0.2)
     expect(params.obstacleMargin).toBe(0.15)
     const outer = new Pipeline9HighDensitySolver(params)
     ;(outer as any).startRegularSolver(structuredClone(node))
     const regular = outer.activeRegularSolver!
     expect(regular.traceToPadClearance).toBe(clearance ?? 0.1)
+    expect(regular.traceToHoleClearance).toBe(holeClearance ?? 0.2)
     regular.step()
     const grow = regular.activeSubSolver as any
     expect(grow.constructorParams.traceToPadClearance).toBe(clearance ?? 0.1)
+    expect(grow.constructorParams.traceToHoleClearance).toBe(holeClearance ?? 0.2)
     grow.createActiveSubSolver()
     return grow.activeSubSolver as PortfolioSingleIntraNodeSolver
   }
@@ -58,6 +61,12 @@ test("P9 forwards authoritative pad edge clearance without changing hole, via or
   const hole = new PortfolioSingleIntraNodeSolver({ ...defaultPortfolio.constructorParams,
     obstacles: [{ ...pad, connectedTo: [], circuitJsonMetadata: undefined, isNonPlatedHole: true }] })
   expect(solve(hole).failed).toBe(true)
+  const noExtraHole = new PortfolioSingleIntraNodeSolver({ ...createPortfolio(undefined, 0).constructorParams,
+    obstacles: hole.constructorParams.obstacles })
+  expect(solve(noExtraHole).solved).toBe(true)
+  const largerHole = new PortfolioSingleIntraNodeSolver({ ...createPortfolio(undefined, 0.35).constructorParams,
+    obstacles: hole.constructorParams.obstacles })
+  expect(solve(largerHole).failed).toBe(true)
   const opaque = new PortfolioSingleIntraNodeSolver({ ...defaultPortfolio.constructorParams,
     traceToPadClearance: 0.2, obstacles: [{ ...pad, connectedTo: [], circuitJsonMetadata: undefined }] })
   expect(solve(opaque).solved).toBe(true)

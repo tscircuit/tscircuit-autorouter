@@ -46,7 +46,7 @@ test("final native port footprints retain pad owners, layers and exact physical 
   expect(reserve([bad597], [actualPad, { ...actualPad, connectedTo: ["pad129"] }])).toEqual([-2])
   expect(reserve([bad597], [actualPad, { ...actualPad }])).toEqual([0])
   expect(reserve([bad597], [{ ...actualPad, connectedTo: [], circuitJsonMetadata: undefined }])).toEqual([-1])
-  expect(reserve([bad597], [{ ...actualPad, connectedTo: [], isNonPlatedHole: true }])).toEqual([-1])
+  expect(reserve([bad597], [{ ...actualPad, connectedTo: [], isNonPlatedHole: true }])).toEqual([-2])
   const rotated: Obstacle = { ...actualPad, center: { x: 0, y: 0 }, width: 2, height: 0.2,
     ccwRotationDegrees: 45, layers: ["top"] }
   expect(reserve([[0.65, 0.65, 0], [0.7, -0.7, 0]], [rotated])).toEqual([0, -1])

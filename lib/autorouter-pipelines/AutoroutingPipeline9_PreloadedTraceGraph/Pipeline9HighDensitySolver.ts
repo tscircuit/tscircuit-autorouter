@@ -50,6 +50,7 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   traceToPadClearance?: number
+  traceToHoleClearance?: number
   viaToPadClearance?: number
   effort: number
   nodePfById?:
@@ -325,6 +326,7 @@ export type Pipeline9RegularNodeSolverParams = {
   traceWidth: number
   obstacleMargin: number
   traceToPadClearance?: number
+  traceToHoleClearance?: number
   viaToPadClearance?: number
   effort: number
   nodePfById:
@@ -356,6 +358,7 @@ export const createPipeline9RegularNodeSolver = ({
   traceWidth,
   obstacleMargin,
   traceToPadClearance,
+  traceToHoleClearance,
   viaToPadClearance,
   effort,
   nodePfById,
@@ -373,6 +376,7 @@ export const createPipeline9RegularNodeSolver = ({
     traceWidth,
     obstacleMargin,
     traceToPadClearance,
+    traceToHoleClearance,
     viaToPadClearance,
     effort,
     nodePfById,
@@ -411,6 +415,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly traceToPadClearance?: number
+  readonly traceToHoleClearance?: number
   readonly viaToPadClearance?: number
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
@@ -449,6 +454,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.traceToPadClearance = params.traceToPadClearance
+    this.traceToHoleClearance = params.traceToHoleClearance
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
     this.nodePfById =
@@ -683,6 +689,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       traceToPadClearance: this.traceToPadClearance,
+      traceToHoleClearance: this.traceToHoleClearance,
       viaToPadClearance: this.viaToPadClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -769,6 +776,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacles: this.obstacles,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       traceToPadClearance: this.traceToPadClearance,
+      traceToHoleClearance: this.traceToHoleClearance,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,

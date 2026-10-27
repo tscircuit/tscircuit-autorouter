@@ -704,7 +704,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
           viaToPadClearance: this.constructorParams.viaToPadClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
           traceToPadClearance: this.constructorParams.traceToPadClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
-          traceToHoleClearance: this.constructorParams.obstacleMargin ?? 0.15,
+          traceToHoleClearance: this.constructorParams.traceToHoleClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
           boardGeometry: this.constructorParams.boardGeometry,
           coordinateScale: this.constructorParams.priorityCoordinateScale ?? 1,
         },
