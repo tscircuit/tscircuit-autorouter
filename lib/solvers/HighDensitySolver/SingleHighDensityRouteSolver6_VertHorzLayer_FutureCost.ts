@@ -145,8 +145,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     if (anchor && anchor.viaPenaltyDistance === viaPenaltyDistance) {
       const point = this.futureConnectionPoints[anchor.pointIndex]
       const winnerScore =
-        distance(node, point) +
-        (node.z !== point.z ? viaPenaltyDistance : 0)
+        distance(node, point) + (node.z !== point.z ? viaPenaltyDistance : 0)
       if (
         winnerScore <
         anchor.runnerUp -

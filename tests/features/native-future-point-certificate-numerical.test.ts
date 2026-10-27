@@ -68,7 +68,9 @@ test("certified nearest points match numeric and tie oracles", () => {
         f: 0,
         parent: null,
       }
-      expect(solver.getClosestFutureConnectionPoint(node)).toBe(fullScan(solver, node))
+      expect(solver.getClosestFutureConnectionPoint(node)).toBe(
+        fullScan(solver, node),
+      )
       comparisons++
     }
   }
