@@ -1,3 +1,4 @@
+import Flatbush from "flatbush"
 import { clamp, pointToBoxDistance, pointToSegmentDistance, segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -235,6 +236,19 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
         viaMargin: params.viaDiameter / 2 + (opaque ? 0 : context.viaToPadClearance),
         traceMargin: params.traceThickness / 2 + (opaque ? 0 : traceClearance) }
     })
+  // Broad phase only: every exact blocker remains in original input order.
+  const obstacleIndex = foreign.length ? new Flatbush(foreign.length) : undefined
+  for (const prepared of foreign) {
+    const { obstacle, cosine, sine } = prepared
+    const rx = obstacle.shape === "circle" ? obstacle.width / 2 :
+      (Math.abs(cosine) * obstacle.width + Math.abs(sine) * obstacle.height) / 2
+    const ry = obstacle.shape === "circle" ? obstacle.width / 2 :
+      (Math.abs(sine) * obstacle.width + Math.abs(cosine) * obstacle.height) / 2
+    const margin = Math.max(0, prepared.viaMargin, prepared.traceMargin)
+    obstacleIndex!.add(obstacle.center.x - rx - margin, obstacle.center.y - ry - margin,
+      obstacle.center.x + rx + margin, obstacle.center.y + ry + margin)
+  }
+  obstacleIndex?.finish()
   const minZ = context.allowBlindAndBuriedVias ? Math.min(params.start.z!, params.end.z!) : 0
   const maxZ = context.allowBlindAndBuriedVias ? Math.max(params.start.z!, params.end.z!) : context.layerCount - 1
   const viaRadius = params.viaDiameter / 2, traceRadius = params.traceThickness / 2
@@ -277,7 +291,11 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   }
   const blockers = (via: Point): PreparedObstacle[] => {
     const result: PreparedObstacle[] = []
-    for (const prepared of foreign) {
+    const ids = obstacleIndex?.search(Math.min(start.x, end.x, via.x), Math.min(start.y, end.y, via.y),
+      Math.max(start.x, end.x, via.x), Math.max(start.y, end.y, via.y)) ?? []
+    ids.sort((a, b) => a - b)
+    for (const id of ids) {
+      const prepared = foreign[id]!
       const blockedVia = prepared.layers.some((z) => z >= minZ && z <= maxZ) && obstacleDistance(via, via, prepared) + EPSILON < prepared.viaMargin
       const blockedStartWire = prepared.layers.includes(params.start.z!) && obstacleDistance(start, via, prepared) + EPSILON < prepared.traceMargin
       const blockedEndWire = prepared.layers.includes(params.end.z!) && obstacleDistance(end, via, prepared) + EPSILON < prepared.traceMargin
