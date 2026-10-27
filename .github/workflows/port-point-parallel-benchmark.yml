@@ -1,9 +1,6 @@
 name: Port-point parallel scaling
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/port-point-parallel-benchmark.yml"
   workflow_dispatch:
     inputs:
       samples:
@@ -25,13 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.2"
       - run: bun install
       - run: bun scripts/build-solver-workers.ts
       - name: Compare the TypeScript backend with one and four workers
+        shell: bash
         env:
           SAMPLES: ${{ inputs.samples || '6' }}
           REPEATS: ${{ inputs.repeats || '3' }}

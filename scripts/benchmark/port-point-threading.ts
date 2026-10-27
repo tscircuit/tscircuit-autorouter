@@ -31,6 +31,7 @@ type Outcome = {
   ms: number
   solved: boolean
   failed: boolean
+  error: string | null
   iterations: number
   hash: string | null
   metrics: Record<string, unknown> | undefined
@@ -63,6 +64,7 @@ const run = async (pipeline: Pipeline9, threaded: boolean): Promise<Outcome> => 
       ms,
       solved: phase.solved,
       failed: phase.failed,
+      error: phase.error,
       iterations: phase.iterations,
       hash: phase.solved ? createHash("sha256").update(JSON.stringify(phase.getOutput())).digest("hex") : null,
       metrics: phase.getSolveGraphBenchmarkMetrics(),
@@ -108,8 +110,6 @@ for (let repeat = 0; repeat < repeats; repeat++) {
       threaded = await threadedRun()
       serial = await serialRun()
     }
-    assert.equal(threaded.solved, serial.solved, `${sample}: solved status changed`)
-    assert.equal(threaded.failed, serial.failed, `${sample}: failed status changed`)
     const row = { sample, repeat, serial, threaded, speedup: serial.ms / threaded.ms }
     rows.push(row)
     console.log(JSON.stringify(row))
@@ -139,3 +139,5 @@ const summary = {
 }
 console.log(JSON.stringify({ summary }))
 if (readArg("--out")) await writeFile(readArg("--out")!, JSON.stringify({ summary, rows }, null, 2))
+
+if (summary.statusChanges > 0 || summary.completed !== rows.length) process.exitCode = 1
