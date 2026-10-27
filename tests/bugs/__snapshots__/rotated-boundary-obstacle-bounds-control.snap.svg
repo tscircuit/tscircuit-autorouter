@@ -1,0 +1,47 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="2,-3 2,-1.805846655763724 0.8999198565154831,-0.7057665122792072 0.882,-0.425 0.882,-0.175 0.882,0.075 0.882,0.325 0.882,0.575 0.882,0.825 0.882,1.8820000000000001 2,3" data-type="line" data-label="" points="117.12244395171226,526.9475240206948 117.12244395171226,444.5718313904515 41.2361566455618,368.68554408430106 40.00000000000002,349.31756590293173 40.00000000000002,332.0719389012072 40.00000000000002,314.8263118994826 40.00000000000002,297.5806848977581 40.00000000000002,280.3350578960335 40.00000000000002,263.089430894309 40.00000000000002,190.17491993101748 117.12244395171226,113.05247597930526" fill="none" stroke="red" stroke-linejoin="round" stroke-width="10.347376201034736"/></g><g><rect data-type="rect" data-label="top
+bottom" data-x="5" data-y="0" data-ccw-rotation-degrees="0" x="48.139935944814" y="285.5087459965509" width="551.860064055186" height="68.98250800689823" fill="rgba(255,0,0,0.75)" stroke="black" stroke-width="0.014496428571428573"/></g><g><rect data-type="rect" data-label="top
+signal" data-x="2" data-y="-3" x="106.77506775067752" y="516.6001478196602" width="20.69475240206947" height="20.694752402069412" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.014496428571428573"/></g><g><rect data-type="rect" data-label="top
+signal" data-x="2" data-y="3" x="106.77506775067752" y="102.70509977827054" width="20.69475240206947" height="20.69475240206944" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.014496428571428573"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":68.98250800689824,"c":0,"e":-20.84257206208423,"b":0,"d":-68.98250800689824,"f":320};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#166534">Relaxed DRC errors: 0</text></g></svg>
