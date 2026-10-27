@@ -130,7 +130,18 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
     srjWithPointPairs: input,
     routedTraces: output.traces!,
   }).errors
-  expect(inputDrcErrors).toEqual([])
+  // The saved board already places one via too close to an unrelated pad.
+  // Both simplification modes remove that violation without changing the input.
+  const inputViaPadErrors = inputDrcErrors.filter(
+    (error) => error.type === "pcb_pad_pad_clearance_error",
+  )
+  expect(inputDrcErrors).toEqual(inputViaPadErrors)
+  expect(inputViaPadErrors).toHaveLength(1)
+  expect(inputViaPadErrors[0]!.minimum_clearance).toBe(0.1)
+  expect(inputViaPadErrors[0]!.actual_clearance).toBeCloseTo(
+    0.015273532008702517,
+    9,
+  )
   expect(outputDrcErrors).toEqual([])
   const baselineDrcErrors = evaluateRelaxedDrc({
     inputSrj: drcInputSrj,

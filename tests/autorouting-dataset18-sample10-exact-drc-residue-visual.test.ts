@@ -72,14 +72,16 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
 
   pipeline.step()
   while (
-    pipeline.getCurrentPhase() === "exactGeometryDrcForceImproveSolver" &&
+    (pipeline.getCurrentPhase() === "exactGeometryDrcForceImproveSolver" ||
+      pipeline.getCurrentPhase() === "copperClearanceProjectionSolver") &&
     !pipeline.failed
   ) {
     pipeline.step()
   }
 
   const exactSolver = pipeline.exactGeometryDrcForceImproveSolver!
-  const outputRoutes = exactSolver.getOutput()
+  const projectionSolver = pipeline.copperClearanceProjectionSolver!
+  const outputRoutes = projectionSolver.getOutput()
   const outputDrc = evaluateBenchmarkDrc(outputRoutes)
   viewer.outputHdRoutes = outputRoutes
   frames.push({
@@ -94,6 +96,8 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
+  expect(projectionSolver.solved).toBe(true)
+  expect(projectionSolver.failed).toBe(false)
 
   const snapshotPath =
     process.platform === "linux"

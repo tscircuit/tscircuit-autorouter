@@ -1,5 +1,6 @@
 import { expect, spyOn, test } from "bun:test"
 import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -25,7 +26,7 @@ const createSolver = (): Pipeline9JointDrcRepairSolver => {
     colorMap: {},
   })
   // This test exercises the later stages. Model an incomplete bounded pass
-  // so the exact, B01 and final bounded children still execute.
+  // so the exact, B01, final bounded and final projection children still execute.
   const initial = solver.initialBoundedRegionalRepairSolver!
   const getResult = initial.getResult.bind(initial)
   const initialResult = spyOn(initial, "getResult").mockImplementation(() => ({
@@ -51,6 +52,7 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
   const solveSpies = [
     Pipeline9RegionalB01RepairSolver.prototype,
     Pipeline9BoundedRegionalRepairSolver.prototype,
+    Pipeline9ClearanceProjectionSolver.prototype,
   ].map((prototype) =>
     spyOn(prototype, "solve").mockImplementation((): never => {
       throw new Error("Joint repair must advance its active child one step")
@@ -80,10 +82,13 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
       "exactRepairSolver",
       "regionalB01RepairSolver",
       "boundedRegionalRepairSolver",
+      "finalClearanceProjectionSolver",
+      "none",
     ])
     expect(solver.activeSubSolver).toBeNull()
     expect(solver.regionalB01RepairSolver?.solved).toBeTrue()
     expect(solver.boundedRegionalRepairSolver?.solved).toBeTrue()
+    expect(solver.finalClearanceProjectionSolver?.solved).toBeTrue()
     expect(solver.progress).toBe(1)
     expect(solveSpies.every((spy) => spy.mock.calls.length === 0)).toBeTrue()
     const fixture = createBoundedRegionalRepairFixture()
@@ -115,6 +120,7 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
     expect(failing.activeSubSolver).toBeNull()
     expect(failing.regionalB01RepairSolver).toBeUndefined()
     expect(failing.boundedRegionalRepairSolver).toBeUndefined()
+    expect(failing.finalClearanceProjectionSolver).toBeUndefined()
   } finally {
     failureStep.mockRestore()
   }

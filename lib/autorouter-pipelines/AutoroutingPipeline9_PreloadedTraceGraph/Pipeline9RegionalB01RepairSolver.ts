@@ -146,6 +146,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
+          error.type === "pcb_pad_pad_clearance_error" ||
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )

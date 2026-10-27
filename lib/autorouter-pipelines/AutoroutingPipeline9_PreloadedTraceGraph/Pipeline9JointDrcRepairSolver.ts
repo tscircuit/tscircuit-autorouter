@@ -658,6 +658,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof GlobalDrcBranchPortfolioSolver
   >[0]
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
+  finalClearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -779,6 +780,27 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return this.boundedRegionalRepairSolver
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
+    },
+    {
+      solverName: "finalClearanceProjectionSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
+          throw new Error("Pipeline9 final clearance is missing its input")
+        }
+        this.finalClearanceProjectionSolver =
+          new Pipeline9ClearanceProjectionSolver({
+            originalSrj: this.params.originalSrj,
+            routes: this.combinedOutput,
+            drcEvaluator: this.cachedReferenceDrcEvaluator,
+          })
+        return this.finalClearanceProjectionSolver
+      },
+      onSolved: (): void => {
+        if (!this.finalClearanceProjectionSolver?.solved) {
+          throw new Error("Pipeline9 final clearance must solve before output")
+        }
+        this.combinedOutput = this.finalClearanceProjectionSolver.getOutput()
+      },
     },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
@@ -2017,7 +2039,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
-    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
