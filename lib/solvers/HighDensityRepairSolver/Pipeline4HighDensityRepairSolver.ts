@@ -441,14 +441,16 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           entry,
           index,
           pointCount: entry.sample.nodeHdRoutes!.reduce(
-            (count, route) => count + (route.route?.length ?? 0),
+            (count, route) => count + route.route!.length,
             0,
           ),
         }))
-      const pending = new Array<Promise<
-        | { type: "result"; result: Pipeline4HighDensityRepairSampleOutput }
-        | { type: "error"; error: unknown }
-      >>(selected.length)
+      const pending = new Array<
+        Promise<
+          | { type: "result"; result: Pipeline4HighDensityRepairSampleOutput }
+          | { type: "error"; error: unknown }
+        >
+      >(selected.length)
       // Start expensive nodes early so the pool has less idle time at the tail.
       for (const { entry, index } of selected.toSorted(
         (a, b) => b.pointCount - a.pointCount || a.index - b.index,
