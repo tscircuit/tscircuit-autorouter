@@ -1,0 +1,45 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="131.8,-85.4 132.04993757802748,-85.4 132.08,-85.4 132.16,-85.4 132.24,-85.4 132.404,-85.4" data-type="line" data-label="" points="109.99999999999272,320 197.47815230960987,320 208,320 235.99999999999272,320 264,320 321.3999999999942,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="37.31000000000079"/></g><g><polyline data-points="132.404,-85.4 132.72,-85.4 132.96,-85.4 133.2,-85.4" data-type="line" data-label="" points="321.3999999999942,320 432,320 516,320 600,320" fill="none" stroke="rgba(0,128,0,0.5)" stroke-linejoin="round" stroke-width="37.31000000000079" stroke-dasharray="0.2 0.2"/></g><g><rect data-type="rect" data-label="top
+/S0SDQ4" data-x="131.8" data-y="-85.4" x="39.99999999999636" y="249.99999999999818" width="139.99999999999272" height="140.00000000000364" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.0028571428571427964"/></g><g><rect data-type="rect" data-label="top" data-x="132.6" data-y="-85.4" x="319.99999999999636" y="249.99999999999818" width="139.99999999999272" height="140.00000000000364" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.0028571428571427964"/></g><circle data-type="circle" data-label="" data-x="132.404" data-y="-85.4" cx="321.3999999999942" cy="320" r="57.22500000000122" fill="blue" stroke="none" stroke-width="0.0028571428571427964"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":350.00000000000745,"c":0,"e":-46020.00000000099,"b":0,"d":-350.00000000000745,"f":-29570.000000000637};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#b91c1c"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#b91c1c">Relaxed DRC errors: 1</text></g></svg>
