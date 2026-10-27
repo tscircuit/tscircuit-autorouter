@@ -66,5 +66,7 @@ test("only owned Pipeline9 Native factories share via clearance without changing
   expect(plain).toBeInstanceOf(IntraNodeRouteSolver)
   expect(dag).toBeInstanceOf(PriorityDagIntraNodeSolver)
   expect((plain as IntraNodeRouteSolver).nativeViaSiblingClearance).toBe(true)
-  expect((dag as PriorityDagIntraNodeSolver).nativeViaSiblingClearance).toBe(true)
+  expect((dag as PriorityDagIntraNodeSolver).nativeViaSiblingClearance).toBe(
+    true,
+  )
 })

@@ -41,7 +41,10 @@ test("owned Native via sharing preserves every queue and closure step", (): void
         captureSearchDebug: false,
       }
       const reference = new Native(options)
-      const mirrored = new Native({ ...options, nativeViaSiblingClearance: true })
+      const mirrored = new Native({
+        ...options,
+        nativeViaSiblingClearance: true,
+      })
       expect(reference.exploredNodes.constructor).toBe(Set)
       expect(mirrored.exploredNodes.constructor).toBe(Set)
       while (

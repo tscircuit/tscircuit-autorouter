@@ -76,7 +76,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.getFutureConnectionPenalty === originalViaMethods.penalty &&
       this.getClosestFutureConnectionPoint === originalViaMethods.closest &&
       this.computeF === originalViaMethods.priority &&
-      Object.getOwnPropertyDescriptor(this, "viaPenaltyDistance") === undefined &&
+      Object.getOwnPropertyDescriptor(this, "viaPenaltyDistance") ===
+        undefined &&
       Object.getOwnPropertyDescriptor(nativePrototype, "viaPenaltyDistance") ===
         undefined &&
       Object.getOwnPropertyDescriptor(

@@ -103,7 +103,9 @@ test("via reuse is lazy, preserves each target and disables for changed hooks", 
           index.add(100, 100, 101, 101)
           index.finish()
           const search = index.search.bind(index)
-          index.search = (...args: Parameters<Flatbush["search"]>): number[] => {
+          index.search = (
+            ...args: Parameters<Flatbush["search"]>
+          ): number[] => {
             viaCalls++
             return search(...args)
           }
