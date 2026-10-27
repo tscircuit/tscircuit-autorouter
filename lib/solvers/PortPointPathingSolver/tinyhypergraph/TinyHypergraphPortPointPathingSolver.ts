@@ -1,7 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { SnapshotBatchSolver } from "./snapshot/SnapshotBatchSolver"
+import { PreparedPortPointRoutingSolver } from "./prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
@@ -921,7 +921,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    useSnapshotBatchRouting = false,
+    usePreparedPortPointRouting = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -941,8 +941,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        useSnapshotBatchRouting
-          ? SnapshotBatchSolver
+        usePreparedPortPointRouting
+          ? PreparedPortPointRoutingSolver
           : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1143,7 +1143,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_SNAPSHOT_BATCH_ROUTING === true,
+        params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1453,7 +1453,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_SNAPSHOT_BATCH_ROUTING === true,
+            this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1514,7 +1514,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     try {
       while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
         const phase = this.tinyPipelineSolver.activeSubSolver
-        if (runtime && phase instanceof SnapshotBatchSolver) {
+        if (runtime && phase instanceof PreparedPortPointRoutingSolver) {
           const previousIterations = phase.iterations
           await phase.solveAsync(runtime, previousIterations + Math.max(0, stopAtIteration - this.iterations))
           const terminal = phase.solved || phase.failed

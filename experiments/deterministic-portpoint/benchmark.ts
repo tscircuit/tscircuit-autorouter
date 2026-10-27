@@ -4,7 +4,7 @@ import os from "node:os"
 
 const sample = Number(process.argv[2] ?? 6)
 const repeats = Number(process.argv[3] ?? 3)
-const directory = process.argv[4] ?? "work/snapshot-benchmark"
+const directory = process.argv[4] ?? "work/prepared-benchmark"
 const batchSize = Number(process.argv[5] ?? 8)
 mkdirSync(directory,{recursive:true})
 const orders = [["original","new1","new4"],["new4","original","new1"],["new1","new4","original"]]
@@ -23,12 +23,12 @@ for (let repeat = 0; repeat < repeats; repeat++) {
   }
 }
 const revised = reports.filter(report=>report.mode !== "original")
-assert.equal(new Set(revised.map(report=>report.hash)).size,1,"Revised outputs differ across threads or repeats")
+assert.equal(new Set(reports.map(report=>report.hash)).size,1,"Original/revised outputs differ across threads or repeats")
 const expected = readFileSync(`${directory}/0-new1-output.json`)
-for (const report of revised) {
+for (const report of reports) {
   assert.deepEqual(readFileSync(`${directory}/${report.repeat}-${report.mode}-output.json`),expected)
-  const {searchMs,mergeMs,...logicalStats} = report.batchStats
-  const {searchMs:referenceSearchMs,mergeMs:referenceMergeMs,...referenceStats} = revised[0].batchStats
+  const {timeMs,...logicalStats} = report.metrics
+  const {timeMs:referenceTimeMs,...referenceStats} = revised[0].metrics
   assert.deepEqual(logicalStats,referenceStats,"Logical work differs across threads or repetitions")
 }
 const median = (values:number[]):number => [...values].sort((a,b)=>a-b)[Math.floor(values.length/2)]!

@@ -1,72 +1,60 @@
-Deterministic snapshot routing through SolverRuntime
+Prepared port-point routing
+===========================
 
-Pipeline9 enables USE_SNAPSHOT_BATCH_ROUTING in its portPointPathingSolver.
-Other pipelines keep their existing solver unless they opt in. Both serial
-solve()/step() and solveAsync(runtime) execute the same revised algorithm.
-The flag requires the existing USE_SELECTIVE_RERIP_ROUTING option.
+This replaces the earlier snapshot-batch prototype. Route order, rerips, partial
+route plans, final completion attempts, iteration budgets, floating-point cost
+addition order, and native heap tie-breaking stay unchanged.
 
-Algorithm
-1. Take the first eight pending routes, independent of physical worker count.
-2. Freeze port ownership, region intersections, and congestion costs.
-3. Search each route against that snapshot with a private search workspace.
-4. Reconcile all proposals in original route order, never completion order.
-   Commit compatible proposals; defer stale conflicts to the next wave.
-5. Apply the existing selective blocker/rip-up logic to the first failed route.
-6. Update congestion and completed checkpoints using the existing solver logic.
+The implementation specializes full-route expansion for the dense two-region
+incidence graphs produced by Pipeline9. It prepares segment distances once,
+filters permanently unavailable regional neighbors once per route attempt, and
+memoizes the small integer-indexed table of marginal region costs. The table is
+invalidated whenever the native immutable intersection-cache object changes.
+Single-layer crossings still receive the native infinite cost. Native handling
+remains responsible for route initialization, partial/outside-in searches,
+commits, rerips, and timeout acceptance.
 
-This changes serial semantics: routes within a wave see stale costs, deliberately.
-Serial execution searches all proposals before committing any. The coordinator
-alone mutates the committed state and performs floating-point aggregation.
+SolverRuntime
+-------------
 
-Each search has an effort-scaled 100,000-iteration budget. The original
-2,000,000-iteration budget becomes the threshold for accepting an existing
-completed checkpoint. Without one, the solver may continue to 8,000,000 proposal
-iterations, checked between waves, then fails explicitly. There is also a
-10,000-wave bound. No decision depends on wall time or worker count. Partial
-outside-in rerouting and greedy final-route optimization are disabled.
+Static distance preparation is split into at most four deterministic chunks,
+balanced by the number of region-port pairs. Both serial and asynchronous modes
+run the same RegionDistancePreparationSolver jobs. Asynchronous execution uses
+the caller-owned SolverRuntime pool and the normal Bun/Node worker registrations.
+Results are concatenated in submission order; worker completion order never
+influences routing. Worker errors propagate without beginning route search.
 
-SolverRuntime convention
-SnapshotRouteBatchSolver is registered with SolverRuntime and imported by both
-Bun and Node worker entrypoints. Pipeline9 delegates port-point work to its
-caller's existing pool, which is also used by downstream routing stages. The
-algorithm does not create or dispose a pool or implement a Worker protocol.
+The searches and route commits remain serial. Most of the speedup comes from
+reducing their overhead, not from using four CPUs. The benchmark reports revised
+serial and four-worker times separately so preparation parallelism is not
+mistaken for parallel search. Independent search portfolios and snapshot route
+batching were rejected because their different routes caused failures or more
+downstream work.
 
-Every task includes all inputs needed to run on any worker. SolverRuntime does
-not provide worker affinity, so each execution isolate has a bounded one-entry
-cache of static graph/search state. A random graph ID identifies that cache;
-it has no influence on route order, costs, or output. Every new wave supplies
-the complete occupancy snapshot; initial assignments remain in the coordinator.
+Memory and supported inputs
+---------------------------
 
-Static adjacency is packed as numeric offsets/values. Populated intersection
-caches are packed into numeric arrays, preserving float64 costs. Immutable
-buffers use SharedArrayBuffer when available and ArrayBuffer otherwise. This
-avoids repeated structured cloning of thousands of graph/cache objects through
-the runtime. Buffers are copied on the host once and never mutated after packing.
-There are eight logical jobs per full wave, dynamically scheduled on the pool.
+The distance table is Float64 and bounded to 16,777,216 entries (128 MiB).
+Graphs with more than two incident regions per port, larger distance tables, or
+non-dense candidate storage use the native search implementation. These are
+explicit input specializations, not recovery after an error. Partial routing
+continues using its native implementation. No dependencies are patched.
 
-Reproduction (Bun, from repository root)
-  bun experiments/deterministic-portpoint/run.ts 6 original
-  bun experiments/deterministic-portpoint/run.ts 6 new1
-  bun experiments/deterministic-portpoint/run.ts 6 new4
-  bun experiments/deterministic-portpoint/benchmark.ts 6 3
+Validation
+----------
 
-The benchmark rotates execution order, launches a fresh process for every trial,
-and verifies exact output bytes and logical work across all revised trials.
-Results default to work/. The original mode disables only the new flag, using
-the original graph solver, graph preparation, and section pipeline. Stage time
-includes graph construction, duplicate-port prepass, runtime startup/disposal,
-snapshot packing, search, ordered reconciliation, and section completion. Input
-loading, external output extraction, validation, and file writing are excluded
-equally. Internal solveGraph metrics now measure actual execution, not replay.
+The harness compares original and revised port-point output bytes, independently
+checks graph ownership/incidence/connectivity, and records abstract single-layer
+crossing counts. Such crossings already occur in the original output on some
+boards (including sample 14); they are diagnostics, not final board DRC results.
+Final routing must complete and pass evaluateRelaxedDrc. Tests also compare
+original/native routing with serial, one-worker, and four-worker execution,
+including nonzero trace-density cost and forced final acceptance.
 
-Set PROTOTYPE_DOWNSTREAM=1 when running run.ts to finish the pipeline with four
-workers and evaluate relaxed DRC. Graph validation independently checks every
-route's connectivity, disconnected fragments, incidence, port ownership, region
-reservations, and forbidden single-layer crossings. Graph validity alone does
-not establish downstream routing quality. The dataset-wide /benchmark command
-is needed to assess solve rate and downstream cost, beyond this tuned sample.
+Commands (from repository root):
+  bun experiments/deterministic-portpoint/benchmark.ts 6 3 work/prepared-benchmark
+  PROTOTYPE_DOWNSTREAM=1 bun experiments/deterministic-portpoint/run.ts 6 new4 8 work/prepared-full.json
+  bun test tests/solvers/prepared-routing-*.test.ts tests/features/pipeline9-async-portpoint-budget.test.ts --timeout 9999999
 
-Focused tests cover real one/four-worker execution, pool reuse, reversed task
-completion, prefix/resume, rejection without partial commits, and concurrent
-solve rejection. The native benchmark-runtime test covers full-pipeline parity
-and cleanup. No dependency source is patched.
+The fourth argument to run.ts is retained as a compatibility placeholder for the
+previous experiment's eight-route batch size. It does not control current routing.
