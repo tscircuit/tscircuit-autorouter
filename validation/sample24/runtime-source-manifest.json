@@ -1,0 +1,1383 @@
+{
+  "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
+  "rootSource": "234d5e9cb3faee23ebaa77bdac20dff55b65924d",
+  "rootLibTree": "53128a5254f2cc2fc88b470d5f9fec43306b1c0e",
+  "rootPackageBlob": "327eeecbab617b0de3d3631d85ceed28df54192a",
+  "localRuntimeReceiptSha256": "743921fa989dda11c0843b6d36a42e6362a9bd22ecb42c3d078b4c3b80ec96e1",
+  "bunVersion": "1.4.3",
+  "packages": [
+    {
+      "name": "tiny-hypergraph",
+      "revision": "78f53c77e44a028608c3a85cf3091557af017fa0",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#78f53c77e44a028608c3a85cf3091557af017fa0",
+      "entrySpecifier": "tiny-hypergraph/lib/core",
+      "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
+      "runtimeFiles": [
+        {
+          "path": "lib/DuplicateCongestedPortSolver.ts",
+          "gitBlobSha1": "af370b7a94aaafbf998b91d64a968047ee95d974",
+          "sha256": "26db95dcc6add3e9d8608f0428e3437a7465c495966e92e53ede83136d667ef6",
+          "bytes": 17001
+        },
+        {
+          "path": "lib/MinHeap.ts",
+          "gitBlobSha1": "cbedb41afca2e0dbc265aae54dbf54c715d29a86",
+          "sha256": "9bcf57bca5d2e7e2efa671dbe78a25cabd2de21de410c3622ed95419aedc6c91",
+          "bytes": 1922
+        },
+        {
+          "path": "lib/bus-solver/BusBoundaryPlanner.ts",
+          "gitBlobSha1": "0f878f22fad212b85db79ecccf6d960ce111face",
+          "sha256": "4bbab6a0f5a96d7199039a868af81e723efde9c33534f6b3d5d6caf402ac9d7f",
+          "bytes": 16929
+        },
+        {
+          "path": "lib/bus-solver/BusTraceInferencePlanner.ts",
+          "gitBlobSha1": "f3b6ff94459d491904e799a653169444f74f4f47",
+          "sha256": "f2621ffbe2dee3226652cf6c13bbb23d45d2415766d52e9f62e56eb15cc760c0",
+          "bytes": 23739
+        },
+        {
+          "path": "lib/bus-solver/TinyHyperGraphBusSolver.ts",
+          "gitBlobSha1": "557934c51db2301fe96487e9dd950a18946a5864",
+          "sha256": "43173f1dc21fcb47a406ec282ec9cb2ef0b0f1b0202d371ef35b285bee641141",
+          "bytes": 68606
+        },
+        {
+          "path": "lib/bus-solver/busGoalSearch.ts",
+          "gitBlobSha1": "6499797f2a011a193c59880990f2145eabc14fe0",
+          "sha256": "68280a9a7cb94bc22cb9a41f794996f690c65a3546d7ef2294934d7e61a982ae",
+          "bytes": 2960
+        },
+        {
+          "path": "lib/bus-solver/busPathHelpers.ts",
+          "gitBlobSha1": "b9ac30721410227fb783616de3de217571337380",
+          "sha256": "5e7bb7c7ec87a5cf14419f95dc22d594825a99c632ba66aa702eb0f4736e4f5d",
+          "bytes": 3279
+        },
+        {
+          "path": "lib/bus-solver/busSolverTypes.ts",
+          "gitBlobSha1": "d9abbd0caab861880409cd4eacbe0e99c00fd41c",
+          "sha256": "0bef28d3844e3ed1f7562bd6b4f485853b60f9cd85c218fb2bbad912cec6c3cc",
+          "bytes": 2688
+        },
+        {
+          "path": "lib/bus-solver/deriveBusTraceOrder.ts",
+          "gitBlobSha1": "8c4c32698ebd2b2a2f95793ac77f719c1379fb90",
+          "sha256": "37d2cc2199fd87950dae76cee2d4b16ca71a4ce7ca6e92af6cb987a32a271d26",
+          "bytes": 3722
+        },
+        {
+          "path": "lib/bus-solver/geometry.ts",
+          "gitBlobSha1": "651cb8def065f6a4b7404b077007854468944b23",
+          "sha256": "70831eb170eafabcb976423e3e68ef91ffed32f966b3a41c6246f02c6f02d792",
+          "bytes": 3617
+        },
+        {
+          "path": "lib/bus-solver/index.ts",
+          "gitBlobSha1": "9d30b0971ce76b2a542c324685116654e6d4c62c",
+          "sha256": "cd54b63dd071a9d006c0840d4883f220455cb269f9a96bc5aa08e9fa4b6aede3",
+          "bytes": 219
+        },
+        {
+          "path": "lib/bus-solver/previewRoutingState.ts",
+          "gitBlobSha1": "c537b7567df2d2fff1cea759db70f2e4c9991867",
+          "sha256": "e22df541f0f4ab8a2bae1bde00cc1a475a546b0767b779b27126ff86234eed73",
+          "bytes": 3281
+        },
+        {
+          "path": "lib/compat/convertPortPointPathingSolverInputToSerializedHyperGraph.ts",
+          "gitBlobSha1": "c063ff46a782e3f18d125bcdfa4cf70c26e09ad7",
+          "sha256": "8a12d99036b86c9244d05bc91bd966ffb63a10656f29d1490012208a84cd7e7d",
+          "bytes": 1991
+        },
+        {
+          "path": "lib/compat/convertToSerializedHyperGraph.ts",
+          "gitBlobSha1": "0d2e22237d1fc4b7c3e669464ddb4ea31a5724c8",
+          "sha256": "53c2af246d7ed972c7307f9a36f0a05b80b6217d354939cbb291859ae81be6fd",
+          "bytes": 12740
+        },
+        {
+          "path": "lib/compat/loadSerializedHyperGraph.ts",
+          "gitBlobSha1": "63fbdfdd4335dda705ba677344813daa3730f48e",
+          "sha256": "0d2effa07c5b608eaaf3ee04acb98975ac524535400725ccf6ecb73e4c685fc5",
+          "bytes": 20187
+        },
+        {
+          "path": "lib/computeRegionCost.ts",
+          "gitBlobSha1": "aba90668c3fabdf0bd3605acaf70690c749e92e4",
+          "sha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9",
+          "bytes": 2302
+        },
+        {
+          "path": "lib/core.ts",
+          "gitBlobSha1": "424b51e1d033c265e4cf3dd8b6b660f2e4cc3771",
+          "sha256": "7542a3ff0345bc4e4ff4052a7f8d68ac93e25787def48c3cde409f48e4c2885c",
+          "bytes": 76306
+        },
+        {
+          "path": "lib/countIntersectionsFromAnglePairsDynamic.ts",
+          "gitBlobSha1": "271a58630ed097487c0926993d7d6bd13423893d",
+          "sha256": "356afa69a8add0b5fd49ccd64eee3275b088c6ce0e6afe53c92eecb0e08fc5e8",
+          "bytes": 1190
+        },
+        {
+          "path": "lib/countNewIntersections.ts",
+          "gitBlobSha1": "43a6ea2710035586697981e944f28a294eebde56",
+          "sha256": "e30c4e1b84f45e5c928428f867fa24c687dc58b3d439d64ce2ca1435f9587959",
+          "bytes": 3290
+        },
+        {
+          "path": "lib/distance-aware-tiny-hypergraph-solver.ts",
+          "gitBlobSha1": "2aea87988a69cfdc678f0595f086e7cfe4349fa0",
+          "sha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
+          "bytes": 2016
+        },
+        {
+          "path": "lib/find-distinct-owner-blocker-path.ts",
+          "gitBlobSha1": "c441376035865762b98d92c29a5cabf1d6eafab9",
+          "sha256": "a1d68c7c5deba4da4e8856b3ea0bf47010134ac8ec20a71bd5e982f0ce518ab2",
+          "bytes": 13924
+        },
+        {
+          "path": "lib/index.ts",
+          "gitBlobSha1": "713b4ede0fa217ea49cbf4ebaffa57479ce5c3d2",
+          "sha256": "5331b525346e11a1da67c25b80e7f2c1cd176049003db6abd00d5686ec2ba9d8",
+          "bytes": 1291
+        },
+        {
+          "path": "lib/indexed-candidate-heap.ts",
+          "gitBlobSha1": "175bebd564c1991305ca5e0f3eb9b86686dd3390",
+          "sha256": "76512ee7d18511d1fbf05b8d3dbb1f8f2c4108a3bbeb60e8e6766bae49a3d09a",
+          "bytes": 6696
+        },
+        {
+          "path": "lib/initialAssignments.ts",
+          "gitBlobSha1": "a907fb92312549e3eac4f318831486739e7f9b2d",
+          "sha256": "75abfa11c090aecad5b41fbb476b30ad50d33a8d3846cac5b414889946aa1352",
+          "bytes": 5288
+        },
+        {
+          "path": "lib/layerLabels.ts",
+          "gitBlobSha1": "ffd93fa2f4e2266ca3159f35c56ef32b66cb6389",
+          "sha256": "de7bc9d7b3e24d773ca3fb18e37d1696337430b75fa3ae50e8161d2ffcf61d4a",
+          "bytes": 664
+        },
+        {
+          "path": "lib/mapPortsToAnglePairs.ts",
+          "gitBlobSha1": "85a6ba431b5a20ec890f8a3104d9369f3061d8f0",
+          "sha256": "233da5d4d00148c3a59941fb705cec956966c8c9fd360a796b9a0a08c50e01af",
+          "bytes": 860
+        },
+        {
+          "path": "lib/outside-in-partial-rip-tiny-hypergraph-solver.ts",
+          "gitBlobSha1": "be894922caa94960a0df3945919120e367c7a600",
+          "sha256": "99f18b868cbf5c774e5ab59b6bf79c4c894e55977da87ec4fdc4bdf133a4656b",
+          "bytes": 41526
+        },
+        {
+          "path": "lib/poly-types.ts",
+          "gitBlobSha1": "839718fee4dcf96c5aeaf840aef30c47ba4fd45b",
+          "sha256": "b3aa6a5c23e934d65a130956a4272ee3081832cadc9058d60e50c9a0196b1bd3",
+          "bytes": 3200
+        },
+        {
+          "path": "lib/poly.ts",
+          "gitBlobSha1": "0e4e45aa4ba402fb6f170dd6cbb52eb9844aeb96",
+          "sha256": "944e857237562d9aa42289c149f709f3c2824b470d07f60ab58c9a27a7d553ff",
+          "bytes": 34122
+        },
+        {
+          "path": "lib/region-graph/filterPortPointPathingSolverInputByConnectionPatches.ts",
+          "gitBlobSha1": "2bc602e0b5385161cc0c51dc0aef112822d07c7b",
+          "sha256": "eb256422906445a90d640db06377251dbf9e47af96d59df139437c55ed20a736",
+          "bytes": 1713
+        },
+        {
+          "path": "lib/region-graph/graph.ts",
+          "gitBlobSha1": "bc4d2a10d70c373ab5d3a326364274660f216df3",
+          "sha256": "c99cb1995e804a86cb570d7340074c2813d9fba9939b6c1b0ec46bad027a5fcb",
+          "bytes": 6565
+        },
+        {
+          "path": "lib/region-graph/index.ts",
+          "gitBlobSha1": "0fe9b643738f7795de64a33aab9782ed13087056",
+          "sha256": "3653809a3e4c882f84478e3914dec414f150d8871d25b0d3e80a6639bfbcd6ff",
+          "bytes": 277
+        },
+        {
+          "path": "lib/region-graph/region-path-solver.ts",
+          "gitBlobSha1": "bcdc66f075cf644005ac956059b364a18c811626",
+          "sha256": "3e76e3709b458dcbfa9c456519925a7d995e7796576110317d014a530caab1e6",
+          "bytes": 10692
+        },
+        {
+          "path": "lib/region-graph/visualizeRegionGraph.ts",
+          "gitBlobSha1": "71443e635b3f04dffd2c9772776366e1e25c632e",
+          "sha256": "11aaa65f8708386e60a091ed38f740b213be884c87a55210149db39e8d910970",
+          "bytes": 9557
+        },
+        {
+          "path": "lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
+          "gitBlobSha1": "9ccd4f97db75fbef687601894f258535f6d69490",
+          "sha256": "465e01fe38cbebd2166e70ba619442ec1b9ca83741fa6a538de2c5d2b97ccff7",
+          "bytes": 16820
+        },
+        {
+          "path": "lib/section-solver/index.ts",
+          "gitBlobSha1": "2f4bd0e2967fe7b729e496a41fdf595580cc6d71",
+          "sha256": "25a3128a2849b1171f16969a34144524a45dc3076443df39c94e772d30d93815",
+          "bytes": 33427
+        },
+        {
+          "path": "lib/section-solver/sectionCandidateFamilies.ts",
+          "gitBlobSha1": "4344518cd2ede0e183e263fd44e39bb9618cd2e6",
+          "sha256": "98c5a7052286281f703afbe3ef45d0b1c34c99696906ec3f75817a4a52f9495c",
+          "bytes": 3482
+        },
+        {
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "gitBlobSha1": "49e28705762dc0129f93a319fe73d62440f01f5e",
+          "sha256": "b1b9ecc6faaa80b4097fa16df5fec3075682f1608fe30aadcc5701808f5911c6",
+          "bytes": 34689
+        },
+        {
+          "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
+          "gitBlobSha1": "d9c442dc67bab453f195b8e19bd7d31cfee3fbe2",
+          "sha256": "ec052f55f7ae0502f0e9ee27b3e2d56b2e1da40cadb77bea97d1b1d3ec73c2d7",
+          "bytes": 6059
+        },
+        {
+          "path": "lib/selective-rerip/relaxedBlockerSearchTypes.ts",
+          "gitBlobSha1": "ea4f6dfc347ec8d10c41efe1cc3286338181ba80",
+          "sha256": "1a3c2d5d79103ede2a810bace0fef3a0a0509e6263d33ee1f0d8a6b232ffb43f",
+          "bytes": 720
+        },
+        {
+          "path": "lib/shuffle.ts",
+          "gitBlobSha1": "9b7bdfede912a99e2af03474b008ffc8011a1552",
+          "sha256": "ebd57c93f11b8c7f68d5988930fe81553ecbcb0cb57febc283dc3e53572d8ac4",
+          "bytes": 597
+        },
+        {
+          "path": "lib/static-reachability.ts",
+          "gitBlobSha1": "91583446526a70e25f17a2a6f863cdd936b45663",
+          "sha256": "efc406ca63296b2a07ba4fc6c9eebbe7427c0ac1323eb262d46494e5bec895b0",
+          "bytes": 7321
+        },
+        {
+          "path": "lib/types.ts",
+          "gitBlobSha1": "b10900096b15aa5f2bb4940282ea0de21c17e6a8",
+          "sha256": "06e853251f4ab990e316bda4e21c8cf6788eae7cc6626e8a33f5290a0123f72a",
+          "bytes": 1162
+        },
+        {
+          "path": "lib/utils.ts",
+          "gitBlobSha1": "a9e83e0dfa2c229e7d83800f556afd8f734afcea",
+          "sha256": "e1cdfb51609ee3a4c7b04807ddd1a002179f8c30c5f201d3fd110a082e5cbc85",
+          "bytes": 144
+        },
+        {
+          "path": "lib/visualizeStaticReachabilityFailure.ts",
+          "gitBlobSha1": "612c5cfbb011b6cdcf1781f24dbcf745a95ac458",
+          "sha256": "0e67ed6f7b148c195cde0d3ca10a6d3500ffc7bc138fcea06dc227b44d3510f5",
+          "bytes": 4587
+        },
+        {
+          "path": "lib/visualizeTinyGraph.ts",
+          "gitBlobSha1": "7d5eb16c338a158b95757badf08a1243dc4bce39",
+          "sha256": "70550ecca2d88d70eab52e4e16dc7b01f1d38845df453f0eaaf9030b60f84e49",
+          "bytes": 30483
+        },
+        {
+          "path": "package.json",
+          "gitBlobSha1": "ccd1d25dfebc997a4ed4c5911ee6547e449a7ae3",
+          "sha256": "e05b1b421115850de34741862befebc071c98376358df95e132e06a0dc7db3d2",
+          "bytes": 1802
+        },
+        {
+          "path": "tsconfig.json",
+          "gitBlobSha1": "ad93792af726ee72925609f45f2463e49866e1b4",
+          "sha256": "fabe72fb7215838d9aac80d30a9a965d432e0d68ecb74efe9f5c3204303131ed",
+          "bytes": 1044
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/high-density-a01",
+      "revision": "c0018b3691913861060c4438f236cba8beda8b2c",
+      "declaredPin": "git+https://github.com/tscircuit/high-density-a01.git#c0018b3691913861060c4438f236cba8beda8b2c",
+      "entrySpecifier": "@tscircuit/high-density-a01",
+      "bundleRoot": "validation/sample24/runtime-src/@tscircuit/high-density-a01",
+      "runtimeFiles": [
+        {
+          "path": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+          "gitBlobSha1": "9ec0802689e792a8560d04210ea7ef507422a4bf",
+          "sha256": "aca4e9ff9bf40e93ff9913aa338bc3de7e76f4ddbee3aa4064cd682d0ce14974",
+          "bytes": 55629
+        },
+        {
+          "path": "lib/HighDensitySolverA01WasmEngine/HighDensitySolverA01WasmEngine.ts",
+          "gitBlobSha1": "cb45f9e5eb830284778d44812022471ce4f7f8f7",
+          "sha256": "a3abca908330bd6657707a930201e9076f28d631e19af9e8ce3158413486a490",
+          "bytes": 9089
+        },
+        {
+          "path": "lib/HighDensitySolverA02/HighDensitySolverA02.ts",
+          "gitBlobSha1": "7ede29d15c2c543a73cf871be7eb666103f45ee0",
+          "sha256": "5af921f22e65f5fa3e7afb032cba408ed3e7eab9c2a80f09ca40f43338f768ea",
+          "bytes": 68446
+        },
+        {
+          "path": "lib/HighDensitySolverA03/HighDensitySolverA03.ts",
+          "gitBlobSha1": "389e4c0bd7b3f2f0578ab132d91293d10707e55e",
+          "sha256": "a18d30c53480a940cc3fd71b4335627bcf6085aa4595c82e906b006c64fd3bbb",
+          "bytes": 65615
+        },
+        {
+          "path": "lib/HighDensitySolverA05/HighDensitySolverA05.ts",
+          "gitBlobSha1": "f4613660d638f6fa9be1932b17f7a0adf4d981e9",
+          "sha256": "28490fa7c341b12919673e27117827c534072ffbb0b0eca3820f3e27f5e75e47",
+          "bytes": 74834
+        },
+        {
+          "path": "lib/HighDensitySolverA08/A08_BreakoutSolver.ts",
+          "gitBlobSha1": "65af927f187f5c1a89a14daf7f0a9d730e7d73d3",
+          "sha256": "f8bf09de9104a16bdab0c75a4f002eefe74bda257e2952744f521df031e6ec8c",
+          "bytes": 50982
+        },
+        {
+          "path": "lib/HighDensitySolverA08/HighDensitySolverA08.ts",
+          "gitBlobSha1": "150af81f41fe58e66992bec3c930ea4f1286e17a",
+          "sha256": "198d397650ad51d05b91f40191497187986a8765b27a3b577783f15e06b74b4f",
+          "bytes": 12665
+        },
+        {
+          "path": "lib/HighDensitySolverA08/shared.ts",
+          "gitBlobSha1": "f3bec97982476732e6bb11d7ac8af78952a36882",
+          "sha256": "21cd90acb693ca3c509619ad64911aa7a7582084132ac09cda44a6a28573aba7",
+          "bytes": 8995
+        },
+        {
+          "path": "lib/HighDensitySolverA09/HighDensitySolverA09.ts",
+          "gitBlobSha1": "c28c6a351e03786f1301434562725bc6f0e3e7ce",
+          "sha256": "1cc33f62da5c020ad0c440b5d13c9619a9a49731ab5e37b9d453f5d96955c86a",
+          "bytes": 25621
+        },
+        {
+          "path": "lib/HighDensitySolverA11/HighDensitySolverA11.ts",
+          "gitBlobSha1": "dc37ce38773f4c345c8276c93c2a1e828fb77f94",
+          "sha256": "aee3fab80e817824d63df114b086a3be3dbe8d06def5428bad733ca906dfa4c7",
+          "bytes": 1518
+        },
+        {
+          "path": "lib/HighDensitySolverA12/HighDensitySolverA12.ts",
+          "gitBlobSha1": "21e11a94005067efce8bba6c49fdb805d2a73197",
+          "sha256": "9161ae88640afcd9d1b1fae1f9c26ccfcb195a26dfb102bb635b91e21a63671a",
+          "bytes": 2478
+        },
+        {
+          "path": "lib/HighDensitySolverA13/HighDensitySolverA13.ts",
+          "gitBlobSha1": "33c90d7286601b3a0d1bb4da7f8ce3d2dbbe0739",
+          "sha256": "98e1a6fbf662e1fb97372afb2be842bd812a58da32b1b422152cb584bc5ec98a",
+          "bytes": 22819
+        },
+        {
+          "path": "lib/HighDensitySolverA13/search/JavascriptSearchKernel.ts",
+          "gitBlobSha1": "3f43d72e10153d7b261dbe2dcf132893246e9dde",
+          "sha256": "5e835ec5e1a6d5079479e40980c32de3df7ba0a223757b3bb389e37ed17809ed",
+          "bytes": 6360
+        },
+        {
+          "path": "lib/HighDensitySolverA13/search/SearchInputs.ts",
+          "gitBlobSha1": "661d1b9e564313a7425a2aa3889c751ffeaeda94",
+          "sha256": "b2a974c9b5df4d22f4361aff943c330687de1f2977d093bfd715fde6541cd223",
+          "bytes": 228
+        },
+        {
+          "path": "lib/HighDensitySolverA13/search/WasmSearchKernel.ts",
+          "gitBlobSha1": "dad4f8b1fa70fd4c7bc580aca0328608f40c99bf",
+          "sha256": "a17b2aaa04acff0f3bf3d8f15bb7a9da528211e671500fd487f7a18a11229c84",
+          "bytes": 3848
+        },
+        {
+          "path": "lib/HighDensitySolverA13/search/kernel.c",
+          "gitBlobSha1": "957bd4399f39f0a9eaeae8a87f294f2d9158f536",
+          "sha256": "29d9795af19b90ccdd898a10173f865c47a8a7c452c9004afcbb2e4f5d1a41b7",
+          "bytes": 5078
+        },
+        {
+          "path": "lib/HighDensitySolverA13/search/kernel.generated.ts",
+          "gitBlobSha1": "ffd3d0e475d12333e3bc9c3732b78a60b200ee5a",
+          "sha256": "02993c059a508aafe9c806787c2860208255afdffc63b3afddbaea560d7bc0bd",
+          "bytes": 6185
+        },
+        {
+          "path": "lib/dataset02/convertDataset02SampleToNodeWithPortPoints.ts",
+          "gitBlobSha1": "8c970cf2b06e01418cba12b2e78b99541ee1116e",
+          "sha256": "071a7ddd07b7804627c420107c612ad31dc7ceaaa804a7bb4e561995522355a2",
+          "bytes": 3097
+        },
+        {
+          "path": "lib/default-params.ts",
+          "gitBlobSha1": "7a4658255ef7bd138f5f0c268683bc79d3d1864f",
+          "sha256": "29f81b3ce37601189479475424cec0ca63ce82b7ff0bc1759a3ba3b6c990daa0",
+          "bytes": 4537
+        },
+        {
+          "path": "lib/getConnectionPortPointPairs.ts",
+          "gitBlobSha1": "7bab7c4f5099cae728d37ac3173590dc7d173b61",
+          "sha256": "9fc2ddd883a2af03968b1a4a3373d0d74b5d801123914bd841d38558d3644469",
+          "bytes": 3483
+        },
+        {
+          "path": "lib/gridToAffineTransform.ts",
+          "gitBlobSha1": "5641147f8cad917e841037159885ed250ae0562e",
+          "sha256": "d2e71d2b990b1669793ab18040a0675e3007bbfba8a12618b23aa6a891df849b",
+          "bytes": 2071
+        },
+        {
+          "path": "lib/index.ts",
+          "gitBlobSha1": "b86044614bc0ca064a60155e6cecbc72a64a450e",
+          "sha256": "733bc4b2f060b92abbce5e90480f09778ab51414f9c1463fbc1f48c6af1eea5e",
+          "bytes": 1258
+        },
+        {
+          "path": "lib/maxIterationsByNodeSizeAndConnectionCount.ts",
+          "gitBlobSha1": "b1762a8c5c685fe4dc9e3646f45702a51dedbdb8",
+          "sha256": "ac844eb990507de6d07e6b34fbc2115f3bb98fa6f8282e153a8f1ebc95e5b0a8",
+          "bytes": 1548
+        },
+        {
+          "path": "lib/routeGeometryValidation.ts",
+          "gitBlobSha1": "985a2d6826f73c6cf4f4d6d4fe769f05ba9fb4ac",
+          "sha256": "0802bc4e569d78a349daf4bd1bc5286a97e3f2a89016dbb02c3c1ff9ca2c24be",
+          "bytes": 16588
+        },
+        {
+          "path": "lib/routeReflow.ts",
+          "gitBlobSha1": "80392dd3c506dcd8c406706e9bf21f0ca0ad5ede",
+          "sha256": "90bd8e4130cd7de4a325d98acc29914c8c6213a465d9fa5b601e8229023a0794",
+          "bytes": 50109
+        },
+        {
+          "path": "lib/types.ts",
+          "gitBlobSha1": "e4fbb881875c250e183c92c608d6aac737e13f47",
+          "sha256": "880f391d02a85420367e3aa122d6b631f1b98c20d331ddfd376eadd1ea8c8d21",
+          "bytes": 2304
+        },
+        {
+          "path": "lib/wasm.ts",
+          "gitBlobSha1": "dc295a45d810fa0747a76274942d3877f9c3891e",
+          "sha256": "e62d1e42d54c65bd335cabc6b55beaa503e3a116c5ffe810e0853a2d0750de0c",
+          "bytes": 268
+        },
+        {
+          "path": "package.json",
+          "gitBlobSha1": "5032acc0958e400e7ffdc6759388341f4c5b8639",
+          "sha256": "13b732057f0447ab265c5e0ebb57dd02796e94330bbd190d588f8dc7f450e1ea",
+          "bytes": 1944
+        },
+        {
+          "path": "tsconfig.json",
+          "gitBlobSha1": "be3d138c8ad6572e0ac8fb84a041046d91802495",
+          "sha256": "ef042693ebb847d68cd301265cc44f864c5a46fbff180a11a66acb58a20e59d3",
+          "bytes": 720
+        },
+        {
+          "path": "wasm/pkg/highdensity_solver_a01_wasm.d.ts",
+          "gitBlobSha1": "c1a905794ecb737b888693af48559a9db86599ca",
+          "sha256": "55b8114099387ec0aa0d740cadd172bb1ffbd8472a6099759e1f0c545fec6366",
+          "bytes": 3007
+        }
+      ]
+    },
+    {
+      "name": "high-density-repair01",
+      "revision": "27b3392c38ed4474b0557c73640b261155e28c27",
+      "declaredPin": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
+      "entrySpecifier": "high-density-repair01",
+      "bundleRoot": "validation/sample24/runtime-src/high-density-repair01",
+      "runtimeFiles": [
+        {
+          "path": "lib/BaseSolver.ts",
+          "gitBlobSha1": "1f76c12272d5b0b584a1f8038a8f771c4cf9b06b",
+          "sha256": "6590c6cb00483c448d58ac0ccb158a2845157aa1efadf71bbaec78397c21c80b",
+          "bytes": 2266
+        },
+        {
+          "path": "lib/HighDensityForceImproveSolver.ts",
+          "gitBlobSha1": "606456ed14a002e75f86e1d9eef177bb658ecb15",
+          "sha256": "3e1465801470c5f0bfb3160f97a2547dccd0e437af6c8c74dc1d4708e64a2201",
+          "bytes": 63626
+        },
+        {
+          "path": "lib/colors.ts",
+          "gitBlobSha1": "6ab9cc68d190a46b424dd5d4bbc1348028edf34d",
+          "sha256": "9591119dc2b26605b1a182b42114be01a1bbcd5d69233782726bffafd294c25c",
+          "bytes": 1675
+        },
+        {
+          "path": "lib/connection-point-utils.ts",
+          "gitBlobSha1": "7cb83dbf56bfaed08e63c4efc2a6159997767a9d",
+          "sha256": "12390000a156f3c4629b48be24c8cde146f30cb18ee88a157f0970ce210e0e01",
+          "bytes": 1126
+        },
+        {
+          "path": "lib/drc-check.ts",
+          "gitBlobSha1": "6f71eab5dab5fa0e564c9f78d2527c9073220812",
+          "sha256": "c8cfec5d1b3b1fdb8389569a99ae3d474852e6e64a43ee7c06d1b5f6b45668ab",
+          "bytes": 24528
+        },
+        {
+          "path": "lib/high-density-types.ts",
+          "gitBlobSha1": "c331df8154ff2695ccd3ac2c76b539269e12e2cf",
+          "sha256": "d9a92d2d0e75a4b89d23430840b022e22602b21b5758dad97a155560b155e6be",
+          "bytes": 2148
+        },
+        {
+          "path": "lib/index.ts",
+          "gitBlobSha1": "5503f0c763eb2abbc990f651102a9f5e4b169ac2",
+          "sha256": "48213e840efe027aa385db97cd85dd6a2f47d59115aba12f19a0f12fc2f1874b",
+          "bytes": 210
+        },
+        {
+          "path": "lib/repair.ts",
+          "gitBlobSha1": "78b07196c83eefa555ac52cc3bb5bd2d4b6617cf",
+          "sha256": "c7d8b555b84ae3bdc2930c5fd9b8b73a99e14e221351021b043b91029904037e",
+          "bytes": 5504
+        },
+        {
+          "path": "lib/srj-types.ts",
+          "gitBlobSha1": "b021e90c98b82ce4e8b68a9ce0f572008a96b1c2",
+          "sha256": "7f9d99773e0065c9b4d949985197d3bba76e14a791d312189f269e985ea37a4c",
+          "bytes": 3004
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "gitBlobSha1": "0b95cbd1d2f403c48206b5f5107899bfb1c81ee0",
+          "sha256": "679355b965f23ae7333ba279be30157c67bebac6ac9f02f37fcc8a4dea232100",
+          "bytes": 2168
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "gitBlobSha1": "2432d847b4dc0af9e553f5fd0c2d2dd38e1a8115",
+          "sha256": "1a1075a9b3d7b7c811af3137deefc58d8eea9de101fec4435d0917f068fd89ad",
+          "bytes": 3011
+        },
+        {
+          "path": "lib/types/types.ts",
+          "gitBlobSha1": "450f35a2d79e5f925bf87c9ca7de4c7eb64739e5",
+          "sha256": "453be5fc35970f62e04243cf20f578d0af43ce3628e6ceef8f08a7531b577a4c",
+          "bytes": 1451
+        },
+        {
+          "path": "lib/utils/color-parser.ts",
+          "gitBlobSha1": "3112b72e48253cf2f2e716cd81d5ba34da8c1198",
+          "sha256": "105f14dde437552feab2d38431358038c32c87946ecb18f2a417b838bcfbbafd",
+          "bytes": 3413
+        },
+        {
+          "path": "lib/utils/colors.ts",
+          "gitBlobSha1": "6e116b482483b1ce24c64b05b402c1d7bf908a13",
+          "sha256": "7aeca3adf99a56ca0d94e737f58bc4136e81f56a25458c61eaa574e98c6ea92b",
+          "bytes": 1676
+        },
+        {
+          "path": "lib/utils/connection-point-utils.ts",
+          "gitBlobSha1": "019ba5d48debbbb9eabc734caa156a861a64fa90",
+          "sha256": "34224996d260fdcb79aea79788c828e5b9daec81b43218b0a5a72ecf37282121",
+          "bytes": 1133
+        },
+        {
+          "path": "lib/utils/force-improve-route-helpers.ts",
+          "gitBlobSha1": "695ef758a091ff916fcac0c222778e934e20ad92",
+          "sha256": "9f4ae1ca35a8b87f4fc287426857f6a9b7a721eff2bda80a8f63b36a2d553180",
+          "bytes": 2305
+        },
+        {
+          "path": "lib/utils/force-improve-segment-helpers.ts",
+          "gitBlobSha1": "a7d9859585217650e5d4dab592ecc2f97931175e",
+          "sha256": "580f96d12f06b3b12a1a3325d5d0db728c547f548cc4d47865bee624c3b1856b",
+          "bytes": 6059
+        },
+        {
+          "path": "lib/utils/getVectorLength.ts",
+          "gitBlobSha1": "76a32fd63480b1e7a9729bc0f23d7176bf6c2249",
+          "sha256": "d03a5918f39b0bee13e5147809d909b61aac28f688facc8a30b4578a84d77298",
+          "bytes": 550
+        },
+        {
+          "path": "lib/utils/high-density-force-improve-topology.ts",
+          "gitBlobSha1": "fae9c843316fe6ef9612339250d3dc0ee9873621",
+          "sha256": "c6245ef29a67ef5f8f25ec127d7bb3cc4de8806e53fa8dd93cdb3b2ff675c92c",
+          "bytes": 18361
+        },
+        {
+          "path": "lib/utils/normalize-routes.ts",
+          "gitBlobSha1": "d8a4a436fe86f11e50b9b017d8d33ee91fa0923e",
+          "sha256": "88931049db9d2aac3a02cd479650cfd26dbede1d5793cab2785c76b069d619ed",
+          "bytes": 11200
+        },
+        {
+          "path": "lib/utils/simplify.ts",
+          "gitBlobSha1": "02018af31eefe4e58b5307492fe8c5ee72395c4b",
+          "sha256": "601a87350da37ce019fcd537e2a65f0caea1c721d34422a2849e8fc9ac0d100b",
+          "bytes": 9371
+        },
+        {
+          "path": "lib/visualizeHighDensityRepair.ts",
+          "gitBlobSha1": "86b64d438fbcd6efa3c2682d09715cbe28e6ba83",
+          "sha256": "187bf37d1d4552595b18fe0659e52dd2396fed3ce7d0601424e043f2116790eb",
+          "bytes": 7106
+        },
+        {
+          "path": "package.json",
+          "gitBlobSha1": "968879b3a28d9bcf1f27dea9c58e38dd580fdd94",
+          "sha256": "c864499e9061b7edfd4073aced2419fa256fc76262331b29ba3afa7e5e488cab",
+          "bytes": 1575
+        },
+        {
+          "path": "tsconfig.json",
+          "gitBlobSha1": "06e0e33611ce1e6e7c1268451acc4aef7b5f4045",
+          "sha256": "81b32b52d23c920170691d6be45cee0c6b90d9582bd9b7b94355518aed5ffcfd",
+          "bytes": 996
+        }
+      ]
+    },
+    {
+      "name": "high-density-repair02",
+      "revision": "1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
+      "declaredPin": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
+      "entrySpecifier": "high-density-repair02",
+      "bundleRoot": "validation/sample24/runtime-src/high-density-repair02",
+      "runtimeFiles": [
+        {
+          "path": "lib/high-density-repair-solver.ts",
+          "gitBlobSha1": "9fcc653038441540749154d71aa3e638ff5d6a0f",
+          "sha256": "237f8f54f4ed7ecd37c51b8da7143b49e7784cd091a605ed0578b4d8c78bd454",
+          "bytes": 10233
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/FixedCopperClearanceGuard.ts",
+          "gitBlobSha1": "958e9f7129087c29c8eb2aa3636ca56be1755275",
+          "sha256": "4d2f26f2dd7c97fcca88ff63449c77db67142c4634aaa93b696ba721494fcab8",
+          "bytes": 4780
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clamp.ts",
+          "gitBlobSha1": "0497dae516ec37b0a5bbf2b0ec79694b0e94326e",
+          "sha256": "f2b80c613d8d68da17806fd17e2f7ec91d5c298db7fc3258f5e627341838c88d",
+          "bytes": 104
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clamp01.ts",
+          "gitBlobSha1": "16c7eb2d463cfda6191dffad03356d681e07ae7a",
+          "sha256": "3e86d34ff89831de347865c7ad230b065e7f92a57cf8a5b2fc333b2ff7526138",
+          "bytes": 74
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clampRoutePointsToBoundary.ts",
+          "gitBlobSha1": "dcfa1434b6f6058dba635d7a87fe0dd689c5dd57",
+          "sha256": "3b3b2471ae63a00e35e7e3f26e910e3aee556ae5350d2c7c5dbe2021ca87555b",
+          "bytes": 1441
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clonePoint.ts",
+          "gitBlobSha1": "6567662a2ae7c7154d6c9ea88f1344aa0524eab8",
+          "sha256": "9994bdd286d29639080f9017d5ac78794154cac72e8d72e4aa994bf7f339fc3c",
+          "bytes": 127
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/cloneRoute.ts",
+          "gitBlobSha1": "a14d7ef03279e10800e2646ace0c29d34527f619",
+          "sha256": "06dc10c3e20368ec7e1fa72f89c5363faa79461d90262df67df8af368b7831c9",
+          "bytes": 250
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/cloneRoutes.ts",
+          "gitBlobSha1": "4921fd93c66fa9760d6d5ba6557f9cc490f86b96",
+          "sha256": "1d7f92f1c1555623f0ea21fee158172942090039e11def92a83e8f113e4ee2cf",
+          "bytes": 163
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createBoundryViolationRects.ts",
+          "gitBlobSha1": "93538ac9237d25d57ee1d4483e0428f14adeb846",
+          "sha256": "ef7c05d1f58202f3adb46ab836c41152d25617d5e6744e090d9107e0311a21ce",
+          "bytes": 1160
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createCandidateFrame.ts",
+          "gitBlobSha1": "17e61a31b55699082d38b67945713b0df82812ac",
+          "sha256": "099e53c9266b43925aa5d5be301c5afe574b58887494e11c45d5a2feb176e59b",
+          "bytes": 1459
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createFinalFrame.ts",
+          "gitBlobSha1": "eecf43d4b64a677087548940241a9bef1e36fef1",
+          "sha256": "b23f78dde75ce9a4e3a493fe055e87058213632dee1f089d74c70bd3d1a35dc0",
+          "bytes": 292
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createInitialFrame.ts",
+          "gitBlobSha1": "9934f72a0ac682f2dbf0ecbd01886e533e72ef3a",
+          "sha256": "a261c7df5e4390642e3ad2214dade35a55c45c28e52aadf5a7a008fd397f8021",
+          "bytes": 249
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createMovedRoute.ts",
+          "gitBlobSha1": "6e228d2df85c950dadcc3fa051c8a397f67f8bcc",
+          "sha256": "27a20588004e03f28be9a068832cff0c1a812b966c20e5eaac3b9f4100cd6438",
+          "bytes": 3870
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createMovementArrow.ts",
+          "gitBlobSha1": "8b88c352a5724f8a5c6c477525b6f0047e966f73",
+          "sha256": "42ba730557108bab692e5d7434e61d55d8e5f685b5c1d48ba51434f82ad7f7ec",
+          "bytes": 1386
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createOverlayLinesForRoutes.ts",
+          "gitBlobSha1": "2e50bb0f6546176de816cd47574bfa2a3bda4292",
+          "sha256": "74b030ca36e6dbd18dd123b645a94b447fcd65c07596af7781fece2257f99436",
+          "bytes": 546
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createSideAnalysisFrame.ts",
+          "gitBlobSha1": "5b191e988501e8d908da4c1b98e058d4588eb451",
+          "sha256": "725d043f662aa82f5a59aaff5b34a9cbf1b7c6354edd41aff9fbdc55d4b5aa77",
+          "bytes": 716
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createSideStripRect.ts",
+          "gitBlobSha1": "ee40bda531ea13ad85e531fe690f475025e4e6ed",
+          "sha256": "33f8ed8107b946cb90da9bb01716accc1056882782ec38d0fb37f98c82f596ad",
+          "bytes": 1117
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createTraceViolationCircles.ts",
+          "gitBlobSha1": "ba4c152616517232b0184b6e3b890641b22cfb82",
+          "sha256": "94fe29a6304b3e41acb2dd04319a954cca9d0fc99bd0f573cd60e984832b1dca",
+          "bytes": 9406
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/dedupeRoutePoints.ts",
+          "gitBlobSha1": "d5696667a9c080646d9975f0125f63e094ec768a",
+          "sha256": "5200c0d45c8ebdc34a96cdf8edbd58e0b2832d24ba61f81a2e9db6bd0199e1c3",
+          "bytes": 424
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/distancePointToSegment.ts",
+          "gitBlobSha1": "de38eef0e9197efb6fc0b65ef4868b2bee1ea3a7",
+          "sha256": "c7e65c2d5d60086344c124b71bd90e4a7ed7487fed23c23d74a61a6becf5a71c",
+          "bytes": 705
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/distanceToSide.ts",
+          "gitBlobSha1": "c0c23347c742776fdc5157573e1c36dbfeb34cee",
+          "sha256": "9df5fc5dc8f93d47bf12200d23cceec286ea32877420f49b50edd791065558dc",
+          "bytes": 413
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/dot.ts",
+          "gitBlobSha1": "1a1d56c8495b937e248b34ccddd756e32e52885e",
+          "sha256": "ddfa7994f7d38c10df1376aa3af6cd3346177a8f09afb6af1cbd09742fb3bc43",
+          "bytes": 102
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findBoundaryTouchRegressions.ts",
+          "gitBlobSha1": "651395a1edc27cbbfc6f8e76a3e59e080ff3d925",
+          "sha256": "7209fcb6697c6a32170cd91267f4cad7839ab042257f6f50d306de9922913079",
+          "bytes": 1526
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findBufferZoneSegmentsNotStraightFromBoundary.ts",
+          "gitBlobSha1": "1e4b52fa666d4716c08ad33d9831f9f6b2adb58c",
+          "sha256": "3279fb7fdd02a4b518df54b3c7ef860295bf5f97561e600083a2bd2a613b4975",
+          "bytes": 4012
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findClearanceConflictPairs.ts",
+          "gitBlobSha1": "b0c9b9e30137793a37c51590d921dac0d5f54c4d",
+          "sha256": "5ab965263bd5b19764a016d5b2a60366ae70a5069a143f52af9e54b08cb3240b",
+          "bytes": 443
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findClearanceConflicts.ts",
+          "gitBlobSha1": "e675cf76b116c3ab6faabbb7b38bb66cd7bb1925",
+          "sha256": "0ce83d75c80a80bde6fe33284b1eddcdd163566147dece364118920696d3af78",
+          "bytes": 15652
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findConflictingRouteIndexes.ts",
+          "gitBlobSha1": "b3fc9d76d179c50bf9843749d8f5e5c02c008fa2",
+          "sha256": "1fb925c80f806c0ee5de7cee1c6fa10893a0eda0b43bf2f19c7d06f5c6b16c6a",
+          "bytes": 1522
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findInteriorDiagonalSegmentsInBufferZone.ts",
+          "gitBlobSha1": "b453b92b0ce7c0677ad24474686e51669d984826",
+          "sha256": "eb3435d43e92c13532270a46d27834e979910ed50dfd3c2f8c32e8a990562e09",
+          "bytes": 5432
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findNewUnpushableZeroClearanceConflicts.ts",
+          "gitBlobSha1": "6dc53322ea0862d3147d691303fc18ec747f03c3",
+          "sha256": "c9da2db503172ed39d286285c8d9c2a7dc97ebfd4b7ce15fd2baa2e1b70cb02a",
+          "bytes": 1936
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findTraceClearanceRegressions.ts",
+          "gitBlobSha1": "e10a1c1b6439303c65fd1eff86900a2e025529ec",
+          "sha256": "df4fe8eadda4e1356360fd6776b7f53f9f55582c009aa0b77e8ceb7107902344",
+          "bytes": 4251
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getBoundaryRect.ts",
+          "gitBlobSha1": "fd07f1e584448a84569ab06a14c12b925b5365d8",
+          "sha256": "8fdf979c14cdf69352753afd0bcb0590c48e09259ea525417fe7eae0e8ad9f7f",
+          "bytes": 501
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getMoveAmountForSide.ts",
+          "gitBlobSha1": "5c5838c33ee9469e7bc2f586ea94f32bbf9056d3",
+          "sha256": "89bea0211cd246dc350229cb1230c95d642db6fcbf684c4ef0a156e5957c841b",
+          "bytes": 539
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getObstacleBounds.ts",
+          "gitBlobSha1": "67419029eab9a3f0e4b5ebce3e6d17d2696283f9",
+          "sha256": "f05fa53df4f31ab4b1fa42ae9d5dbaa4ba65add1db14b9e4d447b8380787aa24",
+          "bytes": 402
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteBoundaryOverflow.ts",
+          "gitBlobSha1": "79becea7d6410eeae27aae5527cd87dc2811a78f",
+          "sha256": "1e24c7ec2a20fa09b1681399e85e534f8d1a3d77f0a0b576e520d0815941193a",
+          "bytes": 393
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteGeometry.ts",
+          "gitBlobSha1": "083f850ab450b8d93b694509fb916224c48c7205",
+          "sha256": "a4612816da287b081fa8a06add4c0c83f982c218e979678e1c5b3b686d4fabce",
+          "bytes": 3502
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteInteriorSamplePoints.ts",
+          "gitBlobSha1": "ce96d6670e993798e84c8fedfe05df2eda26879b",
+          "sha256": "314c5b476e6e03479884f8a25b933ea45e00ca1bf69ba21c8488571e900caf5c",
+          "bytes": 713
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteInteriorSideClearance.ts",
+          "gitBlobSha1": "c6831648a24bf0f9e19fca8625d315dbfa61d962",
+          "sha256": "43926eb361a5d1bd8120db3ec62477f5fa3bf58d27a6d6b4a0147aaa7dacc4e8",
+          "bytes": 598
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteMovableIndexes.ts",
+          "gitBlobSha1": "bf21a533058dcac18f3ce2ea12c6281c388ba670",
+          "sha256": "0f0160fa2eabafde36adb6956bfaf7b999060446969290db39e2744f251a1949",
+          "bytes": 1974
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRoutePointLayer.ts",
+          "gitBlobSha1": "d4cb1ab34a04c29a8014038f9041948e49ff7297",
+          "sha256": "47d9c7ef0e695dc311253aaa308fe75fa0b875007601d9c882042b6af7980b48",
+          "bytes": 163
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRoutePushableIndexes.ts",
+          "gitBlobSha1": "b011ac8d8a7cac9443717994eaf829e8435f0f34",
+          "sha256": "3bec28256ac7662ba4edee1024f4aa2cd4fdc9e2ac9bf1f636f4d4bdb57f658a",
+          "bytes": 1903
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSegments.ts",
+          "gitBlobSha1": "9743e8d6088b0711bca1343635258e03f4aff50e",
+          "sha256": "fbe1c97e27f1d9be9b5a69e40eeec9cce0533186559bc30c3bc39dfc64436294",
+          "bytes": 316
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSideContactState.ts",
+          "gitBlobSha1": "a28fcfd9a91458c700b2f9f0d07a40f2ddb6074d",
+          "sha256": "c90ca49dbce54631b97ccdf9ef53d3dfcae4a437ba27eeb201bd7c052273530e",
+          "bytes": 1310
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSideExposure.ts",
+          "gitBlobSha1": "246ee8a36ca78c1386211588cd47d273aa076d11",
+          "sha256": "f3d52c0b18e21056b6d2449fa981acbd8294789f8b067ff75957286189f19506",
+          "bytes": 730
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteStrokeColor.ts",
+          "gitBlobSha1": "67a0a052855b1cd25651cdb0321b423edba739f5",
+          "sha256": "9b10390b2d47aca6d7d566afb9634d5d2a5ec00a3532a5132e5f6ae97a3638e0",
+          "bytes": 199
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getSegmentLength.ts",
+          "gitBlobSha1": "8fcb45f5b5720902192b9bbfa5d080d682b77215",
+          "sha256": "339490e5d642f7b3cf25de18523bdf37aa061ed0ed7e6f6ab28657f0046baaa1",
+          "bytes": 146
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isObstacleNearSide.ts",
+          "gitBlobSha1": "113bd0aa19cbf61ee42f94d9dc31d15fb6651cad",
+          "sha256": "9339ffcb9c33a442c8d157f8764156e9cee6474393b851bd2c12b9d178979134",
+          "bytes": 994
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isPointInsideBoundary.ts",
+          "gitBlobSha1": "6155e5982b80435158900115cc9ea696ef4ed42a",
+          "sha256": "4e4720c64d2dc3fa89883418242b797e8394a87130151bff549bd50da8db54f2",
+          "bytes": 336
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isPointNearSide.ts",
+          "gitBlobSha1": "20b3123ba7e033773656cf421caa4f41d84607a1",
+          "sha256": "400eaf92f8b623a0703600bc8c265a1d6aff796efb1858dcceacac1f7141f275",
+          "bytes": 342
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/lengthSquared.ts",
+          "gitBlobSha1": "fe1741af744bcf66c2ed63e0ea0a97e42b19fe1f",
+          "sha256": "cfccbeb657781f5584d9a5c72effe80fd493e45e870e1be7ce28eca109bd71e4",
+          "bytes": 127
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/normalizeBoundaryAnchoredRoutes.ts",
+          "gitBlobSha1": "c5d2d033327151ed3c4d98a691a4009e801901ef",
+          "sha256": "debca149a4802d998c6df3c9fb91750ee6f929a7abb5f9b64c20a04010d2d47c",
+          "bytes": 1217
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/onSegment.ts",
+          "gitBlobSha1": "226e20a16e3c5a3b11b89df80a6aa176d8a2ee14",
+          "sha256": "6d222f4ac333e0b7cfcfa3c2fdeb271e03533eed5085eda2bfaed49cb9ab3368",
+          "bytes": 300
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/orientation.ts",
+          "gitBlobSha1": "dfa3c6ac72dab834c158bd2344ffc334004b6f67",
+          "sha256": "d0f1ebfd182defeb22cd09e981604247b27c0e40da01f7809d4626890443aef1",
+          "bytes": 151
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/pointsCoincide.ts",
+          "gitBlobSha1": "9d9554132d5bc753e45f894b5234babef39db838",
+          "sha256": "5c93ab28c72b67015b93de25d2355df11bd6acd575f35d7815837a5829eb2858",
+          "bytes": 204
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/repairNodeClearance.ts",
+          "gitBlobSha1": "cdc890e757f6368d06e1d0da1ce2156041816e75",
+          "sha256": "5e6fc5c9754e094de6a4b05da681e13a27c0afc16f0a4f2374faccf2c71ff3e7",
+          "bytes": 29749
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/routeEndpointsStayOnBoundarySides.ts",
+          "gitBlobSha1": "c6613b806d4e0f3ad39537edfeb0e7e432722b07",
+          "sha256": "807f2e24d7fa5aa066a25aa117e3844c8efe631af9a710d3e29e4523dd926b13",
+          "bytes": 1398
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/routeStaysInsideBoundary.ts",
+          "gitBlobSha1": "49bb2c2542eb151ab0b6ffce852f5ec52ef4d87e",
+          "sha256": "6320a841111f4e957ba6623b2d5745bf114fe5ae0cc1eb97652eb64435f8410c",
+          "bytes": 296
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentDistance.ts",
+          "gitBlobSha1": "aa65cb27951ada04aea3cd3c3afe53a5dcb9eee7",
+          "sha256": "d3fe6f5197b697a9fceb88372a13d4b1e6c5bc61f8f39d3595976617bb780cd0",
+          "bytes": 470
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentsIntersect.ts",
+          "gitBlobSha1": "d026c3a2b502928e253c95c1204214c131768d0c",
+          "sha256": "65480d111580d14d5d8a1a6ca58de871b1294dc87463f9eb6c07d6bfea0a568b",
+          "bytes": 716
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentsShareEndpoint.ts",
+          "gitBlobSha1": "d0c906ff0c7ac7c096d848c91e207d3a60ddb3c8",
+          "sha256": "4e546e7c7631ebc0e88682e9201632b2a4d75ecf68b1c9c74356b217bb5e76f3",
+          "bytes": 304
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/sideDirection.ts",
+          "gitBlobSha1": "a0f647918a80b90c42cc53685a010f3fb8f142d8",
+          "sha256": "1f2ea7e53f164ec29e778bba98b1e242dcf497774134e12a0097a8432b7d6219",
+          "bytes": 360
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/snapToGrid.ts",
+          "gitBlobSha1": "a2b082b328a5ac1597234fb8d204d644e1c08e26",
+          "sha256": "8e14b3805f1c23c47ed15f188fb4e95ba6e8bff0d77ca9d43744c3c0d3c3b31c",
+          "bytes": 496
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/splitRouteIntoLayerSegments.ts",
+          "gitBlobSha1": "1328307465d8c719ff882119c513e496ee4e1353",
+          "sha256": "76306a083221edfadbe71c875a114beee2e404e9d372368f005240e50987c685",
+          "bytes": 1510
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/subtract.ts",
+          "gitBlobSha1": "fcdcb1989f4159eb143401cd88ffc2023cc52972",
+          "sha256": "b6561faa7775064289f8d05f9632c7f9851b7492faaa7f4a1c91878387e73747",
+          "bytes": 122
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/synchronizeRouteVias.ts",
+          "gitBlobSha1": "9503b8fe98cb18e7b65d87e5c88b9df9f9a16790",
+          "sha256": "b72472fa4f23a8f598d82f037abe24a494f6478ce0cfbd1dc26aadfde5681572",
+          "bytes": 1298
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/wouldIncreaseExposureOnOtherSides.ts",
+          "gitBlobSha1": "cc4b09eaf333aa622f3ca68d2240382dae25e529",
+          "sha256": "53a839de11ce421d5a27fc1f8e3b747af917cbf7314ac7a472c7ea70b2e931ce",
+          "bytes": 1061
+        },
+        {
+          "path": "lib/high-density-repair-solver/shared/constants.ts",
+          "gitBlobSha1": "1ea1d6afd55b1e3a4256067150bd38dfbc1d1cc3",
+          "sha256": "9e644ee9811cb87801b5e62ea26ee730fca7f587640faac20d6019a3405f0ef4",
+          "bytes": 526
+        },
+        {
+          "path": "lib/high-density-repair-solver/shared/types.ts",
+          "gitBlobSha1": "20b5065b58797282c6fcaa35e87b2a3071fef3eb",
+          "sha256": "c45d4c619e67cfbcf85f8837edd887403f4ffa5a32cfeca0b9c00c64c0538e62",
+          "bytes": 3330
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/buildRepairFrames.ts",
+          "gitBlobSha1": "959f72799ba0294e08427fb7c5ce3f43baa0a29d",
+          "sha256": "c916c19462e521165091291a95d0510ff42102886fa730a5251db642b1110524",
+          "bytes": 11764
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/evaluateRouteMove.ts",
+          "gitBlobSha1": "cd2cd6c37f0dbf2adc6263791f836f14f4a2f15b",
+          "sha256": "0472344317549524930f8bbb4c0eacfbe61f83f275b134404012583f22a748c7",
+          "bytes": 12708
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/processBoundarySide.ts",
+          "gitBlobSha1": "b4be08daacfaf654ca32ff4f40cc2dadfb18941d",
+          "sha256": "01b9cee6eca265bb7a97be9a6d89180e40d981226dc6dea79f4646d9ca0435aa",
+          "bytes": 4992
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/targetedBoundaryCleanup.ts",
+          "gitBlobSha1": "1b1d401346a4a0c57bbda563f405059057512b11",
+          "sha256": "0cbb2fd11ca7089a291cff7b322f555214eadd1ca82cb83f7554dcbb01bbdd52",
+          "bytes": 14970
+        },
+        {
+          "path": "lib/index.ts",
+          "gitBlobSha1": "f3b3181ecfdbcfd61db7ad0e6ef0d440dccc86f7",
+          "sha256": "bc0cbae94522a153ba3dc5480e3b6e2da7e7cabdf9f046ee3b8f758507a00f34",
+          "bytes": 45
+        },
+        {
+          "path": "package.json",
+          "gitBlobSha1": "6a8de23c072bfbe9a78b62ea7f73a773635afc8d",
+          "sha256": "d2b3ba0e75187a45f3b9f570cd8a84a61cba3dcc1e70057881920a2b304c7141",
+          "bytes": 1071
+        },
+        {
+          "path": "tsconfig.json",
+          "gitBlobSha1": "894d900a4b465b95deb0c021d586c6a631523a9a",
+          "sha256": "af4ffdc5d331f4ddf8ed862716ead430587c43c198ed7e02ad5b332940920422",
+          "bytes": 782
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/trace-simplification-solver",
+      "revision": "054d77a1a9a200478736062e1abe4fdb8dc163df",
+      "declaredPin": "github:tscircuit/trace-simplification-solver#054d77a1a9a200478736062e1abe4fdb8dc163df",
+      "entrySpecifier": "@tscircuit/trace-simplification-solver",
+      "bundleRoot": "validation/sample24/runtime-src/@tscircuit/trace-simplification-solver",
+      "runtimeFiles": [
+        {
+          "path": "index.ts",
+          "gitBlobSha1": "77923ba030f708f59189e75b59747eeb1bd90dff",
+          "sha256": "cb3d294aee275b5d6c5c339c73b4804926203fd32585f2bb3a6bf73b095fe5dd",
+          "bytes": 1611
+        },
+        {
+          "path": "lib/data-structures/FlatbushIndex.ts",
+          "gitBlobSha1": "af851185ec254c537464bbe0c2b92c952574d61b",
+          "sha256": "50e43a79ff67b871335c429918baba9f127afe96b2fc9952cbdaf63a0268de86",
+          "bytes": 1031
+        },
+        {
+          "path": "lib/data-structures/HighDensityRouteSpatialIndex.ts",
+          "gitBlobSha1": "bfce096a88aa4731e83b26f25fd46bec94430734",
+          "sha256": "bf2315422d12a1fe616ef379efe7363a4545ad1655951b3f57208c6ca010a0d0",
+          "bytes": 23372
+        },
+        {
+          "path": "lib/data-structures/ObstacleTree.ts",
+          "gitBlobSha1": "6f42a3a7693eb6ee4e6c58ff9f01fd4d0f71927d",
+          "sha256": "9cfb1423d4103dd4999a0ad63456d89b3d2d028c665fdaf219332bc14d31f026",
+          "bytes": 4956
+        },
+        {
+          "path": "lib/data-structures/PathSimplificationGeometryIndex.ts",
+          "gitBlobSha1": "5cf6b8ad880eb44b4bf408a50900889acde937bd",
+          "sha256": "5943acd33e8490a5d8df3cc42e7236c70a5a145d8fafa4b66ac2738f76761f0c",
+          "bytes": 7841
+        },
+        {
+          "path": "lib/data-structures/RbushIndex.ts",
+          "gitBlobSha1": "911757b7493665bde8040d82917e137a92c79e81",
+          "sha256": "e7477ee149baf3c9df6e0be2de65c0c8d7d2f620e2b1f9174fe41d693fb6c5fb",
+          "bytes": 959
+        },
+        {
+          "path": "lib/data-structures/SegmentTree.ts",
+          "gitBlobSha1": "70f6acc63f50a092d6e8abe27ab10ff9f7c1e4ba",
+          "sha256": "a53cc703979f5ae8ab65d24906a8044e95c091c6fe6543bc65c5dece3cbaed67",
+          "bytes": 3999
+        },
+        {
+          "path": "lib/data-structures/SpatialIndex.ts",
+          "gitBlobSha1": "3f42cea420d29b1a7ba848f8ce778691ab135f71",
+          "sha256": "c3f30a7494d3635eafbc265f0152932026b84cdfe62936a57f434ac9f15c2d48",
+          "bytes": 362
+        },
+        {
+          "path": "lib/solvers/BaseSolver.ts",
+          "gitBlobSha1": "1f76c12272d5b0b584a1f8038a8f771c4cf9b06b",
+          "sha256": "6590c6cb00483c448d58ac0ccb158a2845157aa1efadf71bbaec78397c21c80b",
+          "bytes": 2266
+        },
+        {
+          "path": "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver.ts",
+          "gitBlobSha1": "4fa7189063e1c59a94910f90b7843349eeabe70e",
+          "sha256": "22a6314c25fa86f4bdf91dc57d1c36646b152936824feb11771164a53a941400",
+          "bytes": 45251
+        },
+        {
+          "path": "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver.ts",
+          "gitBlobSha1": "8eab681c5ab2f51e3c77150f2f7c7c32c2b6be6a",
+          "sha256": "1fe01b2ae7f156a9cee9f0b51de5a98df3f8205c30be26d09e7b2fcfcd45ed8e",
+          "bytes": 22323
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver.ts",
+          "gitBlobSha1": "46525590a9fe296ec5372988f19e93e5bde1dc04",
+          "sha256": "7308d2ce1aefc18d440d8e532e3b34cc04121585ba3a691dc8fa0bbea6ff0035",
+          "bytes": 9528
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver.ts",
+          "gitBlobSha1": "c815fe333700e89a0061cc0a495ae83481a280ea",
+          "sha256": "a3999d31d905cd29eaea75b16d9c89f2d1780d74aab8bf1ae20a59557d018bd7",
+          "bytes": 6645
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts",
+          "gitBlobSha1": "55bb9fb7d46eada3deb12b38ec928ba830010be4",
+          "sha256": "8321b1900accc6408f99afdb57afa5da7052eb5d47c0ffb1e7c98ceb8892863b",
+          "bytes": 35359
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/VertexShortcutPathSolver.ts",
+          "gitBlobSha1": "e12281a07ba5dcddde543ba8ed5152915b2912aa",
+          "sha256": "ec4682effdc0de6122000322ea35ae3f3d24346e3afa24b8560ca0f1e2d1c0b5",
+          "bytes": 3415
+        },
+        {
+          "path": "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts",
+          "gitBlobSha1": "8b4341320cd18b4d58daa97c262f07ab544910c1",
+          "sha256": "f5f996e98d2b4450876687459ebc8a5399d1b89d78f25fb0281f5ca235545891",
+          "bytes": 21128
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver.ts",
+          "gitBlobSha1": "26b81db9ae5b347c3dea374cdbdc59079b2d8b19",
+          "sha256": "99accc1b7f2f37499c4c74afcb4bd31b931ed23f7caa04dcdaed3afb4a2f5e47",
+          "bytes": 33126
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver.ts",
+          "gitBlobSha1": "1e023ae0f17ea268a033b5b1df463b4f2e7578f7",
+          "sha256": "ebfcf5061b414773689d209404d149eb49d9d9b37c12e259805a08fe8572da89",
+          "bytes": 7403
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/break-route-into-sections.ts",
+          "gitBlobSha1": "8af0f5ed6627269928381405efb0b7b6117173bc",
+          "sha256": "c316bde188fe9e1dcc7f5d5250558c2cff5a5ad1483ed8eaa81ccf82d98ef199",
+          "bytes": 973
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/can-endpoint-connect-on-layer.ts",
+          "gitBlobSha1": "949896c586cb06fe14ec89014ff73bc88548e421",
+          "sha256": "ef2285254cfeeb4042461b0d1c5516f9f6f1d478414c5cbaf2ab15cee0a6f419",
+          "bytes": 2091
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/can-section-move-to-layer.ts",
+          "gitBlobSha1": "c26e9d3c08fd2e9e7cece0605e9d49647775774f",
+          "sha256": "6f76d94b11dddb246d67311ce9233a7d3f8187ac900232d7fdf8000359f491b7",
+          "bytes": 4092
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/create-obstacle-detour-path-validator.ts",
+          "gitBlobSha1": "8500ae760679439c512dafc77c4a7ca3439595ca",
+          "sha256": "ebc68d4c18540bb9cdd65b7d310ce70b0cad7544393b8a925dfad095eda8dd63",
+          "bytes": 6617
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/route-section.ts",
+          "gitBlobSha1": "88413f662ca7eb32a36d347fc032aeec444ead59",
+          "sha256": "4f7c583fbaa2936b9dc8b8c5a0020c1136d9c870d28e6b0c2a3066d015fa4497",
+          "bytes": 194
+        },
+        {
+          "path": "lib/solvers/colors.ts",
+          "gitBlobSha1": "0afb8dc1ddd041746899998d23bb3fa43d20bfef",
+          "sha256": "2ccdc7d08fc5d87c11c41ddabd4d9b31e70e4b75442c020c63b603c7a469b13e",
+          "bytes": 223
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "gitBlobSha1": "b5d1e0144903deff00413b8eaa1d750d384233e9",
+          "sha256": "dbc05ef850bcf61a9f0a331cb56abb6ae5feb17360c6518a1b1cb0176b3389de",
+          "bytes": 1655
+        },
+        {
+          "path": "lib/types/index.ts",
+          "gitBlobSha1": "cda3bd914aff327ca811dfd9950f0b56071a73d8",
+          "sha256": "e1e901ba5ccc453c62cc68edeb1b8e97ba6cbbb957e5ddc0eee27dc3335bef33",
+          "bytes": 28
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "gitBlobSha1": "5b37d7037b260cfd7624af83af6170fb816b6278",
+          "sha256": "8583393c3569461bd60899cedc9f385b08d110d5c4c831e376d7be5b35935b09",
+          "bytes": 1273
+        },
+        {
+          "path": "lib/utils/calculate45DegreePaths.ts",
+          "gitBlobSha1": "a2d6f1b4c9f8c57ece21609e1f7a5e0f63e03a4a",
+          "sha256": "182eb1ba17b047775b7a787958d2efb196ee3b3ca4d4258e2ed0dc329d5ebaa4",
+          "bytes": 1552
+        },
+        {
+          "path": "lib/utils/combineVisualizations.ts",
+          "gitBlobSha1": "9c07f45d10697dac7512b9da06e7a2c560c97314",
+          "sha256": "8253c8b6635d2c6f4b4d25a1d34f13fc51e581772fd25bc6d06795ccbcb6fb59",
+          "bytes": 1669
+        },
+        {
+          "path": "lib/utils/createObjectsWithZLayers.ts",
+          "gitBlobSha1": "9c992e851b257312aac26774b251c5f9587fd391",
+          "sha256": "202bcbaf00f16267bf8f6666ab4597f699fe0b9182246276f4e7a8b6dee69dbf",
+          "bytes": 1123
+        },
+        {
+          "path": "lib/utils/getJumperGraphics.ts",
+          "gitBlobSha1": "996f1c3dba80d034b59defae358f4d5750a9c3de",
+          "sha256": "a7baf4345cb86e1ce2e907fae8aecf26c2020aa2b0d6689564a6cfd3f23de626",
+          "bytes": 2378
+        },
+        {
+          "path": "lib/utils/getVectorLength.ts",
+          "gitBlobSha1": "8952c900373f093d4e38e348b0118e97b0f08474",
+          "sha256": "6498934513814e2619f2ca2a722c2ecb9b6788e7d3f7df9095d0f9a918887b13",
+          "bytes": 456
+        },
+        {
+          "path": "lib/utils/jumperSizes.ts",
+          "gitBlobSha1": "32ee1a8f4baf2392860e44da0edf3d4d8d8b6d7c",
+          "sha256": "9315f085a3bbfaf90e7a21d5fdda9807324cab144b93af6ba33c42b629bc7f8c",
+          "bytes": 1157
+        },
+        {
+          "path": "lib/utils/mapLayerNameToZ.ts",
+          "gitBlobSha1": "c79c9d3103fd92d10650edead83737814c06064e",
+          "sha256": "39f65025d71f81bc0c6c49b969c8792893a67aeb8f180111c2c15aa4ef8412b2",
+          "bytes": 690
+        },
+        {
+          "path": "lib/utils/mapZToLayerName.ts",
+          "gitBlobSha1": "ae502d07004f2825c06b32df6e018dfa1a2f59fd",
+          "sha256": "c8b4a19387c96368dde4f04df603405e8c5a904a89519fd834229666f7cc1bd2",
+          "bytes": 494
+        },
+        {
+          "path": "lib/utils/minimumDistanceBetweenSegments.ts",
+          "gitBlobSha1": "dc3ce9ff71cfe453b68b29ab7a090c9856292b9b",
+          "sha256": "84c1440e22cf9a4279066d443c4f36eea855739bebaca71fa576927daf10773a",
+          "bytes": 2246
+        },
+        {
+          "path": "lib/utils/polygonContainment.ts",
+          "gitBlobSha1": "d1a6de2c6f82ebb245cd1298990d1c033b9be627",
+          "sha256": "be1eade90662d276884f6ad2f6fe29e55b280ce7dc972047903dca7819479038",
+          "bytes": 3007
+        },
+        {
+          "path": "package.json",
+          "gitBlobSha1": "181a91e331963305777e77cad0baa881eb39b153",
+          "sha256": "314d7e609c54d75ae45b3ae1595c22a105661e8f9e23e7f2544470c6600d7923",
+          "bytes": 1085
+        },
+        {
+          "path": "tsconfig.json",
+          "gitBlobSha1": "ed62a76771d66af7c37abb48d18182ae6e814d62",
+          "sha256": "c4ab5c00fd56b15e8883aa2e476a9173a132d0b7a0d8b8b46b7ab15db81142fb",
+          "bytes": 420
+        }
+      ]
+    }
+  ],
+  "rootTransitives": {
+    "@tscircuit/math-utils": {
+      "version": "0.0.36",
+      "entrySha256": "a6b693b67c131467d6cfdc0f278ce2cf49b64a79149278dfc5a69a1e58cf53c5"
+    },
+    "@tscircuit/solver-utils": {
+      "version": "0.0.23",
+      "entrySha256": "8dccabc62b65504da61bd35f007565c1f8733310cae4c4bba3c025c53f094bb5"
+    },
+    "@tscircuit/rectdiff": {
+      "version": "0.0.56",
+      "entrySha256": "c4adfec8693eb814df39ebcb8965c731326e4827a352d44cc9ebcbd5c023e4b8"
+    },
+    "circuit-json-to-connectivity-map": {
+      "version": "0.0.34",
+      "entrySha256": "f884c62c893ad801919539fa220b6a41ec301a141c335ba42b5d4620f64e3078"
+    }
+  },
+  "simplifierNestedConnectivityVersion": "0.0.19",
+  "requiredBenchmarkArgs": [
+    "--pipeline",
+    "9",
+    "--dataset",
+    "24",
+    "--sample",
+    "24",
+    "--effort",
+    "1",
+    "--concurrency",
+    "1",
+    "--threads",
+    "1",
+    "--sample-timeout",
+    "3600s",
+    "--capture-final-srj"
+  ],
+  "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
+  "bundleSha256": "6f5289e793e4e0f1d221fefefc83ee3214bc955698912b71bd0df035050a2b60"
+}
