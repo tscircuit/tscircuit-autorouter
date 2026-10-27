@@ -31,6 +31,7 @@ jobs:
       - name: Compare the TypeScript backend with one and four workers
         shell: bash
         env:
+          PROFILE_PORT_SEARCH: "1"
           SAMPLES: ${{ inputs.samples || '6' }}
           REPEATS: ${{ inputs.repeats || '3' }}
         run: |
@@ -45,3 +46,4 @@ jobs:
           path: |
             port-point-scaling.json
             port-point-scaling.log
+            worker-profiles/**
