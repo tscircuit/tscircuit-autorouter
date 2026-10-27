@@ -61,6 +61,18 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     const nodeById = new Map(
       this.nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    const edgesByNodeId = new Map<CapacityMeshNodeId, CapacityMeshEdge[]>()
+    const indexEdge = (edge: CapacityMeshEdge): void => {
+      for (const nodeId of new Set(edge.nodeIds)) {
+        const incidentEdges = edgesByNodeId.get(nodeId)
+        if (incidentEdges) {
+          incidentEdges.push(edge)
+        } else {
+          edgesByNodeId.set(nodeId, [edge])
+        }
+      }
+    }
+    for (const edge of this.edges) indexEdge(edge)
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -68,12 +80,20 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        if (
+          this.hasEdgeBetween(
+            nodeA,
+            nodeB,
+            edgesByNodeId.get(nodeA.capacityMeshNodeId) ?? [],
+          )
+        ) continue
 
-        this.edges.push({
+        const edge: CapacityMeshEdge = {
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
-        })
+        }
+        this.edges.push(edge)
+        indexEdge(edge)
       }
     }
 
@@ -82,7 +102,7 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
+      const hasRoutingEdge = (edgesByNodeId.get(targetNode.capacityMeshNodeId) ?? []).some((edge) => {
         if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
         const otherNodeId =
           edge.nodeIds[0] === targetNode.capacityMeshNodeId
@@ -112,8 +132,12 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     return node1.availableZ.some((z) => node2.availableZ.includes(z))
   }
 
-  hasEdgeBetween(node1: CapacityMeshNode, node2: CapacityMeshNode): boolean {
-    return this.edges.some(
+  hasEdgeBetween(
+    node1: CapacityMeshNode,
+    node2: CapacityMeshNode,
+    candidateEdges: readonly CapacityMeshEdge[] = this.edges,
+  ): boolean {
+    return candidateEdges.some(
       (edge) =>
         edge.nodeIds.includes(node1.capacityMeshNodeId) &&
         edge.nodeIds.includes(node2.capacityMeshNodeId),
