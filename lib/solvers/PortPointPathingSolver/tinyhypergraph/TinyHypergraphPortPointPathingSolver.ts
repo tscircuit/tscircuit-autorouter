@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -1387,6 +1388,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
+      parallelRegionCostWorkers: solveGraphStats.parallelRegionCostWorkers,
+      parallelRegionCostCompletedTables: solveGraphStats.parallelRegionCostCompletedTables,
+      parallelRegionCostRowsUsed: solveGraphStats.parallelRegionCostRowsUsed,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
@@ -1421,6 +1425,69 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solveGraphStats.outsideInForwardExpansionCount,
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
+    }
+  }
+
+  // Short searches do not amortize speculative table construction. Keep their
+  // original stepping loop; start workers only when a graph search is long.
+  PARALLEL_COST_WARMUP_ITERATIONS = 500_000
+  private asyncRunning = false
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) {
+      throw new Error("Port-point pathing solveAsync is already running")
+    }
+    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+    this.asyncRunning = true
+    const startTime = performance.now()
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const pipeline = this.tinyPipelineSolver
+        const graphSolver = pipeline.activeSubSolver
+        if (
+          runtime && graphSolver instanceof TinyHyperGraphSolver &&
+          !graphSolver.solved && !graphSolver.failed
+        ) {
+          while (
+            !this.solved && !this.failed && this.iterations < stopAtIteration &&
+            this.tinyPipelineSolver === pipeline &&
+            pipeline.activeSubSolver === graphSolver &&
+            graphSolver.iterations < this.PARALLEL_COST_WARMUP_ITERATIONS
+          ) {
+            this.step()
+          }
+          if (this.solved || this.failed || this.iterations >= stopAtIteration) break
+          if (this.tinyPipelineSolver !== pipeline || pipeline.activeSubSolver !== graphSolver) continue
+          if (graphSolver.solved || graphSolver.failed) {
+            this.step()
+            continue
+          }
+          await graphSolver.withParallelRegionCosts(runtime, () => {
+            // Preserve every original wrapper and child step, including budgets
+            // and transitions to a possible alternative routing candidate.
+            while (
+              !this.solved && !this.failed && this.iterations < stopAtIteration &&
+              this.tinyPipelineSolver === pipeline &&
+              pipeline.activeSubSolver === graphSolver
+            ) {
+              this.step()
+            }
+          })
+        } else {
+          this.step()
+        }
+      }
+    } catch (error) {
+      this.solved = false
+      this.failed = true
+      this.error = `Port-point pathing runtime error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
     }
   }
 

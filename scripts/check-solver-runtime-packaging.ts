@@ -137,13 +137,22 @@ serial.solve()
 assert.equal(serial.solved, true)
 const runtime = createAutorouterSolverRuntime({workerCount: 2, requireWorker: true})
 let dispatchCount = 0
+let pathingDispatchCount = 0
 const countingRuntime = {
-  executeAsync(Solver, input) { dispatchCount++; return runtime.executeAsync(Solver, input) },
+  executeAsync(Solver, input) {
+    dispatchCount++
+    if (Solver === "TinyHyperGraphRegionCostWorker") pathingDispatchCount++
+    return runtime.executeAsync(Solver, input)
+  },
 }
 try {
   const solver = new Pipeline9(structuredClone(input), {effort: 0.1, cacheProvider: null})
+  while (!solver.portPointPathingSolver && !solver.solved && !solver.failed) solver.step()
+  assert.ok(solver.portPointPathingSolver, "Test must reach port-point pathing")
+  solver.portPointPathingSolver.PARALLEL_COST_WARMUP_ITERATIONS = 0
   await solver.solveAsync(countingRuntime)
   assert.equal(solver.solved, true)
+  assert.ok(pathingDispatchCount > 0, "Test must dispatch parallel pathing services")
   assert.ok(dispatchCount > 0, "Test must actually dispatch registered solver tasks")
   assert.equal(JSON.stringify(solver.getOutputSimpleRouteJson()), JSON.stringify(serial.getOutputSimpleRouteJson()))
   assert.equal(solver.iterations, serial.iterations)

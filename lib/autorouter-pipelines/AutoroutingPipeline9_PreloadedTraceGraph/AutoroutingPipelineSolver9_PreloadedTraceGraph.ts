@@ -1153,7 +1153,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
-          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
+          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver ||
+          this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver
         ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
