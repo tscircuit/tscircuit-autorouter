@@ -1,0 +1,52 @@
+{
+  "scope": "INDEPENDENT_CORRECTED_REFERENCE_EVALUATOR_OVERLAY_NOT_PRODUCTION_ROUTING",
+  "producerSource": "86f94f52beb47a5779feb4eae86b683a3f3e958c",
+  "referenceWorktree": "/workspace/sample24-physical-repair-integration",
+  "referenceRevision": "53b1649066e1a386a45809a10040a9d5bf8cb8db",
+  "visitedRuntimeImports": 20,
+  "files": [
+    {
+      "path": "lib/testing/evaluate-relaxed-drc.ts",
+      "sha256": "4b7dadfc47b5fe205ca5a7e00ac6a60d9b18ffac7dc1be32ca414273d5c7744b",
+      "bytes": 3604,
+      "producerBlobSha256": "d774e4d05931e0e24b2462e9436c9b0aba604aafddc88c99e67e588a4c2fcd59"
+    },
+    {
+      "path": "lib/testing/getDrcErrors.ts",
+      "sha256": "1a44c7f3e6bf82eeefb1dda82c1dad26437a888f265406e7d9cf79b27da9dc31",
+      "bytes": 6789,
+      "producerBlobSha256": "8f3aba2532e216d530db5efe3d514ec114f33b4ac0e32d68170522660257a994"
+    },
+    {
+      "path": "lib/testing/getUnownedObstacleDrcErrors.ts",
+      "sha256": "a88d780da5c52243c918c33776aa26f5d5a4813dfe0586877c826b9e76db3c83",
+      "bytes": 4614,
+      "producerBlobSha256": null
+    },
+    {
+      "path": "lib/testing/utils/convertToCircuitJson.ts",
+      "sha256": "5430dfb31c032d037863f54e8b08f9d433192e0e25ce2b2fb12c90f4d8f4f25f",
+      "bytes": 38484,
+      "producerBlobSha256": "826d3479413296b10768cb3e49a65b87b94a1403e7b8811cd7b7ff35a3cebfd6"
+    },
+    {
+      "path": "lib/types/capacity-mesh-types.ts",
+      "sha256": "84717c6fed858d3f65a6b8c06ea3135e873de62a763f9820a197aecb16f812f7",
+      "bytes": 1438,
+      "producerBlobSha256": "cb19b41d0ea6daf658d483d9cf66c45d7de4aa3bad84c1fbe82ec7df3e49a41f"
+    },
+    {
+      "path": "lib/types/high-density-types.ts",
+      "sha256": "c00c2b17ce5f306005094479cb0552125dfc534419f3260c5160639ddb044b46",
+      "bytes": 3238,
+      "producerBlobSha256": "4c22c1863e5960656e8090c6febe29580b766bd3b03299f33dcbd867f2084df8"
+    },
+    {
+      "path": "lib/utils/getConnectivityMapFromSimpleRouteJson.ts",
+      "sha256": "21e7e2a4fe0c8a37d732f8dcffce39ec4eff147e947b82cdbb17629d3c5fbc35",
+      "bytes": 2756,
+      "producerBlobSha256": "bada24e5503c16e5452b335a813dbf5817ced0001380143b10e1388a97d407e4"
+    }
+  ],
+  "policy": "Apply only to a separate audit-reference checkout after producer runtime/input proof. Keep original producer checkout and routed bytes unchanged. Source hashes distinguish independent evaluator from production benchmark DRC."
+}
