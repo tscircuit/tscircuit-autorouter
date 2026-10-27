@@ -14,12 +14,23 @@ Validation includes exact serial/four-worker path, assignment and iteration pari
 
 ## Performance validation
 
-The target is 2x faster summed `portPointPathingSolver` time against base at four threads, with successful downstream routing and DRC. It has not been reached.
+The target is 2x faster summed `portPointPathingSolver` time against base at four threads, with successful downstream routing and DRC. The measured implementation is autorouter `9b022de8f2771ff3a87133bcdc53eb15e722ff7a`, pinning tiny-hypergraph `577feca9ac7a70df298333ab90ee0991cf78dcfe`.
 
-The preceding strict implementation measured 161.020s → 125.428s (1.284x, 22.1% less phase time) in the full dataset18 comparison [40511314731](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40511314731). All 16 boards solved and passed DRC in both revisions, and all 16 used four participating search workers. Summed end-to-end time improved 672.086s → 628.830s (6.4%). These figures precede the final frontier and worker-input optimizations.
+The exact requested `/benchmark --dataset 18 --threads 4` completed in [40526921244](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40526921244). Both revisions ran on the same Blacksmith 8-vCPU ARM machine with Bun 1.4.2. Times below sum all 16 boards, including any failed or partial samples; none failed or timed out.
 
-The compact-frontier experiment preserved all 16 output hashes and iteration counts in [40514128709](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40514128709), but its own one-worker time was 115.414s versus 124.716s with four workers (0.925x). Repeated samples 6 and 14 also matched; targeted full-pipeline samples 6, 8 and 14 all solved and passed DRC in [40514240384](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40514240384). The improvement against the old autorouter therefore does not demonstrate scaling over this implementation's one-worker mode.
+| Measurement | Base, four threads | PR, four threads | Result |
+| --- | ---: | ---: | --- |
+| Port-point phase | 154.547s | 105.331s | 1.467x faster; 31.8% less time |
+| Total routing time | 627.741s | 573.873s | 8.6% less time |
+| Solved / DRC passed | 16 / 16 | 16 / 16 | No outcome regressions |
+| Timeouts / DRC errors | 0 / 0 | 0 / 0 | No failures |
 
-The final pinned revision is being measured again with `/benchmark --dataset 18 --threads 4` and isolated one-worker/four-worker phase pairs. Final results will replace these preliminary figures when complete.
+All 16 PR boards recorded four actually participating search workers. The 2x phase target is **not met**: this run would require 77.273s or less, another 26.6% reduction from the measured PR time.
+
+The isolated comparison [40526849022](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40526849022) used the same TypeScript implementation with one and four workers. One worker took 113.459s; four took 116.358s (0.975x). All 16 output hashes and iteration counts matched, and all 16 used four participating workers. Three alternating pairs for samples 6 and 14 in [40526866687](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40526866687) also matched on every pair, but four workers were slower (0.962x).
+
+Thus, the gain against the existing autorouter includes the packed TypeScript search optimizations; it does not demonstrate useful scaling over this implementation's one-worker mode. The isolated four-worker run performed 29.5 million observed expansions for 18.3 million accepted expansions and rejected 3,746 stale searches. Conflicting graph updates remain the limiting factor.
+
+Two separate experiments retained exact output parity but did not establish useful scaling: lazy shared graph views measured 1.005x in [40529319848](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40529319848), and geographically spaced searches across a 16-route lookahead measured 0.994x in [40531036928](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40531036928). The wider lookahead increased observed work to 51.2 million expansions. Neither experiment is part of the pinned implementation.
 
 Run benchmarks on Blacksmith per repository policy. `/benchmark --dataset 18 --threads 4` compares both revisions on the same machine. The manual `Port-point parallel scaling` workflow runs isolated one-worker/four-worker phase pairs and fails on incomplete solves, changed output hashes or changed iteration counts. Phase-only measurements do not validate downstream DRC; the full pipeline comparison does.
