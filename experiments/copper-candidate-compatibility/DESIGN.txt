@@ -29,7 +29,10 @@ conflicts to reject incompatible choices. This can revise earlier geometry
 without reproducing its original Native ancestor context or routing order.
 The result is explicitly a new physical proposal, not exact-context memoization.
 Before publication, the existing pair checks and Native per-path guards still
-run. Native generation, archive work, choice search, pair checks, and validation
+run. The original DAG state stays on the frontier while a mixed assignment is
+validated: if reset ancestry introduces a rejecting future-trace guard, that
+proposal is rejected without losing the earlier Native context. Native
+generation, archive work, choice search, pair checks, and validation
 all consume the unchanged aggregate allowance of the replaced Native family.
 
 Restricted-domain exhaustion and work limits do not prove physical impossibility.
@@ -47,4 +50,4 @@ This is a bounded local path-selection experiment, not an implementation of a
 complete SAT/SMT solver, Benders cuts across pipeline stages, or exact global
 column generation. Success needs actual corpus activation and independent DRC
 under the common benchmark rules. Functional A/B script: bun
-experiments/copper-candidate-compatibility/validate.ts srj18 1 (and srj24 1).
+experiments/copper-candidate-compatibility/validate.ts srj18 1 (and srj24 25).

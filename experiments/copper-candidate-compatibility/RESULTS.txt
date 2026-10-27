@@ -39,6 +39,11 @@ choice/aggregate caps with no output, immutable physical facts, changed-geometry
 cache misses, and retained hard future-trace via guards. The existing owner,
 blind-via/span, hole-clearance, ancestor-context, family budget, and async ledger
 tests retain all original assertions.
+An independent review found that a mixed proposal could discard its still-valid
+Native ancestor state before stricter reset-context validation rejected it. The
+frontier now retains that state. A regression proves that the speculative mixed
+proposal is rejected while the original legal two-route geometry still publishes.
+The focused suite now passes 23 tests with 35085 assertions.
 
 Build (workers, ESM, declarations) passes. Required performance evidence remains
 the common-base versus candidate Blacksmith runs for datasets18 and24, plus

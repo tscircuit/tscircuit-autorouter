@@ -522,6 +522,14 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       // This is a NEW physical proposal, not native-context memoization. Soft
       // future costs and old priorities do not constrain its legality. Every
       // pair and every native path guard is checked again before publication.
+      // Keep the current frontier proposal: resetting ancestors can introduce
+      // Native future-trace guards absent from its original valid context.
+      // Rejecting this mixed proposal must not discard that earlier state.
+      if (this.current) {
+        this.charge("priorityCandidateSuspendedStateSlots")
+        this.stack.push(this.current)
+        this.recordCandidate("copperCandidateSuspendedDagStates")
+      }
       this.acceptState({
         ancestors: this.tasks.map(() => new Set()),
         witnesses: search.solution.map((candidate) => ({ ...candidate, ancestors: [] })),
@@ -758,6 +766,10 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       if (this.finalTask < this.tasks.length) {
         if (!this.validateRoute(this.finalTask++, state)) {
           this.record("priorityRejectedFinalWitnesses")
+          if (this.validatingCandidateAssignment) {
+            this.recordCandidate("copperCandidateRejectedAssignments")
+            this.validatingCandidateAssignment = false
+          }
           this.current = undefined
         }
         return
