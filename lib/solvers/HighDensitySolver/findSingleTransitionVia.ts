@@ -402,8 +402,21 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   for (const point of blockingPoints.values()) {
     appendCircleCandidates({ center: point, margin: viaRadius + traceRadius + context.traceToPadClearance + 1e-6 })
   }
-  const legal = [...candidates.values()].filter((via) => boardClear(via) && blockers(via).length === 0 && peerClear(via))
+  const isClear = (via: Point): boolean => boardClear(via) && blockers(via).length === 0 && peerClear(via)
+  const legal = [...candidates.values()].filter(isClear)
     .map((via) => ({ via, length: Math.hypot(via.x - start.x, via.y - start.y) + Math.hypot(via.x - end.x, via.y - end.y) }))
+  if (legal.length === 0) {
+    // A gap can require one obstacle's X boundary and another's Y boundary.
+    // Complete these finite clearance events before declaring no proposal.
+    const xs = new Set([...candidates.values()].map((point) => point.x))
+    const ys = new Set([...candidates.values()].map((point) => point.y))
+    for (const x of xs) for (const y of ys) {
+      if (candidates.has(`${x},${y}`)) continue
+      const via = { x, y }
+      if (!isClear(via)) continue
+      legal.push({ via, length: Math.hypot(x - start.x, y - start.y) + Math.hypot(x - end.x, y - end.y) })
+    }
+  }
   legal.sort((a, b) => a.length - b.length || a.via.x - b.via.x || a.via.y - b.via.y)
   const chosen = legal[0]?.via
   return chosen && { x: center.x + (chosen.x - center.x) * scale, y: center.y + (chosen.y - center.y) * scale }
