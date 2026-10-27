@@ -12,13 +12,21 @@ test("ordinary-cell union preserves concave geometry, layer restrictions and pre
   const restrictedLayers = createFlexibleBoundaryFixture()
   restrictedLayers[1]!.availableZ = [0]
   for (const nodes of [concave, gap, overlap, restrictedLayers]) {
-    const result = coarsenPipeline9OrdinaryNodes({ nodes, hasPreloadedTraces: false })
+    const result = coarsenPipeline9OrdinaryNodes({
+      nodes,
+      hasPreloadedTraces: false,
+      physicalTerminals: [],
+    })
     expect(result.stats.mergedPairCount).toBe(0)
     expect(result.nodes).toEqual(nodes)
   }
   const nodes = createFlexibleBoundaryFixture()
   const before = structuredClone(nodes)
-  const result = coarsenPipeline9OrdinaryNodes({ nodes, hasPreloadedTraces: true })
+  const result = coarsenPipeline9OrdinaryNodes({
+    nodes,
+    hasPreloadedTraces: true,
+    physicalTerminals: [],
+  })
   expect(result.stats.mergedPairCount).toBe(0)
   expect(result.nodes).toEqual(before)
   expect(nodes).toEqual(before)

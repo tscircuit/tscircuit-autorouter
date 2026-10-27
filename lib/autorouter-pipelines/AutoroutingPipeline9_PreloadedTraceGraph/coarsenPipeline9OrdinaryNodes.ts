@@ -25,6 +25,8 @@ type Candidate = {
   removedPortCount: number
 }
 
+type PhysicalTerminal = Pick<PortPoint, "x" | "y" | "z">
+
 const EPSILON = 1e-8
 
 const getPortKey = (point: PortPoint): string | undefined => {
@@ -38,7 +40,9 @@ const getPortKey = (point: PortPoint): string | undefined => {
 const samePort = (a: PortPoint, b: PortPoint): boolean => {
   return (
     getPortKey(a) === getPortKey(b) &&
-    a.x === b.x && a.y === b.y && a.z === b.z &&
+    a.x === b.x &&
+    a.y === b.y &&
+    a.z === b.z &&
     a.rootConnectionName === b.rootConnectionName &&
     a.pcb_port_id === b.pcb_port_id
   )
@@ -52,24 +56,30 @@ const getRectangularSeam = (
   const alignedX = a.center.x === b.center.x && a.width === b.width
   if (
     alignedY &&
-    Math.abs(Math.abs(a.center.x - b.center.x) - (a.width + b.width) / 2) < EPSILON
+    Math.abs(Math.abs(a.center.x - b.center.x) - (a.width + b.width) / 2) <
+      EPSILON
   ) {
     return {
       axis: "x",
-      coordinate: a.center.x < b.center.x
-        ? a.center.x + a.width / 2 : b.center.x + b.width / 2,
+      coordinate:
+        a.center.x < b.center.x
+          ? a.center.x + a.width / 2
+          : b.center.x + b.width / 2,
       min: a.center.y - a.height / 2,
       max: a.center.y + a.height / 2,
     }
   }
   if (
     alignedX &&
-    Math.abs(Math.abs(a.center.y - b.center.y) - (a.height + b.height) / 2) < EPSILON
+    Math.abs(Math.abs(a.center.y - b.center.y) - (a.height + b.height) / 2) <
+      EPSILON
   ) {
     return {
       axis: "y",
-      coordinate: a.center.y < b.center.y
-        ? a.center.y + a.height / 2 : b.center.y + b.height / 2,
+      coordinate:
+        a.center.y < b.center.y
+          ? a.center.y + a.height / 2
+          : b.center.y + b.height / 2,
       min: a.center.x - a.width / 2,
       max: a.center.x + a.width / 2,
     }
@@ -81,10 +91,12 @@ const getMergedNode = ({
   a,
   b,
   owners,
+  physicalTerminals,
 }: {
   a: NodeWithPortPoints
   b: NodeWithPortPoints
   owners: Map<string, Set<string>>
+  physicalTerminals: readonly PhysicalTerminal[]
 }): NodeWithPortPoints | undefined => {
   const seam = getRectangularSeam(a, b)
   if (!seam || !a.availableZ || !b.availableZ) return undefined
@@ -94,7 +106,9 @@ const getMergedNode = ({
   if (!a.portPointsInPairs || !b.portPointsInPairs) return undefined
 
   const internal = new Set<string>()
-  const bPorts = new Map(b.portPoints.map((point) => [getPortKey(point), point]))
+  const bPorts = new Map(
+    b.portPoints.map((point) => [getPortKey(point), point]),
+  )
   for (const node of [a, b]) {
     const keys = new Set<string>()
     for (const point of node.portPoints) {
@@ -109,12 +123,24 @@ const getMergedNode = ({
       if (along <= seam.min + EPSILON || along >= seam.max - EPSILON) {
         return undefined
       }
-      if (point.pcb_port_id !== undefined || owners.get(point.portPointId!)?.size !== 2) {
+      // Physical terminals may have no PCB label. Their original coordinates
+      // and layers must remain fixed even when the port otherwise looks shared.
+      if (
+        point.pcb_port_id !== undefined ||
+        owners.get(point.portPointId!)?.size !== 2 ||
+        physicalTerminals.some(
+          (terminal) =>
+            terminal.z === point.z &&
+            Math.abs(terminal.x - point.x) < EPSILON &&
+            Math.abs(terminal.y - point.y) < EPSILON,
+        )
+      ) {
         return undefined
       }
-      const other = node === a ? bPorts.get(key) : a.portPoints.find(
-        (port) => getPortKey(port) === key,
-      )
+      const other =
+        node === a
+          ? bPorts.get(key)
+          : a.portPoints.find((port) => getPortKey(port) === key)
       if (!other || !samePort(point, other)) return undefined
       internal.add(key)
     }
@@ -123,14 +149,18 @@ const getMergedNode = ({
     if (new Set(flattened.map(getPortKey)).size !== flattened.length) {
       return undefined
     }
-    if (flattened.some((point) => !node.portPoints.some(
-      (port) => samePort(point, port),
-    ))) return undefined
+    if (
+      flattened.some(
+        (point) => !node.portPoints.some((port) => samePort(point, port)),
+      )
+    )
+      return undefined
   }
   // A single uncoupled crossing has no ordering freedom to recover. Keep the
   // first pilot focused on seams that constrain multiple independent routes.
   const internalConnections = new Set(
-    a.portPoints.filter((point) => internal.has(getPortKey(point)!))
+    a.portPoints
+      .filter((point) => internal.has(getPortKey(point)!))
       .map((point) => point.connectionName),
   )
   if (internalConnections.size < 2) return undefined
@@ -177,9 +207,9 @@ const getMergedNode = ({
   const minY = Math.min(a.center.y - a.height / 2, b.center.y - b.height / 2)
   const maxY = Math.max(a.center.y + a.height / 2, b.center.y + b.height / 2)
   return {
-    capacityMeshNodeId: `flexible-boundary:${JSON.stringify([
-      a.capacityMeshNodeId, b.capacityMeshNodeId,
-    ].sort())}`,
+    capacityMeshNodeId: `flexible-boundary:${JSON.stringify(
+      [a.capacityMeshNodeId, b.capacityMeshNodeId].sort(),
+    )}`,
     center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
     width: maxX - minX,
     height: maxY - minY,
@@ -193,10 +223,12 @@ const getMergedNode = ({
 export const coarsenPipeline9OrdinaryNodes = ({
   nodes,
   hasPreloadedTraces,
+  physicalTerminals,
   enabled = true,
 }: {
   nodes: NodeWithPortPoints[]
   hasPreloadedTraces: boolean
+  physicalTerminals: readonly PhysicalTerminal[]
   enabled?: boolean
 }): { nodes: NodeWithPortPoints[]; stats: Pipeline9FlexibleBoundaryStats } => {
   const stats: Pipeline9FlexibleBoundaryStats = {
@@ -211,7 +243,9 @@ export const coarsenPipeline9OrdinaryNodes = ({
   const nodeIndexById = new Map<string, number>()
   for (const [index, node] of nodes.entries()) {
     if (nodeIndexById.has(node.capacityMeshNodeId)) {
-      throw new Error(`Pipeline9 flexible boundary: duplicate node ${node.capacityMeshNodeId}`)
+      throw new Error(
+        `Pipeline9 flexible boundary: duplicate node ${node.capacityMeshNodeId}`,
+      )
     }
     nodeIndexById.set(node.capacityMeshNodeId, index)
     for (const point of node.portPoints) {
@@ -226,24 +260,40 @@ export const coarsenPipeline9OrdinaryNodes = ({
   const candidates: Candidate[] = []
   for (const ids of owners.values()) {
     if (ids.size !== 2) continue
-    const indexes = [...ids].map((id) => nodeIndexById.get(id)!).sort((a, b) => a - b)
+    const indexes = [...ids]
+      .map((id) => nodeIndexById.get(id)!)
+      .sort((a, b) => a - b)
     const key = JSON.stringify(indexes)
     if (candidateKeys.has(key)) continue
     candidateKeys.add(key)
     const a = indexes[0]!
     const b = indexes[1]!
-    const node = getMergedNode({ a: nodes[a]!, b: nodes[b]!, owners })
+    const node = getMergedNode({
+      a: nodes[a]!,
+      b: nodes[b]!,
+      owners,
+      physicalTerminals,
+    })
     if (!node) continue
     if (nodeIndexById.has(node.capacityMeshNodeId)) {
-      throw new Error(`Pipeline9 flexible boundary: merged node ID collision ${node.capacityMeshNodeId}`)
+      throw new Error(
+        `Pipeline9 flexible boundary: merged node ID collision ${node.capacityMeshNodeId}`,
+      )
     }
     candidates.push({
-      a, b, node,
-      removedPortCount: nodes[a]!.portPoints.length + nodes[b]!.portPoints.length - node.portPoints.length,
+      a,
+      b,
+      node,
+      removedPortCount:
+        nodes[a]!.portPoints.length +
+        nodes[b]!.portPoints.length -
+        node.portPoints.length,
     })
   }
   stats.candidatePairCount = candidates.length
-  candidates.sort((a, b) => b.removedPortCount - a.removedPortCount || a.a - b.a || a.b - b.b)
+  candidates.sort(
+    (a, b) => b.removedPortCount - a.removedPortCount || a.a - b.a || a.b - b.b,
+  )
   const selected = new Map<number, Candidate>()
   const used = new Set<number>()
   for (const candidate of candidates) {

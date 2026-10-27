@@ -34,6 +34,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
 import {
   convertSrjToGraphicsObject,
@@ -50,6 +51,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -605,10 +607,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
         const originalNodes =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+        const flexibleBoundariesEnabled =
+          cms.opts.flexibleBoundaries !== false &&
+          !cms.originalSrj.traces?.length
         const coarsened = coarsenPipeline9OrdinaryNodes({
           nodes: originalNodes,
           hasPreloadedTraces: Boolean(cms.originalSrj.traces?.length),
-          enabled: cms.opts.flexibleBoundaries !== false,
+          enabled: flexibleBoundariesEnabled,
+          physicalTerminals: flexibleBoundariesEnabled
+            ? cms.originalSrj.connections.flatMap((connection) =>
+                connection.pointsToConnect.flatMap((point) =>
+                  getConnectionPointLayers(point).map((layer) => ({
+                    x: point.x,
+                    y: point.y,
+                    z: mapLayerNameToZ(layer, cms.originalSrj.layerCount),
+                  })),
+                ),
+              )
+            : [],
         })
         const nodePortPointsSource = coarsened.nodes
         cms.flexibleBoundaryStats = coarsened.stats
