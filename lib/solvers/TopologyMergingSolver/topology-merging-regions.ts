@@ -280,8 +280,8 @@ function mergeRegionRun(
       mergedRegions.push({
         ...region,
         bounds: { ...region.bounds },
-        availableZ: [...region.availableZ],
-        sourceKeys: [...region.sourceKeys],
+        availableZ: region.availableZ,
+        sourceKeys: region.sourceKeys,
       })
       continue
     }
