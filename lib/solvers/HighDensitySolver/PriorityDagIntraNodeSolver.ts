@@ -1,3 +1,4 @@
+import { createPhysicalGridGuards } from './createPhysicalGridGuards'
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import {
   doPipeline9RoutesHaveCopperConflict,
@@ -116,7 +117,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         3 + Object.keys(this.hyperParameters).length,
       )
       this.nativeBounds = {
-        ...getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
+        ...(this.routingBounds ?? getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)),
       }
       this.regionId = this.nodeWithPortPoints.capacityMeshNodeId
       this.hyperParameters = Object.freeze({ ...this.hyperParameters })
@@ -291,6 +292,12 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           obstacleRoutes.push(witness.route)
       } else if (i !== task) futureConnections.push(this.tasks[i])
     }
+    if (this.physicalContext) this.charge("priorityPhysicalContextEntries", this.physicalContext.obstacles.length + obstacleRoutes.length)
+    const physicalGuards = this.physicalContext && createPhysicalGridGuards({
+      context: { ...this.physicalContext, routedPeerRoutes: obstacleRoutes }, bounds: this.nativeBounds,
+      center: this.nodeWithPortPoints.center, connectionName: this.tasks[task].connectionName,
+      rootConnectionName: this.tasks[task].rootConnectionName, traceWidth: this.traceWidth, viaDiameter: this.viaDiameter,
+    })
     return {
       ...this.tasks[task],
       A: this.tasks[task].points[0],
@@ -299,6 +306,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       obstacleRoutes,
       futureConnections,
       bounds: this.nativeBounds,
+      physicalGuards,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       layerCount: this.board.layerCount,
       availableZ: this.allowedLayers,
@@ -306,7 +314,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceThickness: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
+      obstacleMargin: this.physicalContext?.traceToPadClearance ?? this.obstacleMargin,
+      nearbySegmentClearance: this.physicalContext ? this.traceWidth + this.physicalContext.traceToPadClearance : undefined,
       captureSearchDebug: this.captureSearchDebug,
     }
   }

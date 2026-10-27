@@ -5,6 +5,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { IntraNodeRouteSolver } from "../../HighDensitySolver/IntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
@@ -107,9 +108,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   constructorParams: GrowShrinkHighDensityIntraNodeSolverParams
   nodeWithPortPoints: NodeWithPortPoints
   solvedRoutes: HighDensityIntraNodeRoute[] = []
-  failedSolvers: PortfolioSingleIntraNodeSolver[] = []
-  activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
-  winningSolver?: PortfolioSingleIntraNodeSolver
+  failedSolvers: (PortfolioSingleIntraNodeSolver | IntraNodeRouteSolver)[] = []
+  activeSubSolver: PortfolioSingleIntraNodeSolver | IntraNodeRouteSolver | null = null
+  winningSolver?: PortfolioSingleIntraNodeSolver | IntraNodeRouteSolver
+  physicalWorldBounds = false
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
@@ -118,6 +120,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
     this.constructorParams = params
+    this.physicalWorldBounds = params.obstacles !== undefined && params.layerCount !== undefined &&
+      (params.priorityCoordinateScale ?? 1) === 1
     this.nodeWithPortPoints = params.nodeWithPortPoints
     // Sub-via-sized nodes spend their first growth attempts just reaching a
     // usable routing scale. Preserve the normal search budget after that scale
@@ -203,14 +207,23 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
+    // Only the physical grid consumes enlarged world bounds. The original
+    // portfolio has already tried the unchanged ports and geometric proposals.
+    const Solver = this.physicalWorldBounds && this.scaleFactor > 1 ? IntraNodeRouteSolver : PortfolioSingleIntraNodeSolver
+    this.activeSubSolver = new Solver({
       ...portfolioParams,
-      priorityCoordinateScale:
+      priorityCoordinateScale: this.physicalWorldBounds ? 1 :
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
+      routingBounds: this.physicalWorldBounds ? {
+        minX: this.nodeWithPortPoints.center.x - this.nodeWithPortPoints.width * this.scaleFactor / 2,
+        maxX: this.nodeWithPortPoints.center.x + this.nodeWithPortPoints.width * this.scaleFactor / 2,
+        minY: this.nodeWithPortPoints.center.y - this.nodeWithPortPoints.height * this.scaleFactor / 2,
+        maxY: this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height * this.scaleFactor / 2,
+      } : portfolioParams.routingBounds,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
-      nodeWithPortPoints: scaleNodeWithPortPoints(
+      nodeWithPortPoints: this.physicalWorldBounds ? this.nodeWithPortPoints : scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
@@ -221,9 +234,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
   }
 
-  private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
+  private acceptSolution(solver: PortfolioSingleIntraNodeSolver | IntraNodeRouteSolver): boolean {
     const solvedRoutes =
-      this.scaleFactor === 1
+      this.physicalWorldBounds || this.scaleFactor === 1
         ? solver.solvedRoutes
         : solver.solvedRoutes.map((route) =>
             scaleRoute(

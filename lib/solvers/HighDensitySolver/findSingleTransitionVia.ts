@@ -10,6 +10,7 @@ import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import { queryMandatoryPortPointIndex, type MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
+import { areCopperRoutesOnSameNet as sameElectricalNet } from "./completedCopperWorldIndex"
 
 type Point = { x: number; y: number }
 export type SingleTransitionBoardContext = {
@@ -47,23 +48,6 @@ type PeerVia = { center: Point; minZ: number; maxZ: number; radius: number; hole
 const EPSILON = 1e-9
 // Independent of via-to-pad rules; matches getDrcErrors.MIN_VIA_TO_VIA_CLEARANCE.
 const MINIMUM_VIA_EDGE_CLEARANCE = 0.1
-
-const sameElectricalNet = (a: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">,
-  b: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">, connMap?: ConnectivityMap): boolean => {
-  const canonical = new Set(Object.keys(connMap?.netMap ?? {}))
-  const owner = (route: typeof a): string => {
-    if (route.rootConnectionName !== undefined && canonical.has(route.rootConnectionName)) {
-      return JSON.stringify(["registered", route.rootConnectionName])
-    }
-    if (canonical.has(route.connectionName)) return JSON.stringify(["registered", route.connectionName])
-    const registered = connMap?.getNetConnectedToId(route.connectionName)
-    if (registered !== undefined) return JSON.stringify(["registered", registered])
-    const root = route.rootConnectionName ?? route.connectionName
-    const net = canonical.has(root) ? root : connMap?.getNetConnectedToId(root)
-    return JSON.stringify(net === undefined ? ["literal", root] : ["registered", net])
-  }
-  return owner(a) === owner(b)
-}
 
 /** Final admission for every candidate family, including regional optimizers. */
 export const areRoutesClearOfMandatoryPorts = (params: {
