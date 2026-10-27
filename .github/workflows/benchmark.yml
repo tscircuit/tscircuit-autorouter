@@ -8,6 +8,11 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      postrun_audit_run_id:
+        description: Validate the owned completed sample24 final artifact without rerouting
+        required: false
+        default: ""
+        type: string
       sample24_source_bundle:
         description: Use the reviewed sample24 source bundle for this validation
         required: false
@@ -82,7 +87,7 @@ permissions:
 
 jobs:
   effort-comparison:
-    if: github.event_name == 'workflow_dispatch' && inputs.effort_compare == true
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id == '' && inputs.effort_compare == true
     uses: ./.github/workflows/benchmark-effort.yml
     secrets: inherit
     with:
@@ -94,6 +99,7 @@ jobs:
     if: |
       (
         github.event_name == 'workflow_dispatch' &&
+        inputs.postrun_audit_run_id == '' &&
         inputs.same_machine_compare != true &&
         inputs.effort_compare != true
       ) || (
@@ -1588,7 +1594,7 @@ jobs:
 
   same-machine-benchmark:
     name: Same machine benchmark
-    if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id == '' && inputs.same_machine_compare == true
     runs-on: ${{ (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || 'blacksmith-8vcpu-ubuntu-2404-arm' }}
     timeout-minutes: ${{ inputs.long_benchmark && (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 480 || (contains(inputs.benchmark_args_json, '"--threads"') || inputs.threads != '') && 360 || 180 }}
     env:
@@ -1827,6 +1833,80 @@ jobs:
               comment_id: Number(process.env.STATUS_COMMENT_ID),
               body,
             })
+
+  sample24-postrun-independent-validation:
+    name: Validate actual sample24 routing artifact
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout independent audit controller
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: controller
+          persist-credentials: false
+          sparse-checkout: validation/sample24/audits
+      - name: Bind completed producer and owned artifacts
+        id: producer
+        uses: actions/github-script@v7
+        env:
+          PRODUCER_RUN_ID: ${{ inputs.postrun_audit_run_id }}
+        with:
+          script: |
+            await require(process.cwd() + '/controller/validation/sample24/audits/bind-producer.cjs')({ github, context, core })
+      - name: Checkout exact producer source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.producer.outputs.sha }}
+          path: source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Download actual final SRJ
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: sample24-final-srj
+          path: producer-final
+      - name: Download producer runtime and input proof
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: sample24-reviewed-runtime-proof
+          path: producer-proof
+      - name: Download actual benchmark result
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.postrun_audit_run_id }}
+          name: benchmark-result
+          path: producer-benchmark
+      - name: Verify exact producer runtime and original input without routing
+        working-directory: source
+        run: |
+          sample24_audit_args_json="$(node -e 'console.log(JSON.stringify(require("./validation/sample24/runtime-source-manifest.json").requiredBenchmarkArgs))')"
+          BENCHMARK_ARGS_JSON="$sample24_audit_args_json" bun validation/sample24/install-runtime.ts
+          bun validation/sample24/verify-runtime.ts
+          bun validation/sample24/verify-input.ts
+      - name: Validate actual physical and electrical routing
+        run: python3 controller/validation/sample24/audits/run-postrun-validation.py --source-root source --producer-proof-dir producer-proof --routes-dir producer-final --benchmark-dir producer-benchmark --producer-run-binding producer-run-binding.json --out-dir audit-results
+      - name: Preserve independent reports and API artifact binding
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample24-independent-physical-electrical-audit
+          path: |
+            audit-results
+            producer-run-binding.json
+            controller/validation/sample24/audits/auditor-source-manifest.json
+          if-no-files-found: error
 
   benchmark-history:
     name: Build benchmark history dashboard
