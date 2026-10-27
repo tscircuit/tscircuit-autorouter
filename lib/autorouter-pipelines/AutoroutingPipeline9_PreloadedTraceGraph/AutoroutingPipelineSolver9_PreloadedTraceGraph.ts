@@ -13,6 +13,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { createPortPointPositionValidator, createPortReservationNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPortReservationNetIds"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -539,6 +540,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
+        const portReservationContext = {
+          obstacles: cms.originalSrj.obstacles,
+          connMap: cms.connMap,
+          traceWidth: cms.minTraceWidth,
+          traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+          traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
+          layerCount: cms.originalSrj.layerCount,
+        }
 
         return [
           {
@@ -548,6 +557,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            createPortReservations: (model) => createPortReservationNetIds({
+              ...model, context: portReservationContext,
+            }),
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -593,6 +605,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          isPortPointPositionAllowed: createPortPointPositionValidator({
+            obstacles: cms.originalSrj.obstacles,
+            connMap: cms.connMap,
+            traceWidth: cms.minTraceWidth,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
+            layerCount: cms.originalSrj.layerCount,
+          }),
         },
       ],
     ),
@@ -650,6 +670,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,

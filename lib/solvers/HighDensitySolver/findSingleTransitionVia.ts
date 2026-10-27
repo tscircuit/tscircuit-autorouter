@@ -17,6 +17,7 @@ export type SingleTransitionBoardContext = {
   allowBlindAndBuriedVias?: boolean
   viaToPadClearance: number
   traceToPadClearance: number
+  traceToHoleClearance?: number
   boardGeometry?: HighDensityBoardGeometry
   coordinateScale: number
 }
@@ -74,9 +75,12 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       const sine = Math.sin(angle)
       const layers = obstacle.zLayers ?? obstacle.__zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, context.layerCount))
       const opaque = isOpaqueUnownedObstacle(obstacle)
+      const traceClearance = obstacle.isNonPlatedHole
+        ? context.traceToHoleClearance ?? context.traceToPadClearance
+        : context.traceToPadClearance
       return { obstacle, cosine, sine, layers,
         viaMargin: params.viaDiameter / 2 + (opaque ? 0 : context.viaToPadClearance),
-        traceMargin: params.traceThickness / 2 + (opaque ? 0 : context.traceToPadClearance) }
+        traceMargin: params.traceThickness / 2 + (opaque ? 0 : traceClearance) }
     })
   const minZ = context.allowBlindAndBuriedVias ? Math.min(params.start.z!, params.end.z!) : 0
   const maxZ = context.allowBlindAndBuriedVias ? Math.max(params.start.z!, params.end.z!) : context.layerCount - 1
