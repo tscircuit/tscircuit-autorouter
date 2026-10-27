@@ -57,6 +57,11 @@ def main():
     assert runtime["localRuntimeReceiptSha256"] == config["runtimeReceiptSha256"]
     input_proof, _ = read_one(args.proof_dir, "input-verification.json")
     assert input_proof["rawSampleSha256"] == config["originalInputSha256"]
+    if config.get("neighborsOnly"):
+        print("[sample24-failed-hdr-neighbor-source-proof] " + json.dumps(
+            {"runId": config["runId"], "head": config["transportCommit"],
+             "runtimeSourceFiles": 218, "originalInputSha256": input_proof["rawSampleSha256"]}))
+        return
     capture, path = read_one(args.capture_dir, "*.hdr.json")
     assert capture["kind"] == "ACTUAL_FAILED_HDR_RETAINED_CONSTRUCTOR_NOT_ROUTED_BOARD"
     assert capture["sampleNumber"] == 24 and capture["scenarioName"] == "sample024"

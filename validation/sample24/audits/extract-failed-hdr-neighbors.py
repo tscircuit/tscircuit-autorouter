@@ -67,6 +67,10 @@ def main():
               "maxX": max(failed["center"]["x"] + failed["width"] / 2, proposed["x"]) + margin,
               "minY": min(failed["center"]["y"] - failed["height"] / 2, proposed["y"]) - margin,
               "maxY": max(failed["center"]["y"] + failed["height"] / 2, proposed["y"]) + margin}
+    bounds = config.get("explicitSelectionBounds", bounds)
+    regions = config.get("requestedSubregions", [])
+    def inside(point, box):
+        return box["minX"] <= point["x"] <= box["maxX"] and box["minY"] <= point["y"] <= box["maxY"]
     selected = []
     for node in params["nodePortPoints"]:
         if any(bounds["minX"] <= point["x"] <= bounds["maxX"]
@@ -78,11 +82,22 @@ def main():
                 for obstacle in obstacles]
     hashes = [digest(item) for item in geometry]
     conn = params["connMap"]
+    net_map = conn["netMap"]
+    assert isinstance(net_map, dict) and len(net_map) == 2061
+    names = {point[key] for node in selected for point in node["portPoints"]
+             for key in ("connectionName", "rootConnectionName") if isinstance(point.get(key), str)}
+    canonical_groups = [[key, value] for key, value in net_map.items()
+                        if isinstance(value, list) and set(value) & names]
     report = {"kind": "ACTUAL_FAILED_HDR_NEIGHBOR_AND_GEOMETRY_HASH_DIAGNOSTIC",
               "captureSha256": hashlib.sha256(raw).hexdigest(), "failedNodeId": failed["capacityMeshNodeId"],
               "referencePointForNeighborhoodOnly": proposed, "neighborPortMargin": margin, "selectionBounds": bounds,
               "selectionRule": "All actual constructor nodes with any actual port inside failed-node/proposed-via union expanded by the explicitly configured margin; every selected node retains all of its ports and pairs.",
               "selectedNodeCount": len(selected), "selectedActualNodes": selected,
+              "requestedSubregions": regions,
+              "selectedNodeIdsByRequestedSubregion": {region["name"]: [node["capacityMeshNodeId"] for node in selected
+                  if any(inside(point, region["bounds"]) for point in node["portPoints"])] for region in regions},
+              "selectedCanonicalAliasGroups": canonical_groups,
+              "allConnMapCanonicalSha256": digest(net_map),
               "connectivityEncodingShape": shape(conn),
               "physicalGeometryExcludedKeys": sorted(NON_GEOMETRY),
               "physicalGeometryHashRecipe": "canonical_binary64 in extract-failed-hdr-neighbors.py: omit tagged Undefined object properties; numeric values (including layer integers) become {__ieee754binary64be:16 lowercase hex digits of IEEE754 big-endian double}, normalize negative zero; sorted compact ASCII JSON; SHA256. Preserve every other geometry key and array order.",
@@ -94,13 +109,16 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     (out / "failed-hdr-neighbor-diagnostic.json").write_text(json.dumps(report, indent=2) + "\n")
     summary = {key: value for key, value in report.items()
-               if key not in {"selectedActualNodes", "perIndexObstacleGeometrySha256"}}
+               if key not in {"selectedActualNodes", "perIndexObstacleGeometrySha256", "selectedCanonicalAliasGroups"}}
     print("[sample24-failed-hdr-neighbor-summary] " + json.dumps(summary, separators=(",", ":")))
     for node in selected:
         print("[sample24-failed-hdr-neighbor-node] " + json.dumps(node, separators=(",", ":")))
-    for offset in range(0, len(hashes), 128):
-        print("[sample24-failed-hdr-physical-hashes] " + json.dumps(
-            {"startIndex": offset, "sha256": hashes[offset:offset + 128]}, separators=(",", ":")))
+    for entry in canonical_groups:
+        print("[sample24-failed-hdr-neighbor-conn-entry] " + json.dumps(entry, separators=(",", ":")))
+    if config.get("emitPhysicalHashes", True):
+        for offset in range(0, len(hashes), 128):
+            print("[sample24-failed-hdr-physical-hashes] " + json.dumps(
+                {"startIndex": offset, "sha256": hashes[offset:offset + 128]}, separators=(",", ":")))
 
 
 if __name__ == "__main__":

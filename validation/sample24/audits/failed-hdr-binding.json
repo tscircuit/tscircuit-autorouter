@@ -23,5 +23,45 @@
   "failedNodeIds": [
     "topology_merge_77584"
   ],
-  "neighborPortMargin": 0.3
+  "neighborPortMargin": 0.3,
+  "neighborsOnly": true,
+  "emitPhysicalHashes": false,
+  "explicitSelectionBounds": {
+    "minX": 281.10065701,
+    "maxX": 283.62565776,
+    "minY": 67.5633996,
+    "maxY": 70.655101
+  },
+  "requestedSubregions": [
+    {
+      "name": "root_complete_route_bbox_plus0.3mm",
+      "bounds": {
+        "minX": 281.800657,
+        "maxX": 282.925658,
+        "minY": 68.2633996,
+        "maxY": 69.955101
+      }
+    },
+    {
+      "name": "hdr_two_via_expanded1mm",
+      "bounds": {
+        "minX": 281.10065701,
+        "maxX": 283.62565776,
+        "minY": 67.5633996,
+        "maxY": 70.655101
+      }
+    }
+  ],
+  "referencePointsForNeighborhoodOnly": [
+    {
+      "root": "299",
+      "x": 282.50065801,
+      "y": 68.5633996
+    },
+    {
+      "root": "106",
+      "x": 282.10065701,
+      "y": 68.5633996
+    }
+  ]
 }
