@@ -55,9 +55,15 @@ test("Pipeline9 activates connected-net attachment and preserves original multip
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  const metrics = solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()
-  expect(metrics?.connectedTreeRouteAttempts).toBeGreaterThan(0)
-  expect(metrics?.connectedTreeExpandedGoalAttempts).toBeGreaterThan(0)
+  const metrics = solver.physicalNetForestSolver!.diagnostics
+  expect(metrics.committedNets).toBe(1)
+  expect(metrics.committedBranches).toBe(3)
+  expect(metrics.avoidedPairDemands).toBe(3)
+  expect(solver.netToPointPairsSolver!.newConnections).toEqual([])
+  expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(3)
+  expect(solver.getUpdatedPreloadedTraces()).toEqual([])
+  expect(solver.getOutputSimpleRouteJson().connections).toEqual(input.connections)
+  expect(solver.physicalNetForestSolver!.diagnostics.physicallyValidatedNets).toBe(1)
   expect(
     evaluateRelaxedDrc({
       inputSrj: input,

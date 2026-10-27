@@ -1,0 +1,72 @@
+Prepared port-point routing
+===========================
+
+This replaces the earlier snapshot-batch prototype. Route order, rerips, partial
+route plans, final completion attempts, iteration budgets, floating-point cost
+addition order, and native heap tie-breaking stay unchanged.
+
+The implementation specializes full-route expansion for the dense two-region
+incidence graphs produced by Pipeline9. It prepares segment distances once,
+filters permanently unavailable regional neighbors once per route attempt, and
+memoizes the small integer-indexed table of marginal region costs. The table is
+invalidated whenever the native immutable intersection-cache object changes.
+Single-layer crossings still receive the native infinite cost. Native handling
+remains responsible for route initialization, partial/outside-in searches,
+commits, rerips, and timeout acceptance.
+
+Package ownership
+-----------------
+
+The graph implementation and its isolated determinism tests live in
+tscircuit/tiny-hypergraph PR #297, pinned by the autorouter to commit
+ec80c91ccbf6529bfd9ae5b205c1d24c7f40bef1. This repository owns the
+pipeline adapter, runtime worker registrations, and integration tests.
+The tiny-hypergraph package exports PreparedPortPointRoutingSolver and
+RegionDistancePreparationSolver from lib/index.ts. Worker entrypoints import
+tiny-hypergraph/lib/prepared/RegionDistancePreparationSolver before listening.
+There is no local copy or dependency patch.
+
+SolverRuntime
+-------------
+
+Static distance preparation is split into at most four deterministic chunks,
+balanced by the number of region-port pairs. Both serial and asynchronous modes
+run the same RegionDistancePreparationSolver jobs. Asynchronous execution uses
+the caller-owned SolverRuntime pool and the normal Bun/Node worker registrations.
+Results are concatenated in submission order; worker completion order never
+influences routing. Worker errors propagate without beginning route search.
+
+The searches and route commits remain serial. Most of the speedup comes from
+reducing their overhead, not from using four CPUs. The benchmark reports revised
+serial and four-worker times separately so preparation parallelism is not
+mistaken for parallel search. Independent search portfolios and snapshot route
+batching were rejected because their different routes caused failures or more
+downstream work.
+
+Memory and supported inputs
+---------------------------
+
+The distance table is Float64 and bounded to 16,777,216 entries (128 MiB).
+Graphs with more than two incident regions per port, larger distance tables, or
+non-dense candidate storage use the native search implementation. These are
+explicit input specializations, not recovery after an error. Partial routing
+continues using its native implementation. No dependencies are patched.
+
+Validation
+----------
+
+The harness compares original and revised port-point output bytes, independently
+checks graph ownership/incidence/connectivity, and records abstract single-layer
+crossing counts. Such crossings already occur in the original output on some
+boards (including sample 14); they are diagnostics, not final board DRC results.
+Final routing must complete and pass evaluateRelaxedDrc. Tests also compare
+original/native routing with serial, one-worker, and four-worker execution,
+including nonzero trace-density cost and forced final acceptance.
+
+Commands (from repository root):
+  bun experiments/deterministic-portpoint/benchmark.ts 6 3 work/prepared-benchmark
+  PROTOTYPE_DOWNSTREAM=1 bun experiments/deterministic-portpoint/run.ts 6 new4 8 work/prepared-full.json
+  bun test tests/solvers/prepared-routing-*.test.ts tests/features/pipeline9-async-portpoint-budget.test.ts --timeout 9999999
+
+The fourth argument to run.ts is retained as a compatibility placeholder for the
+previous experiment's eight-route batch size. It does not control current routing.

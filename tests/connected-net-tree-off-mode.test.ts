@@ -27,7 +27,7 @@ test("generic Tiny callers preserve the original shared-terminal graph and route
     expect(solver.failed).toBe(false)
     expect(solver.getOutput()).toEqual(baseline.output)
     expect(
-      solver.getSolveGraphBenchmarkMetrics()?.connectedTreeRouteAttempts,
-    ).toBeUndefined()
+      "connectedTreeRouteAttempts" in solver.getSolveGraphBenchmarkMetrics()!,
+    ).toBe(false)
   }
 })
