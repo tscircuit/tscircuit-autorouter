@@ -125,7 +125,35 @@ export function getLayerTopologiesForCoveredNodes({
     }
   }
 
-  return [...layerTopologyBySignature.values()]
+  const topologies = [...layerTopologyBySignature.values()]
+  if (topologies.length <= 1) return topologies
+  const allSourcesAreFree = coveringNodes.every(({ node }) => {
+    const ownership = node as typeof node & { netId?: number; NetId?: number }
+    return !node._containsObstacle && !node._containsTarget &&
+      !node._completelyInsideObstacle && !node._targetConnectionName &&
+      !node._isVirtualOffboard && !node._offBoardConnectionId &&
+      !node._offboardNetName && !node._offBoardConnectedCapacityMeshNodeIds?.length &&
+      !node._isNarrowQfpPadGap && node._qfpRegionType !== "pad" && node._soicRegionType !== "pad" &&
+      !node._connectedTo?.length && ownership.netId === undefined && ownership.NetId === undefined
+  })
+  if (!allSourcesAreFree) return topologies
+  const layerCoverage = new Uint32Array(layerCount)
+  for (const topology of topologies) {
+    for (const z of topology.availableZ) layerCoverage[z] += 1
+  }
+  if (layerCoverage.every((count) => count === 1)) {
+    // Layer-specific partition IDs are provenance, not a physical barrier.
+    // Preserve complete-stack planning connectivity across the common XY
+    // atom. Detailed routing still validates the drilled via's physical fit.
+    const sourceKeys = [...new Set(topologies.flatMap((topology) => topology.sourceKeys))].sort()
+    return [{
+      availableZ: Array.from({ length: layerCount }, (_, z) => z),
+      sourceKeys,
+      topologyMode: "merged",
+      topologySignature: JSON.stringify({ mode: "merged", sourceKeys }),
+    }]
+  }
+  return topologies
 }
 
 export function restoreAuthoritativeTargetRegions({

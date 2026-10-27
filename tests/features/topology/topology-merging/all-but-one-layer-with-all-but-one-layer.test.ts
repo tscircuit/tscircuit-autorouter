@@ -29,11 +29,7 @@ test("topology merging refines two different all-but-one-layer regions", (): voi
     },
   ])
 
-  expect(getAvailableZAtPoint(nodes, { x: 1.5, y: 2 })).toEqual([
-    [0],
-    [1, 2],
-    [3],
-  ])
+  expect(getAvailableZAtPoint(nodes, { x: 1.5, y: 2 })).toEqual([[0, 1, 2, 3]])
   expect(getAvailableZAtPoint(nodes, { x: 0.5, y: 2 })).toEqual([[1, 2, 3]])
   expect(getAvailableZAtPoint(nodes, { x: 3, y: 2 })).toEqual([[0, 1, 2]])
 })

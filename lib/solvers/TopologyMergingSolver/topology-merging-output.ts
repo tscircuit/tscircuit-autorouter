@@ -159,6 +159,20 @@ export function validateTopologyMergingOutput({
         preparedNodeBySourceKey,
       })
     }
+    const bounds = getCapacityMeshNodeBounds(node)
+    for (const z of node.availableZ) {
+      const isCoveredOnLayer = sourceKeys.some((key) => {
+        const source = preparedNodeBySourceKey.get(key)
+        return source?.node.availableZ.includes(z) &&
+          bounds.minX >= source.bounds.minX - TOPOLOGY_PROVENANCE_EPSILON &&
+          bounds.maxX <= source.bounds.maxX + TOPOLOGY_PROVENANCE_EPSILON &&
+          bounds.minY >= source.bounds.minY - TOPOLOGY_PROVENANCE_EPSILON &&
+          bounds.maxY <= source.bounds.maxY + TOPOLOGY_PROVENANCE_EPSILON
+      })
+      if (!isCoveredOnLayer) {
+        throw new Error(`TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has no source coverage on layer ${z}`)
+      }
+    }
   }
 
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
