@@ -32,7 +32,7 @@
   "experiments": [
     {
       "pr": 3198,
-      "candidateSha": "5a168b9213c0cfbb71659c1a92f14a7d8a5a2552",
+      "candidateSha": "d24d6e9a692ce49560ad66f8f6438177aeb7849d",
       "label": "connected-net-trees",
       "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -110,8 +110,6 @@
     }
   ],
   "runPrNumbers": [
-    3199,
-    3200,
-    3201
+    3198
   ]
 }

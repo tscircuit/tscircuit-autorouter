@@ -5,6 +5,7 @@ import os
 import pathlib
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -69,6 +70,13 @@ class PinnedControllerTests(unittest.TestCase):
         self.assertEqual(result["mutuallyOfficialCleanSamples"], [])
         self.assertIsNone(result["mutuallyCleanMedianCandidateBaselineTimeRatio"])
 
+    def test_unattempted_candidate_is_not_a_regression(self):
+        baseline = {"sampleNumber": 1, "arm": "A", "round": 1, "controllerError": None,
+                    "official": {"didSolve": True, "didTimeout": False, "relaxedDrcPassed": True, "elapsedTimeMs": 50, "viaCount": 2}}
+        result = runner.summarize([baseline], 1)
+        self.assertEqual(result["cleanRegressions"], [])
+        self.assertFalse(result["firstRoundComplete"])
+
     def test_replication_never_replaces_first_round_failure(self):
         first = {"sampleNumber": 1, "arm": "B", "round": 1, "controllerError": None,
                  "official": {"didSolve": False, "didTimeout": True, "relaxedDrcPassed": False, "elapsedTimeMs": 360000}}
@@ -97,8 +105,16 @@ class PinnedControllerTests(unittest.TestCase):
             self.assertTrue(timed_out)
             self.assertIsNone(code)
             stat = pathlib.Path("/proc") / marker.read_text() / "stat"
-            if stat.exists():
-                self.assertEqual(stat.read_text().split()[2], "Z")
+            deadline = time.monotonic() + 1
+            while stat.exists():
+                try:
+                    state = stat.read_text().split()[2]
+                except FileNotFoundError:
+                    break
+                if state == "Z":
+                    break
+                self.assertLess(time.monotonic(), deadline, "Timed-out sample left a live descendant")
+                time.sleep(0.01)
 
 
 if __name__ == "__main__":

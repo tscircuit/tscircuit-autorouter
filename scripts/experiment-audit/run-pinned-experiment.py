@@ -153,8 +153,9 @@ def summarize(records, sample_count):
     first = {(record["sampleNumber"], record["arm"]): record for record in records if record["round"] == 1}
     clean = {arm: sum(is_clean(first.get((sample, arm))) for sample in range(1, sample_count + 1)) for arm in ["A", "B"]}
     mutual = [sample for sample in range(1, sample_count + 1) if all(is_clean(first.get((sample, arm))) for arm in ["A", "B"])]
-    regressions = [sample for sample in range(1, sample_count + 1) if is_clean(first.get((sample, "A"))) and not is_clean(first.get((sample, "B")))]
-    gains = [sample for sample in range(1, sample_count + 1) if is_clean(first.get((sample, "B"))) and not is_clean(first.get((sample, "A")))]
+    attempted_pairs = [sample for sample in range(1, sample_count + 1) if (sample, "A") in first and (sample, "B") in first]
+    regressions = [sample for sample in attempted_pairs if is_clean(first.get((sample, "A"))) and not is_clean(first.get((sample, "B")))]
+    gains = [sample for sample in attempted_pairs if is_clean(first.get((sample, "B"))) and not is_clean(first.get((sample, "A")))]
     times = {arm: sum(first[sample, arm]["official"]["elapsedTimeMs"] for sample in mutual) for arm in ["A", "B"]}
     ratios = [first[sample, "B"]["official"]["elapsedTimeMs"] / first[sample, "A"]["official"]["elapsedTimeMs"] for sample in mutual if first[sample, "A"]["official"]["elapsedTimeMs"] > 0]
     via_totals = {arm: sum(first[sample, arm]["official"].get("viaCount", 0) for sample in mutual) for arm in ["A", "B"]}
