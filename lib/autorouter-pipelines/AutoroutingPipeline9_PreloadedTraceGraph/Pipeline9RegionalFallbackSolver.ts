@@ -32,6 +32,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   viaToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
+  captureSearchDebug?: boolean
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -162,6 +163,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
+      captureSearchDebug: params.captureSearchDebug,
       growShrinkSolutionValidator:
         params.boardObstacles &&
         params.movablePreloadedConnectionNames &&
