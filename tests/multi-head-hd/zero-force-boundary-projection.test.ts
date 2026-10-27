@@ -4,13 +4,18 @@ import { MultiHeadPolyLineIntraNodeSolver2 } from "lib/solvers/HighDensitySolver
 import type { PolyLine2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
 
 test("a trace without collision forces still projects its movable points inside the node boundary", (): void => {
-  const input: PolyLine2[] = [{
-    connectionName: "boundary-route",
-    start: { x: -1, y: -1, z1: 0, z2: 0 },
-    mPoints: [{ x: 0, y: -1, z1: 0, z2: 0 }],
-    end: { x: 1, y: -1, z1: 0, z2: 0 },
-  }]
-  for (const Solver of [MultiHeadPolyLineIntraNodeSolver, MultiHeadPolyLineIntraNodeSolver2]) {
+  const input: PolyLine2[] = [
+    {
+      connectionName: "boundary-route",
+      start: { x: -1, y: -1, z1: 0, z2: 0 },
+      mPoints: [{ x: 0, y: -1, z1: 0, z2: 0 }],
+      end: { x: 1, y: -1, z1: 0, z2: 0 },
+    },
+  ]
+  for (const Solver of [
+    MultiHeadPolyLineIntraNodeSolver,
+    MultiHeadPolyLineIntraNodeSolver2,
+  ]) {
     const solver = new Solver({
       nodeWithPortPoints: {
         capacityMeshNodeId: "zero-force-boundary",
@@ -27,7 +32,12 @@ test("a trace without collision forces still projects its movable points inside 
       expect(solver.applyForcesToPolyLines(lines).lastStepMoved).toBe(true)
     } else {
       const neighbors = solver.getNeighbors({
-        polyLines: lines, minGaps: [], viaCount: 0, g: 0, h: 0, f: 0,
+        polyLines: lines,
+        minGaps: [],
+        viaCount: 0,
+        g: 0,
+        h: 0,
+        f: 0,
       })
       expect(neighbors).toHaveLength(1)
       lines = neighbors[0]!.polyLines

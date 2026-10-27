@@ -19,12 +19,25 @@ test("the portfolio forwards board drill geometry independently from copper annu
     height: 4,
     availableZ: [0, 1],
     portPoints: lines.flatMap((line) => [
-      { connectionName: line.connectionName, x: line.start.x, y: line.start.y, z: line.start.z1 },
-      { connectionName: line.connectionName, x: line.end.x, y: line.end.y, z: line.end.z2 },
+      {
+        connectionName: line.connectionName,
+        x: line.start.x,
+        y: line.start.y,
+        z: line.start.z1,
+      },
+      {
+        connectionName: line.connectionName,
+        x: line.end.x,
+        y: line.end.y,
+        z: line.end.z2,
+      },
     ]),
   }
   const connMap = new ConnectivityMap({ ground: ["branch-0", "branch-1"] })
-  for (const [gap, expected] of [[0.1, true], [0.2, false]] as const) {
+  for (const [gap, expected] of [
+    [0.1, true],
+    [0.2, false],
+  ] as const) {
     const portfolio = new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints,
       connMap,
@@ -36,9 +49,11 @@ test("the portfolio forwards board drill geometry independently from copper annu
       MULTI_HEAD_POLYLINE_SOLVER: true,
     }) as unknown as MultiHeadPolyLineIntraNodeSolver3
     expect(solver).toBeInstanceOf(MultiHeadPolyLineIntraNodeSolver3)
-    expect(solver.checkIfSolved({
-      polyLines: lines,
-      minGaps: solver.computeMinGapBtwPolyLines(lines),
-    })).toBe(expected)
+    expect(
+      solver.checkIfSolved({
+        polyLines: lines,
+        minGaps: solver.computeMinGapBtwPolyLines(lines),
+      }),
+    ).toBe(expected)
   }
 })

@@ -19,8 +19,8 @@ test("boundary projection retains sub-EPS tangential displacement without changi
   // one axial endpoint force and half of each fixed endpoint's reaction.
   const axialForce = 0.02 * Math.exp(-6 * 2)
   const radialDistance = Math.sqrt(2 * 2 + 1)
-  const halfReaction = -((-2 / radialDistance) *
-    (0.02 * Math.exp(-6 * radialDistance))) / 2
+  const halfReaction =
+    -((-2 / radialDistance) * (0.02 * Math.exp(-6 * radialDistance))) / 2
   let expectedTangentialForce = 0
   for (let segment = 0; segment < 2; segment++) {
     expectedTangentialForce += axialForce

@@ -134,7 +134,9 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         firstLayerByConnection.set(portPoint.connectionName, portPoint.z)
         continue
       }
-      if (firstLayerByConnection.get(portPoint.connectionName) !== portPoint.z) {
+      if (
+        firstLayerByConnection.get(portPoint.connectionName) !== portPoint.z
+      ) {
         connectionsChangingLayer.add(portPoint.connectionName)
       }
     }
@@ -150,10 +152,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     //   return
     // }
 
-    if (
-      this.minViaCount >
-      this.SEGMENTS_PER_POLYLINE * uniqueConnections
-    ) {
+    if (this.minViaCount > this.SEGMENTS_PER_POLYLINE * uniqueConnections) {
       this.failed = true
       this.error = `Not possible to solve problem with given SEGMENTS_PER_POLYLINE (${this.SEGMENTS_PER_POLYLINE}), atleast ${this.minViaCount} vias are required`
       return
@@ -1114,7 +1113,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         )
         const connected =
           a.connectionName === b.connectionName ||
-          this.connMap?.areIdsConnected(a.connectionName, b.connectionName) === true
+          this.connMap?.areIdsConnected(a.connectionName, b.connectionName) ===
+            true
         // An identical same-net site reuses one drill. Distinct sites obey
         // drill clearance even when their connected copper annuli overlap.
         if (centerDistance === 0 && connected) continue

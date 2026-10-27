@@ -82,8 +82,14 @@ function applyReferenceSegmentForces(
         solver.bounds.minY + padding,
         Math.min(solver.bounds.maxY - padding, point.y + force.y),
       )
-      const negligibleForce = Math.abs(force.x) < 1e-6 && Math.abs(force.y) < 1e-6
-      if (negligibleForce && Math.abs(point.x - x) <= 1e-6 && Math.abs(point.y - y) <= 1e-6) continue
+      const negligibleForce =
+        Math.abs(force.x) < 1e-6 && Math.abs(force.y) < 1e-6
+      if (
+        negligibleForce &&
+        Math.abs(point.x - x) <= 1e-6 &&
+        Math.abs(point.y - y) <= 1e-6
+      )
+        continue
       if (!negligibleForce) {
         magForceApplied += Math.sqrt(force.x * force.x + force.y * force.y)
       }

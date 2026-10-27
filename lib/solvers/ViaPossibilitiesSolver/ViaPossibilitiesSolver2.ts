@@ -209,7 +209,12 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       pathMap: Map<ConnectionName, Point3[]>,
     ) => {
       for (const [connectionName, path] of pathMap) {
-        if (this.connMap?.areIdsConnected(this.currentConnectionName, connectionName)) {
+        if (
+          this.connMap?.areIdsConnected(
+            this.currentConnectionName,
+            connectionName,
+          )
+        ) {
           continue
         }
         for (let i = 0; i < path.length - 1; i++) {

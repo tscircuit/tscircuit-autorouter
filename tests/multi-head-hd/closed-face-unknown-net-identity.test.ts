@@ -22,7 +22,11 @@ test("an unmapped route name matching a mapped net ID remains unrelated in close
   expect(connMap.getNetConnectedToId("branch-a")).toBe("ground")
   expect(connMap.getNetConnectedToId("ground")).toBeUndefined()
   expect(connMap.areIdsConnected("branch-a", "ground")).toBe(false)
-  expect(detectMultiConnectionClosedFacesWithoutVias(
-    lines, { minX: -2, maxX: 2, minY: -2, maxY: 2 }, connMap,
-  )).toBe(true)
+  expect(
+    detectMultiConnectionClosedFacesWithoutVias(
+      lines,
+      { minX: -2, maxX: 2, minY: -2, maxY: 2 },
+      connMap,
+    ),
+  ).toBe(true)
 })

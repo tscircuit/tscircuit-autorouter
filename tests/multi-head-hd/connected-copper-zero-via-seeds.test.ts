@@ -30,7 +30,10 @@ test("connected crossing and coincident copper can produce zero-via seeds", (): 
       availableZ: [0, 1],
       portPoints,
     }
-    for (const Solver of [MultiHeadPolyLineIntraNodeSolver, MultiHeadPolyLineIntraNodeSolver3]) {
+    for (const Solver of [
+      MultiHeadPolyLineIntraNodeSolver,
+      MultiHeadPolyLineIntraNodeSolver3,
+    ]) {
       const solver = new Solver({
         nodeWithPortPoints,
         connMap,

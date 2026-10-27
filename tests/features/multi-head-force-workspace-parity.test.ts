@@ -75,11 +75,21 @@ test("force workspaces retain exact mutable passes and release resized candidate
       const actualStep = solver.applyForcesToPolyLines(actual)
       const originalStep = original.applyForcesToPolyLines(expected)
       const boundaryCorrections = expectBoundaryProjectionCorrection({
-        actual, reference: expected, before: beforePass,
-        bounds: solver.bounds, padding: solver.traceWidth / 2 + solver.BOUNDARY_PADDING,
+        actual,
+        reference: expected,
+        before: beforePass,
+        bounds: solver.bounds,
+        padding: solver.traceWidth / 2 + solver.BOUNDARY_PADDING,
       })
-      expect(isDeepStrictEqual(actualStep.magForceApplied, originalStep.magForceApplied)).toBe(true)
-      expect(actualStep.lastStepMoved).toBe(originalStep.lastStepMoved || boundaryCorrections > 0)
+      expect(
+        isDeepStrictEqual(
+          actualStep.magForceApplied,
+          originalStep.magForceApplied,
+        ),
+      ).toBe(true)
+      expect(actualStep.lastStepMoved).toBe(
+        originalStep.lastStepMoved || boundaryCorrections > 0,
+      )
       expect(isDeepStrictEqual(actual, expected)).toBe(true)
       // Both solvers receive identical corrected geometry on the next pass,
       // retaining the existing boundary stress, resizing and mutation cases.

@@ -18,7 +18,11 @@ export function expectBoundaryProjectionCorrection({
 }): number {
   let correctedPoints = 0
   for (let lineIndex = 0; lineIndex < actual.length; lineIndex++) {
-    for (let pointIndex = 0; pointIndex < actual[lineIndex]!.mPoints.length; pointIndex++) {
+    for (
+      let pointIndex = 0;
+      pointIndex < actual[lineIndex]!.mPoints.length;
+      pointIndex++
+    ) {
       const point = actual[lineIndex]!.mPoints[pointIndex]!
       const referencePoint = reference[lineIndex]!.mPoints[pointIndex]!
       if (isDeepStrictEqual(point, referencePoint)) continue
@@ -29,13 +33,21 @@ export function expectBoundaryProjectionCorrection({
       expect(beforePoint.z1).toBe(beforePoint.z2)
       expect(isDeepStrictEqual(referencePoint, beforePoint)).toBe(true)
       expect(
-        beforePoint.x < bounds.minX + padding || beforePoint.x > bounds.maxX - padding ||
-        beforePoint.y < bounds.minY + padding || beforePoint.y > bounds.maxY - padding,
+        beforePoint.x < bounds.minX + padding ||
+          beforePoint.x > bounds.maxX - padding ||
+          beforePoint.y < bounds.minY + padding ||
+          beforePoint.y > bounds.maxY - padding,
       ).toBe(true)
       const projected = {
         ...beforePoint,
-        x: Math.max(bounds.minX + padding, Math.min(bounds.maxX - padding, beforePoint.x)),
-        y: Math.max(bounds.minY + padding, Math.min(bounds.maxY - padding, beforePoint.y)),
+        x: Math.max(
+          bounds.minX + padding,
+          Math.min(bounds.maxX - padding, beforePoint.x),
+        ),
+        y: Math.max(
+          bounds.minY + padding,
+          Math.min(bounds.maxY - padding, beforePoint.y),
+        ),
       }
       expect(isDeepStrictEqual(point, projected)).toBe(true)
       referencePoint.x = projected.x

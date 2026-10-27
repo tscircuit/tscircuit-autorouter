@@ -98,13 +98,20 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
       const oldResult = frozen.applyForcesToPolyLines(expected)
       const newResult = trial.applyForcesToPolyLines(actual)
       const boundaryCorrections = expectBoundaryProjectionCorrection({
-        actual, reference: expected, before: beforePass,
-        bounds: trial.bounds, padding: trial.traceWidth / 2 + trial.BOUNDARY_PADDING,
+        actual,
+        reference: expected,
+        before: beforePass,
+        bounds: trial.bounds,
+        padding: trial.traceWidth / 2 + trial.BOUNDARY_PADDING,
       })
       // Force totals retain exact signed zeros and NaNs. Only the certified
       // projection changes movement, then both receive identical next inputs.
-      expect(isDeepStrictEqual(newResult.magForceApplied, oldResult.magForceApplied)).toBe(true)
-      expect(newResult.lastStepMoved).toBe(oldResult.lastStepMoved || boundaryCorrections > 0)
+      expect(
+        isDeepStrictEqual(newResult.magForceApplied, oldResult.magForceApplied),
+      ).toBe(true)
+      expect(newResult.lastStepMoved).toBe(
+        oldResult.lastStepMoved || boundaryCorrections > 0,
+      )
       expected = structuredClone(actual)
     }
   }

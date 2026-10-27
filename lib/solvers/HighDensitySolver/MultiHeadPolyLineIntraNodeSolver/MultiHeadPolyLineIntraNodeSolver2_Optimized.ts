@@ -664,8 +664,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // Boundary projection can move a regular point without collision force.
         const negligibleForce =
-          Math.abs(currentForceX) < EPSILON &&
-          Math.abs(currentForceY) < EPSILON
+          Math.abs(currentForceX) < EPSILON && Math.abs(currentForceY) < EPSILON
         if (
           negligibleForce &&
           Math.abs(mPoint.x - newX) <= EPSILON &&
