@@ -17,8 +17,10 @@ test("intermediate shared-port identities never become this demand's endpoints e
   const solver = new TinyHypergraphPortPointPathingSolver(params)
   solver.solve()
   expect(solver.solved).toBe(true)
-  const pipeline: { getSolvedTinySolver(): TinyHyperGraphSolver } =
-    Reflect.get(solver, "tinyPipelineSolver")
+  const pipeline: { getSolvedTinySolver(): TinyHyperGraphSolver } = Reflect.get(
+    solver,
+    "tinyPipelineSolver",
+  )
   const native = pipeline.getSolvedTinySolver()
   const interior = native.state.regionSegments
     .flat()

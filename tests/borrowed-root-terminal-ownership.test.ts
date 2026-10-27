@@ -66,7 +66,8 @@ test("borrowed tree copper scopes terminal roles without dropping physical geome
     stitchClearanceMode: "require_clear" as const,
   }
   expect(
-    () => new SingleHighDensityRouteStitchSolver3({ ...options, hdRoutes: routes }),
+    () =>
+      new SingleHighDensityRouteStitchSolver3({ ...options, hdRoutes: routes }),
   ).toThrow('unknown PCB terminal "pcb_port_793"')
   const solver = new SingleHighDensityRouteStitchSolver3({
     ...options,
@@ -91,9 +92,10 @@ test("borrowed tree copper scopes terminal roles without dropping physical geome
     terminals: [start, end],
   })
   expect(
-    () => new SingleHighDensityRouteStitchSolver3({
-      ...options,
-      hdRoutes: invalidOwned,
-    }),
+    () =>
+      new SingleHighDensityRouteStitchSolver3({
+        ...options,
+        hdRoutes: invalidOwned,
+      }),
   ).toThrow('unknown PCB terminal "pcb_port_793"')
 })
