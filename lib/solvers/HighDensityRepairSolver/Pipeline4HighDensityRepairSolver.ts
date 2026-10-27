@@ -432,39 +432,22 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
             2,
         ),
       )
-      const selected = this.sampleEntries
+      const pending = this.sampleEntries
         .slice(
           this.activeSampleIndex,
           this.activeSampleIndex + parallelSampleCount,
         )
-        .map((entry, index) => ({
-          entry,
-          index,
-          pointCount: entry.sample.nodeHdRoutes!.reduce(
-            (count, route) => count + route.route!.length,
-            0,
-          ),
-        }))
-      const pending = new Array<
-        Promise<
-          | { type: "result"; result: Pipeline4HighDensityRepairSampleOutput }
-          | { type: "error"; error: unknown }
-        >
-      >(selected.length)
-      // Start expensive nodes early so the pool has less idle time at the tail.
-      for (const { entry, index } of selected.toSorted(
-        (a, b) => b.pointCount - a.pointCount || a.index - b.index,
-      )) {
-        pending[index] = runtime
-          .executeAsync(Pipeline4HighDensityRepairSampleSolver, {
-            sample: entry.sample,
-            margin: this.repairMargin,
-          })
-          .then(
-            (result) => ({ type: "result" as const, result }),
-            (error: unknown) => ({ type: "error" as const, error }),
-          )
-      }
+        .map((entry) =>
+          runtime
+            .executeAsync(Pipeline4HighDensityRepairSampleSolver, {
+              sample: entry.sample,
+              margin: this.repairMargin,
+            })
+            .then(
+              (result) => ({ type: "result" as const, result }),
+              (error: unknown) => ({ type: "error" as const, error }),
+            ),
+        )
       for (const promise of pending) {
         // A serial sample uses one construction step and one repair step.
         if (
