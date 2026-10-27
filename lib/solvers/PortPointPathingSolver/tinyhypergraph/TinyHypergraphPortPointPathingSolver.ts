@@ -1398,6 +1398,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       speculativeRouteExpansions: solveGraphStats.speculativeRouteExpansions,
       staleRouteSearches: solveGraphStats.staleRouteSearches,
       certifiedRouteSearches: solveGraphStats.certifiedRouteSearches,
+      boundedCostRouteSearches: solveGraphStats.boundedCostRouteSearches,
+      parallelMaxRelativeCostIncrease: solveGraphStats.parallelMaxRelativeCostIncrease,
       parallelWorkerSearchMs: solveGraphStats.parallelWorkerSearchMs,
       parallelWorkerSnapshotMs: solveGraphStats.parallelWorkerSnapshotMs,
       parallelGraphSyncMs: solveGraphStats.parallelGraphSyncMs,
