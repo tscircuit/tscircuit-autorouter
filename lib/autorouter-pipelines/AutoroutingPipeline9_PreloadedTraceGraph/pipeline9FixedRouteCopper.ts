@@ -276,6 +276,7 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   left,
   right,
   clearance,
+  viaPadClearance = clearance,
   leftBounds,
   layerCount,
   allowBlindAndBuriedVias,
@@ -283,6 +284,7 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   left: HighDensityRoute
   right: HighDensityRoute
   clearance: number
+  viaPadClearance?: number
   leftBounds?: Pipeline9Bounds
   layerCount: number
   allowBlindAndBuriedVias?: boolean
@@ -351,7 +353,7 @@ export const doPipeline9RoutesHaveCopperConflict = ({
     for (const rightVia of rightGeometry.viaSpans) {
       if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
       const requiredClearance =
-        leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
+        leftVia.diameter / 2 + rightVia.diameter / 2 + viaPadClearance
       if (
         Math.hypot(
           leftVia.center.x - rightVia.center.x,

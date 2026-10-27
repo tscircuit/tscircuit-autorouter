@@ -447,16 +447,53 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
+    const firstPointToAdd = pointsToAdd[0]
+    const nextPointToAdd = pointsToAdd[1]
+    const exactJoin =
+      firstPointToAdd !== undefined &&
+      lastMergedPoint.x === firstPointToAdd.x &&
+      lastMergedPoint.y === firstPointToAdd.y &&
+      lastMergedPoint.z === firstPointToAdd.z
+    // A nearby point can own a barrel edge or an exact registered drill site.
+    // Moving its outgoing transition to the preceding point can move that
+    // transition outside its pad while leaving the via at its original site.
+    const preserveJoinPoint =
+      firstPointToAdd !== undefined &&
+      (firstPointToAdd.toNextSegmentType !== undefined ||
+        firstPointToAdd.toNextSegmentCircuitJsonMetadata !== undefined ||
+        (nextPointToAdd !== undefined &&
+          nextPointToAdd.z !== firstPointToAdd.z) ||
+        hdRouteToMerge.vias.some(
+          (via): boolean =>
+            via.x === firstPointToAdd.x && via.y === firstPointToAdd.y,
+        ))
+
     if (
       pointsToAdd.length > 0 &&
       distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
-      lastMergedPoint.z === pointsToAdd[0].z
+      lastMergedPoint.z === pointsToAdd[0].z &&
+      (exactJoin || !preserveJoinPoint)
     ) {
       if (pointsToAdd[0].toNextSegmentType) {
         lastMergedPoint.toNextSegmentType = pointsToAdd[0].toNextSegmentType
+        lastMergedPoint.toNextSegmentCircuitJsonMetadata =
+          pointsToAdd[0].toNextSegmentCircuitJsonMetadata
       }
       this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
     } else {
+      if (
+        preserveJoinPoint &&
+        !exactJoin &&
+        firstPointToAdd !== undefined &&
+        lastMergedPoint.z === firstPointToAdd.z &&
+        distance(lastMergedPoint, firstPointToAdd) < GEOMETRIC_TOLERANCE &&
+        !this.isPlanarStitchClear(lastMergedPoint, firstPointToAdd) &&
+        this.stitchClearanceMode === "require_clear"
+      ) {
+        this.failed = true
+        this.error = `Transition stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
+        return
+      }
       this.mergedHdRoute.route.push(...pointsToAdd)
     }
 

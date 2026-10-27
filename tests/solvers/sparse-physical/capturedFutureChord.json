@@ -1,0 +1,54 @@
+{
+  "source": "SRJ18 sample1 cmn_314 original captured priority-DAG node",
+  "node": {
+    "capacityMeshNodeId": "cmn_314",
+    "center": {
+      "x": 23.074999999999996,
+      "y": -12.1337
+    },
+    "width": 2.019999999999996,
+    "height": 2.997399999999999,
+    "portPoints": [
+      {
+        "portPointId": "ce3632_pp1_z1::1",
+        "x": 22.064999999999998,
+        "y": -11.3699,
+        "z": 1,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "nextPortPointId": "ce3677_pp0_z1::1"
+      },
+      {
+        "portPointId": "ce3677_pp0_z1::1",
+        "x": 22.86,
+        "y": -10.635,
+        "z": 1,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "prevPortPointId": "ce3632_pp1_z1::1"
+      },
+      {
+        "portPointId": "ce3635_pp1_z1::1",
+        "x": 22.064999999999998,
+        "y": -10.8225,
+        "z": 1,
+        "connectionName": "source_trace_3__source_net_3_mst0",
+        "rootConnectionName": "connectivity_net49",
+        "nextPortPointId": "ce3677_pp0_z0::0"
+      },
+      {
+        "portPointId": "ce3677_pp0_z0::0",
+        "x": 22.86,
+        "y": -10.635,
+        "z": 0,
+        "connectionName": "source_trace_3__source_net_3_mst0",
+        "rootConnectionName": "connectivity_net49",
+        "prevPortPointId": "ce3635_pp1_z1::1"
+      }
+    ],
+    "availableZ": [
+      0,
+      1
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 export type Pipeline9BoundedRegionalRepairResult = {
@@ -81,6 +81,11 @@ export type Pipeline9BoundedRegionalRepairParams = {
   connMap?: ConnectivityMap
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
+  /** Copper outside the owned movable sections, retained exactly as supplied. */
+  fixedPreloadedContext?: {
+    traces: SimplifiedPcbTrace[]
+    obstacleRoutes: HighDensityRoute[]
+  }
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget

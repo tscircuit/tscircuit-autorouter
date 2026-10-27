@@ -8,7 +8,10 @@ import {
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import type {
+  DrcEvaluator,
+  SimpleRouteJson as RepairSimpleRouteJson,
+} from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
@@ -26,11 +29,15 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
+import { getPipeline9FixedPreloadedRepairTraces } from "./getPipeline9FixedPreloadedRepairTraces"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
 type FixedViolations = ReturnType<typeof getFixedObstacleViolations>
 type RepairAllowance = ReturnType<typeof getPipeline9BoundedRepairAllowance>
+type FixedContextSrj = Omit<SimpleRouteJson, "traces"> & {
+  traces: RepairSimpleRouteJson["traces"]
+}
 
 type InitialContext = {
   boundaryMargin: number
@@ -45,7 +52,7 @@ type ReferencedContext = InitialContext & {
 }
 
 type RegionalContext = ReferencedContext & {
-  srj: SimpleRouteJson & { traces: undefined }
+  srj: FixedContextSrj
   obstacleCenterById: Map<string, { x: number; y: number }>
   attemptedRegions: Array<{ bounds: Bounds; size: number }>
   fixedViolations: Map<string, number>
@@ -138,6 +145,7 @@ const REGION_SIZES = [10, 16] as const
 export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   readonly params: Pipeline9BoundedRegionalRepairParams
   readonly budget: Pipeline9BoundedRepairBudget
+  private readonly repairSrj: FixedContextSrj
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
@@ -145,6 +153,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
     this.params = params
+    this.repairSrj = {
+      ...params.originalSrj,
+      traces:
+        params.fixedPreloadedContext === undefined
+          ? undefined
+          : getPipeline9FixedPreloadedRepairTraces({
+              traces: params.fixedPreloadedContext.traces,
+              layerCount: params.originalSrj.layerCount,
+            }),
+    }
     this.budget = params.budget ?? PIPELINE9_BOUNDED_REPAIR_BUDGET
     this.result = {
       routes: params.routes,
@@ -228,7 +246,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
 
   private initialize(): void {
     const { originalSrj, routes, syntheticConnectionNames } = this.params
-    if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
+    if (
+      (originalSrj.traces?.length || syntheticConnectionNames.size > 0) &&
+      this.params.fixedPreloadedContext === undefined
+    ) {
       this.finish()
       return
     }
@@ -296,7 +317,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
-      originalSrj: this.params.originalSrj,
+      originalSrj: this.repairSrj,
+      fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
       routes: referenced.currentRoutes,
       drcEvaluator: (input): DrcResult => {
         this.result.referenceValidationCount++
@@ -329,8 +351,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private prepareRegions(context: ReferencedContext): void {
     // Normalize layer membership. Preserve pad dimensions, rotation and net aliases.
     const srj = {
-      ...createSrjWithBoardValidObstacleLayers(this.params.originalSrj),
-      traces: undefined,
+      ...createSrjWithBoardValidObstacleLayers(this.repairSrj),
+      traces: this.repairSrj.traces,
     }
     const obstacleCenterById = new Map<string, { x: number; y: number }>()
     for (const obstacle of this.params.originalSrj.obstacles) {
@@ -572,7 +594,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
-      originalSrj: this.params.originalSrj,
+      originalSrj: this.repairSrj,
+      fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
       routes: negotiatedRoutes,
       // The outer via guard compares the complete spliced proposal to this input.
       previousRoutes: context.currentRoutes,
@@ -703,7 +726,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private prepareIndependentProjection(context: RegionalContext): void {
     // Private regional changes cannot leak into independent partial publication.
     const solver = new Pipeline9ClearanceProjectionSolver({
-      originalSrj: this.params.originalSrj,
+      originalSrj: this.repairSrj,
+      fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
       routes: this.params.routes,
       allowPartialRepair: true,
       drcEvaluator: (input): DrcResult => {
@@ -727,7 +751,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
-      originalSrj: this.params.originalSrj,
+      originalSrj: this.repairSrj,
+      fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
       routes: state.independentRoutes,
       allowPartialRepair: true,
       subdivideSegments: true,
@@ -756,7 +781,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
-      originalSrj: this.params.originalSrj,
+      originalSrj: this.repairSrj,
+      fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
       routes: state.independentRoutes,
       usePrecisionMargin: true,
       drcEvaluator: (input): DrcResult => {
@@ -820,7 +846,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         // A clear nominal projection needs no extra slack. Otherwise refine
         // its retained bends with the margin before spending more search.
         const solver = new Pipeline9ClearanceProjectionSolver({
-          originalSrj: this.params.originalSrj,
+          originalSrj: this.repairSrj,
+          fixedObstacleRoutes: this.params.fixedPreloadedContext?.obstacleRoutes,
           routes: state.solver.getOutput(),
           previousRoutes: state.context.currentRoutes,
           usePrecisionMargin: true,

@@ -1,6 +1,7 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -637,6 +638,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
+            actualCopperClearance:
+              cms.originalSrj.minTraceToPadEdgeClearance ??
+              RELAXED_DRC_OPTIONS.traceClearance ??
+              0.1,
+            actualViaPadClearance:
+              cms.originalSrj.minPadEdgeToPadEdgeClearance ??
+              RELAXED_DRC_OPTIONS.viaClearance ??
+              0.1,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),

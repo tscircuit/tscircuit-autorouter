@@ -1,0 +1,135 @@
+{
+  "source": "SRJ18 sample1, cmn_330, recorded final rejection witness",
+  "node": {
+    "capacityMeshNodeId": "cmn_330",
+    "center": {
+      "x": 23.7916875,
+      "y": -9.398
+    },
+    "width": 0.5866249999999908,
+    "height": 0.5739999999999998,
+    "portPoints": [
+      {
+        "portPointId": "ce3733_pp0_z1::1",
+        "x": 23.7916875,
+        "y": -9.684999999999999,
+        "z": 1,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "nextPortPointId": "ce3764_pp0_z1::1"
+      },
+      {
+        "portPointId": "ce3764_pp0_z1::1",
+        "x": 24.084999999999994,
+        "y": -9.398,
+        "z": 1,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "prevPortPointId": "ce3733_pp0_z1::1"
+      },
+      {
+        "portPointId": "ce3764_pp0_z0::0",
+        "x": 24.084999999999994,
+        "y": -9.398,
+        "z": 0,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "nextPortPointId": "ce3739_pp0_z0::0"
+      },
+      {
+        "portPointId": "ce3739_pp0_z0::0",
+        "x": 23.7916875,
+        "y": -9.111,
+        "z": 0,
+        "connectionName": "source_trace_1__source_net_1_mst16",
+        "rootConnectionName": "connectivity_net51",
+        "prevPortPointId": "ce3764_pp0_z0::0"
+      }
+    ],
+    "availableZ": [
+      0,
+      1
+    ]
+  },
+  "owner": "connectivity_net51",
+  "ancestorRoute": {
+    "connectionName": "source_trace_1__source_net_1_mst16",
+    "rootConnectionName": "connectivity_net51",
+    "regionId": "cmn_330",
+    "traceThickness": 0.1,
+    "viaDiameter": 0.3,
+    "route": [
+      {
+        "x": 23.7916875,
+        "y": -9.684999999999999,
+        "z": 1
+      },
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001,
+        "z": 1
+      },
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001,
+        "z": 0
+      },
+      {
+        "x": 24.084999999999994,
+        "y": -9.398,
+        "z": 0
+      },
+      {
+        "x": 24.084999999999994,
+        "y": -9.398,
+        "z": 0
+      }
+    ],
+    "vias": [
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001
+      }
+    ]
+  },
+  "route": {
+    "connectionName": "source_trace_1__source_net_1_mst16",
+    "rootConnectionName": "connectivity_net51",
+    "regionId": "cmn_330",
+    "traceThickness": 0.1,
+    "viaDiameter": 0.3,
+    "route": [
+      {
+        "x": 23.7916875,
+        "y": -9.684999999999999,
+        "z": 1
+      },
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001,
+        "z": 1
+      },
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001,
+        "z": 0
+      },
+      {
+        "x": 23.7916875,
+        "y": -9.111,
+        "z": 0
+      },
+      {
+        "x": 23.7916875,
+        "y": -9.111,
+        "z": 0
+      }
+    ],
+    "vias": [
+      {
+        "x": 23.798376000000005,
+        "y": -9.411001
+      }
+    ]
+  }
+}

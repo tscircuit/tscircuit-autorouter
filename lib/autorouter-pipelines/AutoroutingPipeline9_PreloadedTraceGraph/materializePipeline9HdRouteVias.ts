@@ -1,6 +1,8 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
 
+type ConnectionName = HighDensityRoute["connectionName"]
+
 /**
  * Canonicalizes Pipeline9 layer transitions before force improvement.
  *
@@ -14,7 +16,7 @@ export const materializePipeline9HdRouteVias = (
   hdRoutes: readonly HighDensityRoute[],
   referenceHdRoutes: readonly HighDensityRoute[] = [],
 ): HighDensityRoute[] => {
-  const references = new Map<string, HighDensityRoute[]>()
+  const references = new Map<ConnectionName, HighDensityRoute[]>()
   for (const reference of referenceHdRoutes) {
     const group = references.get(reference.connectionName)
     if (group) group.push(reference)

@@ -66,6 +66,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   readonly nativeCandidateIterationLimit: number
   private readonly viaHoleDiameter: number
   private readonly minimumHoleGap: number
+  private readonly actualCopperClearance: number
+  private readonly actualViaPadClearance: number
   private readonly nativeBounds: {
     minX: number
     maxX: number
@@ -79,6 +81,22 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     super(params)
     this.aggregate = params.priorityDiagnostics
     this.sparsePhysicalSearch = params.sparsePhysicalSearch ?? false
+    // A search margin is not the board's electrical copper-clearance rule.
+    // Standalone callers retain their requested margin when no rule is supplied.
+    this.actualCopperClearance = this.sparsePhysicalSearch
+      ? (params.actualCopperClearance ?? this.obstacleMargin)
+      : this.obstacleMargin
+    this.actualViaPadClearance = this.sparsePhysicalSearch
+      ? (params.actualViaPadClearance ?? this.actualCopperClearance)
+      : this.obstacleMargin
+    if (
+      this.sparsePhysicalSearch &&
+      (!Number.isFinite(this.actualCopperClearance) ||
+        this.actualCopperClearance < 0 ||
+        !Number.isFinite(this.actualViaPadClearance) ||
+        this.actualViaPadClearance < 0)
+    )
+      throw new Error("Invalid priority copper clearance")
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
       throw new Error("Invalid priority coordinate scale")
@@ -310,7 +328,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceThickness: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
+      obstacleMargin: this.actualCopperClearance,
       captureSearchDebug: this.captureSearchDebug,
     }
   }
@@ -370,6 +388,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       ? new SparsePhysicalSingleRouteSolver({
           ...opts,
           ...this.board,
+          nodeBoundaryMargin: this.obstacleMargin,
+          viaPadClearance: this.actualViaPadClearance,
           viaHoleDiameter: this.viaHoleDiameter,
           minViaHoleEdgeToViaHoleEdgeClearance: this.minimumHoleGap,
           onWork: (count): void => this.charge("prioritySparseWork", count),
@@ -439,7 +459,14 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       for (const vb of b.vias) {
         this.charge("priorityDrillPairChecks")
         const distance = Math.hypot(va.x - vb.x, va.y - vb.y)
-        if (distance === 0 && this.owner[left] === this.owner[right]) continue
+        if (distance === 0 && this.owner[left] === this.owner[right]) {
+          if (
+            this.sparsePhysicalSearch &&
+            !this.hasCompatibleSharedVia({ left: a, right: b, center: va })
+          )
+            return true
+          continue
+        }
         if (distance < this.viaHoleDiameter + this.minimumHoleGap) return true
       }
     if (this.owner[left] === this.owner[right]) return false
@@ -459,9 +486,68 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     return doPipeline9RoutesHaveCopperConflict({
       left: a,
       right: b,
-      clearance: this.obstacleMargin,
+      clearance: this.actualCopperClearance,
+      viaPadClearance: this.actualViaPadClearance,
       ...this.board,
     })
+  }
+
+  private hasCompatibleSharedVia({
+    left,
+    right,
+    center,
+  }: {
+    left: HighDensityIntraNodeRoute
+    right: HighDensityIntraNodeRoute
+    center: { x: number; y: number }
+  }): boolean {
+    this.charge(
+      "prioritySharedViaGeometrySetup",
+      left.route.length +
+        left.vias.length +
+        right.route.length +
+        right.vias.length,
+    )
+    const leftGeometry = getPipeline9RouteCopperGeometry(left, this.board)
+    const rightGeometry = getPipeline9RouteCopperGeometry(right, this.board)
+    this.charge(
+      "prioritySharedViaSpanVisits",
+      leftGeometry.viaSpans.length + rightGeometry.viaSpans.length,
+    )
+    const leftSpans = leftGeometry.viaSpans.filter(
+      (span) => span.center.x === center.x && span.center.y === center.y,
+    )
+    const rightSpans = rightGeometry.viaSpans.filter(
+      (span) => span.center.x === center.x && span.center.y === center.y,
+    )
+    // Registered sites without a routed transition are through drills, matching
+    // the sparse scene's physical interpretation of explicit orphan via sites.
+    if (leftSpans.length === 0)
+      leftSpans.push({
+        center,
+        minZ: 0,
+        maxZ: this.board.layerCount - 1,
+        diameter: left.viaDiameter,
+      })
+    if (rightSpans.length === 0)
+      rightSpans.push({
+        center,
+        minZ: 0,
+        maxZ: this.board.layerCount - 1,
+        diameter: right.viaDiameter,
+      })
+    this.charge(
+      "prioritySharedViaSpanPairs",
+      leftSpans.length * rightSpans.length,
+    )
+    return leftSpans.every((leftSpan) =>
+      rightSpans.every(
+        (rightSpan) =>
+          leftSpan.diameter === rightSpan.diameter &&
+          leftSpan.minZ === rightSpan.minZ &&
+          leftSpan.maxZ === rightSpan.maxZ,
+      ),
+    )
   }
 
   private branch(left: number, right: number, state: State): void {
@@ -518,6 +604,27 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           0,
         ),
     )
+    // Native copper checks already exempt a connected route's wire segments,
+    // but its via-disc index has no owner metadata. Same-owner copper is reusable;
+    // its distinct drill spacing and exact shared-site compatibility were checked
+    // for every witness pair above, independently of this ancestor-only context.
+    if (this.sparsePhysicalSearch) {
+      const sameOwnerRoutes = new Set<HighDensityIntraNodeRoute>()
+      for (const ancestor of state.ancestors[task]) {
+        this.charge("priorityFinalOwnerVisits")
+        if (this.owner[ancestor] !== this.owner[task]) continue
+        const ancestorRoute = state.witnesses[ancestor]?.route
+        if (!ancestorRoute) throw new Error("Missing same-owner priority witness")
+        sameOwnerRoutes.add(ancestorRoute)
+      }
+      opts.obstacleRoutes = opts.obstacleRoutes.filter((route) => {
+        this.charge("priorityFinalOwnerRouteChecks")
+        return !sameOwnerRoutes.has(route)
+      })
+      // At this point every actual witness pair has passed the physical gate.
+      // An unrouted ideal chord is no longer a physical obstacle to those routes.
+      if (this.readyToValidate) opts.futureConnections = []
+    }
     const checker = new Native(opts)
     let parent: Node | null = null
     for (let i = 0; i < witness.route.route.length; i++) {
@@ -536,7 +643,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           if (
             checker.isNodeTooCloseToObstacle(
               node,
-              this.viaDiameter / 2 + this.obstacleMargin / 2,
+              checker.viaDiameter / 2 + checker.obstacleMargin / 2,
               true,
             ) ||
             checker.isNodeTooCloseToEdge(node, true)

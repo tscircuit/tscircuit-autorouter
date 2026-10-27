@@ -108,6 +108,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
     sparsePhysicalSearch?: boolean
+    actualCopperClearance?: number
+    actualViaPadClearance?: number
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number

@@ -20,6 +20,8 @@ export type Pipeline9ClearanceProjectionParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
+  /** Immutable copper participates in projection without becoming output. */
+  fixedObstacleRoutes?: readonly HighDensityRoute[]
   /** Geometry before regional rerouting, matching the outer via guard. */
   previousRoutes?: HighDensityRoute[]
   /** Retain independently safe wire adjustments on boards with mixed errors. */
@@ -86,14 +88,18 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
+      const fixedRoutes = canonicalizePipeline9HdRoutes(
+        [...(params.fixedObstacleRoutes ?? [])],
+      )
+      const projectionRoutes = [...canonicalRoutes, ...fixedRoutes]
       const solver = new RelaxTraceClearanceSolver({
         srj,
-        routes: canonicalRoutes,
+        routes: projectionRoutes,
         bounds: srj.bounds,
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-        lockedPointIndices: canonicalRoutes.map((route) =>
-          route.route.map(() => false),
+        lockedPointIndices: projectionRoutes.map((route, routeIndex) =>
+          route.route.map(() => routeIndex >= canonicalRoutes.length),
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
@@ -127,7 +133,9 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         this.state = {
           phase: "select",
           context: state.context,
-          candidate: state.solver.getOutput(),
+          candidate: state.solver
+            .getOutput()
+            .slice(0, state.context.canonicalRoutes.length),
         }
       }
       return

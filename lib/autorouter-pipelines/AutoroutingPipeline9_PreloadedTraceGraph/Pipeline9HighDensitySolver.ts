@@ -48,6 +48,8 @@ export type Pipeline9HighDensitySolverParams = {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
+  actualCopperClearance?: number
+  actualViaPadClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -322,6 +324,8 @@ export type Pipeline9RegularNodeSolverParams = {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
+  actualCopperClearance?: number
+  actualViaPadClearance?: number
   obstacleMargin: number
   effort: number
   nodePfById:
@@ -352,6 +356,8 @@ export const createPipeline9RegularNodeSolver = ({
   priorityDiagnostics,
   priorityDagSearch = false,
   sparsePhysicalSearch = false,
+  actualCopperClearance,
+  actualViaPadClearance,
   traceWidth,
   obstacleMargin,
   effort,
@@ -387,6 +393,8 @@ export const createPipeline9RegularNodeSolver = ({
     captureSearchDebug: false,
     priorityDagSearch,
     sparsePhysicalSearch,
+    actualCopperClearance,
+    actualViaPadClearance,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -691,6 +699,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
       sparsePhysicalSearch: true,
+      actualCopperClearance: this.params.actualCopperClearance,
+      actualViaPadClearance: this.params.actualViaPadClearance,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
