@@ -87,7 +87,7 @@ permissions:
 
 jobs:
   effort-comparison:
-    if: github.event_name == 'workflow_dispatch' && inputs.effort_compare == true
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id == '' && inputs.effort_compare == true
     uses: ./.github/workflows/benchmark-effort.yml
     secrets: inherit
     with:
@@ -1594,7 +1594,7 @@ jobs:
 
   same-machine-benchmark:
     name: Same machine benchmark
-    if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
+    if: github.event_name == 'workflow_dispatch' && inputs.postrun_audit_run_id == '' && inputs.same_machine_compare == true
     runs-on: ${{ (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || 'blacksmith-8vcpu-ubuntu-2404-arm' }}
     timeout-minutes: ${{ inputs.long_benchmark && (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 480 || (contains(inputs.benchmark_args_json, '"--threads"') || inputs.threads != '') && 360 || 180 }}
     env:
