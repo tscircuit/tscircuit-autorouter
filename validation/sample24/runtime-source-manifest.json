@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "22b42e135da168c73bbb36edf5ff0716a739a853",
+  "rootSource": "03ca19048c90629d59a73620c90d7b6fcd4f20ce",
   "rootLibTree": "af74d48e9a17b8fb409432ef8d96b007bbb304ad",
-  "rootPackageBlob": "ef15b59ad1381b22a7c33fd97bed173b90ba768b",
-  "localRuntimeReceiptSha256": "b362ac912e0fa9c9f52bd3ff8c04546c86634bf7caf2dd68d89d15d238fac2d8",
+  "rootPackageBlob": "7c1adb1d308d9a7907bbb7e6965119350c63f7fb",
+  "localRuntimeReceiptSha256": "0de4ca7e1cbec64c583d9dbcf2cf0327585902c0b7a747ce8356149241bfcd50",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "6272e5e2822ed8bd2b4019191f90a092687d1097",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#6272e5e2822ed8bd2b4019191f90a092687d1097",
+      "revision": "e1a956eda93ba66d20e7d1073b7ddb6c6ea7f1a9",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#e1a956eda93ba66d20e7d1073b7ddb6c6ea7f1a9",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -39,9 +39,9 @@
         },
         {
           "path": "lib/bus-solver/TinyHyperGraphBusSolver.ts",
-          "gitBlobSha1": "3bf802308327e452d1a1d9a87d8ec5ef3fe71f1a",
-          "sha256": "2a2b6eef41fd26f9e2f3297a85dd64e979dcfb0926616560e1c137cfd5ad5642",
-          "bytes": 70846
+          "gitBlobSha1": "6e1fb29be0617781821e187a36e65c8866e8c56f",
+          "sha256": "d0034d28e2b3b7cef02e019a84fc7d3ab291148eeca552c228e7088f0dd823d8",
+          "bytes": 70879
         },
         {
           "path": "lib/bus-solver/busGoalSearch.ts",
@@ -111,9 +111,9 @@
         },
         {
           "path": "lib/core.ts",
-          "gitBlobSha1": "955085b1132c856606e4d0d8d9bf813e24bd1715",
-          "sha256": "6ceaf0feb038b097b97fe845115d31b3f0d797554e9d8c57ca7a553c902d112b",
-          "bytes": 79258
+          "gitBlobSha1": "f2f584252855297754a0008a47b07ea44b9cf72b",
+          "sha256": "68ad1cb0e031c37c35fe3e058cffed1580163b1ba66107ba443c9a342847e4c4",
+          "bytes": 79295
         },
         {
           "path": "lib/countIntersectionsFromAnglePairsDynamic.ts",
@@ -189,9 +189,9 @@
         },
         {
           "path": "lib/port-conflicts.ts",
-          "gitBlobSha1": "1031e40a70d26f062b3cfbc5b49eea14d4ea4586",
-          "sha256": "858ff48ea3638740f8e730a0bf08ce70f42dcf4c425b1b6d2fdd206be4231fcd",
-          "bytes": 4206
+          "gitBlobSha1": "97d7b757c9da1d4017ce2c5f84406db78b3cae1b",
+          "sha256": "dd66b296f38bf81c053271e01b7f7354d697c1ad1d7592b32036bf6632947069",
+          "bytes": 6781
         },
         {
           "path": "lib/port-reservations.ts",
@@ -249,9 +249,9 @@
         },
         {
           "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "gitBlobSha1": "aa1bc5429ec0ec31c003dcaf635291a0f370f753",
-          "sha256": "c1339e970c323d8ce3fe99ea1fa215f11648f840479ed3cf2e117175f8906333",
-          "bytes": 37169
+          "gitBlobSha1": "f508f8fb0cd97b7096430c2153b5f4c5b436d80c",
+          "sha256": "b0f218857563e8c32a4cd9118934b03eb5be5b5739e8c16820dab18f844a1cee",
+          "bytes": 38679
         },
         {
           "path": "lib/selective-rerip/certifyMinimumTwoBlockerOwners.ts",
@@ -279,9 +279,9 @@
         },
         {
           "path": "lib/static-reachability.ts",
-          "gitBlobSha1": "7561285f6647a4dc91d13e5deef2bbbfae6c1973",
-          "sha256": "2095b27d21be0c5e2abf3fbbde737d9042dd99d40b6b261a163676fb20ff0a66",
-          "bytes": 8765
+          "gitBlobSha1": "d75afa211a407366913db0db6ad8058e735c1f11",
+          "sha256": "43963a314a88e8c83f6ac0d4d0f9f7a1b55b6543950e56ceb97a0d3975362533",
+          "bytes": 8798
         },
         {
           "path": "lib/types.ts",
@@ -1396,5 +1396,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "00bdb31ce62461bfa48e00507fe303d960f5251aac2cadefb019cad1353b8ff5"
+  "bundleSha256": "d1647be83e8cc51d42be1db0c992f57e29314705fa772e4eb374fc4d79c3193d"
 }
