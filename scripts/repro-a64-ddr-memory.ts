@@ -17,6 +17,7 @@ type RetentionSummary = {
   retainedFailedRouteSearches: number
   planarPointCacheEntries: number
   typedBufferBytes: number
+  topologyAtomicRegions: number
 }
 
 function measureSearchRetention(root: BaseSolver): RetentionSummary {
@@ -30,6 +31,7 @@ function measureSearchRetention(root: BaseSolver): RetentionSummary {
     retainedFailedRouteSearches: 0,
     planarPointCacheEntries: 0,
     typedBufferBytes: 0,
+    topologyAtomicRegions: 0,
   }
   const pending: unknown[] = [root]
   while (pending.length > 0) {
@@ -46,6 +48,9 @@ function measureSearchRetention(root: BaseSolver): RetentionSummary {
     if (solver.constructor.name === "GrowShrinkHighDensityIntraNodeSolver") {
       result.retiredGrowthPortfolios += solver.failedSolvers.length
     }
+    if (solver.constructor.name === "TopologyMergingSolver") {
+      result.topologyAtomicRegions += solver.atomicRegions.length
+    }
     for (const field of Object.values(solver)) {
       if (ArrayBuffer.isView(field) && !buffers.has(field.buffer)) {
         buffers.add(field.buffer)
@@ -54,6 +59,7 @@ function measureSearchRetention(root: BaseSolver): RetentionSummary {
     }
     for (const key of [
       "highDensityRouteSolver",
+      "topologyMergingSolver",
       "highDensitySolver",
       "activeSubSolver",
       "activeRegularSolver",

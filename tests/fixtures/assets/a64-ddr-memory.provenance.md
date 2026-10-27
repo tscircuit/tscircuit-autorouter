@@ -26,6 +26,12 @@ ownership groups are retained. ConnectivityMap and Map records are serialized
 as plain records, and the empty movable-preload Set as an empty array; the loader
 restores their original runtime types. No search state or routed answer is saved.
 
+The topology checkpoint is the actual five-group input to the merging stage.
+It contains 20,586 input nodes. Baseline merging creates 515,892 atomic regions
+and 36,786 final nodes, then keeps the construction-only regions alive after
+completion. The topology regression checks the exact final-output hash before
+asserting that the construction workspace has been released.
+
 Decompressed fixture SHA-256 values:
 
 | File | SHA-256 |
@@ -33,14 +39,16 @@ Decompressed fixture SHA-256 values:
 | `a64-full-ddr-memory.srj.json.gz` | `9d3e7417f6b1b1711ffc642c02fda5333cb33861d08bb1cc91228846bb751848` |
 | `a64-ddr-high-density-memory.json.gz` | `fed69f08584352af00dfeb87fe88967336d4f6dbc7cf3bdfba47fd39954c1b46` |
 | `a64-ddr-regional-memory.json.gz` | `fa6404132520a34c16fcbe168b9914e685a02038872dc3fb7bb48ccff23b143a` |
+| `a64-ddr-topology-memory.json.gz` | `d9963fdce4e1ffa3979dd134c36e6092ce889880439fdfe4bc18e15fe2205909` |
 
-The two expected-failure tests isolate the causal retention paths without making
+The expected-failure tests isolate the causal retention paths without making
 CI allocate several GiB: production regional routing enables search debug
-capture, and grow/shrink retains retired portfolios despite an explicit opt-out.
+capture, grow/shrink retains retired portfolios despite an explicit opt-out,
+and topology merging retains its completed construction workspace.
 Run them with:
 
 ```sh
-bun test tests/repro/pipeline9-a64-ddr-regional-debug-memory.test.ts tests/repro/pipeline9-a64-ddr-growth-retention.test.ts --timeout 9999999
+bun test tests/repro/pipeline9-a64-ddr-regional-debug-memory.test.ts tests/repro/pipeline9-a64-ddr-growth-retention.test.ts tests/repro/pipeline9-a64-ddr-topology-memory.test.ts --timeout 9999999
 ```
 
 For fresh memory measurements with identical search work, run each revision in

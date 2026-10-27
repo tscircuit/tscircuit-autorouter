@@ -3,6 +3,7 @@ import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
+import type { TopologyMergingSolverParams } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 export function loadA64DdrHighDensityMemoryParams(): ConstructorParameters<
@@ -54,4 +55,19 @@ export function loadA64FullDdrMemoryInput(): SimpleRouteJson {
       ),
     ).toString(),
   ) as SimpleRouteJson
+}
+
+export function loadA64DdrTopologyMemoryInput(): TopologyMergingSolverParams {
+  return JSON.parse(
+    gunzipSync(
+      Uint8Array.from(
+        readFileSync(
+          new URL(
+            "./assets/a64-ddr-topology-memory.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString(),
+  ) as TopologyMergingSolverParams
 }
