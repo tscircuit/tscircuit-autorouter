@@ -129,3 +129,84 @@ unchanged actual-copper reference validator still rejects that proposal; the
 projection is a conservative copper search model, not a substitute for the
 manufacturing-rule validator. Current materialized forest vias are retained in
 that reference context.
+
+## V3 owned regional native routing
+
+The v2 mechanism controls expose two different costs. SRJ24 sample 25 spends
+22,448 of its 24,143 HD steps in regional routing. Two approximately 1 mm nodes
+start with two native ports each; the existing preload adapter reconstructs
+forest sections as extra demands and promotes exact blockers, expanding those
+problems to six and eight ports. Regional routing used an older portfolio
+configuration than ordinary local routing. The primary B01 solver already sees
+actual copper segments. AABB dispatch false positives are a separate, minor cost
+on these controls and do not explain this sample's large regression.
+
+V3 explicitly opts owned local regions into the current native node factory,
+with the physical board, drill, via-span, cache, and owner context retained.
+Regional A13 remains disabled, preserving the existing family allowance; the
+ordinary factory keeps its existing A13 default. Grid work ceilings decrease or
+remain unchanged, Priority DAG replacement preserves its native family work
+allowance, and outer/growth caps remain unchanged. The original candidate,
+force-improve, repair, and fixed-copper splice guards remain in place. Regional
+nodes bypass a second owner normalization: a registered net key can also be a
+different net's literal ID. Default and projected/networked regional callers
+retain the exact legacy configuration because their requests lack complete
+physical context.
+
+All eight matched functional controls use effort 1, explicit null cache, and the
+same original inputs. Both forest-off outputs remain byte-identical. For
+forest-on SRJ24 sample 25, candidate clocks decrease from 2,283,395 to 702,444
+(69.2%), while A13 kernel work remains 1,681. HD iterations decrease from 24,143
+to 7,989 and total pipeline iterations from 72,924 to 56,756. All reference,
+board, and declared checks pass, and all three forest nets pass final physical
+connectivity. A local native/forest gap contact in the captured `cmn_57` result
+still requires the existing whole-board repair; local acceptance alone does not
+certify the board.
+
+SRJ18 sample 5 does not improve by the charged-work measure: candidate clocks
+increase from 10,286,136 to 10,291,306, with A13 kernel work unchanged at 2,388,919.
+Its HD iterations decrease slightly from 106,929 to 106,089, and total iterations
+from 329,306 to 328,471; those three final checks still pass. The dominant cost remains
+an ordinary native node whose geometry is unchanged but whose upstream port
+population changes from 18 to 24 when forest demands are removed. That node
+alone costs 93,964 HD steps. Regional configuration does not resolve this
+upstream congestion sensitivity.
+
+The external ledger retains every generated portfolio candidate, including
+failed growth attempts and unselected candidates. It sums each candidate clock
+once; a Priority DAG already includes its native children. A13 kernel iterations
+are recorded separately because a call can execute 1,000 expansions. These clocks
+are defined search work, not complete CPU or geometry-operation cost. The first
+probe enabled regional A13 and was rejected because it added a family allowance;
+its lower outer iteration count was not sufficient evidence.
+
+`physical-net-forest/RESULTS-V3.json` records qualification and limitations;
+the ordered `physical-net-forest/raw/REGIONAL-CONTROLS.manifest.json` and its eight row archives retain full ledgers,
+output traces, input hashes, and validator results. Reproduce a current-source
+functional control from the repository root with
+`bun experiments/physical-net-forest/runRegionalNativeControls.ts current . /tmp/forest-controls.json`.
+Use separate processes rooted in each selected worktree when comparing sources.
+These local controls establish no full-corpus timing result. Bug107's v2 failure
+is **unretested in v3**; no fix is implied. No snapshots were updated and no
+formatter or linter was run.
+
+V3 verification passes the 26-file focused suite (357 assertions), all four
+unchanged SRJ18 DRC regressions for samples 9, 11, 12 and 16, full repository
+type checking, and the serialized worker/ESM/DTS build. The inherited warm-cache,
+preloaded async, and selected networked HTTP parity checks also pass. Separate
+supplemental library dangling-end/via-to-pad checks are not included in these
+local controls; their named checks do not constitute complete physical qualification.
+
+The archived control reports use eight deterministic gzip parts (level 9, zero
+timestamp, empty filename). The ordered manifest preserves every part hash and
+the exact original uncompressed report SHA-256 hashes and sizes. Verify
+decompression, byte-exact reconstruction, all eight rows, work ledgers, output
+identities, and stored reference results without rerouting with
+`bun experiments/physical-net-forest/runRegionalNativeControls.ts --verify-packaged`.
+An optional directory argument after `--verify-packaged` writes the two reconstructed
+original JSON reports there. Each compressed part is smaller than 22 KB.
+
+The two captured regional test inputs are also deterministic gzip archives
+(7,269 and 7,346 bytes). Their shared loader verifies compressed and original
+SHA-256 hashes before parsing; `--verify-packaged` checks these inputs too.
+Their decompressed bytes remain identical to the originally reviewed fixtures.

@@ -4,6 +4,8 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
+import { createPipeline9RegularNodeSolverFromCanonicalNode } from "./Pipeline9HighDensitySolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
@@ -17,6 +19,12 @@ import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
   cacheProvider?: null
+  /** Only owned local routing supplies the complete native physical context. */
+  useNativeRouting?: boolean
+  boardGeometry?: HighDensityBoardGeometry
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  priorityDiagnostics?: Record<string, number>
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
@@ -140,16 +148,53 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private phase: RegionalFallbackPhase = "route"
+  private readonly nativePriorityInstancesBefore: number
+  private readonly nativePriorityCompletedWorkBefore: number
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
     this.params = params
+    this.nativePriorityInstancesBefore = params.priorityDiagnostics?.priorityInstances ?? 0
+    this.nativePriorityCompletedWorkBefore = params.priorityDiagnostics?.priorityCompletedWorkUnits ?? 0
+    if (params.useNativeRouting && params.priorityDiagnostics) {
+      params.priorityDiagnostics.regionalNativeRouteInstances =
+        (params.priorityDiagnostics.regionalNativeRouteInstances ?? 0) + 1
+    }
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
-    this.highDensitySolver = new HighDensitySolver({
+    const growShrinkSolutionValidator =
+      params.boardObstacles &&
+      params.movablePreloadedConnectionNames &&
+      params.viaToPadClearance !== undefined
+        ? (routes: HighDensityRoute[]): boolean => this.validateCandidateRoutes(routes)
+        : undefined
+    this.highDensitySolver = params.useNativeRouting ? createPipeline9RegularNodeSolverFromCanonicalNode({
+      cacheProvider: params.cacheProvider,
+      nodeWithPortPoints: params.nodeWithPortPoints,
+      colorMap: params.colorMap,
+      connMap: params.connMap,
+      viaDiameter: params.viaDiameter,
+      traceWidth: params.traceWidth,
+      obstacleMargin: params.obstacleMargin,
+      effort: params.effort,
+      nodePfById: params.nodePfById ?? new Map(),
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      boardGeometry: params.boardGeometry,
+      viaHoleDiameter: params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        params.minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+      priorityDagSearch: true,
+      priorityDiagnostics: params.priorityDiagnostics,
+      // Keep regional search's existing family allowance; this experiment
+      // changes native priority routing and geometry context without adding A13.
+      enableNegotiatedSearch: false,
+      growShrinkSolutionValidator,
+    }) : new HighDensitySolver({
       cacheProvider: params.cacheProvider,
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
@@ -164,12 +209,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
+      growShrinkSolutionValidator,
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
@@ -208,15 +248,30 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return !hasViaConflict
   }
 
+  private recordNativeRouteDiagnostics(): void {
+    const diagnostics = this.params.priorityDiagnostics
+    if (!this.params.useNativeRouting || !diagnostics) return
+    diagnostics.regionalNativePriorityInstances =
+      (diagnostics.regionalNativePriorityInstances ?? 0) +
+      (diagnostics.priorityInstances ?? 0) - this.nativePriorityInstancesBefore
+    // This is only the existing completed-priority-candidate clock. It does
+    // not claim work for unfinished candidates or other portfolio families.
+    diagnostics.regionalNativePriorityCompletedWorkUnits =
+      (diagnostics.regionalNativePriorityCompletedWorkUnits ?? 0) +
+      (diagnostics.priorityCompletedWorkUnits ?? 0) - this.nativePriorityCompletedWorkBefore
+  }
+
   override _step(): void {
     if (this.phase === "route") {
       this.highDensitySolver.step()
       if (this.highDensitySolver.failed) {
+        this.recordNativeRouteDiagnostics()
         this.error = this.highDensitySolver.error
         this.failed = true
         return
       }
       if (!this.highDensitySolver.solved) return
+      this.recordNativeRouteDiagnostics()
       const routedCandidate = materializePipeline9HdRouteVias(
         this.highDensitySolver.routes,
       )

@@ -318,6 +318,8 @@ const restoreRootConnectionNames = (
 
 export type Pipeline9RegularNodeSolverParams = {
   cacheProvider?: null
+  growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  enableNegotiatedSearch?: boolean
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -343,7 +345,19 @@ export type Pipeline9RegularNodeSolverParams = {
  * explicit and requires the caller's full drill context. Projected
  * network requests leave it disabled; owned local routing supplies that context.
  */
-export const createPipeline9RegularNodeSolver = ({
+export const createPipeline9RegularNodeSolver = (
+  params: Pipeline9RegularNodeSolverParams,
+): HighDensitySolver =>
+  createPipeline9RegularNodeSolverFromCanonicalNode({
+    ...params,
+    nodeWithPortPoints: normalizePipeline9NodeRootConnectionNames(
+      params.nodeWithPortPoints,
+      params.connMap,
+    ),
+  })
+
+/** Regional nodes already carry registered owners; do not resolve them as IDs again. */
+export const createPipeline9RegularNodeSolverFromCanonicalNode = ({
   nodeWithPortPoints,
   connMap,
   colorMap,
@@ -361,11 +375,11 @@ export const createPipeline9RegularNodeSolver = ({
   boardGeometry,
   layerCount,
   cacheProvider,
+  growShrinkSolutionValidator,
+  enableNegotiatedSearch = true,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
-    nodePortPoints: [
-      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
-    ],
+    nodePortPoints: [nodeWithPortPoints],
     colorMap,
     connMap,
     viaDiameter,
@@ -376,7 +390,7 @@ export const createPipeline9RegularNodeSolver = ({
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
-    enableNegotiatedSearch: true,
+    enableNegotiatedSearch,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
@@ -390,6 +404,7 @@ export const createPipeline9RegularNodeSolver = ({
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
     cacheProvider,
+    growShrinkSolutionValidator,
   })
 
 /**
@@ -752,7 +767,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      useNativeRouting: true,
       cacheProvider: this.params.cacheProvider,
+      boardGeometry: this.boardGeometry,
+      viaHoleDiameter: this.params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        this.params.minViaHoleEdgeToViaHoleEdgeClearance,
+      priorityDiagnostics: this.benchmarkDiagnosticCounters,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,

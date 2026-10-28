@@ -1,0 +1,211 @@
+{
+  "revision": "v3 owned regional native policy",
+  "baselineMain": "637b6c581128238f6c61227a1c15be423d24baca",
+  "v2Source": "60300326a9eea8b92645b299ddd7e083403c1fa2",
+  "v2Published": "d24d6e9a692ce49560ad66f8f6438177aeb7849d",
+  "sourceFileSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts": "e30f1541f25c64639dcc4e9a67aba57a127eda8419fcb43bc5437ad5a78447fd",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts": "7525256631eaadaee66f43253834f6bd36bd2db4aedc07f0c2e7f6c17ff2daf4"
+  },
+  "scope": "Local owned regional routing uses the current native factory with full physical context and A13 disabled. Default/projected regional requests retain the exact legacy configuration.",
+  "controls": [
+    {
+      "dataset": "srj18",
+      "sample": 5,
+      "forest": false,
+      "inputSha256": "ca7d3dc4657c6beeb44993ae3b16c627fd33a38cbc0b586ba1b3e1e107b5b76b",
+      "before": {
+        "candidateClocks": 1440480,
+        "a13KernelIterations": 1563495,
+        "pipelineIterations": 192730,
+        "hdIterations": 13151,
+        "outputSha256": "0168c4ec9b64d407be42e24f6da301d9826ad65ba90caedc82c04eadc6a008bd"
+      },
+      "after": {
+        "candidateClocks": 1440480,
+        "a13KernelIterations": 1563495,
+        "pipelineIterations": 192730,
+        "hdIterations": 13151,
+        "outputSha256": "0168c4ec9b64d407be42e24f6da301d9826ad65ba90caedc82c04eadc6a008bd"
+      },
+      "referenceErrors": [
+        0,
+        0
+      ],
+      "boardErrors": [
+        0,
+        0
+      ],
+      "declaredErrors": [
+        0,
+        0
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "sample": 5,
+      "forest": true,
+      "inputSha256": "ca7d3dc4657c6beeb44993ae3b16c627fd33a38cbc0b586ba1b3e1e107b5b76b",
+      "before": {
+        "candidateClocks": 10286136,
+        "a13KernelIterations": 2388919,
+        "pipelineIterations": 329306,
+        "hdIterations": 106929,
+        "outputSha256": "8c5611a15fc37296b808bc69ed24244ad4ad632b73ce994d8d2d1705c6126dff"
+      },
+      "after": {
+        "candidateClocks": 10291306,
+        "a13KernelIterations": 2388919,
+        "pipelineIterations": 328471,
+        "hdIterations": 106089,
+        "outputSha256": "eaecf342b30f8ccb98a70bc1ffc2e008a17dae621ab872936a2f66f7d89013da"
+      },
+      "referenceErrors": [
+        0,
+        0
+      ],
+      "boardErrors": [
+        0,
+        0
+      ],
+      "declaredErrors": [
+        0,
+        0
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "forest": false,
+      "inputSha256": "e93af43bdcfe9a62705d71c3eba553a2ada76f004eb565912d93dfd5a3bcc4c6",
+      "before": {
+        "candidateClocks": 88899,
+        "a13KernelIterations": 2904,
+        "pipelineIterations": 59042,
+        "hdIterations": 900,
+        "outputSha256": "ced0afc49af926a861e7ee1f5d1db417b296c93b0514f4327f250f380c37abe2"
+      },
+      "after": {
+        "candidateClocks": 88899,
+        "a13KernelIterations": 2904,
+        "pipelineIterations": 59042,
+        "hdIterations": 900,
+        "outputSha256": "ced0afc49af926a861e7ee1f5d1db417b296c93b0514f4327f250f380c37abe2"
+      },
+      "referenceErrors": [
+        0,
+        0
+      ],
+      "boardErrors": [
+        0,
+        0
+      ],
+      "declaredErrors": [
+        0,
+        0
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "forest": true,
+      "inputSha256": "e93af43bdcfe9a62705d71c3eba553a2ada76f004eb565912d93dfd5a3bcc4c6",
+      "before": {
+        "candidateClocks": 2283395,
+        "a13KernelIterations": 1681,
+        "pipelineIterations": 72924,
+        "hdIterations": 24143,
+        "outputSha256": "929944af717b1963b5ec20a2e5ff2c70a0c90c3668e449597ed1eb3a53805cf3"
+      },
+      "after": {
+        "candidateClocks": 702444,
+        "a13KernelIterations": 1681,
+        "pipelineIterations": 56756,
+        "hdIterations": 7989,
+        "outputSha256": "8cb07f5c56741444bbff2ac533b5da400d56a4ed70d7c458dbb6f7e132b61a36"
+      },
+      "referenceErrors": [
+        0,
+        0
+      ],
+      "boardErrors": [
+        0,
+        0
+      ],
+      "declaredErrors": [
+        0,
+        0
+      ]
+    }
+  ],
+  "actualNodeProbe": [
+    {
+      "node": "cmn_42",
+      "beforeCandidateClocks": 1043230,
+      "afterCandidateClocks": 279690,
+      "beforeA13Kernel": 0,
+      "afterA13Kernel": 0
+    },
+    {
+      "node": "cmn_57",
+      "beforeCandidateClocks": 1187814,
+      "afterCandidateClocks": 370403,
+      "beforeA13Kernel": 0,
+      "afterA13Kernel": 0
+    }
+  ],
+  "qualification": [
+    "All eight full functional control solves pass reference, board, and declared checks and final physical forest connectivity.",
+    "Forest-off outputs are byte-identical between v2 and v3 on both controls.",
+    "SRJ24/25 forest-on reduces measured candidate work by 69.2% versus v2.",
+    "SRJ18/5 forest-on increases measured candidate work by 5170 (0.0503%) versus v2 despite fewer outer iterations; no work improvement is claimed there."
+  ],
+  "ledgerDefinition": "Identity-register every Portfolio.generateSolver result across all growth attempts, failed and unselected candidates included. Sum candidate.iterations atomically; a Priority DAG clock includes its children and must not be counted twice. Also retain A13.routingIterations separately because a call can execute 1000 expansions. These defined clocks do not measure complete CPU/setup/validation cost.",
+  "firstProbeRejected": "Enabling the entire ordinary policy added A13 kernel work and a configured A13 allowance absent from legacy regional routing. That variant was rejected; v3 keeps regional A13 disabled.",
+  "knownLimitations": [
+    "Bug107 v2 still has 145 reference DRC errors after 552.936 seconds. It was NOT retested on v3; no fix is implied.",
+    "The SRJ18 dominant upstream 24-port native region remains expensive; this policy only addresses the regional configuration bottleneck.",
+    "The independent local 0.1mm gap probe found one native/forest contact on the cmn57 result; the unchanged complete pipeline repairs it. Local acceptance is not a whole-board DRC certificate.",
+    "V1, v2, v3 full-corpus runs must retain separate SHA attribution. No corpus speedup or replacement claim is established by these controls.",
+    "Remote mechanism counters regionalNativePriorityCompletedWorkUnits only count completed priority candidates; they are not the complete external ledger.",
+    "These controls run the named reference/board/declared checks and final forest connectivity assertion. Separate supplemental library dangling-end/via-to-pad checks are not included; no complete physical qualification is claimed."
+  ],
+  "validation": {
+    "focused": {
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "assertions": 357
+    },
+    "unchangedSrj18DrcRegressions": {
+      "samples": [
+        9,
+        11,
+        12,
+        16
+      ],
+      "pass": 4,
+      "fail": 0,
+      "assertions": 20
+    },
+    "typecheck": "full repository tsc --noEmit passes",
+    "build": "ESM, workers, DTS pass",
+    "inherited": "Warm-cache and preload async regressions pass. Two existing networked HTTP policy/failure parity regressions pass with network access.",
+    "reproducer": "Committed standalone harness reproduces all four v3 output hashes and complete candidate ledgers exactly."
+  },
+  "packagedRawManifest": "raw/REGIONAL-CONTROLS.manifest.json",
+  "packagedCapturedNodeFixtures": {
+    "cmn_42": {
+      "uncompressedBytes": 104298,
+      "uncompressedSha256": "3762a5269614607c3eb87aae1959fdffe8e0c3da99509140cb74e00e8ffa2cbf",
+      "compressedBytes": 7269,
+      "compressedSha256": "d3792580da837b9b4506f6454d99160480d7cddf1787c8eadcb3af4fee65b027"
+    },
+    "cmn_57": {
+      "uncompressedBytes": 104624,
+      "uncompressedSha256": "34de944b19a49ed56b46bea8dd7ad9054d51ad65a76ad672c616cc989857c70b",
+      "compressedBytes": 7346,
+      "compressedSha256": "48db5c85c25efd65f515017f3a67759fca5774ae2e8b0a6d307c2ec95e290118"
+    }
+  }
+}

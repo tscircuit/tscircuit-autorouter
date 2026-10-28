@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "compression": "gzip level9, empty filename, mtime0",
+  "reconstruction": "JSON.stringify(orderedParsedRows, null, 2), with no trailing newline",
+  "archives": [
+    {
+      "arm": "legacy",
+      "logicalPath": "REGIONAL-CONTROLS-LEGACY.json",
+      "uncompressedBytes": 876132,
+      "uncompressedSha256": "93bae2ab2dc10987e6cf0c51b16198c51b705e4c5ad97f239a9c6896a6e5987e",
+      "parts": [
+        {
+          "path": "REGIONAL-CONTROLS-LEGACY-01.json.gz",
+          "dataset": "srj18",
+          "sample": 5,
+          "forest": false,
+          "compressedBytes": 20429,
+          "compressedSha256": "bce55544b5f7a84b1e64a9c6d4113753b26bb3b014681541df75223249f0df50",
+          "uncompressedBytes": 172367,
+          "uncompressedSha256": "241972316c7b45642aec6060624d0c3e983dffa6e9eba794c31f0b185d571f13"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-LEGACY-02.json.gz",
+          "dataset": "srj18",
+          "sample": 5,
+          "forest": true,
+          "compressedBytes": 21722,
+          "compressedSha256": "5d2a54fe9b5beed80004946a0e0141a53ea5336e0b7b0a92c8060f07f14b3ca8",
+          "uncompressedBytes": 181187,
+          "uncompressedSha256": "15d39fb4b6bb2d1d10cf8457b466fc34aeafb732cbcdf5012563f469c0f1342d"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-LEGACY-03.json.gz",
+          "dataset": "srj24",
+          "sample": 25,
+          "forest": false,
+          "compressedBytes": 5197,
+          "compressedSha256": "277f3d2e40b7b4f32743c5ede226080e863f980d2649a8aedb0ec95e66f8892d",
+          "uncompressedBytes": 43781,
+          "uncompressedSha256": "b91fa30dbf6cafe0ea9cb97465d6a0189c5d539dc1a8c122cf12963416d888d6"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-LEGACY-04.json.gz",
+          "dataset": "srj24",
+          "sample": 25,
+          "forest": true,
+          "compressedBytes": 5343,
+          "compressedSha256": "221904a8eaa7a42155765b77d8e4780a3701aa9b517f8f472b85be31481f81e2",
+          "uncompressedBytes": 43664,
+          "uncompressedSha256": "c855c213e1b5db4cb83aa05ef391986ac9c1cc48af1676b7c5d9a3fbfdb1f5d9"
+        }
+      ]
+    },
+    {
+      "arm": "native",
+      "logicalPath": "REGIONAL-CONTROLS-NATIVE.json",
+      "uncompressedBytes": 876968,
+      "uncompressedSha256": "4f2ce41030c922961cc17716e78b6b661db8163566aeef2e2dc1bad5d9723efd",
+      "parts": [
+        {
+          "path": "REGIONAL-CONTROLS-NATIVE-01.json.gz",
+          "dataset": "srj18",
+          "sample": 5,
+          "forest": false,
+          "compressedBytes": 20428,
+          "compressedSha256": "bb3240333425a3264bf96f0c3ed92980a92dbd1eec1cf747a5bc187466e9ab99",
+          "uncompressedBytes": 172367,
+          "uncompressedSha256": "93f32178801f16af21bbe46ebbd82c6403feb5db279f744f0bea5027f0a79f4e"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-NATIVE-02.json.gz",
+          "dataset": "srj18",
+          "sample": 5,
+          "forest": true,
+          "compressedBytes": 21720,
+          "compressedSha256": "9e578aa400e0020178e7409cb29a1f934b3b254ac94a917c248575bfe15bc009",
+          "uncompressedBytes": 181338,
+          "uncompressedSha256": "3add22b410e16fe8f8ea694d60e9f26a35957f8ef877eaed13fa1adec998603b"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-NATIVE-03.json.gz",
+          "dataset": "srj24",
+          "sample": 25,
+          "forest": false,
+          "compressedBytes": 5197,
+          "compressedSha256": "5aa97c6de91ea4a6c91db990b97b460522c1ac9bc50e187d1ef9eb659dc4c662",
+          "uncompressedBytes": 43781,
+          "uncompressedSha256": "42d4b77df64b0c5446d8f5fb08ab36e0b3a0c8d7b63a344a4a7cabd905a1d139"
+        },
+        {
+          "path": "REGIONAL-CONTROLS-NATIVE-04.json.gz",
+          "dataset": "srj24",
+          "sample": 25,
+          "forest": true,
+          "compressedBytes": 5364,
+          "compressedSha256": "e26a1d2fbda0504b6968906e54ce198de4b50fb46d0aaf4a93f354bc2fa38bfe",
+          "uncompressedBytes": 43797,
+          "uncompressedSha256": "c60a9e348a8d26039984e3f55689b9e5491c2172c9b3dde622dfa4f8ce981456"
+        }
+      ]
+    }
+  ]
+}
