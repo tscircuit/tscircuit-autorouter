@@ -31,6 +31,9 @@ export type Pipeline9ClearanceProjectionParams = {
   subdivideSegments?: boolean
   /** Keep the same small clearance margin when validating a final coupled pass. */
   usePrecisionMargin?: boolean
+  /** Keep preloaded copper fixed during a local clearance repair. */
+  lockedConnectionNames?: ReadonlySet<string>
+  movableRegions?: { center: { x: number; y: number }; radius: number }[]
 }
 
 type ProjectionContext = {
@@ -96,7 +99,17 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
         lockedPointIndices: canonicalRoutes.map((route) =>
-          route.route.map(() => false),
+          route.route.map(
+            (point) =>
+              params.lockedConnectionNames?.has(route.connectionName) ===
+                true ||
+              (params.movableRegions !== undefined &&
+                !params.movableRegions.some(
+                  ({ center, radius }) =>
+                    Math.hypot(point.x - center.x, point.y - center.y) <=
+                    radius,
+                )),
+          ),
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
