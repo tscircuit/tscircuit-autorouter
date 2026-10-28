@@ -72,3 +72,5 @@ Legalization copper/overlap counts describe conflicting route pairs in intermedi
 Source: [paired benchmark run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40634271235), attempt 1. Finished 2026-10-28T05:41:12.328887+00:00. Decoded input SHA-256: `127d7ba011da5a6b38920c7aa5a4e6852ee1a6d1c6de1c61d61ed03f7628c087`.
 
 Artifacts: [42 paired samples](per-sample.csv) and [numeric diagnostics](diagnostics.json).
+
+Reproduction dependency snapshot: [verified experiment-only Bun lock](../resolved-dependencies-62ee3213.bun.lock) (SHA-256 `62ee3213e32eb76d9dbec37933768663da7c47eea69e4c07cefcf9aa4c5bd041`). This archive does not change project dependencies. To reproduce the measured resolution, prepopulate the paired controller’s `--deps` directory with these exact bytes named `bun.lock` before its normal install; use the recorded Bun 1.4.3 and matching package manifest.
