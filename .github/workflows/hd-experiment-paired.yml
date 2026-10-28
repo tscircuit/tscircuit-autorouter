@@ -22,7 +22,7 @@ jobs:
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       HD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      HD_EAGER_SHA: "9c73d2877f8db7642f4ddc9157a74f7b4e72274f"
+      HD_EAGER_SHA: "bf90a4eefbc2c444671861ddf59ec3f21ae12c70"
       HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-refinement-worktrees
       HD_RESULTS: ${{ github.workspace }}/hd-refinement-results
       HD_DEPS: ${{ github.workspace }}/hd-refinement-dependencies
@@ -83,5 +83,6 @@ jobs:
           name: hd-refinement-portfolio-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
           path: hd-refinement-results
           if-no-files-found: warn
+          include-hidden-files: true
           compression-level: 9
           retention-days: 30
