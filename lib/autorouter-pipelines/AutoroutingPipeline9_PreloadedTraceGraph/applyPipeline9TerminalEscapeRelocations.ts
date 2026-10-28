@@ -191,6 +191,9 @@ const createTerminalCandidate = ({
   if (!endpoint || !adjacentPoint || endpoint.z !== adjacentPoint.z) {
     return undefined
   }
+  if (endpoint.toNextSegmentType || adjacentPoint.toNextSegmentType) {
+    return undefined
+  }
   const radius = route.traceThickness / 2
   if (
     point.x - radius < bounds.minX ||
@@ -200,7 +203,9 @@ const createTerminalCandidate = ({
   ) {
     return undefined
   }
-  route.route[pointIndex] = { ...endpoint, ...point }
+  // A pad contact does not authorize moving its locked terminal. Change only
+  // the approach to that terminal, preserving its position, layer and metadata.
+  const approach = { ...adjacentPoint, ...point }
   if (collapseAdjacent) {
     const nextInteriorPointIndex =
       endpointIndex === 0 ? adjacentPointIndex + 1 : adjacentPointIndex - 1
@@ -216,14 +221,25 @@ const createTerminalCandidate = ({
     ) {
       return undefined
     }
-    route.route[adjacentPointIndex] = { ...adjacentPoint, ...point }
+    route.route[adjacentPointIndex] = approach
+  } else {
+    const segmentStart = endpointIndex === 0 ? endpoint : adjacentPoint
+    route.route.splice(endpointIndex === 0 ? 1 : pointIndex, 0, {
+      x: point.x,
+      y: point.y,
+      z: endpoint.z,
+      ...(segmentStart.traceThickness !== undefined
+        ? { traceThickness: segmentStart.traceThickness }
+        : {}),
+    })
   }
   return candidateRoutes
 }
 
 /**
- * Relocates a trace terminal only inside its own pad when a different-net pad
- * overlaps the current escape side. Every candidate is accepted by joint DRC.
+ * Repairs the approach inside the terminal's own pad when a different-net pad
+ * overlaps its escape side. Terminal coordinates stay fixed in every candidate;
+ * every changed approach is validated by joint DRC.
  */
 export const applyPipeline9TerminalEscapeRelocations = ({
   srj,
