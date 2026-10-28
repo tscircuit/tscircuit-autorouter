@@ -2,10 +2,15 @@
 
 The original paired measurements in `experiments/hd-results/legalization` remain
 the historical evidence for source `8115e35a4517191c306820438b14a197dc911c7a`.
-The refinement below has focused validation only until its new five-arm benchmark
-finishes. It must not inherit the old speed, clean-board or memory claims.
+The first selective refinement at source `70d7a1bbbc61ca474c9b696cdccba7a8bd814c14`
+completed its five-arm dataset18/24 comparison in
+[run 40740148169](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40740148169).
+It preserved one extra clean dataset24 board over baseline, but lost the old-full
+clean sample 11 and did not establish a substantial routing-time improvement.
+Compression-only also lost clean dataset18 sample 15. Those negative results remain
+separate evidence; the current joint-projection follow-up must be confirmed anew.
 
-## Refinement: explicit ablations and selective projection
+## Refinement: joint physical projection and explicit ablations
 
 `physicalLegalizationMode` is a serializable Pipeline9 constructor option, also
 accepted by the HD and grow/shrink constructors. There are no environment controls
@@ -18,7 +23,7 @@ or measurement hooks that change the policy:
 | `full` | Use the full iteration schedule under the refined shared physical guards. This is not byte-equivalent historical source `8115e35a`. |
 | `selective` | Apply those same guards and accepted-proposal rules, but spend projection work only on conflicts with movable degrees of freedom and continued measured progress. |
 
-The ordinary Pipeline9 factory defaults to `selective`. The legacy
+The ordinary Pipeline9 factory now defaults to `full`; `selective` remains an explicit research mode. The legacy
 `physicalLegalization: true` on a direct HD/grow-shrink caller still selects `full`
 unless a mode is explicit. Setting `maxIterations: 0` on the direct legalizer
 retains its historical full-scene diagnostic behavior; use `compression-only` for
@@ -63,15 +68,38 @@ claim that mechanism as new. Aggressive compression preserves initial copper but
 changes later numerical control vertices and protected endpoint segments; its
 effect on force/repair and final route quality needs the separate arm.
 
-For the compression benchmark source, change only the default literal
-`physicalLegalizationMode = "selective"` to `"compression-only"` in
-`Pipeline9HighDensitySolver.ts`. The refined-full arm changes that same literal
-to `"full"`; it isolates the shared guard fixes from selective stopping. Use the
-unchanged historical source for the old-full arm, alongside the original control;
-keep all prior result reports immutable. Promotion requires retaining
-all clean dataset18/24 outcomes, including the replicated dataset24 samples2 and11,
-and independently checking the known snapshot-masked numerical fixtures. No
-additional clean-board result is claimed by the refinement before those runs.
+The archived five-arm source used a `"selective"` factory default and derived
+its `"compression-only"` and `"full"` controls by one literal change. The current
+follow-up instead compares joint full projection with the unchanged historical
+full source and original baseline. All prior result reports remain immutable.
+Promotion requires retaining the clean dataset18/24 outcomes, including the
+replicated dataset24 samples 2 and 11, and independently checking the known
+snapshot-masked numerical fixtures. No new whole-board result is claimed before
+that confirmation.
+
+The lost sample 11 was localized to grown node `cmn_3`. A faithful captured proposal
+contains 9760 points across 80 routes. The selective-refinement implementation
+accepted no projection step: every energy-decreasing first trial violated a pad
+constraint by a few micrometres after drill projection undid the earlier pad
+projection. Projecting constraint families separately is therefore insufficient.
+
+The follow-up precomputes the active obstacle and drill half-spaces once per
+optimization iteration, then alternates both families for at most 32 passes,
+stopping when vertex adjustments are below 1e-12. The same exact nonlinear
+obstacle, board and per-drill-pair guards still decide trial and final acceptance.
+A capacity-node inset includes each vertex's starting coordinate, keeping trial
+motion continuous as step size decreases. Redundant point owner annotations may
+be compressed only when they match the route and both adjacent points; distinct
+point identities and physical metadata remain protected.
+
+A correctness-only replay of that captured node reduces literal overlaps 121→12
+and drill-hole pairs 8→0 with all guards passing, versus 121→22 and 8→8 for the old
+full proposal. The old result additionally violates two new per-pair drill
+nonregression constraints; its aggregate hole count hid that trade. The replay
+shows a useful local geometry improvement, not a measured whole-board speed or
+clean-solve claim. Operation counters drop from 8208288 geometry operations for a
+naive 32-pass joint implementation to 1543881 with cached half-spaces and early
+convergence; these counters are not wall-clock measurements.
 
 Pipeline 9 currently grows node coordinates, routes with unchanged copper sizes,
 then divides coordinates back to the physical node. Widths and via diameters do
@@ -85,16 +113,18 @@ physical embedding, before established board-wide force improvement and repair.
   pipelines and the regional/preloaded-copper solver retain their existing
   configuration. The ordinary node factory is selected only when the existing
   preload-overlap filter finds no fixed copper in the expanded node. Changed
-  interior vertices remain in the node, with a copper-radius inset; fixed
-  terminals stay at their original coordinates. This does not implement a new
+  interior vertices remain inside the envelope of the node's copper-radius inset
+  and their starting position; an existing capacity-boundary position cannot
+  force a discontinuous jump. Fixed terminals stay at their original coordinates. This does not implement a new
   joint region repair or upstream port-assignment feedback algorithm.
 - Only accepted candidates at scale greater than one are processed. At scale one
   routing is unchanged. No extra routing portfolio is launched. Copper widths,
   via diameters, route/layer ordering, shared-net junction coordinates and
   terminal metadata remain intact. Jumpers and `through_obstacle` segments are
   explicitly recorded as unsupported and retained for established processing.
-- Strictly collinear metadata-free points are removed without changing the
-  copper. This reduces grid stair-step sampling overhead while retaining corners,
+- Strictly collinear points with no distinct metadata are removed without changing
+  the copper. Repeated connection/root owner labels are redundant only when the
+  route and both adjacent points agree; unknown point metadata stays intact. This reduces grid stair-step sampling overhead while retaining corners,
   vias, terminals and width changes. Compression is a separate ablation because
   it changes the input discretization of downstream numerical repair.
 - Deterministic projected gradient steps reduce squared physical penetration of

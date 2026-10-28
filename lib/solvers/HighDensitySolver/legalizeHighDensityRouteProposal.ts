@@ -15,6 +15,10 @@ import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 type Point = { x: number; y: number }
 type Vertex = Point & { originalX: number; originalY: number; fixed: boolean; radius: number }
 type Primitive = { a: number; b: number; radius: number; minZ: number; maxZ: number; routeIndex: number; via: boolean }
+type ProjectionHalfSpace = {
+  a: number; b: number; nx: number; ny: number; wa: number; wb: number
+  denominator: number; minimumMotion: number; kind: "obstacle" | "hole"
+}
 type Contact = { t: number; u: number; dx: number; dy: number; distance: number }
 type Energy = { loss: number; maxPenetration: number; pairs: number; movableLoss: number; movableContacts: number; gx: Float64Array; gy: Float64Array; weight: Float64Array }
 export type PhysicalRouteLegalizationMode = "off" | "compression-only" | "full" | "selective"
@@ -105,7 +109,7 @@ const closestSegments = (a: Point, b: Point, c: Point, d: Point): Contact => {
   return { t, u, dx, dy, distance: Math.hypot(dx, dy) }
 }
 
-/** Remove only strictly collinear, metadata-free points; the copper is identical. */
+/** Remove collinear points without distinct physical or identity metadata. */
 const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortPoints): HighDensityIntraNodeRoute[] => {
   return routes.map((route) => {
     const points: HighDensityIntraNodeRoute["route"] = []
@@ -115,7 +119,15 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
         const dx1 = b.x - a.x, dy1 = b.y - a.y, dx2 = point.x - b.x, dy2 = point.y - b.y
         const scale = Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2)
         if (a.z !== b.z || b.z !== point.z || b.pcb_port_id || b.insideJumperPad || b.toNextSegmentType ||
-          Object.keys(b).some((key) => key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness") ||
+          // Bridge repair repeats route ownership on every point. Those labels
+          // are redundant only when both adjoining points agree with the route.
+          Object.keys(b).some((key) => {
+            if (key === "x" || key === "y" || key === "z" || key === "traceThickness") return false
+            if (key !== "connectionName" && key !== "rootConnectionName") return true
+            const owner = route[key]
+            return [a, b, point].some((vertex) =>
+              (vertex as unknown as Record<string, unknown>)[key] !== owner)
+          }) ||
           node.portPoints.some((port) => port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9) ||
           a.toNextSegmentType || b.toNextSegmentCircuitJsonMetadata ||
           (a.traceThickness ?? route.traceThickness) !== (b.traceThickness ?? route.traceThickness) ||
@@ -550,42 +562,55 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
       if (length > maxMove) { x *= maxMove / length; y *= maxMove / length }
       return { x, y }
     })
-    // Project the proposed displacement onto active obstacle half-spaces. The
-    // exact nonlinear guard below still decides acceptance. This permits motion
-    // along a pad boundary without spending all work on steps it will reject.
-    for (let pass = 0; pass < 4; pass++) for (const constraint of obstacleConstraints) {
+    // Contacts stay fixed while projecting this iteration's displacement. Cache
+    // their half-spaces once, then solve both families together: a hole update
+    // can otherwise invalidate a pad constraint projected earlier in the pass.
+    const halfSpaces: ProjectionHalfSpace[] = []
+    for (const constraint of obstacleConstraints) {
       const { primitive, obstacle, minimumDistance } = constraint
       if (!primitiveNearObstacle(primitive, obstacle, minimumDistance + maxMove * 3)) continue
       const contact = obstacleContact(primitive, obstacle)
       if (contact.distance - minimumDistance > maxMove * 3) continue
       const magnitude = Math.hypot(contact.dx, contact.dy)
       if (magnitude < 1e-12) continue
-      const nx = contact.dx / magnitude, ny = contact.dy / magnitude
       const wa = vertices[primitive.a]!.fixed ? 0 : 1 - contact.t
       const wb = vertices[primitive.b]!.fixed ? 0 : contact.t
       const denominator = primitive.a === primitive.b ? (wa + wb) ** 2 : wa * wa + wb * wb
       if (denominator < 1e-12) continue
-      const moveA = moves[primitive.a]!, moveB = moves[primitive.b]!
-      const motion = nx * (wa * moveA.x + wb * moveB.x) + ny * (wa * moveA.y + wb * moveB.y)
-      const correction = minimumDistance - contact.distance - motion
-      if (correction <= 0) continue
-      moveA.x += nx * correction * wa / denominator; moveA.y += ny * correction * wa / denominator
-      moveB.x += nx * correction * wb / denominator; moveB.y += ny * correction * wb / denominator
+      halfSpaces.push({ a: primitive.a, b: primitive.b, nx: contact.dx / magnitude,
+        ny: contact.dy / magnitude, wa, wb, denominator,
+        minimumMotion: minimumDistance - contact.distance, kind: "obstacle" })
     }
-    for (let pass = 0; pass < 4; pass++) for (const constraint of holeConstraints) {
+    for (const constraint of holeConstraints) {
       geometryWork++
       const a = vertices[constraint.a]!, b = vertices[constraint.b]!
       const dx = a.x - b.x, dy = a.y - b.y, distance = Math.hypot(dx, dy)
       if (distance < 1e-12 || distance - constraint.minimumDistance > maxMove * 3) continue
       const wa = Number(!a.fixed), wb = Number(!b.fixed)
       if (wa + wb === 0) continue
-      const nx = dx / distance, ny = dy / distance
-      const moveA = moves[constraint.a]!, moveB = moves[constraint.b]!
-      const motion = nx * (moveA.x - moveB.x) + ny * (moveA.y - moveB.y)
-      const correction = constraint.minimumDistance - distance - motion
-      if (correction <= 0) continue
-      moveA.x += nx * correction * wa / (wa + wb); moveA.y += ny * correction * wa / (wa + wb)
-      moveB.x -= nx * correction * wb / (wa + wb); moveB.y -= ny * correction * wb / (wa + wb)
+      halfSpaces.push({ a: constraint.a, b: constraint.b, nx: dx / distance, ny: dy / distance,
+        wa, wb, denominator: wa + wb,
+        minimumMotion: constraint.minimumDistance - distance, kind: "hole" })
+    }
+    for (let pass = 0; pass < 32; pass++) {
+      let largestAdjustment = 0
+      for (const constraint of halfSpaces) {
+        geometryWork++
+        const { nx, ny, wa, wb, denominator } = constraint
+        const moveA = moves[constraint.a]!, moveB = moves[constraint.b]!
+        const motion = constraint.kind === "obstacle"
+          ? nx * (wa * moveA.x + wb * moveB.x) + ny * (wa * moveA.y + wb * moveB.y)
+          : nx * (moveA.x - moveB.x) + ny * (moveA.y - moveB.y)
+        const correction = constraint.minimumMotion - motion
+        if (correction <= 0) continue
+        const ax = nx * correction * wa / denominator, ay = ny * correction * wa / denominator
+        const bx = nx * correction * wb / denominator, by = ny * correction * wb / denominator
+        moveA.x += ax; moveA.y += ay
+        moveB.x += constraint.kind === "obstacle" ? bx : -bx
+        moveB.y += constraint.kind === "obstacle" ? by : -by
+        largestAdjustment = Math.max(largestAdjustment, Math.hypot(ax, ay) + Math.hypot(bx, by))
+      }
+      if (largestAdjustment < 1e-12) break
     }
     let accepted = false
     for (const step of [1, 0.5, 0.25, 0.125, 0.0625, 0.03125]) {
@@ -593,8 +618,13 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
         if (vertex.fixed) continue
         const dx = moves[i]!.x, dy = moves[i]!.y
         const inset = Math.min(vertex.radius, node.width / 2, node.height / 2)
-        vertex.x = Math.max(bounds.minX + inset, Math.min(bounds.maxX - inset, previous[i]!.x + step * dx))
-        vertex.y = Math.max(bounds.minY + inset, Math.min(bounds.maxY - inset, previous[i]!.y + step * dy))
+        // Grown copper may already touch a capacity boundary. Include its
+        // starting position so smaller steps do not force a fixed-size jump.
+        // Exact board, obstacle and drill guards still decide acceptance.
+        vertex.x = Math.max(Math.min(bounds.minX + inset, vertex.originalX),
+          Math.min(Math.max(bounds.maxX - inset, vertex.originalX), previous[i]!.x + step * dx))
+        vertex.y = Math.max(Math.min(bounds.minY + inset, vertex.originalY),
+          Math.min(Math.max(bounds.maxY - inset, vertex.originalY), previous[i]!.y + step * dy))
       }
       const candidate = energy(false)
       if (candidate.loss < current.loss - 1e-14 && preservesObstacleClearance() && preservesHoleClearance()) { current = candidate; accepted = true; break }

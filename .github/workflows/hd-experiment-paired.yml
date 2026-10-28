@@ -1,4 +1,4 @@
-name: HD refinement multi-arm datasets18 and24
+name: HD confirmation refinements datasets18 and24
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hd-refinement-legalization-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  group: hd-confirmation-combined-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -16,53 +16,45 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.head.ref == 'codex/hd-exp-3-physical-legalization'
-    name: Pipeline9 five-source-arm legalization ablation on datasets18 and24
+    name: Pipeline9 four-source confirmation on datasets18 and24
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 240
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       HD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      HD_COMPRESSION_SHA: "1b25fbf9daef4e56daaf6475c94f39b30e090633"
-      HD_FULL_SHA: "a282b66ace3a54582bc1784e3a242118cc87d316"
-      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-refinement-worktrees
-      HD_RESULTS: ${{ github.workspace }}/hd-refinement-results
-      HD_DEPS: ${{ github.workspace }}/hd-refinement-dependencies
-      HD_CONFIG: ${{ github.workspace }}/hd-refinement-config.json
+      HD_PORTFOLIO_SHA: "5b4c680c842eafe17e2830fc9a29d16d17d6a9b2"
+      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-confirmation-worktrees
+      HD_RESULTS: ${{ github.workspace }}/hd-confirmation-results
+      HD_DEPS: ${{ github.workspace }}/hd-confirmation-dependencies
+      HD_CONFIG: ${{ github.workspace }}/hd-confirmation-config.json
 
     steps:
       - name: Checkout exact baseline
         uses: actions/checkout@v4
         with:
           ref: 637b6c581128238f6c61227a1c15be423d24baca
-          path: hd-refinement-worktrees/control
+          path: hd-confirmation-worktrees/control
           persist-credentials: false
 
-      - name: Checkout exact previously measured source
+      - name: Checkout exact historical full legalization
         uses: actions/checkout@v4
         with:
           ref: 8115e35a4517191c306820438b14a197dc911c7a
-          path: hd-refinement-worktrees/old-full
+          path: hd-confirmation-worktrees/old-full
           persist-credentials: false
 
-      - name: Checkout exact source-derived ablation
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.HD_COMPRESSION_SHA }}
-          path: hd-refinement-worktrees/compression-only
-          persist-credentials: false
-
-      - name: Checkout exact refined full source ablation
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.HD_FULL_SHA }}
-          path: hd-refinement-worktrees/refined-full
-          persist-credentials: false
-
-      - name: Checkout exact refined PR head
+      - name: Checkout exact corrected full legalization
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          path: hd-refinement-worktrees/selective
+          path: hd-confirmation-worktrees/fixed-full
+          persist-credentials: false
+
+      - name: Checkout exact revised lazy portfolio
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HD_PORTFOLIO_SHA }}
+          path: hd-confirmation-worktrees/optimized-lazy
           persist-credentials: false
 
       - name: Setup Bun1.4.3
@@ -70,17 +62,17 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Bind matrix to exact source commits
+      - name: Bind confirmation to exact source commits
         shell: bash
         run: |
-          python3 "$HD_WORKTREE_ROOT/selective/experiments/hd-refinements/harness/configure_matrix.py" \
-            --profile legalization --head-sha "$HD_HEAD_SHA" \
-            --derived-sha "$HD_COMPRESSION_SHA" --full-sha "$HD_FULL_SHA" --out "$HD_CONFIG"
+          python3 "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/confirmation/bind_confirmation.py" \
+            --harness "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/harness" \
+            --head-sha "$HD_HEAD_SHA" --portfolio-sha "$HD_PORTFOLIO_SHA" --out "$HD_CONFIG"
 
-      - name: Measure all210 source-arm samples with global admission
+      - name: Measure all168 fresh source-arm samples with global admission
         shell: bash
         run: |
-          python3 "$HD_WORKTREE_ROOT/selective/experiments/hd-refinements/harness/multiarm_ci.py" \
+          python3 "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/harness/multiarm_ci.py" \
             --root "$HD_WORKTREE_ROOT" --out "$HD_RESULTS" \
             --deps "$HD_DEPS" --config "$HD_CONFIG"
 
@@ -88,8 +80,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hd-refinement-legalization-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
-          path: hd-refinement-results
+          name: hd-confirmation-combined-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: hd-confirmation-results
           if-no-files-found: warn
+          include-hidden-files: true
           compression-level: 9
           retention-days: 30

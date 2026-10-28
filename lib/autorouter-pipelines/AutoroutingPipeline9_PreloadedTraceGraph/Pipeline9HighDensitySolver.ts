@@ -367,7 +367,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-  physicalLegalizationMode = "selective",
+  physicalLegalizationMode = "full",
   physicalLegalizationIterations,
   minTraceToHoleEdgeClearance,
   minTraceToPadEdgeClearance,
