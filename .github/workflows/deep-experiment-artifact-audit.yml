@@ -17,17 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - sourceKey: forest-v3-srj18
-            expectedFile: expected-forest-v3-srj18.json
+          - sourceKey: forest-v3-srj24
+            expectedFile: expected-forest-v3-srj24.json
             runId: 40630414562
-            artifactName: pinned-experiment-3198-srj18
-          - sourceKey: forest-v2-srj18
-            expectedFile: expected-forest-v2-srj18.json
-            runId: 40605289097
-            artifactName: pinned-experiment-3198-srj18
-          - sourceKey: forest-v2-srj24
-            expectedFile: expected-forest-v2-srj24.json
-            runId: 40605289097
             artifactName: pinned-experiment-3198-srj24
     steps:
       - name: Checkout read-only artifact inspector
