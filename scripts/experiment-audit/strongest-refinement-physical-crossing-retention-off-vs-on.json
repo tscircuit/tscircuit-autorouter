@@ -132,7 +132,7 @@
     "qualify-pinned-output.ts": "26d5f289257fc243f1b1b2cb69f743bae0d1ff074f81b1c71624adc9b5ad7713",
     "run-pinned-experiment.py": "6490b82018a553a224cdbb053947d817f4843bb98cf24151e33d1803f06fcea1",
     "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
-    "run-retention-physical-crossing.py": "58c25ae6dee65fef55df4a667c059bd4a39a05213a078f39f5fda21c037c7d83"
+    "run-retention-physical-crossing.py": "c9a7aede34348994cb044255f5d2a65d492342a6705eb10b1c0fbcef06711065"
   },
   "runSampleSourceSha256": "c1d0e2572e06750a104c09e68df550873718945c707e76aacd1ecd8d2ad9a77e",
   "expectedHarnessSourceHashes": {

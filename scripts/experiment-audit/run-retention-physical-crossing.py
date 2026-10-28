@@ -248,7 +248,8 @@ def verify_tiny_dependencies(manifest, checkouts):
     for arm, checkout in checkouts.items():
         wanted = manifest["tinyDependencyByArm"][arm]
         source = json.loads((checkout / "package.json").read_text())
-        if source.get("dependencies", {}).get("tiny-hypergraph") != wanted["declaration"]:
+        declarations = [source[section]["tiny-hypergraph"] for section in ["dependencies", "devDependencies", "optionalDependencies"] if "tiny-hypergraph" in source.get(section, {})]
+        if declarations != [wanted["declaration"]]:
             raise ValueError("Source Tiny declaration differs: " + arm)
         provenance = json.loads((checkout / "experiment-dependencies-provenance.json").read_text())
         actual = provenance.get("directDependencies", {}).get("tiny-hypergraph", {})
