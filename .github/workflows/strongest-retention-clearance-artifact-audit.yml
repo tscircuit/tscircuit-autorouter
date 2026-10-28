@@ -1,0 +1,40 @@
+name: Strongest retention clearance retained-artifact audit
+
+on:
+  push:
+    branches: [codex/strongest-retention-clearance-artifact-audit]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 74de6cea4bd39c9aa41e9d492b003a892abd1596
+          path: candidate
+          persist-credentials: false
+      - name: Download and verify the existing immutable targeted artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 controller/scripts/experiment-audit/fetch-fixed-retention-artifact.py --source candidate --output retained-artifact
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install the source dependency declarations in isolation
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Inspect retained copper with unchanged checks and independent typed ownership
+        run: |
+          mkdir -p candidate/scripts/experiment-audit
+          cp controller/scripts/experiment-audit/audit-retention-fixed-artifact.ts candidate/scripts/experiment-audit/audit-retention-fixed-artifact.ts
+          cd candidate
+          bun scripts/experiment-audit/audit-retention-fixed-artifact.ts ../retained-artifact
