@@ -10,6 +10,9 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
+const FREE_PLANAR_OBSTACLE_CACHE_SLOTS = 4096
+const INITIAL_FREE_PLANAR_OBSTACLE_CACHE_SLOTS = 64
+
 export type FutureConnection = {
   connectionName: string
   rootConnectionName?: string
@@ -85,7 +88,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
-  freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
+  private freePlanarObstaclePointCache?: Float64Array
+  private freePlanarObstaclePointCacheWrites = 0
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
 
@@ -307,22 +311,31 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const pointKey = canCachePlanarPoint
       ? (planarObstacleQuery?.pointKey ?? this.getNodeKey(node))
       : undefined
-    if (pointKey !== undefined) {
+    const pointCacheSlots = this.freePlanarObstaclePointCache
+      ? this.freePlanarObstaclePointCache.length / 3
+      : INITIAL_FREE_PLANAR_OBSTACLE_CACHE_SLOTS
+    const pointCacheIndex =
+      pointKey !== undefined && Number.isSafeInteger(pointKey)
+        ? Math.abs(pointKey % pointCacheSlots) * 3
+        : undefined
+    if (pointCacheIndex !== undefined) {
       if (
         this.cachedPlanarTraceProximity !== traceProximity ||
         this.cachedPlanarViaProximity !== viaProximity
       ) {
-        this.freePlanarObstaclePoints.clear()
+        this.freePlanarObstaclePointCache?.fill(Number.NaN)
+        this.freePlanarObstaclePointCacheWrites = 0
         this.cachedPlanarTraceProximity = traceProximity
         this.cachedPlanarViaProximity = viaProximity
       }
-      const freePoint = this.freePlanarObstaclePoints.get(pointKey)
-      // A rounded grid key can represent different floating-point coordinates.
+      const coordinates = this.freePlanarObstaclePointCache
+      // Both rounded grid keys and bounded slots can alias. Reuse a result
+      // only at the exact coordinate and layer that passed clearance.
       if (
-        freePoint &&
-        freePoint.x === node.x &&
-        freePoint.y === node.y &&
-        freePoint.z === node.z
+        coordinates &&
+        coordinates[pointCacheIndex] === node.x &&
+        coordinates[pointCacheIndex + 1] === node.y &&
+        coordinates[pointCacheIndex + 2] === node.z
       ) {
         return false
       }
@@ -399,12 +412,29 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    if (pointKey !== undefined) {
-      this.freePlanarObstaclePoints.set(pointKey, {
-        x: node.x,
-        y: node.y,
-        z: node.z,
-      })
+    if (pointCacheIndex !== undefined) {
+      // Small searches need only a small workspace. Grow after enough free
+      // writes to fill each capacity, then retain a fixed upper memory bound.
+      if (
+        !this.freePlanarObstaclePointCache ||
+        (this.freePlanarObstaclePointCacheWrites >= pointCacheSlots &&
+          pointCacheSlots < FREE_PLANAR_OBSTACLE_CACHE_SLOTS)
+      ) {
+        const nextCacheSlots = this.freePlanarObstaclePointCache
+          ? Math.min(pointCacheSlots * 4, FREE_PLANAR_OBSTACLE_CACHE_SLOTS)
+          : INITIAL_FREE_PLANAR_OBSTACLE_CACHE_SLOTS
+        this.freePlanarObstaclePointCache = new Float64Array(
+          nextCacheSlots * 3,
+        ).fill(Number.NaN)
+        this.freePlanarObstaclePointCacheWrites = 0
+      }
+      // Growth discards memoized results, so hash against the new capacity.
+      const coordinates = this.freePlanarObstaclePointCache
+      const cacheIndex = Math.abs(pointKey! % (coordinates.length / 3)) * 3
+      coordinates[cacheIndex] = node.x
+      coordinates[cacheIndex + 1] = node.y
+      coordinates[cacheIndex + 2] = node.z
+      this.freePlanarObstaclePointCacheWrites++
     }
     return false
   }
@@ -580,7 +610,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   buildObstacleIndexes() {
-    this.freePlanarObstaclePoints.clear()
+    this.freePlanarObstaclePointCache?.fill(Number.NaN)
+    this.freePlanarObstaclePointCacheWrites = 0
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -1124,12 +1155,6 @@ type IndexedObstacleSegment = {
 }
 
 type IndexedObstacleVia = { x: number; y: number }
-
-type FreePlanarObstaclePoint = {
-  x: number
-  y: number
-  z: number
-}
 
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]
