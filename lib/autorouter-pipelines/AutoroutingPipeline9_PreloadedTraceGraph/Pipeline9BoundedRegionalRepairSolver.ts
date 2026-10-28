@@ -296,9 +296,38 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.finish()
       return
     }
+    // Keep distant copper fixed while projecting a local clearance error.
+    // Nearby routes remain movable together even when the reference error
+    // identifies a via without identifying every route that owns it.
+    const movableRegions: {
+      center: { x: number; y: number }
+      radius: number
+    }[] = []
+    const centeredErrors = Array.isArray(reference)
+      ? reference
+      : (reference.errorsWithCenters ?? reference.errors)
+    for (const error of centeredErrors) {
+      const center = error.center ?? error.pcb_center
+      if (
+        center &&
+        typeof center === "object" &&
+        "x" in center &&
+        typeof center.x === "number" &&
+        Number.isFinite(center.x) &&
+        "y" in center &&
+        typeof center.y === "number" &&
+        Number.isFinite(center.y)
+      ) {
+        movableRegions.push({
+          center: { x: center.x, y: center.y },
+          radius: context.regionSizes[0]! / 2,
+        })
+      }
+    }
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: referenced.currentRoutes,
+      movableRegions,
       drcEvaluator: (input): DrcResult => {
         this.result.referenceValidationCount++
         return this.params.drcEvaluator(input)
