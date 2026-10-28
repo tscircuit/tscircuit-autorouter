@@ -12,6 +12,8 @@ import signal
 import subprocess
 import time
 
+from memory_scheduler import MemoryReservationScheduler
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 VARIANTS = ["control", "portfolio", "kernel", "legalization", "corridors", "compatibility"]
@@ -106,18 +108,52 @@ async def run(args):
         raise ValueError("--cpus must name exactly one CPU per worker slot")
     if cpus and not set(cpus).issubset(os.sched_getaffinity(0)):
         raise ValueError("Requested CPU affinity is not allowed")
+    reservation_path = Path(args.memory_reservations).resolve()
+    reservation_policy = json.loads(reservation_path.read_text())
+    if reservation_policy.get("schemaVersion") != 1:
+        raise ValueError("Unsupported memory reservation policy")
+    reservation_budget_bytes = int(args.reservation_budget_gib * 1024**3)
+    resource_values = {}
+    for name, resource_path in [
+        ("cpuMax", Path("/sys/fs/cgroup/cpu.max")),
+        ("memoryMax", Path("/sys/fs/cgroup/memory.max")),
+    ]:
+        try:
+            resource_values[name] = resource_path.read_text().strip()
+        except FileNotFoundError:
+            # A VM's host-root cgroup may not expose these control files.
+            # Report that explicitly instead of inventing a quota/limit.
+            resource_values[name] = None
+    physical_memory_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    memory_max = resource_values["memoryMax"]
+    effective_memory_bytes = min(physical_memory_bytes, int(memory_max)) if memory_max and memory_max != "max" else physical_memory_bytes
+    if reservation_budget_bytes > effective_memory_bytes - 2 * 1024**3:
+        raise ValueError("Admission budget must leave at least2GiB outside sample reservations on this machine")
     metadata = {
         "schemaVersion": 1,
         "startedAt": now(),
         "args": vars(args),
         "runnerSha256": digest(Path(__file__)),
         "workerSha256": digest(HERE / "worker.ts"),
-        "cpuMax": Path("/sys/fs/cgroup/cpu.max").read_text().strip(),
+        "memorySchedulerSha256": digest(HERE / "memory_scheduler.py"),
+        "memoryReservationPolicy": {
+            "path": str(reservation_path),
+            "sha256": digest(reservation_path),
+            "budgetBytes": reservation_budget_bytes,
+            "maxQueueBypasses": args.max_memory_bypasses,
+            "allowHeavyOverlap": args.allow_heavy_overlap,
+            "method": reservation_policy["method"],
+        },
+        "cpuMax": resource_values["cpuMax"],
         "cpuset": sorted(os.sched_getaffinity(0)),
-        "memoryMax": Path("/sys/fs/cgroup/memory.max").read_text().strip(),
+        "logicalCpuCount": os.cpu_count(),
+        "availableCpuCount": len(os.sched_getaffinity(0)),
+        "memoryMax": resource_values["memoryMax"],
+        "physicalMemoryBytes": physical_memory_bytes,
+        "effectiveMemoryLimitBytes": effective_memory_bytes,
         "bunVersion": subprocess.check_output([args.bun, "--version"], text=True).strip(),
         "variants": {},
-        "method": "Fresh process per sample. Existing repository runTask DRC and trace lint. One synchronous observer, identical for variants. Effort 1. Rotating variant order by sample. Failure score equals configured timeout; only paired completed clean boards are compared for success-only speed. Two or three concurrent samples share this 4-core CPU quota; results are exploratory, not statistically repeated estimates.",
+        "method": f"Fresh process per sample. Existing repository runTask DRC and trace lint. One synchronous observer, identical for variants. Effort 1. Rotating initial variant order by sample; memory admission can scan ahead with bounded bypasses. Per-sample reservations include conservative observed-RSS margins; tasks exceeding the admission budget are exclusive. Heavy-board overlap is {'enabled using unclamped estimates' if args.allow_heavy_overlap else 'disabled with explicit exclusive reservations'}. Admission budget={args.reservation_budget_gib}GiB; configured maximum concurrent samples={args.concurrency}. Reservations do not cap solver memory. Failure score equals configured timeout; only paired completed clean boards are compared for success-only speed. Observed CPU quota/affinity and physical/cgroup RAM are recorded above. Results are exploratory, not statistically repeated estimates.",
     }
     for variant in variants:
         checkout = worktree_root / variant
@@ -131,7 +167,6 @@ async def run(args):
         if metadata["variants"][variant]["dirtyStatus"]:
             raise RuntimeError(f"Refusing to benchmark dirty checkout {checkout}; commit or restore implementation first")
     (out / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
-    pending = asyncio.Queue()
     jobs = []
     for i, (dataset, sample) in enumerate(samples):
         rotation = i % len(variants)
@@ -198,8 +233,23 @@ async def run(args):
                     "workerSha256": metadata["workerSha256"],
                     "concurrency": args.concurrency,
                     "cpus": args.cpus,
+                    "memorySchedulerSha256": metadata["memorySchedulerSha256"],
+                    "memoryReservationPolicySha256": metadata["memoryReservationPolicy"]["sha256"],
+                    "memoryReservationBudgetBytes": reservation_budget_bytes,
+                    "memoryHeavyOverlapAllowed": args.allow_heavy_overlap,
                 },
             }
+            memory = reservation_policy["samples"].get(f"{dataset}:{sample}")
+            if not memory:
+                raise ValueError(f"Missing memory reservation for {dataset} sample {sample}")
+            requested_reservation = memory["estimatedPeakWithMarginBytes"] if args.allow_heavy_overlap else memory["reservationBytes"]
+            exclusive = bool(requested_reservation > reservation_budget_bytes or memory["exclusive"] and not args.allow_heavy_overlap)
+            task["memoryReservationBytes"] = reservation_budget_bytes if exclusive else requested_reservation
+            task["memoryExclusive"] = exclusive
+            task["memoryObservedPeakRssBytes"] = memory["observedPeakRssBytes"]
+            task["memoryEstimatedPeakWithMarginBytes"] = memory["estimatedPeakWithMarginBytes"]
+            task["measurementProvenance"]["memoryReservationBytes"] = task["memoryReservationBytes"]
+            task["measurementProvenance"]["memoryExclusive"] = exclusive
             if args.mode == "hd":
                 if args.hd_input:
                     if len(samples) != 1:
@@ -216,7 +266,7 @@ async def run(args):
                 task["hdInputSha256"] = digest(Path(task["hdInput"]))
                 task["nodeIds"] = args.node_ids.split(",") if args.node_ids else []
             jobs.append(task)
-            pending.put_nowait(task)
+    scheduler = MemoryReservationScheduler(jobs, reservation_budget_bytes, args.max_memory_bypasses)
     active = {}
     completed = 0
     started = time.monotonic()
@@ -249,7 +299,7 @@ async def run(args):
         with stderr_path.open("wb") as stderr, stdout_path.open("w") as stdout:
             proc = await asyncio.create_subprocess_exec(*command, cwd=task["checkout"], stdout=asyncio.subprocess.PIPE, stderr=stderr, start_new_session=True, limit=32 * 1024 * 1024)
             active[slot] = proc.pid
-            event({"type": "start", "slot": slot, "pid": proc.pid, "variant": task["variant"], "dataset": task["dataset"], "sample": task["sampleNumber"], "cpu": cpus[slot] if cpus else None})
+            event({"type": "start", "slot": slot, "pid": proc.pid, "variant": task["variant"], "dataset": task["dataset"], "sample": task["sampleNumber"], "cpu": cpus[slot] if cpus else None, "memoryReservationBytes": task["memoryReservationBytes"], "memoryExclusive": task["memoryExclusive"], "activeReservedBytes": scheduler.reserved_bytes({slot: rss_bytes(pid) for slot, pid in active.items()})})
 
             async def read():
                 nonlocal solve_started, last_progress, last_hd_input, result
@@ -312,22 +362,24 @@ async def run(args):
         event({"type": "complete", "completed": completed, "total": len(jobs), "variant": task["variant"], "dataset": task["dataset"], "sample": task["sampleNumber"], "solveMs": r.get("elapsedTimeMs"), "solved": r.get("didSolve"), "clean": r.get("relaxedDrcPassed"), "timeout": r.get("didTimeout"), "phase": r.get("errorPhaseName"), "rssBytes": r.get("peakRssBytes"), "wallSeconds": time.monotonic() - started})
 
     async def lane(slot):
-        while not pending.empty():
+        while scheduler.pending_count:
             if (out / "PAUSE_AFTER_CURRENT").exists():
-                event({"type": "paused", "slot": slot, "remaining": pending.qsize()})
+                event({"type": "paused", "slot": slot, "remaining": scheduler.pending_count})
                 return
-            # This prevents launching another large process while current
-            # samples already occupy most memory. It is not a per-child cap.
-            while sum(rss_bytes(pid) for pid in active.values()) >= args.memory_guard_gib * 1024**3:
+            observed_rss = {worker_slot: rss_bytes(pid) for worker_slot, pid in active.items()}
+            if sum(observed_rss.values()) >= args.memory_guard_gib * 1024**3:
                 await asyncio.sleep(1)
+                continue
+            task = scheduler.admit(slot, observed_rss)
+            if task is None:
+                await asyncio.sleep(0.2)
+                continue
             try:
-                task = pending.get_nowait()
-            except asyncio.QueueEmpty:
-                return
-            await run_job(slot, task)
-            pending.task_done()
+                await run_job(slot, task)
+            finally:
+                scheduler.release(slot)
 
-    event({"type": "matrix_started", "jobs": len(jobs), "concurrency": args.concurrency, "variants": variants, "out": str(out)})
+    event({"type": "matrix_started", "jobs": len(jobs), "concurrency": args.concurrency, "variants": variants, "out": str(out), "memoryReservationBudgetBytes": reservation_budget_bytes, "memoryReservationPolicySha256": metadata["memoryReservationPolicy"]["sha256"]})
     try:
         await asyncio.gather(*(lane(i) for i in range(args.concurrency)))
     except (KeyboardInterrupt, asyncio.CancelledError):
@@ -357,6 +409,10 @@ def parse():
     p.add_argument("--timeout", type=float, default=360)
     p.add_argument("--startup-timeout", type=float, default=60)
     p.add_argument("--memory-guard-gib", type=float, default=12)
+    p.add_argument("--memory-reservations", default=str(HERE / "memory-reservations.json"))
+    p.add_argument("--reservation-budget-gib", type=float, default=13)
+    p.add_argument("--max-memory-bypasses", type=int, default=8)
+    p.add_argument("--allow-heavy-overlap", action="store_true", help="Use unclamped measured-margin reservations on a larger-memory runner instead of default heavy-board exclusivity")
     p.add_argument("--bun", default="bun")
     p.add_argument("--save-output", action="store_true")
     p.add_argument("--rerun", action="store_true")
@@ -370,6 +426,8 @@ def parse():
         p.error("HD mode requires --hd-input or --full-results")
     if args.concurrency < 1 or args.concurrency > 3:
         p.error("Use one, two, or at most three sample workers on this machine")
+    if not args.reservation_budget_gib >= 1 or args.reservation_budget_gib == float("inf") or args.max_memory_bypasses < 0:
+        p.error("Memory admission budget must be finite and at least1GiB; maximum bypasses must be nonnegative")
     return args
 
 
