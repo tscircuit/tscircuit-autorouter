@@ -140,6 +140,7 @@ export class CachedPortfolioSingleIntraNodeSolver
       normalizedHyperParameters,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       selectivePortfolio: this.selectivePortfolio,
+      ...(this.selectivePortfolio ? { selectivePortfolioPolicyVersion: 2 } : {}),
       selectivePortfolioTiming: this.selectivePortfolio ? this.selectiveClockSource : undefined,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,

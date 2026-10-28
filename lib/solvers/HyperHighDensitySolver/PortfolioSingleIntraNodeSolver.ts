@@ -32,12 +32,17 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { EndpointPreservingHighDensitySolverA01 } from "./EndpointPreservingHighDensitySolverA01"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+
+type SelectiveCpuUsage = { user: number; system: number }
+export type SelectivePortfolioTiming = "threadCpu" | "cpu" | "elapsed"
+type ThreadCpuProcess = { threadCpuUsage?: () => SelectiveCpuUsage }
 
 type SelectiveCandidateFamily = "fast" | "native" | "a01" | "a03" | "a13" | "polyline"
 type SelectiveCandidate = {
@@ -84,7 +89,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
   readonly selectivePortfolio: boolean
-  readonly selectiveClockSource: "cpu" | "elapsed"
+  readonly selectiveClockSource: SelectivePortfolioTiming
+  private readonly selectiveThreadCpuUsage?: () => SelectiveCpuUsage
   private selectiveCandidates: SelectiveCandidate[] = []
   private nextSelectiveCandidate = 0
   private selectiveElapsedMs = 0
@@ -93,6 +99,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private selectiveCalibrationRates: number[] = []
   private selectiveWallStartedAt = 0
   private selectiveCpuStartedAt = 0
+  private selectiveThreadCpuStartedAt = 0
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -154,7 +161,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       selectivePortfolio?: boolean
-      selectivePortfolioTiming?: "cpu" | "elapsed"
+      selectivePortfolioTiming?: SelectivePortfolioTiming
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -169,9 +176,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.selectivePortfolio = opts.selectivePortfolio ?? false
     const hasCpuClock = typeof process !== "undefined" && typeof process.cpuUsage === "function"
-    this.selectiveClockSource = opts.selectivePortfolioTiming ?? (hasCpuClock ? "cpu" : "elapsed")
+    const threadCpuUsage = typeof process === "undefined"
+      ? undefined : (process as unknown as ThreadCpuProcess).threadCpuUsage
+    if (typeof threadCpuUsage === "function") {
+      this.selectiveThreadCpuUsage = threadCpuUsage.bind(process)
+    }
+    this.selectiveClockSource = opts.selectivePortfolioTiming ?? (
+      this.selectiveThreadCpuUsage ? "threadCpu" : hasCpuClock ? "cpu" : "elapsed"
+    )
     if (this.selectiveClockSource === "cpu" && !hasCpuClock) {
       throw new Error("Selective portfolio CPU timing requires process.cpuUsage()")
+    }
+    if (this.selectiveClockSource === "threadCpu" && !this.selectiveThreadCpuUsage) {
+      throw new Error("Selective portfolio thread CPU timing requires process.threadCpuUsage()")
     }
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -242,7 +259,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
-      ["highDensityA03"],
+      ...(!this.selectivePortfolio || (this.constructorParams.traceWidth ?? 0.15) === 0.1
+        ? [["highDensityA03"]] : []),
       ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
     ]
   }
@@ -584,6 +602,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       const cpu = process.cpuUsage()
       this.selectiveCpuStartedAt = (cpu.user + cpu.system) / 1000
     }
+    if (this.selectiveThreadCpuUsage) {
+      const cpu = this.selectiveThreadCpuUsage()
+      this.selectiveThreadCpuStartedAt = (cpu.user + cpu.system) / 1000
+    }
     const setupStartedAt = this.getSelectiveClockNow()
     const defs = this.getHyperParameterDefs()
     const hyperParameters = this.getCombinationDefs().flatMap((names) =>
@@ -623,6 +645,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.supervisedSolvers = []
     this.stats.selectivePortfolio = true
     this.stats.selectiveClockSource = this.selectiveClockSource
+    this.stats.selectiveClockScope = this.selectiveClockSource === "threadCpu" ? "thread"
+      : this.selectiveClockSource === "cpu" ? "process" : "elapsed"
+    this.stats.selectiveThreadCpuSupported = this.selectiveThreadCpuUsage !== undefined
+    this.stats.selectiveA03Eligible = (this.constructorParams.traceWidth ?? 0.15) === 0.1
     this.stats.selectiveCandidateCount = this.selectiveCandidates.length
     this.stats.selectiveCandidatesAdmitted = 0
     this.stats.selectiveAttemptStatus = "searching"
@@ -630,10 +656,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getSelectiveClockNow(): number {
-    // Browser consumers explicitly use elapsed time; server races exclude OS
-    // descheduling while retaining GC and setup as real process CPU costs.
+    // A worker must not charge other workers' CPU against its own candidates.
+    // Process and elapsed clocks remain explicit capability/ablation modes.
     if (this.selectiveClockSource === "elapsed") return performance.now()
-    const cpu = process.cpuUsage()
+    const cpu = this.selectiveClockSource === "threadCpu"
+      ? this.selectiveThreadCpuUsage!() : process.cpuUsage()
     return (cpu.user + cpu.system) / 1000
   }
 
@@ -690,6 +717,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       const cpu = process.cpuUsage()
       this.stats.selectiveCpuMs = (cpu.user + cpu.system) / 1000 - this.selectiveCpuStartedAt
     }
+    if (this.selectiveThreadCpuUsage) {
+      const cpu = this.selectiveThreadCpuUsage()
+      this.stats.selectiveThreadCpuMs = (cpu.user + cpu.system) / 1000 - this.selectiveThreadCpuStartedAt
+    }
     this.stats.selectiveCalibrationRates = [...this.selectiveCalibrationRates]
     this.stats.selectiveElapsedMs = this.selectiveElapsedMs
     this.stats.selectiveAttemptBudgetMs = this.selectiveAttemptBudgetMs
@@ -719,6 +750,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (this.stats.selectiveCpuMs !== undefined) {
         diagnostics.portfolioSelectiveCpuMicros = (diagnostics.portfolioSelectiveCpuMicros ?? 0) + Math.round(this.stats.selectiveCpuMs * 1000)
       }
+      if (this.stats.selectiveThreadCpuMs !== undefined) {
+        diagnostics.portfolioSelectiveThreadCpuMicros = (diagnostics.portfolioSelectiveThreadCpuMicros ?? 0) + Math.round(this.stats.selectiveThreadCpuMs * 1000)
+      }
+      const clockCounter = this.selectiveClockSource === "threadCpu" ? "portfolioSelectiveThreadCpuAttempts"
+        : this.selectiveClockSource === "cpu" ? "portfolioSelectiveProcessCpuAttempts" : "portfolioSelectiveElapsedClockAttempts"
+      diagnostics[clockCounter] = (diagnostics[clockCounter] ?? 0) + 1
+      diagnostics.portfolioSelectiveA03ExcludedAttempts = (diagnostics.portfolioSelectiveA03ExcludedAttempts ?? 0) + Number(!this.stats.selectiveA03Eligible)
     }
   }
 
@@ -929,7 +967,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const solver = new HighDensitySolverA01({
+      const A01Solver = this.selectivePortfolio
+        ? EndpointPreservingHighDensitySolverA01 : HighDensitySolverA01
+      const solver = new A01Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -944,6 +984,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
+      if (this.selectivePortfolio && (this.constructorParams.traceWidth ?? 0.15) !== 0.1) {
+        throw new Error("Selective portfolio A03 is ineligible unless requested traceWidth is 0.1 mm")
+      }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,

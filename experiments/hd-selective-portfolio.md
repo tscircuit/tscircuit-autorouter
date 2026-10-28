@@ -5,6 +5,59 @@ Baseline: `637b6c581128238f6c61227a1c15be423d24baca`. This branch enables
 original fitness scheduler unless they explicitly opt in. B01, regional repair,
 force improvement and joint DRC repair are unchanged.
 
+## Narrow v2 corrections and preserved v1 evidence
+
+V1 at `69f911acf376cef278780f307184aee151d64741` was measured on all 16 dataset18
+and all 26 dataset24 circuits with pipeline9, effort1, a 360-second sample limit,
+three pinned sample lanes, one routing thread and identical resolved dependencies.
+The baseline and experiment ran sequentially on the same ARM64 Blacksmith runner.
+This is one exploratory paired pass, not a repeated randomized estimate.
+
+| Dataset | Completed-HD cohort | HD seconds, control → v1 | HD speedup | Final clean, control → v1 | Paired-clean board speedup |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 18 | 16 | 313.738 → 236.603 | 1.326× | 16 → 15 | 0.979× across 15 |
+| 24 | 21 | 584.438 → 406.741 | 1.437× | 17 → 17 | 1.022× across 17 |
+
+The component gain is real evidence worth preserving. Dataset18's quality loss
+and added downstream repair prevent calling it an overall improvement. The
+completed-HD dataset24 cohort includes some boards that subsequently fail; it is
+not a claim that all 26 boards completed or accelerated. V1's numerical CI also
+reported DRC/connectivity regressions and unequal serial/four-worker output.
+Benchmark: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40634267642
+Numerical CI: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40634267621
+
+V2 makes three bounded corrections without replacing the race or changing its
+four-allocation policy:
+
+1. Selective mode wraps A01 output reconstruction. A distinct actual end terminal
+   is appended when both terminals occupy one grid cell. The endpoint comes from
+   the public `solvedConnectionsMap` in the base output's order, with explicit
+   alignment checks; no nearest-point guess is involved. The wrapper retains
+   A01 `instanceof`, solver name, search, iteration limits and multi-cell output.
+   Legacy mode still constructs the original A01 class. This fixes that specific
+   reconstruction bug, not every possible grid-alias/connectivity issue.
+2. Selective mode admits A03 only for its known supported 0.1 mm width. Other
+   widths, including the implicit 0.15 mm default, exclude that candidate before
+   construction. Directly requesting an ineligible selective A03 candidate throws.
+   It never substitutes a narrower width. Legacy candidate eligibility remains
+   unchanged. The existing A03 comment documents why passing an arbitrary width
+   is not a demonstrated supported alternative.
+3. When available, the race uses `process.threadCpuUsage()`. Process CPU includes
+   unrelated worker threads and was the wrong scope for per-candidate decisions.
+   `threadCpu`, `cpu` and `elapsed` are explicit clock modes; automatic capability
+   selection prefers thread CPU, then process CPU, then elapsed time. Unsupported
+   explicit CPU requests throw. Stats identify clock scope and capabilities, and
+   report thread CPU, process CPU and wall time separately. Compatibility process
+   mode retains its documented cross-worker interference. Thread CPU removes that
+   scope bug; JIT, GC and timing-based cutoffs still prevent an exact parity claim.
+
+Selective cache keys carry policy version2, including explicit process-clock
+ablations, so old selective outputs cannot hide the endpoint/eligibility changes.
+Legacy cache keys are unchanged. No snapshots, physical checks or grown-proposal
+acceptance rules are weakened. Missing full drill/NPTH-rule context and remaining
+DRC/worker-parity concerns remain open; v2's full dataset validation is separate
+from the preserved v1 results above.
+
 ## Hypothesis
 
 An attempt that exhausts six A01 seeds repeatedly spends most of its time proving
@@ -18,8 +71,8 @@ useful orderings sooner and reduce unsuccessful physical/grown attempts.
 * Construct candidate descriptors first. Allocate geometry/grid and run setup only
   when admitting that candidate. Geometric solvers and one native family precede
   grid allocation, so easy nodes can finish without constructing a grid portfolio.
-* Preserve the existing geometric, priority-DAG, A01, A03, negotiated A13 and
-  polyline candidates. Admit all six A01 orderings as the race progresses.
+* Preserve the existing geometric, priority-DAG, A01, negotiated A13 and
+  polyline candidates, plus A03 when its requested-width capability is met. Admit all six A01 orderings as the race progresses.
 * Advance in approximately 2–16 ms quanta, checking after bounded kernel batches.
   A13 receives one kernel call per clock check because each call already batches
   search. Construction, setup and losing probes count toward measured cost.
@@ -70,16 +123,17 @@ route-dependent rate estimation risk despite excluding the warmup prefix. This
 is not evidence of a faster or clean node, and a calibrated allocation is not a
 guaranteed CPU reduction.
 
-These early adverse repeats motivated a revision before the dataset experiment:
-Node/Bun now uses `process.cpuUsage()` for admission, promotion and the allocation.
-OS descheduling does not consume the race budget. GC and setup still consume real
-CPU and correctly count. Browser consumers without that capability use elapsed
-time; explicitly requesting CPU timing on an unsupported runtime throws. Set
-`selectivePortfolioTiming: "elapsed"` for a portable clock ablation.
+These early adverse repeats motivated v1's process-CPU revision before the
+first dataset experiment. V2 now prefers `process.threadCpuUsage()` for admission,
+promotion and the allocation, avoiding CPU spent by unrelated worker threads.
+Setup and work on the current thread count; background threads are excluded.
+`selectivePortfolioTiming: "cpu"` retains the v1 process-clock compatibility mode;
+`"elapsed"` selects the portable elapsed-clock ablation. Unsupported explicit
+CPU-clock requests throw. The selected capability and scope are reported.
 
 The calibrated allocation now freezes at a median of three completed windows,
 rather than repeatedly shrinking to the fastest observed rate. Stats record the
-selected clock plus both process CPU and elapsed wall time. CPU accounting removes
+selected clock plus thread CPU, process CPU and elapsed wall time. CPU accounting removes
 OS preemption from decisions, but different JIT/GC histories and route-dependent
 cost per iteration can still change the race or overestimate the allocation. Repeated fresh-process comparisons under controlled load remain necessary;
 iteration reductions alone cannot establish an improvement.
@@ -117,7 +171,27 @@ descheduling, a fixed allocation after later rate improvements, and terminal
 `UNKNOWN` recording when BaseSolver exhausts its separate supervisor-dispatch
 limit. That hard limit retains BaseSolver's generic iteration-budget error;
 `selectiveAttemptStatus` and `selectiveUnknownReason` identify its search status. Legacy scheduler tests continue to cover the
-unchanged default mode.
+unchanged default mode. V2 adds real one-cell terminal connectivity, exact
+multi-cell output/search parity, A03 width eligibility, explicit clock capability
+selection and isolation from simulated unrelated worker CPU.
+
+## V2 numerical follow-up
+
+The existing nonvisual sample9 regression test passed at solver-fix commit
+`770361dc8aea701c766dc5e745555b4afe2dc049`: one test, seven assertions, zero
+final joint-repair issues and zero final relaxed-DRC errors. The run observed
+840 accepted selective nodes: 837 at scale1 and three at scale2. The one-cell
+wrapper restored actual end terminals in two accepted scale1 A01 winners,
+`cmn_1366` and `cmn_1342` (PCB terminals330 and309).
+
+The three grown winners were `cmn_137` (A01 seed0), `cmn_110` (native public
+solver name `IntraNodeRouteSolver`) and `cmn_20` (A03 seed0). The saved numerical
+summary records winner iterations, limits, public family names and exact
+restored endpoint coordinates in `hd-selective-portfolio-v2-sample9.json`.
+Observation hooks recorded output/acceptance without changing returned geometry.
+This functional run is not a latency benchmark, does not isolate which change
+removed the previous final issue, and does not establish that USB-DP, bug94,
+T113, complete datasets or worker parity are fixed.
 
 ## Measurements
 
@@ -126,7 +200,9 @@ cost, best progress, iterations, limit, terminal state and quanta. Other stats
 include admission count, allocation, measured cost and `selectiveAttemptStatus`.
 `stats.selectiveClockSource` identifies the clock for per-candidate `elapsedMs`
 and aggregate `selectiveElapsedMs`; `selectiveCpuMs` and `selectiveWallElapsedMs`
-report both clocks explicitly. Shared `priorityDiagnostics` aggregates these numeric counters so they survive
+report process and wall clocks explicitly; `selectiveThreadCpuMs` records the
+current thread when supported. Concurrent per-attempt process CPU measurements
+overlap across worker threads and must not be summed as independent CPU work. Shared `priorityDiagnostics` aggregates these numeric counters so they survive
 retiring individual nodes:
 
 * `portfolioSelectiveAttempts`
@@ -136,6 +212,11 @@ retiring individual nodes:
 * `portfolioSelectiveUnknownAttempts`
 * `portfolioSelectiveCpuMicros`
 * `portfolioSelectiveWallMicros`
+* `portfolioSelectiveThreadCpuMicros`
+* `portfolioSelectiveThreadCpuAttempts`
+* `portfolioSelectiveProcessCpuAttempts`
+* `portfolioSelectiveElapsedClockAttempts`
+* `portfolioSelectiveA03ExcludedAttempts`
 
 Compare final DRC-clean completion first; then paired total and HD elapsed time,
 force/repair time, censored timeouts, memory, vias and wire length. Attribute
@@ -143,4 +224,5 @@ upstream/other-solver failures separately, and replay captured HD inputs where
 needed. Do not turn a dataset24 upstream failure into evidence against this
 scheduler, or count a faster unresolved circuit as a speedup.
 
-Full dataset18 and dataset24 results are added by the experiment coordinator.
+V1 dataset evidence is preserved above. V2 full dataset18 and dataset24 results
+are added separately by the experiment coordinator.

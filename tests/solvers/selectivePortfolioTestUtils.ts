@@ -10,7 +10,7 @@ type FakeWorkload = {
   stepsToWin?: number
   fastWinner?: boolean
   iterationLimit?: number
-  clockSource?: "cpu" | "elapsed"
+  clockSource?: "threadCpu" | "cpu" | "elapsed"
 }
 
 export const selectiveTestNode: NodeWithPortPoints = {
@@ -52,7 +52,7 @@ export class SimulatedSelectivePortfolio extends PortfolioSingleIntraNodeSolver 
   readonly constructed: Array<Record<string, any>> = []
 
   constructor(private readonly workload: FakeWorkload) {
-    super({ nodeWithPortPoints: selectiveTestNode, selectivePortfolio: true, selectivePortfolioTiming: workload.clockSource ?? "elapsed" })
+    super({ nodeWithPortPoints: selectiveTestNode, traceWidth: 0.1, selectivePortfolio: true, selectivePortfolioTiming: workload.clockSource ?? "elapsed" })
   }
 
   override getCombinationDefs(): string[][] {
