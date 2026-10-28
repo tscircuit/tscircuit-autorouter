@@ -1,0 +1,32 @@
+{
+  "variant": "legalization-joint-qa",
+  "label": "p4circuit102",
+  "existingUnchangedNumericalTest": true,
+  "localHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=5s",
+    "180s",
+    "taskset",
+    "-c",
+    "3",
+    "bun",
+    "test",
+    "--timeout",
+    "9999999",
+    "tests/features/pipeline4-dataset01-circuit102.test.ts"
+  ],
+  "exitCode": 0,
+  "censored": false,
+  "elapsedSeconds": 27.112591421988327,
+  "maxChildRssBytes": 683163648,
+  "testFileSha256": "708b57f3ea0bab4b5a900235c2b5c79b3c8e525e19681f772b1e1692bb0f09ae",
+  "testFileSha256After": "708b57f3ea0bab4b5a900235c2b5c79b3c8e525e19681f772b1e1692bb0f09ae",
+  "originalUnchanged": true,
+  "statusAfter": "",
+  "timingComparisonValid": false,
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "log": "p4circuit102/legalization-joint-qa-p4circuit102.log",
+  "outcome": "pass"
+}

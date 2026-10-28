@@ -1,0 +1,12 @@
+{
+  "checkedUtc": "2026-10-28T22:27:34.922304+00:00",
+  "sourceUnderMeasurement": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "verifierPath": "experiments/hd-refinements/analysis/verify_refinement_artifact.py",
+  "runId": 40772916886,
+  "archiveSha256": "8353966223458c787a600c63075879f3a44e18b43a1e448e5663a067cb574e9b",
+  "approvedConfigSha256": "f044b266cbdf1e639662625457ad5d204f6674f1c56342626900ffd328b36ab4",
+  "result": "fully-verified126/126, archive complete, protocol authenticated, independent summary matches",
+  "verificationOutput": "/workspace/hd-refinements-2026-10-28/artifacts/portable-published-proof/legal-final/artifact-verification.json",
+  "verificationOutputSha256": "4454ad62351354c3bfd9d839c0a8bc5397480a5dda81bbb77a9a7d76cc24094f",
+  "scope": "Full reexecution of repository-portable path-adapted verifier using final approved configuration; source/protocol/raw data unchanged."
+}

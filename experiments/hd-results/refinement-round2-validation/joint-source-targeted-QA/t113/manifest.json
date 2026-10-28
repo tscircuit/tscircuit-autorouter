@@ -1,0 +1,9 @@
+{
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "sourceTree": "05a178c53be4dd3d59c3e012398df9c84d47110d",
+  "testRelativePath": "tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts",
+  "originalTestSha256": "e4958fa5b7cf30e8bb56d00f6b32df28bbd6db834324e919c65a11aca99e1dd2",
+  "existingRunnerSha256": "19a71d94aa0535729266f6d2fa4642e52885157a5a6b0e155b8be52a61d6267f",
+  "dependencySymlink": "/workspace/.tools/autorouter-dependencies/node_modules",
+  "protocol": "Unmodified tracked correctness regression. One fresh process onCPU3 with declared external cap. Test assertions and snapshots are unchanged; no timing comparison."
+}

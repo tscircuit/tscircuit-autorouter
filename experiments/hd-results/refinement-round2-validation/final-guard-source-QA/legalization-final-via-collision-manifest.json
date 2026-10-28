@@ -1,0 +1,49 @@
+{
+  "sourceHead": "2cfb8273527b89f63d8ba9dfe39062856504a7ab",
+  "parent": "792ae033e9a3ce3f1737a1a4edc2542b75537f04",
+  "sourceClean": true,
+  "change": "Decline anyreportedvia pairwithtraceIDcollidingwithanimmutablepreloadedtraceIDinparams.srj.traces, becauseactualreferenceuniqueevaluationIDsmaynormalizebacktooneambiguoussolverID.",
+  "files": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9FinalViaMergeSolver.ts": "a1a45ca1439764b8888ac4bfe404879d6b36ec3c19ad1a68e1991df7bdab9558",
+    "tests/features/pipeline9-via-coalescence-rejects-preloaded-id-collision.test.ts": "2916f01c22b591573cc1fe8eb7232b255a3a4e7832f89cf6219aff8a29c465ea"
+  },
+  "evidence": {
+    "legalization-final-via-collision-focused.log": "1ad3ec97a1cd5538f1fbff43aba5ab64507990997bee78f4089346a2060f74fd",
+    "coalesce-midi-final-child-replay-collision-guard.ts": "9b5f8d31c1eed726302c0196f1022679aa682c411f54320fe8a3db5c83a76a8d",
+    "legalization-joint-midi-phases/coalescing-final-child-replay-collision-guard.json": "784e1aff8e194269ab996d400fbdda647d381da9b598adec9cc14fbcfe4bfac7",
+    "probe-final-via-preload-id-collision.ts": "a4b0a96fb43aa3676d6e6b1bbd00801beb7120a6c913e7c814ec7d4a5d825784",
+    "final-via-preload-id-collision-probe.json": "ae6d4cdad29a10ba80a74d0b68cb3f5eaa1876f56f268ba8de28a41b6da2b869"
+  },
+  "focusedTests": {
+    "tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "assertions": 52,
+    "cpu": 2
+  },
+  "actualAllowedCollisionProof": {
+    "actualUniqueID": "branch_0_0_routed",
+    "immutableID": "branch_0_0",
+    "normalizedOwnerIDs": [
+      "branch_0_0",
+      "branch_0_0"
+    ],
+    "physicalErrorCount": 1,
+    "newGuardAttempted": false,
+    "inputUnchanged": true,
+    "physicalBugDemonstrated": false
+  },
+  "capturedMidiReplay": {
+    "capturedSource": "6eb1871908f7a717610c005d551230e94c5936cf",
+    "frozenWrapperRuntime": "2cfb8273527b89f63d8ba9dfe39062856504a7ab",
+    "eligible": true,
+    "referenceDRC": "1->0",
+    "fixedRoutes": 283,
+    "outerSteps": 6,
+    "existingMergerSteps": 5,
+    "inputsAndPreloadsUnchanged": true,
+    "fullBoardOutcomeClaim": false,
+    "timingComparisonValid": false
+  },
+  "scope": "Guard+oneactualreferenceDRCtestonly; nomain/QAworktree/GitHubmutation. RootcoordinatesfinalTS/build/fullMIDIfrozenclone."
+}

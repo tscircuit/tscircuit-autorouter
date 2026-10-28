@@ -1,0 +1,22 @@
+{
+  "sourceVerificationPath": "/workspace/hd-refinements-2026-10-28/artifacts/portable-published-proof/confirmation/artifact-verification.json",
+  "sourceVerificationSha256": "74008e777e3ab775c4ecce0bccf541fb3f7ff53ead782e38e498518ca3fb685e",
+  "sourceVerificationBytes": 127368,
+  "publishedDocumentationHead": "eedd773d4aa422ffac90f304ad3f45a8e4000e4f",
+  "measurementRunId": 40760310372,
+  "measuredSource": "83a593a901b1209a024ab3a96bb9c191871b8df4",
+  "fields": {
+    "evidenceStatus": "fully-verified",
+    "archiveComplete": true,
+    "measurementProtocolAuthenticated": true,
+    "independentSummaryMatches": true,
+    "verified": true,
+    "verifierSha256": "2e83889a85cb252b22b70618ffac54eed8c10354e2780e9c46b8b6d2f784e977",
+    "expectedRecords": 168,
+    "fullRecords": 168,
+    "errors": [],
+    "archiveErrors": [],
+    "missingProtocolFiles": []
+  },
+  "transformation": "Explicit compact projection of original verifier output; complete original output and downloaded raw archive are not duplicated here. No measurement or protocol bytes modified."
+}

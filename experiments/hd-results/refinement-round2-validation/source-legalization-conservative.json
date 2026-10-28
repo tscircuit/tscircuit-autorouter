@@ -1,0 +1,16 @@
+{
+  "localAlgorithmHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "algorithmTree": "517dc816880c7f380724fe00e2f9626fb3365268",
+  "localInfrastructureHead": "85264c0d6b52c0b1defeded8ae56752fa24d6b2e",
+  "infrastructureTree": "b7e1a34d1f19f212c3cfa511661d085707f6f311",
+  "remoteStatus": "NOT_PUBLISHED, existingPRstill83a593a901b1209a024ab3a96bb9c191871b8df4",
+  "change": "DROPunsafeownercompressionallowlist, preservebranchjunctions; joint32/continuousbounds/FULLunchanged",
+  "focusedTests": 21,
+  "focusedAssertions": 161,
+  "typecheckExitCode": 0,
+  "buildExitCode": 0,
+  "qaClone": "/workspace/hd-refinements-2026-10-28/legalization-conservative-qa",
+  "qaStatus": "Bug107capture900thenunchangedMIDI360CPU3serial;GO20:54",
+  "currentCombinedRunUnchanged": 40760310372,
+  "followupProfile": "legal-confirmation seed2026102813,3arms126,notlaunched"
+}

@@ -1,0 +1,75 @@
+{
+  "runId": 40772916886,
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40772916886",
+  "measuredSource": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "benchmarkBaseline": "637b6c581128238f6c61227a1c15be423d24baca",
+  "oldFullSource": "8115e35a4517191c306820438b14a197dc911c7a",
+  "archiveSha256": "8353966223458c787a600c63075879f3a44e18b43a1e448e5663a067cb574e9b",
+  "approvedConfigSha256": "f044b266cbdf1e639662625457ad5d204f6674f1c56342626900ffd328b36ab4",
+  "canonicalConfigSha256": "3ec21904bc67c3c5cb73ef32b72a6019b19845d3fe387d9ec9bc05170f9195a8",
+  "copiedArtifactVerificationSha256": "40cf7080ec2a27845dea43f0a0d284a3b9fce4272f73beaf4828b5467707514d",
+  "publicationBundleManifestSha256": "c52639cbe271f9fbde6db63360870245383c8d66ed54c5f81fa31f663d9c9e1e",
+  "reportDestination": "experiments/hd-results/refinement-final-legalization/results.md",
+  "rawRecords": 126,
+  "archiveComplete": true,
+  "protocolAuthenticated": true,
+  "independentSummaryMatches": true,
+  "priorRoundTimingsPooled": false,
+  "cleanByDataset": {
+    "control": [
+      16,
+      17
+    ],
+    "old-full": [
+      16,
+      19
+    ],
+    "final-full": [
+      15,
+      19
+    ]
+  },
+  "oldFullVsFinal": {
+    "srj18": {
+      "commonCleanCount": 15,
+      "beforeRoutingSeconds": 827.0898799,
+      "afterRoutingSeconds": 824.6189727760001,
+      "routingPercentChange": -0.2987471112932405,
+      "strictCompletedHdCount": 16,
+      "beforeHdSeconds": 345.46287904800005,
+      "afterHdSeconds": 344.13947039600004,
+      "hdPercentChange": -0.38308273689113825
+    },
+    "srj24": {
+      "commonCleanCount": 19,
+      "beforeRoutingSeconds": 1302.6345873980001,
+      "afterRoutingSeconds": 1305.044381957,
+      "routingPercentChange": 0.18499390253512438,
+      "strictCompletedHdCount": 21,
+      "beforeHdSeconds": 676.259111825,
+      "afterHdSeconds": 685.14534664,
+      "hdPercentChange": 1.314028108400489
+    }
+  },
+  "lostBaselineCleanBoards": [
+    "srj18-015"
+  ],
+  "newBaselineCleanBoards": [
+    "srj24-002",
+    "srj24-011"
+  ],
+  "lost18Sample15": {
+    "boardId": "srj18-015",
+    "commit": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+    "solved": "true",
+    "clean": "false",
+    "timeout": "false",
+    "routingMs": "238299.649459",
+    "drcErrorCount": "174",
+    "drcErrorTypes": "{\"pcb_pad_trace_clearance_error\":39,\"pcb_trace_error\":59,\"pcb_via_clearance_error\":8,\"pcb_via_trace_clearance_error\":28,\"trace_smtpad_accidental_contact\":25,\"trace_via_overlap\":15}",
+    "hdCompleted": "true",
+    "hdIterations": "269763",
+    "outputHash": "8ded15b0a8ba9ae7485993fef23639f37417bd82b6b96260f192b594c333141c"
+  },
+  "publicationScope": "Later documentation head adds evidence only. The exact-source matrix is distinct from source365 current-base ordinary CI merge, standalone2f diagnoses and previous VM timing cohorts. No no-regression or isolated memory-saving claim."
+}

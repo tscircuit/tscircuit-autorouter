@@ -1,0 +1,101 @@
+{
+  "format": "base64-wrapped deterministic USTAR/gzip report archive",
+  "archive": {
+    "base64File": "report-data.tar.gz.b64",
+    "base64Sha256": "b8bec0e00513c6e6c1c7c4291216a1c48540abc9d24bfb424798211dc746a5f4",
+    "base64Bytes": 636093,
+    "sha256": "8305e7ab3b3e096d0f0ac95db2bb229a93b831338069b42789c558f540bac547",
+    "bytes": 470874
+  },
+  "memberCount": 11,
+  "armRows": 168,
+  "members": {
+    "arm-samples.csv": {
+      "sha256": "5682f4f81aac699c50ccd007b664f9a7ae739dfb1861e9e27206b78039bce6b8",
+      "bytes": 583109,
+      "csvRows": 168
+    },
+    "arms.csv": {
+      "sha256": "8075d4aeb3420bbee6f02a45c0d6f089f80137ff3b29dce836e07107e1bf2252",
+      "bytes": 21839,
+      "csvRows": 8
+    },
+    "arms.json": {
+      "sha256": "83b133c8f256a5a823edd99a954b4cdbf98e02f6767eb5d718704b8752c28007",
+      "bytes": 1098960
+    },
+    "contrast-samples.csv": {
+      "sha256": "311f6f0f69ccbb5f8c67d3c49e1770895ba2c81fbf53383d597d3786a9177e8d",
+      "bytes": 885847,
+      "csvRows": 168
+    },
+    "contrasts.csv": {
+      "sha256": "cc07c2ae4063b00f9161f41942fb887b1c02ef515e3a8a156b0afa830e19e945",
+      "bytes": 22573,
+      "csvRows": 8
+    },
+    "contrasts.json": {
+      "sha256": "ef306f0e6a70c4f66984b0ae1abf3aab316f8850ae7be4273eea401c127d8b2d",
+      "bytes": 3589945
+    },
+    "counter-parity.csv": {
+      "sha256": "00604128659825f894403e236c17b1227db81e2834528cb46dd073c564dbb4f0",
+      "bytes": 214144,
+      "csvRows": 1176
+    },
+    "phase-costs.csv": {
+      "sha256": "ba092e2a82b233f99c2abbb3d9def1526880f910b4b79f681f6e4ab8aaf87f65",
+      "bytes": 149984,
+      "csvRows": 800
+    },
+    "phase-costs.json": {
+      "sha256": "61614693756ff512727636f2e939c57f57ba168f9948140093c1d56fce5b40f4",
+      "bytes": 673879
+    },
+    "report-verification.json": {
+      "sha256": "9655f42345563c8be0b6ea6741c724cff7cc559d2c7cf280e2c629e5f76e0ad8",
+      "bytes": 48994
+    },
+    "results.md": {
+      "sha256": "13c2f25f4e5447522354a912e128bbdb69b73d6b8e76fd735bad50de81315607",
+      "bytes": 8250
+    }
+  },
+  "metadataPolicy": "Sorted flat member names; mode0644; uid/gid/mtime0; empty owner/group/gzip filename; gzip mtime0/compression9. Member contents are the untouched renderer bytes.",
+  "compactView": {
+    "file": "arm-samples-compact.csv",
+    "rows": 168,
+    "originalColumnsCopiedAsExactCsvStrings": [
+      "arm",
+      "dataset",
+      "sampleNumber",
+      "boardId",
+      "commit",
+      "solved",
+      "clean",
+      "timeout",
+      "routingMs",
+      "failurePenalizedMs",
+      "drcErrorCount",
+      "drcErrorTypes",
+      "drcErrorMessages",
+      "hdCompleted",
+      "hdMs",
+      "hdIterations",
+      "pipelineFinalIterations",
+      "peakRssBytes",
+      "viaCount",
+      "wireLengthMm",
+      "failurePhase",
+      "error",
+      "outputHash"
+    ],
+    "identityHashColumns": {
+      "sourceSrjSha256": "sourceProblem.srjSha256",
+      "sourceScenarioSha256": "sourceProblem.scenarioSha256",
+      "rawHdConstructorSha256": "rawHdConstructor.sha256"
+    },
+    "nullPolicy": "Original blank CSV values stay blank; missing/null nested identity hashes become blank. No missing numerical value is zero-filled.",
+    "fullMetadataLocation": "The untouched arm-samples.csv archive member retains all original JSON context, numeric diagnostics, completed stages and iteration-scope text."
+  }
+}

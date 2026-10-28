@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "headSha": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "ciMergeSha": "9d6c1452aad1e434d923620220026c92e440ac1b",
+  "ciBaseSha": "9e751e3c7650a1f21f52bad9160650d6aa388a14",
+  "allOrdinaryChecksCompleted": true,
+  "originalJobLogCount": 16,
+  "logTransport": "GitHubconnectorfetch_workflow_job_logsstructuredContent.content;eachoriginalUTF8logwrittenwithunchangedcontentandtrailingnewline;SHA256below",
+  "files": {
+    "legalization-final.json": {
+      "sha256": "c5480b763f5a0e801b0008b7880e6e600164df95a97f5bccb9e89c5e94b30ab2",
+      "bytes": 53660
+    },
+    "legalization-final-summary.md": {
+      "sha256": "5b6712128a133012fdb703617d4a61cacbeaf42506f599b3dd066c96ac448a7a",
+      "bytes": 3657
+    },
+    "legalization-final-completed-status.json": {
+      "sha256": "cffa050655b8191620732eae93f56389750945853b925248a456e03a8c3cad11",
+      "bytes": 39004
+    },
+    "legalization-final-initial-status.json": {
+      "sha256": "cd8f596ebc15dd8d115cef64cca596467ed75476ef4eb0edcf662abc733bff33",
+      "bytes": 35092
+    },
+    "assemble_legalization_final_ci_audit.py": {
+      "sha256": "a850cb6c3c38eca1457ca8a560ae46ff452b20bbbc470cb949560e0425c075b3",
+      "bytes": 13940
+    },
+    "logs/legalization-final-build-123114571678.log": {
+      "sha256": "8be55c2381461332d0006fe24352f3b045321379f14ecd4771787db0ab000ecf",
+      "bytes": 66235
+    },
+    "logs/legalization-final-bun-123114572598.log": {
+      "sha256": "6c6a2f8a8cb0df0421f7f0b2bc464af3784dcf78b2bf83d87d96ad48bc3911a7",
+      "bytes": 69578
+    },
+    "logs/legalization-final-bun-123114572875.log": {
+      "sha256": "bc67ec255dd15bf6fe9815dd8837d7f6d1320daa1a46fa6fce45b2e76166ee7a",
+      "bytes": 68105
+    },
+    "logs/legalization-final-bun-123114572918.log": {
+      "sha256": "f566a02afb6272fd0eaf14efa56efafb4f2d3f58df76289f4a6200a7da6da78c",
+      "bytes": 74461
+    },
+    "logs/legalization-final-bun-123114572977.log": {
+      "sha256": "87d293ed72209a90ff316376ad6f72791dd44c94bfb1efa693d2c6cf4af04f8a",
+      "bytes": 74429
+    },
+    "logs/legalization-final-bun-123114573004.log": {
+      "sha256": "1346c143ae61275b648fadba4a8b624460527ffc0de2ab035cd5b080c10f9947",
+      "bytes": 69930
+    },
+    "logs/legalization-final-bun-123114573096.log": {
+      "sha256": "ca7a85ff8bea85bbe16a4a42226da8b1fd5d571502dd3ebd932acd051be39576",
+      "bytes": 47778
+    },
+    "logs/legalization-final-bun-123114573120.log": {
+      "sha256": "7e3d3e0a3a6a37650296476a20e759eb2f9a85426f8ec6527264216bbc0f7a1b",
+      "bytes": 71154
+    },
+    "logs/legalization-final-bun-123114573177.log": {
+      "sha256": "f96968dc8ab03f4dffb6414b468260189ca34a4fb8358987ed995150564be929",
+      "bytes": 67167
+    },
+    "logs/legalization-final-bun-123114573219.log": {
+      "sha256": "fe22d7bbbb00986ca4b0dcfac3319d31e373c72bb913d595f9e6d977b3f05c36",
+      "bytes": 186343
+    },
+    "logs/legalization-final-format-123114572374.log": {
+      "sha256": "96b7ad87134c32581f2b17ec663d6f7e9b9509410761b31eb16648d47ab23e2d",
+      "bytes": 188639
+    },
+    "logs/legalization-final-no-dependency-patches-123114572104.log": {
+      "sha256": "c27552427cfcc34b8b0f397825753b6ff20601c0a3869dd3dd7e8bd44538a7c4",
+      "bytes": 389894
+    },
+    "logs/legalization-final-no-string-id-hacks-123114572449.log": {
+      "sha256": "ffd18c1724d4cd2f855e23051e1ff95fa625e095a5cedce8b60a73d08e60d6a1",
+      "bytes": 391889
+    },
+    "logs/legalization-final-testbox-123114571842.log": {
+      "sha256": "fdb80ed629acf8fb130565949345158b4dd90e9cc6799ddb26b075b10ec05c38",
+      "bytes": 46040
+    },
+    "logs/legalization-final-type-123114572288.log": {
+      "sha256": "4b9febff07bfee88ca439ac3d6c7ecf809d7284288bba2f23316620a51deba9e",
+      "bytes": 55864
+    },
+    "logs/legalization-final-vercel-123114571391.log": {
+      "sha256": "9825a6b8c6fc4fb3093c31441bc4dd947ddfc0dfbf5daaaa675e3e70b2ef41b5",
+      "bytes": 200955
+    }
+  },
+  "standalonePublicationProof": {
+    "proof": "/workspace/hd-refinements-2026-10-28/artifacts/published-legalization-final-source.json",
+    "sha256": "2be3e23b25af3e8d09067242b39c0c5333521eaf4ebbbea5cf304e0ee09a75e3",
+    "tree": "7718a9ca2f2f3802147fba63560e870de534a665",
+    "remoteHead": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+    "localEquivalent": "372baa96e1078827cb5d7860f85c24875338d0e4"
+  }
+}

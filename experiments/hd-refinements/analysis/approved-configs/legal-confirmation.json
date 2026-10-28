@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "name": "legalization-final-confirmation",
+  "baselineArm": "control",
+  "dependencyLockSha256": "261a3861619cd4aa6265d2c9b75825a49196002d59ad665dddd69c67378ed1ee",
+  "orderSeed": 2026102813,
+  "arms": [
+    {
+      "id": "control",
+      "commit": "637b6c581128238f6c61227a1c15be423d24baca",
+      "role": "Historical baseline Pipeline9"
+    },
+    {
+      "id": "old-full",
+      "commit": "8115e35a4517191c306820438b14a197dc911c7a",
+      "role": "Previously measured full physical legalization; historical source"
+    },
+    {
+      "id": "final-full",
+      "commit": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+      "role": "Final full physical legalization preserving declared clearances and drill guards; source under confirmation"
+    }
+  ],
+  "contrasts": [
+    {
+      "id": "baseline-vs-old-full",
+      "before": "control",
+      "after": "old-full"
+    },
+    {
+      "id": "baseline-vs-final-full",
+      "before": "control",
+      "after": "final-full"
+    },
+    {
+      "id": "old-full-vs-final-full",
+      "before": "old-full",
+      "after": "final-full"
+    }
+  ]
+}

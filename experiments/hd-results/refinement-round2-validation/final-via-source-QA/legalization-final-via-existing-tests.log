@@ -1,0 +1,45 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/features/pipeline9-reported-via-merges-stepped.test.ts:
+Pipeline9ReportedViaMergeSolver error: Error: Reported via merge failed: SameNetViaMergerSolver ran out of iterations (MAX_ITERATIONS=0)
+(pass) reported via repairs advance one merger step and retain repeated route pieces [6.22ms]
+
+tests/features/pipeline9-joint-drc-repair-metadata.test.ts:
+(pass) Pipeline9 joint DRC metadata keeps new route identities repairable [4.42ms]
+
+tests/features/pipeline9-joint-drc-repair-stages.test.ts:
+74 |         expect(solver.activeSubSolver.iterations).toBe(0)
+75 |       expect(solver.progress).toBeGreaterThanOrEqual(progress)
+76 |     }
+77 |     expect(solver.failed, solver.error ?? "").toBeFalse()
+78 |     expect(solver.solved).toBeTrue()
+79 |     expect(phases).toEqual([
+                        ^
+error: expect(received).toEqual(expected)
+
+  [
+    "exactRepairSolver",
+    "regionalB01RepairSolver",
+    "boundedRegionalRepairSolver",
++   "finalViaMergeSolver",
+  ]
+
+- Expected  - 0
++ Received  + 1
+
+      at <anonymous> (/workspace/hd-refinements-2026-10-28/legalization-via-coalesce-experiment/tests/features/pipeline9-joint-drc-repair-stages.test.ts:79:20)
+(fail) joint DRC repair exposes sequential child stages and propagates failures [192.73ms]
+
+tests/features/pipeline9-joint-drc-preload-id-ownership.test.ts:
+(pass) Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias [989.12ms]
+
+tests/features/pipeline9-joint-drc-reuses-static-connectivity.test.ts:
+(pass) Pipeline9 reuses obstacle connectivity while evaluating changed repair geometry [10.18ms]
+
+tests/features/pipeline9-reported-via-merges-mixed-drc.test.ts:
+(pass) merges reported same-net vias while an unrelated trace crossing remains [35.80ms]
+
+ 5 pass
+ 1 fail
+ 714 expect() calls
+Ran 6 tests across 6 files. [1.77s]

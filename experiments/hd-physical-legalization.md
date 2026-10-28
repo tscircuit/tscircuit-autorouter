@@ -1,5 +1,16 @@
 # Experiment: embed grown topology at physical dimensions
 
+The [completed final confirmation](hd-results/refinement-final-legalization/results.md)
+does not beat the previous full legalizer: baseline, previous full and final
+source are clean on 33, 35 and 34 of the 42 boards respectively. Final source
+`365b38451f01c734d3f60628dbd6db14760ca4e6` retains dataset24 samples2 and11,
+but still loses dataset18 sample15 with174 DRC errors. Routing on common clean
+boards is effectively unchanged versus previous full (-0.299% / +0.185%).
+The shared-junction and MIDI numerical fixes remain useful; Bug107 still has
+92 DRC errors in ordinary CI. This remains an experimental draft.
+See [the findings](hd-results/refinement-final-legalization/findings.md) and
+[source-scoped validation](hd-results/refinement-round2-validation/VALIDATION.md).
+
 The original paired measurements in `experiments/hd-results/legalization` remain
 the historical evidence for source `8115e35a4517191c306820438b14a197dc911c7a`.
 The first selective refinement at source `70d7a1bbbc61ca474c9b696cdccba7a8bd814c14`
@@ -8,7 +19,7 @@ completed its five-arm dataset18/24 comparison in
 It preserved one extra clean dataset24 board over baseline, but lost the old-full
 clean sample 11 and did not establish a substantial routing-time improvement.
 Compression-only also lost clean dataset18 sample 15. Those negative results remain
-separate evidence; the current joint-projection follow-up must be confirmed anew.
+separate evidence; the completed joint-projection follow-up is reported above.
 
 ## Refinement: joint physical projection and explicit ablations
 
@@ -72,10 +83,10 @@ The archived five-arm source used a `"selective"` factory default and derived
 its `"compression-only"` and `"full"` controls by one literal change. The current
 follow-up instead compares joint full projection with the unchanged historical
 full source and original baseline. All prior result reports remain immutable.
-Promotion requires retaining the clean dataset18/24 outcomes, including the
-replicated dataset24 samples 2 and 11, and independently checking the known
-snapshot-masked numerical fixtures. No new whole-board result is claimed before
-that confirmation.
+The final confirmation retains the replicated dataset24 samples2 and11 but
+does not retain clean dataset18 sample15. It also retains the independently
+observed Bug107 numerical regression. These outcomes block promotion of this
+refinement despite the valid local physical gains.
 
 The lost sample 11 was localized to grown node `cmn_3`. A faithful captured proposal
 contains 9760 points across 80 routes. The selective-refinement implementation

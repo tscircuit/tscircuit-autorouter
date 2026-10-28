@@ -1,0 +1,9 @@
+{
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "testAndFixtureSha256": {
+    "tests/features/pipeline9-srj18-sample01-thread-parity.test.ts": "d7100fb7628b2532ee1f3a820f09fc3f7fc4b880f227628c5827d19abe1846ed",
+    "tests/fixtures/pipeline9Sample01ThreadParity.ts": "2e112109147a7fa5399c42ba61cf096fd947219de05ea7e742c88f74b217e280"
+  },
+  "dependencies": "/workspace/.tools/autorouter-dependencies/node_modules",
+  "protocol": "Original tracked test unmodified: serial solve and four native Bun worker solve, exact final SRJ hash comparison, counters and SVG snapshot. One fresh test process, inherited CPU3 affinity; external180s resource cap. Correctness test, no timing comparison."
+}

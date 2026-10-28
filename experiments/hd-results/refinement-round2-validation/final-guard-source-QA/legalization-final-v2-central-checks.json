@@ -1,0 +1,11 @@
+{
+  "sourceHead": "372baa96e1078827cb5d7860f85c24875338d0e4",
+  "typecheck": {
+    "exitCode": 0,
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-final-v2-typecheck.log"
+  },
+  "build": {
+    "exitCode": 0,
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-final-v2-build.log"
+  }
+}

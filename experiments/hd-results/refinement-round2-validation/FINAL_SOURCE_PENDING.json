@@ -1,0 +1,111 @@
+{
+  "status": "FINAL_SOURCE_MEASURED_CI_BUG107_BLOCKED_FINAL126_COMPLETE",
+  "finalMeasuredSource": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "finalBenchmarkRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40772916886",
+  "currentMainAtPreparation": "372baa96e1078827cb5d7860f85c24875338d0e4",
+  "isolatedRuntimeImplementation": "19aa367b7a96ad8b13f04a47b2d1cbc25a53e1f4",
+  "isolatedFocusedTestHead": "792ae033e9a3ce3f1737a1a4edc2542b75537f04",
+  "currentlyPublishedLegalSource": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "plannedFinalConfirmation": {
+    "profile": "legal-confirmation",
+    "arms": [
+      "control",
+      "old-full",
+      "final-full"
+    ],
+    "records": 126,
+    "datasets": [
+      18,
+      24
+    ],
+    "pipeline": 9,
+    "seed": 2026102813,
+    "status": "COMPLETE_FULLY_VERIFIED",
+    "runId": 40772916886,
+    "jobId": 123114577365,
+    "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40772916886",
+    "reportDestination": "experiments/hd-results/refinement-final-legalization/results.md"
+  },
+  "scope": "Measured standalone365final126completeauth/archivecomplete/independentsummarymatches;finalclean15/19=34vsold16/19=35andbaseline16/17=33. DistinctordinaryCImerge9d6/base9e751Bug10792+7SVGstillblocks. Separate2fphysicalclassificationsretainactualsource.",
+  "knownBug107ConservativeSource": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "knownBug107RelaxedErrors": 92,
+  "midiFixApplicability": "Exactly one eligible reported via-pair residual under existing baseline-filtered reference evaluation. Bug107 multi-error residual is outside this gate.",
+  "currentMIDIWholeTestPass": false,
+  "currentMIDINumericalPass": true,
+  "finalSourceTree": "7718a9ca2f2f3802147fba63560e870de534a665",
+  "finalGuardIsolatedSource": "2cfb8273527b89f63d8ba9dfe39062856504a7ab",
+  "focusedTests": 12,
+  "focusedAssertions": 779,
+  "typecheckExitCode": 0,
+  "buildExitCode": 0,
+  "actualFinalMidiSource": "372baa96e1078827cb5d7860f85c24875338d0e4",
+  "actualFinalMidiNumericalPass": true,
+  "actualFinalMidiWholeTestPass": false,
+  "actualFinalMidiUncensoredSeconds": 108.69562225599657,
+  "finalSourceAuditBlockingFindings": [],
+  "approvedConfigSha256": "f044b266cbdf1e639662625457ad5d204f6674f1c56342626900ffd328b36ab4",
+  "canonicalConfigSha256": "3ec21904bc67c3c5cb73ef32b72a6019b19845d3fe387d9ec9bc05170f9195a8",
+  "priorPublishedLegalSource": "83a593a901b1209a024ab3a96bb9c191871b8df4",
+  "branchMoved": true,
+  "actualFinalMidiVerificationSha256": "4090d85a98393621860e2c9b698f877cf5b3ef50f14fdd5a3a5211d629b08407",
+  "receivedMidiSvgByteIdenticalToPriorA2e6": true,
+  "finalCi": {
+    "allOrdinaryChecksCompleted": true,
+    "sourceHead": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+    "mergeSha": "9d6c1452aad1e434d923620220026c92e440ac1b",
+    "baseSha": "9e751e3c7650a1f21f52bad9160650d6aa388a14",
+    "auditSha256": "c5480b763f5a0e801b0008b7880e6e600164df95a97f5bccb9e89c5e94b30ab2",
+    "manifestSha256": "97a7f2abd56f3d26f17a1d3a0a3fee1ef0a55fa96f0d5ed9871e8365c3697188",
+    "allNineBunShardsCompleted": true,
+    "successfulBunShards": 3,
+    "failingBunShards": 6,
+    "uniqueFailingTests": 8,
+    "numericalFailures": {
+      "bug107": {
+        "errorCount": 92,
+        "location": "tests/bugs/bugreport107-board-1726.test.ts:41:18"
+      }
+    },
+    "svgFailures": 7,
+    "midiOnlyFinalSvgFailure": true,
+    "allTwelveFinalFocusedTestsObservedPassing": true,
+    "typecheckBuildPackedOtherChecksPass": true,
+    "formatDiagnosticCount": 38,
+    "allTestsPass": false
+  },
+  "actualFinal365Bug107CiErrorCount": 92,
+  "legacyFilename": "Filename retained from source-freeze preparation; current status and finalConfirmation below supersede historical pending labels.",
+  "finalConfirmation": {
+    "complete": true,
+    "fullyVerified": true,
+    "archiveComplete": true,
+    "rawRecords": 126,
+    "artifactZipSha256": "8353966223458c787a600c63075879f3a44e18b43a1e448e5663a067cb574e9b",
+    "reportDestination": "experiments/hd-results/refinement-final-legalization/results.md",
+    "bundleManifestSha256": "c52639cbe271f9fbde6db63360870245383c8d66ed54c5f81fa31f663d9c9e1e",
+    "cleanByDataset": {
+      "control": [
+        16,
+        17
+      ],
+      "old-full": [
+        16,
+        19
+      ],
+      "final-full": [
+        15,
+        19
+      ]
+    },
+    "lostBaselineCleanBoards": [
+      "srj18-015"
+    ],
+    "newBaselineCleanBoards": [
+      "srj24-002",
+      "srj24-011"
+    ],
+    "source15DrcErrorCount": 174,
+    "promotionRecommended": false
+  },
+  "finalCriticalReviewSha256": "6a95975ecabccf7a0b1c3d8136e2c6d6e7041a3e8367b9a60b09e39ca7a0552b"
+}

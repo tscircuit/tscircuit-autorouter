@@ -1,0 +1,107 @@
+{
+  "sourceHead": "a2e6aa535c5a4110b4b999c044847b73039b3425",
+  "method": "Small real reference-DRC fixture with one immutable preloaded via and one new via. Preload PCBtraceID deliberately collides with new solver trace ID, a supported repository contract. Use actual unique-new-ID helper, actual owner enrichment, actual trace-ID remapping and normalization from joint reference evaluation. No mocked physical errors/evaluator, no source edits.",
+  "collidedId": "branch_0_0",
+  "evaluatedNewTraceIds": [
+    "branch_0_0_routed"
+  ],
+  "originalCircuitVias": [
+    {
+      "type": "pcb_via",
+      "pcb_via_id": "via_0",
+      "pcb_trace_id": "branch_0_0",
+      "x": 0,
+      "y": 0.006,
+      "outer_diameter": 0.3,
+      "hole_diameter": 0.2,
+      "layers": [
+        "top",
+        "bottom"
+      ]
+    },
+    {
+      "type": "pcb_via",
+      "pcb_via_id": "via_1",
+      "pcb_trace_id": "branch_0_0_routed",
+      "x": 0,
+      "y": 0,
+      "outer_diameter": 0.3,
+      "hole_diameter": 0.2,
+      "layers": [
+        "top",
+        "bottom"
+      ]
+    }
+  ],
+  "normalizedCircuitVias": [
+    {
+      "type": "pcb_via",
+      "pcb_via_id": "via_0",
+      "pcb_trace_id": "branch_0_0",
+      "x": 0,
+      "y": 0.006,
+      "outer_diameter": 0.3,
+      "hole_diameter": 0.2,
+      "layers": [
+        "top",
+        "bottom"
+      ]
+    },
+    {
+      "type": "pcb_via",
+      "pcb_via_id": "via_1",
+      "pcb_trace_id": "branch_0_0",
+      "x": 0,
+      "y": 0,
+      "outer_diameter": 0.3,
+      "hole_diameter": 0.2,
+      "layers": [
+        "top",
+        "bottom"
+      ]
+    }
+  ],
+  "initialErrors": [
+    {
+      "type": "pcb_via_clearance_error",
+      "pcb_error_id": "same_net_vias_close_via_0_via_1",
+      "message": "Vias unnamed via and unnamed via are too close together (gap: -0.194mm)",
+      "error_type": "pcb_via_clearance_error",
+      "pcb_via_ids": [
+        "via_0",
+        "via_1"
+      ],
+      "minimum_clearance": 0.1,
+      "actual_clearance": -0.194,
+      "pcb_center": {
+        "x": 0,
+        "y": 0.003
+      },
+      "pcb_via_id": "via_0",
+      "pcb_trace_ids": [
+        "branch_0_0"
+      ],
+      "__collapsed_trace_participants": [
+        {
+          "solverTraceId": "branch_0_0",
+          "evaluationTraceIds": [
+            "branch_0_0",
+            "branch_0_0_routed"
+          ]
+        }
+      ],
+      "pcb_trace_id": "branch_0_0"
+    }
+  ],
+  "result": {
+    "attempted": true,
+    "repaired": false,
+    "initialDrcIssueCount": 1,
+    "remainingDrcIssueCount": 1,
+    "referenceValidationCount": 3,
+    "routesSameObject": true
+  },
+  "inputAndPreloadUnchanged": true,
+  "physicalBugDemonstrated": false,
+  "implication": "Eligibility can classify a preloaded via as a new route via when normalized trace IDs collide. Here it attempts but rejects unchanged1-error geometry, so no immutable movement or false-clean result. The mutation and full-reference guards remain effective; the absolute new-owned-pair eligibility claim is too strong without extra provenance or conservative collision rejection."
+}

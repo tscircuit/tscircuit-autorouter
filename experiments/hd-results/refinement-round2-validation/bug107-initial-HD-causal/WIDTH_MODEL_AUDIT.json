@@ -1,0 +1,117 @@
+{
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "readOnly": true,
+  "solverConstructorsOrStepsRun": 0,
+  "drcReruns": 0,
+  "requestedHdTraceWidth": 0.095,
+  "sourceMinTraceWidth": 0.095,
+  "sourceGlobalNominalTraceWidth": 0.1524,
+  "pointPairNominalWidths": {
+    "1": 36,
+    "2": 45,
+    "0.6": 34,
+    "0.4": 91,
+    "0.247396": 22,
+    "0.1524": 293,
+    "1.5": 4,
+    "0.2": 238
+  },
+  "initialHd": {
+    "routeCount": 6726,
+    "routeWidthHistogram": {
+      "0.095": 6281,
+      "0.1": 440,
+      "0.15": 5
+    },
+    "effectivePointWidthHistogram": {
+      "0.095": 39419,
+      "0.1": 5352,
+      "0.15": 20
+    },
+    "widthsBelowRequestedMinimum": 0,
+    "routesWithResolvedNominal": 6726,
+    "routesNarrowerThanResolvedNominal": 6726
+  },
+  "joint": {
+    "routeCount": 763,
+    "routeWidthHistogram": {
+      "2": 3,
+      "0.1524": 172,
+      "0.095": 294,
+      "0.5475": 13,
+      "0.1237": 17,
+      "1.0475": 3,
+      "0.2": 167,
+      "0.14750000000000002": 37,
+      "0.247396": 4,
+      "0.17119800000000002": 6,
+      "0.6": 7,
+      "0.3475": 4,
+      "0.4": 25,
+      "0.2475": 10,
+      "0.7975": 1
+    },
+    "routesWithWiderCopperThanTheirInitialMaximum": 469,
+    "routesBelowRequestedHdMinimum": 0
+  },
+  "finalErrors": {
+    "count": 92,
+    "byType": {
+      "pcb_trace_error": 18,
+      "pcb_via_trace_clearance_error": 63,
+      "pcb_pad_trace_clearance_error": 1,
+      "pcb_via_clearance_error": 10
+    },
+    "withParticipantContainingWiderCopperThanInitial": 24,
+    "participantRouteWidthAssociationIsNotOffendingSegmentCausality": true
+  },
+  "viaTraceClosedForm": {
+    "errorsMeasured": 63,
+    "exactActualClearanceReproductionTolerance": 1e-08,
+    "errorsWhoseEntirePairClearsAtInitialMaximumWidthOnSameCenterlines": 1,
+    "errorsWithWiderClosestSegmentThanInitialMaximum": 3,
+    "errorsWhoseClosestSegmentsAllAtOrBelowInitialMaximum": 60,
+    "closestSegmentWidthHistogram": {
+      "0.095": 60,
+      "0.1237": 3
+    },
+    "widthOnlyClearingExamples": [
+      {
+        "errorIndex": 29,
+        "traceId": "source_trace_72__source_net_72_mst1_0",
+        "viaId": "via_103",
+        "connectionName": "source_trace_72__source_net_72_mst1",
+        "nominal": 0.1524,
+        "initialMaximumWidth": 0.095,
+        "actualGap": 0.09031412087029698,
+        "requiredGap": 0.1,
+        "closestSegments": [
+          {
+            "pointIndex": 8,
+            "width": 0.1237,
+            "layer": "inner2",
+            "centerlineGap": 0.152164120870297
+          }
+        ],
+        "widthOnlyMinimumGapAtInitialMaximum": 0.10466412087029699,
+        "allSegmentsClearAtInitialMaximumWidth": true,
+        "scope": "Closed-form measurement of the captured via/trace pair on unchanged final centerlines; no DRC or routing rerun, no global validity inference."
+      }
+    ]
+  },
+  "identityMethod": "Exact production TraceWidthSolver.getNominalTraceWidthForRoute resolution on captured srjWithPointPairs.connections; exact getPipeline9RouteIndexByTraceId for all final participant traces; actual converted circuitJson via id mapping plus addAutoroutingViaTraceIds/getPipeline9DrcErrorTraceIds. No parsed guessed connection IDs or proximity identity joins.",
+  "conclusions": [
+    "No captured initialHD effective width is below the requested0.095mm minimum. The generic A03 ignoring a0.15/0.2 requested width defect is not observed under this case's actual0.095 request.",
+    "InitialHD routes are narrower than resolved per-connection nominal widths, and many captured joint/final routes contain wider copper. This is an existing staged width model difference, not proof that it caused this experiment's regression.",
+    "Closed-form width-only measurements can show which existing via/trace clearances on final centerlines depend on wider copper, but cannot infer which route geometry an earlier width-aware solver would produce or whether the complete board would be clean.",
+    "The10 final via-via drill errors are unaffected by reducing trace width. No attribution of all92 errors or the old-vs-new outcome difference to width is supported without additional evidence."
+  ],
+  "captureLinkageLimit": "Initial-HD geometry came from the separate already-captured early-stop execution on the same source and fixture; point-pair newConnections are byte-identical to the full failing capture, but its full earlier route geometry was not preserved. Width semantics and exact connection identities agree; no claim that both runs' entire earlier geometry is identical.",
+  "timingComparisonValid": false,
+  "detailArchive": {
+    "filename": "WIDTH_MODEL_AUDIT.details.json.gz",
+    "sha256": "d3f95a5309c206eabedcc413ac9ddbe046d15c5b97fa5d72a96bd43f96ecda00",
+    "uncompressedSha256": "f8b42e0060aec27653d0fea52a595f4f8748d3f09fdd0bdc91254fbde243cdee",
+    "containsAll63ViaTraceMeasurementsAndAll763JointRouteRows": true
+  }
+}

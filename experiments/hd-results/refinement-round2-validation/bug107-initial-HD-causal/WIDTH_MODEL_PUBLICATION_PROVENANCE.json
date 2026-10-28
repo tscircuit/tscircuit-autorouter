@@ -1,0 +1,46 @@
+{
+  "scope": "Bounded read-only closed-form width-model falsification on conservative2f captures. No solver or DRC re-execution, source edit, benchmark mutation or performance comparison.",
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "copied": {
+    "WIDTH_MODEL_AUDIT.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/WIDTH_MODEL_AUDIT.json",
+      "sha256": "49fcd0f1cd91c4ecb3856acdc97cfff53fccea16db04e4014c51c906d4bece25",
+      "bytes": 4897,
+      "transformation": "none"
+    },
+    "WIDTH_MODEL_FINDINGS.md": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/WIDTH_MODEL_FINDINGS.md",
+      "sha256": "f78257378b8599f7565f44ba0ad0c6a79dee3155629ecd5d2dc9ded7ca63e6cf",
+      "bytes": 2215,
+      "transformation": "none"
+    },
+    "WIDTH_MODEL_MANIFEST.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/WIDTH_MODEL_MANIFEST.json",
+      "sha256": "10f6829a10d4d488bfe2be3dfe34578f01d16f4d84d85f9a6ddb947cf5b6a940",
+      "bytes": 687,
+      "transformation": "none"
+    }
+  },
+  "notBundled": {
+    "audit-width-model.ts": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/audit-width-model.ts",
+      "sha256": "757abef1433546844d163ba832f963c97a317164e924c535b437a0a897b8abaf",
+      "bytes": 12706
+    },
+    "audit-width-model.log": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/audit-width-model.log",
+      "sha256": "f1f188b72ae95f838d489340b0bfe0117babcd9c7839862b48b0e8705489951e",
+      "bytes": 920
+    },
+    "WIDTH_MODEL_AUDIT.details.json.gz": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/WIDTH_MODEL_AUDIT.details.json.gz",
+      "sha256": "d3f95a5309c206eabedcc413ac9ddbe046d15c5b97fa5d72a96bd43f96ecda00",
+      "bytes": 15030
+    }
+  },
+  "binaryGzipCopied": false,
+  "largeCaptureCopied": false,
+  "completeManifestArchiveClaimed": false,
+  "linkageLimitation": "Same source/fixture and byte-identical point-pair connections link early-HD and final captures, but the entire early geometry of the full failing run was not jointly preserved. This is not a complete earlier-geometry identity claim.",
+  "fullBoardValidityInferred": false
+}

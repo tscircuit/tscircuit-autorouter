@@ -1,0 +1,315 @@
+{
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "sameInputAndOriginalTestPreserved": true,
+  "originalTestExitCode": 1,
+  "originalSvgReached": false,
+  "originalExpectCalls": 5,
+  "sourceWorktreeCleanAfter": true,
+  "targetOriginNode": "cmn_104",
+  "firstIllegalPairStage": "pipeline9JointDrcRepairSolver",
+  "pairHistory": [
+    {
+      "stage": "highDensityRouteSolver",
+      "prefix": "01-highDensityRouteSolver",
+      "distance": 0,
+      "viaA": {
+        "routeIndex": 41,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -28.25097175305978,
+        "y": 27.173670717636654,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 42,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -28.25097175305978,
+        "y": 27.173670717636654,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "highDensityForceImproveSolver",
+      "prefix": "02-highDensityForceImproveSolver",
+      "distance": 0.39800374582256026,
+      "viaA": {
+        "routeIndex": 41,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -28.358670972408948,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 42,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "highDensityRepairSolver",
+      "prefix": "03-highDensityRepairSolver",
+      "distance": 0.399189707141662,
+      "viaA": {
+        "routeIndex": 41,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -28.358670972408948,
+        "y": 27.019252982193045,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 42,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "regionId": "cmn_104",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "highDensityStitchSolver",
+      "prefix": "04-highDensityStitchSolver",
+      "distance": 0.399189707141662,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.358670972408948,
+        "y": 27.019252982193045,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "traceSimplificationSolver",
+      "prefix": "05-traceSimplificationSolver",
+      "distance": 0.399189707141662,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.358670972408948,
+        "y": 27.019252982193045,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "traceWidthSolver",
+      "prefix": "06-traceWidthSolver",
+      "distance": 0.399189707141662,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.358670972408948,
+        "y": 27.019252982193045,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "globalDrcForceImproveSolver",
+      "prefix": "07-globalDrcForceImproveSolver",
+      "distance": 0.399189707141662,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.960667226586388,
+        "y": 27.050000999999998,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.358670972408948,
+        "y": 27.019252982193045,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "pipeline9JointDrcRepairSolver",
+      "prefix": "08-pipeline9JointDrcRepairSolver",
+      "distance": 0.005522725341513009,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.99935928468926,
+        "y": 27.14566793145634,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.00446942870388,
+        "y": 27.147762429808598,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "effortCleanupSolver",
+      "prefix": "09-effortCleanupSolver",
+      "distance": 0.005522725341513009,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.99935928468926,
+        "y": 27.14566793145634,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.00446942870388,
+        "y": 27.147762429808598,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "lengthMatchingPostProcessingSolver",
+      "prefix": "10-lengthMatchingPostProcessingSolver",
+      "distance": 0.005522725341513009,
+      "viaA": {
+        "routeIndex": 0,
+        "connectionName": "source_net_37_mst3",
+        "rootConnectionName": "source_net_37",
+        "x": -27.99935928468926,
+        "y": 27.14566793145634,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      },
+      "viaB": {
+        "routeIndex": 2,
+        "connectionName": "source_net_37_mst1",
+        "rootConnectionName": "source_net_37",
+        "x": -28.00446942870388,
+        "y": 27.147762429808598,
+        "minZ": 0,
+        "maxZ": 1,
+        "diameter": 0.3
+      }
+    },
+    {
+      "stage": "powerTraceExpansionSolver",
+      "prefix": "11-powerTraceExpansionSolver",
+      "distance": 0.005522725341513009,
+      "viaA": {
+        "routeIndex": 1,
+        "pcb_trace_id": "source_net_37_mst1_0",
+        "route_type": "via",
+        "x": -28.00446942870388,
+        "y": 27.147762429808598,
+        "from_layer": "bottom",
+        "to_layer": "top",
+        "via_diameter": 0.3,
+        "via_hole_diameter": 0.2
+      },
+      "viaB": {
+        "routeIndex": 3,
+        "pcb_trace_id": "source_net_37_mst3_0",
+        "route_type": "via",
+        "x": -27.99935928468926,
+        "y": 27.14566793145634,
+        "from_layer": "bottom",
+        "to_layer": "top",
+        "via_diameter": 0.3,
+        "via_hole_diameter": 0.2
+      }
+    }
+  ],
+  "stageReferenceDrcCounts": {
+    "traceWidthSolver": 69,
+    "globalDrcForceImproveSolver": 61,
+    "pipeline9JointDrcRepairSolver": 1,
+    "effortCleanupSolver": 1,
+    "lengthMatchingPostProcessingSolver": 1
+  },
+  "finalOutputMatchesSeparatePostSolveCapture": true,
+  "finalOutputSha256": "3780583b54a8ef5ad4be7f65e6fb1972851e9add48b423d034f228c99f98c570",
+  "stepObserver": {
+    "originalStepCallSites": 1,
+    "additionalPipelineStepCallsInObserver": 0,
+    "exactlyOnceByConstruction": true,
+    "runtimeCounterTotalsRecorded": false,
+    "reason": "Bun did not run the registered Node process exit callback; no runtime call count is invented."
+  },
+  "allStageSnapshotHashesVerified": true,
+  "inputFiltering": false,
+  "assertionsChanged": false,
+  "timingComparisonValid": false
+}

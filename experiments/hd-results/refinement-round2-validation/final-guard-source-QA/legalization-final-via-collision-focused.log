@@ -1,0 +1,24 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/features/pipeline9-via-coalescence-rejects-preloaded-id-collision.test.ts:
+(pass) declines via ownership when a normalized new trace id collides with immutable preload copper [84.90ms]
+
+tests/features/pipeline9-via-coalescence-protects-endpoints.test.ts:
+(pass) does not coalesce when every target would move a protected endpoint [231.20ms]
+
+tests/features/pipeline9-via-coalescence-rejects-preloaded-via.test.ts:
+(pass) does not move a via owned by an immutable preloaded trace [12.70ms]
+
+tests/features/pipeline9-via-coalescence-rejects-distinct-nets.test.ts:
+(pass) does not merge electrically distinct nets despite a physical via collision [9.99ms]
+
+tests/features/pipeline9-via-coalescence-rejects-new-pad-conflicts.test.ts:
+(pass) does not publish a via merge when moved copper hits foreign pads [86.01ms]
+
+tests/features/pipeline9-via-coalescence-cleans-reference-drc.test.ts:
+(pass) coalesces near-coincident same-net interior vias with full reference DRC [19.34ms]
+
+ 6 pass
+ 0 fail
+ 52 expect() calls
+Ran 6 tests across 6 files. [1.78s]

@@ -1,0 +1,32 @@
+{
+  "variant": "old-full",
+  "rules": "declared",
+  "errorCount": 1198,
+  "byType": {
+    "pcb_trace_error": 290,
+    "pcb_via_trace_clearance_error": 572,
+    "pcb_pad_trace_clearance_error": 117,
+    "pcb_via_clearance_error": 219
+  },
+  "crossRegionByType": {
+    "pcb_trace_error": 109,
+    "pcb_via_trace_clearance_error": 210,
+    "pcb_via_clearance_error": 5
+  },
+  "sameRegionByType": {
+    "pcb_trace_error": 181,
+    "pcb_via_trace_clearance_error": 362,
+    "pcb_via_clearance_error": 208
+  },
+  "singleOrUnknownRegionByType": {
+    "pcb_pad_trace_clearance_error": 117,
+    "pcb_via_clearance_error": 6
+  },
+  "convertedTraces": 6726,
+  "initialHdRouteCount": 6726,
+  "inputRouteSha256": "ef2ae31fbd03d1aff7fee6f91158877e0212db5bc69237e028e77359714e59d8",
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "noTraceContinuityCheck": "Pre-stitch HD segments intentionally evaluated for physical copper/drill/board constraints only.",
+  "scope": "Offline substitution of per-node grown physical proposals into EXACT captured initialHD output. No downstream routing, native search, final board, timing or success-rate claim.",
+  "timingComparisonValid": false
+}

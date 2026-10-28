@@ -1,0 +1,56 @@
+{
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "sourceTree": "517dc816880c7f380724fe00e2f9626fb3365268",
+  "cloneClean": true,
+  "allOriginalSourceTestFixtureHashesUnchanged": true,
+  "sourceChangesDuringQA": false,
+  "allOriginalAssertionsRetained": true,
+  "testsExecutedSeriallyCpu": 3,
+  "wallTimesNotBenchmark": true,
+  "bug107": {
+    "numericalPass": false,
+    "errorCount": 92,
+    "countsByType": {
+      "pcb_trace_error": 18,
+      "pcb_via_trace_clearance_error": 63,
+      "pcb_pad_trace_clearance_error": 1,
+      "pcb_via_clearance_error": 10
+    },
+    "censored": false,
+    "exitCode": 1,
+    "elapsedSecondsDiagnosticOnly": 785.7448147319956,
+    "maxChildRssBytes": 5433262080,
+    "svgReached": false,
+    "captureMethod": "BunonLoad insertsdatawritesafteroriginalDRCevaluation; removinginsertionrecoversoriginaltestbyteforbyte. Allassertionsretained.",
+    "result": "legalization-conservative-bug107/result.json",
+    "classification": "legalization-conservative-bug107/ERROR_CLASSIFICATION.json",
+    "verification": "legalization-conservative-bug107/QA_VERIFICATION.json"
+  },
+  "midi": {
+    "numericalPass": false,
+    "errorCount": 1,
+    "censored": false,
+    "exitCode": 1,
+    "elapsedSecondsDiagnosticOnly": 100.0328545730008,
+    "maxChildRssBytes": 2295160832,
+    "svgReached": false,
+    "testUnchanged": true,
+    "errorId": "same_net_vias_close_via_89_via_97",
+    "actualClearance": -0.19447727465848702,
+    "minimumClearance": 0.1,
+    "result": "legalization-conservative-midi/result.json",
+    "log": "legalization-conservative-midi/legalization-conservative-qa-midi.log"
+  },
+  "conclusion": "Conservativecompressionreversionpreservesprovenbranchweldbutdoesnotfixeitherbroadernumericalregression. Neitherresultcensored. Noregressionfreeclaimjustified.",
+  "evidenceSha256": {
+    "legalization-conservative-bug107/result.json": "a7418d7c4a60f56ec60ca925a5a70fe391983bee6723e13f76db5065220997aa",
+    "legalization-conservative-bug107/QA_VERIFICATION.json": "2d7290b542a6b175d62f3a51f7a4f9ff2de9a46b006c5e19ce594120212268bf",
+    "legalization-conservative-bug107/ERROR_CLASSIFICATION.json": "4d04fa871a31a87c8f6e74400293e47c74211dd8ac484091ed45122600f9bcf5",
+    "legalization-conservative-bug107/bug107-capture.log": "954f5b07dc3d36851703b466cfe95db146b75be155fc473a74476300d3efe2cb",
+    "legalization-conservative-bug107/manifest.json": "5b4fe239af43bf6d5f277e3d65b3bc83d17a3abfc2a8851c7c736c69e9c7d9ca",
+    "legalization-conservative-bug107/transformation.json": "46c554396df4ef29759710f1d635297bfae3d703781db171363d6d37fadb0c52",
+    "legalization-conservative-midi/result.json": "7e328e3a341db83e9b1cb7e13a0f681d6cce61932d0a33205291937393d9bef6",
+    "legalization-conservative-midi/legalization-conservative-qa-midi.log": "09246498834668ab0d257b8739d2812f9fb05d1cfd3aa4c766d8319c75c0b50b",
+    "legalization-conservative-midi/manifest.json": "5b4fe239af43bf6d5f277e3d65b3bc83d17a3abfc2a8851c7c736c69e9c7d9ca"
+  }
+}

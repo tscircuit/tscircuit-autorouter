@@ -1,0 +1,33 @@
+{
+  "status": "PORTABLE_PATH_ADAPTATION_ONLY",
+  "intendedRepoDirectory": "experiments/hd-refinements/analysis",
+  "supportedProfiles": [
+    "portfolio",
+    "legalization",
+    "confirmation",
+    "legal-confirmation"
+  ],
+  "allowedChanges": [
+    "renderer ROOT resolved from script parents[1]",
+    "both confirmation templates resolved under ROOT/confirmation and ROOT/confirmation-legal-only"
+  ],
+  "measurementFilesChanged": false,
+  "files": {
+    "verify_refinement_artifact.py": {
+      "originalSha256": "eb2b6f7a6bd2023eb3f32a299e2412c3a1341f140d549a4a4f4ce350693657d0",
+      "portableSha256": "2e83889a85cb252b22b70618ffac54eed8c10354e2780e9c46b8b6d2f784e977",
+      "pathOnlyDiffSha256": "93955287ea0c47764f2dbbfd86be564e4911551c5acafce22f4dadd6ca128fed",
+      "exactDiff": "--- local/verify_refinement_artifact.py\n+++ portable/verify_refinement_artifact.py\n@@ -30,9 +30,9 @@\n RULE = re.compile(r\"clearance|gap|tracewidth|diameter\", re.IGNORECASE)\n SOURCE_METHOD = \"Exact JSON.stringify of loaded source SRJ after metadata migration and effort override, before runTask/timed solve; scenario hash also includes scenarioName. No configuration fields removed or normalized.\"\n KNOWN_NONEXECUTING_OMISSIONS = {\".gitignore\"}\n-CONFIRMATION_TEMPLATE = ROOT / \"artifacts/confirmation/combined-confirmation.json.in\"\n+CONFIRMATION_TEMPLATE = ROOT / \"confirmation/combined-confirmation.json.in\"\n CONFIRMATION_TEMPLATE_SHA256 = \"611973ae75130fb4dded3a17e8ef3d744270e0a344e9cbad65ca993fe2bf9c95\"\n-LEGAL_CONFIRMATION_TEMPLATE = ROOT / \"artifacts/confirmation-legal-only/legalization-final-confirmation.json.in\"\n+LEGAL_CONFIRMATION_TEMPLATE = ROOT / \"confirmation-legal-only/legalization-final-confirmation.json.in\"\n LEGAL_CONFIRMATION_TEMPLATE_SHA256 = \"59fc336f47993d670c15d94a65321bcf8e144c9b80ab1b316a1d1391e22417e6\"\n \n \n",
+      "previousCombinedOnlySha256": "185be0cdbebfafa2cfc1400d969661214d1188f80443eb6176f5a007d40cb8e9",
+      "newProfileGateDiffSha256": "0d1afe565653b08919db23739191c81f601f6d42fc122bbb301377ea227957a0"
+    },
+    "render_refinement_report.py": {
+      "originalSha256": "047db12c90175e3b90e0d3aca138431e1da1ec407645f119b80aa815a5487ef6",
+      "portableSha256": "9aaa7b8199d5808f03894c2ea05a8a11f4f3ed4df714511eb6189ddd46f06c0c",
+      "pathOnlyDiffSha256": "1e9a797988ae5218393ab8b6bcff87bcd47ce2c91c3b860ae5eb9d2b9695e282",
+      "exactDiff": "--- local/render_refinement_report.py\n+++ portable/render_refinement_report.py\n@@ -14,7 +14,7 @@\n import sys\n import tempfile\n \n-ROOT = Path('/workspace/hd-refinements-2026-10-28')\n+ROOT = Path(__file__).resolve().parents[1]\n HARNESS = ROOT / 'harness'\n sys.path.insert(0, str(HARNESS))\n import arm_profiles as profiles\n@@ -30,9 +30,9 @@\n \n DATASETS = {'srj18': 16, 'srj24': 26}\n GIB = 1024 ** 3\n-CONFIRMATION_TEMPLATE = ROOT / 'artifacts/confirmation/combined-confirmation.json.in'\n+CONFIRMATION_TEMPLATE = ROOT / 'confirmation/combined-confirmation.json.in'\n CONFIRMATION_TEMPLATE_SHA256 = '611973ae75130fb4dded3a17e8ef3d744270e0a344e9cbad65ca993fe2bf9c95'\n-LEGAL_CONFIRMATION_TEMPLATE = ROOT / 'artifacts/confirmation-legal-only/legalization-final-confirmation.json.in'\n+LEGAL_CONFIRMATION_TEMPLATE = ROOT / 'confirmation-legal-only/legalization-final-confirmation.json.in'\n LEGAL_CONFIRMATION_TEMPLATE_SHA256 = '59fc336f47993d670c15d94a65321bcf8e144c9b80ab1b316a1d1391e22417e6'\n \n \n",
+      "previousCombinedOnlySha256": "212dccb4f32cc324a0bacf345c259192b3d0191b0fcb3e22cd8a465fe2761d51",
+      "newProfileGateDiffSha256": "2519e59ade1f56ab9c7c9528634ab21b1ce9d22e8f537b8aab4a2159639ccdf7"
+    }
+  }
+}

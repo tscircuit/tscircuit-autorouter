@@ -1,0 +1,10 @@
+{
+  "sourceHead": "a2e6aa535c5a4110b4b999c044847b73039b3425",
+  "sourceTree": "ca617134fe70e9968e6c745e10b0b9c90a32d941",
+  "files": {
+    "tests/bugs/usb-dp-phase-detour.test.ts": "4063090ae9c698d43f094ad83098f693cae9703ba49d179b735685e99d4d7b0c",
+    "tests/fixtures/bug-reports/usb-dp-phase-detour/input.json": "78966edc3a39e56ee1253022012c5da28b8dae0a7921d5d3ffde4382c9ebe5af"
+  },
+  "method": "UnchangedoriginaltestwithallnumericandSVGassertions;CPU3external360s;noperformancecomparison;nosnapshotupdates",
+  "bunVersion": "1.4.3"
+}

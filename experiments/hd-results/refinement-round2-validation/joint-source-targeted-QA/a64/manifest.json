@@ -1,0 +1,31 @@
+{
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "sourceTree": "05a178c53be4dd3d59c3e012398df9c84d47110d",
+  "originalTestSha256": "c658bf296e427296e17c0b49d658425becf8768204f4daa6b82c2a4fe5c84b1a",
+  "executedProbeSha256": "45b2159c91f973f44dbda2e2cd0097638a12b3bcaab770b6e2b7b55f34c835f7",
+  "removedOnlyStatements": [
+    {
+      "start": 3169,
+      "end": 3307,
+      "startLine": 76,
+      "endLine": 79,
+      "text": "await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(\n    import.meta.path,\n    { svgName: \"full-board\", tolerance: 0 },\n  )"
+    },
+    {
+      "start": 3310,
+      "end": 3598,
+      "startLine": 80,
+      "endLine": 90,
+      "text": "await expect(\n    getA64Byte0EscapeSnapshotSvg({\n      inputSrj: originalInput,\n      routedTraces,\n      drcCount: reference.errors.length,\n      drillOverlapCount: drillOverlaps.length,\n    }),\n  ).toMatchSvgSnapshot(import.meta.path, {\n    svgName: \"ram-escape\",\n    tolerance: 0,\n  })"
+    }
+  ],
+  "fixtureAndHelperSha256": {
+    "tests/fixtures/assets/a64-byte0-source-rules.srj.json.gz": "368522780dc721787ea2b0ae4b77dc487795769175715c5b62600c0f0ee68fb1",
+    "tests/fixtures/countA64Byte0ConnectedSignals.ts": "f686778d5fb82b309a962c1f1c5d29496d0b47576275a2c8c3f067112925beaf",
+    "tests/fixtures/getA64Byte0DrillPadOverlaps.ts": "4fd0b7e7bc10eb732b9e3593109f4dd2e6dc831b7d820c7350211682e48ccf12",
+    "tests/fixtures/getA64Byte0ReferenceDrcInput.ts": "a01419d10e60cc807a015dac6c888a29732b98a5216f9d589d4466d45fbc9a6e",
+    "tests/fixtures/getA64Byte0EscapeSnapshotSvg.ts": "ebea82e849c2d18f9892536af2468652e3839c0c02db742963ac7d8ec4e99b0b"
+  },
+  "dependencySymlink": "/workspace/.tools/autorouter-dependencies/node_modules",
+  "protocol": "Fresh-process A64 correctness check on CPU3 with an external180s cap. Exact previously reviewed two SVG awaits removed; every solve, input and numerical assertion remains. No timing comparison."
+}

@@ -1,0 +1,17 @@
+{
+  "verified": true,
+  "archiveComplete": true,
+  "measurementProtocolAuthenticated": true,
+  "independentSummaryMatches": true,
+  "run": "40772916886",
+  "head": "365b38451f01c734d3f60628dbd6db14760ca4e6",
+  "profile": "legal-confirmation",
+  "expectedRecords": 126,
+  "fullRecords": 126,
+  "artifactZipSha256": "8353966223458c787a600c63075879f3a44e18b43a1e448e5663a067cb574e9b",
+  "approvedConfigSha256": "3ec21904bc67c3c5cb73ef32b72a6019b19845d3fe387d9ec9bc05170f9195a8",
+  "evidenceStatus": "fully-verified",
+  "missingProtocolFiles": [],
+  "errors": [],
+  "archiveErrors": []
+}

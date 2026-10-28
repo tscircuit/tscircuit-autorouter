@@ -1,0 +1,10 @@
+{
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "originalTestSha256": "d92c524628fc9db17613598144d3a68b880eb0a209b337522aef40e523f175fc",
+  "executedTestSha256": "1f4eeba846ed20a5c007356551b01fafa8f6d88c88d129d68f6b8343b13ae6de",
+  "insertionAfter": "  const stats = solver.pipeline9JointDrcRepairSolver!.stats\n",
+  "insertedStatements": "  // Diagnostic data capture only: every original assertion below remains.\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.drc-input.json\", JSON.stringify(drcInput))\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.final-routes.json\", JSON.stringify(drcInput.routedTraces))\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.errors.json\", JSON.stringify(errors, null, 2))\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.joint-routes.json\", JSON.stringify(solver.pipeline9JointDrcRepairSolver!.getOutput()))\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.before-power-traces.json\", JSON.stringify(solver.getNewTracesBeforePowerExpansion()))\n  writeFileSync(\"/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.metadata.json\", JSON.stringify({\n    sourceHead: \"2f77750b872ddfeae0026987de3bf01e253f9992\",\n    solved: solver.solved,\n    failed: solver.failed,\n    iterations: solver.iterations,\n    errorCount: errors.length,\n    stats,\n    newConnections: solver.netToPointPairsSolver!.newConnections,\n    method: \"Post-solve capture after original DRC evaluation and before original DRC assertions. Original source file and every numerical/SVG assertion are unchanged. Diagnostic only, no timing comparison.\",\n  }, null, 2))\n",
+  "exactOriginalRecoveredByRemovingInsertion": true,
+  "numericalAssertionsRemoved": 0,
+  "svgAssertionsRemoved": 0
+}

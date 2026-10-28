@@ -1,0 +1,10 @@
+{
+  "typecheck": {
+    "exitCode": 0,
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-final-via-typecheck.log"
+  },
+  "build": {
+    "exitCode": 0,
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-final-via-build.log"
+  }
+}

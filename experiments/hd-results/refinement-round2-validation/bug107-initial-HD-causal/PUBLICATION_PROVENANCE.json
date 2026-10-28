@@ -1,0 +1,49 @@
+{
+  "scope": "Compact source-scoped initial-HD causal reports, selected exact replay metadata, scripts and physical-summary tables only. Large route/input captures and participant-group enumerations are not bundled. All original report limitations remain.",
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "fullPipelineReplayed": false,
+  "continuityChecked": false,
+  "historicalFactoryReproduced": false,
+  "timingComparisonValid": false,
+  "localPathsAreProvenanceReferences": true,
+  "files": {
+    "PARTICIPANT_GROUP_CONTRASTS.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/PARTICIPANT_GROUP_CONTRASTS.json",
+      "sha256": "15d19532493ad889554f9e6b96a714079a0f566fb8d99efe980db98af3a525a2",
+      "bytes": 481290,
+      "bundled": false
+    },
+    "recombination-mapping.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/recombination-mapping.json",
+      "sha256": "0aa6847676273bda4ba54a13b4cf72b50e2d6b7e0cb38b7b0c89a28130c96395",
+      "bytes": 94458,
+      "bundled": false
+    },
+    "OBSTACLE_FILTER_AUDIT.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/OBSTACLE_FILTER_AUDIT.json",
+      "sha256": "0d7d8c334c4f37bb86756c2b4dc83dfbc1e5d89d70c452f6becd9c9426a24152",
+      "bytes": 37060,
+      "bundled": false
+    },
+    "NEAR_VIA_ALIAS_AUDIT.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/NEAR_VIA_ALIAS_AUDIT.json",
+      "sha256": "237f2d887b8afab9bbc16f029ada55d1ceb933dd5a50e0d11aa6a33a106577ed",
+      "bytes": 15827,
+      "bundled": false
+    },
+    "OFFLINE_CAUSAL_FINDINGS.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/OFFLINE_CAUSAL_FINDINGS.json",
+      "sha256": "6ebb35995511ff52416b25b6ff9802523dbaf58a41dd150650e531e707e7c6d5",
+      "bytes": 9476,
+      "bundled": true,
+      "transformation": "none"
+    },
+    "ANALYSIS_MANIFEST.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/ANALYSIS_MANIFEST.json",
+      "sha256": "b0cc499f414f18f924cc86af281ecaa51093fa74e6d435e9607b9547ca14c2e6",
+      "bytes": 1497,
+      "bundled": true,
+      "transformation": "none"
+    }
+  }
+}

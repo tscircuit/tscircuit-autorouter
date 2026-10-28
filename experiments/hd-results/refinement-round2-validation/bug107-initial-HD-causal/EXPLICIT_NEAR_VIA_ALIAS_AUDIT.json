@@ -1,0 +1,293 @@
+{
+  "scope": "Exact captured route.vias aliases only; same-net ownership from captured connMap.idToNetMap plus explicit equal route/root names. Does not audit all implicit geometry via spans or physical port connectivity.",
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "proposalCount": 47,
+  "nearViaAliasPairCount": 0,
+  "splitAliasPairCount": 0,
+  "rows": [
+    {
+      "nodeId": "cmn_836",
+      "prefix": "proposal-0001",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_608",
+      "prefix": "proposal-0002",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_584",
+      "prefix": "proposal-0003",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_522",
+      "prefix": "proposal-0004",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_504",
+      "prefix": "proposal-0005",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_501",
+      "prefix": "proposal-0006",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_495",
+      "prefix": "proposal-0007",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_487",
+      "prefix": "proposal-0008",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_471",
+      "prefix": "proposal-0009",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_444",
+      "prefix": "proposal-0010",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_425",
+      "prefix": "proposal-0011",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_421",
+      "prefix": "proposal-0012",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_415",
+      "prefix": "proposal-0013",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_403",
+      "prefix": "proposal-0014",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_360",
+      "prefix": "proposal-0015",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_353",
+      "prefix": "proposal-0016",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_297",
+      "prefix": "proposal-0017",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_228",
+      "prefix": "proposal-0018",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_214",
+      "prefix": "proposal-0019",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_205",
+      "prefix": "proposal-0020",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_200",
+      "prefix": "proposal-0021",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_197",
+      "prefix": "proposal-0022",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_170",
+      "prefix": "proposal-0023",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_166",
+      "prefix": "proposal-0024",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_161",
+      "prefix": "proposal-0025",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_153",
+      "prefix": "proposal-0026",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_142",
+      "prefix": "proposal-0027",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_140",
+      "prefix": "proposal-0028",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_134",
+      "prefix": "proposal-0029",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_126",
+      "prefix": "proposal-0030",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_113",
+      "prefix": "proposal-0031",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_112",
+      "prefix": "proposal-0032",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_111",
+      "prefix": "proposal-0033",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_95__sub_1_0",
+      "prefix": "proposal-0034",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_95__sub_0_0",
+      "prefix": "proposal-0035",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_63",
+      "prefix": "proposal-0036",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_43",
+      "prefix": "proposal-0037",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_42",
+      "prefix": "proposal-0038",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_30",
+      "prefix": "proposal-0039",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_27",
+      "prefix": "proposal-0040",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_26",
+      "prefix": "proposal-0041",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_25",
+      "prefix": "proposal-0042",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_21",
+      "prefix": "proposal-0043",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_19",
+      "prefix": "proposal-0044",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_16",
+      "prefix": "proposal-0045",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_13",
+      "prefix": "proposal-0046",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    },
+    {
+      "nodeId": "cmn_12",
+      "prefix": "proposal-0047",
+      "nearViaAliasPairs": 0,
+      "splitAliasPairs": 0
+    }
+  ],
+  "matches": [],
+  "timingComparisonValid": false
+}

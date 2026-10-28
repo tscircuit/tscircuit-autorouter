@@ -1,0 +1,40 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/features/pipeline9-reported-via-merges-stepped.test.ts:
+Pipeline9ReportedViaMergeSolver error: Error: Reported via merge failed: SameNetViaMergerSolver ran out of iterations (MAX_ITERATIONS=0)
+(pass) reported via repairs advance one merger step and retain repeated route pieces [6.81ms]
+
+tests/features/pipeline9-joint-drc-repair-metadata.test.ts:
+(pass) Pipeline9 joint DRC metadata keeps new route identities repairable [10.45ms]
+
+tests/features/pipeline9-joint-drc-repair-stages.test.ts:
+(pass) joint DRC repair exposes sequential child stages and propagates failures [233.54ms]
+
+tests/features/pipeline9-via-coalescence-protects-endpoints.test.ts:
+(pass) does not coalesce when every target would move a protected endpoint [15.20ms]
+
+tests/features/pipeline9-via-coalescence-rejects-preloaded-via.test.ts:
+(pass) does not move a via owned by an immutable preloaded trace [2.30ms]
+
+tests/features/pipeline9-via-coalescence-rejects-distinct-nets.test.ts:
+(pass) does not merge electrically distinct nets despite a physical via collision [9.57ms]
+
+tests/features/pipeline9-via-coalescence-rejects-new-pad-conflicts.test.ts:
+(pass) does not publish a via merge when moved copper hits foreign pads [66.54ms]
+
+tests/features/pipeline9-joint-drc-preload-id-ownership.test.ts:
+(pass) Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias [908.81ms]
+
+tests/features/pipeline9-joint-drc-reuses-static-connectivity.test.ts:
+(pass) Pipeline9 reuses obstacle connectivity while evaluating changed repair geometry [14.46ms]
+
+tests/features/pipeline9-via-coalescence-cleans-reference-drc.test.ts:
+(pass) coalesces near-coincident same-net interior vias with full reference DRC [15.27ms]
+
+tests/features/pipeline9-reported-via-merges-mixed-drc.test.ts:
+(pass) merges reported same-net vias while an unrelated trace crossing remains [29.68ms]
+
+ 11 pass
+ 0 fail
+ 768 expect() calls
+Ran 11 tests across 11 files. [1.86s]

@@ -1,0 +1,122 @@
+{
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "files": {
+    "conservative-QA/legalization-conservative-qa-verification/QA_VERIFICATION.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-qa-verification/QA_VERIFICATION.json",
+      "sourceSha256": "f4b69033f8be8c8e054e7d55b7584142254be00aeb778aa488c3fa79246d8975",
+      "bytes": 2986,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-qa-verification/results.md": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-qa-verification/results.md",
+      "sourceSha256": "4ca6406af99bc76640c61ffd30cecd3f3c12aae38c67ecffa4ff3a5fb964b2c0",
+      "bytes": 979,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/ERROR_CLASSIFICATION.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/ERROR_CLASSIFICATION.json",
+      "sourceSha256": "4d04fa871a31a87c8f6e74400293e47c74211dd8ac484091ed45122600f9bcf5",
+      "bytes": 6454,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/QA_VERIFICATION.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/QA_VERIFICATION.json",
+      "sourceSha256": "2d7290b542a6b175d62f3a51f7a4f9ff2de9a46b006c5e19ce594120212268bf",
+      "bytes": 738,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/result.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/result.json",
+      "sourceSha256": "a7418d7c4a60f56ec60ca925a5a70fe391983bee6723e13f76db5065220997aa",
+      "bytes": 854,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/manifest.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/manifest.json",
+      "sourceSha256": "5b4fe239af43bf6d5f277e3d65b3bc83d17a3abfc2a8851c7c736c69e9c7d9ca",
+      "bytes": 1120,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/transformation.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/transformation.json",
+      "sourceSha256": "46c554396df4ef29759710f1d635297bfae3d703781db171363d6d37fadb0c52",
+      "bytes": 2049,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/STAGE_PHYSICAL_ERROR_DIFFERENCE.relaxed.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/STAGE_PHYSICAL_ERROR_DIFFERENCE.relaxed.json",
+      "sourceSha256": "e53962fafe0ca3847e63a99aca438c9b1bc9b024553360d07cfd2e626bcfbe17",
+      "bytes": 2302,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-bug107/STAGE_PHYSICAL_ERROR_DIFFERENCE.declared.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/STAGE_PHYSICAL_ERROR_DIFFERENCE.declared.json",
+      "sourceSha256": "9967235ee0fc63c5249ff3cee02935e9ad457a55033842ce1fcc0acfc0e9fe12",
+      "bytes": 2304,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-midi/result.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-midi/result.json",
+      "sourceSha256": "7e328e3a341db83e9b1cb7e13a0f681d6cce61932d0a33205291937393d9bef6",
+      "bytes": 735,
+      "transformation": "none"
+    },
+    "conservative-QA/legalization-conservative-midi/manifest.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-midi/manifest.json",
+      "sourceSha256": "5b4fe239af43bf6d5f277e3d65b3bc83d17a3abfc2a8851c7c736c69e9c7d9ca",
+      "bytes": 1120,
+      "transformation": "none"
+    },
+    "conservative-QA/bug107-stage-drc-review-compact.json": {
+      "originalPath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/STAGE_DRC_REVIEW.json",
+      "originalSha256": "cd55ad6f0336ed96386744c9edba7aec88bb1fa92b19c634795113ab9a3584b3",
+      "originalBytes": 1364611,
+      "transformation": "Only per-evaluation errors and physicalErrors arrays omitted; every other field retained unchanged. Original error counts/types/digests and full input hashes remain. No solver execution or benchmark cohort normalization.",
+      "fullRouteCaptureBundled": false,
+      "originalLocalEvidencePathsAreProvenanceReferences": true
+    },
+    "not-bundled/capture.drc-input.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.drc-input.json",
+      "sha256": "0923e8e82ab523a8c5a1b809105b554b505017934968a17c0cd4c8a3859e4be5",
+      "bytes": 9690750,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    },
+    "not-bundled/capture.metadata.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.metadata.json",
+      "sha256": "ab6d6416aab8824c10230516af7a657f341f3d9eae3e76be2b7d95f802ae117e",
+      "bytes": 457638,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    },
+    "not-bundled/capture.joint-routes.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.joint-routes.json",
+      "sha256": "19fb11356a689754a5f6a9fdae753c628532886075e9fde421718f4deb0b9a7e",
+      "bytes": 998143,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    },
+    "not-bundled/capture.before-power-traces.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.before-power-traces.json",
+      "sha256": "fec25cc0e22cdf5484d988a1f3d2aad8fb636bdbbce3717c959a19d55464adcc",
+      "bytes": 1161923,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    },
+    "not-bundled/capture.final-routes.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.final-routes.json",
+      "sha256": "a841cde187a86e2c711c55e92139cbb7e3d399387a553e280b352d31aaa0a316",
+      "bytes": 1168622,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    },
+    "not-bundled/capture.errors.json": {
+      "sourcePath": "/workspace/hd-refinements-2026-10-28/artifacts/legalization-conservative-bug107/capture.errors.json",
+      "sha256": "654224f39549b816b87cae70afeed0fc6d679b2be974a7f7ce9793735183914d",
+      "bytes": 51577,
+      "bundled": false,
+      "scope": "Local captured evidence identity; no public route-copy or archive-completeness claim."
+    }
+  },
+  "scope": "Staging only; compact numerical proof metadata and selected original JSON. No large route/DRC-input copies."
+}

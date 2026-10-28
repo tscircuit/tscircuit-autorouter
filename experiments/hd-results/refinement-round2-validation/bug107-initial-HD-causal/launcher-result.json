@@ -1,0 +1,19 @@
+{
+  "exitCode": 0,
+  "censored": false,
+  "elapsedSeconds": 167.573867101004,
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=5s",
+    "360s",
+    "taskset",
+    "-c",
+    "0",
+    "bun",
+    "/workspace/hd-refinements-2026-10-28/artifacts/bug107-hd-capture/capture.ts"
+  ],
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "gitStatusAfter": "",
+  "timingComparisonValid": false
+}

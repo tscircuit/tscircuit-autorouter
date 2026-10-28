@@ -1,0 +1,176 @@
+{
+  "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+  "errorCount": 92,
+  "countsByType": {
+    "pcb_trace_error": 18,
+    "pcb_via_trace_clearance_error": 63,
+    "pcb_pad_trace_clearance_error": 1,
+    "pcb_via_clearance_error": 10
+  },
+  "examplesByType": {
+    "pcb_trace_error": [
+      {
+        "type": "pcb_trace_error",
+        "error_type": "pcb_trace_error",
+        "message": "PCB trace unnamed trace overlaps with unnamed trace (accidental contact)",
+        "pcb_trace_id": "source_trace_189__source_net_189_mst10_0",
+        "source_trace_id": "",
+        "pcb_trace_error_id": "overlap_source_trace_189__source_net_189_mst10_0_source_trace_3__source_net_3_mst2_0",
+        "pcb_component_ids": [],
+        "center": {
+          "x": -6.257005452131184,
+          "y": 8.866592823032793
+        },
+        "pcb_port_ids": [
+          "pcb_port_891",
+          "pcb_port_856",
+          "pcb_port_886",
+          "pcb_port_434"
+        ]
+      },
+      {
+        "type": "pcb_trace_error",
+        "error_type": "pcb_trace_error",
+        "message": "PCB trace unnamed trace overlaps with pcb_via \"unnamed via\" (accidental contact)",
+        "pcb_trace_id": "source_trace_189__source_net_189_mst10_0",
+        "center": {
+          "x": -5.318061539761765,
+          "y": 8.846437654428556
+        },
+        "source_trace_id": "",
+        "pcb_trace_error_id": "overlap_source_trace_189__source_net_189_mst10_0_via_71",
+        "pcb_component_ids": [],
+        "pcb_port_ids": [
+          "pcb_port_891",
+          "pcb_port_856"
+        ]
+      }
+    ],
+    "pcb_via_trace_clearance_error": [
+      {
+        "type": "pcb_via_trace_clearance_error",
+        "pcb_via_trace_clearance_error_id": "via_trace_clearance_via_12_source_trace_61__source_net_61_mst1_0",
+        "error_type": "pcb_via_trace_clearance_error",
+        "message": "Via unnamed via and trace unnamed trace are too close (clearance: 0.078mm, minimum: 0.1mm)",
+        "pcb_via_id": "via_12",
+        "pcb_trace_id": "source_trace_61__source_net_61_mst1_0",
+        "minimum_clearance": 0.1,
+        "actual_clearance": 0.07759290031229339,
+        "center": {
+          "x": -4.921111666965947,
+          "y": 8.708819347815503
+        }
+      },
+      {
+        "type": "pcb_via_trace_clearance_error",
+        "pcb_via_trace_clearance_error_id": "via_trace_clearance_via_43_source_trace_28__source_net_28_mst1_0",
+        "error_type": "pcb_via_trace_clearance_error",
+        "message": "Via unnamed via and trace unnamed trace are too close (clearance: 0.074mm, minimum: 0.1mm)",
+        "pcb_via_id": "via_43",
+        "pcb_trace_id": "source_trace_28__source_net_28_mst1_0",
+        "minimum_clearance": 0.1,
+        "actual_clearance": 0.0738374278072811,
+        "center": {
+          "x": 6.141780432344792,
+          "y": 8.670742281086618
+        }
+      }
+    ],
+    "pcb_pad_trace_clearance_error": [
+      {
+        "type": "pcb_pad_trace_clearance_error",
+        "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_175_source_trace_20__source_net_20_mst5_0",
+        "error_type": "pcb_pad_trace_clearance_error",
+        "message": "Pad unnamed SMD pad and trace unnamed trace are too close (clearance: 0.085mm, minimum: 0.1mm)",
+        "pcb_pad_id": "pcb_smtpad_175",
+        "pcb_trace_id": "source_trace_20__source_net_20_mst5_0",
+        "minimum_clearance": 0.1,
+        "actual_clearance": 0.0846317161516373,
+        "center": {
+          "x": -7.401694706481024,
+          "y": 19.652281908833878
+        }
+      }
+    ],
+    "pcb_via_clearance_error": [
+      {
+        "type": "pcb_via_clearance_error",
+        "pcb_error_id": "same_net_vias_close_via_287_via_345",
+        "message": "Vias unnamed via and unnamed via are too close together (gap: -0.111mm)",
+        "error_type": "pcb_via_clearance_error",
+        "pcb_via_ids": [
+          "via_287",
+          "via_345"
+        ],
+        "minimum_clearance": 0.1,
+        "actual_clearance": -0.11114363060669177,
+        "pcb_center": {
+          "x": 19.120548020372233,
+          "y": -7.738984102445718
+        }
+      },
+      {
+        "type": "pcb_via_clearance_error",
+        "pcb_error_id": "same_net_vias_close_via_333_via_338",
+        "message": "Vias unnamed via and unnamed via are too close together (gap: -0.063mm)",
+        "error_type": "pcb_via_clearance_error",
+        "pcb_via_ids": [
+          "via_333",
+          "via_338"
+        ],
+        "minimum_clearance": 0.1,
+        "actual_clearance": -0.06349859076269189,
+        "pcb_center": {
+          "x": 9.505470085185816,
+          "y": 4.711801024630008
+        }
+      }
+    ]
+  },
+  "referenceDrcDeclaration": "Original unchanged test runDrcPipeline9 declaration; capture executes after original evaluation and before original assertions.",
+  "originalResult": {
+    "sourceHead": "2f77750b872ddfeae0026987de3bf01e253f9992",
+    "command": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=5s",
+      "900s",
+      "taskset",
+      "-c",
+      "3",
+      "bun",
+      "test",
+      "--preload",
+      "/workspace/hd-refinements-2026-10-28/artifacts/capture-bug107-errors-conservative.ts",
+      "--timeout",
+      "9999999",
+      "tests/bugs/bugreport107-board-1726.test.ts"
+    ],
+    "exitCode": 1,
+    "censored": false,
+    "elapsedSeconds": 785.7448147319956,
+    "maxChildRssBytes": 5433262080,
+    "originalHashesUnchanged": true,
+    "statusAfter": "",
+    "timingComparisonValid": false,
+    "originalHelperDiagnostic": null,
+    "captureFiles": [
+      "capture.before-power-traces.json",
+      "capture.drc-input.json",
+      "capture.errors.json",
+      "capture.final-routes.json",
+      "capture.joint-routes.json",
+      "capture.metadata.json"
+    ]
+  },
+  "sourceAndTestUnchanged": true,
+  "timingComparisonValid": false,
+  "sha256": {
+    "capture.final-routes.json": "a841cde187a86e2c711c55e92139cbb7e3d399387a553e280b352d31aaa0a316",
+    "capture.drc-input.json": "0923e8e82ab523a8c5a1b809105b554b505017934968a17c0cd4c8a3859e4be5",
+    "capture.errors.json": "654224f39549b816b87cae70afeed0fc6d679b2be974a7f7ce9793735183914d",
+    "capture.metadata.json": "ab6d6416aab8824c10230516af7a657f341f3d9eae3e76be2b7d95f802ae117e",
+    "capture.before-power-traces.json": "fec25cc0e22cdf5484d988a1f3d2aad8fb636bdbbce3717c959a19d55464adcc",
+    "capture.joint-routes.json": "19fb11356a689754a5f6a9fdae753c628532886075e9fde421718f4deb0b9a7e"
+  }
+}

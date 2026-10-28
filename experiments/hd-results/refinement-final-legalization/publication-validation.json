@@ -1,0 +1,16 @@
+{
+  "allOriginalRendererFilesUnchanged": true,
+  "deterministicArchiveRebuildMatches": true,
+  "standaloneDecoderResult": {
+    "directory": "/tmp/hd-report-publication-zg0cn0cu/decoded",
+    "verifiedMembers": 11,
+    "armRows": 126,
+    "archiveSha256": "ff79e7d4d83b7f5c2501de4031224a506d38be5d90f5a866f92b2b38db3a3dc6"
+  },
+  "allElevenMemberBytesAndSizesMatch": true,
+  "allCsvMemberRowCountsMatch": true,
+  "allCompactCoreStringsAndExtractedHashesMatch": true,
+  "allArmRowsPreserved": 126,
+  "markdownNumericalTableLinesExactlyMatch": true,
+  "armsContrastsVerificationCopiedByteForByte": true
+}

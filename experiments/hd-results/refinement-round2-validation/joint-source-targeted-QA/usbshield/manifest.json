@@ -1,0 +1,28 @@
+{
+  "sourceHead": "6eb1871908f7a717610c005d551230e94c5936cf",
+  "sourceTree": "05a178c53be4dd3d59c3e012398df9c84d47110d",
+  "originalTestSha256": "16071d8ea4760b86c8dc409dd5aab3ae69c899363dc6057f339c736c0df9eb37",
+  "executedProbeSha256": "f82e98aee6ffad855170f5fa4345922b40e46b9db2c27639c30b32f9edc1bc66",
+  "removedOnlyStatements": [
+    {
+      "start": 2067,
+      "end": 2193,
+      "startLine": 46,
+      "endLine": 49,
+      "text": "await expect(getBugReportSnapshotSvg(phase0Drc)).toMatchSvgSnapshot(\n    import.meta.path,\n    { svgName: phase0SvgName },\n  )"
+    },
+    {
+      "start": 2853,
+      "end": 2977,
+      "startLine": 70,
+      "endLine": 73,
+      "text": "await expect(getBugReportSnapshotSvg(finalDrc)).toMatchSvgSnapshot(\n    import.meta.path,\n    { svgName: finalSvgName },\n  )"
+    }
+  ],
+  "staticFixtureSha256": {
+    "phase-0.input.json": "e9d487cd0c5857f3c2590d79222bff93c96d9856aab762d782c0c338282db73e",
+    "input.json": "78966edc3a39e56ee1253022012c5da28b8dae0a7921d5d3ffde4382c9ebe5af"
+  },
+  "dependencySymlink": "/workspace/.tools/autorouter-dependencies/node_modules",
+  "protocol": "One source-frozen fresh-process correctness regression, CPU3; external cap only. Exactly two reviewed SVG await expression statements removed, all input preparation, solves, and numerical assertions unchanged. No stage observer and no timing comparison."
+}
