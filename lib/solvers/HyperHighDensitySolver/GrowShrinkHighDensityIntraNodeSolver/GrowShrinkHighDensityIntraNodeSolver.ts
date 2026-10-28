@@ -6,7 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
-import { legalizeHighDensityRouteProposal } from "../../HighDensitySolver/legalizeHighDensityRouteProposal"
+import { legalizeHighDensityRouteProposal, type PhysicalRouteLegalizationMode } from "../../HighDensitySolver/legalizeHighDensityRouteProposal"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
@@ -28,6 +28,10 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     physicalLegalization?: boolean
+    physicalLegalizationMode?: PhysicalRouteLegalizationMode
+    minTraceToHoleEdgeClearance?: number
+    minTraceToPadEdgeClearance?: number
+    viaToPadClearance?: number
     physicalLegalizationIterations?: number
   }
 
@@ -235,7 +239,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
-    if (this.scaleFactor > 1 && this.constructorParams.physicalLegalization) {
+    const legalizationMode = this.constructorParams.physicalLegalizationMode ??
+      (this.constructorParams.physicalLegalization ? "full" : "off")
+    if (this.scaleFactor > 1 && legalizationMode !== "off") {
       const result = legalizeHighDensityRouteProposal({
         routes: solvedRoutes,
         node: this.nodeWithPortPoints,
@@ -249,6 +255,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         minViaHoleEdgeToViaHoleEdgeClearance:
           this.constructorParams.minViaHoleEdgeToViaHoleEdgeClearance,
         maxIterations: this.constructorParams.physicalLegalizationIterations,
+        mode: legalizationMode,
+        minTraceToHoleEdgeClearance: this.constructorParams.minTraceToHoleEdgeClearance,
+        minTraceToPadEdgeClearance: this.constructorParams.minTraceToPadEdgeClearance,
+        viaToPadClearance: this.constructorParams.viaToPadClearance,
       })
       solvedRoutes = result.routes
       this.stats.physicalLegalization = { ...result, routes: undefined }
@@ -256,7 +266,23 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       if (diagnostics) {
         const counters = {
           physicalLegalizationProposalCount: 1,
-          physicalLegalizationCleanProposalCount: Number(result.status === "clean"),
+          physicalLegalizationMeasuredProposalCount: Number(result.metricsRecorded),
+          physicalLegalizationEnergyMeasuredProposalCount: Number(result.energyMetricsRecorded),
+          physicalLegalizationDrillMeasuredProposalCount: Number(result.drillMetricsRecorded),
+          physicalLegalizationCopperOnlyCleanProposalCount: Number(result.independentCleanScope === "copper-only"),
+          physicalLegalizationCompressionOnlyProposalCount: Number(result.mode === "compression-only"),
+          physicalLegalizationSelectiveProposalCount: Number(result.mode === "selective"),
+          physicalLegalizationEnergyEvaluationCount: result.energyEvaluationCount,
+          physicalLegalizationGeometryWork: result.geometryWork,
+          physicalLegalizationProjectionWork: result.projectionWork,
+          physicalLegalizationMovableConflictCount: result.movableConflictCount,
+          physicalLegalizationImmutableConflictCount: result.immutableConflictCount,
+          physicalLegalizationMovableLossBefore: result.movableLossBefore,
+          physicalLegalizationMovableLossAfter: result.movableLossAfter,
+          physicalLegalizationNoMovableConflictsCount: Number(result.stopReason === "no-movable-conflicts"),
+          physicalLegalizationProgressPlateauCount: Number(result.stopReason === "progress-plateau"),
+          physicalLegalizationWorkLimitCount: Number(result.stopReason === "work-limit"),
+          physicalLegalizationCleanProposalCount: Number(result.status === "clean" && result.independentCleanScope === "copper-and-drill"),
           physicalLegalizationImprovedProposalCount: Number(result.status === "improved-needs-repair"),
           physicalLegalizationUnchangedProposalCount: Number(result.status === "unchanged-needs-repair"),
           physicalLegalizationNotNeededProposalCount: Number(result.status === "not-needed"),
@@ -269,6 +295,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           physicalLegalizationCopperPairsAfter: result.copperPairsAfter,
           physicalLegalizationOverlapPairsBefore: result.overlapPairsBefore,
           physicalLegalizationOverlapPairsAfter: result.overlapPairsAfter,
+          physicalLegalizationHolePairsBefore: result.holePairsBefore,
+          physicalLegalizationHolePairsAfter: result.holePairsAfter,
           physicalLegalizationLossBefore: result.lossBefore,
           physicalLegalizationLossAfter: result.lossAfter,
           physicalLegalizationCandidateCopperPairs:
@@ -280,10 +308,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           physicalLegalizationBoardGuardRejectedCount:
             Number(result.boardGuardRejected === true),
           physicalLegalizationIndependentCleanCheckPassedCount:
-            Number(result.independentCleanCheckPassed === true),
+            Number(result.independentCleanCheckPassed === true && result.independentCleanScope === "copper-and-drill"),
         }
         for (const [name, value] of Object.entries(counters)) {
-          diagnostics[name] = (diagnostics[name] ?? 0) + value
+          if (value !== null) diagnostics[name] = (diagnostics[name] ?? 0) + value
         }
       }
     }

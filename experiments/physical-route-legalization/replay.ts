@@ -1,5 +1,5 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { legalizeHighDensityRouteProposal } from "lib/solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
+import { legalizeHighDensityRouteProposal, type PhysicalRouteLegalizationMode } from "lib/solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
@@ -14,11 +14,16 @@ type CapturedInput = {
   allowBlindAndBuriedVias?: boolean
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
+  minTraceToHoleEdgeClearance?: number
+  minTraceToPadEdgeClearance?: number
+  viaToPadClearance?: number
 }
 type CapturedWinner = { id: string; routes: HighDensityIntraNodeRoute[] }
 
-const [paramsPath, witnessesPath, iterationsText = "40", outputPath] = process.argv.slice(2)
-if (!paramsPath || !witnessesPath) throw new Error("Usage: bun experiments/physical-route-legalization/replay.ts <hd-input.json> <grown-winners.json> [iterations=40] [output.json]")
+const [paramsPath, witnessesPath, iterationsText = "40", outputPath, modeText = "full"] = process.argv.slice(2)
+if (!paramsPath || !witnessesPath) throw new Error("Usage: bun experiments/physical-route-legalization/replay.ts <hd-input.json> <grown-winners.json> [iterations=40] [output.json] [mode=full]")
+if (!["off", "compression-only", "full", "selective"].includes(modeText)) throw new Error(`Unknown legalization mode: ${modeText}`)
+const mode = modeText as PhysicalRouteLegalizationMode
 const maxIterations = Number(iterationsText)
 if (!Number.isInteger(maxIterations) || maxIterations < 0) throw new Error("iterations must be a nonnegative integer")
 const input = await Bun.file(paramsPath).json() as CapturedInput
@@ -28,9 +33,9 @@ const results = witnesses.nodes.map((winner) => {
   const node = input.nodePortPoints.find((candidate) => candidate.capacityMeshNodeId === winner.id)
   if (!node) throw new Error(`No physical node input for ${winner.id}`)
   const result = legalizeHighDensityRouteProposal({ ...input, node, routes: winner.routes, connMap,
-    clearance: input.obstacleMargin, maxIterations })
+    clearance: input.obstacleMargin, maxIterations, mode })
   const { routes, ...metrics } = result
   console.log(JSON.stringify({ node: winner.id, ...metrics }))
   return { node: winner.id, ...result }
 })
-if (outputPath) await Bun.write(outputPath, JSON.stringify({ maxIterations, nodes: results }, null, 2))
+if (outputPath) await Bun.write(outputPath, JSON.stringify({ mode, maxIterations, nodes: results }, null, 2))

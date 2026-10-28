@@ -21,6 +21,7 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import type { PhysicalRouteLegalizationMode } from "../../solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -58,6 +59,10 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  physicalLegalizationMode?: PhysicalRouteLegalizationMode
+  physicalLegalizationIterations?: number
+  minTraceToHoleEdgeClearance?: number
+  minTraceToPadEdgeClearance?: number
 }
 
 type NodeBounds = {
@@ -333,6 +338,11 @@ export type Pipeline9RegularNodeSolverParams = {
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
+  physicalLegalizationMode?: PhysicalRouteLegalizationMode
+  physicalLegalizationIterations?: number
+  minTraceToHoleEdgeClearance?: number
+  minTraceToPadEdgeClearance?: number
+  viaToPadClearance?: number
 }
 
 /**
@@ -357,6 +367,11 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  physicalLegalizationMode = "selective",
+  physicalLegalizationIterations,
+  minTraceToHoleEdgeClearance,
+  minTraceToPadEdgeClearance,
+  viaToPadClearance,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -379,7 +394,11 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
-    physicalLegalization: true,
+    physicalLegalizationMode,
+    physicalLegalizationIterations,
+    minTraceToHoleEdgeClearance,
+    minTraceToPadEdgeClearance,
+    viaToPadClearance,
     captureSearchDebug: false,
     priorityDagSearch,
     priorityDiagnostics,
@@ -685,6 +704,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      physicalLegalizationMode: this.params.physicalLegalizationMode,
+      physicalLegalizationIterations: this.params.physicalLegalizationIterations,
+      minTraceToHoleEdgeClearance: this.params.minTraceToHoleEdgeClearance,
+      minTraceToPadEdgeClearance: this.params.minTraceToPadEdgeClearance,
+      viaToPadClearance: this.viaToPadClearance,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

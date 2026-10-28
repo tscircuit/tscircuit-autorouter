@@ -16,8 +16,9 @@ type Point = { x: number; y: number }
 type Vertex = Point & { originalX: number; originalY: number; fixed: boolean; radius: number }
 type Primitive = { a: number; b: number; radius: number; minZ: number; maxZ: number; routeIndex: number; via: boolean }
 type Contact = { t: number; u: number; dx: number; dy: number; distance: number }
-type Energy = { loss: number; maxPenetration: number; pairs: number; gx: Float64Array; gy: Float64Array; weight: Float64Array }
-type PhysicalRouteLegalizationParams = {
+type Energy = { loss: number; maxPenetration: number; pairs: number; movableLoss: number; movableContacts: number; gx: Float64Array; gy: Float64Array; weight: Float64Array }
+export type PhysicalRouteLegalizationMode = "off" | "compression-only" | "full" | "selective"
+export type PhysicalRouteLegalizationParams = {
   routes: HighDensityIntraNodeRoute[]
   node: NodeWithPortPoints
   layerCount: number
@@ -28,22 +29,33 @@ type PhysicalRouteLegalizationParams = {
   allowBlindAndBuriedVias?: boolean
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
+  minTraceToHoleEdgeClearance?: number
+  minTraceToPadEdgeClearance?: number
+  viaToPadClearance?: number
   maxIterations?: number
+  mode?: PhysicalRouteLegalizationMode
+  projectionWorkLimit?: number
 }
 
-export type PhysicalRouteLegalizationResult = {
+type PhysicalRouteLegalizationResultBase = {
   routes: HighDensityIntraNodeRoute[]
-  status: "clean" | "improved-needs-repair" | "unchanged-needs-repair" | "not-needed" | "unsupported"
+  mode: PhysicalRouteLegalizationMode
+  stopReason: "disabled" | "compression-only" | "unsupported" | "no-pairwise-conflicts" | "no-movable-conflicts" | "no-descent" | "work-limit" | "progress-plateau" | "iteration-limit" | "clean-energy"
   elapsedMs: number
   iterations: number
   pointsBefore: number
   pointsAfter: number
-  copperPairsBefore: number
-  copperPairsAfter: number
-  overlapPairsBefore: number
-  overlapPairsAfter: number
-  lossBefore: number
-  lossAfter: number
+  energyEvaluationCount: number
+  geometryWork: number
+  projectionWork: number
+  projectionWorkLimit: number | null
+  movableConflictCount: number | null
+  immutableConflictCount: number | null
+  energyMetricsRecorded: boolean
+  drillMetricsRecorded: boolean
+  independentCleanScope: "copper-only" | "copper-and-drill" | null
+  movableLossBefore: number | null
+  movableLossAfter: number | null
   candidateLoss?: number
   candidateCopperPairs?: number
   candidateOverlapPairs?: number
@@ -51,6 +63,29 @@ export type PhysicalRouteLegalizationResult = {
   boardGuardRejected?: boolean
   independentCleanCheckPassed?: boolean
 }
+export type PhysicalRouteLegalizationResult = PhysicalRouteLegalizationResultBase & ({
+  status: "disabled" | "compressed" | "unsupported"
+  metricsRecorded: false
+  copperPairsBefore: null
+  copperPairsAfter: null
+  overlapPairsBefore: null
+  overlapPairsAfter: null
+  holePairsBefore: null
+  holePairsAfter: null
+  lossBefore: null
+  lossAfter: null
+} | {
+  status: "clean" | "improved-needs-repair" | "unchanged-needs-repair" | "not-needed"
+  metricsRecorded: true
+  copperPairsBefore: number
+  copperPairsAfter: number
+  overlapPairsBefore: number
+  overlapPairsAfter: number
+  holePairsBefore: number | null
+  holePairsAfter: number | null
+  lossBefore: number | null
+  lossAfter: number | null
+})
 
 /** Exact segment closest points, including degenerate segments and crossings. */
 const closestSegments = (a: Point, b: Point, c: Point, d: Point): Contact => {
@@ -80,6 +115,7 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
         const dx1 = b.x - a.x, dy1 = b.y - a.y, dx2 = point.x - b.x, dy2 = point.y - b.y
         const scale = Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2)
         if (a.z !== b.z || b.z !== point.z || b.pcb_port_id || b.insideJumperPad || b.toNextSegmentType ||
+          Object.keys(b).some((key) => key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness") ||
           node.portPoints.some((port) => port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9) ||
           a.toNextSegmentType || b.toNextSegmentCircuitJsonMetadata ||
           (a.traceThickness ?? route.traceThickness) !== (b.traceThickness ?? route.traceThickness) ||
@@ -142,7 +178,8 @@ const isPhysicalProposalClean = (params: PhysicalRouteLegalizationParams): boole
           id === route.connectionName || id === route.rootConnectionName || connMap?.areIdsConnected(id, route.connectionName) ||
           route.rootConnectionName !== undefined && connMap?.areIdsConnected(id, route.rootConnectionName))
         if (connected && !capsule.via) continue
-        const margin = capsule.radius + clearance
+        const margin = capsule.radius + (obstacle.isNonPlatedHole ? params.minTraceToHoleEdgeClearance ?? clearance :
+          capsule.via ? params.viaToPadClearance ?? clearance : params.minTraceToPadEdgeClearance ?? clearance)
         if (obstacle.shape === "circle") {
           if (minimumDistanceBetweenSegments(capsule.a, capsule.b, obstacle.center, obstacle.center) <
             margin + Math.max(obstacle.width, obstacle.height) / 2 - 1e-9) return false
@@ -172,9 +209,27 @@ const isPhysicalProposalClean = (params: PhysicalRouteLegalizationParams): boole
  */
 export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizationParams): PhysicalRouteLegalizationResult => {
   const startedAt = performance.now()
-  const { node, layerCount, clearance, connMap } = params
+  const mode = params.mode ?? "full"
+  if (!["off", "compression-only", "full", "selective"].includes(mode)) throw new Error(`Unknown physical legalization mode: ${mode}`)
   const original = params.routes
   const pointsBefore = original.reduce((sum, route) => sum + route.route.length, 0)
+  const unmeasuredResult = (status: "disabled" | "compressed" | "unsupported", routes: HighDensityIntraNodeRoute[]): PhysicalRouteLegalizationResult => ({
+    routes, mode, status, stopReason: status === "disabled" ? "disabled" : status === "compressed" ? "compression-only" : "unsupported",
+    metricsRecorded: false, elapsedMs: performance.now() - startedAt, iterations: 0,
+    pointsBefore, pointsAfter: routes.reduce((sum, route) => sum + route.route.length, 0),
+    copperPairsBefore: null, copperPairsAfter: null, overlapPairsBefore: null, overlapPairsAfter: null,
+    holePairsBefore: null, holePairsAfter: null, lossBefore: null, lossAfter: null,
+    energyEvaluationCount: 0, geometryWork: 0, projectionWork: 0, projectionWorkLimit: null,
+    movableConflictCount: null, immutableConflictCount: null, movableLossBefore: null, movableLossAfter: null, energyMetricsRecorded: false,
+    drillMetricsRecorded: false, independentCleanScope: null,
+  })
+  if (mode === "off") return unmeasuredResult("disabled", original)
+  const unsupported = original.some((route) => route.jumpers?.length || route.route.some((point) => point.toNextSegmentType))
+  if (unsupported) return unmeasuredResult("unsupported", original)
+  const { node } = params
+  const routes = compressRoutes(original, node)
+  if (mode === "compression-only") return unmeasuredResult("compressed", routes)
+  const { layerCount, clearance, connMap } = params
   const sameNet = original.map((left) => original.map((right) => connMap
     ? arePipeline9RoutesOnSameNet(left, right, connMap)
     : left.connectionName === right.connectionName ||
@@ -187,14 +242,32 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
     }
     return count
   }
-  const routes = compressRoutes(original, node)
+  const holePairCount = (candidateRoutes: HighDensityIntraNodeRoute[]): number | null => {
+    if (params.viaHoleDiameter === undefined) return candidateRoutes.some((route) => route.vias.length > 0 ||
+      route.route.some((point, i) => i > 0 && point.z !== route.route[i - 1]!.z)) ? null : 0
+    const geometries = candidateRoutes.map((route) => getPipeline9RouteCopperGeometry(route, params))
+    const required = params.viaHoleDiameter + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
+    let count = 0
+    for (let i = 0; i < geometries.length; i++) for (let j = i; j < geometries.length; j++) {
+      for (const [aIndex, left] of geometries[i]!.viaSpans.entries()) for (const [bIndex, right] of geometries[j]!.viaSpans.entries()) {
+        if (i === j && bIndex <= aIndex || left.minZ > right.maxZ || right.minZ > left.maxZ) continue
+        const distance = Math.hypot(left.center.x - right.center.x, left.center.y - right.center.y)
+        if (sameNet[i]![j] && distance <= 1e-9) continue
+        if (distance < required - 1e-9) count++
+      }
+    }
+    return count
+  }
   const copperPairsBefore = pairCount(routes, clearance)
   const overlapPairsBefore = pairCount(routes, 0)
-  const unsupported = original.some((route) => route.jumpers?.length || route.route.some((point) => point.toNextSegmentType))
-  if (unsupported || copperPairsBefore === 0) return {
-    routes: original, status: unsupported ? "unsupported" : "not-needed", elapsedMs: performance.now() - startedAt,
+  const holePairsBefore = holePairCount(routes)
+  if (copperPairsBefore === 0 && (holePairsBefore === 0 || holePairsBefore === null)) return {
+    routes: original, mode, metricsRecorded: true, status: "not-needed", stopReason: "no-pairwise-conflicts", elapsedMs: performance.now() - startedAt,
     iterations: 0, pointsBefore, pointsAfter: pointsBefore, copperPairsBefore, copperPairsAfter: copperPairsBefore,
-    overlapPairsBefore, overlapPairsAfter: overlapPairsBefore, lossBefore: 0, lossAfter: 0,
+    overlapPairsBefore, overlapPairsAfter: overlapPairsBefore, lossBefore: null, lossAfter: null,
+    holePairsBefore, holePairsAfter: holePairsBefore, energyEvaluationCount: 0, geometryWork: 0, projectionWork: 0,
+    projectionWorkLimit: null, movableConflictCount: null, immutableConflictCount: null, movableLossBefore: null, movableLossAfter: null, energyMetricsRecorded: false,
+    drillMetricsRecorded: holePairsBefore !== null, independentCleanScope: null,
   }
   const vertices: Vertex[] = []
   const vertexByOwnerXY = new Map<string, number>()
@@ -211,6 +284,7 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
       const previous = vertexByOwnerXY.get(key)
       if (previous !== undefined) {
         vertices[previous]!.fixed ||= fixed
+        vertices[previous]!.radius = Math.max(vertices[previous]!.radius, (point.traceThickness ?? route.traceThickness) / 2)
         return previous
       }
       const index = vertices.length
@@ -262,13 +336,17 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
   // into this node and a segment between such vertices remains in its rectangle.
   const bounds = { minX: node.center.x - node.width / 2, maxX: node.center.x + node.width / 2,
     minY: node.center.y - node.height / 2, maxY: node.center.y + node.height / 2 }
-  const reach = clearance + Math.max(...primitives.map((primitive) => primitive.radius),
+  const reach = Math.max(clearance, params.minTraceToHoleEdgeClearance ?? clearance,
+    params.minTraceToPadEdgeClearance ?? clearance, params.viaToPadClearance ?? clearance) + Math.max(...primitives.map((primitive) => primitive.radius),
     (params.viaHoleDiameter ?? 0) / 2 + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0))
   const obstacles = (params.obstacles ?? []).filter((obstacle) => {
     const halfDiagonal = Math.hypot(obstacle.width, obstacle.height) / 2 + reach
     return obstacle.center.x + halfDiagonal >= bounds.minX && obstacle.center.x - halfDiagonal <= bounds.maxX &&
       obstacle.center.y + halfDiagonal >= bounds.minY && obstacle.center.y - halfDiagonal <= bounds.maxY
-  }).map((obstacle) => ({ obstacle, layers: obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
+  }).map((obstacle) => ({ obstacle,
+    traceClearance: obstacle.isNonPlatedHole ? params.minTraceToHoleEdgeClearance ?? clearance : params.minTraceToPadEdgeClearance ?? clearance,
+    viaClearance: obstacle.isNonPlatedHole ? params.minTraceToHoleEdgeClearance ?? clearance : params.viaToPadClearance ?? clearance,
+    layers: obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
     connected: routes.map((route) => obstacle.connectedTo.some((id) => id === route.connectionName || id === route.rootConnectionName ||
       connMap?.areIdsConnected(id, route.connectionName) || route.rootConnectionName !== undefined && connMap?.areIdsConnected(id, route.rootConnectionName))) }))
   const obstacleBounds = new Map(obstacles.map(({ obstacle }) => {
@@ -287,7 +365,10 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
     return Math.min(a.x, b.x) - margin <= rect.maxX && Math.max(a.x, b.x) + margin >= rect.minX &&
       Math.min(a.y, b.y) - margin <= rect.maxY && Math.max(a.y, b.y) + margin >= rect.minY
   }
+  let geometryWork = 0
+  let energyEvaluationCount = 0
   const obstacleContact = (primitive: Primitive, obstacle: Obstacle): Contact => {
+    geometryWork += obstacle.shape === "circle" ? 1 : 4
     const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
     const cosine = Math.cos(angle), sine = Math.sin(angle)
     const local = (point: Point): Point => ({ x: cosine * (point.x - obstacle.center.x) - sine * (point.y - obstacle.center.y),
@@ -321,17 +402,29 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
     return { ...best, dx: cosine * best.dx + sine * best.dy, dy: -sine * best.dx + cosine * best.dy }
   }
   const obstacleConstraints: { primitive: Primitive; obstacle: Obstacle; minimumDistance: number }[] = []
+  const holeConstraints: { a: number; b: number; minimumDistance: number }[] = []
+  if (params.viaHoleDiameter !== undefined) {
+    const required = params.viaHoleDiameter + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
+    const vias = primitives.filter((primitive) => primitive.via)
+    for (let i = 0; i < vias.length; i++) for (let j = i + 1; j < vias.length; j++) {
+      const left = vias[i]!, right = vias[j]!
+      if (left.a === right.a || left.minZ > right.maxZ || right.minZ > left.maxZ) continue
+      const a = vertices[left.a]!, b = vertices[right.a]!
+      holeConstraints.push({ a: left.a, b: right.a, minimumDistance: Math.min(required, Math.hypot(a.x - b.x, a.y - b.y)) })
+    }
+  }
   const obstaclePenetrationByRoute = obstacles.map(() => routes.map(() => 0))
   for (const primitive of primitives) for (const [obstacleIndex, entry] of obstacles.entries()) {
     if (entry.connected[primitive.routeIndex] && !primitive.via || !entry.layers.some((z) => z >= primitive.minZ && z <= primitive.maxZ)) continue
-    if (!primitiveNearObstacle(primitive, entry.obstacle, primitive.radius + clearance)) continue
-    const penetration = Math.max(0, primitive.radius + clearance - obstacleContact(primitive, entry.obstacle).distance)
+    const gap = primitive.via ? entry.viaClearance : entry.traceClearance
+    if (!primitiveNearObstacle(primitive, entry.obstacle, primitive.radius + gap)) continue
+    const penetration = Math.max(0, primitive.radius + gap - obstacleContact(primitive, entry.obstacle).distance)
     obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex] = Math.max(
       obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]!, penetration)
   }
   for (const primitive of primitives) for (const [obstacleIndex, entry] of obstacles.entries()) {
     if (entry.connected[primitive.routeIndex] && !primitive.via || !entry.layers.some((z) => z >= primitive.minZ && z <= primitive.maxZ)) continue
-    const required = primitive.radius + clearance
+    const required = primitive.radius + (primitive.via ? entry.viaClearance : entry.traceClearance)
     obstacleConstraints.push({ primitive, obstacle: entry.obstacle,
       minimumDistance: required - obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]! })
   }
@@ -343,9 +436,24 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
     }
     return true
   }
+  const preservesHoleClearance = (): boolean => {
+    for (const constraint of holeConstraints) {
+      geometryWork++
+      const a = vertices[constraint.a]!, b = vertices[constraint.b]!
+      if (Math.hypot(a.x - b.x, a.y - b.y) < constraint.minimumDistance - 1e-8) return false
+    }
+    return true
+  }
+  // Objective-only backtracking evaluations do not need fresh force arrays.
+  // Reuse one workspace; only gradient evaluations clear or update it.
+  const gx = new Float64Array(vertices.length)
+  const gy = new Float64Array(vertices.length)
+  const weight = new Float64Array(vertices.length)
   const energy = (gradient: boolean): Energy => {
-    const result: Energy = { loss: 0, maxPenetration: 0, pairs: 0, gx: new Float64Array(vertices.length),
-      gy: new Float64Array(vertices.length), weight: new Float64Array(vertices.length) }
+    energyEvaluationCount++
+    geometryWork += primitives.length
+    if (gradient) { gx.fill(0); gy.fill(0); weight.fill(0) }
+    const result: Energy = { loss: 0, maxPenetration: 0, pairs: 0, movableLoss: 0, movableContacts: 0, gx, gy, weight }
     const index = new Flatbush(primitives.length)
     for (const primitive of primitives) {
       const a = vertices[primitive.a]!, b = vertices[primitive.b]!
@@ -360,6 +468,9 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
       result.loss += penetration * penetration
       result.maxPenetration = Math.max(result.maxPenetration, penetration)
       result.pairs++
+      const movable = !vertices[left.a]!.fixed && 1 - contact.t > 1e-9 || !vertices[left.b]!.fixed && contact.t > 1e-9 ||
+        right !== undefined && (!vertices[right.a]!.fixed && 1 - contact.u > 1e-9 || !vertices[right.b]!.fixed && contact.u > 1e-9)
+      if (movable) { result.movableLoss += penetration * penetration; result.movableContacts++ }
       if (!gradient) return
       let { dx, dy } = contact
       let magnitude = Math.hypot(dx, dy)
@@ -390,13 +501,15 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
         const holeDistance = left.via && right.via && params.viaHoleDiameter !== undefined
           ? params.viaHoleDiameter + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0) : 0
         if (sameOwner && (holeDistance === 0 || left.a === right.a || !left.via || !right.via)) continue
+        geometryWork++
         addContact(left, right, closestSegments(a, b, vertices[right.a]!, vertices[right.b]!),
           sameOwner ? holeDistance : Math.max(holeDistance, left.radius + right.radius + clearance))
       }
       for (const entry of obstacles) {
         if (entry.connected[left.routeIndex] && !left.via || !entry.layers.some((z) => z >= left.minZ && z <= left.maxZ)) continue
-        if (!primitiveNearObstacle(left, entry.obstacle, left.radius + clearance)) continue
-        addContact(left, undefined, obstacleContact(left, entry.obstacle), left.radius + clearance)
+        const gap = left.via ? entry.viaClearance : entry.traceClearance
+        if (!primitiveNearObstacle(left, entry.obstacle, left.radius + gap)) continue
+        addContact(left, undefined, obstacleContact(left, entry.obstacle), left.radius + gap)
       }
     }
     return result
@@ -408,7 +521,25 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
   let iterations = 0
   const maxMove = Math.max(0.005, Math.min(0.06, Math.min(node.width, node.height) / 20))
   const maxIterations = params.maxIterations ?? 40
-  for (; iterations < maxIterations && current.loss > 1e-14; iterations++) {
+  if (!Number.isInteger(maxIterations) || maxIterations < 0) throw new Error("Physical legalization iterations must be a nonnegative integer")
+  if (params.projectionWorkLimit !== undefined && (!Number.isFinite(params.projectionWorkLimit) || params.projectionWorkLimit < 0)) {
+    throw new Error("Physical legalization work limit must be finite and nonnegative")
+  }
+  const projectionStartWork = geometryWork
+  const projectionWorkLimit = mode === "selective" ? params.projectionWorkLimit ??
+    Math.max(10_000, geometryWork * Math.max(8, maxIterations * 4)) : Infinity
+  let stopReason: PhysicalRouteLegalizationResult["stopReason"] = "iteration-limit"
+  let checkpointMovableLoss = initial.movableLoss
+  const eligible = mode !== "selective" || initial.movableContacts > 0
+  if (!eligible) stopReason = "no-movable-conflicts"
+  for (; eligible && iterations < maxIterations && current.loss > 1e-14; iterations++) {
+    if (mode === "selective" && geometryWork - projectionStartWork >= projectionWorkLimit) { stopReason = "work-limit"; break }
+    if (mode === "selective" && current.movableContacts === 0) { stopReason = "no-movable-conflicts"; break }
+    if (mode === "selective" && iterations > 0 && iterations % 4 === 0) {
+      const relativeProgress = (checkpointMovableLoss - current.movableLoss) / Math.max(checkpointMovableLoss, 1e-12)
+      if (relativeProgress < 0.005) { stopReason = "progress-plateau"; break }
+      checkpointMovableLoss = current.movableLoss
+    }
     const forces = energy(true)
     const previous = vertices.map(({ x, y }) => ({ x, y }))
     const moves = vertices.map((vertex, i) => {
@@ -441,6 +572,21 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
       moveA.x += nx * correction * wa / denominator; moveA.y += ny * correction * wa / denominator
       moveB.x += nx * correction * wb / denominator; moveB.y += ny * correction * wb / denominator
     }
+    for (let pass = 0; pass < 4; pass++) for (const constraint of holeConstraints) {
+      geometryWork++
+      const a = vertices[constraint.a]!, b = vertices[constraint.b]!
+      const dx = a.x - b.x, dy = a.y - b.y, distance = Math.hypot(dx, dy)
+      if (distance < 1e-12 || distance - constraint.minimumDistance > maxMove * 3) continue
+      const wa = Number(!a.fixed), wb = Number(!b.fixed)
+      if (wa + wb === 0) continue
+      const nx = dx / distance, ny = dy / distance
+      const moveA = moves[constraint.a]!, moveB = moves[constraint.b]!
+      const motion = nx * (moveA.x - moveB.x) + ny * (moveA.y - moveB.y)
+      const correction = constraint.minimumDistance - distance - motion
+      if (correction <= 0) continue
+      moveA.x += nx * correction * wa / (wa + wb); moveA.y += ny * correction * wa / (wa + wb)
+      moveB.x -= nx * correction * wb / (wa + wb); moveB.y -= ny * correction * wb / (wa + wb)
+    }
     let accepted = false
     for (const step of [1, 0.5, 0.25, 0.125, 0.0625, 0.03125]) {
       for (const [i, vertex] of vertices.entries()) {
@@ -451,10 +597,11 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
         vertex.y = Math.max(bounds.minY + inset, Math.min(bounds.maxY - inset, previous[i]!.y + step * dy))
       }
       const candidate = energy(false)
-      if (candidate.loss < current.loss - 1e-14 && preservesObstacleClearance()) { current = candidate; accepted = true; break }
+      if (candidate.loss < current.loss - 1e-14 && preservesObstacleClearance() && preservesHoleClearance()) { current = candidate; accepted = true; break }
     }
     if (!accepted) {
       for (const [i, vertex] of vertices.entries()) { vertex.x = previous[i]!.x; vertex.y = previous[i]!.y }
+      stopReason = "no-descent"
       break
     }
     if (current.loss < bestLoss) {
@@ -462,6 +609,8 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
       bestPositions = vertices.map(({ x, y }) => ({ x, y }))
     }
   }
+  if (current.loss <= 1e-14) stopReason = "clean-energy"
+  const projectionWork = geometryWork - projectionStartWork
   for (const [i, vertex] of vertices.entries()) { vertex.x = bestPositions[i]!.x; vertex.y = bestPositions[i]!.y }
   const candidate = routes.map((route, routeIndex) => ({ ...route,
     route: route.route.map((point, i) => ({ ...point, x: vertices[routeVertices[routeIndex]![i]!]!.x,
@@ -473,6 +622,7 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
     }),
   }))
   const copperPairsAfter = pairCount(candidate, clearance), overlapPairsAfter = pairCount(candidate, 0)
+  const holePairsAfter = holePairCount(candidate)
   // Transactional guard: never trade a newly hit board obstacle/edge for a local
   // pair improvement. Check independent of the optimizer's broad phase/energy.
   const finalEdges = externalViolations(vertices)
@@ -481,17 +631,24 @@ export const legalizeHighDensityRouteProposal = (params: PhysicalRouteLegalizati
   // must remain clean; an existing access conflict cannot become deeper.
   const obstacleWorsened = !preservesObstacleClearance()
   const accepted = bestLoss < initial.loss - 1e-12 && overlapPairsAfter <= overlapPairsBefore &&
-    !obstacleWorsened && [...finalEdges].every((key) => baselineEdges.has(key))
+    (holePairsBefore === null || holePairsAfter !== null && holePairsAfter <= holePairsBefore) &&
+    !obstacleWorsened && preservesHoleClearance() && [...finalEdges].every((key) => baselineEdges.has(key))
   const acceptedRoutes = accepted ? candidate : routes
   const finalPairs = accepted ? copperPairsAfter : copperPairsBefore
   const independentCleanCheckPassed = finalPairs === 0 && accepted && isPhysicalProposalClean({ ...params, routes: acceptedRoutes })
-  return { routes: acceptedRoutes, status: independentCleanCheckPassed
+  return { routes: acceptedRoutes, mode, metricsRecorded: true, stopReason, status: independentCleanCheckPassed
       ? "clean" : accepted ? "improved-needs-repair" : "unchanged-needs-repair",
     elapsedMs: performance.now() - startedAt, iterations, pointsBefore,
     pointsAfter: acceptedRoutes.reduce((sum, route) => sum + route.route.length, 0),
     copperPairsBefore, copperPairsAfter: finalPairs, overlapPairsBefore,
     overlapPairsAfter: accepted ? overlapPairsAfter : overlapPairsBefore,
+    holePairsBefore, holePairsAfter: accepted ? holePairsAfter : holePairsBefore,
     lossBefore: initial.loss, lossAfter: accepted ? bestLoss : initial.loss,
+    energyEvaluationCount, geometryWork, projectionWork, projectionWorkLimit: Number.isFinite(projectionWorkLimit) ? projectionWorkLimit : null,
+    movableConflictCount: initial.movableContacts, immutableConflictCount: initial.pairs - initial.movableContacts, energyMetricsRecorded: true,
+    drillMetricsRecorded: holePairsBefore !== null,
+    independentCleanScope: independentCleanCheckPassed ? holePairsAfter === null ? "copper-only" : "copper-and-drill" : null,
+    movableLossBefore: initial.movableLoss, movableLossAfter: accepted ? current.movableLoss : initial.movableLoss,
     candidateLoss: bestLoss, candidateCopperPairs: copperPairsAfter, candidateOverlapPairs: overlapPairsAfter,
     obstacleGuardRejected: obstacleWorsened, boardGuardRejected: [...finalEdges].some((key) => !baselineEdges.has(key)),
     independentCleanCheckPassed }

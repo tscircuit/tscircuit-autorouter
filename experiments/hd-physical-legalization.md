@@ -1,5 +1,78 @@
 # Experiment: embed grown topology at physical dimensions
 
+The original paired measurements in `experiments/hd-results/legalization` remain
+the historical evidence for source `8115e35a4517191c306820438b14a197dc911c7a`.
+The refinement below has focused validation only until its new five-arm benchmark
+finishes. It must not inherit the old speed, clean-board or memory claims.
+
+## Refinement: explicit ablations and selective projection
+
+`physicalLegalizationMode` is a serializable Pipeline9 constructor option, also
+accepted by the HD and grow/shrink constructors. There are no environment controls
+or measurement hooks that change the policy:
+
+| Mode | Behavior on a completed grown proposal |
+| --- | --- |
+| `off` | Preserve the original proposal; skip legalization entirely. |
+| `compression-only` | Preserve geometry, widths, vias, terminal/point metadata and internal node ports; remove strictly collinear redundant vertices. Do not construct or evaluate a physical scene. |
+| `full` | Use the full iteration schedule under the refined shared physical guards. This is not byte-equivalent historical source `8115e35a`. |
+| `selective` | Apply those same guards and accepted-proposal rules, but spend projection work only on conflicts with movable degrees of freedom and continued measured progress. |
+
+The ordinary Pipeline9 factory defaults to `selective`. The legacy
+`physicalLegalization: true` on a direct HD/grow-shrink caller still selects `full`
+unless a mode is explicit. Setting `maxIterations: 0` on the direct legalizer
+retains its historical full-scene diagnostic behavior; use `compression-only` for
+the inexpensive component ablation. Compression-only processes supported grown
+proposals without the old pairwise-conflict eligibility check, so this distinction
+is part of the ablation rather than an unreported equivalence claim.
+
+Selective policy uses no sample IDs, dataset labels, elapsed-time thresholds or
+timing feedback. It skips projection with no movable contact contribution and
+checks movable squared-penetration progress every four completed iterations.
+Less than 0.5% reduction over that window stops further work while retaining a
+useful accepted partial proposal. A deterministic geometry-work allocation limits
+distance/index work at iteration boundaries, with the same 40-iteration maximum.
+One complete iteration may exceed the remaining allocation; mandatory final
+acceptance checks always finish. This is not a strict CPU, memory or per-contact
+limit. One force-array workspace is reused across objective/backtracking calls.
+
+The work counter covers optimization index entries and exact-distance operations,
+including obstacle/drill guards; it excludes the separate authoritative pairwise
+and final clean audits. Total elapsed time includes setup and all audits. New
+metrics distinguish pairwise, energy and drill measurement. Uncomputed losses,
+movable/immutable conflicts and missing drill measurements are `null`, not zero,
+and are not added to shared numeric counters. A direct helper caller without
+drill dimensions can obtain only an explicit `copper-only` clean scope; ordinary
+Pipeline9 supplies drill dimensions. Shared physical clean counters require the
+`copper-and-drill` scope. Neither scope certifies the complete board.
+
+Shared guard fixes apply to both projection modes: arbitrary point metadata and
+all internal node ports survive compression; shared XY vertices use their widest
+copper radius; each existing drill-pair conflict may not deepen, and clean drill
+pairs remain clean even if a copper objective improves. Same-net drill-only
+conflicts are no longer skipped by an inter-net-only eligibility check. Declared
+trace-to-pad, via-to-pad and non-plated-hole clearances flow from SRJ through the
+regular-node factory into both the optimizer guard and independent clean audit.
+The NPTH rule uses `isNonPlatedHole`, never provenance metadata. These physical
+context additions can legitimately change serialized HD-input hashes; retain
+both original SRJ identity and raw constructor identity in comparisons.
+
+The existing pre-force simplifier already compresses regions with at least 4096
+points and straight runs of at least 64 grid segments. This refinement does not
+claim that mechanism as new. Aggressive compression preserves initial copper but
+changes later numerical control vertices and protected endpoint segments; its
+effect on force/repair and final route quality needs the separate arm.
+
+For the compression benchmark source, change only the default literal
+`physicalLegalizationMode = "selective"` to `"compression-only"` in
+`Pipeline9HighDensitySolver.ts`. The refined-full arm changes that same literal
+to `"full"`; it isolates the shared guard fixes from selective stopping. Use the
+unchanged historical source for the old-full arm, alongside the original control;
+keep all prior result reports immutable. Promotion requires retaining
+all clean dataset18/24 outcomes, including the replicated dataset24 samples2 and11,
+and independently checking the known snapshot-masked numerical fixtures. No
+additional clean-board result is claimed by the refinement before those runs.
+
 Pipeline 9 currently grows node coordinates, routes with unchanged copper sizes,
 then divides coordinates back to the physical node. Widths and via diameters do
 not shrink, so a useful connectivity proposal can contain physical copper
@@ -73,12 +146,12 @@ obstacles, obstacleMargin, ... }`; winners use `{ nodes: [{ id, routes }] }` in
 physical coordinates, after inverse scaling. Then compare:
 
 ```sh
-bun experiments/physical-route-legalization/replay.ts hd-input.json grown-winners.json 0 compressed.json
-bun experiments/physical-route-legalization/replay.ts hd-input.json grown-winners.json 40 projected.json
+bun experiments/physical-route-legalization/replay.ts hd-input.json grown-winners.json 0 compressed.json compression-only
+bun experiments/physical-route-legalization/replay.ts hd-input.json grown-winners.json 40 projected.json selective
 ```
 
-The zero-iteration run isolates geometry-preserving compression; 40 includes
-projection and all validation. Disabling `physicalLegalization` on
+The explicit compression-only run isolates geometry-preserving compression;
+selective projection includes setup and all validation. Disabling `physicalLegalization` on
 `HighDensitySolver` retains the original raw proposal. `physicalLegalizationIterations`
 sets the projection bound. These are serializable constructor options, not
 process-local monkey patches.

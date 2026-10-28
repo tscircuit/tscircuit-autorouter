@@ -14,6 +14,7 @@ test("physical legalization cannot gain clearance by driving a through via into 
     width: 3, height: 3, portPoints: [] }, layerCount: 4, clearance: 0.1,
     obstacles: [{ type: "rect", center: { x: 0, y: -0.4 }, width: 2, height: 0.2, layers: ["inner1"], connectedTo: [] }] })
   const via = result.routes[0]!.vias[0]!
+  if (!result.metricsRecorded) throw new Error("Physical fixture must record its conflicts")
   expect(via.y).toBeGreaterThanOrEqual(-0.05 - 1e-8)
   expect(result.status).not.toBe("clean")
   expect(result.overlapPairsAfter).toBeLessThanOrEqual(result.overlapPairsBefore)

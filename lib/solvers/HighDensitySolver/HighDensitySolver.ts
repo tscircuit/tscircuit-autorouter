@@ -19,6 +19,7 @@ import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/Portfo
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import type { PhysicalRouteLegalizationMode } from "./legalizeHighDensityRouteProposal"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -69,6 +70,10 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   readonly physicalLegalization: boolean
+  readonly physicalLegalizationMode: PhysicalRouteLegalizationMode
+  readonly minTraceToHoleEdgeClearance?: number
+  readonly minTraceToPadEdgeClearance?: number
+  readonly viaToPadClearance?: number
   readonly physicalLegalizationIterations?: number
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
@@ -118,6 +123,10 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     physicalLegalization = false,
+    physicalLegalizationMode,
+    minTraceToHoleEdgeClearance,
+    minTraceToPadEdgeClearance,
+    viaToPadClearance,
     physicalLegalizationIterations,
     captureSearchDebug,
     priorityDagSearch = false,
@@ -148,6 +157,10 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     physicalLegalization?: boolean
+    physicalLegalizationMode?: PhysicalRouteLegalizationMode
+    minTraceToHoleEdgeClearance?: number
+    minTraceToPadEdgeClearance?: number
+    viaToPadClearance?: number
     physicalLegalizationIterations?: number
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
@@ -184,7 +197,11 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
-    this.physicalLegalization = physicalLegalization
+    this.physicalLegalizationMode = physicalLegalizationMode ?? (physicalLegalization ? "full" : "off")
+    this.physicalLegalization = this.physicalLegalizationMode !== "off"
+    this.minTraceToHoleEdgeClearance = minTraceToHoleEdgeClearance
+    this.minTraceToPadEdgeClearance = minTraceToPadEdgeClearance
+    this.viaToPadClearance = viaToPadClearance
     this.physicalLegalizationIterations = physicalLegalizationIterations
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
@@ -450,6 +467,10 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       physicalLegalization: this.physicalLegalization,
+      physicalLegalizationMode: this.physicalLegalizationMode,
+      minTraceToHoleEdgeClearance: this.minTraceToHoleEdgeClearance,
+      minTraceToPadEdgeClearance: this.minTraceToPadEdgeClearance,
+      viaToPadClearance: this.viaToPadClearance,
       physicalLegalizationIterations: this.physicalLegalizationIterations,
       captureSearchDebug: this.captureSearchDebug,
     }

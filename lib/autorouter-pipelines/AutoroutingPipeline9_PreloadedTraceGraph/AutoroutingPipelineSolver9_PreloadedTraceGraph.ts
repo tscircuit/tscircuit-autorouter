@@ -8,6 +8,7 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import type { PhysicalRouteLegalizationMode } from "lib/solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
@@ -114,6 +115,8 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  physicalLegalizationMode?: PhysicalRouteLegalizationMode
+  physicalLegalizationIterations?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -643,6 +646,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            physicalLegalizationMode: cms.opts.physicalLegalizationMode,
+            physicalLegalizationIterations: cms.opts.physicalLegalizationIterations,
+            minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           },
         ]
       },
