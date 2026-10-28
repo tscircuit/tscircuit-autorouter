@@ -26,7 +26,7 @@ are added.
 timeout 120s bun scripts/repro-ddr-resized-search.ts --report /tmp/ddr-memory.json
 bun test tests/repro/pipeline9-a64-ddr-resized-search-allocation.test.ts --timeout 9999999
 bun test tests/repro/pipeline9-h3-ddr-displaced-port-geometry.test.ts --timeout 9999999
-./benchmark.sh --pipeline 9 --dataset 36 --sample-numbers 1,2 --concurrency 1 --sample-timeout 1200s
+./benchmark.sh --pipeline 9 --dataset 36 --concurrency 1 --sample-timeout 360s --max-rss-mib 12288
 ```
 
 The local checkpoint regressions are expected-failing in the reproduction PR and
@@ -35,6 +35,8 @@ limits; it never counts a limit stop as solved.
 
 For comparisons, run the same dataset on both revisions with identical runtime,
 rules and limits. Record high-density-stage completion separately from full-board
-completion, DRC and timing validation. The current single-thread benchmark can
-report stale RSS after a timeout because synchronous solving blocks its progress
-timer; use external process memory monitoring for capped runs.
+completion, DRC and timing validation. The benchmark parent samples Linux process
+peak RSS independently of the routing loop, including on time/RSS stops. Each raw
+sample result records the first completed high-density stage's elapsed time and
+cumulative process peak in `highDensityStage`. Full-board completion and DRC are
+reported separately; hitting a resource limit is a failed sample.

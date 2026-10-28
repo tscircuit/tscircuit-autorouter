@@ -32,6 +32,7 @@ type SubSolverInstance = {
 }
 
 type HighDensityBenchmarkSource = {
+  solved?: boolean
   iterations?: number
   stats?: Record<string, unknown>
   waitForAllRemoteRequests?: () => Promise<void>
@@ -511,6 +512,7 @@ export const solveWithProgress = async (
     options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS
   let lastProgressAt = -Infinity
   let lastProgressKey = ""
+  let highDensityStage: WorkerProgress["highDensityStage"]
 
   const emitProgress = (force = false) => {
     if (!options.onProgress) {
@@ -531,7 +533,16 @@ export const solveWithProgress = async (
     lastProgressKey = progressKey
     // Building stage timings walks the completed pipeline and allocates a
     // report. Do that only for emitted updates, not every routing iteration.
-    options.onProgress(getProgressInfo(task, solver, elapsedTimeMs))
+    if (!highDensityStage && solver.highDensityRouteSolver?.solved) {
+      highDensityStage = {
+        elapsedTimeMs,
+        peakRssBytes: process.resourceUsage().maxRSS * 1024,
+      }
+    }
+    options.onProgress({
+      ...getProgressInfo(task, solver, elapsedTimeMs),
+      highDensityStage,
+    })
   }
 
   emitProgress(true)
@@ -545,7 +556,14 @@ export const solveWithProgress = async (
     throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
   }
 
-  if (typeof solver.solveAsync === "function") {
+  // Pipeline9.solveAsync(undefined) runs a synchronous loop. Step it here so
+  // progress and stage-completion measurements are emitted during inline runs.
+  const inlinePipeline9 =
+    (task.threads ?? 1) === 1 &&
+    (task.solverConstructorName ?? task.solverName) ===
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph" &&
+    typeof solver.step === "function"
+  if (typeof solver.solveAsync === "function" && !inlinePipeline9) {
     const interval =
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
