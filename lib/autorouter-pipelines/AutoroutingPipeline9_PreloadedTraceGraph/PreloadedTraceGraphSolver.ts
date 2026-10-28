@@ -1,4 +1,5 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   PreloadedTracePortAssignment,
@@ -241,6 +242,7 @@ const preloadPort = (
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
+  private readonly boundaryIndex: Flatbush | null
 
   constructor(
     private readonly sharedEdgeSegments: SharedEdgeSegment[],
@@ -249,6 +251,20 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     super()
     this.MAX_ITERATIONS = 1
     this.primitives = getPreloadedTracePrimitives(srj)
+    this.boundaryIndex = sharedEdgeSegments.length > 0
+      ? new Flatbush(sharedEdgeSegments.length)
+      : null
+    if (this.boundaryIndex) {
+      for (const segment of sharedEdgeSegments) {
+        this.boundaryIndex.add(
+          Math.min(segment.start.x, segment.end.x),
+          Math.min(segment.start.y, segment.end.y),
+          Math.max(segment.start.x, segment.end.x),
+          Math.max(segment.start.y, segment.end.y),
+        )
+      }
+      this.boundaryIndex.finish()
+    }
   }
 
   override getSolverName(): string {
@@ -256,8 +272,20 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
+    let boundaryDistanceCheckCount: number = 0
     for (const primitive of this.primitives) {
-      for (const segment of this.sharedEdgeSegments) {
+      if (this.boundaryIndex === null) break
+      // Include near misses accepted by the exact geometric predicate. Keep
+      // boundary order stable: competing fixed-net assignments are ordered.
+      const candidates: number[] = this.boundaryIndex.search(
+        Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
+        Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
+        Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
+        Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
+      ).sort((left, right) => left - right)
+      for (const index of candidates) {
+        const segment = this.sharedEdgeSegments[index]!
+        boundaryDistanceCheckCount++
         if (
           minimumDistanceBetweenSegments(
             primitive.start,
@@ -284,6 +312,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       (portPoint) => (portPoint._preloadedFixedNetIds?.length ?? 0) > 0,
     )
     this.stats = {
+      boundaryDistanceCheckCount,
       preloadedTraceCount: this.srj.traces?.length ?? 0,
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
