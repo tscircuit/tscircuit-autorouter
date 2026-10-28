@@ -6,6 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
+import { legalizeHighDensityRouteProposal } from "../../HighDensitySolver/legalizeHighDensityRouteProposal"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
@@ -26,6 +27,8 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    physicalLegalization?: boolean
+    physicalLegalizationIterations?: number
   }
 
 const scalePoint = <T extends { x: number; y: number }>(
@@ -222,7 +225,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
-    const solvedRoutes =
+    let solvedRoutes =
       this.scaleFactor === 1
         ? solver.solvedRoutes
         : solver.solvedRoutes.map((route) =>
@@ -232,6 +235,58 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
+    if (this.scaleFactor > 1 && this.constructorParams.physicalLegalization) {
+      const result = legalizeHighDensityRouteProposal({
+        routes: solvedRoutes,
+        node: this.nodeWithPortPoints,
+        layerCount: this.constructorParams.layerCount ?? 2,
+        clearance: this.constructorParams.obstacleMargin ?? 0.15,
+        connMap: this.constructorParams.connMap,
+        obstacles: this.constructorParams.obstacles,
+        boardGeometry: this.constructorParams.boardGeometry,
+        allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
+        viaHoleDiameter: this.constructorParams.viaHoleDiameter,
+        minViaHoleEdgeToViaHoleEdgeClearance:
+          this.constructorParams.minViaHoleEdgeToViaHoleEdgeClearance,
+        maxIterations: this.constructorParams.physicalLegalizationIterations,
+      })
+      solvedRoutes = result.routes
+      this.stats.physicalLegalization = { ...result, routes: undefined }
+      const diagnostics = this.constructorParams.priorityDiagnostics
+      if (diagnostics) {
+        const counters = {
+          physicalLegalizationProposalCount: 1,
+          physicalLegalizationCleanProposalCount: Number(result.status === "clean"),
+          physicalLegalizationImprovedProposalCount: Number(result.status === "improved-needs-repair"),
+          physicalLegalizationUnchangedProposalCount: Number(result.status === "unchanged-needs-repair"),
+          physicalLegalizationNotNeededProposalCount: Number(result.status === "not-needed"),
+          physicalLegalizationUnsupportedProposalCount: Number(result.status === "unsupported"),
+          physicalLegalizationTimeMs: result.elapsedMs,
+          physicalLegalizationIterations: result.iterations,
+          physicalLegalizationPointsBefore: result.pointsBefore,
+          physicalLegalizationPointsAfter: result.pointsAfter,
+          physicalLegalizationCopperPairsBefore: result.copperPairsBefore,
+          physicalLegalizationCopperPairsAfter: result.copperPairsAfter,
+          physicalLegalizationOverlapPairsBefore: result.overlapPairsBefore,
+          physicalLegalizationOverlapPairsAfter: result.overlapPairsAfter,
+          physicalLegalizationLossBefore: result.lossBefore,
+          physicalLegalizationLossAfter: result.lossAfter,
+          physicalLegalizationCandidateCopperPairs:
+            result.candidateCopperPairs ?? result.copperPairsBefore,
+          physicalLegalizationCandidateOverlapPairs:
+            result.candidateOverlapPairs ?? result.overlapPairsBefore,
+          physicalLegalizationObstacleGuardRejectedCount:
+            Number(result.obstacleGuardRejected === true),
+          physicalLegalizationBoardGuardRejectedCount:
+            Number(result.boardGuardRejected === true),
+          physicalLegalizationIndependentCleanCheckPassedCount:
+            Number(result.independentCleanCheckPassed === true),
+        }
+        for (const [name, value] of Object.entries(counters)) {
+          diagnostics[name] = (diagnostics[name] ?? 0) + value
+        }
+      }
+    }
     if (
       this.constructorParams.growShrinkSolutionValidator &&
       !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)

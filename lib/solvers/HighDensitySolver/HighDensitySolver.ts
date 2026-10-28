@@ -68,6 +68,8 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  readonly physicalLegalization: boolean
+  readonly physicalLegalizationIterations?: number
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
@@ -115,6 +117,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
+    physicalLegalization = false,
+    physicalLegalizationIterations,
     captureSearchDebug,
     priorityDagSearch = false,
     priorityDiagnostics,
@@ -143,6 +147,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    physicalLegalization?: boolean
+    physicalLegalizationIterations?: number
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
@@ -178,6 +184,8 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.physicalLegalization = physicalLegalization
+    this.physicalLegalizationIterations = physicalLegalizationIterations
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
@@ -441,6 +449,8 @@ export class HighDensitySolver extends BaseSolver {
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      physicalLegalization: this.physicalLegalization,
+      physicalLegalizationIterations: this.physicalLegalizationIterations,
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver

@@ -379,6 +379,7 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    physicalLegalization: true,
     captureSearchDebug: false,
     priorityDagSearch,
     priorityDiagnostics,
