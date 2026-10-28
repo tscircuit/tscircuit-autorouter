@@ -28,12 +28,12 @@ export {
 const getTerminalDistance = (
   terminal: StitchTerminal,
   point: Point3,
-  preserveTerminalPcbPortIds: boolean | undefined,
+  pointPcbPortId: string | undefined,
 ): number => {
   if (
-    preserveTerminalPcbPortIds &&
     terminal.pcb_port_id &&
-    terminal.z !== point.z
+    pointPcbPortId &&
+    terminal.pcb_port_id !== pointPcbPortId
   ) {
     return Infinity
   }
@@ -206,22 +206,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const distStartToFirst = getTerminalDistance(
         opts.start,
         firstPoint,
-        opts.preserveTerminalPcbPortIds,
+        opts.preserveTerminalPcbPortIds ? route.startPcbPortId : undefined,
       )
       const distStartToLast = getTerminalDistance(
         opts.start,
         lastPoint,
-        opts.preserveTerminalPcbPortIds,
+        opts.preserveTerminalPcbPortIds ? route.endPcbPortId : undefined,
       )
       const distEndToFirst = getTerminalDistance(
         opts.end,
         firstPoint,
-        opts.preserveTerminalPcbPortIds,
+        opts.preserveTerminalPcbPortIds ? route.startPcbPortId : undefined,
       )
       const distEndToLast = getTerminalDistance(
         opts.end,
         lastPoint,
-        opts.preserveTerminalPcbPortIds,
+        opts.preserveTerminalPcbPortIds ? route.endPcbPortId : undefined,
       )
 
       const minDist = Math.min(
@@ -268,12 +268,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const distToFirst = getTerminalDistance(
       this.start,
       firstRouteFirstPoint,
-      opts.preserveTerminalPcbPortIds,
+      opts.preserveTerminalPcbPortIds ? firstRoute.startPcbPortId : undefined,
     )
     const distToLast = getTerminalDistance(
       this.start,
       firstRouteLastPoint,
-      opts.preserveTerminalPcbPortIds,
+      opts.preserveTerminalPcbPortIds ? firstRoute.endPcbPortId : undefined,
     )
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||

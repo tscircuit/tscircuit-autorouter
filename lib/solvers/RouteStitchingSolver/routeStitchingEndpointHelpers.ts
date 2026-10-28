@@ -138,30 +138,23 @@ const addAdjacencyEdge = (
 
 /**
  * Chooses the island endpoints that best align to the requested connection
- * terminals, honoring known terminal endpoints before distance comparisons.
+ * terminals, with deterministic tie-breaking.
  */
 export const selectIslandEndpoints = (params: {
   possibleEndpoints: Point3[]
   globalStart: Point3
   globalEnd: Point3
-  startEndpoint?: Point3
-  endEndpoint?: Point3
-}): { start: Point3; end: Point3 } => {
+}) => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
-  const startCandidates = sortedEndpoints.filter(
-    (point) => point !== params.endEndpoint,
-  )
-  const start =
-    params.startEndpoint ??
-    startCandidates.reduce((bestPoint, point) => {
-      const pointDistance = distance(point, params.globalStart)
-      const bestDistance = distance(bestPoint, params.globalStart)
-      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-          comparePoints(point, bestPoint) < 0)
-        ? point
-        : bestPoint
-    })
+  const start = sortedEndpoints.reduce((bestPoint, point) => {
+    const pointDistance = distance(point, params.globalStart)
+    const bestDistance = distance(bestPoint, params.globalStart)
+    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
+        comparePoints(point, bestPoint) < 0)
+      ? point
+      : bestPoint
+  })
 
   const remainingEndpoints = sortedEndpoints.filter((point) => point !== start)
 
@@ -170,17 +163,15 @@ export const selectIslandEndpoints = (params: {
       ? remainingEndpoints
       : params.possibleEndpoints
 
-  const end =
-    params.endEndpoint ??
-    endCandidates.reduce((bestPoint, point) => {
-      const pointDistance = distance(point, params.globalEnd)
-      const bestDistance = distance(bestPoint, params.globalEnd)
-      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-          comparePoints(point, bestPoint) < 0)
-        ? point
-        : bestPoint
-    })
+  const end = endCandidates.reduce((bestPoint, point) => {
+    const pointDistance = distance(point, params.globalEnd)
+    const bestDistance = distance(bestPoint, params.globalEnd)
+    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
+        comparePoints(point, bestPoint) < 0)
+      ? point
+      : bestPoint
+  })
 
   return { start, end }
 }
@@ -191,9 +182,23 @@ export const selectIslandEndpoints = (params: {
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
-  terminals: Point3[]
-}) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  terminals: Array<Point3 & { pcb_port_id?: string }>
+  pcbPortId?: string
+  otherPcbPortId?: string
+}): Point3 => {
+  const candidates = params.pcbPortId
+    ? params.terminals.filter(
+        (terminal) => terminal.pcb_port_id === params.pcbPortId,
+      )
+    : params.otherPcbPortId
+      ? params.terminals.filter(
+          (terminal) => terminal.pcb_port_id !== params.otherPcbPortId,
+        )
+      : params.terminals
+  if (candidates.length === 0) {
+    throw new Error(`No stitch terminal matches PCB port "${params.pcbPortId}"`)
+  }
+  const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 

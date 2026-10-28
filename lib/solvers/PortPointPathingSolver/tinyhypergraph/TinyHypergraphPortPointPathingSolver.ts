@@ -22,6 +22,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
+  DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -37,7 +38,6 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { CapacityLimitedPortDuplicationSolver } from "./CapacityLimitedPortDuplicationSolver"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import {
   NativeRoutingSolverWithGraphSizedCompletion,
@@ -196,7 +196,6 @@ type TinyPortMetadata = {
   nextPortPointId?: string
   distToCentermostPortOnZ?: number
   cramped?: boolean
-  allowDuplication?: boolean
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
@@ -430,7 +429,6 @@ const toSerializedPortData = (
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
-    allowDuplication: port.d.allowDuplication,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
@@ -1098,8 +1096,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver =
-      new CapacityLimitedPortDuplicationSolver(serializedGraph, {
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+      serializedGraph,
+      {
         duplicatePortProximity: 0.05,
         useSerializedPortPenalties: false,
         routeSolveOptions: {
@@ -1111,7 +1110,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
         },
-      })
+      },
+    )
     duplicateCongestedPortSolver.solve()
     if (duplicateCongestedPortSolver.failed) {
       this.duplicateCongestedPortError =

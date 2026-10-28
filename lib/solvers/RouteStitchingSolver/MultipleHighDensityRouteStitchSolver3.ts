@@ -258,50 +258,45 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             params.layerCount,
           ),
         }
-        let startEndpoint: Point3 | undefined
-        let endEndpoint: Point3 | undefined
-        if (this.preserveTerminalPcbPortIds) {
-          // Terminal tags identify the island side even when both pads are
-          // closer to the same endpoint than to the island's other endpoint.
-          for (const route of hdRoutes) {
-            for (const [pcbPortId, endpoint] of [
-              [route.startPcbPortId, route.route[0]],
-              [route.endPcbPortId, route.route[route.route.length - 1]],
-            ] as const) {
-              if (!pcbPortId) continue
-              if (pcbPortId === globalStart.pcb_port_id)
-                startEndpoint = endpoint
-              if (pcbPortId === globalEnd.pcb_port_id) endEndpoint = endpoint
-            }
-          }
-        }
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
           globalEnd,
-          startEndpoint,
-          endEndpoint,
         }))
 
         if (
-          !this.preserveTerminalPcbPortIds &&
           distance(start, connection.pointsToConnect[1]) <
-            distance(end, connection.pointsToConnect[0])
+          distance(end, connection.pointsToConnect[0])
         ) {
           ;[start, end] = [end, start]
         }
 
+        const pcbPortIdByEndpoint = new Map<Point3, string>()
+        if (this.preserveTerminalPcbPortIds) {
+          // Match tagged ends to their pads without changing island orientation.
+          for (const route of hdRoutes) {
+            if (route.startPcbPortId)
+              pcbPortIdByEndpoint.set(route.route[0], route.startPcbPortId)
+            if (route.endPcbPortId)
+              pcbPortIdByEndpoint.set(
+                route.route[route.route.length - 1],
+                route.endPcbPortId,
+              )
+          }
+        }
+        const startPcbPortId = pcbPortIdByEndpoint.get(start)
+        const endPcbPortId = pcbPortIdByEndpoint.get(end)
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: this.preserveTerminalPcbPortIds
-            ? [globalStart]
-            : [globalStart, globalEnd],
+          terminals: [globalStart, globalEnd],
+          pcbPortId: startPcbPortId,
+          otherPcbPortId: endPcbPortId,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: this.preserveTerminalPcbPortIds
-            ? [globalEnd]
-            : [globalStart, globalEnd],
+          terminals: [globalStart, globalEnd],
+          pcbPortId: endPcbPortId,
+          otherPcbPortId: startPcbPortId,
         })
       } else {
         start = {

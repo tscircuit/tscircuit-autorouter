@@ -22,7 +22,6 @@ export type RawPort = {
   z: number
   distToCentermostPortOnZ: number
   cramped?: boolean
-  allowDuplication?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
   _preloadedFixedNetIds?: string[]
