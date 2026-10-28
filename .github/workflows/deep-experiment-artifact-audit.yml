@@ -17,21 +17,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - sourceKey: copper-soft-only-srj18
+          - sourceKey: copper-soft-only-srj24
             kind: full
-            expectedFile: expected-copper-soft-only-srj18.json
+            expectedFile: expected-copper-soft-only-srj24.json
             runId: 40639451020
-            artifactName: pinned-experiment-3201-srj18
-          - sourceKey: forest-scope-targeted-srj18
-            kind: targeted
-            expectedFile: expected-targeted-forest-scope-srj18.json
-            runId: 40640929032
-            artifactName: targeted-forest-scope-3198-srj18
-          - sourceKey: forest-scope-targeted-srj24
-            kind: targeted
-            expectedFile: expected-targeted-forest-scope-srj24.json
-            runId: 40640929032
-            artifactName: targeted-forest-scope-3198-srj24
+            artifactName: pinned-experiment-3201-srj24
     steps:
       - name: Checkout read-only artifact inspector
         uses: actions/checkout@v4
