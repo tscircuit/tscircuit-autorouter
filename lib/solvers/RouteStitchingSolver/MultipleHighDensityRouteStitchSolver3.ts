@@ -19,6 +19,7 @@ import {
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
+  getUniqueStitchRoutes,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
@@ -155,7 +156,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
-    const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+    const canonicalHdRoutes = getUniqueStitchRoutes(params.hdRoutes).sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
       hdRoutes: canonicalHdRoutes,
     })
