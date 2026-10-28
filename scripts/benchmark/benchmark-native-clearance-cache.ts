@@ -2,19 +2,18 @@ import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { heapStats } from "bun:jsc"
 import type { IntraNodeRouteSolver } from "../../lib/solvers/HighDensitySolver/IntraNodeSolver"
 import type { NodeWithPortPoints } from "../../lib/types/high-density-types"
 
 type Mode = "timing" | "memory"
 type Arm = "baseline" | "candidate"
 type NativeCache = {
-  freePlanarObstaclePointCache?: Float64Array
+  freePlanarObstaclePointCache?: number[]
   freePlanarObstaclePoints?: Map<number, { x: number; y: number; z: number }>
 }
 type LiveCheckpoint = {
-  heapBytes: number
-  externalBytes: number
-  managedBytes: number
+  liveHeapBytes: number
   rssBytes: number
   outerIterations: number
   nativeConnectionName: string
@@ -22,7 +21,6 @@ type LiveCheckpoint = {
   exploredNodeCount: number
   cacheEntries: number
   cacheCapacity: number | null
-  cacheBytes: number | null
   stateHash: string
 }
 type Measurement = {
@@ -41,9 +39,7 @@ type Trial = Measurement & { arm: Arm; mode: Mode; trial: number }
 type MemorySummary = Record<
   Arm,
   {
-    heapBytes: number
-    externalBytes: number
-    managedBytes: number
+    liveHeapBytes: number
     rssBytes: number
   }
 >
@@ -94,11 +90,10 @@ const captureCheckpoint = (
   }
   // The pipeline still owns this active native solver and its live cache.
   Bun.gc(true)
+  const liveHeapBytes = heapStats().heapSize
   const memory = process.memoryUsage()
   return {
-    heapBytes: memory.heapUsed,
-    externalBytes: memory.external,
-    managedBytes: memory.heapUsed + memory.external,
+    liveHeapBytes,
     rssBytes: memory.rss,
     outerIterations: solver.iterations,
     nativeConnectionName: native.connectionName,
@@ -106,7 +101,6 @@ const captureCheckpoint = (
     exploredNodeCount: native.exploredNodes.size,
     cacheEntries,
     cacheCapacity: cache ? cache.length / 3 : null,
-    cacheBytes: cache?.byteLength ?? null,
     stateHash: hash({
       routes: solver.solvedRoutes,
       unsolvedConnections: solver.unsolvedConnections,
@@ -289,9 +283,7 @@ const main = (): void => {
         (row) => row.arm === arm && row.mode === "memory",
       )
       medianMemory[arm] = {
-        heapBytes: median(rows.map((row) => row.checkpoint!.heapBytes)),
-        externalBytes: median(rows.map((row) => row.checkpoint!.externalBytes)),
-        managedBytes: median(rows.map((row) => row.checkpoint!.managedBytes)),
+        liveHeapBytes: median(rows.map((row) => row.checkpoint!.liveHeapBytes)),
         rssBytes: median(rows.map((row) => row.checkpoint!.rssBytes)),
       }
     }
@@ -312,7 +304,7 @@ const main = (): void => {
         trials,
         roots,
         notes:
-          "Fresh process per arm and trial; alternating order; three identical warmups; median of five constructor+solve times excludes cloning and inter-run GC. All timing trials precede all memory trials. Memory children repeat once per trial and measure live heap/external/RSS after GC at fixed outer iteration 17000/19000, while the pipeline owns an active native solver. Managed memory is heapUsed+external, including typed-array backing storage. Cache entries/storage and a cache-independent live-state hash accompany every checkpoint. RSS is the checkpoint reading, not peak RSS. Memory-mode elapsed time includes checkpoint work and is excluded from timing summaries. Final route/state hashes must match after continuing to completion. Failed final outcomes are parity controls, not successful routing claims.",
+          "Fresh process per arm and trial; alternating order; three identical warmups; median of five constructor+solve times excludes cloning and inter-run GC. All timing trials precede all memory trials. Memory children repeat once per trial and measure JSC live heap and process RSS after GC at fixed outer iteration 17000/19000, while the pipeline owns an active native solver. liveHeapBytes is heapStats().heapSize, which already includes extraMemorySize and backing storage. Cache entries/capacity and a cache-independent live-state hash accompany every checkpoint. RSS is the checkpoint reading, not peak RSS. Memory-mode elapsed time includes checkpoint work and is excluded from timing summaries. Final route/state hashes must match after continuing to completion. Failed final outcomes are parity controls, not successful routing claims.",
         results,
       },
       null,

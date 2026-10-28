@@ -88,7 +88,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
-  private freePlanarObstaclePointCache?: Float64Array
+  private freePlanarObstaclePointCache?: number[]
   private freePlanarObstaclePointCacheWrites = 0
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
@@ -423,7 +423,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         const nextCacheSlots = this.freePlanarObstaclePointCache
           ? Math.min(pointCacheSlots * 4, FREE_PLANAR_OBSTACLE_CACHE_SLOTS)
           : INITIAL_FREE_PLANAR_OBSTACLE_CACHE_SLOTS
-        this.freePlanarObstaclePointCache = new Float64Array(
+        this.freePlanarObstaclePointCache = new Array<number>(
           nextCacheSlots * 3,
         ).fill(Number.NaN)
         this.freePlanarObstaclePointCacheWrites = 0
