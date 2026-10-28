@@ -1,0 +1,100 @@
+{
+  "purpose": "Constructor integration correction; routing algorithm, physical acceptance and work budgets unchanged. Full population qualification requires a new pinned revision.",
+  "previousLocalCommit": "3099308a58f82cfba8d140bb04194cb27d18a0a6",
+  "previousPublishedCommit": "cefb6bf3b7be31d1ac9dc678fb3fb1af128d0fac",
+  "initialSrj18Outcome": "All16 candidates rejected during construction because cacheProvider:null entered numeric-option validation; not evidence of search failure or a timing win.",
+  "contract": {
+    "cacheProvider": "Only null/undefined accepted; this engine has no cache",
+    "numericOptions": [
+      "effort",
+      "maxSearchNodes",
+      "maxGeometryQueries",
+      "viaCost"
+    ],
+    "unknownOptions": "Explicit error",
+    "routingLimitsChanged": false,
+    "acceptanceChanged": false
+  },
+  "focusedTests": {
+    "files": 20,
+    "pass": 20,
+    "fail": 0,
+    "assertions": 982
+  },
+  "screen": {
+    "dataset": "srj24",
+    "sample": 25,
+    "constructor": "GeometryAutoroutingPipelineSolver",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1
+    },
+    "inputSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+    "solved": true,
+    "traceCount": 57,
+    "referenceDrcErrors": 0,
+    "explicitNullEqualsAbsentCopper": true,
+    "outputSha256": "92cc8c02af3ff37b8cbe95808399981be633f8258297ac94dc75ddfa54c62427",
+    "stats": {
+      "backend": "lazy-obstacle-visibility-v1",
+      "geometryQueries": 8843,
+      "searchExpansions": 313,
+      "obstacleEvents": 578,
+      "routedBranches": 57,
+      "throughVias": 20,
+      "reusedViaTransitions": 1,
+      "pipeline9StagesExecuted": 0,
+      "conflictReorders": 0,
+      "replayedBranches": 0,
+      "noRouteStates": 0,
+      "branchCount": 57,
+      "acceptedAgainstOriginalInput": true,
+      "acceptedBranches": 57,
+      "acceptedThroughVias": 20,
+      "acceptedUniqueThroughVias": 19
+    },
+    "factoryAudit": {
+      "actualSolverName": "GeometryAutoroutingPipelineSolver",
+      "actualConstructorName": "GeometryAutoroutingPipelineSolver",
+      "solverModule": "lib/testing/GeometryAutoroutingPipelineSolver.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1
+      },
+      "solverSolved": true,
+      "solverFailed": false,
+      "solverError": null,
+      "actualCacheProviderState": "not exposed by this backend",
+      "inputHash": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+      "inputMutated": false,
+      "constructorTimeMs": 3.0776759999999967,
+      "evidence": {
+        "stats": {
+          "backend": "lazy-obstacle-visibility-v1",
+          "geometryQueries": 8843,
+          "searchExpansions": 313,
+          "obstacleEvents": 578,
+          "routedBranches": 57,
+          "throughVias": 20,
+          "reusedViaTransitions": 1,
+          "pipeline9StagesExecuted": 0,
+          "conflictReorders": 0,
+          "replayedBranches": 0,
+          "noRouteStates": 0,
+          "branchCount": 57,
+          "acceptedAgainstOriginalInput": true,
+          "acceptedBranches": 57,
+          "acceptedThroughVias": 20,
+          "acceptedUniqueThroughVias": 19
+        }
+      }
+    }
+  },
+  "validation": {
+    "build": "worker, ESM and DTS build passed",
+    "typecheck": "targeted TypeScript check passed, including the exact-options regression",
+    "formatOrLintRun": false,
+    "snapshotsChanged": false,
+    "factory": "The actual pinned experiment-audit-adapter dynamic constructor and createExperimentAuditSolver functions passed SRJ24/25; recorded actual constructor/options and unchanged input."
+  }
+}

@@ -24,6 +24,8 @@ type Blocker = {
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 }
 export interface GeometryAutoroutingPipelineSolverOptions {
+  /** This engine has no cache; accept the shared benchmark's explicit cold-run option. */
+  cacheProvider?: null
   effort?: number
   maxSearchNodes?: number
   maxGeometryQueries?: number
@@ -90,6 +92,11 @@ export class GeometryAutoroutingPipelineSolver extends BaseSolver {
     this.srj = structuredClone(srj)
     this.opts = opts
     for (const [name, value] of Object.entries(opts)) {
+      if (name === "cacheProvider") {
+        if (value !== null && value !== undefined) throw new Error("Geometry cacheProvider must be null or undefined; this engine has no cache")
+        continue
+      }
+      if (!["effort", "maxSearchNodes", "maxGeometryQueries", "viaCost"].includes(name)) throw new Error(`Geometry does not support option ${name}`)
       if (value !== undefined && (!Number.isFinite(value) || (name === "viaCost" ? value < 0 : value <= 0))) throw new Error(`Geometry ${name} must be finite and ${name === "viaCost" ? "nonnegative" : "positive"}`)
     }
     if (!Number.isInteger(srj.layerCount) || srj.layerCount < 1) throw new Error("Geometry layerCount must be a positive integer")

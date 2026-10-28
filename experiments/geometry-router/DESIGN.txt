@@ -31,6 +31,14 @@ Effort scales all three search budgets. Coordinate state identity rounds to 1e-7
 mm; collision decisions use unrounded coordinates. This finite graph and its
 state dominance rules do not provide continuous completeness or optimality.
 
+The engine has no cache. It accepts the shared benchmark's explicit
+{ cacheProvider: null, effort: 1 } constructor contract; a nonnull cache provider
+or unknown option fails explicitly. The initial full SRJ18 campaign rejected all
+16 candidate constructions because the generic numeric-option loop treated null
+as an invalid numeric budget. Those are constructor integration rejections, not
+search outcomes. The corrected constructor preserves routing and acceptance;
+its full SRJ18/SRJ24 qualification must use a separately pinned revision.
+
 The engine uses the existing KRT adapter's branch preparation and original-input
 qualifier, without calling Rust or WASM. Unsupported features fail explicitly:
 preloaded traces, blind/buried vias, via-in-pad permission, jumpers, differential
