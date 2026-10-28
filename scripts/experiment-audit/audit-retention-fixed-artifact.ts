@@ -171,6 +171,36 @@ function comparablePadErrors(errors: Json[]): string[] {
   return errors.filter((error) => error.type === "pcb_pad_pad_clearance_error").map((error) => JSON.stringify([error.type, sorted(error.pcb_pad_ids), error.message])).sort()
 }
 
+// Classify every reported port against the original exported task. Keep all
+// findings in the result; singleton classification never subtracts DRC errors.
+export function classifyConnectivityFindings(original: Json, pairs: Json, traces: Json[], circuitJson: Json[], errors: Json[]): Json[] {
+  return errors.filter((error) => error.type === "pcb_port_not_connected_error").map((error) => {
+    assert.equal(error.pcb_port_ids.length, 1, "This retained audit expects one participant per connectivity finding")
+    const portId = error.pcb_port_ids[0]
+    const originalMembership = original.connections.filter((connection: Json) => connection.pointsToConnect.some((point: Json) => point.pcb_port_id === portId))
+    const pointPairDemandNames = pairs.connections.filter((connection: Json) => connection.pointsToConnect.some((point: Json) => point.pcb_port_id === portId)).map((connection: Json) => connection.name).sort()
+    const prefix = "pcb_port_not_connected_error_trace_"
+    const sourceTraceId = error.pcb_port_not_connected_error_id.startsWith(prefix) ? error.pcb_port_not_connected_error_id.slice(prefix.length) : null
+    const converted = sourceTraceId === null ? null : circuitJson.find((element) => element.type === "source_trace" && element.source_trace_id === sourceTraceId)
+    const rawTraceDeclaredEndpointCount = traces.filter((trace) => trace.connectsTo?.includes(portId) || trace.route.some((point: Json) => point.start_pcb_port_id === portId || point.end_pcb_port_id === portId)).length
+    const point = originalMembership.length === 1 && originalMembership[0].pointsToConnect.length === 1 ? originalMembership[0].pointsToConnect[0] : null
+    const singletonSelfAssociation = point !== null && pointPairDemandNames.length === 0 && point.pointId === portId &&
+      JSON.stringify(converted?.connected_source_port_ids) === JSON.stringify([portId]) &&
+      JSON.stringify(converted?.connected_source_net_ids) === JSON.stringify([point.pointId])
+    return {
+      errorId: error.pcb_port_not_connected_error_id,
+      portId,
+      originalMembership: originalMembership.map((connection: Json) => ({ name: connection.name, terminalCount: connection.pointsToConnect.length })),
+      pointPairDemandNames,
+      convertedSourceTraceId: sourceTraceId,
+      convertedSourcePortIds: converted ? converted.connected_source_port_ids : null,
+      convertedSourceNetTokens: converted ? converted.connected_source_net_ids : null,
+      rawTraceDeclaredEndpointCount,
+      classification: singletonSelfAssociation ? "ORIGINAL_SINGLE_TERMINAL_NO_PAIR_DEMAND_CONVERTER_SELF_NET" : "REQUESTED_OR_UNRESOLVED_CONNECTIVITY_REVIEW_REQUIRED",
+    }
+  }).sort((a, b) => a.portId.localeCompare(b.portId) || a.errorId.localeCompare(b.errorId))
+}
+
 async function main() {
   const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
   const artifactRoot = resolve(process.argv[2] ?? "")
@@ -203,6 +233,7 @@ async function main() {
   assert.equal(rows.length, 4)
   assert.deepEqual(rows.map((row) => `${row.sampleNumber}${row.arm}`), ["14A", "14B", "15A", "15B"])
   const reports: Json[] = []
+  const connectivityReports: Json[] = []
   for (const row of rows) {
     const key = `${row.sampleNumber}${row.arm}`, expected = EXPECTED[key]
     assert(expected, "Unexpected sample/arm")
@@ -220,6 +251,12 @@ async function main() {
     const padErrors = library.filter((error: Json) => error.type === "pcb_pad_pad_clearance_error")
     assert.equal(padErrors.length, row.sampleNumber === 14 ? (row.arm === "A" ? 0 : 5) : (row.arm === "A" ? 13 : 0))
     const ownerMap = originalOwners(original), copper = strictCopperMetrics(original, traces)
+    const connectivity = classifyConnectivityFindings(original, pairs, traces, evaluated.circuitJson, library)
+    assert.equal(connectivity.length, row.sampleNumber === 14 ? 68 : 20)
+    const savedPortParticipants = supplemental.libraryRoutingChecks.errors.filter((error: Json) => error.type === "pcb_port_not_connected_error").map((error: Json) => JSON.stringify(error.pcb_port_ids)).sort()
+    const reproducedPortParticipants = library.filter((error: Json) => error.type === "pcb_port_not_connected_error").map((error: Json) => JSON.stringify(error.pcb_port_ids)).sort()
+    assert.deepEqual(reproducedPortParticipants, savedPortParticipants, `Archived connectivity participants changed: ${key}`)
+    connectivityReports.push({ sample: row.sampleNumber, arm: row.arm, inputHash: expected.input, outputHash: expected.output, libraryPortFindingCount: connectivity.length, singletonSelfAssociationCount: connectivity.filter((finding) => finding.classification === "ORIGINAL_SINGLE_TERMINAL_NO_PAIR_DEMAND_CONVERTER_SELF_NET").length, findings: connectivity })
     const objects = new Map(evaluated.circuitJson.map((element: Json) => [element.pcb_via_id ?? element.pcb_smtpad_id ?? element.pcb_plated_hole_id, element]))
     const traceById = new Map(copper.traceOwners.map((entry: Json) => [entry.trace.pcb_trace_id, entry]))
     const findings = row.sampleNumber === 14 ? padErrors.map((error: Json) => {
@@ -245,6 +282,15 @@ async function main() {
     reports.push({ sample: row.sampleNumber, arm: row.arm, source: SOURCE, hashes: expected, referenceErrorCount: evaluated.errors.length, libraryPadErrorCount: padErrors.length, originalOwnershipCopper: copper.summary, findings })
   }
   console.log("RETENTION_FIXED_ARTIFACT_AUDIT_JSON " + JSON.stringify({ status: "AUDIT_COMPLETE_NO_SOLVER_RUN", archivedRun: RUN, archivedController: CONTROLLER, source: SOURCE, validatorHashes: validators, checksPackageSha256: CHECKS_PACKAGE_HASH, reports, limits: "Original reference validators unchanged. Re-evaluates retained raw copper only; no routing or timing run. Typed original connection/terminal declaration components define owners; coordinates are used only for physical distance and exact pad-fragment identity. Supplemental rule outcomes remain separate from official benchmark qualification." }))
+  const comparisons = [14, 15].map((sample) => {
+    const a = connectivityReports.find((row) => row.sample === sample && row.arm === "A")
+    const b = connectivityReports.find((row) => row.sample === sample && row.arm === "B")
+    assert(a && b, "Both retained arms are required for participant comparison")
+    const participants = (row: Json): string[] => row.findings.map((finding: Json) => finding.portId).sort()
+    const identities = (row: Json): string[] => row.findings.map((finding: Json) => JSON.stringify([finding.errorId, finding.portId, finding.originalMembership, finding.pointPairDemandNames, finding.convertedSourcePortIds, finding.convertedSourceNetTokens])).sort()
+    return { sample, portParticipantSetsEqual: JSON.stringify(participants(a)) === JSON.stringify(participants(b)), exactFindingIdentitySetsEqual: JSON.stringify(identities(a)) === JSON.stringify(identities(b)), participantsOnlyInA: participants(a).filter((port) => !participants(b).includes(port)), participantsOnlyInB: participants(b).filter((port) => !participants(a).includes(port)) }
+  })
+  console.log("CONNECTIVITY_FINDINGS_JSON " + JSON.stringify({ status: "EXACT_RETAINED_A_B_PORT_FINDINGS_CLASSIFIED_NO_ROUTING_RUN", archivedRun: RUN, archivedController: CONTROLLER, source: SOURCE, reports: connectivityReports, comparisons, limits: "Every library connectivity finding remains reported and counted. A singleton has no peer terminal or requested point-pair route in the exported original SRJ; converter pointId-to-connected_source_net_ids self-association explains the single-port synthetic-net requirement. This does not prove intended electrical completeness of the source PCB beyond the exported task, or waive any physical clearance rule. No routing, timing or source-validator change." }))
 }
 
 if (import.meta.main) await main()

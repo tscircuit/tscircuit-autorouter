@@ -1,8 +1,8 @@
-name: Strongest retention clearance retained-artifact audit
+name: Strongest retention connectivity retained-artifact audit
 
 on:
   push:
-    branches: [codex/strongest-retention-clearance-artifact-audit]
+    branches: [codex/strongest-retention-connectivity-artifact-audit]
   workflow_dispatch:
 
 permissions:
@@ -32,7 +32,7 @@ jobs:
           bun-version: 1.4.2
       - name: Install the source dependency declarations in isolation
         run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
-      - name: Inspect retained copper with unchanged checks and independent typed ownership
+      - name: Inspect retained copper and exact A B port finding identities
         run: |
           mkdir -p candidate/scripts/experiment-audit
           cp controller/scripts/experiment-audit/audit-retention-fixed-artifact.ts candidate/scripts/experiment-audit/audit-retention-fixed-artifact.ts
