@@ -49,14 +49,25 @@ export class CompactA01Frontier {
   private openCount = 0
   private sequence = 0
   private readonly bestQueuedCost = new Map<number, number>()
+  private readonly victimMaskLimit: number
+
+  static isCapacitySupported(stateCount: number, connectionCount = 32): boolean {
+    if (!Number.isSafeInteger(connectionCount) || connectionCount < 0 || connectionCount > 32) return false
+    if (!Number.isSafeInteger(stateCount) || stateCount <= 0 || stateCount > 2 ** 32) return false
+    // Every key is mask*S+cell, with max key 2^N*S-1. Multiplication by
+    // 2^N is exact for integer S<=2^32, including the safe equality boundary.
+    return 2 ** connectionCount * stateCount <= 2 ** 53
+  }
 
   constructor(
     readonly stateCount: number,
     readonly pruneEquivalentLabels: boolean,
+    readonly connectionCount = 32,
   ) {
-    if (!Number.isSafeInteger(stateCount) || stateCount <= 0 || stateCount >= 2 ** 21) {
-      throw new Error(`Compact A01 requires 0 < grid states < 2^21; got ${stateCount}`)
+    if (!CompactA01Frontier.isCapacitySupported(stateCount, connectionCount)) {
+      throw new Error(`Compact A01 capacity requires N<=32, S<=2^32 and 2^N*S<=2^53; got N=${connectionCount}, S=${stateCount}`)
     }
+    this.victimMaskLimit = 2 ** connectionCount
   }
 
   get size(): number {
@@ -81,8 +92,8 @@ export class CompactA01Frontier {
     const sequence = this.sequence++
     if (this.pruneEquivalentLabels) {
       const mask = this.getVictimMask(ripped)
-      // Unsigned bit 31 is required: signed masks alias otherwise. S < 2^21
-      // makes mask * S + cell injective and exactly representable below 2^53.
+      // Unsigned bit31 is required. The checked owner-dependent bound makes
+      // mask*S+cell injective and exactly representable through MAX_SAFE_INTEGER.
       const key = mask * this.stateCount + cell
       const bestCost = this.bestQueuedCost.get(key)
       if (bestCost !== undefined && bestCost <= g) {
@@ -174,17 +185,27 @@ export class CompactA01Frontier {
 
   private getVictimMask(ripped: CompactA01RippedConnection | null): number {
     if (ripped === null) return 0
-    if (ripped.compactMask !== undefined) return ripped.compactMask
+    if (ripped.compactMask !== undefined) {
+      const cached = ripped.compactMask
+      if ((cached >>> 0) !== cached || cached >= this.victimMaskLimit) {
+        throw new Error(`Compact A01 cached victim mask outside N=${this.connectionCount}: ${cached}`)
+      }
+      return cached
+    }
     let mask = 0
     let tail: CompactA01RippedConnection | null = ripped
     while (tail !== null && tail.compactMask === undefined) {
-      if (!Number.isInteger(tail.id) || tail.id < 0 || tail.id >= 32) {
-        throw new Error(`Compact A01 victim ID outside [0, 31]: ${tail.id}`)
+      if (!Number.isInteger(tail.id) || tail.id < 0 || tail.id >= this.connectionCount) {
+        throw new Error(`Compact A01 victim ID outside [0, ${this.connectionCount - 1}]: ${tail.id}`)
       }
       mask |= 1 << tail.id
       tail = tail.prev
     }
-    mask = (mask | (tail?.compactMask ?? 0)) >>> 0
+    const cachedTail = tail?.compactMask ?? 0
+    if ((cachedTail >>> 0) !== cachedTail || cachedTail >= this.victimMaskLimit) {
+      throw new Error(`Compact A01 cached victim mask outside N=${this.connectionCount}: ${cachedTail}`)
+    }
+    mask = (mask | cachedTail) >>> 0
     ripped.compactMask = mask
     return mask
   }

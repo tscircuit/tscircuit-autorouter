@@ -85,6 +85,7 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
   compactFrontier?: CompactA01Frontier
   private compactState?: A01SearchState
   private compactOwnerCount = 0
+  private compactVictimMaskLimit = 1
   private compactOverlapAllowed = new Uint8Array(0)
 
   static isSupported(props: HighDensitySolverA01CompactProps): boolean {
@@ -92,7 +93,7 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
     const layers = node.availableZ?.length ?? new Set(node.portPoints.map((point) => point.z)).size
     const states = Math.floor(node.width / props.cellSizeMm) * Math.floor(node.height / props.cellSizeMm) * layers
     const connections = new Set(node.portPoints.map((point) => point.connectionName)).size
-    return connections <= 32 && Number.isSafeInteger(states) && states > 0 && states < 2 ** 21
+    return CompactA01Frontier.isCapacitySupported(states, connections)
   }
 
   constructor(props: HighDensitySolverA01CompactProps) {
@@ -121,7 +122,7 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
     const state = this as unknown as A01SearchState
     const states = state.rows * state.cols * state.layers
     if (
-      !Number.isSafeInteger(states) || states <= 0 || states >= 2 ** 21 ||
+      !CompactA01Frontier.isCapacitySupported(states, state.connIdToName.length) ||
       state.connIdToName.length > 32 || state.visitedStamp.length !== states ||
       state.connIdToRootNet.length !== state.connIdToName.length ||
       state.planeSize !== state.rows * state.cols ||
@@ -140,11 +141,12 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
       throw new Error("Compact A01 post-setup invariant failed; check the pinned A01 adapter and actual scene dimensions")
     }
     for (const segment of state.unsolvedSegs) {
-      if (!Number.isInteger(segment.connId) || segment.connId < 0 || segment.connId >= 32) {
+      if (!Number.isInteger(segment.connId) || segment.connId < 0 || segment.connId >= state.connIdToName.length) {
         throw new Error(`Compact A01 post-setup connection ID out of range: ${segment.connId}`)
       }
     }
     this.compactOwnerCount = state.connIdToName.length
+    this.compactVictimMaskLimit = 2 ** this.compactOwnerCount
     this.compactOverlapAllowed = new Uint8Array(this.compactOwnerCount ** 2)
     for (let active = 0; active < this.compactOwnerCount; active++) {
       for (let owner = 0; owner < this.compactOwnerCount; owner++) {
@@ -154,7 +156,7 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
         }
       }
     }
-    this.compactFrontier = new CompactA01Frontier(states, this.compactFrontierPruning)
+    this.compactFrontier = new CompactA01Frontier(states, this.compactFrontierPruning, this.compactOwnerCount)
     this.compactState = state
     // Original debug openSet reads heap.size. No object labels are needed by
     // its visualize/output implementation until route finalization.
@@ -283,7 +285,9 @@ export class HighDensitySolverA01Compact extends HighDensitySolverA01 {
   ): void {
     let cost = 0
     let r = ripped
-    if (r && r.compactMask === undefined) throw new Error("Compact A01 received an unencoded victim chain")
+    if (r && (r.compactMask === undefined || (r.compactMask >>> 0) !== r.compactMask || r.compactMask >= this.compactVictimMaskLimit)) {
+      throw new Error("Compact A01 received an unencoded or out-of-range victim chain")
+    }
     const cols = state.cols
 
     if (fromZ !== toZ) {

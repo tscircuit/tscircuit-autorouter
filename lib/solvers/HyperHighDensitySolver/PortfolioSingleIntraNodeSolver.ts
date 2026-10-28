@@ -682,8 +682,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
       // Select by the compact representation's explicit capacity, before any
       // search runs. Unsupported scenes retain the existing A01 policy.
+      const layerCount = props.nodeWithPortPoints.availableZ?.length ??
+        new Set(props.nodeWithPortPoints.portPoints.map((point) => point.z)).size
+      const stateCount = Math.floor(props.nodeWithPortPoints.width / props.cellSizeMm) *
+        Math.floor(props.nodeWithPortPoints.height / props.cellSizeMm) * layerCount
       const solver = HighDensitySolverA01Compact.isSupported(props)
-        ? new HighDensitySolverA01Compact(props)
+        ? new HighDensitySolverA01Compact({
+            ...props,
+            // Newly representable grids keep the original search policy.
+            // The earlier experiment's pruning remains on its original domain.
+            compactFrontierPruning: stateCount < 2 ** 21,
+          })
         : new HighDensitySolverA01(props)
       solver.stats.compactA01Supported = solver instanceof HighDensitySolverA01Compact
       const diagnostics = this.constructorParams.priorityDiagnostics
@@ -692,6 +701,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           ? "compactA01Candidates"
           : "compactA01UnsupportedCandidates"
         diagnostics[counter] = (diagnostics[counter] ?? 0) + 1
+        if (solver instanceof HighDensitySolverA01Compact && !solver.compactFrontierPruning) {
+          diagnostics.compactA01StorageOnlyCandidates =
+            (diagnostics.compactA01StorageOnlyCandidates ?? 0) + 1
+        }
       }
       return solver as any
     }

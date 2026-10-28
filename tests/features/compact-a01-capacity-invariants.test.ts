@@ -22,5 +22,7 @@ test("compact A01 selects capacity before construction and validates actual post
   expect(() => new HighDensitySolverA01Compact(props)).toThrow("Unsupported compact A01 scene")
   expect(() => compact.setup()).toThrow("post-setup invariant")
   const largeGrid = { ...props, nodeWithPortPoints: { ...props.nodeWithPortPoints, width: 204.8, height: 102.4, portPoints: [] } }
-  expect(HighDensitySolverA01Compact.isSupported(largeGrid)).toBe(false)
+  expect(HighDensitySolverA01Compact.isSupported(largeGrid)).toBe(true)
+  const beyondUint32 = { ...largeGrid, nodeWithPortPoints: { ...largeGrid.nodeWithPortPoints, width: 6553.6, height: 6553.6 } }
+  expect(HighDensitySolverA01Compact.isSupported(beyondUint32)).toBe(false)
 })
