@@ -1,0 +1,101 @@
+name: Strongest experiment refinement fixed-source-retention-off-vs-on
+
+on:
+  push:
+    branches: [codex/strongest-fixed-source-retention-off-vs-on, codex/strongest-fixed-source-retention-off-vs-on-ba]
+  workflow_dispatch:
+    inputs:
+      population:
+        description: 'Original SRJ18 samples14 and15 only; no full-corpus claim'
+        type: choice
+        options: [screen]
+        default: screen
+      order:
+        description: 'BA is a separate repeat; run only after useful AB evidence'
+        type: choice
+        options: [AB, BA]
+        default: AB
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: plan
+        env:
+          POPULATION: screen
+          EXECUTION_ORDER: ${{ inputs.order || (endsWith(github.ref_name, '-ba') && 'BA') || 'AB' }}
+        run: python3 scripts/experiment-audit/run-retention-stitch-recovery.py --mode plan --manifest scripts/experiment-audit/strongest-refinement-fixed-source-retention-off-vs-on.json --population "$POPULATION" --order "$EXECUTION_ORDER"
+  experiment:
+    name: fixed-source-retention-off-vs-on / ${{ matrix.population }} / ${{ matrix.dataset }} (${{ matrix.count }}, ${{ matrix.order }})
+    needs: plan
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Validate frozen source and unchanged budgets
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-retention-stitch-recovery.py --mode select --manifest controller/scripts/experiment-audit/strongest-refinement-fixed-source-retention-off-vs-on.json --dataset '${{ matrix.dataset }}'
+      - name: Checkout original immutable harness
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-harness
+          persist-credentials: false
+      - name: Checkout arm A
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: baseline
+          persist-credentials: false
+      - name: Checkout arm B
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify exact source commit and tree in each arm
+        run: python3 controller/scripts/experiment-audit/run-retention-stitch-recovery.py --mode verify-checkouts --manifest controller/scripts/experiment-audit/strongest-refinement-fixed-source-retention-off-vs-on.json --baseline baseline --candidate candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install arm A dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Install arm B dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Build arm A
+        working-directory: baseline
+        run: bun run build
+      - name: Build arm B
+        working-directory: candidate
+        run: bun run build
+      - name: Install identical pinned harness and synchronous observer
+        run: |
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target baseline --expected-sha '${{ steps.refs.outputs.baseline_sha }}'
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Fresh matched pairs in the declared order in the selected original population
+        run: python3 controller/scripts/experiment-audit/run-retention-stitch-recovery.py --mode run --manifest controller/scripts/experiment-audit/strongest-refinement-fixed-source-retention-off-vs-on.json --population '${{ matrix.population }}' --order '${{ matrix.order }}' --dataset '${{ matrix.dataset }}' --baseline baseline --candidate candidate --output 'results/fixed-source-retention-off-vs-on-${{ matrix.population }}-${{ matrix.order }}-${{ matrix.dataset }}'
+      - name: Retain full provenance, checkpoints, raw copper and original checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strongest-refinement-fixed-source-retention-off-vs-on-${{ matrix.population }}-${{ matrix.order }}-${{ matrix.dataset }}
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
