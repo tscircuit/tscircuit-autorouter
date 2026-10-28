@@ -1,3 +1,4 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   Bounds,
   Point,
@@ -52,6 +53,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   }
 
   bounds: Bounds
+  connMap?: ConnectivityMap
   maxViaCount: number
   portPairMap: PortPairMap
   colorMap: Record<string, string>
@@ -76,11 +78,13 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   constructor({
     nodeWithPortPoints,
     colorMap,
+    connMap,
     hyperParameters,
     viaDiameter,
   }: {
     nodeWithPortPoints: NodeWithPortPoints
     colorMap?: Record<string, string>
+    connMap?: ConnectivityMap
     hyperParameters?: ViaPossibilities2HyperParameters
     viaDiameter?: number
   }) {
@@ -88,6 +92,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.MAX_ITERATIONS = 100e3
     this.colorMap =
       colorMap ?? generateColorMapFromNodeWithPortPoints(nodeWithPortPoints)
+    this.connMap = connMap
     this.maxViaCount = 5
     this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
@@ -203,7 +208,15 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     const checkIntersectionsWithPathMap = (
       pathMap: Map<ConnectionName, Point3[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [connectionName, path] of pathMap) {
+        if (
+          this.connMap?.areIdsConnected(
+            this.currentConnectionName,
+            connectionName,
+          )
+        ) {
+          continue
+        }
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)

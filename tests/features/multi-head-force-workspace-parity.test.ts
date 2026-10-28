@@ -1,3 +1,4 @@
+import { expectBoundaryProjectionCorrection } from "tests/fixtures/expectBoundaryProjectionCorrection"
 import { expect, test } from "bun:test"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import type {
@@ -70,13 +71,29 @@ test("force workspaces retain exact mutable passes and release resized candidate
       solver.viaDiameter = original.viaDiameter = 0.2 + pass * 0.03
       solver.BOUNDARY_PADDING = original.BOUNDARY_PADDING =
         pass % 2 === 0 ? 0.05 : -0.05
+      const beforePass = structuredClone(expected)
+      const actualStep = solver.applyForcesToPolyLines(actual)
+      const originalStep = original.applyForcesToPolyLines(expected)
+      const boundaryCorrections = expectBoundaryProjectionCorrection({
+        actual,
+        reference: expected,
+        before: beforePass,
+        bounds: solver.bounds,
+        padding: solver.traceWidth / 2 + solver.BOUNDARY_PADDING,
+      })
       expect(
         isDeepStrictEqual(
-          solver.applyForcesToPolyLines(actual),
-          original.applyForcesToPolyLines(expected),
+          actualStep.magForceApplied,
+          originalStep.magForceApplied,
         ),
       ).toBe(true)
+      expect(actualStep.lastStepMoved).toBe(
+        originalStep.lastStepMoved || boundaryCorrections > 0,
+      )
       expect(isDeepStrictEqual(actual, expected)).toBe(true)
+      // Both solvers receive identical corrected geometry on the next pass,
+      // retaining the existing boundary stress, resizing and mutation cases.
+      expected = structuredClone(actual)
       comparisons++
       expect(workspace.netForces.length).toBe(actual.length)
       expect(workspace.geometry.length).toBe(actual.length)

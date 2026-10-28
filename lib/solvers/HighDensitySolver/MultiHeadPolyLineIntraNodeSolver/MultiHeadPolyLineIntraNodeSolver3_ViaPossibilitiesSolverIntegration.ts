@@ -46,6 +46,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     const viaSolver = new ViaPossibilitiesSolver2({
       nodeWithPortPoints: this.nodeWithPortPoints,
       colorMap: this.colorMap,
+      connMap: this.connMap,
       // Pass relevant hyperparameters if needed, e.g., shuffle seed
       hyperParameters: {
         SHUFFLE_SEED: shuffleSeed,

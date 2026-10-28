@@ -1,3 +1,4 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { MHPoint2 } from "./types2"
 import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
 import { doSegmentsIntersect } from "@tscircuit/math-utils"
@@ -27,8 +28,7 @@ import { doSegmentsIntersect } from "@tscircuit/math-utils"
  * polyLine1 = layer change
  * polyLine2 = no layer change
  * maxViaCount = 4
- * minViaCount = 2 (sometimes we know, because of same-layer intersections,
- *                  there must be at least N vias)
+ * minViaCount = 2 (a certified lower bound on the total number of vias)
  *
  * We would have these possible variants:
  * [
@@ -45,6 +45,7 @@ export const computeViaCountVariants = (
   segmentsPerPolyline: number,
   maxViaCount: number,
   minViaCount: number,
+  connMap?: ConnectivityMap,
 ): Array<number[]> => {
   const possibleViaCountsPerPolyline: number[][] = []
 
@@ -89,17 +90,18 @@ export const computeViaCountVariants = (
     return true
   })
 
-  // If two port pairs intersect, the sum of their via counts must be >= 2
+  // Intersecting unrelated routes require separation; connected copper may meet.
   variants = variants.filter((variant) => {
     for (let i = 0; i < portPairsEntries.length; i++) {
-      const [, portPair1] = portPairsEntries[i]
+      const [connectionName1, portPair1] = portPairsEntries[i]
       if (portPairsEntries[i][1].start.z1 !== portPairsEntries[i][1].start.z2)
         continue
       for (let j = i + 1; j < portPairsEntries.length; j++) {
         if (portPairsEntries[j][1].start.z1 !== portPairsEntries[j][1].start.z2)
           continue
 
-        const [, portPair2] = portPairsEntries[j]
+        const [connectionName2, portPair2] = portPairsEntries[j]
+        if (connMap?.areIdsConnected(connectionName1, connectionName2)) continue
         if (
           portPair1.start.z1 === portPair1.end.z1 &&
           portPair2.start.z1 === portPair2.end.z1 &&
