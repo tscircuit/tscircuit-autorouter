@@ -13,9 +13,12 @@ const { values } = parseArgs({
 const maxRssMiB = Number(values["max-rss-mib"])
 const maxSeconds = Number(values["max-seconds"])
 if (
-  !Number.isFinite(maxRssMiB) || maxRssMiB <= 0 ||
-  !Number.isFinite(maxSeconds) || maxSeconds <= 0
-) throw new Error("Reproduction limits must be positive finite numbers")
+  !Number.isFinite(maxRssMiB) ||
+  maxRssMiB <= 0 ||
+  !Number.isFinite(maxSeconds) ||
+  maxSeconds <= 0
+)
+  throw new Error("Reproduction limits must be positive finite numbers")
 const params = loadA64DdrResizedSearch()
 const solver = new GrowShrinkHighDensityIntraNodeSolver(params)
 const started = performance.now()
