@@ -18,6 +18,10 @@ import {
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
+import {
+  redistributePortPointsWithFixedRoutes,
+  type FixedCopperPortDistributionInput,
+} from "./redistributePortPointsWithFixedRoutes"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
@@ -30,6 +34,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  fixedCopper?: FixedCopperPortDistributionInput
 }
 
 /**
@@ -134,7 +139,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       obstacles: this.input.obstacles,
     })
-    if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer && !this.input.fixedCopper) return
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
@@ -144,6 +149,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
+      if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) continue
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
@@ -170,10 +176,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
-      sharedEdge,
-      portPoints: family,
-    })
+    const redistributed = this.input.fixedCopper
+      ? redistributePortPointsWithFixedRoutes({
+          sharedEdge,
+          portPoints: familyRaw,
+          movablePortIds: new Set(family.map((point) => point.portPointId!)),
+          fixedCopper: this.input.fixedCopper,
+        })
+      : redistributePortPointsOnSharedEdge({ sharedEdge, portPoints: family })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

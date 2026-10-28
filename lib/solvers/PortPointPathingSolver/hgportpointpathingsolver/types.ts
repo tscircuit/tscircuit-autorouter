@@ -12,8 +12,9 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   SimpleRouteConnection,
+  SimpleRouteJson,
 } from "lib/types"
-import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { PreloadedTracePortAssignment, SharedEdgeSegment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 export type RawPort = {
   portId: string
@@ -26,6 +27,8 @@ export type RawPort = {
   tinyHypergraphPortPenalty?: number
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  /** Undefined permits any owner; an empty set makes this physical resource unavailable. */
+  allowedNetId?: string | null
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {
@@ -98,6 +101,13 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Actual provenance IDs whose copper remains fixed rather than becoming reroutable sections. */
+  immutableTraceIds?: ReadonlySet<string>
+  physicalBoundarySupply?: {
+    srj: SimpleRouteJson
+    originalSrj: SimpleRouteJson
+    sharedEdgeSegments: SharedEdgeSegment[]
+  }
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
@@ -108,6 +118,10 @@ export interface HgPortPointPathingSolverParams {
     USE_PREPARED_PORT_POINT_ROUTING?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
+    /** Preserve the most complete partial routing across destructive global rerips. */
+    RETAIN_BEST_PARTIAL_ROUTING?: boolean
+    /** Price foreign immutable copper interiors without declaring mesh pairs infeasible. */
+    USE_IMMUTABLE_COPPER_REGION_COSTS?: boolean
   }
   weights: {
     /** Seed used for deterministic shuffling in rip-selection ordering. */

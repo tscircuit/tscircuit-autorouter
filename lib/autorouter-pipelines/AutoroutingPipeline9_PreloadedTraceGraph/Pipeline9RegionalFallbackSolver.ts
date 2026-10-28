@@ -16,6 +16,10 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { hasPipeline9OriginalPhysicalContext } from "./hasPipeline9OriginalPhysicalContext"
+import { arePipeline9NativeRoutesPhysicallyValid } from "./arePipeline9NativeRoutesPhysicallyValid"
+import type { Pipeline9PhysicalOwnership } from "./getPipeline9PhysicalOwnership"
+import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 
 type Pipeline9RegionalFallbackSolverParams = {
   cacheProvider?: null
@@ -28,6 +32,10 @@ type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
+  /** Complete original context is separate from legacy boardObstacles search input. */
+  physicalOwnership?: Pipeline9PhysicalOwnership
+  physicalBoardObstacles?: Obstacle[]
+  immutableRoutes?: HighDensityRoute[]
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
@@ -37,6 +45,13 @@ type Pipeline9RegionalFallbackSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
+  physicalTraceClearance?: number
+  traceToPadClearance?: number
+  traceToHoleClearance?: number
+  physicalRouteDimensionsByConnectionName?: Readonly<Record<string, {
+    traceThickness: number
+    viaDiameter: number
+  }>>
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
@@ -144,6 +159,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
 /** Runs the regular high-density cleanup pipeline for a B01 fallback region. */
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly params: Pipeline9RegionalFallbackSolverParams
+  readonly hasOriginalPhysicalContext: boolean
   readonly highDensitySolver: HighDensitySolver
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
@@ -153,6 +169,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
+    this.hasOriginalPhysicalContext = hasPipeline9OriginalPhysicalContext(params)
     this.params = params
     this.nativePriorityInstancesBefore = params.priorityDiagnostics?.priorityInstances ?? 0
     this.nativePriorityCompletedWorkBefore = params.priorityDiagnostics?.priorityCompletedWorkUnits ?? 0
@@ -166,9 +183,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       repairCandidateRejectionCount: 0,
     }
     const growShrinkSolutionValidator =
-      params.boardObstacles &&
+      params.immutableRoutes?.length || (params.boardObstacles &&
       params.movablePreloadedConnectionNames &&
-      params.viaToPadClearance !== undefined
+      params.viaToPadClearance !== undefined)
         ? (routes: HighDensityRoute[]): boolean => this.validateCandidateRoutes(routes)
         : undefined
     this.highDensitySolver = params.useNativeRouting ? createPipeline9RegularNodeSolverFromCanonicalNode({
@@ -176,12 +193,20 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodeWithPortPoints: params.nodeWithPortPoints,
       colorMap: params.colorMap,
       connMap: params.connMap,
+      physicalOwnership: params.physicalOwnership,
+      physicalImmutableRoutes: params.immutableRoutes,
       viaDiameter: params.viaDiameter,
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
       nodePfById: params.nodePfById ?? new Map(),
       obstacles: params.obstacles,
+      physicalBoardObstacles: params.physicalBoardObstacles,
+      physicalTraceClearance: params.physicalTraceClearance,
+      traceToPadClearance: params.traceToPadClearance,
+      traceToHoleClearance: params.traceToHoleClearance,
+      physicalRouteDimensionsByConnectionName: params.physicalRouteDimensionsByConnectionName,
+      viaToPadClearance: params.viaToPadClearance,
       layerCount: params.layerCount,
       boardGeometry: params.boardGeometry,
       viaHoleDiameter: params.viaHoleDiameter,
@@ -220,6 +245,23 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    const hasNativePhysicalConflict = ((this.params.useNativeRouting && this.hasOriginalPhysicalContext) || this.params.immutableRoutes?.length) && !arePipeline9NativeRoutesPhysicallyValid({
+      routes,
+      immutableRoutes: this.params.immutableRoutes,
+      routeDimensionsByConnectionName: this.params.physicalRouteDimensionsByConnectionName,
+      connMap: this.params.connMap,
+      physicalOwnership: this.params.physicalOwnership,
+      layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+      traceClearance: this.params.physicalTraceClearance ?? 0.1,
+      traceToPadClearance: this.params.traceToPadClearance,
+      traceToHoleClearance: this.params.traceToHoleClearance,
+      viaHoleDiameter: this.params.viaHoleDiameter ?? this.params.viaDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        this.params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+      boardObstacles: this.hasOriginalPhysicalContext ? this.params.physicalBoardObstacles! : [],
+      viaToPadClearance: this.params.viaToPadClearance ?? 0.1,
+    })
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
@@ -230,7 +272,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       !movablePreloadedConnectionNames ||
       viaToPadClearance === undefined
     ) {
-      return true
+      return !hasNativePhysicalConflict
     }
     const hasViaConflict = hasPreloadedViaToBoardObstacleConflict({
       routes,
@@ -245,7 +287,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       this.stats.preloadedViaCandidateRejectionCount =
         Number(this.stats.preloadedViaCandidateRejectionCount ?? 0) + 1
     }
-    return !hasViaConflict
+    return !hasViaConflict && !hasNativePhysicalConflict
   }
 
   private recordNativeRouteDiagnostics(): void {
@@ -281,12 +323,28 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.forceImproveSolver = new HighDensityForceImproveSolver({
+      this.forceImproveSolver = new Pipeline9HighDensityForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
         colorMap: this.params.colorMap,
         totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
         nodeAssignmentMargin: this.params.obstacleMargin,
+        physicalValidation: (this.params.useNativeRouting && this.hasOriginalPhysicalContext) || this.params.immutableRoutes?.length ? {
+          connectivityNetMap: this.params.connMap.netMap,
+          physicalOwnership: this.params.physicalOwnership,
+          immutableRoutes: this.params.immutableRoutes,
+          layerCount: this.params.layerCount,
+          allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+          traceClearance: this.params.physicalTraceClearance ?? 0.1,
+          traceToPadClearance: this.params.traceToPadClearance,
+          traceToHoleClearance: this.params.traceToHoleClearance,
+          viaHoleDiameter: this.params.viaHoleDiameter ?? this.params.viaDiameter,
+          minViaHoleEdgeToViaHoleEdgeClearance:
+            this.params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+          boardObstacles: this.hasOriginalPhysicalContext ? this.params.physicalBoardObstacles! : [],
+          viaToPadClearance: this.params.viaToPadClearance ?? 0.1,
+          routeDimensionsByConnectionName: this.params.physicalRouteDimensionsByConnectionName,
+        } : undefined,
       })
       this.activeSubSolver = this.forceImproveSolver
       this.phase = "improve"
@@ -318,6 +376,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         repairMargin: this.params.obstacleMargin,
         minimumTraceWidth: this.params.traceWidth,
         connMap: this.params.connMap,
+        ...(this.params.useNativeRouting ? {
+          viaSpanContext: {
+            layerCount: this.params.layerCount,
+            allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+          },
+        } : {}),
       })
       this.activeSubSolver = this.repairSolver
       this.phase = "repair"

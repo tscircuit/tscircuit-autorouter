@@ -203,8 +203,27 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
+    const solutionValidator = portfolioParams.solutionValidator
+    const routeFragmentValidator = portfolioParams.routeFragmentValidator
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      solutionValidator: solutionValidator
+        ? (routes): boolean =>
+            solutionValidator(
+              this.scaleFactor === 1
+                ? routes
+                : routes.map((route) =>
+                    scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+                  ),
+            )
+        : undefined,
+      routeFragmentValidator: routeFragmentValidator
+        ? (route): boolean => routeFragmentValidator(
+            this.scaleFactor === 1
+              ? route
+              : scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+          )
+        : undefined,
       priorityCoordinateScale:
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
       enableNegotiatedSearch:

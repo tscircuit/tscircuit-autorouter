@@ -1,10 +1,14 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { pointToSegmentDistance, segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
-import type { ConnectionPoint, SimpleRouteConnection, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { ConnectionPoint, Obstacle, SimpleRouteConnection, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectionPointLayers } from "lib/types"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import {
+  getPipeline9PhysicalObstacleOwner,
+  getPipeline9PhysicalOwnership,
+  getPipeline9PhysicalRouteOwner,
+  type Pipeline9PhysicalOwnership,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalOwnership"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { assertPhysicalForestConnectivity } from "./assertPhysicalForestConnectivity"
@@ -38,16 +42,21 @@ export class PhysicalNetForestSolver extends BaseSolver {
   }
   private readonly committedConnections: SimpleRouteConnection[] = []
   private readonly pending: SimpleRouteConnection[]
-  private readonly connMap: ConnectivityMap
+  readonly physicalOwnership: Pipeline9PhysicalOwnership
+  private readonly obstacleOwners = new WeakMap<Obstacle, string | undefined>()
   private readonly constrainedNames: Set<string>
   private readonly traceIds: Set<string>
 
-  constructor(readonly inputSrj: SimpleRouteJson, readonly enabled = true) {
+  constructor(readonly inputSrj: SimpleRouteJson, readonly enabled = true, originalSrj: SimpleRouteJson = inputSrj) {
     super()
     this.pending = enabled ? mergeConnections(inputSrj.connections) : []
-    this.connMap = getConnectivityMapFromSimpleRouteJson(inputSrj)
-    for (const connection of this.pending) {
-      this.connMap.addConnections([[connection.name, ...(connection.__rootConnectionNames ?? [])]])
+    this.physicalOwnership = getPipeline9PhysicalOwnership({
+      originalSrj,
+      derivedConnections: [...inputSrj.connections, ...this.pending],
+      derivedTraces: inputSrj.traces,
+    })
+    for (const obstacle of inputSrj.obstacles) {
+      this.obstacleOwners.set(obstacle, getPipeline9PhysicalObstacleOwner(this.physicalOwnership, obstacle))
     }
     this.constrainedNames = new Set([
       ...(inputSrj.buses ?? []).flatMap((bus) => bus.connectionNames),
@@ -58,10 +67,9 @@ export class PhysicalNetForestSolver extends BaseSolver {
   }
 
   private isSameNet(name: string, other: string): boolean {
-    return (
-      name === other ||
-      this.connMap.areIdsConnected(name, other)
-    )
+    const owner = getPipeline9PhysicalRouteOwner(this.physicalOwnership, { connectionName: name })
+    const otherOwner = getPipeline9PhysicalRouteOwner(this.physicalOwnership, { connectionName: other })
+    return owner !== undefined && owner === otherOwner
   }
 
   private isClear(start: Point, end: Point, layer: string, width: number, name: string): boolean {
@@ -78,9 +86,10 @@ export class PhysicalNetForestSolver extends BaseSolver {
       outline.some((point, index) => minimumDistanceBetweenSegments(start, end, point,
         outline[(index + 1) % outline.length]!) < boardMargin))) return false
     const margin = this.inputSrj.defaultObstacleMargin ?? 0.15
+    const owner = getPipeline9PhysicalRouteOwner(this.physicalOwnership, { connectionName: name })
     for (const obstacle of this.inputSrj.obstacles) {
-      if (!obstacle.layers.includes(layer) || (!obstacle.isNonPlatedHole &&
-        obstacle.connectedTo.some((id) => this.isSameNet(name, id)))) continue
+      if ((!obstacle.isNonPlatedHole && !obstacle.layers.includes(layer)) || (!obstacle.isNonPlatedHole &&
+        owner !== undefined && owner === this.obstacleOwners.get(obstacle))) continue
       const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
       const cos = Math.cos(angle), sin = Math.sin(angle)
       const localStart = { x: (start.x - obstacle.center.x) * cos - (start.y - obstacle.center.y) * sin,
@@ -88,7 +97,7 @@ export class PhysicalNetForestSolver extends BaseSolver {
       const localEnd = { x: (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
         y: (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos }
       const gap = obstacle.isNonPlatedHole
-        ? (this.inputSrj.minTraceToHoleEdgeClearance ?? margin)
+        ? (this.inputSrj.minTraceToHoleEdgeClearance ?? 0.2)
         : (this.inputSrj.minTraceToPadEdgeClearance ?? margin)
       if (segmentToBoxMinDistance(localStart, localEnd, { center: { x: 0, y: 0 },
         width: obstacle.width, height: obstacle.height }) < radius + gap + 1e-6) return false
@@ -115,7 +124,8 @@ export class PhysicalNetForestSolver extends BaseSolver {
   private getEligibleLayer(connection: SimpleRouteConnection): string | undefined {
     const points = connection.pointsToConnect
     const names = [connection.name, ...(connection.__rootConnectionNames ?? [])]
-    if (connection.isOffBoard || (connection.externallyConnectedPointIds?.length ?? 0) > 0 ||
+    if (getPipeline9PhysicalRouteOwner(this.physicalOwnership, { connectionName: connection.name }) === undefined ||
+      connection.isOffBoard || (connection.externallyConnectedPointIds?.length ?? 0) > 0 ||
       points.length < 3 || points.length > 24 || names.some((name) => this.constrainedNames.has(name)) ||
       points.some((point) => !point.pointId || ("terminalVia" in point && point.terminalVia)) ||
       new Set(points.map((point) => point.pointId)).size !== points.length ||

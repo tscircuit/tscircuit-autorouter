@@ -5,6 +5,7 @@ import {
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { createNativeSingleRouteSolverWithPhysicalValidation } from "./createNativeSingleRouteSolverWithPhysicalValidation"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { extendPriorityDag, type PriorityDagState } from "./priorityDagState"
@@ -63,6 +64,10 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   readonly nativeCandidateIterationLimit: number
   private readonly viaHoleDiameter: number
   private readonly minimumHoleGap: number
+  private readonly physicalValidationRoutes = new WeakMap<
+    HighDensityIntraNodeRoute,
+    HighDensityIntraNodeRoute
+  >()
   private readonly nativeBounds: {
     minX: number
     maxX: number
@@ -166,8 +171,13 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       this.owner = this.tasks.map((task) => {
         this.charge("priorityOwnerLookups")
         const net = this.connMap?.getNetConnectedToId(task.connectionName)
-        if (net === undefined)
+        if (net === undefined) {
+          // Regional section IDs are synthetic. Their root is an already
+          // canonical owner and must not be looked up as another member ID.
+          if (params.rootConnectionNamesAreCanonical && task.rootConnectionName && this.connMap?.netMap[task.rootConnectionName])
+            return JSON.stringify(["registered", task.rootConnectionName])
           return JSON.stringify(["literal", task.connectionName])
+        }
         const members = this.connMap!.netMap[net]
         if (!Array.isArray(members))
           throw new Error("Missing indexed priority owner members")
@@ -288,8 +298,17 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         if (!witness)
           throw new Error("Missing higher-priority physical witness")
         if (this.owner[i] !== this.owner[task])
-          obstacleRoutes.push(witness.route)
+          obstacleRoutes.push(this.getPhysicalValidationRoute(witness.route))
       } else if (i !== task) futureConnections.push(this.tasks[i])
+    }
+    let hyperParameters = this.hyperParameters
+    if (this.coordinateScale !== 1) {
+      this.charge("priorityPhysicalHyperparameterCopies", Object.keys(hyperParameters).length + 1)
+      hyperParameters = {
+        ...hyperParameters,
+        FUTURE_CONNECTION_VIA_TRACE_CLEARANCE:
+          (hyperParameters.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE ?? 0.1) * this.coordinateScale,
+      }
     }
     return {
       ...this.tasks[task],
@@ -302,11 +321,11 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       layerCount: this.board.layerCount,
       availableZ: this.allowedLayers,
-      hyperParameters: this.hyperParameters,
+      hyperParameters,
       connMap: this.connMap,
-      viaDiameter: this.viaDiameter,
-      traceThickness: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
+      viaDiameter: this.viaDiameter * this.coordinateScale,
+      traceThickness: this.traceWidth * this.coordinateScale,
+      obstacleMargin: this.obstacleMargin * this.coordinateScale,
       captureSearchDebug: this.captureSearchDebug,
     }
   }
@@ -319,6 +338,12 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     if (connection !== this.tasks[this.currentTask] || !this.nativeTaskOptions)
       throw new Error("Unknown priority native helper context")
     return this.nativeTaskOptions
+  }
+
+  private createNativeSolver(opts: ConstructorParameters<typeof Native>[0]): Native {
+    return createNativeSingleRouteSolverWithPhysicalValidation(opts, {
+      traceThickness: this.traceWidth, viaDiameter: this.viaDiameter,
+    }, this.routeFragmentValidator)
   }
 
   private startTask(task: number, state: State): void {
@@ -353,15 +378,19 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         const route = this.solvedRoutes.pop()
         if (!route || this.solvedRoutes.length !== 0)
           throw new Error("Invalid native endpoint-via temporary witness")
-        this.storeRoute(route, state, task)
-        this.record("priorityEndpointViaAccepted")
-        return
+        if (this.routeFragmentValidator) this.charge("priorityEndpointViaPhysicalChecks")
+        if (!this.routeFragmentValidator || this.routeFragmentValidator(route)) {
+          this.storeRoute(route, state, task)
+          this.record("priorityEndpointViaAccepted")
+          return
+        }
+        this.record("priorityEndpointViaPhysicalRejections")
       }
     }
     // As in native Intra, a rejected endpoint-via test continues to the SAME
     // native Single search. Both constructions and the failed check are paid.
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
-    this.activeSubSolver = new Native(opts)
+    this.activeSubSolver = this.createNativeSolver(opts)
     this.record("priorityNativeSearches")
   }
 
@@ -423,7 +452,10 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         this.charge("priorityDrillPairChecks")
         const distance = Math.hypot(va.x - vb.x, va.y - vb.y)
         if (distance === 0 && this.owner[left] === this.owner[right]) continue
-        if (distance < this.viaHoleDiameter + this.minimumHoleGap) return true
+        if (
+          distance <
+          (this.viaHoleDiameter + this.minimumHoleGap) * this.coordinateScale
+        ) return true
       }
     if (this.owner[left] === this.owner[right]) return false
     this.charge(
@@ -440,11 +472,35 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         (y.wireSegments.length + y.viaSpans.length),
     )
     return doPipeline9RoutesHaveCopperConflict({
-      left: a,
-      right: b,
-      clearance: this.obstacleMargin,
+      left: this.getPhysicalValidationRoute(a),
+      right: this.getPhysicalValidationRoute(b),
+      clearance: this.obstacleMargin * this.coordinateScale,
       ...this.board,
     })
+  }
+
+  private getPhysicalValidationRoute(
+    route: HighDensityIntraNodeRoute,
+  ): HighDensityIntraNodeRoute {
+    if (this.coordinateScale === 1) return route
+    const cached = this.physicalValidationRoutes.get(route)
+    if (cached) return cached
+    this.charge("priorityPhysicalFrameCopies", route.route.length + 1)
+    // Coordinates are enlarged by grow/shrink; widths and holes describe the
+    // manufactured board and must occupy the same enlarged validation frame.
+    const physicalRoute = {
+      ...route,
+      traceThickness: route.traceThickness * this.coordinateScale,
+      viaDiameter: route.viaDiameter * this.coordinateScale,
+      route: route.route.map((point) => ({
+        ...point,
+        traceThickness: point.traceThickness === undefined
+          ? undefined
+          : point.traceThickness * this.coordinateScale,
+      })),
+    }
+    this.physicalValidationRoutes.set(route, physicalRoute)
+    return physicalRoute
   }
 
   private branch(left: number, right: number, state: State): void {
@@ -484,7 +540,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         const distance = Math.hypot(a.x - b.x, a.y - b.y)
         if (
           distance > 0 &&
-          distance < this.viaHoleDiameter + this.minimumHoleGap
+          distance <
+            (this.viaHoleDiameter + this.minimumHoleGap) * this.coordinateScale
         )
           return false
       }
@@ -501,7 +558,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           0,
         ),
     )
-    const checker = new Native(opts)
+    const checker = this.createNativeSolver(opts)
     let parent: Node | null = null
     for (let i = 0; i < witness.route.route.length; i++) {
       this.charge("priorityWitnessVertices")
@@ -519,7 +576,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           if (
             checker.isNodeTooCloseToObstacle(
               node,
-              this.viaDiameter / 2 + this.obstacleMargin / 2,
+              (this.viaDiameter / 2 + this.obstacleMargin / 2) * this.coordinateScale,
               true,
             ) ||
             checker.isNodeTooCloseToEdge(node, true)
@@ -562,8 +619,18 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         } else if (this.activeSubSolver.solved) {
           if (!this.current || !this.activeSubSolver.solvedPath)
             throw new Error("Missing completed priority plan")
+          if (
+            this.activeSubSolver.solvedPath.traceThickness !== this.traceWidth * this.coordinateScale ||
+            this.activeSubSolver.solvedPath.viaDiameter !== this.viaDiameter * this.coordinateScale
+          ) {
+            throw new Error("Invalid scaled priority native copper dimensions")
+          }
           this.storeRoute(
-            this.activeSubSolver.solvedPath,
+            {
+              ...this.activeSubSolver.solvedPath,
+              traceThickness: this.traceWidth,
+              viaDiameter: this.viaDiameter,
+            },
             this.current,
             this.currentTask,
           )

@@ -17,24 +17,29 @@ export const preparePipeline7PowerTraceExpansionInput = ({
   newlyRoutedTraces,
   currentPreloadedTraces,
   expandedConnectionNames,
+  immutableTraceIds = [],
   resolveConnectedTraceAliases = false,
 }: {
   originalSrj: SimpleRouteJson
   newlyRoutedTraces: SimplifiedPcbTraces
   currentPreloadedTraces?: SimplifiedPcbTraces
   expandedConnectionNames: readonly string[]
+  immutableTraceIds?: readonly string[]
   resolveConnectedTraceAliases?: boolean
 }): Pipeline7PowerTraceExpansionInput => {
   const preloadedTraces = currentPreloadedTraces ?? originalSrj.traces ?? []
+  const immutableTraceIdSet = new Set(immutableTraceIds)
   const mutablePreloadedTraceSet = resolveConnectedTraceAliases
     ? getConnectedMutablePreloadedTraces({
         originalSrj,
         newlyRoutedTraces,
         preloadedTraces,
         expandedConnectionNames,
+        immutableTraceIdSet,
       })
     : new Set(
         preloadedTraces.filter((trace) =>
+          !immutableTraceIdSet.has(trace.pcb_trace_id) &&
           expandedConnectionNames.includes(trace.connection_name),
         ),
       )
@@ -75,11 +80,13 @@ const getConnectedMutablePreloadedTraces = ({
   newlyRoutedTraces,
   preloadedTraces,
   expandedConnectionNames,
+  immutableTraceIdSet,
 }: {
   originalSrj: SimpleRouteJson
   newlyRoutedTraces: SimplifiedPcbTraces
   preloadedTraces: SimplifiedPcbTraces
   expandedConnectionNames: readonly string[]
+  immutableTraceIdSet: ReadonlySet<string>
 }): Set<SimplifiedPcbTrace> => {
   const preloadedTraceIds = new Set(
     preloadedTraces.map((trace) => trace.pcb_trace_id),
@@ -109,6 +116,7 @@ const getConnectedMutablePreloadedTraces = ({
   )
   return new Set(
     preloadedTraces.filter((trace) =>
+      !immutableTraceIdSet.has(trace.pcb_trace_id) &&
       connectionNameResolver
         .canonicalize([trace.connection_name])
         .some((name) => expandedConnectionNameSet.has(name)),

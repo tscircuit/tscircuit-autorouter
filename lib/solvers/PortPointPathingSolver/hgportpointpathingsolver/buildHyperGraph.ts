@@ -232,6 +232,7 @@ export function buildHyperGraph(params: {
               ].sort()
             : undefined,
         _preloadedTracePortAssignments: preloadedTracePortAssignments,
+        allowedNetId: spp.allowedNetIdByZ?.[z],
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

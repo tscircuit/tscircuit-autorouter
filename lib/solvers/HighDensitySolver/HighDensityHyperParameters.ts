@@ -2,6 +2,7 @@ export interface HighDensityHyperParameters {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR: number
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR: number
   FUTURE_CONNECTION_PROXIMITY_VD: number
+  FUTURE_CONNECTION_VIA_TRACE_CLEARANCE?: number
   /**
    * Alternative to FUTURE_CONNECTION_PROXIMITY_VD that accepts mm
    * Used by high density w/ jumpers solver

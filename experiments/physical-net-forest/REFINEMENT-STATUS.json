@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_INTERIOR_COST_REFINEMENT_AWAITING_CORPUS_QUALIFICATION_AND_SPECIFIC_FIXTURE_PUBLICATION_APPROVAL",
+  "dateUtc": "2026-10-28",
+  "architecture": "Construct visible physical same-net trees before pair demands, then preserve those certified branches as immutable copper through global routing, detailed routing, reconstruction and power expansion. Only actual generated trace IDs establish immutable provenance; genuine user preloads retain their existing policy.",
+  "changes": [
+    "Retain original electrical ownership even when all pair demands are removed. Physical permission uses original typed declarations, never coordinate rounding.",
+    "Reserve actual finite-width immutable copper supply before Tiny pathing and during uniform distribution; preserve full manufactured through-via spans.",
+    "Check scaled native proposals, cached candidates, numerical optimization and primary B01 candidates in the original physical frame with declared clearances and original pad shapes.",
+    "Separate subset-safe route-fragment feasibility from custom whole-solution acceptance; protect immutable copper in both.",
+    "Keep generated branches out of mutable preloaded sections, local promotion/replacement, and power-expansion eligibility.",
+    "Retain genuinely improved partial routing before destructive rerips and use it for the existing final attempts, preserving live budgets, seeds and attempt count.",
+    "Cache exact original pad geometry queries by actual proposal envelopes; share this index between native checks and numerical proposal acceptance.",
+    "Require the complete explicit original-board/strict-owner context for new manufacturing acceptance. Legacy public API policy/work replay and all original guardrails remain independent.",
+    "Run original physical fragment checks for the ordinary single-task Native solver, including constructor fast paths and endpoint via transitions. A rejected shortcut continues the existing grid search with unchanged budgets.",
+    "Revalidate ordinary Native cache hits in the current physical fragment context before reuse.",
+    "Represent actual certified forest interiors in native regional search costs; finite-width foreign same-layer chord contacts receive only a finite soft preference, without changing physical acceptance or rerip thresholds.",
+    "Expose retainBestPartialRouting and usePhysicalNetForestInteriorCosts for separate causal comparisons; existing retention default remains forest dependent.",
+    "Stitch only exact whole-object duplicate fragments once, preserving all unrounded geometry/identity/width/terminal/segment metadata. This prevents duplicate via fragments from sending the greedy stitch down and back up while leaving a valid terminal piece unvisited."
+  ],
+  "dependencies": {
+    "tinyHypergraph": {
+      "pr": "https://github.com/tscircuit/tiny-hypergraph/pull/299",
+      "sha": "85be866819c4ba0350485649882d6539aa34d98f",
+      "tree": "c2d149abdc76f736c17fa26cf66a5681452730eb",
+      "stackedOn": "https://github.com/tscircuit/tiny-hypergraph/pull/298",
+      "purpose": "Native port restrictions, optional progress retention, and optional finite soft interior copper cost; all default-off or absent-data behavior preserves existing native policy."
+    },
+    "repair02": {
+      "pr": "https://github.com/tscircuit/high-density-repair02/pull/81",
+      "sha": "778854e08d04c43929a04593be4c7bb8d7f67370",
+      "purpose": "Existing physical board layer/through-via policy; reused without a duplicate upstream implementation."
+    }
+  },
+  "provenConstructionCoverage": {
+    "population": 42,
+    "originalInputsHashVerified": true,
+    "remainingPairInitialTraceAndFixedPieceAliasesResolved": 17121,
+    "unknownRouteAliases": 0,
+    "ambiguousDerivedAliases": 0,
+    "initialForestBranchCountsChangedByStrictIdentityAndHoleRules": 0,
+    "qualification": "Prefixes stopped before topology/high density. These are ownership/construction checks, not completed board routing, timing or DRC results."
+  },
+  "knownUnresolvedBeforeCorpusQualification": [
+    {
+      "case": "strict original-context cmn42/cmn57 local searches",
+      "finding": "Actual generated proposals can be unsafe, while independently checked coupled shapes are physically feasible. Strict replay still exposes bounded shape-discovery incompleteness. Original legacy capture tests passunchanged; newstrictcapturetest explicitly retainsbothunsafe-rejection andfeasible-witness evidence. Thisdoesnotqualifywholeownedrouting."
+    },
+    {
+      "case": "genuine mutable MIDI user preload",
+      "finding": "Staticimmutable reservations do not describe the still-committed shape of a mutable section. Conditional footprint occupancy remains unresolved; fullMIDI notclaimedrecovered."
+    }
+  ],
+  "qualificationProtocol": {
+    "baseline": "637b6c581128238f6c61227a1c15be423d24baca",
+    "targeted": {
+      "srj18": [
+        2,
+        6,
+        14,
+        15
+      ],
+      "srj24": [
+        8,
+        12,
+        15,
+        20,
+        21,
+        25
+      ]
+    },
+    "fullPopulation": {
+      "srj18": 16,
+      "srj24": 26
+    },
+    "campaigns": [
+      "main versus refined forest",
+      "same refined source with sharing disabled versus enabled"
+    ],
+    "effort": 1,
+    "threads": 1,
+    "sampleTimeoutSeconds": 360,
+    "timing": "AB-only, same-job comparison per population/dataset/campaign. Do not pool historical uninstrumented times.",
+    "checkpoints": "Synchronous durable lifecycle markers, paired in both arms; last marker is a boundary, not proof later work never ran."
+  },
+  "historicalAttributionCorrection": "HISTORICAL-STAGE-ATTRIBUTION-CORRECTION.json",
+  "causalEvidence": {
+    "file": "REFINEMENT-CAUSES.json",
+    "sha256": "73fc112526fce12d6c4e422530c9fc26bf7c5a6484f8042165517475404bc55e"
+  },
+  "verification": "Finalphysicalintegration:75focusedtests/989assertionspass, fullrepositorytypes andworker/ESM/declarationsbuild pass. OriginalSRJ24/25 full-board functionalcontrolpassesall3unchangedreferencecheckconfigurations. Dedup-onlystandalonefixhas13tests/74assertionsandindependentreview. No full42physicalsharingbenchmark dispatched; specificfourfixturepublicationapprovalpending.",
+  "unchangedConstraints": [
+    "No validator or physical-rule weakening",
+    "No routing cap increase or extra fallback family",
+    "No formatter/linter/README/snapshot edits",
+    "No merge or ready-for-review transition"
+  ],
+  "prefixRecovery": {
+    "case": "srj18/14 (same geometry as srj24/12)",
+    "withoutRetention": "All234 demands individually reachable; best219/234 was discarded by a global reset and the unchanged2m cap endedwith70unrouted.",
+    "withRetention": "Actual caller reaches high-density constructor with4certifiedbranches/234demands. Retained219routes/live32rips seedtheexistingfirst50k greedyattempt,whichfinishes15remaining.",
+    "unchangedBudgets": "2,000,000normaliterations,4existing50,000-step finalattempts; no newattempt/reripbudgetreset.",
+    "controls": "srj18/2 (8branches/236demands) andlamp(6branches/343demands) alsoreachHDconstructor; these are prefixes, notwhole-boardDRC/performanceclaims."
+  },
+  "publicationStatus": "AutomaticapprovalreviewrejectedoneexactderivedPCBfixtureafterpublic-provenanceverification; no sourcecommit/refupdateorqualificationdispatchbypassedtheblock. Reviewableexactpayloadmanifestispreparedlocally.",
+  "nativeShortcutRecovery": {
+    "case": "owned srj24/25 cmn87",
+    "cause": "Single-task constructor shortcut emitted a straight chord without consulting the original physical context. The chord surfacegap to foreignbottompad408 is0.033554241588mm againstrequired0.1mm.",
+    "boundedResult": "The original node now solves with zero vias and all nine immutable routes unchanged, passingall80originalpads/fixedcopper checks.",
+    "endToEndLimit": "Subsequent immutable-interior planning refinement recovers the original SRJ24/25 functional full-board control and all three original reference checks. This is one control, not whole-corpus qualification."
+  },
+  "interiorPlanningRecovery": {
+    "case": "SRJ24/25",
+    "cause": "Boundary port permissions alone did not expose immutable interior copper to global routing.",
+    "softModel": "Finite-width/layer/strict-owner contact on a candidate straight chord adds a finite heuristic cost, never a hard physical restriction. A finite endpoint may be detoured.",
+    "prefixComparison": "Off: net13 uses cmn42 and crosses fixed copper. On: net13 remains on bottom and takes neighboring regions around the finite endpoint. All48 demands complete,9forest branches preserved; no layer-change necessity claim.",
+    "controls": "Camera18/14 and18/2 still reach the detailed-routing constructor at unchanged budgets.",
+    "wholeBoard": "Original SRJ24/25 test now solves, retains3physically validated nets and3interior attachments, and passes unchanged relaxed/full-board/declared reference rule calls plus original-input immutability.",
+    "testMaintenance": "Replaced the incidental assertion that regional Native instances must be positive with proof that immutable copper was supplied to global planning. All physical assertions and configurations remain unchanged.",
+    "limits": "No performance claim from local functional checks; full42 main and same-source comparisons remain required."
+  },
+  "duplicateFragmentStitching": {
+    "source": "SamegeneralfixasstandalonePR3338source74de6cea4bd39c9aa41e9d492b003a892abd1596",
+    "localCausalProof": "SixindependentlysolvedoriginalHDnodesproduce53fragments; oneexactduplicateviafragmentdriveswronglayercompletion. RemovingonlytheduplicatechangesSingleandMultipleStitchtolayer-correctone-viaoutput.",
+    "scope": "No rounding, endpointpainting, newsearch/fallback, cap/rule/validatorchange. Distinctmetadata/dimensions/geometryandlegitimateplatedterminalslayersretained.",
+    "limits": "ThisboundedwitnessdoesnotqualifywholeSRJ18/14manufacturingclearance. Standalone14/15same-fixed-sourceoff/onbenchmarkrunningseparately; itsresults cannotqualifythisphysical-sharinghead."
+  }
+}

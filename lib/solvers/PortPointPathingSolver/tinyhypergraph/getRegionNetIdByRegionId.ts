@@ -58,6 +58,21 @@ export function getRegionNetIdByRegionId(input: {
     }
   }
 
+  // A physical net can have no remaining pair demands. Its copper and pads
+  // still own regions even though no desired connection registers that net.
+  for (const port of input.params.graph.ports) {
+    for (const assignment of port.d._preloadedTracePortAssignments ?? []) {
+      const netId = assignment.fixedNetId
+      netIndexByConnectionAlias.set(
+        netId,
+        input.getNetIndex({
+          connectionId: assignment.traceId,
+          mutuallyConnectedNetworkId: netId,
+        }),
+      )
+    }
+  }
+
   for (const region of input.params.graph.regions) {
     for (const connectionName of region.d._connectedTo ?? []) {
       const routeNetIndex = netIndexByConnectionAlias.get(connectionName)

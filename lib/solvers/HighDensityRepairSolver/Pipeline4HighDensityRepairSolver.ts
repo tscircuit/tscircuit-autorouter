@@ -12,7 +12,7 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
@@ -28,6 +28,11 @@ type RepairSampleEntry = {
   routeIndexes: number[]
   sample: DatasetSample
 }
+
+type RepairViaSpanContext = Pick<
+  SimpleRouteJson,
+  "layerCount" | "allowBlindAndBuriedVias"
+>
 
 const DEFAULT_REPAIR_MARGIN = 0.2
 
@@ -212,6 +217,7 @@ const getAdjacentObstacles = (
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
+  readonly viaSpanContext?: RepairViaSpanContext
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -232,12 +238,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
+    viaSpanContext?: RepairViaSpanContext
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
+    this.viaSpanContext = params.viaSpanContext
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -272,7 +280,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     const layeredObstacles = createObjectsWithZLayers(
       params.obstacles,
-      Math.max(
+      params.viaSpanContext?.layerCount ?? Math.max(
         2,
         ...params.nodeWithPortPoints.flatMap(
           (node) => node.availableZ?.map((z) => z + 1) ?? [],
@@ -280,7 +288,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       ),
     )
     const repairRoutes = params.hdRoutes.map((route) =>
-      toRepairRoute(route, params.connMap, params.minimumTraceWidth),
+      toRepairRoute(
+        route,
+        params.connMap,
+        params.minimumTraceWidth,
+      ),
     )
     const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
       params.hdRoutes.length,
@@ -324,6 +336,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           node,
           routeIndexes,
           sample: {
+            layerCount: params.viaSpanContext?.layerCount,
+            allowBlindAndBuriedVias: params.viaSpanContext?.allowBlindAndBuriedVias,
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
               center: node.center,
@@ -527,6 +541,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
+        viaSpanContext: this.viaSpanContext,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },

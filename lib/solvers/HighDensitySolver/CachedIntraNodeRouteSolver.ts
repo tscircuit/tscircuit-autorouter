@@ -204,8 +204,22 @@ export class CachedIntraNodeRouteSolver
   }
 
   applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
+    if (!cachedSolution.success && this.routeFragmentValidator) {
+      // The key does not describe physical context, so a different context's
+      // search failure cannot establish that this request is unroutable.
+      this.stats.physicalCacheFailureRejectionCount =
+        Number(this.stats.physicalCacheFailureRejectionCount ?? 0) + 1
+      return
+    }
     if (cachedSolution.success) {
-      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      const solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      if (this.routeFragmentValidator &&
+        !solvedRoutes.every((route) => this.routeFragmentValidator!(route))) {
+        this.stats.physicalCacheCandidateRejectionCount =
+          Number(this.stats.physicalCacheCandidateRejectionCount ?? 0) + 1
+        return
+      }
+      this.solvedRoutes = solvedRoutes
       this.solved = true
       this.failed = false
     } else {
@@ -241,17 +255,21 @@ export class CachedIntraNodeRouteSolver
       return false
     }
 
+    let cachedSolution: CachedSolvedIntraNodeRouteSolver | null | undefined
     try {
-      const cachedSolution = this.cacheProvider.getCachedSolutionSync(
+      cachedSolution = this.cacheProvider.getCachedSolutionSync(
         this.cacheKey,
       )
-
-      if (cachedSolution !== undefined && cachedSolution !== null) {
-        this.applyCachedSolution(cachedSolution)
-        return true
-      }
     } catch (error) {
       console.error("Error attempting to use cache:", error)
+      return false
+    }
+
+    if (cachedSolution !== undefined && cachedSolution !== null) {
+      // Only cache I/O is recoverable. A physical-validator invariant must
+      // propagate instead of being converted into an ordinary cache miss.
+      this.applyCachedSolution(cachedSolution)
+      return this.cacheHit
     }
 
     return false
@@ -259,6 +277,12 @@ export class CachedIntraNodeRouteSolver
 
   saveToCacheSync(): void {
     if (!this.cacheProvider?.isSyncCache) {
+      return
+    }
+
+    if (this.failed && this.routeFragmentValidator) {
+      this.stats.physicalCacheFailureSaveSkippedCount =
+        Number(this.stats.physicalCacheFailureSaveSkippedCount ?? 0) + 1
       return
     }
 

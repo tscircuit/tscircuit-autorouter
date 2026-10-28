@@ -34,6 +34,10 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { hasPipeline9OriginalPhysicalContext } from "./hasPipeline9OriginalPhysicalContext"
+import { arePipeline9NativeRoutesPhysicallyValid } from "./arePipeline9NativeRoutesPhysicallyValid"
+import { getPipeline9PhysicalBoardObstaclesInBounds } from "./getPipeline9PhysicalBoardObstaclesInBounds"
+import { getPipeline9PhysicalRouteOwner, type Pipeline9PhysicalOwnership } from "./getPipeline9PhysicalOwnership"
 
 export type Pipeline9HighDensitySolverParams = {
   /** Explicit null disables process-local route caches, including fallback work. */
@@ -42,9 +46,14 @@ export type Pipeline9HighDensitySolverParams = {
   useNativeRegionalRouting?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
+  /** Certified input copper that regional routing must never reconstruct. */
+  immutablePreloadedTraceIndices?: readonly number[]
   connMap: ConnectivityMap
+  /** Original electrical proof and original board geometry must be supplied together. */
+  physicalOwnership?: Pipeline9PhysicalOwnership
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
+  physicalBoardObstacles?: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
   allowBlindAndBuriedVias?: boolean
@@ -52,6 +61,9 @@ export type Pipeline9HighDensitySolverParams = {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
+  physicalTraceClearance?: number
+  traceToPadClearance?: number
+  traceToHoleClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -324,6 +336,8 @@ export type Pipeline9RegularNodeSolverParams = {
   enableNegotiatedSearch?: boolean
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
+  /** Original electrical proof and original board geometry must be supplied together. */
+  physicalOwnership?: Pipeline9PhysicalOwnership
   colorMap: Record<string, string>
   viaDiameter: number
   viaHoleDiameter?: number
@@ -335,6 +349,16 @@ export type Pipeline9RegularNodeSolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   obstacles: Obstacle[]
+  physicalBoardObstacles?: Obstacle[]
+  physicalImmutableRoutes?: HighDensityRoute[]
+  physicalRouteDimensionsByConnectionName?: Readonly<Record<string, {
+    traceThickness: number
+    viaDiameter: number
+  }>>
+  viaToPadClearance?: number
+  physicalTraceClearance?: number
+  traceToPadClearance?: number
+  traceToHoleClearance?: number
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
@@ -362,6 +386,7 @@ export const createPipeline9RegularNodeSolver = (
 export const createPipeline9RegularNodeSolverFromCanonicalNode = ({
   nodeWithPortPoints,
   connMap,
+  physicalOwnership,
   colorMap,
   viaDiameter,
   viaHoleDiameter,
@@ -375,12 +400,80 @@ export const createPipeline9RegularNodeSolverFromCanonicalNode = ({
   nodePfById,
   obstacles,
   boardGeometry,
+  physicalBoardObstacles,
+  physicalImmutableRoutes,
+  physicalRouteDimensionsByConnectionName,
+  physicalTraceClearance,
+  traceToPadClearance,
+  traceToHoleClearance,
+  viaToPadClearance,
   layerCount,
   cacheProvider,
   growShrinkSolutionValidator,
   enableNegotiatedSearch = true,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const hasOriginalPhysicalContext = hasPipeline9OriginalPhysicalContext({ physicalOwnership, physicalBoardObstacles })
+  const requiresPhysicalGuard = hasOriginalPhysicalContext || Boolean(physicalImmutableRoutes?.length)
+  const originalPhysicalObstacles = physicalBoardObstacles ?? obstacles
+  const boardClearance = Math.max(
+    traceToPadClearance ?? physicalTraceClearance ?? 0.1,
+    traceToHoleClearance ?? 0.2,
+    viaToPadClearance ?? 0.1,
+  )
+  const validatePhysicalRoutes = (routes: HighDensityIntraNodeRoute[]): boolean => {
+    if (!hasOriginalPhysicalContext) {
+      const intrinsicRules = {
+        connMap, layerCount, allowBlindAndBuriedVias,
+        routeDimensionsByConnectionName: physicalRouteDimensionsByConnectionName,
+        viaHoleDiameter: viaHoleDiameter ?? viaDiameter,
+        minViaHoleEdgeToViaHoleEdgeClearance: minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+        boardObstacles: [], viaToPadClearance: viaToPadClearance ?? 0.1,
+      }
+      // Explicit fixed copper is protected independently of original-board
+      // certification. Preserve its legacy gap without strengthening new pairs.
+      return arePipeline9NativeRoutesPhysicallyValid({ ...intrinsicRules, routes,
+        traceClearance: physicalTraceClearance ?? 0.1 }) && routes.every((route) =>
+        arePipeline9NativeRoutesPhysicallyValid({ ...intrinsicRules, routes: [route],
+          immutableRoutes: physicalImmutableRoutes,
+          traceClearance: physicalTraceClearance ?? obstacleMargin }))
+    }
+
+    const bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+    // Query the actual proposal envelope, including restored source dimensions;
+    // neither growth nor an out-of-node proposal can escape board constraints.
+    for (const route of routes) {
+      const dimensions = physicalRouteDimensionsByConnectionName?.[route.connectionName]
+      let radius = Math.max(route.traceThickness, route.viaDiameter,
+        dimensions?.traceThickness ?? 0, dimensions?.viaDiameter ?? 0) / 2
+      for (const point of route.route) radius = Math.max(radius, (point.traceThickness ?? 0) / 2)
+      const expansion = radius + boardClearance
+      for (const point of [...route.route, ...route.vias]) {
+        bounds.minX = Math.min(bounds.minX, point.x - expansion)
+        bounds.minY = Math.min(bounds.minY, point.y - expansion)
+        bounds.maxX = Math.max(bounds.maxX, point.x + expansion)
+        bounds.maxY = Math.max(bounds.maxY, point.y + expansion)
+      }
+    }
+    return arePipeline9NativeRoutesPhysicallyValid({
+      routes,
+      immutableRoutes: physicalImmutableRoutes,
+      routeDimensionsByConnectionName: physicalRouteDimensionsByConnectionName,
+      connMap,
+      physicalOwnership,
+      layerCount,
+      allowBlindAndBuriedVias,
+      traceClearance: physicalTraceClearance ?? 0.1,
+      traceToPadClearance,
+      traceToHoleClearance,
+      viaHoleDiameter: viaHoleDiameter ?? viaDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+      boardObstacles: !hasOriginalPhysicalContext || routes.length === 0 ? []
+        : getPipeline9PhysicalBoardObstaclesInBounds(originalPhysicalObstacles, bounds),
+      viaToPadClearance: viaToPadClearance ?? 0.1,
+    })
+  }
+  return new HighDensitySolver({
     nodePortPoints: [nodeWithPortPoints],
     colorMap,
     connMap,
@@ -401,13 +494,20 @@ export const createPipeline9RegularNodeSolverFromCanonicalNode = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
+    rootConnectionNamesAreCanonical: true,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
     cacheProvider,
     growShrinkSolutionValidator,
+    solutionValidator: priorityDagSearch && requiresPhysicalGuard ? (routes): boolean =>
+      validatePhysicalRoutes(routes) && (growShrinkSolutionValidator?.(routes) ?? true) : undefined,
+    routeFragmentValidator: priorityDagSearch && requiresPhysicalGuard
+      ? (route): boolean => validatePhysicalRoutes([route])
+      : undefined,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -416,15 +516,19 @@ export const createPipeline9RegularNodeSolverFromCanonicalNode = ({
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
+  readonly immutablePreloadedTraceIndices: ReadonlySet<number>
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
+  readonly physicalBoardObstacles: Obstacle[]
+  readonly hasOriginalPhysicalContext: boolean
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
+  readonly physicalTraceClearance?: number
   readonly viaToPadClearance?: number
   readonly effort: number
   readonly useNativeRegionalRouting: boolean
@@ -453,16 +557,26 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
+    this.hasOriginalPhysicalContext = hasPipeline9OriginalPhysicalContext(params)
     this.fixedHdRoutes = params.fixedHdRoutes
+    this.immutablePreloadedTraceIndices = new Set(params.immutablePreloadedTraceIndices)
+    for (const index of this.immutablePreloadedTraceIndices) {
+      if (!Number.isInteger(index) || index < 0) {
+        throw new Error(`Pipeline9 received invalid immutable preloaded trace index: ${index}`)
+      }
+    }
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
+    this.physicalBoardObstacles = params.physicalBoardObstacles ?? params.obstacles
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
+    this.physicalTraceClearance = params.physicalTraceClearance ??
+      (params.useNativeRegionalRouting === true && this.hasOriginalPhysicalContext ? 0.1 : undefined)
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
     this.useNativeRegionalRouting = params.useNativeRegionalRouting === true
@@ -661,6 +775,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
     return this.fixedHdRoutes.flatMap((route) => {
+      if (this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex) &&
+        (this.removedFixedRouteConnectionNames.has(route.connectionName) ||
+          this.fixedRouteReplacements.has(route.connectionName))) {
+        throw new Error(`Pipeline9 attempted to mutate immutable preloaded route "${route.connectionName}"`)
+      }
       if (this.removedFixedRouteConnectionNames.has(route.connectionName)) {
         return []
       }
@@ -694,13 +813,21 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
+      physicalOwnership: this.params.physicalOwnership,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
+      physicalBoardObstacles: this.hasOriginalPhysicalContext ? this.physicalBoardObstacles : undefined,
+      physicalImmutableRoutes: this.fixedHdRoutes.filter((route) =>
+        this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex)),
       boardGeometry: this.boardGeometry,
+      viaToPadClearance: this.viaToPadClearance,
+      physicalTraceClearance: this.physicalTraceClearance,
+      traceToPadClearance: this.params.traceToPadClearance,
+      traceToHoleClearance: this.params.traceToHoleClearance,
       layerCount: this.layerCount,
       viaHoleDiameter: this.params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance:
@@ -738,6 +865,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalNode,
       this.getUpdatedFixedHdRoutes(),
       promotedFixedRouteConnectionNames,
+      this.immutablePreloadedTraceIndices,
     )
     const movableFixedRouteConnectionNames = new Set(
       [...fallbackProblem.fixedRouteSectionsByConnectionName.values()].flatMap(
@@ -745,6 +873,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ),
     )
     for (const connectionName of promotedFixedRouteConnectionNames) {
+      if (this.fixedHdRoutes.some((route) => route.connectionName === connectionName &&
+        this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex))) {
+        throw new Error(`Pipeline9 cannot promote immutable preloaded route "${connectionName}"`)
+      }
       if (!movableFixedRouteConnectionNames.has(connectionName)) {
         throw new Error(
           `Pipeline9 could not promote fixed route "${connectionName}" into the active regional fallback`,
@@ -781,13 +913,26 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
+      physicalOwnership: this.params.physicalOwnership,
+      immutableRoutes: this.activeFallbackFixedObstacleRoutes.filter((route) =>
+        this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex)),
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
-      boardObstacles: this.obstacles,
+      boardObstacles: this.physicalBoardObstacles,
+      physicalBoardObstacles: this.hasOriginalPhysicalContext ? this.physicalBoardObstacles : undefined,
+      physicalTraceClearance: this.physicalTraceClearance,
+      traceToPadClearance: this.params.traceToPadClearance,
+      traceToHoleClearance: this.params.traceToHoleClearance,
+      physicalRouteDimensionsByConnectionName: Object.fromEntries(
+        [...this.activeFallbackFixedRouteSections].map(([name, section]) => [name, {
+          traceThickness: Math.max(...section.sourceRoutes.map((route) => route.traceThickness)),
+          viaDiameter: Math.max(...section.sourceRoutes.map((route) => route.viaDiameter)),
+        }]),
+      ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -845,6 +990,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const unchangedFixedRouteSections: FixedRouteSection[] = []
     for (const [connectionName, section] of this
       .activeFallbackFixedRouteSections) {
+      if (section.sourceRoutes.some((route) =>
+        this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex))) {
+        throw new Error(`Pipeline9 cannot replace immutable preloaded route "${connectionName}"`)
+      }
       const replacementRoutes =
         replacementRoutesByConnectionName.get(connectionName) ?? []
       if (replacementRoutes.length === 0) {
@@ -878,30 +1027,54 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ...newRoutes,
       ...pendingFixedRouteReplacements.map(({ replacement }) => replacement),
     ]
+    if (this.useNativeRegionalRouting && this.hasOriginalPhysicalContext && !arePipeline9NativeRoutesPhysicallyValid({
+      routes: candidateRoutes,
+      connMap: this.connMap,
+      physicalOwnership: this.params.physicalOwnership,
+      layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      traceClearance: this.physicalTraceClearance ?? 0.1,
+      traceToPadClearance: this.params.traceToPadClearance,
+      traceToHoleClearance: this.params.traceToHoleClearance,
+      viaHoleDiameter: this.params.viaHoleDiameter ?? this.viaDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        this.params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+      boardObstacles: this.physicalBoardObstacles,
+      viaToPadClearance: this.viaToPadClearance ?? 0.1,
+    })) {
+      this.error = "Pipeline9 regional candidate fails physical validation after fixed copper reconstruction"
+      this.failed = true
+      return
+    }
     const fixedObstacleRoutes = [
       ...this.activeFallbackFixedObstacleRoutes,
       ...unchangedFixedRouteSections.flatMap((section) => section.sourceRoutes),
     ]
     const candidateBounds = getNodeBounds(
       this.activeNode,
-      this.obstacleMargin + Math.max(this.traceWidth, this.viaDiameter) / 2,
+      (this.physicalTraceClearance ?? this.obstacleMargin) +
+        Math.max(this.traceWidth, this.viaDiameter) / 2,
     )
     const conflictingFixedRoutesByConnectionName = new Map<
       string,
       PreloadedHighDensityRoute
     >()
     for (const candidateRoute of candidateRoutes) {
+      const candidateOwner = this.params.physicalOwnership
+        ? getPipeline9PhysicalRouteOwner(this.params.physicalOwnership, candidateRoute)
+        : undefined
       for (const fixedRoute of fixedObstacleRoutes) {
-        if (
-          arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
-        ) {
+        const sameOwner = this.params.physicalOwnership
+          ? candidateOwner !== undefined && candidateOwner === getPipeline9PhysicalRouteOwner(this.params.physicalOwnership, fixedRoute)
+          : arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
+        if (sameOwner) {
           continue
         }
         if (
           doPipeline9RoutesHaveCopperConflict({
             left: candidateRoute,
             right: fixedRoute,
-            clearance: this.obstacleMargin,
+            clearance: this.physicalTraceClearance ?? this.obstacleMargin,
             leftBounds: candidateBounds,
             layerCount: this.layerCount,
             allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
@@ -918,6 +1091,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const conflictingConnectionNames = [
         ...conflictingFixedRoutesByConnectionName.keys(),
       ]
+      const immutableConnectionNames = [...conflictingFixedRoutesByConnectionName]
+        .filter(([, route]) => this.immutablePreloadedTraceIndices.has(route.preloadedTraceIndex))
+        .map(([connectionName]) => connectionName)
+      if (immutableConnectionNames.length > 0) {
+        this.error = `Pipeline9 regional fallback conflicts with immutable preloaded route(s): ${immutableConnectionNames.join(", ")}`
+        this.failed = true
+        return
+      }
       const reconstructableConnectionNames = [
         ...conflictingFixedRoutesByConnectionName,
       ].flatMap(([connectionName, fixedRoute]) =>
@@ -1024,6 +1205,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
       },
       this.getUpdatedFixedHdRoutes(),
+      new Set(),
+      this.immutablePreloadedTraceIndices,
     )
     const markedTraceIndexes = new Set<number>()
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
@@ -1129,6 +1312,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.startRegionalFallback()
   }
 
+  private finishB01SolverFailure(error: string): void {
+    if (!this.activeB01Solver) {
+      throw new Error("Pipeline9 cannot reject B01 without an active solver")
+    }
+    this.failedSolvers.push(this.activeB01Solver)
+    this.activeFallbackReason = `B01 failed: ${error}`
+    this.activeB01Solver = null
+    if (!this.enableRegionalFallback) {
+      this.error = `Pipeline9 ${this.activeFallbackReason}`
+      this.failed = true
+      this.activeNode = null
+      return
+    }
+    this.startRegionalFallback()
+  }
+
   override _step(): void {
     this.stepNodeRouting()
     this.activeSubSolver =
@@ -1191,21 +1390,35 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeB01Solver) {
       this.activeB01Solver.step()
       if (this.activeB01Solver.failed) {
-        this.failedSolvers.push(this.activeB01Solver)
-        this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
-        this.activeB01Solver = null
-        if (!this.enableRegionalFallback) {
-          this.error = `Pipeline9 ${this.activeFallbackReason}`
-          this.failed = true
-          this.activeNode = null
-          return
-        }
-        this.startRegionalFallback()
+        this.finishB01SolverFailure(this.activeB01Solver.error ?? "unknown error")
         return
       }
       if (!this.activeB01Solver.solved) return
 
-      this.finishActiveNode(this.activeB01Solver.getOutput())
+      const candidate = this.activeB01Solver.getOutput()
+      if (this.hasOriginalPhysicalContext &&
+        !arePipeline9NativeRoutesPhysicallyValid({
+          routes: candidate,
+          immutableRoutes: this.getUpdatedFixedHdRoutes(),
+          connMap: this.connMap,
+          physicalOwnership: this.params.physicalOwnership,
+          layerCount: this.layerCount,
+          allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+          traceClearance: this.physicalTraceClearance ?? 0.1,
+          traceToPadClearance: this.params.traceToPadClearance,
+          traceToHoleClearance: this.params.traceToHoleClearance,
+          viaHoleDiameter: this.params.viaHoleDiameter ?? this.viaDiameter,
+          minViaHoleEdgeToViaHoleEdgeClearance:
+            this.params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+          boardObstacles: this.physicalBoardObstacles,
+          viaToPadClearance: this.viaToPadClearance ?? 0.1,
+        })) {
+        this.stats.b01PhysicalCandidateRejectionCount =
+          Number(this.stats.b01PhysicalCandidateRejectionCount ?? 0) + 1
+        this.finishB01SolverFailure("B01 output failed physical validation")
+        return
+      }
+      this.finishActiveNode(candidate)
       return
     }
 
@@ -1215,7 +1428,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
+    const nodeBounds = getNodeBounds(node,
+      Math.max(this.obstacleMargin, this.physicalTraceClearance ?? 0),
+    )
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
@@ -1269,7 +1484,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin: Math.max(
+        PRELOADED_TRACE_CLEARANCE,
+        this.physicalTraceClearance ?? 0,
+      ),
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {

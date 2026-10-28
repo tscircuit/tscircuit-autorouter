@@ -11,6 +11,7 @@ import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+import { createNativeSingleRouteSolverWithPhysicalValidation } from "./createNativeSingleRouteSolverWithPhysicalValidation"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
@@ -76,6 +77,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  protected readonly routeFragmentValidator?: (route: HighDensityIntraNodeRoute) => boolean
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -106,6 +108,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     priorityCoordinateScale?: number
+    rootConnectionNamesAreCanonical?: boolean
+    routeFragmentValidator?: (route: HighDensityIntraNodeRoute) => boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
@@ -125,6 +129,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.routeFragmentValidator = params.routeFragmentValidator
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -267,6 +272,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
   }
 
+  protected createSingleRouteSolver(
+    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>[0],
+  ): SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
+    return createNativeSingleRouteSolverWithPhysicalValidation(opts, {
+      traceThickness: this.traceWidth, viaDiameter: this.viaDiameter,
+    }, this.routeFragmentValidator)
+  }
+
   protected trySolveSamePointLayerChange(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
@@ -274,7 +287,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }) {
     const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
     const obstacleChecker =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+      this.createSingleRouteSolver(opts)
     const { A, B } = opts
     const viaPoint = { x: A.x, y: A.y }
 
@@ -295,7 +308,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         pt.z !== arr[idx - 1].z,
     )
 
-    this.solvedRoutes.push({
+    const solvedRoute: HighDensityIntraNodeRoute = {
       connectionName: unsolvedConnection.connectionName,
       rootConnectionName: unsolvedConnection.rootConnectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
@@ -303,7 +316,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],
-    })
+    }
+    if (this.routeFragmentValidator && !this.routeFragmentValidator(solvedRoute)) return false
+    this.solvedRoutes.push(solvedRoute)
     return true
   }
 
@@ -487,9 +502,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       }
     }
     this.activeSubSolver =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-        this.getSingleRouteSolverOpts(unsolvedConnection),
-      )
+      this.createSingleRouteSolver(this.getSingleRouteSolverOpts(unsolvedConnection))
   }
 
   visualize(): GraphicsObject {

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "recordType": "NEW_CORRECTION_RECORD_HISTORICAL_EVIDENCE_UNCHANGED",
+  "dateUtc": "2026-10-28",
+  "corrects": {
+    "publishedResultsCommit": "bb36fd0d7d88fbdcb5b9421567e41ab3ae302aa9",
+    "reportSha256": "de23d3f02eed5f42f7bc71fb19ae4c77446230df189d2a1eefc9c6a4f3bb9a72",
+    "affectedStatements": [
+      {
+        "file": "consolidated-final-results.json",
+        "jsonPath": "$.results[3].datasets.srj24.softStageCoverage.qualification"
+      },
+      {
+        "file": "latest-measured-pr-result-sections.json",
+        "jsonPath": "$.entries[3].datasets.srj24.softStageCoverage.qualification and readyMarkdownResultSection"
+      },
+      {
+        "file": "3201-soft-only-full-population-causal-summary.json",
+        "jsonPath": "$.datasets[1].noncleanCasesRetained.preprocessingTimeouts.qualification"
+      }
+    ]
+  },
+  "withdrawnInference": "The historical last-progress phase label does not prove these timeouts remained in preprocessing or never reached changed routing stages.",
+  "sourceMechanism": "The pinned threads=1 pipeline solveAsync(undefined) calls synchronous solve(). Its event loop can starve interval progress callbacks. Timeout report labels derive from the last callback, and the retained timeout stageTiming has empty/partial stages rather than an actual stall-phase clock.",
+  "counterexample": {
+    "dataset": "srj24",
+    "sample": 8,
+    "lastProgress": {
+      "elapsedTimeMs": 0.5355840000000285,
+      "phaseName": "preprocessSimpleRouteJsonSolver",
+      "forestCounterPresent": false,
+      "nativeCounterPresent": false
+    },
+    "finalPhaseCount": 26,
+    "finalForestCommittedBranches": 84,
+    "finalError": "Pipeline9 asynchronous solve error: Error: Physical forest lost copper connectivity for terminal \"pcb_port_578\" on net \"source_trace_22__source_net_22\"",
+    "conclusion": "An initial preprocessing observation can survive to a late failure. Actual stall phase for360s timeout records with no final maps is UNKNOWN, even when the rendered timeout names preprocessing.",
+    "priorReportCorrectionRequired": "Earlier soft/forest summaries that said these timeouts never reached changed stages inferred too much from last progress. Keep denominator failures, but withdraw that stage attribution unless independent source/runtime evidence proves it."
+  },
+  "correctInterpretation": {
+    "srj24SharedBudgetFailures": [
+      1,
+      3,
+      4,
+      11,
+      18,
+      24
+    ],
+    "sharedQualification": "Both arms timed out within their original full26 denominators. These are not new candidate clean losses. Actual stall stage and whether a changed routing stage ran are UNKNOWN from those retained progress records.",
+    "forestV3CandidateOnlyBudgetFailure": {
+      "dataset": "srj18",
+      "sample": 15,
+      "qualification": "A real candidate clean-loss regression in the original full16 denominator. Actual timeout stage UNKNOWN."
+    }
+  },
+  "preserved": "Every original input, SHA, outcome, denominator, official elapsed time, raw log, artifact and frozen result remains unchanged. This record corrects causal attribution only.",
+  "futureEvidence": "A paired synchronous lifecycle checkpoint observer is being prepared for new source-pinned runs. Any new timings belong only to their own instrumented campaign; they do not replace historical samples."
+}

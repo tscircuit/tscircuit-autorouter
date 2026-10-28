@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "scope": "New causal supplement from retained historical artifacts. No rerouting or checker/converter rerun; historical frozen reports/counts/times unchanged.",
+  "historicalSource": {
+    "baseline": "637b6c581128238f6c61227a1c15be423d24baca",
+    "forestV3": "fac5f6b05d411648c1460b25ac5a279b680cfa2c",
+    "fullRun": 40630414562,
+    "datasetDenominators": {
+      "srj18": 16,
+      "srj24": 26
+    },
+    "baselineClean": {
+      "srj18": 16,
+      "srj24": 17
+    },
+    "candidateClean": {
+      "srj18": 14,
+      "srj24": 12
+    },
+    "current588": "Only separately targeted1+4 with37 conditional paths, not another full42."
+  },
+  "inspection": {
+    "run": 40688142228,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40688142228",
+    "controller": "b426e939d6267b8c83bee707cf7ff3a7dc153de1",
+    "tree": "e9635d7640bdab9a139ffb016072a7012c794a9a",
+    "bothJobs": "SUCCESS",
+    "strictLogQualification": "Zero source/run/helper-hash/population/marker issues",
+    "fullAnalysis": "artifact-context-packet/bounded-analysis.json",
+    "fullAnalysisSha256": "e9e62e2a7179c6d3482857f2e920e0eeccff07f198da721d3edf33d4c5fd27ab"
+  },
+  "newFindings": [
+    {
+      "id": "certified_forest_copper_deformed_downstream",
+      "confidence": "OBSERVED_PHYSICAL_MUTATION_AND_FINAL_CONTACT;FIRST_MUTATING_PHASE_UNKNOWN",
+      "cases": [
+        "srj24/15",
+        "srj24/20",
+        "part_of_srj24/21"
+      ],
+      "proof": "24/15 exact initial prefix and retained point-pair context have the same safe straight2-vertex forest49. Final rawNew and rawSolverOutput contain the same8-vertex __replaces_pcb_trace_id replacement, physical geometry hash ee64f4a2ee74c94837e09bd6c28597b27de728075cfe7afd5a52a3c71fb605a3. Its vertex(-14.8262699617,-13.1),width0.1 is0.025mm outside pad104 edge, so0.05mm copper radius overlaps. The official retained reference error directly names forest49.",
+      "ownerProof": {
+        "qualification": "Intended original ownership identified from exact original terminal references; no new original-component union or permission from generated owner labels. Raw generated label stays unresolved in the original-request-only index.",
+        "originalInputSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+        "originalPortMembership": {
+          "pcb_port_467": [
+            "source_net_12"
+          ],
+          "pcb_port_27": [
+            "source_trace_12",
+            "source_net_12"
+          ],
+          "pcb_port_104": [
+            "source_net_14"
+          ]
+        },
+        "branchDeclaredConnectsTo": [
+          "pcb_port_467",
+          "pcb_port_27"
+        ],
+        "sourceNet12Versus14": {
+          "left": "source_net_12",
+          "right": "source_net_14",
+          "classification": "distinct_explicit_owners",
+          "explicitIdentityProof": null,
+          "rejectedDuplicateRequestPath": null,
+          "sourceExplicitPath": null,
+          "sourceFullPath": null,
+          "coordinateUnionIsNotElectricalPermission": false
+        },
+        "trace12VersusNet12": {
+          "left": "source_trace_12",
+          "right": "source_net_12",
+          "classification": "same_proven_explicit_identity",
+          "explicitIdentityProof": {
+            "edgeCount": 2,
+            "pathHash": "f68990c467fe7e29ea68a19318d5ef541525f9bf36f15079154a1e77660a34d7",
+            "edges": [
+              {
+                "from": [
+                  "net_or_request",
+                  "source_trace_12"
+                ],
+                "to": [
+                  "pcb_port",
+                  "pcb_port_15"
+                ],
+                "evidence": {
+                  "source": "original.connections[12].pointsToConnect[0]",
+                  "request": "source_trace_12",
+                  "field": "pcb_port_id",
+                  "alias": "pcb_port_15"
+                }
+              },
+              {
+                "from": [
+                  "pcb_port",
+                  "pcb_port_15"
+                ],
+                "to": [
+                  "net_or_request",
+                  "source_net_12"
+                ],
+                "evidence": {
+                  "source": "original.connections[168].pointsToConnect[0]",
+                  "request": "source_net_12",
+                  "field": "pcb_port_id",
+                  "alias": "pcb_port_15"
+                }
+              }
+            ],
+            "truncated": false
+          },
+          "rejectedDuplicateRequestPath": null,
+          "sourceExplicitPath": {
+            "edgeCount": 2,
+            "pathHash": "5371b0a09a4688a4805dd90ebe76dfadce8065f64d88189a6b441fd679e98120",
+            "edges": [
+              {
+                "from": "source_trace_12",
+                "to": "pcb_port_15",
+                "evidence": {
+                  "kind": "declared",
+                  "source": "original.connections[12].pointsToConnect[0]",
+                  "request": "source_trace_12",
+                  "field": "pcb_port_id"
+                }
+              },
+              {
+                "from": "pcb_port_15",
+                "to": "source_net_12",
+                "evidence": {
+                  "kind": "declared",
+                  "source": "original.connections[168].pointsToConnect[0]",
+                  "request": "source_net_12",
+                  "field": "pcb_port_id"
+                }
+              }
+            ],
+            "truncated": false
+          },
+          "sourceFullPath": {
+            "edgeCount": 2,
+            "pathHash": "5371b0a09a4688a4805dd90ebe76dfadce8065f64d88189a6b441fd679e98120",
+            "edges": [
+              {
+                "from": "source_trace_12",
+                "to": "pcb_port_15",
+                "evidence": {
+                  "kind": "declared",
+                  "source": "original.connections[12].pointsToConnect[0]",
+                  "request": "source_trace_12",
+                  "field": "pcb_port_id"
+                }
+              },
+              {
+                "from": "pcb_port_15",
+                "to": "source_net_12",
+                "evidence": {
+                  "kind": "declared",
+                  "source": "original.connections[168].pointsToConnect[0]",
+                  "request": "source_net_12",
+                  "field": "pcb_port_id"
+                }
+              }
+            ],
+            "truncated": false
+          },
+          "coordinateUnionIsNotElectricalPermission": false
+        }
+      },
+      "otherReferenceParticipants": "24/20 one retained error directly names replacement forest50 vs pad113 at0.09mm gap<0.1.24/21 has19 errors:1 names forest3,15 ordinary routed trace participants,3 via-only findings with ownership unresolved in selected reference records. Do not attribute all19 to a forest branch.",
+      "recommendation": "Preserve certified tree copper as fixed supply throughout coarse routing, materialization, cleanup and power expansion. Do not silently replace it by unvalidated mutable sections. Then qualify completion and physical tradeoffs; immutability alone does not prove all ordinary-route/via failures fixed."
+    },
+    {
+      "id": "late_continuity_loss_has_no_retained_output",
+      "confidence": "OBSERVED_COVERAGE_LIMIT",
+      "case": "srj24/8",
+      "proof": "Candidate artifact contains only latest-progress-evidence.json. original-input/raw-new-traces/raw-solver-output/point-pair-context/capture-provenance/supplemental-validation are absent. Baseline A supplies only the exact same-hash original input. Late terminal pcb_port_578 continuity assertion is observed; no final candidate copper or first destructive phase can be recovered.",
+      "recommendation": "Future paired observer captures last durable lifecycle boundary; separate post-elapsed failure-only context reads completed stages stored arrays without getters/reconstruction/checkers. Stored terminal arrays must not be labeled earlier snapshots."
+    },
+    {
+      "id": "unsafe_local_native_proposals_are_not_the_final_good_control",
+      "confidence": "SOURCE_AND_LOCAL_PROPOSAL_DEFECT_PROVEN;SCOPED_FINAL_CORRECTION_OBSERVED",
+      "case": "srj24/25",
+      "proof": "Native local cmn57/cmn42 scaling/incomplete-world acceptance admits bad candidates. But old final cmn57 context contains only declared net14/17 (no13/unknown/truncation), and bad cmn42 via(46.79,51.135) is absent. Final net13 vias moved to(46.949,50.974),(47.376,51.544); the first has analytic gap0.15960128mm to original pad338 versus bad local0.00060128mm. Both final output collections agree.",
+      "limits": "Query covers the selected native regions only. Pad338 inspector lookup used a non-altium ID; exact original same-hash pad pcb_smtpad_altium_338 supplied the analytic comparison. No broad whole-board manufacturing proof or claim every local defect persists into final copper.",
+      "recommendation": "Reject unsafe proposals in their actual physical coordinates/material/span/context, while preserving24/25 as a useful final quality control. New guards may trade early search effort against later repair; same-run paired qualification must measure that."
+    }
+  ],
+  "priorProvenMechanismsStillRelevant": [
+    {
+      "mechanism": "Outstanding demand list was reused as physical ownership/supply model. Fully served nets disappeared, losing pad owners and reservations.",
+      "evidence": "Same routing input18/14==24/12:4forest branches\u21920serialized sections,8assigned ports lost. Related loss24/15 54\u21922,24/20 95\u21929,24/21 46\u219210. Good18/2 also loses8\u21921 yet succeeds.",
+      "qualification": "Representation defect proven by prefix/serialization source controls; isolated cause of iteration caps unproven. Preserve all original owner identities and fixed supply independently of unresolved demand."
+    },
+    {
+      "mechanism": "Native regional scale can blow up eager allocation on tiny clipped boundary separation.",
+      "evidence": "Reading-lamp local exact node contains22.588nm boundary separation, forces8192scale and estimated305GB A01 array footprint. Existing CI records actual A01 OOM; safe probe intercepted the allocation.",
+      "qualification": "Off-corpus actual resource failure; do not call it established baseline/preexisting. Separate source-pinned lamp/MIDI investigation plan; no full-CI rerouting by default."
+    },
+    {
+      "mechanism": "Unclocked setup/callback work materially affects elapsed runtime.",
+      "evidence": "18/6 recovers clean but elapsed71.936\u2192249.225s;26.646s additional cost lies outside recorded phase clocks. _step clocks phase end before onSolved and starts next after constructor params/construction.",
+      "qualification": "Do not assign this residual wholly to HD. New paired lifecycle timestamps bound setup/constructor+bookkeeping/callback intervals and include observer overhead."
+    }
+  ],
+  "historicalTimeoutCorrection": {
+    "record": "historical-stage-attribution-correction.json",
+    "sha256": "3adc703a755ae5546a9f41a73c618a94ea49ba4cd1219f879ec1a388f5f9cf29",
+    "core": "Pinned threads1 synchronous solve starves interval callbacks. Six shared24 budget failures retain denominators and are not new candidate clean losses; actual stall stages UNKNOWN. Candidate-only18/15 is a true regression with unknown actual stall phase. Withdraw unsupported never-reached-changed-stages inference; preserve old counts/times."
+  },
+  "preservedSubcases": [
+    {
+      "case": "srj18/2",
+      "historicalSameRun": "108.4257\u219257.5883s(-46.89%),typed explicit-identity physical drill sites495\u2192474,emitted occurrences497\u2192477,style10\u21921,odd780\u2192352.",
+      "limit": "Raw wire4731.717\u21924783.492mm(+1.09%);8unknown generated wire labels leave16segments20.205mm unresolved, so no complete normalized wire improvement claim. Zero interior attachments; do not disable this case based on Steiner savings alone."
+    },
+    {
+      "case": "srj24/25",
+      "historicalSameRun": "Typed sites20\u219219,exact same-net segment length219.173898\u2192205.654450mm(-6.17%);elapsed2.309\u21922.925s(+26.65%),odd11\u219245.",
+      "limit": "Quality/geometric gain with runtime/style tradeoffs, not a speed win. The specifically replayed local unsafe geometry was not retained in selected final regions."
+    }
+  ],
+  "nextQualification": {
+    "runtimeStatus": "Both campaign controllers locally reviewed/frozen; candidate refs pending root source freeze. No benchmark dispatched yet.",
+    "campaigns": [
+      "main637 versus refined forest",
+      "same refined SHA fixes-only(usePhysicalNetForest:false) versus forest(true)"
+    ],
+    "firstTargeted": {
+      "srj18": [
+        2,
+        6,
+        14,
+        15
+      ],
+      "srj24": [
+        8,
+        12,
+        15,
+        20,
+        21,
+        25
+      ]
+    },
+    "full": {
+      "srj18": 16,
+      "srj24": 26
+    },
+    "protocol": "Fresh matched AB-only,effort1,threads1,official360s,external480s,original pinned harness/validators. Identical synchronous observer in both arms. No time pooling across selected/full,versions,hosts,campaigns. Failed-fast records cannot become speed wins."
+  }
+}

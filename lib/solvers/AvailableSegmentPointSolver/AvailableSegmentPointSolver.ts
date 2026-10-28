@@ -39,6 +39,10 @@ export interface SegmentPortPoint {
   _preloadedFixedNetIds?: string[]
   /** Ordered crossings used to create serialized graph assignments. */
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  /** Canonical owners allowed on a layer with no finite-width foreign boundary supply. */
+  allowedNetIdByZ?: Record<number, string | null>
+  /** Physically clear generic placement witnesses, before routing uses these ports. */
+  positionByZ?: Record<number, { x: number; y: number }>
 }
 
 export interface SharedEdgeSegment {

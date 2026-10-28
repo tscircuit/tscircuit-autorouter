@@ -159,10 +159,35 @@ export class CachedPortfolioSingleIntraNodeSolver
   applyCachedSolution(
     cachedSolution: CachedSolvedPortfolioSingleIntraNode,
   ): void {
+    const solutionValidator = this.constructorParams.solutionValidator
+    if (!cachedSolution.success && solutionValidator) {
+      // Physical context is deliberately absent from this cache key. A
+      // previous context's failure says nothing about the current request.
+      this.stats.physicalCacheFailureRejectionCount =
+        Number(this.stats.physicalCacheFailureRejectionCount ?? 0) + 1
+      return
+    }
     if (cachedSolution.success) {
-      // Important: Deep clone the cached routes if they might be mutated later
-      // For now, assuming they are treated as immutable after retrieval.
-      this.solvedRoutes = cachedSolution.solvedRoutes
+      const solvedRoutes = structuredClone(cachedSolution.solvedRoutes)
+      if (solutionValidator) {
+        for (const route of solvedRoutes) {
+          const currentPort = this.nodeWithPortPoints.portPoints.find(
+            (point) => point.connectionName === route.connectionName,
+          )
+          if (!currentPort) {
+            this.stats.physicalCacheIdentityRejectionCount =
+              Number(this.stats.physicalCacheIdentityRejectionCount ?? 0) + 1
+            return
+          }
+          route.rootConnectionName = currentPort.rootConnectionName
+        }
+      }
+      if (solutionValidator && !solutionValidator(solvedRoutes)) {
+        this.stats.physicalCacheCandidateRejectionCount =
+          Number(this.stats.physicalCacheCandidateRejectionCount ?? 0) + 1
+        return
+      }
+      this.solvedRoutes = solvedRoutes
       this.solved = true
       this.failed = false
     } else {
@@ -195,29 +220,32 @@ export class CachedPortfolioSingleIntraNodeSolver
       return false
     }
 
+    let cachedSolution: CachedSolvedPortfolioSingleIntraNode | null | undefined
     try {
-      const cachedSolution = this.cacheProvider.getCachedSolutionSync(
+      cachedSolution = this.cacheProvider.getCachedSolutionSync(
         this.cacheKey,
       )
-
-      if (cachedSolution !== undefined && cachedSolution !== null) {
-        // console.log(`Cache hit for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
-        this.applyCachedSolution(
-          cachedSolution as CachedSolvedPortfolioSingleIntraNode,
-        )
-        return true // Cache hit and applied
-      } else {
-        // console.log(`Cache miss for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
-      }
     } catch (error) {
       console.error("Error attempting to use cache:", error)
-      // Decide how to handle cache read errors, e.g., treat as miss
+      return false
+    }
+
+    if (cachedSolution !== undefined && cachedSolution !== null) {
+      // The validator is solver logic, outside the recoverable cache-I/O
+      // boundary. Its errors must surface rather than becoming cache misses.
+      this.applyCachedSolution(cachedSolution)
+      return this.cacheHit
     }
 
     return false // Cache miss or error
   }
 
   saveToCacheSync(): void {
+    if (this.failed && this.constructorParams.solutionValidator) {
+      this.stats.physicalCacheFailureSaveSkippedCount =
+        Number(this.stats.physicalCacheFailureSaveSkippedCount ?? 0) + 1
+      return
+    }
     if (!this.cacheKey) {
       console.error(
         "Cannot save to cache without cache key. Trying to compute.",

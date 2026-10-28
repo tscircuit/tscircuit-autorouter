@@ -75,6 +75,7 @@ import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteR
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
+import { getPipeline9PhysicalOwnership, type Pipeline9PhysicalOwnership } from "./getPipeline9PhysicalOwnership"
 import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
@@ -111,6 +112,10 @@ interface CapacityMeshSolverOptions {
   cacheProvider?: CacheProvider | null
   effort?: number
   usePhysicalNetForest?: boolean
+  /** Override the forest-dependent experimental retention policy for ablation. */
+  retainBestPartialRouting?: boolean
+  /** Include certified forest interiors in soft coarse-routing costs. */
+  usePhysicalNetForestInteriorCosts?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -255,6 +260,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   physicalNetForestSolver?: PhysicalNetForestSolver
+  physicalOwnership!: Pipeline9PhysicalOwnership
   netToPointPairsSolver?: NetToPointPairsSolver
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
@@ -356,6 +362,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         cms.srjWithEscapeViaLocations ?? cms.srj,
         cms.opts.usePhysicalNetForest !== false,
+        cms.originalSrj,
       ],
       {
         onSolved: (cms) => {
@@ -552,12 +559,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            immutableTraceIds: new Set(cms.physicalNetForestSolver!.branches.map((trace) => trace.pcb_trace_id)),
+            physicalBoundarySupply: {
+              srj: cms.srjWithPointPairs!,
+              originalSrj: cms.originalSrj,
+              sharedEdgeSegments,
+            },
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
               USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
+              RETAIN_BEST_PARTIAL_ROUTING:
+                cms.opts.retainBestPartialRouting ??
+                cms.physicalNetForestSolver!.branches.length > 0,
+              USE_IMMUTABLE_COPPER_REGION_COSTS:
+                cms.opts.usePhysicalNetForestInteriorCosts !== false &&
+                cms.physicalNetForestSolver!.branches.length > 0,
             },
             weights: {
               SHUFFLE_SEED: 0,
@@ -586,20 +605,41 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
-          minTraceWidth: cms.minTraceWidth,
+      (cms) => {
+        const physicalTraces = cms.getInitialPhysicalTraces()
+        const pathingOutput = cms.portPointPathingSolver!.getOutput()
+        const originalFixedRoutes = cms.getOriginalFixedHdRoutes()
+        const changedSections = cms.getChangedPreloadedTraceSections()
+        const fixedRoutes = removeChangedSectionsFromFixedHdRoutes({
+          traces: physicalTraces,
+          fixedHdRoutes: originalFixedRoutes,
+          sections: changedSections,
+        })
+        const netByConnectionName = new Map(Object.entries(cms.connMap.idToNetMap))
+        for (const netId of Object.keys(cms.connMap.netMap)) netByConnectionName.set(netId, netId)
+        for (const [connectionName, netId] of getPipeline9NetByConnectionName(originalFixedRoutes, cms.connMap)) {
+          netByConnectionName.set(connectionName, netId)
+        }
+        const traceWidthByConnectionName = new Map(pathingOutput.nodesWithPortPoints.flatMap((node) =>
+          node.portPoints.map((point) => [point.connectionName, cms.minTraceWidth] as const),
+        ))
+        return [{
+          nodeWithPortPoints: pathingOutput.nodesWithPortPoints,
+          inputNodesWithPortPoints: pathingOutput.inputNodeWithPortPoints,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-        },
-      ],
+          ...(fixedRoutes.length > 0 ? {
+            fixedCopper: {
+              routes: fixedRoutes,
+              netByConnectionName,
+              traceWidthByConnectionName,
+              clearance: cms.srj.defaultObstacleMargin ?? 0.15,
+            },
+          } : {}),
+        }]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
@@ -619,7 +659,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = cms.getInitialPhysicalTraces().flatMap(
+        const initialPhysicalTraces = cms.getInitialPhysicalTraces()
+        const forestTraceIds = new Set(cms.physicalNetForestSolver!.branches.map(
+          (trace) => trace.pcb_trace_id,
+        ))
+        const originalFixedHdRoutes = initialPhysicalTraces.flatMap(
           (trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
               trace,
@@ -629,8 +673,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
         )
+        cms.physicalOwnership = getPipeline9PhysicalOwnership({
+          originalSrj: cms.originalSrj,
+          derivedConnections: cms.srjWithPointPairs!.connections,
+          derivedTraces: initialPhysicalTraces,
+          derivedRouteAliases: originalFixedHdRoutes.map((route) => {
+            const parent = initialPhysicalTraces[route.preloadedTraceIndex]
+            if (!parent) throw new Error("Physical fixed route lost its initial trace parent")
+            return {
+              connectionName: route.connectionName,
+              parentConnectionName: parent.connection_name,
+              parentTraceId: parent.pcb_trace_id,
+            }
+          }),
+          routingConnMap: cms.connMap,
+        })
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.getInitialPhysicalTraces(),
+          traces: initialPhysicalTraces,
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
@@ -644,9 +703,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
             },
             fixedHdRoutes,
+            immutablePreloadedTraceIndices: initialPhysicalTraces.flatMap(
+              (trace, index) => forestTraceIds.has(trace.pcb_trace_id) ? [index] : [],
+            ),
             connMap: cms.connMap,
+            physicalOwnership: cms.physicalOwnership,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
+            physicalBoardObstacles: cms.originalSrj.obstacles,
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
@@ -654,6 +718,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
+            physicalTraceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -682,6 +749,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          physicalValidation: {
+            connectivityNetMap: cms.connMap.netMap,
+            physicalOwnership: cms.physicalOwnership,
+            layerCount: cms.originalSrj.layerCount,
+            allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+            traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            minViaHoleEdgeToViaHoleEdgeClearance:
+              cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+            boardObstacles: cms.originalSrj.obstacles,
+            viaToPadClearance: cms.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
+            immutableRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+          },
         },
       ],
     ),
@@ -699,6 +781,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
           connMap: cms.connMap,
+          viaSpanContext: {
+            layerCount: cms.originalSrj.layerCount,
+            allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+          },
         },
       ],
     ),
@@ -1092,6 +1178,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
             currentPreloadedTraces: cms.getUpdatedPhysicalTraces(),
             expandedConnectionNames: onlyConnectionNames,
+            immutableTraceIds: (cms.physicalNetForestSolver?.branches ?? []).map(
+              (trace) => trace.pcb_trace_id,
+            ),
             resolveConnectedTraceAliases: true,
           }),
           {

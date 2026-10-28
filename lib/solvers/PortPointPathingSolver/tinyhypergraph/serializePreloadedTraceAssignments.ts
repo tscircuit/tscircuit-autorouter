@@ -145,6 +145,7 @@ const getEndpointRegionId = (
  */
 export const serializePreloadedTraceAssignments = (
   serializedHyperGraph: SerializedHyperGraph,
+  immutableTraceIds?: ReadonlySet<string>,
 ): SerializedPreloadedTraceStats => {
   const orderedPortsByTraceId = new Map<string, OrderedTracePort[]>()
   const fixedNetIdByTraceId = new Map<string, string>()
@@ -210,6 +211,7 @@ export const serializePreloadedTraceAssignments = (
   let preloadedAssignmentCount = 0
 
   for (const [traceId, tracePorts] of orderedPortsByTraceId) {
+    if (immutableTraceIds?.has(traceId)) continue
     tracePorts.sort(
       (left, right) =>
         left.assignment.routePosition - right.assignment.routePosition ||

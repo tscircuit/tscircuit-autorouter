@@ -9,6 +9,7 @@ import {
   comparePoints,
   compareRoutes,
   DISTANCE_TIE_TOLERANCE,
+  getUniqueStitchRoutes,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
@@ -81,7 +82,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     stitchClearanceMode: StitchClearanceMode
   }) {
     super()
-    const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
+    const canonicalHdRoutes = getUniqueStitchRoutes(opts.hdRoutes).sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys

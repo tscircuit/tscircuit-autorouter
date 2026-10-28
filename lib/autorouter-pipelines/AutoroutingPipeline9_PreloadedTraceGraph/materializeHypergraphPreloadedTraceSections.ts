@@ -125,7 +125,7 @@ const getSectionRangesByTraceIndex = ({
   sections,
 }: {
   traces: SimplifiedPcbTrace[]
-  sections: ChangedPreloadedTraceSection[]
+  sections: Array<Pick<ChangedPreloadedTraceSection, "traceId" | "startRoutePosition" | "endRoutePosition">>
 }) => {
   const traceIndexById = getTraceIndexById(traces)
   const rangesByTraceIndex = new Map<number, RoutePositionRange[]>()
@@ -186,7 +186,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
 }: {
   traces: SimplifiedPcbTrace[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
-  sections: ChangedPreloadedTraceSection[]
+  sections: Array<Pick<ChangedPreloadedTraceSection, "traceId" | "startRoutePosition" | "endRoutePosition">>
 }): PreloadedHighDensityRoute[] => {
   const rangesByTraceIndex = getSectionRangesByTraceIndex({ traces, sections })
 

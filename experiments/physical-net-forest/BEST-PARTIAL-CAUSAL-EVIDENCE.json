@@ -1,0 +1,41 @@
+{
+  "scope": "Bounded immutable-camera coarse pathing only, before HD; exact original2m cap and original final attempts/guards",
+  "observed": {
+    "staticUnreachableRoutes": 0,
+    "everyRouteSucceededAtLeastOnce": true,
+    "bestPartial": {
+      "completed": 219,
+      "total": 234,
+      "remaining": 15,
+      "iteration": 1250819,
+      "ripCount": 22
+    },
+    "discardedFinalState": {
+      "remaining": 70,
+      "iteration": 2000000,
+      "ripCount": 32,
+      "trigger": "failed_owner_cycle global rerip"
+    },
+    "sameBudgetDiagnosticRetained": {
+      "solved": true,
+      "parentIterations": 2000000,
+      "liveRipCount": 32,
+      "remainingInput": 15,
+      "existingGreedyAttempt": 1,
+      "existingGreedyCap": 50000
+    }
+  },
+  "evidence": [
+    "camera-path-cap-immutable.json",
+    "camera-coarse-retention-observe.json",
+    "camera-coarse-retention-retained.json",
+    "camera-coarse-retention-probe.ts"
+  ],
+  "productionObservation": "Pathing agent reports actual default-off opt-in caller solves atexistinggreedyattempt0. Differencefromdiagnostic is snapshots captured before rips, not everycompletedpath; inputs/guards/caps unchanged.",
+  "limits": [
+    "Not an end-to-end physical clearance/continuity certificate",
+    "Individually reachable demands do not prove simultaneous physical feasibility",
+    "Existing zero-cost greedy final route has known independent hard-feasibility issues; no guard is weakened by this change and whole-board checks remain necessary",
+    "Static immutable copper constraints and actual forest provenance remain in force"
+  ]
+}

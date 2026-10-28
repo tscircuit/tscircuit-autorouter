@@ -57,6 +57,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -129,6 +130,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
     super()
@@ -754,9 +756,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (
+      this.constructorParams.solutionValidator &&
+      !this.constructorParams.solutionValidator(solvedRoutes)
+    ) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Native candidate fails world-coordinate physical validation"
+      this.stats.physicalCandidateRejectionCount =
+        Number(this.stats.physicalCandidateRejectionCount ?? 0) + 1
+      this.solved = false
+      this.winningSolver = undefined
+      return
+    }
+    this.solvedRoutes = solvedRoutes
   }
 }

@@ -231,6 +231,7 @@ export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
   fixedRoutes: PreloadedHighDensityRoute[],
   promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
+  immutablePreloadedTraceIndices: ReadonlySet<number> = new Set(),
 ): RegionalFallbackProblem => {
   const fixedRouteSectionsByConnectionName = new Map<
     string,
@@ -246,6 +247,7 @@ export const createRegionalFallbackProblem = (
     .filter(
       (slice) =>
         slice.sourceRoute.isThroughObstacle !== true &&
+        !immutablePreloadedTraceIndices.has(slice.sourceRoute.preloadedTraceIndex) &&
         (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
           promotedFixedRouteConnectionNames.has(
             slice.sourceRoute.connectionName,

@@ -69,6 +69,9 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  routeFragmentValidator?: (route: HighDensityIntraNodeRoute) => boolean
+  readonly rootConnectionNamesAreCanonical: boolean
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly cacheProvider: CacheProvider | null
@@ -117,6 +120,9 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
+    solutionValidator,
+    routeFragmentValidator,
+    rootConnectionNamesAreCanonical = false,
     captureSearchDebug,
     priorityDagSearch = false,
     priorityDiagnostics,
@@ -146,6 +152,9 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+    routeFragmentValidator?: (route: HighDensityIntraNodeRoute) => boolean
+    rootConnectionNamesAreCanonical?: boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
@@ -182,6 +191,9 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.solutionValidator = solutionValidator
+    this.routeFragmentValidator = routeFragmentValidator
+    this.rootConnectionNamesAreCanonical = rootConnectionNamesAreCanonical
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.cacheProvider = cacheProvider === undefined ? getGlobalInMemoryCache() : cacheProvider
@@ -433,6 +445,9 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       boardGeometry: this.boardGeometry,
+      solutionValidator: this.solutionValidator,
+      routeFragmentValidator: this.routeFragmentValidator,
+      rootConnectionNamesAreCanonical: this.rootConnectionNamesAreCanonical,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

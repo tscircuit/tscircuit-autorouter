@@ -1,0 +1,548 @@
+{
+  "node": {
+    "capacityMeshNodeId": "cmn_57",
+    "center": {
+      "x": 44.5427475,
+      "y": 52.459300999999996
+    },
+    "width": 0.9929010000000034,
+    "height": 1.059123999999997,
+    "portPoints": [
+      {
+        "portPointId": "ce4157_pp0_z3::3",
+        "x": 44.32569724,
+        "y": 52.988862999999995,
+        "z": 3,
+        "connectionName": "source_net_altium_pcb_13_mst2",
+        "rootConnectionName": "connectivity_net6",
+        "nextPortPointId": "ce4161_pp2_z3::3"
+      },
+      {
+        "portPointId": "ce4161_pp2_z3::3",
+        "x": 44.5427475,
+        "y": 51.929739,
+        "z": 3,
+        "connectionName": "source_net_altium_pcb_13_mst2",
+        "rootConnectionName": "connectivity_net6",
+        "prevPortPointId": "ce4157_pp0_z3::3"
+      },
+      {
+        "x": 44.046296999999996,
+        "y": 52.500956698873196,
+        "z": 0,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:start",
+        "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:end",
+        "connectionName": "source_net_altium_pcb_17_fixed_2_0",
+        "rootConnectionName": "connectivity_net20"
+      },
+      {
+        "x": 45.039198,
+        "y": 52.68666653147813,
+        "z": 0,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:end",
+        "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:start",
+        "connectionName": "source_net_altium_pcb_17_fixed_2_0",
+        "rootConnectionName": "connectivity_net20"
+      },
+      {
+        "x": 44.046296999999996,
+        "y": 52.61294680663337,
+        "z": 3,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:start",
+        "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:end",
+        "connectionName": "source_net_altium_pcb_14_fixed_6_0",
+        "rootConnectionName": "connectivity_net22"
+      },
+      {
+        "x": 45.039198,
+        "y": 52.73664047453257,
+        "z": 3,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:end",
+        "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:start",
+        "connectionName": "source_net_altium_pcb_14_fixed_6_0",
+        "rootConnectionName": "connectivity_net22"
+      },
+      {
+        "x": 44.74247761635666,
+        "y": 52.988862999999995,
+        "z": 3,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:start",
+        "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:end",
+        "connectionName": "source_net_altium_pcb_14_fixed_8_0",
+        "rootConnectionName": "connectivity_net22"
+      },
+      {
+        "x": 44.777953440655644,
+        "y": 52.704095137420396,
+        "z": 3,
+        "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:end",
+        "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:start",
+        "connectionName": "source_net_altium_pcb_14_fixed_8_0",
+        "rootConnectionName": "connectivity_net22"
+      }
+    ],
+    "portPointsInPairs": [
+      [
+        {
+          "portPointId": "ce4157_pp0_z3::3",
+          "x": 44.32569724,
+          "y": 52.988862999999995,
+          "z": 3,
+          "connectionName": "source_net_altium_pcb_13_mst2",
+          "rootConnectionName": "connectivity_net6",
+          "nextPortPointId": "ce4161_pp2_z3::3"
+        },
+        {
+          "portPointId": "ce4161_pp2_z3::3",
+          "x": 44.5427475,
+          "y": 51.929739,
+          "z": 3,
+          "connectionName": "source_net_altium_pcb_13_mst2",
+          "rootConnectionName": "connectivity_net6",
+          "prevPortPointId": "ce4157_pp0_z3::3"
+        }
+      ],
+      [
+        {
+          "x": 44.046296999999996,
+          "y": 52.500956698873196,
+          "z": 0,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:start",
+          "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:end",
+          "connectionName": "source_net_altium_pcb_17_fixed_2_0",
+          "rootConnectionName": "connectivity_net20"
+        },
+        {
+          "x": 45.039198,
+          "y": 52.68666653147813,
+          "z": 0,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:end",
+          "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_17_fixed_2_0:start",
+          "connectionName": "source_net_altium_pcb_17_fixed_2_0",
+          "rootConnectionName": "connectivity_net20"
+        }
+      ],
+      [
+        {
+          "x": 44.046296999999996,
+          "y": 52.61294680663337,
+          "z": 3,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:start",
+          "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:end",
+          "connectionName": "source_net_altium_pcb_14_fixed_6_0",
+          "rootConnectionName": "connectivity_net22"
+        },
+        {
+          "x": 45.039198,
+          "y": 52.73664047453257,
+          "z": 3,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:end",
+          "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_6_0:start",
+          "connectionName": "source_net_altium_pcb_14_fixed_6_0",
+          "rootConnectionName": "connectivity_net22"
+        }
+      ],
+      [
+        {
+          "x": 44.74247761635666,
+          "y": 52.988862999999995,
+          "z": 3,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:start",
+          "nextPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:end",
+          "connectionName": "source_net_altium_pcb_14_fixed_8_0",
+          "rootConnectionName": "connectivity_net22"
+        },
+        {
+          "x": 44.777953440655644,
+          "y": 52.704095137420396,
+          "z": 3,
+          "portPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:end",
+          "prevPortPointId": "pipeline9_fallback:source_net_altium_pcb_14_fixed_8_0:start",
+          "connectionName": "source_net_altium_pcb_14_fixed_8_0",
+          "rootConnectionName": "connectivity_net22"
+        }
+      ]
+    ],
+    "availableZ": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "routes": [
+    {
+      "connectionName": "source_net_altium_pcb_14_fixed_8_0",
+      "rootConnectionName": "connectivity_net22",
+      "regionId": "cmn_57",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 44.74247761635666,
+          "y": 52.988862999999995,
+          "z": 3
+        },
+        {
+          "x": 44.72137375,
+          "y": 52.9796505,
+          "z": 3
+        },
+        {
+          "x": 44.72137375,
+          "y": 52.8796505,
+          "z": 3
+        },
+        {
+          "x": 44.72137375,
+          "y": 52.779650499999995,
+          "z": 3
+        },
+        {
+          "x": 44.777953440655644,
+          "y": 52.704095137420396,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_14_fixed_6_0",
+      "rootConnectionName": "connectivity_net22",
+      "regionId": "cmn_57",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 44.046296999999996,
+          "y": 52.61294680663337,
+          "z": 3
+        },
+        {
+          "x": 44.021373749999995,
+          "y": 52.6296505,
+          "z": 3
+        },
+        {
+          "x": 44.121373750000004,
+          "y": 52.6296505,
+          "z": 3
+        },
+        {
+          "x": 44.22137375,
+          "y": 52.729650500000005,
+          "z": 3
+        },
+        {
+          "x": 44.22137375,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.32137375000001,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.52137375000001,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.621373750000004,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.72137375000001,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.82137375000001,
+          "y": 52.729650500000005,
+          "z": 0
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.8296505,
+          "z": 0
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.8296505,
+          "z": 3
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.729650500000005,
+          "z": 3
+        },
+        {
+          "x": 45.039198,
+          "y": 52.73664047453257,
+          "z": 3
+        }
+      ],
+      "vias": [
+        {
+          "x": 44.22137375,
+          "y": 52.729650500000005
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.8296505
+        }
+      ]
+    },
+    {
+      "connectionName": "source_net_altium_pcb_17_fixed_2_0",
+      "rootConnectionName": "connectivity_net20",
+      "regionId": "cmn_57",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 44.046296999999996,
+          "y": 52.500956698873196,
+          "z": 0
+        },
+        {
+          "x": 44.021373749999995,
+          "y": 52.4796505,
+          "z": 0
+        },
+        {
+          "x": 44.121373750000004,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.22137375,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.32137375000001,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.52137375000001,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.621373750000004,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.72137375000001,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.82137375000001,
+          "y": 52.3796505,
+          "z": 0
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.4796505,
+          "z": 0
+        },
+        {
+          "x": 44.921373750000015,
+          "y": 52.5796505,
+          "z": 0
+        },
+        {
+          "x": 45.02137375000001,
+          "y": 52.6796505,
+          "z": 0
+        },
+        {
+          "x": 45.039198,
+          "y": 52.68666653147813,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_13_mst2",
+      "rootConnectionName": "connectivity_net6",
+      "regionId": "cmn_57",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 44.32569724,
+          "y": 52.988862999999995,
+          "z": 3
+        },
+        {
+          "x": 44.32137375,
+          "y": 52.9796505,
+          "z": 3
+        },
+        {
+          "x": 44.32137375,
+          "y": 52.8796505,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.779650499999995,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.679650499999994,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.57965049999999,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.47965049999999,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.37965049999999,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.27965049999999,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.17965049999999,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 52.079650499999985,
+          "z": 3
+        },
+        {
+          "x": 44.42137375,
+          "y": 51.979650499999984,
+          "z": 3
+        },
+        {
+          "x": 44.5427475,
+          "y": 51.929739,
+          "z": 3
+        }
+      ],
+      "vias": []
+    }
+  ],
+  "connectivityNetMap": {
+    "connectivity_net6": [
+      "source_net_altium_pcb_13_mst0",
+      "source_net_altium_pcb_13",
+      "3915,5055:3",
+      "pcb_port_altium_382",
+      "3915,5309:3",
+      "pcb_port_altium_383",
+      "source_net_altium_pcb_13_mst1",
+      "4584,5080:3",
+      "pcb_port_altium_379",
+      "4853,5077:3",
+      "pcb_port_altium_410",
+      "source_net_altium_pcb_13_mst2",
+      "pcb_smtpad_altium_379",
+      "connectivity_net368",
+      "pcb_trace_altium_1780",
+      "pcb_trace_altium_1779",
+      "pcb_trace_altium_1766",
+      "pcb_trace_altium_1765",
+      "pcb_trace_altium_1748",
+      "pcb_trace_altium_1747",
+      "pcb_trace_altium_1746",
+      "pcb_trace_altium_1745",
+      "pcb_smtpad_altium_410",
+      "pcb_smtpad_altium_383",
+      "pcb_smtpad_altium_382",
+      "source_trace_altium_pcb_13",
+      "source_port_altium_379",
+      "source_port_altium_382",
+      "source_port_altium_383",
+      "source_port_altium_410"
+    ],
+    "connectivity_net20": [
+      "pcb_smtpad_altium_332",
+      "connectivity_net300",
+      "pcb_trace_altium_1712",
+      "pcb_smtpad_altium_342",
+      "pcb_smtpad_altium_340",
+      "pcb_smtpad_altium_339",
+      "source_trace_altium_pcb_17",
+      "source_port_altium_332",
+      "source_port_altium_339",
+      "source_port_altium_340",
+      "source_port_altium_342",
+      "source_net_altium_pcb_17",
+      "pcb_port_altium_332",
+      "pcb_port_altium_339",
+      "pcb_port_altium_340",
+      "pcb_port_altium_342",
+      "4853,5076:0",
+      "4584,5284:0",
+      "4415,5580:0",
+      "4344,5239:0",
+      "pipeline9_forest_0",
+      "pipeline9_forest_1",
+      "pipeline9_forest_2"
+    ],
+    "connectivity_net22": [
+      "pcb_smtpad_altium_380",
+      "connectivity_net338",
+      "pcb_trace_altium_1750",
+      "pcb_trace_altium_1749",
+      "pcb_smtpad_altium_408",
+      "pcb_smtpad_altium_392",
+      "pcb_smtpad_altium_390",
+      "source_trace_altium_pcb_14",
+      "source_port_altium_380",
+      "source_port_altium_390",
+      "source_port_altium_392",
+      "source_port_altium_408",
+      "source_net_altium_pcb_14",
+      "pcb_port_altium_380",
+      "pcb_port_altium_390",
+      "pcb_port_altium_392",
+      "pcb_port_altium_408",
+      "4584,5284:3",
+      "4438,5588:3",
+      "4339,5253:3",
+      "4773,5077:3",
+      "pipeline9_forest_6",
+      "pipeline9_forest_7",
+      "pipeline9_forest_8"
+    ]
+  },
+  "layerCount": 4,
+  "viaHoleDiameter": 0.15,
+  "minViaHoleEdgeToViaHoleEdgeClearance": 0.1,
+  "obstacleMargin": 0.15
+}

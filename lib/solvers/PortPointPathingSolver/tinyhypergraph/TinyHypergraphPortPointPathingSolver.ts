@@ -3,7 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { PreloadedTracePortAssignment, SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -41,7 +41,10 @@ import {
   shareConnectedTerminalPorts,
   type TerminalPortIdentity,
 } from "./shareConnectedTerminalPorts"
-import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import {
+  createTinyRouteNetIndexer,
+  type TinyRouteNetIndexSource,
+} from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -51,6 +54,8 @@ import {
   type PreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
+import { annotateFixedCopperBoundarySupply } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/annotateFixedCopperBoundarySupply"
+import { annotateImmutableCopperRegions, type SerializedFixedCopperSegment } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/annotateImmutableCopperRegions"
 
 type RouteMetadata = {
   connectionId: string
@@ -202,6 +207,7 @@ type TinyPortMetadata = {
   duplicatedFromPortId?: string
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  allowedNetId?: string | null
 }
 
 type LoadedTinyGraph = {
@@ -307,6 +313,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  retainBestPartialRouting = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -324,6 +331,9 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...(retainBestPartialRouting
+        ? { RETAIN_BEST_PARTIAL_ROUTING: true }
+        : {}),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -432,6 +442,7 @@ const toSerializedPortData = (
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
+    allowedNetId: port.d.allowedNetId,
   }
 }
 
@@ -462,7 +473,13 @@ const getTinyRouteConnectionsOrThrow = (
 const buildSerializedTinyGraph = (
   params: TinyHypergraphInput,
 ): SerializedHyperGraph => {
-  const getNetIndex = createTinyRouteNetIndexer()
+  const resolveNetIndex = createTinyRouteNetIndexer()
+  const netIdByIndex: string[] = []
+  const getNetIndex = (metadata: TinyRouteNetIndexSource): number => {
+    const netIndex = resolveNetIndex(metadata)
+    netIdByIndex[netIndex] = metadata.mutuallyConnectedNetworkId
+    return netIndex
+  }
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
     params,
     getNetIndex,
@@ -669,7 +686,70 @@ const buildSerializedTinyGraph = (
       terminals: terminalIdentities,
     })
   }
-  serializePreloadedTraceAssignments(serializedHyperGraph)
+  serializePreloadedTraceAssignments(serializedHyperGraph, params.immutableTraceIds)
+  if (params.physicalBoundarySupply) {
+    const { srj, originalSrj, sharedEdgeSegments } = params.physicalBoundarySupply
+    annotateFixedCopperBoundarySupply(sharedEdgeSegments, srj,
+      serializedHyperGraph.connections.flatMap((connection) => hasPreloadedTraceSectionMetadata(connection) ? [connection.preloadedTraceSection] : []), originalSrj,
+    )
+    const sourcePointByPortId = new Map<string, { point: SegmentPortPoint; z: number }>(sharedEdgeSegments.flatMap((segment) => segment.portPoints.flatMap((point) =>
+      point.availableZ.map((z) => [`${point.segmentPortPointId}::${z}`, { point, z }] as const),
+    )))
+    for (const port of serializedHyperGraph.ports) {
+      const source = sourcePointByPortId.get(port.portId)
+      if (!source) continue
+      const allowedNetId = source.point.allowedNetIdByZ?.[source.z]
+      if (allowedNetId === undefined) {
+        if (port.d) delete port.d.allowedNetId
+      } else {
+        port.d = { ...port.d, allowedNetId }
+      }
+      const position = source.point.positionByZ?.[source.z]
+      if (position) port.d = { ...port.d, x: position.x, y: position.y }
+    }
+  }
+
+  // A trace with fewer than two usable boundary crossings has no serialized
+  // route. Register the routes first so such a physical net cannot shift a
+  // later route's numeric ownership index onto another net's pads.
+  const getSerializedNetIndex = createTinyRouteNetIndexer()
+  for (const connection of serializedHyperGraph.connections) {
+    if (!connection.mutuallyConnectedNetworkId) {
+      throw new Error(
+        `Serialized connection "${connection.connectionId}" has no net ID`,
+      )
+    }
+    getSerializedNetIndex({
+      connectionId: connection.connectionId,
+      mutuallyConnectedNetworkId: connection.mutuallyConnectedNetworkId,
+    })
+  }
+  const serializedNetIndexByInitialIndex = netIdByIndex.map((netId) =>
+    getSerializedNetIndex({
+      connectionId: netId,
+      mutuallyConnectedNetworkId: netId,
+    }),
+  )
+  for (const region of serializedHyperGraph.regions) {
+    const netIndex = region.d?.netId
+    if (typeof netIndex !== "number" || netIndex < 0) continue
+    const serializedIndex = serializedNetIndexByInitialIndex[netIndex]
+    if (serializedIndex === undefined) {
+      throw new Error(`Region "${region.regionId}" has an unknown net index`)
+    }
+    region.d!.netId = serializedIndex
+  }
+  if (params.flags.USE_IMMUTABLE_COPPER_REGION_COSTS === true && params.immutableTraceIds?.size) {
+    if (!params.physicalBoundarySupply) {
+      throw new Error("Immutable regional copper costs require the original physical source context")
+    }
+    annotateImmutableCopperRegions({
+      graph: serializedHyperGraph,
+      srj: params.physicalBoundarySupply.srj,
+      originalSrj: params.physicalBoundarySupply.originalSrj,
+      immutableTraceIds: params.immutableTraceIds,
+    })
+  }
   return serializedHyperGraph
 }
 
@@ -1100,6 +1180,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
+  private readonly immutableCopperStats: {
+    immutableCopperRegionCount: number
+    immutableCopperPieceCount: number
+    immutableCopperSegmentAssociationCount: number
+    immutableCopperUnmappedRoutingOwnerPieceCount: number
+  }
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1119,6 +1205,19 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const immutableCopperRegions = serializedGraph.regions.filter((region) =>
+      Array.isArray(region.d?.fixedCopperSegments) && region.d.fixedCopperSegments.length > 0,
+    )
+    const immutableCopperSegments = immutableCopperRegions.flatMap((region) =>
+      region.d!.fixedCopperSegments as SerializedFixedCopperSegment[],
+    )
+    const immutableCopperPieces = [...new Set(immutableCopperSegments)]
+    this.immutableCopperStats = {
+      immutableCopperRegionCount: immutableCopperRegions.length,
+      immutableCopperPieceCount: immutableCopperPieces.length,
+      immutableCopperSegmentAssociationCount: immutableCopperSegments.length,
+      immutableCopperUnmappedRoutingOwnerPieceCount: immutableCopperPieces.filter((piece) => piece.netId === null).length,
+    }
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1181,6 +1280,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.flags.RETAIN_BEST_PARTIAL_ROUTING === true,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
@@ -1599,6 +1699,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
+      ...this.immutableCopperStats,
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
