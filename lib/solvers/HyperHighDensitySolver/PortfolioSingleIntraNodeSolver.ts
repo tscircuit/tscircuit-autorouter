@@ -13,6 +13,7 @@ import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNode
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
 import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntraNodeSolver"
+import type { RouteWitnessCompatibilitySession } from "../HighDensitySolver/RouteWitnessCompatibilityCatalog"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -68,6 +69,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  readonly enableWitnessCompatibility: boolean
+  private readonly witnessCompatibilitySession: RouteWitnessCompatibilitySession = {}
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -129,6 +132,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      enableWitnessCompatibility?: boolean
     },
   ) {
     super()
@@ -140,6 +144,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.enableWitnessCompatibility = opts.enableWitnessCompatibility ?? true
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -720,6 +725,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         ...this.constructorParams,
         hyperParameters,
         priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,
+        witnessCompatibilitySession: this.enableWitnessCompatibility
+          ? this.witnessCompatibilitySession
+          : undefined,
         precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
       })
     }
