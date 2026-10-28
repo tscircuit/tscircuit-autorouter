@@ -1,0 +1,60 @@
+TARGETED5 forest native-policy scope qualification
+
+Publish only on codex/deep-experiment-forest-scope-targeted. The new workflow is
+restricted to pushes on that branch. The inherited full benchmark workflow is
+restricted to codex/deep-experiment-bench and is left unchanged, as is its normal
+pinned-manifest.json. This targeted push must not launch another full 42 sweep.
+
+Candidate 58873007d669bbeb0d53ea4cb19b983c10ab1c66 has reviewed tree
+2b189aba98051506dcf7df7b426a06f3653dc99e, identical to local scope patch
+cc2eaf512c4c197c8d0d85a24c7c9baa0af1c244. Baseline is
+637b6c581128238f6c61227a1c15be423d24baca. The workflow verifies the candidate
+commit and reviewed tree before build/routing. The earlier pending manifest is
+retained outside the publication files as a fail-closed preparation record.
+
+The two Blacksmith jobs route only original SRJ18 sample[4] and original SRJ24
+samples[5,9,10,16]. Their denominators are 1 and 4. Both arms first load and verify
+the complete ordered 16/26 input populations and all pinned original hashes;
+selection never renumbers, slices/reindexes, mutates or substitutes an input.
+
+The wrapper imports the byte-identical run_sample from run-pinned-experiment.py.
+Its source SHA256 is c1d0e2572e06750a104c09e68df550873718945c707e76aacd1ecd8d2ad9a77e.
+The entire original runner and its factory/harness/validator adapter assets are
+SHA256-checked before work. The existing official factory, validators, effort 1,
+cacheProvider:null, fresh process, one worker/thread, official 360s limit, original
+external deadline guard and separately timed supplemental checks are unchanged.
+The independent controller budget remains 19800s; this campaign is predeclared
+AB-only with no BA repeats. Installs/builds remain outside routing measurements.
+
+Each selected original input gets its own matched A then B attempt. Timing/via
+summaries use mutually official-clean selected pairs only. Missing attempts are
+missing, never regressions; failed-fast routes are never speed/via wins. Timing
+from these selected cases is never pooled into another dataset or full campaign.
+The other 37 cases were not rerouted here: their unchanged-path proof remains
+conditional and separate from observed scope-patch qualification.
+
+Logs use TARGETED_SCOPE_ACTIVE_JSON, TARGETED_SCOPE_RESULT_JSON and
+TARGETED_SCOPE_SUMMARY_JSON. These deliberately do not contain the original
+EXPERIMENT_RESULT_JSON marker, because the legacy full-population parser matches
+substrings. Summaries say fullPopulationComplete:false/isFullCorpusSweep:false,
+list the original selected sample numbers, and report targetedFirstRoundComplete.
+Do not feed them into the full 16/26 aggregate or source-manifest preparer.
+
+Artifacts are named targeted-forest-scope-3198-srj18 and
+targeted-forest-scope-3198-srj24. Each retains configs, provenance.json,
+targeted-summary.json, targeted-results.jsonl and original-number paths such as
+round-1/sample-004/A/audit-result.json. Raw files and physical/supplemental checks
+have exactly the same schema as run_sample's full-campaign captures. Provenance
+inputPopulation retains the FULL verified 16/26 preflight list;
+targetedInputPopulation separately records only the selected original inputs.
+Source hashes, checkout SHAs, machine/dependency inventories, controller/run IDs,
+wrapper hash and unchanged run_sample hash are retained.
+
+Read-only downstream inspection requires a separately labeled targeted adapter.
+It must verify exact artifact/run/controller/algorithm pins, full preflight hashes,
+the targeted scope and selected hash list, both original-number AB records, source
+and validator hashes, and fullPopulationComplete:false. It can reuse unchanged
+inspect_raw/identity-query functions on the selected captures, but must not weaken
+or silently bypass the legacy full-population provenance/completeness checks.
+Raw artifacts must stay unchanged. Its public summaries must retain the 1/4
+denominators and distinguish official/reference/library/physical rule coverage.

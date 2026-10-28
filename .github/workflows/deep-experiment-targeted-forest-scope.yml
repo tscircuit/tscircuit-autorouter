@@ -1,0 +1,91 @@
+name: TARGETED5 forest scope affected cases
+
+on:
+  push:
+    branches: [codex/deep-experiment-forest-scope-targeted]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Validate exact original affected cases and published scope tree
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve targeted original-case matrix
+        id: plan
+        run: python3 scripts/experiment-audit/run-targeted-forest-scope.py --mode plan --manifest scripts/experiment-audit/targeted-forest-scope-manifest.json
+  experiment:
+    name: TARGETED ${{ matrix.dataset }} original[${{ matrix.originalSamples }}] (${{ matrix.targetedSampleCount }} cases)
+    needs: plan
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - name: Checkout experiment controller
+        uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Validate exact comparison refs
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-targeted-forest-scope.py --mode select --manifest controller/scripts/experiment-audit/targeted-forest-scope-manifest.json --dataset '${{ matrix.dataset }}'
+      - name: Checkout pristine pinned harness
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: pinned-harness
+          persist-credentials: false
+      - name: Checkout baseline algorithm
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: baseline
+          persist-credentials: false
+      - name: Checkout candidate algorithm
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify published reviewed candidate tree before build or routing
+        run: python3 controller/scripts/experiment-audit/run-targeted-forest-scope.py --mode verify-candidate --manifest controller/scripts/experiment-audit/targeted-forest-scope-manifest.json --candidate candidate
+      - name: Set up pinned Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact-source baseline dependencies and record registry resolutions
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Install exact-source candidate dependencies and record registry resolutions
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Build baseline artifacts
+        working-directory: baseline
+        run: bun run build
+      - name: Build candidate artifacts
+        working-directory: candidate
+        run: bun run build
+      - name: Install identical auditable harness adapters
+        run: |
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target baseline --expected-sha '${{ steps.refs.outputs.baseline_sha }}'
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Run only explicitly selected original cases as fresh matched AB pairs
+        run: python3 controller/scripts/experiment-audit/run-targeted-forest-scope.py --mode run --manifest controller/scripts/experiment-audit/targeted-forest-scope-manifest.json --dataset '${{ matrix.dataset }}' --baseline baseline --candidate candidate --output 'targeted-results/pr-${{ matrix.pr }}-${{ matrix.dataset }}'
+      - name: Retain provenance, raw copper, official reports and supplemental checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: targeted-forest-scope-${{ matrix.pr }}-${{ matrix.dataset }}
+          path: targeted-results
+          if-no-files-found: warn
+          retention-days: 30
