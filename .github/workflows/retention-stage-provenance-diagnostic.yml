@@ -1,0 +1,62 @@
+name: Retention fixed-source stage provenance diagnostic
+
+on:
+  push:
+    branches: [codex/retention-stage-provenance-20261028]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: original SRJ18 sample14 / retention ON / diagnostic only
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Validate exact diagnostic source, runtime and unchanged budget
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-retention-stage-diagnostic.py --mode select --manifest controller/scripts/experiment-audit/retention-stage-provenance-diagnostic.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-harness
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify unchanged reviewed algorithm commit and tree
+        run: python3 controller/scripts/experiment-audit/run-retention-stage-diagnostic.py --mode verify-checkout --manifest controller/scripts/experiment-audit/retention-stage-provenance-diagnostic.json --candidate candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install fixed algorithm dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Build fixed algorithm
+        working-directory: candidate
+        run: bun run build
+      - name: Install original harness with diagnostic-only completed-boundary snapshots
+        run: python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Original sample14 retention-on diagnostic with unchanged effort and caps
+        run: python3 controller/scripts/experiment-audit/run-retention-stage-diagnostic.py --mode run --manifest controller/scripts/experiment-audit/retention-stage-provenance-diagnostic.json --candidate candidate --output results/retention-stage-provenance
+      - name: Audit captured geometry after routing and official timing have stopped
+        if: always()
+        working-directory: candidate
+        run: bun ../controller/scripts/experiment-audit/audit-retention-stage-geometry.ts ../results/retention-stage-provenance/sample-014/raw/stage-geometry ../results/retention-stage-provenance/stage-audit.json
+      - name: Retain stage geometry, original output and provenance as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retention-stage-provenance-original-srj18-14-retention-on
+          path: results
+          if-no-files-found: warn
+          retention-days: 30

@@ -6,6 +6,7 @@ type ObserverOptions = {
   metadata: Record<string, unknown>
   evidencePaths?: string[]
   sourceSha256: string
+  diagnosticBoundary?: (kind: string, phaseName: string, solver: any, value?: unknown) => void
   // Injection is used only by small observer tests; routing uses these defaults.
   now?: () => number
   append?: (path: string, text: string) => void
@@ -52,6 +53,14 @@ export function createPhaseCheckpointObserver(options: ObserverOptions) {
   try { mkdirSync(options.outputDirectory, { recursive: true }); saveStatus() }
   catch (error) { status.errors.push(String(error).slice(0, MAX_STRING)) }
 
+  const captureBoundary = (kind: string, phaseName: unknown, value?: unknown) => {
+    if (!options.diagnosticBoundary || typeof phaseName !== "string") return
+    try { options.diagnosticBoundary(kind, phaseName, solver, value) }
+    catch (error) {
+      if (status.errors.length < 4) status.errors.push("Diagnostic boundary: " + String(error).slice(0, MAX_STRING))
+      saveStatus()
+    }
+  }
   const evidence = () => {
     const result: Record<string, unknown> = {}
     for (const path of (options.evidencePaths ?? []).slice(0, 4)) {
@@ -132,7 +141,11 @@ export function createPhaseCheckpointObserver(options: ObserverOptions) {
           if (typeof original !== "function") continue
           phase[key] = function (this: any, ...args: any[]) {
             emit(before)
-            try { return Reflect.apply(original, this, args) }
+            try {
+              const result = Reflect.apply(original, this, args)
+              if (key === "getConstructorParams") captureBoundary("constructor_params_return", ownValue(phase, "solverName"), result)
+              return result
+            }
             catch (error) { emit("lifecycle_throw", { boundary: key, thrown: scalar(String(error)) }); throw error }
             finally { emit(after) }
           }
@@ -142,10 +155,17 @@ export function createPhaseCheckpointObserver(options: ObserverOptions) {
       solver._step = function (this: any, ...args: any[]) {
         observeTransition()
         const before = ownValue(solver, "activeSubSolver")
+        const beforeIndex = ownValue(solver, "currentPipelineStepIndex")
         if (before && before !== lastRunActive) { lastRunActive = before; emit("phase_run_enter") }
         try { return Reflect.apply(originalStep, this, args) }
         catch (error) { emit("step_throw", { thrown: scalar(String(error)) }); throw error }
-        finally { observeTransition() }
+        finally {
+          if (before && ownValue(before, "solved") === true && ownValue(solver, "currentPipelineStepIndex") === beforeIndex + 1) {
+            const phase = ownValue(solver, "pipelineDef")?.[beforeIndex]
+            captureBoundary("completed_phase", ownValue(phase, "solverName"), before)
+          }
+          observeTransition()
+        }
       }
       let lastRunActive: any = null
       status.installed = true

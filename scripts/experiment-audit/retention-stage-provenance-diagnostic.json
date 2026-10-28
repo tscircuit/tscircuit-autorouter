@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "sourceSha": "74de6cea4bd39c9aa41e9d492b003a892abd1596",
+  "sourceTree": "b0de925b8f718415f961f4f9dad146784bbf2b9e",
+  "harnessSha": "637b6c581128238f6c61227a1c15be423d24baca",
+  "dataset": "srj18",
+  "sampleNumbers": [
+    14
+  ],
+  "sampleTimeoutSeconds": 360,
+  "options": {
+    "cacheProvider": null,
+    "effort": 1,
+    "retainBestPartialRouting": true
+  },
+  "diagnosticOnly": true,
+  "timingQualified": false,
+  "expectedPipelineSourceSha256": "8655e62c0f3eaf021bd54b113567af4a08835b77c1126ba485691b1852b7c405",
+  "runtimeSourceHashes": {
+    "run-retention-stage-diagnostic.py": "f9b2e4f3bbb09c59d424e1e567e2823c52382ac88001e464417db28a44945ca2",
+    "run-pinned-experiment.py": "6490b82018a553a224cdbb053947d817f4843bb98cf24151e33d1803f06fcea1",
+    "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+    "prepare-pinned-harness.py": "3c0d8f4b3cae691bb6a242d26e90a4f4db3f3f3fbb744fe66f5d92b71e1c21ca",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "experiment-audit-adapter.ts": "bc48693369a961bab87e50205d3625fa19b473dedef76be76f0ea7b7329e6c61",
+    "qualify-pinned-output.ts": "26d5f289257fc243f1b1b2cb69f743bae0d1ff074f81b1c71624adc9b5ad7713",
+    "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8",
+    "phase-checkpoint-observer.ts": "91bc155dd3e53232892d57103fe126b2a901d3fd7276605af46575897f6a9444",
+    "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "stage-geometry-capture.ts": "09d51d3230b5acaaa1739efcfe7804a68f288911e2de71274cfc935f859f098e",
+    "audit-retention-stage-geometry.ts": "97cf12c90d150ccc10624c5a43570fe66e55022b7f051fda47f8b216b93ae0aa"
+  },
+  "runSampleSourceSha256": "c1d0e2572e06750a104c09e68df550873718945c707e76aacd1ecd8d2ad9a77e",
+  "expectedInputHashes": {
+    "1": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+    "2": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+    "3": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+    "4": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+    "5": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+    "6": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+    "7": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+    "8": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+    "9": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+    "10": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+    "11": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+    "12": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+    "13": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+    "14": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+    "15": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+    "16": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9"
+  },
+  "expectedValidatorHashes": {
+    "lib/testing/evaluate-relaxed-drc.ts": "d774e4d05931e0e24b2462e9436c9b0aba604aafddc88c99e67e588a4c2fcd59",
+    "lib/testing/getDrcErrors.ts": "8f3aba2532e216d530db5efe3d514ec114f33b4ac0e32d68170522660257a994",
+    "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+    "lib/testing/utils/convertToCircuitJson.ts": "ed6f4c1e7506c7aea52679dc52a0af80af8cacdfc638bb74c852208ba7e32212",
+    "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata.ts": "6ce2359e7c76d888cf9a8c91aee28750ea8b083ed09e6913b8446266bb779f13"
+  },
+  "expectedHarnessSourceHashes": {
+    "officialHarnessHash": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66",
+    "adaptedHarnessHash": "27354d365585b69e85ba6aa8917ca4a28b4b9650faa2cc196e0cc9761461afc9",
+    "adapterHash": "bc48693369a961bab87e50205d3625fa19b473dedef76be76f0ea7b7329e6c61",
+    "benchmarkShellHash": "615e710ec3705e693a03edd124ced32b1cb8beb6e86e4af7c345cd87910d47bb",
+    "phaseCheckpointObserverHash": "91bc155dd3e53232892d57103fe126b2a901d3fd7276605af46575897f6a9444",
+    "terminalFailureGeometryCaptureHash": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "stageGeometryCaptureHash": "09d51d3230b5acaaa1739efcfe7804a68f288911e2de71274cfc935f859f098e"
+  },
+  "evidencePaths": [
+    "portPointPathingSolver.tinyPipelineSolver.solveGraph.RETAIN_BEST_PARTIAL_ROUTING",
+    "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialRouteCount",
+    "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialLiveRipCount",
+    "portPointPathingSolver.tinyPipelineSolver.solveGraph.state.ripCount"
+  ],
+  "observerParity": {
+    "status": "PASS_LOCAL_TINY_ACTUAL_ADAPTER_FACTORY_CONTROL",
+    "sourceSha": "d361ecc002de7335e7ec1c82b9e5ac1f1967bd88",
+    "sourceTree": "b0de925b8f718415f961f4f9dad146784bbf2b9e",
+    "runtimeSourceHashes": {
+      "experiment-audit-adapter.ts": "bc48693369a961bab87e50205d3625fa19b473dedef76be76f0ea7b7329e6c61",
+      "phase-checkpoint-observer.ts": "91bc155dd3e53232892d57103fe126b2a901d3fd7276605af46575897f6a9444",
+      "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+      "stage-geometry-capture.ts": "09d51d3230b5acaaa1739efcfe7804a68f288911e2de71274cfc935f859f098e"
+    },
+    "inputHash": "5c8133abb8340e14eb66e1f7977867360794d634bd78cb8c633f7bbaefa91136",
+    "outputHash": "540e130ea2df5ae73763ba0e48986519b59fa5bfae1f2cb6d1ab847f57a39c8a",
+    "iterations": 496,
+    "maxIterations": 100000478,
+    "checkpointRows": 146
+  },
+  "observerParityEvidenceSha256": "fc01da4802084fd0374c8ef5ccf5d326e965ef9eb90c7ff7ae65fccb56d8371b",
+  "qualificationScope": "DIAGNOSTIC_STAGE_PROVENANCE_ONLY_ON_ORIGINAL_SRJ18_14_SOURCE_74DE_RETENTION_ON",
+  "interpretation": "Synchronous immutable own-data snapshots record completed-stage outputs and actual constructor-return inputs. All validation runs after routing. Diagnostic elapsed times include capture overhead and cannot qualify or replace primary optimization timings. Missing captures, owner/frame ambiguity, original physical findings, or changed raw output remain explicit."
+}

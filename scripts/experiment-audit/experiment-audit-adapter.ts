@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { createStageGeometryCapture } from "./stage-geometry-capture"
 import { captureTerminalFailureGeometry } from "./capture-terminal-failure-geometry"
 import { createPhaseCheckpointObserver } from "./phase-checkpoint-observer"
 import type { BenchmarkTask } from "./benchmark-types"
@@ -10,10 +11,13 @@ type AuditConfig = {
   solverModule: string
   options: Record<string, unknown>
   evidencePaths: string[]
+  stageGeometryDiagnostic?: { sourceSha256: string }
   phaseCheckpointTarget?: "selected-pipeline9-child"
   phaseCheckpoint: { observerSourceSha256: string; campaign: string; algorithmSha: string; arm: string; githubRunId?: string; controllerSha?: string; executionOrder?: "AB" | "BA" }
 }
 const config: AuditConfig = JSON.parse(readFileSync(process.env.EXPERIMENT_AUDIT_CONFIG!, "utf8"))
+if (config.stageGeometryDiagnostic && config.stageGeometryDiagnostic.sourceSha256 !== createHash("sha256").update(readFileSync(new URL("./stage-geometry-capture.ts", import.meta.url))).digest("hex")) throw new Error("Stage geometry diagnostic source hash mismatch")
+const stageCaptures = new WeakMap<object, ReturnType<typeof createStageGeometryCapture>>()
 const actualObserverHash = createHash("sha256").update(readFileSync(new URL("./phase-checkpoint-observer.ts", import.meta.url))).digest("hex")
 if (config.phaseCheckpoint?.observerSourceSha256 !== actualObserverHash) throw new Error("Phase observer source hash mismatch")
 const auditModule = await import(resolve(process.cwd(), config.solverModule))
@@ -51,11 +55,16 @@ export function createExperimentAuditSolver(ctor: any, task: BenchmarkTask, scen
     algorithmSha: config.phaseCheckpoint.algorithmSha, githubRunId: config.phaseCheckpoint.githubRunId ?? null,
     controllerSha: config.phaseCheckpoint.controllerSha ?? null, dataset: task.datasetName,
     originalSample: task.sampleNumber, inputSha256: inputHash, executionOrder: config.phaseCheckpoint.executionOrder }
+  const stageCapture = config.stageGeometryDiagnostic ? createStageGeometryCapture({
+    outputDirectory: process.env.EXPERIMENT_AUDIT_OUTPUT!, metadata: observerMetadata,
+    sourceSha256: config.stageGeometryDiagnostic.sourceSha256, original,
+  }) : undefined
   const observer = createPhaseCheckpointObserver({
     outputDirectory: process.env.EXPERIMENT_AUDIT_OUTPUT!,
     sourceSha256: config.phaseCheckpoint.observerSourceSha256,
     evidencePaths: config.evidencePaths,
     metadata: observerMetadata,
+    diagnosticBoundary: stageCapture?.captureBoundary,
   })
   observer.constructorEnter()
   const start = performance.now()
@@ -70,6 +79,7 @@ export function createExperimentAuditSolver(ctor: any, task: BenchmarkTask, scen
   Object.assign(observerMetadata, { observedObjectPath: observed.objectPath, observedConstructorName: constructorName })
   observer.install(observed.target)
   phaseObservers.set(solver, observer)
+  if (stageCapture) stageCaptures.set(solver, stageCapture)
   sourceInputs.set(solver, { original, inputHash, constructorTimeMs })
   return solver
 }
@@ -109,6 +119,7 @@ export function getExperimentAuditEvidence(solver: any, task: BenchmarkTask): Re
     inputMutated: hash(task.scenario) !== input.inputHash,
     constructorTimeMs: input.constructorTimeMs,
     phaseCheckpoint: phaseObservers.get(solver)?.getStatus() ?? null,
+    stageGeometryDiagnostic: stageCaptures.get(solver)?.getStatus() ?? null,
     phaseCheckpointObservedTarget: phaseTargetMetadata.get(solver) ?? null,
     terminalFailureGeometry: terminalFailureCaptures.get(solver) ?? null,
     evidence: readEvidence(solver),
@@ -140,6 +151,7 @@ export function captureExperimentAuditOutput(solver: any, task: BenchmarkTask, t
   writeFileSync(resolve(outputDirectory, "raw-solver-output.json"), JSON.stringify(rawOutput))
   writeFileSync(resolve(outputDirectory, "raw-new-traces.json"), JSON.stringify(traces))
   writeFileSync(resolve(outputDirectory, "point-pair-context.json"), JSON.stringify(solver.srjWithPointPairs ?? original))
+  stageCaptures.get(solver)?.captureFinal(traces, rawOutput)
   const summary = {
     ...getExperimentAuditEvidence(solver, task),
     rawOutputHash: hash(rawOutput),

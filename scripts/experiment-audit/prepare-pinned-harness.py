@@ -33,6 +33,7 @@ def prepare(controller, target, expected_sha):
     shutil.copy2(audit_source / "qualify-pinned-output.ts", destination / "qualify-pinned-output.ts")
     shutil.copy2(audit_source / "experiment-dataset-identity.ts", destination / "experiment-dataset-identity.ts")
     shutil.copy2(audit_source / "phase-checkpoint-observer.ts", destination / "phase-checkpoint-observer.ts")
+    shutil.copy2(audit_source / "stage-geometry-capture.ts", destination / "stage-geometry-capture.ts")
     shutil.copy2(audit_source / "capture-terminal-failure-geometry.ts", destination / "capture-terminal-failure-geometry.ts")
     task_path = destination / "benchmark-run-task.ts"
     task_source = task_path.read_text()
@@ -88,6 +89,7 @@ def prepare(controller, target, expected_sha):
         "officialHarnessHash": original_task_hash,
         "adaptedHarnessHash": digest(task_path),
         "terminalFailureGeometryCaptureHash": digest(destination / "capture-terminal-failure-geometry.ts"),
+        "stageGeometryCaptureHash": digest(destination / "stage-geometry-capture.ts"),
         "phaseCheckpointObserverHash": digest(destination / "phase-checkpoint-observer.ts"),
         "phaseCheckpointLifecycleSourceHash": digest(pipeline_path),
         "phaseCheckpointLifecycleAnchors": lifecycle_anchors,
