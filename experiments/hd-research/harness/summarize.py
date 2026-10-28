@@ -89,7 +89,8 @@ def build(root, mode):
             paired_clean = [(b, e) for b, e in paired if clean(b) and clean(e)]
             paired_hd = [(b, e) for b, e in paired if hd_completed(b) and hd_completed(e) and same_hd_input(b, e)]
             shared_hd_inputs = [(b, e) for b, e in paired if same_hd_input(b, e)]
-            upstream_same = [(b, e) for b, e in paired if not b["result"].get("hdInput") and not e["result"].get("hdInput") and not b["result"].get("didSolve") and not e["result"].get("didSolve") and b["result"].get("errorPhaseName") == e["result"].get("errorPhaseName")]
+            upstream_same_phase = [(b, e) for b, e in paired if not b["result"].get("hdInput") and not e["result"].get("hdInput") and not b["result"].get("didSolve") and not e["result"].get("didSolve") and b["result"].get("errorPhaseName") == e["result"].get("errorPhaseName")]
+            upstream_same = [(b, e) for b, e in upstream_same_phase if bool(b["result"].get("didTimeout")) == bool(e["result"].get("didTimeout")) and b["result"].get("error") == e["result"].get("error")]
             common_before = sum(b["result"]["elapsedTimeMs"] for b, e in paired_clean)
             common_after = sum(e["result"]["elapsedTimeMs"] for b, e in paired_clean)
             hd_before = sum(stage_ms(b, "highDensityRouteSolver") or 0 for b, e in paired_hd)
@@ -121,6 +122,7 @@ def build(root, mode):
                 "pairedHdSpeedup": ratio(hd_before, hd_after),
                 "sameHdInputCount": len(shared_hd_inputs),
                 "sameUpstreamFailureCount": len(upstream_same),
+                "sameUpstreamFailurePhaseCount": len(upstream_same_phase),
                 "pairedCompletedStageTimes": {},
                 "pairedCleanStageTimes": {},
             }
