@@ -26,6 +26,15 @@ test("selective A01 preserves distinct same-cell terminals without changing sear
   expect(selected.getOutput()).toEqual([])
   original.solve()
   selected.solve()
+  for (const portfolioMode of ["eager", "lazy"] as const) {
+    const deterministic = new PortfolioSingleIntraNodeSolver({ ...params, portfolioMode })
+      .generateSolver({ HIGH_DENSITY_A01: true }) as unknown as HighDensitySolverA01
+    expect(deterministic.constructor).toBe(HighDensitySolverA01)
+    deterministic.solve()
+    expect(deterministic.iterations).toBe(original.iterations)
+    expect(deterministic.MAX_ITERATIONS).toBe(original.MAX_ITERATIONS)
+    expect(deterministic.getOutput()).toEqual(original.getOutput())
+  }
   expect(selected.solved).toBe(true)
   expect(selected.failed).toBe(false)
   expect(selected.iterations).toBe(original.iterations)

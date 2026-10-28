@@ -33,12 +33,15 @@ import {
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 import { EndpointPreservingHighDensitySolverA01 } from "./EndpointPreservingHighDensitySolverA01"
+import { DeferredHighDensityGridSetup } from "./DeferredHighDensityGridSetup"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+
+export type PortfolioMode = "legacy" | "eager" | "lazy" | "research-race"
 
 type SelectiveCpuUsage = { user: number; system: number }
 export type SelectivePortfolioTiming = "threadCpu" | "cpu" | "elapsed"
@@ -58,8 +61,7 @@ type SelectiveCandidate = {
   calibrationMs: number
 }
 
-/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
+type PortfolioCandidateSolver =
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
   | SingleTransitionCrossingRouteSolver
@@ -68,7 +70,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | HighDensitySolverA13
-> {
+
+/** Coordinates deterministic fitness scheduling, with an explicit research race. */
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<PortfolioCandidateSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
@@ -88,7 +92,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  readonly portfolioMode: PortfolioMode
+  /** Historical alias: true selects the timing-based research race. */
   readonly selectivePortfolio: boolean
+  private readonly lazyGridSetups = new WeakMap<object, DeferredHighDensityGridSetup>()
+  private lazyDeferredCount = 0
+  private lazyMaterializedCount = 0
+  private eagerGridSetupCount = 0
+  private deterministicStatsRecorded = false
   readonly selectiveClockSource: SelectivePortfolioTiming
   private readonly selectiveThreadCpuUsage?: () => SelectiveCpuUsage
   private selectiveCandidates: SelectiveCandidate[] = []
@@ -134,6 +145,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
+    // A03's solved-map getter requires setup. A known deferred candidate has
+    // the same zero progress as the eagerly allocated, unadvanced candidate.
+    if (this.lazyGridSetups.get(solver)?.pending) return 0
     if (solver instanceof HighDensitySolverA13) {
       if (solver.solved) return 1
       const connectionCount = solver.connections.length
@@ -161,6 +175,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       selectivePortfolio?: boolean
+      portfolioMode?: PortfolioMode
       selectivePortfolioTiming?: SelectivePortfolioTiming
       boardGeometry?: HighDensityBoardGeometry
     },
@@ -174,7 +189,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
-    this.selectivePortfolio = opts.selectivePortfolio ?? false
+    this.portfolioMode = opts.portfolioMode ?? (opts.selectivePortfolio ? "research-race" : "legacy")
+    if (!["legacy", "eager", "lazy", "research-race"].includes(this.portfolioMode)) {
+      throw new Error(`Unsupported portfolio mode: ${this.portfolioMode}`)
+    }
+    if (opts.selectivePortfolio && this.portfolioMode !== "research-race") {
+      throw new Error("selectivePortfolio=true conflicts with the explicit deterministic portfolio mode")
+    }
+    this.selectivePortfolio = this.portfolioMode === "research-race"
     const hasCpuClock = typeof process !== "undefined" && typeof process.cpuUsage === "function"
     const threadCpuUsage = typeof process === "undefined"
       ? undefined : (process as unknown as ThreadCpuProcess).threadCpuUsage
@@ -184,10 +206,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.selectiveClockSource = opts.selectivePortfolioTiming ?? (
       this.selectiveThreadCpuUsage ? "threadCpu" : hasCpuClock ? "cpu" : "elapsed"
     )
-    if (this.selectiveClockSource === "cpu" && !hasCpuClock) {
+    if (this.selectivePortfolio && this.selectiveClockSource === "cpu" && !hasCpuClock) {
       throw new Error("Selective portfolio CPU timing requires process.cpuUsage()")
     }
-    if (this.selectiveClockSource === "threadCpu" && !this.selectiveThreadCpuUsage) {
+    if (this.selectivePortfolio && this.selectiveClockSource === "threadCpu" && !this.selectiveThreadCpuUsage) {
       throw new Error("Selective portfolio thread CPU timing requires process.threadCpuUsage()")
     }
     this.MAX_ITERATIONS = 20_000_000 * this.effort
@@ -259,6 +281,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
+      // Preserve the legacy topology proposal in deterministic modes. The
+      // pipeline assigns nominal physical widths after high-density routing.
       ...(!this.selectivePortfolio || (this.constructorParams.traceWidth ?? 0.15) === 0.1
         ? [["highDensityA03"]] : []),
       ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
@@ -451,6 +475,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
     if (solver instanceof HighDensitySolverA13) return
+    if (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) {
+      if (this.portfolioMode === "lazy") {
+        const cap = this.getGridSearchIterationBudget()
+        if (DeferredHighDensityGridSetup.isEligible(solver, cap)) {
+          const deferred = new DeferredHighDensityGridSetup(solver, cap, (): void => {
+            this.lazyMaterializedCount++
+            this.updateLazySetupStats()
+          })
+          this.lazyGridSetups.set(solver, deferred)
+          this.lazyDeferredCount++
+          this.updateLazySetupStats()
+          return
+        }
+      }
+      this.eagerGridSetupCount++
+    }
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
     if (
@@ -507,6 +547,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override initializeSolvers() {
+    if (this.portfolioMode === "eager" || this.portfolioMode === "lazy") {
+      this.stats.portfolioMode = this.portfolioMode
+    }
     if (this.selectivePortfolio) {
       this.initializeSelectivePortfolio()
       return
@@ -517,6 +560,45 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
+    this.updateLazySetupStats()
+  }
+
+  override getSupervisedSolverWithBestFitness(): SupervisedSolver<PortfolioCandidateSolver> | null {
+    const candidate = super.getSupervisedSolverWithBestFitness()
+    // Selection is the unchanged legacy comparison. Materializing only its
+    // winner also keeps explicit inspection/visualization of that winner safe.
+    const deferred = candidate ? this.lazyGridSetups.get(candidate.solver) : undefined
+    if (deferred?.pending) deferred.materialize()
+    return candidate
+  }
+
+  private updateLazySetupStats(): void {
+    if (this.portfolioMode !== "lazy") return
+    this.stats.lazyGridSetupDeferredCount = this.lazyDeferredCount
+    this.stats.lazyGridSetupMaterializedCount = this.lazyMaterializedCount
+    this.stats.lazyGridSetupUnmaterializedCount = this.lazyDeferredCount - this.lazyMaterializedCount
+    this.stats.lazyGridSetupEagerCount = this.eagerGridSetupCount
+  }
+
+  private recordDeterministicStats(): void {
+    if (this.deterministicStatsRecorded || this.portfolioMode === "legacy" || this.selectivePortfolio) return
+    this.deterministicStatsRecorded = true
+    this.updateLazySetupStats()
+    const diagnostics = this.constructorParams.priorityDiagnostics
+    if (!diagnostics) return
+    const prefix = this.portfolioMode === "lazy" ? "portfolioLazy" : "portfolioEager"
+    for (const [suffix, value] of Object.entries({
+      Attempts: 1,
+      DeferredGridSetups: this.lazyDeferredCount,
+      MaterializedGridSetups: this.lazyMaterializedCount,
+      UnmaterializedGridSetups: this.lazyDeferredCount - this.lazyMaterializedCount,
+      EagerGridSetups: this.eagerGridSetupCount,
+      SolvedAttempts: Number(this.solved),
+      UnknownAttempts: Number(!this.solved),
+      A03ExcludedAttempts: 0,
+    })) {
+      diagnostics[prefix + suffix] = (diagnostics[prefix + suffix] ?? 0) + value
+    }
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
@@ -589,6 +671,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
+    if (this.solved || this.failed) this.recordDeterministicStats()
   }
 
   /**
@@ -845,6 +928,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override tryFinalAcceptance(): void {
+    if (!this.selectivePortfolio) this.recordDeterministicStats()
     if (this.selectivePortfolio && !this.solved && this.stats.selectiveAttemptStatus !== "unknown") {
       // BaseSolver owns this hard dispatch limit and marks the failure after
       // this hook. Record its allocation as UNKNOWN without extending it.
@@ -985,7 +1069,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       if (this.selectivePortfolio && (this.constructorParams.traceWidth ?? 0.15) !== 0.1) {
-        throw new Error("Selective portfolio A03 is ineligible unless requested traceWidth is 0.1 mm")
+        throw new Error("Research-race portfolio A03 is ineligible unless requested traceWidth is 0.1 mm")
       }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,

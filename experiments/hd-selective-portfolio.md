@@ -1,9 +1,18 @@
-# Experiment: selective high-density portfolio
+# Experiment: deterministic lazy high-density setup
 
-Baseline: `637b6c581128238f6c61227a1c15be423d24baca`. This branch enables
-`selectivePortfolio` for Pipeline9 regular-node routing. Other callers retain the
-original fitness scheduler unless they explicitly opt in. B01, regional repair,
-force improvement and joint DRC repair are unchanged.
+The current Pipeline9 default is `portfolioMode: "lazy"`: the deterministic
+fitness scheduler with certified deferred A01/A03 grid setup. It makes no
+execution-time scheduling or stopping decisions. The legacy-compatible eager twin and
+historical legacy/race modes are explicit ablations. See
+[the current implementation and validation contract](hd-deterministic-lazy-portfolio.md).
+
+**Historical evidence below:** the remaining sections preserve the original
+CPU-clock race's v1/v2 behavior, gains, quality failures and parity blockers.
+They do not describe the new default or establish its performance. In particular,
+the old race's measured HD saving is not attributed to deferred setup.
+
+Baseline: `637b6c581128238f6c61227a1c15be423d24baca`. B01, regional repair,
+force improvement and joint DRC repair remain outside this refinement.
 
 ## Narrow v2 corrections and preserved v1 evidence
 
@@ -89,7 +98,7 @@ also represent different costs in A01, A03, A13 and the native priority families
 Lazy candidate construction, bounded probes and cost-aware promotion should find
 useful orderings sooner and reduce unsuccessful physical/grown attempts.
 
-## Implementation
+## Historical research-race implementation
 
 * Construct candidate descriptors first. Allocate geometry/grid and run setup only
   when admitting that candidate. Geometric solvers and one native family precede

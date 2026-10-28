@@ -23,9 +23,11 @@ test("selective racing admits A03 only for its supported width and leaves legacy
     selected.solve()
     expect(selected.admitted.some((hp) => hp.HIGH_DENSITY_A03)).toBe(traceWidth === 0.1)
     expect(selected.stats.selectiveA03Eligible).toBe(traceWidth === 0.1)
-    const legacy = new AdmissionAuditPortfolio(params)
-    legacy.initializeSolvers()
-    expect(legacy.admitted.some((hp) => hp.HIGH_DENSITY_A03)).toBe(true)
+    for (const portfolioMode of ["legacy", "eager", "lazy"] as const) {
+      const deterministic = new AdmissionAuditPortfolio({ ...params, portfolioMode })
+      deterministic.initializeSolvers()
+      expect(deterministic.admitted.some((hp) => hp.HIGH_DENSITY_A03)).toBe(true)
+    }
     if (traceWidth !== 0.1) {
       const direct = new PortfolioSingleIntraNodeSolver({ ...params, selectivePortfolio: true })
       expect(() => direct.generateSolver({ HIGH_DENSITY_A03: true })).toThrow("A03 is ineligible")

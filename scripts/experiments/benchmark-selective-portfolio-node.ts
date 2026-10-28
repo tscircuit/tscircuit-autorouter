@@ -7,9 +7,11 @@ import {
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-const mode = process.argv[2] ?? "selective"
-if (mode !== "selective" && mode !== "fitness") {
-  throw new Error("Usage: bun scripts/experiments/benchmark-selective-portfolio-node.ts [selective|fitness] [node.json]")
+const requestedMode = process.argv[2] ?? "lazy"
+const mode = requestedMode === "selective" ? "research-race"
+  : requestedMode === "fitness" ? "legacy" : requestedMode
+if (mode !== "legacy" && mode !== "eager" && mode !== "lazy" && mode !== "research-race") {
+  throw new Error("Usage: bun scripts/experiments/benchmark-selective-portfolio-node.ts [legacy|eager|lazy|research-race] [node.json]")
 }
 const nodePath = resolve(process.argv[3] ?? "tests/fixtures/srj18-sample002-large-node.json")
 const node = await Bun.file(nodePath).json() as NodeWithPortPoints
@@ -23,7 +25,7 @@ const solver = new GrowShrinkHighDensityIntraNodeSolver({
   layerCount: 2,
   effort: 1,
   captureSearchDebug: false,
-  selectivePortfolio: mode === "selective",
+  portfolioMode: mode,
   enableNegotiatedSearch: true,
   priorityDagSearch: true,
   priorityDiagnostics: diagnostics,
@@ -52,6 +54,7 @@ const physicalChecks = [0, 0.15].map((clearance) => {
 })
 console.log(JSON.stringify({
   mode,
+  requestedMode,
   nodePath,
   wallMs,
   cpuMs: (cpu.user + cpu.system) / 1000,
