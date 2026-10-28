@@ -396,6 +396,9 @@ const toSerializedRegionData = (
     ...(region.d.layerChangeAllowedNetIds !== undefined
       ? { layerChangeAllowedNetIds: [...region.d.layerChangeAllowedNetIds] }
       : {}),
+    ...(region.d.boundaryPortOrderPreserved === true
+      ? { boundaryPortOrderPreserved: true }
+      : {}),
     ...(bounds
       ? {
           bounds: {

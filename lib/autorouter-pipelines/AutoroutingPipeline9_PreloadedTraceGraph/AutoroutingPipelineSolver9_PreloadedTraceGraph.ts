@@ -90,7 +90,9 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
+import { coalescePipeline9LayerRegions } from "./coalescePipeline9LayerRegions"
 import { constrainPipeline9RegionLayerChanges } from "./constrainPipeline9RegionLayerChanges"
+import { certifyPipeline9BoundaryPortOrder } from "./certifyPipeline9BoundaryPortOrder"
 import { getPipeline9PhysicalOwnership } from "./getPipeline9PhysicalOwnership"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
@@ -423,7 +425,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.topologyMergingSolver!.getOutput()
+          const nodes = cms.topologyMergingSolver!.getOutput()
+          cms.capacityNodes = cms.opts.constrainViaPadPlacement && cms.originalSrj.layerCount > 2
+            ? coalescePipeline9LayerRegions({
+                nodes,
+                layerCount: cms.originalSrj.layerCount,
+                terminalConnections: [
+                  ...cms.originalSrj.connections,
+                  ...cms.srj.connections,
+                  ...cms.srjWithPointPairs!.connections,
+                ],
+              }).nodes
+            : nodes
         },
       },
     ),
@@ -544,6 +557,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               routingConnMap: cms.connMap,
             }),
           })
+          if (cms.srj.layerCount > 2) certifyPipeline9BoundaryPortOrder({ graph,
+            terminalRegionIds: new Set(connections.flatMap((connection) => [
+              connection.startRegion.regionId, connection.endRegion.regionId,
+            ])),
+          })
         }
 
         return [
@@ -602,6 +620,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preserveBoundaryPortOrder: cms.opts.constrainViaPadPlacement === true && cms.srj.layerCount > 2,
         },
       ],
     ),
