@@ -62,6 +62,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Verify read-only identity analysis invariants
+        run: python3 scripts/experiment-artifact-audit/test-via-identity-equivalence.py
       - name: Verify immutable source artifact metadata
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -84,6 +86,20 @@ jobs:
           --output compact-report/inspection.json
           --source-metadata compact-report/source-artifact-metadata.json
           --example-limit 3
+          > compact-report/full-inspection.log
+      - name: Print compact verified inspection facts
+        run: >-
+          python3 scripts/experiment-artifact-audit/print-compact-inspection.py
+          --report compact-report/inspection.json
+      - name: Resolve declared electrical identities separately from coordinate unions
+        run: >-
+          python3 scripts/experiment-artifact-audit/inspect-via-identity-equivalence.py
+          --directory downloaded
+          --expected 'scripts/experiment-artifact-audit/${{ matrix.expectedFile }}'
+          --inspection compact-report/inspection.json
+          --include-baseline
+          --examples-per-class 3
+          --output compact-report/identity-equivalence.json
       - name: Retain compact inspection report
         if: always()
         uses: actions/upload-artifact@v4
