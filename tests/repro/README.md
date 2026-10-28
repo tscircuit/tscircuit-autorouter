@@ -6,6 +6,9 @@ These are the five original captured input boards with straight ratsnest lines,
 not completed routes. The two local constructor checkpoints retain their source
 attribution alongside the fixture data.
 
+The [SRJ36 dataset](https://github.com/ShiboSoftwareDev/dataset-srj36-real-ddr)
+contains all five captured inputs, source provenance and individual SVG/PNG previews.
+
 | Sample | Board | Layers | DDR signal nets |
 | --- | --- | ---: | ---: |
 | 1 | [Allwinner H3 DDR3](https://github.com/hvwyl/allwinner-h3-ddr3-16x1-kicad) | 2 | 53 |
@@ -23,6 +26,7 @@ are added.
 timeout 120s bun scripts/repro-ddr-resized-search.ts --report /tmp/ddr-memory.json
 bun test tests/repro/pipeline9-a64-ddr-resized-search-allocation.test.ts --timeout 9999999
 bun test tests/repro/pipeline9-h3-ddr-displaced-port-geometry.test.ts --timeout 9999999
+./benchmark.sh --pipeline 9 --dataset 36 --sample-numbers 1,2 --concurrency 1 --sample-timeout 1200s
 ```
 
 The local checkpoint regressions are expected-failing in the reproduction PR and

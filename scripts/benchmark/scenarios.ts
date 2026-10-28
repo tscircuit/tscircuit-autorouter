@@ -21,6 +21,7 @@ export const DATASET_NAMES = [
   "srj28",
   "srj29",
   "srj33",
+  "srj36",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -28,7 +29,7 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33, 36/srj36"
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -121,6 +122,11 @@ const datasetAliases: Record<string, DatasetName> = {
   srj33: "srj33",
   "dataset-srj33-drc-failures": "srj33",
   "@tscircuit/dataset-srj33-drc-failures": "srj33",
+  "36": "srj36",
+  dataset36: "srj36",
+  srj36: "srj36",
+  "dataset-srj36-real-ddr": "srj36",
+  "@tscircuit/dataset-srj36-real-ddr": "srj36",
   zdwiel: "zdwiel",
 }
 
@@ -268,6 +274,10 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   },
   srj33: async () =>
     (await import("@tscircuit/dataset-srj33-drc-failures")) as DatasetModule,
+  srj36: async () => {
+    const module = await import("@tscircuit/dataset-srj36-real-ddr")
+    return module.dataset as DatasetModule
+  },
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -290,6 +300,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj28: /^circuit\d{3}$/,
   srj29: /^sample\d{3}$/,
   srj33: /^sample\d{3}$/,
+  srj36: /^sample\d{3}$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
