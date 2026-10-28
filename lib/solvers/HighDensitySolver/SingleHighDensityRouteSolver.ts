@@ -68,6 +68,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   gridHeight: number
 
   candidates: SingleRouteCandidatePriorityQueue
+  readonly viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
 
   connectionName: string
   rootConnectionName?: string
@@ -122,9 +123,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
   }) {
     super()
     this.bounds = opts.bounds
+    this.viaPlacementValidator = opts.viaPlacementValidator
     this.connMap = opts.connMap
     this.hyperParameters = opts.hyperParameters ?? {}
     this.CELL_SIZE_FACTOR = this.hyperParameters.CELL_SIZE_FACTOR ?? 1
@@ -247,6 +250,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   handleSimpleCases() {
+    if (
+      this.A.z !== this.B.z && this.viaPlacementValidator &&
+      !this.viaPlacementValidator({
+        ...this.boundsCenter, zStart: this.A.z, zEnd: this.B.z,
+        viaDiameter: this.viaDiameter,
+      }, this.connectionName)
+    ) return
     this.solved = true
     const { A, B } = this
     const route =
@@ -283,6 +293,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
     margin ??= this.obstacleMargin
+    if (isVia && this.viaPlacementValidator && !this.viaPlacementValidator({
+      x: node.x, y: node.y, zStart: node.parent?.z ?? node.z,
+      zEnd: node.z, viaDiameter: this.viaDiameter,
+    }, this.connectionName)) return true
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)

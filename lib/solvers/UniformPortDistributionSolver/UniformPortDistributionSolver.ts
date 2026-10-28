@@ -18,6 +18,7 @@ import {
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
+import { redistributePortPointsBetweenFixedAnchors } from "./redistributePortPointsBetweenFixedAnchors"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
@@ -30,6 +31,8 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Keep the full same-layer boundary order around ignored fixed ports. */
+  preserveBoundaryPortOrder?: boolean
 }
 
 /**
@@ -170,10 +173,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
-      sharedEdge,
-      portPoints: family,
-    })
+    const redistributed = this.input.preserveBoundaryPortOrder
+      ? redistributePortPointsBetweenFixedAnchors({ sharedEdge, portPoints: familyRaw,
+          movablePortPointIds: new Set(family.map((point) => point.portPointId!)) })
+      : redistributePortPointsOnSharedEdge({ sharedEdge, portPoints: family })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

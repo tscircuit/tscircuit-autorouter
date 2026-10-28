@@ -55,6 +55,7 @@ export class HighDensitySolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  readonly viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
   effort: number
   obstacles: Obstacle[]
   layerCount: number
@@ -116,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    viaPlacementValidator,
     priorityDagSearch = false,
     priorityDiagnostics,
     viaHoleDiameter,
@@ -144,6 +146,7 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
@@ -163,6 +166,7 @@ export class HighDensitySolver extends BaseSolver {
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
+    this.viaPlacementValidator = viaPlacementValidator
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
@@ -442,6 +446,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      viaPlacementValidator: this.viaPlacementValidator,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

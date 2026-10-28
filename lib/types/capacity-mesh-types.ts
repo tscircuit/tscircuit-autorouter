@@ -12,6 +12,10 @@ export interface CapacityMeshNode {
   height: number
   layer: string
   availableZ: number[]
+  /** Original-pad permissions for layer transitions; same-layer travel remains free. */
+  layerChangeAllowedNetIds?: string[]
+  /** Caller guarantees redistribution preserves every same-layer boundary order. */
+  boundaryPortOrderPreserved?: boolean
 
   _depth?: number
 

@@ -33,6 +33,8 @@ import {
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
+import { areRouteViasAllowed } from "lib/solvers/HighDensitySolver/areRouteViasAllowed"
+import { getPipeline9ViaPlacementValidator, type Pipeline9ViaPlacementContext } from "./getPipeline9ViaPlacementValidator"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
@@ -58,6 +60,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  viaPlacementContext?: Pipeline9ViaPlacementContext
 }
 
 type NodeBounds = {
@@ -333,6 +336,7 @@ export type Pipeline9RegularNodeSolverParams = {
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
+  viaPlacementContext?: Pipeline9ViaPlacementContext
 }
 
 /**
@@ -357,6 +361,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  viaPlacementContext,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -385,6 +390,7 @@ export const createPipeline9RegularNodeSolver = ({
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
+    viaPlacementValidator: viaPlacementContext ? getPipeline9ViaPlacementValidator(viaPlacementContext) : undefined,
   })
 
 /**
@@ -410,6 +416,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
+  readonly viaPlacementContext?: Pipeline9ViaPlacementContext
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
@@ -450,6 +457,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
+    this.viaPlacementContext = params.viaPlacementContext
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -684,6 +692,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      viaPlacementContext: this.params.viaPlacementContext,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -760,6 +769,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      viaPlacementContext: this.params.viaPlacementContext,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
@@ -1173,7 +1183,18 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       if (!this.activeB01Solver.solved) return
 
-      this.finishActiveNode(this.activeB01Solver.getOutput())
+      const b01Routes = this.activeB01Solver.getOutput()
+      if (this.params.viaPlacementContext) {
+        const validator = getPipeline9ViaPlacementValidator(this.params.viaPlacementContext)
+        if (!b01Routes.every((route) => areRouteViasAllowed(route, validator,
+          this.layerCount, this.allowBlindAndBuriedVias))) {
+          this.activeB01Solver = null
+          this.activeFallbackReason = "B01 via placement violates original board constraints"
+          this.startRegionalFallback()
+          return
+        }
+      }
+      this.finishActiveNode(b01Routes)
       return
     }
 

@@ -90,6 +90,10 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
+import { coalescePipeline9LayerRegions } from "./coalescePipeline9LayerRegions"
+import { constrainPipeline9RegionLayerChanges } from "./constrainPipeline9RegionLayerChanges"
+import { certifyPipeline9BoundaryPortOrder } from "./certifyPipeline9BoundaryPortOrder"
+import { getPipeline9PhysicalOwnership } from "./getPipeline9PhysicalOwnership"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
@@ -109,6 +113,10 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Retain improved partial routing before global rerips; experimental, default off. */
+  retainBestPartialRouting?: boolean
+  /** Constrain manufactured via footprints against original pads; experimental, default off. */
+  constrainViaPadPlacement?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -417,7 +425,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.topologyMergingSolver!.getOutput()
+          const nodes = cms.topologyMergingSolver!.getOutput()
+          cms.capacityNodes = cms.opts.constrainViaPadPlacement && cms.originalSrj.layerCount > 2
+            ? coalescePipeline9LayerRegions({
+                nodes,
+                layerCount: cms.originalSrj.layerCount,
+                terminalConnections: [
+                  ...cms.originalSrj.connections,
+                  ...cms.srj.connections,
+                  ...cms.srjWithPointPairs!.connections,
+                ],
+              }).nodes
+            : nodes
         },
       },
     ),
@@ -526,6 +545,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
+        if (cms.opts.constrainViaPadPlacement) {
+          constrainPipeline9RegionLayerChanges({
+            graph,
+            viaDiameter: cms.viaDiameter,
+            routingNetIds: connections.map((connection) => connection.mutuallyConnectedNetworkId),
+            originalSrj: cms.originalSrj,
+            physicalOwnership: getPipeline9PhysicalOwnership({
+              originalSrj: cms.originalSrj,
+              derivedConnections: cms.srjWithPointPairs!.connections,
+              routingConnMap: cms.connMap,
+            }),
+          })
+          if (cms.srj.layerCount > 2) certifyPipeline9BoundaryPortOrder({ graph,
+            terminalRegionIds: new Set(connections.flatMap((connection) => [
+              connection.startRegion.regionId, connection.endRegion.regionId,
+            ])),
+          })
+        }
 
         return [
           {
@@ -541,6 +578,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               USE_SELECTIVE_RERIP_ROUTING: true,
               USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
+              RETAIN_BEST_PARTIAL_ROUTING:
+                cms.opts.retainBestPartialRouting === true,
             },
             weights: {
               SHUFFLE_SEED: 0,
@@ -581,6 +620,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preserveBoundaryPortOrder: cms.opts.constrainViaPadPlacement === true && cms.srj.layerCount > 2,
         },
       ],
     ),
@@ -621,6 +661,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             nodePortPoints: nodePortPointsSource,
+            ...(cms.opts.constrainViaPadPlacement ? {
+              viaPlacementContext: {
+                boardObstacles: cms.originalSrj.obstacles,
+                physicalOwnership: getPipeline9PhysicalOwnership({
+                  originalSrj: cms.originalSrj,
+                  derivedConnections: cms.srjWithPointPairs!.connections,
+                  routingConnMap: cms.connMap,
+                }),
+                layerCount: cms.originalSrj.layerCount,
+                allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+                clearance: cms.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
+              },
+            } : {}),
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
               outline: cms.originalSrj.outline,
@@ -653,6 +706,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          viaPlacementContext: cms.highDensityRouteSolver!.viaPlacementContext,
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
@@ -679,6 +733,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
           connMap: cms.connMap,
+          viaPlacementContext: cms.highDensityRouteSolver!.viaPlacementContext,
         },
       ],
     ),

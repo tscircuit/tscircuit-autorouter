@@ -303,6 +303,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  retainBestPartialRouting = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -320,6 +321,9 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...(retainBestPartialRouting
+        ? { RETAIN_BEST_PARTIAL_ROUTING: true }
+        : {}),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -389,6 +393,12 @@ const toSerializedRegionData = (
     width: region.d.width,
     height: region.d.height,
     availableZ: [...region.d.availableZ],
+    ...(region.d.layerChangeAllowedNetIds !== undefined
+      ? { layerChangeAllowedNetIds: [...region.d.layerChangeAllowedNetIds] }
+      : {}),
+    ...(region.d.boundaryPortOrderPreserved === true
+      ? { boundaryPortOrderPreserved: true }
+      : {}),
     ...(bounds
       ? {
           bounds: {
@@ -1137,6 +1147,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.flags.RETAIN_BEST_PARTIAL_ROUTING === true,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(

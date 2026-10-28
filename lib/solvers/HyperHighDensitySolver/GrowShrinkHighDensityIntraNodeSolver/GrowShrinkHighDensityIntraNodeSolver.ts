@@ -205,6 +205,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      viaPlacementValidator: portfolioParams.viaPlacementValidator
+        ? (placement, connectionName): boolean => portfolioParams.viaPlacementValidator!(
+            scalePoint(placement, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+            connectionName,
+          )
+        : undefined,
       priorityCoordinateScale:
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
       enableNegotiatedSearch:

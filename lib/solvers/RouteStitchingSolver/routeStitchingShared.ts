@@ -17,6 +17,23 @@ export const MAX_STITCH_GAP_DISTANCE_3 = 1
  */
 export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 
+/** Repeated physical fragments must not send a stitch back through the same via. */
+export const getUniqueStitchRoutes = (
+  routes: readonly HighDensityIntraNodeRoute[],
+): HighDensityIntraNodeRoute[] => {
+  const seen = new Set<string>()
+  const uniqueRoutes: HighDensityIntraNodeRoute[] = []
+  for (const route of routes) {
+    // Keep exact source geometry and all identity/terminal/segment metadata.
+    // Rounded endpoint keys cannot establish physical copper equivalence.
+    const key = JSON.stringify(route)
+    if (seen.has(key)) continue
+    seen.add(key)
+    uniqueRoutes.push(route)
+  }
+  return uniqueRoutes
+}
+
 export const compareNumbers = (a: number, b: number) => {
   if (a < b) return -1
   if (a > b) return 1

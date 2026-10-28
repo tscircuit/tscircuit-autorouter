@@ -30,6 +30,7 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
+import { areRouteViasAllowed } from "../HighDensitySolver/areRouteViasAllowed"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
@@ -695,6 +696,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        viaPlacementValidator: this.constructorParams.viaPlacementValidator,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -754,9 +756,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (this.constructorParams.viaPlacementValidator && !solvedRoutes.every((route) =>
+      areRouteViasAllowed(route, this.constructorParams.viaPlacementValidator!,
+        this.constructorParams.layerCount ?? 2,
+        this.constructorParams.allowBlindAndBuriedVias),
+    )) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Candidate via placement violates original board constraints"
+      this.solved = false
+      this.winningSolver = undefined
+      this.stats.viaPlacementCandidateRejectionCount =
+        Number(this.stats.viaPlacementCandidateRejectionCount ?? 0) + 1
+      return
+    }
+    this.solvedRoutes = solvedRoutes
   }
 }

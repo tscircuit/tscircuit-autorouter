@@ -1,5 +1,8 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { areRouteViasAllowed } from "lib/solvers/HighDensitySolver/areRouteViasAllowed"
+import type { ViaPlacementValidator } from "lib/types/high-density-types"
+import { getPipeline9ViaPlacementValidator, type Pipeline9ViaPlacementContext } from "./getPipeline9ViaPlacementValidator"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
@@ -8,6 +11,51 @@ import {
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
+  private readonly viaPlacementContext?: Pipeline9ViaPlacementContext
+  private readonly viaPlacementValidator?: ViaPlacementValidator
+  private rejectedViaPlacementProposals = 0
+
+  constructor(params: ConstructorParameters<typeof HighDensityForceImproveSolver>[0] & {
+    viaPlacementContext?: Pipeline9ViaPlacementContext
+  }) {
+    super(params)
+    this.viaPlacementContext = params.viaPlacementContext
+    this.viaPlacementValidator = params.viaPlacementContext
+      ? getPipeline9ViaPlacementValidator(params.viaPlacementContext) : undefined
+    if (this.viaPlacementValidator && !this.originalHdRoutes.every((route) =>
+      areRouteViasAllowed(route, this.viaPlacementValidator!, this.viaPlacementContext!.layerCount,
+        this.viaPlacementContext!.allowBlindAndBuriedVias),
+    )) throw new Error("Force-improve input violates original via-placement constraints")
+  }
+
+  override getConstructorParams(): readonly [
+    ReturnType<HighDensityForceImproveSolver["getConstructorParams"]>[0] & {
+      viaPlacementContext?: Pipeline9ViaPlacementContext
+    },
+  ] {
+    return [{ ...super.getConstructorParams()[0],
+      ...(this.viaPlacementContext ? { viaPlacementContext: this.viaPlacementContext } : {}),
+    }]
+  }
+
+  private acceptViaPlacementProposal(routeIndexes: number[]): void {
+    if (!this.viaPlacementValidator || !this.viaPlacementContext) return
+    const proposals = routeIndexes.map((index) => {
+      const route = this.improvedRoutesByIndex.get(index)
+      if (!route || route.connectionName !== this.originalHdRoutes[index]!.connectionName) {
+        throw new Error("Force-improve proposal lost its assigned route identity")
+      }
+      return route
+    })
+    if (!proposals.every((route) => areRouteViasAllowed(route, this.viaPlacementValidator!,
+      this.viaPlacementContext!.layerCount, this.viaPlacementContext!.allowBlindAndBuriedVias))) {
+      // Numerical optimization is optional; declining its proposal preserves the validated input.
+      for (const index of routeIndexes) this.improvedRoutesByIndex.delete(index)
+      this.rejectedViaPlacementProposals++
+    }
+    this.stats = { ...this.stats, improvedRouteCount: this.improvedRoutesByIndex.size,
+      viaPlacementCandidateRejectionCount: this.rejectedViaPlacementProposals }
+  }
 
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
@@ -92,7 +140,11 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   override _step(): void {
     const result = this.completedSample
     if (!result) {
+      const previousIndex = this.activeSampleIndex
       super._step()
+      if (this.activeSampleIndex === previousIndex + 1) {
+        this.acceptViaPlacementProposal(this.sampleEntries[previousIndex]!.routeIndexes)
+      }
       return
     }
     this.completedSample = undefined
@@ -113,5 +165,6 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       totalStepsPerNode: this.totalStepsPerNode,
     }
     if (this.activeSampleIndex >= this.sampleEntries.length) this.solved = true
+    this.acceptViaPlacementProposal(entry.routeIndexes)
   }
 }

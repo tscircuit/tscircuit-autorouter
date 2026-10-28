@@ -1,3 +1,6 @@
+import { areRouteViasAllowed } from "lib/solvers/HighDensitySolver/areRouteViasAllowed"
+import type { ViaPlacementValidator } from "lib/types/high-density-types"
+import { getPipeline9ViaPlacementValidator, type Pipeline9ViaPlacementContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ViaPlacementValidator"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
@@ -225,6 +228,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   override activeSubSolver: HighDensityRepairSolver | null = null
   latestVisualization: GraphicsObject = {}
   private asyncRunning = false
+  private readonly viaPlacementContext?: Pipeline9ViaPlacementContext
+  private readonly viaPlacementValidator?: ViaPlacementValidator
+  private rejectedViaPlacementProposals = 0
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints[]
@@ -234,6 +240,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     minimumTraceWidth?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
+    viaPlacementContext?: Pipeline9ViaPlacementContext
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
@@ -247,6 +254,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     )
     this.colorMap = params.colorMap ?? {}
     this.connMap = params.connMap
+    this.viaPlacementContext = params.viaPlacementContext
+    this.viaPlacementValidator = params.viaPlacementContext
+      ? getPipeline9ViaPlacementValidator(params.viaPlacementContext) : undefined
+    if (this.viaPlacementValidator && !this.originalHdRoutes.every((route) =>
+      areRouteViasAllowed(route, this.viaPlacementValidator!, this.viaPlacementContext!.layerCount,
+        this.viaPlacementContext!.allowBlindAndBuriedVias),
+    )) throw new Error("Repair input violates original via-placement constraints")
 
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
@@ -497,13 +511,28 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         Number(this.stats.nodeClearanceCandidateCount ?? 0) +
         Number(result.clearanceStats?.nodeClearanceCandidateCount ?? 0),
     }
+    let acceptProposal = true
+    if (this.viaPlacementValidator && this.viaPlacementContext) {
+      if (result.repairedRoutes.length !== sampleEntry.routeIndexes.length) {
+        throw new Error("Repair proposal lost its assigned route count")
+      }
+      acceptProposal = result.repairedRoutes.every((route, index) => {
+        const original = this.originalHdRoutes[sampleEntry.routeIndexes[index]!]!
+        if (route.connectionName !== original.connectionName) {
+          throw new Error("Repair proposal lost its assigned route identity")
+        }
+        return areRouteViasAllowed(fromRepairRoute(route, original), this.viaPlacementValidator!,
+          this.viaPlacementContext!.layerCount, this.viaPlacementContext!.allowBlindAndBuriedVias)
+      })
+      if (!acceptProposal) this.rejectedViaPlacementProposals++
+    }
     for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
       const routeIndex = sampleEntry.routeIndexes[i]
       const fallbackRoute = this.originalHdRoutes[routeIndex]
       const repairedRoute = result.repairedRoutes[i]
       this.repairedRoutesByIndex.set(
         routeIndex,
-        repairedRoute
+        repairedRoute && acceptProposal
           ? fromRepairRoute(repairedRoute, fallbackRoute)
           : fallbackRoute,
       )
@@ -515,6 +544,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       sampleCount: this.sampleEntries.length,
       repairedNodeCount: this.activeSampleIndex,
       repairedRouteCount: this.repairedRoutesByIndex.size,
+      ...(this.viaPlacementContext ? {
+        viaPlacementCandidateRejectionCount: this.rejectedViaPlacementProposals,
+      } : {}),
     }
     if (this.activeSampleIndex >= this.sampleEntries.length) this.solved = true
   }
@@ -529,6 +561,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         minimumTraceWidth: this.minimumTraceWidth,
         colorMap: this.colorMap,
         connMap: this.connMap,
+        ...(this.viaPlacementContext ? { viaPlacementContext: this.viaPlacementContext } : {}),
       },
     ] as const
   }

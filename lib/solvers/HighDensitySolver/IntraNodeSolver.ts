@@ -75,6 +75,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  protected readonly viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -104,6 +105,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacleMargin?: number
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
+    viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
     layerCount?: number
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
@@ -124,6 +126,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
+    this.viaPlacementValidator = params.viaPlacementValidator
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
@@ -264,6 +267,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      viaPlacementValidator: this.viaPlacementValidator,
     }
   }
 
@@ -601,6 +605,9 @@ const isEndpointViaSafe = (
   A: { x: number; y: number; z: number },
   B: { x: number; y: number; z: number },
 ) => {
+  if (obstacleChecker.viaPlacementValidator && !obstacleChecker.viaPlacementValidator({
+    ...viaPoint, zStart: A.z, zEnd: B.z, viaDiameter: obstacleChecker.viaDiameter,
+  }, obstacleChecker.connectionName)) return false
   const viaNode = {
     x: viaPoint.x,
     y: viaPoint.y,
