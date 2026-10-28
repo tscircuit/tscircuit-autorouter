@@ -17,6 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - sourceKey: forest-v3-srj18
+            expectedFile: expected-forest-v3-srj18.json
+            runId: 40630414562
+            artifactName: pinned-experiment-3198-srj18
           - sourceKey: forest-v2-srj18
             expectedFile: expected-forest-v2-srj18.json
             runId: 40605289097
@@ -25,38 +29,6 @@ jobs:
             expectedFile: expected-forest-v2-srj24.json
             runId: 40605289097
             artifactName: pinned-experiment-3198-srj24
-          - sourceKey: joint-exits-srj18
-            expectedFile: expected-joint-exits-srj18.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3199-srj18
-          - sourceKey: joint-exits-srj24
-            expectedFile: expected-joint-exits-srj24.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3199-srj24
-          - sourceKey: portals-srj18
-            expectedFile: expected-portals-srj18.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3200-srj18
-          - sourceKey: portals-srj24
-            expectedFile: expected-portals-srj24.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3200-srj24
-          - sourceKey: copper-candidates-srj18
-            expectedFile: expected-copper-candidates-srj18.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3201-srj18
-          - sourceKey: copper-candidates-srj24
-            expectedFile: expected-copper-candidates-srj24.json
-            runId: 40602253584
-            artifactName: pinned-experiment-3201-srj24
-          - sourceKey: geometry-v2-srj18
-            expectedFile: expected-geometry-v2-srj18.json
-            runId: 40606288448
-            artifactName: pinned-experiment-3202-srj18
-          - sourceKey: geometry-v2-srj24
-            expectedFile: expected-geometry-v2-srj24.json
-            runId: 40606288448
-            artifactName: pinned-experiment-3202-srj24
     steps:
       - name: Checkout read-only artifact inspector
         uses: actions/checkout@v4
@@ -64,6 +36,8 @@ jobs:
           persist-credentials: false
       - name: Verify read-only identity analysis invariants
         run: python3 scripts/experiment-artifact-audit/test-via-identity-equivalence.py
+      - name: Verify supplemental intended-reference invariants
+        run: python3 scripts/experiment-artifact-audit/test-intended-trace-references.py
       - name: Verify immutable source artifact metadata
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -100,6 +74,14 @@ jobs:
           --include-baseline
           --examples-per-class 3
           --output compact-report/identity-equivalence.json
+      - name: Query intended original ownership without extending original identities
+        run: >-
+          python3 scripts/experiment-artifact-audit/inspect-intended-trace-references.py
+          --directory downloaded
+          --expected 'scripts/experiment-artifact-audit/${{ matrix.expectedFile }}'
+          --inspection compact-report/inspection.json
+          --examples-per-class 3
+          --output compact-report/intended-trace-references.json
       - name: Retain compact inspection report
         if: always()
         uses: actions/upload-artifact@v4
