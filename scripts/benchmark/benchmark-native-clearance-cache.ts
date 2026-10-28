@@ -56,10 +56,7 @@ type FixtureResult = {
   measurements: Trial[]
 }
 
-const fixtures = [
-  "srj18-sample002-large-node.json",
-  "a13-srj18-hard-node.json",
-]
+const fixtures = ["srj18-sample002-large-node.json", "a13-srj18-hard-node.json"]
 const candidateRoot = resolve(import.meta.dir, "../..")
 const hash = (value: unknown): string => {
   const serialized = JSON.stringify(value)
@@ -210,11 +207,7 @@ const runChild = async (
   }
 }
 
-const measure = (
-  root: string,
-  fixture: string,
-  mode: Mode,
-): Measurement => {
+const measure = (root: string, fixture: string, mode: Mode): Measurement => {
   const child = spawnSync(
     process.execPath,
     [import.meta.path, "--child", root, fixture, mode],

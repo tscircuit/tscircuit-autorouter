@@ -98,13 +98,7 @@ test("bounded planar memo preserves exact clearance with aliases, eviction and c
     expect(check(free)).toBe(false)
     expect(searches.mock.calls.length).toBe(beforeEvictionQuery + 1)
 
-    for (const key of [
-      -1,
-      -1025,
-      Number.MAX_SAFE_INTEGER + 1,
-      NaN,
-      Infinity,
-    ]) {
+    for (const key of [-1, -1025, Number.MAX_SAFE_INTEGER + 1, NaN, Infinity]) {
       solver.forcedKey = key
       solver.buildObstacleIndexes()
       const currentSearches = spyOn(solver.obstacleViaIndex!, "search")
