@@ -33,6 +33,8 @@ export interface SegmentPortPoint {
    * ideally this port points should be discarded but we need them in some cases
    */
   cramped: boolean
+  /** False when the cramped shared edge cannot span two trace widths. */
+  allowDuplication?: boolean
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
   tinyHypergraphPortPenalty?: number
   /** Canonical fixed-net ids loaded onto this existing graph port. */
@@ -197,6 +199,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           connectionName: null,
           distToCentermostPortOnZ: 0,
           cramped: true,
+          allowDuplication: segmentLength >= 2 * this.traceWidth,
         })
       }
       return {
@@ -289,6 +292,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           connectionName: null,
           distToCentermostPortOnZ,
           cramped: edgeTouchesNarrowQfpPadGap,
+          allowDuplication:
+            !edgeTouchesNarrowQfpPadGap ||
+            segmentLength >= 2 * this.traceWidth,
         }
         portPoints.push(portPoint)
       }

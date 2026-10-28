@@ -218,6 +218,7 @@ export function buildHyperGraph(params: {
         z,
         distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
         cramped: spp.cramped,
+        allowDuplication: spp.allowDuplication,
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
         _preloadedFixedNetIds:

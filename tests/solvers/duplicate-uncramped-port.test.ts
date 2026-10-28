@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { DuplicateUncrampedPortSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/DuplicateUncrampedPortSolver"
+import { CapacityLimitedPortDuplicationSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/CapacityLimitedPortDuplicationSolver"
 
 test("congestion repair duplicates spacious ports while preserving cramped capacity", (): void => {
-  const solver = new DuplicateUncrampedPortSolver({
+  const solver = new CapacityLimitedPortDuplicationSolver({
     regions: [
       {
         regionId: "left",
@@ -25,7 +25,7 @@ test("congestion repair duplicates spacious ports while preserving cramped capac
         portId: "cramped",
         region1Id: "middle",
         region2Id: "left",
-        d: { x: 0, y: 0, z: 0, cramped: true },
+        d: { x: 0, y: 0, z: 0, cramped: true, allowDuplication: false },
       },
       {
         portId: "spacious",

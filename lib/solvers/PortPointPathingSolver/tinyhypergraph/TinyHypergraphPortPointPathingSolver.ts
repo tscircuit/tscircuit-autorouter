@@ -37,9 +37,12 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { DuplicateUncrampedPortSolver } from "./DuplicateUncrampedPortSolver"
+import { CapacityLimitedPortDuplicationSolver } from "./CapacityLimitedPortDuplicationSolver"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import {
+  NativeRoutingSolverWithGraphSizedCompletion,
+  PreparedRoutingSolverWithGraphSizedCompletion,
+} from "./graphSizedCompletionSolvers"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -193,6 +196,7 @@ type TinyPortMetadata = {
   nextPortPointId?: string
   distToCentermostPortOnZ?: number
   cramped?: boolean
+  allowDuplication?: boolean
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
@@ -426,6 +430,7 @@ const toSerializedPortData = (
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
+    allowDuplication: port.d.allowDuplication,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
@@ -941,8 +946,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? PreparedPortPointRoutingSolver
-        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        ? PreparedRoutingSolverWithGraphSizedCompletion
+        : NativeRoutingSolverWithGraphSizedCompletion
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -984,7 +989,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         this.inputProblem.serializedHyperGraph,
       )
       this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+        new NativeRoutingSolverWithGraphSizedCompletion(
           topology,
           problem,
           this.getSolveGraphOptions(),
@@ -1093,7 +1098,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateUncrampedPortSolver(
+    const duplicateCongestedPortSolver = new CapacityLimitedPortDuplicationSolver(
       serializedGraph,
       {
         duplicatePortProximity: 0.05,
