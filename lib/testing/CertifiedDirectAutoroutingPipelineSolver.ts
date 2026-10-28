@@ -38,17 +38,24 @@ export class CertifiedDirectAutoroutingPipelineSolver extends BaseSolver {
       ? { eligible: false, reason: configuredOption ? `configured-pipeline-option:${configuredOption[0]}` : incompatibleEffort ? "configured-effort-outside-direct-contract" : "configured-cache-provider",
           diagnostics: { branchCount: 0, checkedBranches: 0, geometryChecks: 0, candidatesChecked: 0 } }
       : getCertifiedDirectRoutingPlan(srj)
-    const eligibilityMs = performance.now() - start
+    const eligibilityEnd = performance.now()
+    const eligibilityMs = eligibilityEnd - start
     this.selection = plan.eligible ? { eligible: true, diagnostics: plan.diagnostics } : plan
     this.selectedStrategy = this.selection.eligible ? "certified-direct" : "pipeline9"
     if (plan.eligible) {
       this.directOriginal = structuredClone(srj)
       this.directTraces = plan.traces
-      this.pipelineDef = [{ solverName: "certifiedDirectRouting" }]
+      this.pipelineDef = [
+        { solverName: "certifiedDirectEligibility" },
+        { solverName: "certifiedDirectRouting" },
+      ]
+      this.currentPipelineStepIndex = 1
       this.MAX_ITERATIONS = 1
       this.timeSpentOnPhase = {}
       this.startTimeOfPhase = {}
       this.endTimeOfPhase = {}
+      this.startTimeOfPhase.certifiedDirectEligibility = start
+      this.endTimeOfPhase.certifiedDirectEligibility = eligibilityEnd
     } else {
       // No direct solver has run or failed. Original input and options are
       // passed unchanged to the general solver selected by applicability.
@@ -87,13 +94,21 @@ export class CertifiedDirectAutoroutingPipelineSolver extends BaseSolver {
       this.stats.pipeline9StagesExecuted = this.pipeline9.currentPipelineStepIndex
       return
     }
-    if (!this.selection.eligible || !this.directTraces) throw new Error("Certified direct selection lacks a qualified plan")
-    this.stats.acceptedAgainstOriginalInput = true
-    this.stats.acceptedBranches = this.directTraces.length
-    this.stats.acceptedThroughVias = this.directTraces.reduce((sum, trace) => sum + trace.route.filter((point) => point.route_type === "via").length, 0)
-    this.solved = true
-    this.progress = 1
-    this.currentPipelineStepIndex = 1
+    const start = performance.now()
+    this.startTimeOfPhase.certifiedDirectRouting = start
+    try {
+      if (!this.selection.eligible || !this.directTraces) throw new Error("Certified direct selection lacks a qualified plan")
+      this.stats.acceptedAgainstOriginalInput = true
+      this.stats.acceptedBranches = this.directTraces.length
+      this.stats.acceptedThroughVias = this.directTraces.reduce((sum, trace) => sum + trace.route.filter((point) => point.route_type === "via").length, 0)
+      this.solved = true
+      this.progress = 1
+      this.currentPipelineStepIndex = this.pipelineDef.length
+    } finally {
+      const end = performance.now()
+      this.endTimeOfPhase.certifiedDirectRouting = end
+      this.timeSpentOnPhase.certifiedDirectRouting = end - start
+    }
   }
 
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
