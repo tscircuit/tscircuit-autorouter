@@ -13,6 +13,7 @@ import subprocess
 import time
 
 from memory_scheduler import MemoryReservationScheduler
+from cpu_resources import get_cpu_capacity, validate_cpu_request
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -124,6 +125,8 @@ async def run(args):
             # A VM's host-root cgroup may not expose these control files.
             # Report that explicitly instead of inventing a quota/limit.
             resource_values[name] = None
+    cpu_capacity = get_cpu_capacity(sorted(os.sched_getaffinity(0)), resource_values["cpuMax"])
+    validate_cpu_request(args.concurrency, cpu_capacity)
     physical_memory_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
     memory_max = resource_values["memoryMax"]
     effective_memory_bytes = min(physical_memory_bytes, int(memory_max)) if memory_max and memory_max != "max" else physical_memory_bytes
@@ -136,6 +139,8 @@ async def run(args):
         "runnerSha256": digest(Path(__file__)),
         "workerSha256": digest(HERE / "worker.ts"),
         "memorySchedulerSha256": digest(HERE / "memory_scheduler.py"),
+        "cpuResourcesSha256": digest(HERE / "cpu_resources.py"),
+        "cpuCapacity": cpu_capacity,
         "memoryReservationPolicy": {
             "path": str(reservation_path),
             "sha256": digest(reservation_path),
@@ -237,6 +242,8 @@ async def run(args):
                     "memoryReservationPolicySha256": metadata["memoryReservationPolicy"]["sha256"],
                     "memoryReservationBudgetBytes": reservation_budget_bytes,
                     "memoryHeavyOverlapAllowed": args.allow_heavy_overlap,
+                    "effectiveCpuCount": cpu_capacity["effectiveCpuCount"],
+                    "quotaCores": cpu_capacity["quotaCores"],
                 },
             }
             memory = reservation_policy["samples"].get(f"{dataset}:{sample}")
@@ -404,7 +411,7 @@ def parse():
     p.add_argument("--variants", default=",".join(VARIANTS))
     p.add_argument("--datasets", default="srj18,srj24")
     p.add_argument("--samples", default="all")
-    p.add_argument("--concurrency", type=int, default=2)
+    p.add_argument("--concurrency", type=int, default=3)
     p.add_argument("--cpus", help="Optional exactly one CPU per worker slot, e.g. 0,1,2")
     p.add_argument("--timeout", type=float, default=360)
     p.add_argument("--startup-timeout", type=float, default=60)
@@ -424,8 +431,8 @@ def parse():
     args = p.parse_args()
     if args.mode == "hd" and not args.hd_input and not args.full_results:
         p.error("HD mode requires --hd-input or --full-results")
-    if args.concurrency < 1 or args.concurrency > 3:
-        p.error("Use one, two, or at most three sample workers on this machine")
+    if args.concurrency < 1:
+        p.error("Sample concurrency must be positive and cannot exceed observed affinity/quota capacity")
     if not args.reservation_budget_gib >= 1 or args.reservation_budget_gib == float("inf") or args.max_memory_bypasses < 0:
         p.error("Memory admission budget must be finite and at least1GiB; maximum bypasses must be nonnegative")
     return args

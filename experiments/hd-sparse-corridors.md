@@ -80,3 +80,40 @@ Different routing objectives and added portfolio effort can alter downstream
 repair work, so isolated kernel gains and end-to-end gains must be reported
 separately. No completeness, shortest-board-path, or dataset speedup claim follows
 from the sparse graph alone.
+
+## Follow-up after broad CI
+
+The first measured version exposed terminal-tag and scheduling-accounting bugs.
+Its CI and dataset results remain evidence for that exact head; the corrected
+version requires a fresh head-specific comparison.
+
+Search states and output interior points now contain explicit XYZ coordinates,
+so a via at a terminal cannot copy that terminal's PCB ID onto another layer.
+Only actual route endpoints retain point-level PCB identities. Route-level
+start/end tags are applied by HighDensitySolver's existing explicit preservation
+policy; the sparse kernel no longer overrides that policy. Node region IDs are
+retained, and sparse winners are reported by their concrete solver name instead
+of being mislabeled as the native IntraNodeRouteSolver strategy.
+
+Sparse fitness is now computed after common candidate-work accounting. The
+existing tracked-versus-scanning scheduling regression passes, including a
+candidate that changes its work limit. Exact-XY layer-change tasks explicitly
+remain with the native endpoint/nearby-via strategy: a generic sparse center
+portal must not replace that established fast path.
+
+The new terminal-via regression verifies unique endpoint IDs, XYZ-only interior
+points, the outer route-tag policy, and successful native stitching. Existing
+physical-clearance tests are unchanged. No virtual-scene prototype was merged.
+
+The bugreport44 maximum-segment-length assertion remains a separate representation
+contract to assess. Its three >2mm stitched segments match original sparse macro
+edges after the existing stitcher's 0.001mm coordinate rounding; they are not
+new connecting jumps. The HD route type does not specify a maximum segment
+length, and copper checks accept continuous segments. No output subdivision or
+snapshot change was introduced merely to satisfy that dense-route proxy.
+
+Local follow-up validation passed all nine focused/accounting/native-via tests
+(86 assertions), plus the four previously failing Pipeline9 numerical stitching
+regressions for SRJ18 samples4,8,9 and11 (27 assertions). These are correctness
+checks, not a controlled performance comparison. Full datasets18/24 and broad
+CI must be evaluated at the corrected head separately from the first experiment.

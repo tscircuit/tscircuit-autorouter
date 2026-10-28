@@ -132,6 +132,12 @@ export class SparseVisibilityIntraNodeSolver extends IntraNodeRouteSolver {
       this.finishUnknown("outside the 2–32 task sparse catalog scope")
       return
     }
+    // Native routing already has guarded endpoint/nearby-via handling for
+    // exact-XY layer changes. A generic center portal must not steal that case.
+    if (this.allTasks.some(({ a, b }) => a.x === b.x && a.y === b.y && a.z !== b.z)) {
+      this.finishUnknown("native exact-XY layer-transition fast path has priority")
+      return
+    }
     for (const obstacle of params.obstacles ?? []) this.addStaticObstacle(obstacle)
     for (const port of node.portPoints) {
       this.staticScene.push({ a: port, b: port, radius: this.traceWidth / 2, layers: [port.z], owners: [port.connectionName, port.rootConnectionName ?? port.connectionName], kind: "terminal" })
@@ -154,6 +160,8 @@ export class SparseVisibilityIntraNodeSolver extends IntraNodeRouteSolver {
   }
 
   private addStaticObstacle(obstacle: Obstacle): void {
+    const radius = Math.hypot(obstacle.width, obstacle.height) / 2 + this.viaDiameter + this.obstacleMargin
+    if (obstacle.center.x + radius < this.bounds.minX || obstacle.center.x - radius > this.bounds.maxX || obstacle.center.y + radius < this.bounds.minY || obstacle.center.y - radius > this.bounds.maxY) return
     const angle = (obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
     const c = Math.cos(angle), s = Math.sin(angle)
     const polygon = [
@@ -162,8 +170,6 @@ export class SparseVisibilityIntraNodeSolver extends IntraNodeRouteSolver {
       [obstacle.width / 2, obstacle.height / 2],
       [-obstacle.width / 2, obstacle.height / 2],
     ].map(([x, y]) => ({ x: obstacle.center.x + x! * c - y! * s, y: obstacle.center.y + x! * s + y! * c }))
-    const radius = Math.hypot(obstacle.width, obstacle.height) / 2 + this.viaDiameter + this.obstacleMargin
-    if (obstacle.center.x + radius < this.bounds.minX || obstacle.center.x - radius > this.bounds.maxX || obstacle.center.y + radius < this.bounds.minY || obstacle.center.y - radius > this.bounds.maxY) return
     this.nearbyObstacles.push(obstacle)
     const layers = obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.map((name) => mapLayerNameToZ(name, this.boardLayerCount))
     this.staticScene.push({
@@ -321,18 +327,23 @@ export class SparseVisibilityIntraNodeSolver extends IntraNodeRouteSolver {
         if (closed[current.state] || current.cost !== cost[current.state]) continue
         if (current.state === goal) {
           const result: LayerPoint[] = []
-          for (let state = goal; state !== -1; state = previous[state]!) result.push({ ...points[Math.floor(state / layerCount)]!, z: this.layers[state % layerCount]! })
+          for (let state = goal; state !== -1; state = previous[state]!) {
+            const point = points[Math.floor(state / layerCount)]!
+            result.push({ x: point.x, y: point.y, z: this.layers[state % layerCount]! })
+          }
           return result.reverse()
         }
         closed[current.state] = 1
         this.sparseDiagnostics.expandedStates++
         const xyIndex = Math.floor(current.state / layerCount), layerIndex = current.state % layerCount
-        const a = { ...points[xyIndex]!, z: this.layers[layerIndex]! }
+        const pointA = points[xyIndex]!
+        const a = { x: pointA.x, y: pointA.y, z: this.layers[layerIndex]! }
         for (let next = 0; next < stateCount; next++) {
           if (closed[next] || next === current.state) continue
           const nextXY = Math.floor(next / layerCount), nextLayer = next % layerCount
           if (nextLayer !== layerIndex && nextXY !== xyIndex) continue
-          const b = { ...points[nextXY]!, z: this.layers[nextLayer]! }
+          const pointB = points[nextXY]!
+          const b = { x: pointB.x, y: pointB.y, z: this.layers[nextLayer]! }
           const distance = nextLayer === layerIndex ? Math.hypot(a.x - b.x, a.y - b.y) : viaCost
           const tentative = current.cost + distance
           if (tentative >= cost[next]!) continue
@@ -371,11 +382,16 @@ export class SparseVisibilityIntraNodeSolver extends IntraNodeRouteSolver {
     const route: HighDensityIntraNodeRoute = {
       connectionName: task.connectionName,
       rootConnectionName: task.rootConnectionName,
-      startPcbPortId: task.a.pcb_port_id,
-      endPcbPortId: task.b.pcb_port_id,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       traceThickness: this.traceWidth,
       viaDiameter: this.viaDiameter,
-      route: path.map((point, index) => ({ ...point, ...(index === 0 ? { pcb_port_id: task.a.pcb_port_id } : index === path.length - 1 ? { pcb_port_id: task.b.pcb_port_id } : {}) })),
+      // Route-level terminal tags belong to HighDensitySolver's explicit
+      // preservation policy. Copying port objects here also leaks their IDs
+      // into interior layer states, so output geometry is built from XYZ only.
+      route: path.map((point, index) => {
+        const terminalId = index === 0 ? task.a.pcb_port_id : index === path.length - 1 ? task.b.pcb_port_id : undefined
+        return { x: point.x, y: point.y, z: point.z, ...(terminalId === undefined ? {} : { pcb_port_id: terminalId }) }
+      }),
       vias: [],
     }
     for (let index = 1; index < path.length; index++) {

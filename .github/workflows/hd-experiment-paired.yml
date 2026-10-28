@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hd-experiment-paired-${{ github.event.pull_request.number }}
+  group: hd-experiment-paired-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: true
 
 jobs:

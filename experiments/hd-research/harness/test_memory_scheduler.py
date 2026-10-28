@@ -93,8 +93,9 @@ class MemorySchedulerTest(unittest.TestCase):
         simulated_active = {}
         clock = 0
         heavy_overlap_seen = False
+        six_lanes_used = False
         while larger.pending_count or larger.active:
-            for slot in range(3):
+            for slot in range(6):
                 if slot in larger.active:
                     continue
                 selected = larger.admit(slot)
@@ -103,12 +104,14 @@ class MemorySchedulerTest(unittest.TestCase):
                     simulated_active[slot] = clock + 1 + len(dispatched) % 11
                     self.assertLessEqual(larger.reserved_bytes(), large_budget)
                     heavy_overlap_seen |= sum(t["heavy"] for t in larger.active.values()) > 1
+                    six_lanes_used |= len(larger.active) == 6
             self.assertTrue(simulated_active, "Larger-runner scheduler deadlocked")
             slot = min(simulated_active, key=simulated_active.get)
             clock = simulated_active.pop(slot)
             larger.release(slot)
         self.assertEqual(len(dispatched), 252)
         self.assertTrue(heavy_overlap_seen)
+        self.assertTrue(six_lanes_used)
 
 
 if __name__ == "__main__":

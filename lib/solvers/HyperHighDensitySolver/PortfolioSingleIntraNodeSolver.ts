@@ -539,9 +539,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
-    if (solver instanceof SparseVisibilityIntraNodeSolver) {
-      return solver.sparseDiagnostics.geometryTests / 100_000
-    }
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
     }
@@ -564,6 +561,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           )
         }
       }
+    }
+    if (solver instanceof SparseVisibilityIntraNodeSolver) {
+      return solver.sparseDiagnostics.geometryTests / 100_000
     }
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
