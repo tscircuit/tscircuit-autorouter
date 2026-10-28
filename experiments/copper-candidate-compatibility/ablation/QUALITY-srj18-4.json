@@ -1,0 +1,294 @@
+{
+  "sample": 4,
+  "identityMethod": "Exact generated circuit participant IDs resolve raw via geometry/trace names and original pad ports. Logical groups union original connection records through exact pcb_port_id only; coordinate proximity never merges owners. Styles compare explicit layer/endpoints/source trace. Original raw findings remain in evidence.",
+  "arms": [
+    {
+      "arm": "control",
+      "physicalFindings": [
+        {
+          "type": "pcb_pad_pad_clearance_error",
+          "minimumClearance": 0.1,
+          "actualClearance": 0.07999999999999963,
+          "participants": [
+            {
+              "type": "pcb_smtpad",
+              "x": 6.4285,
+              "y": -1.524,
+              "layer": "top",
+              "width": 0.975,
+              "height": 1.4,
+              "shape": "rect",
+              "originalPortId": "pcb_port_42",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_29",
+                  "source_trace_29"
+                ]
+              }
+            },
+            {
+              "type": "pcb_via",
+              "x": 7.145999999999999,
+              "y": -1.159,
+              "layers": [
+                "top",
+                "bottom"
+              ],
+              "outerDiameter": 0.3,
+              "holeDiameter": 0.15,
+              "traceConnectionName": "source_trace_2",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_2",
+                  "source_trace_2"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "styleSegments": [],
+      "portFindingIds": [
+        "pcb_port_152",
+        "pcb_port_155",
+        "pcb_port_157",
+        "pcb_port_158",
+        "pcb_port_159",
+        "pcb_port_160",
+        "pcb_port_161",
+        "pcb_port_162",
+        "pcb_port_163",
+        "pcb_port_168",
+        "pcb_port_173",
+        "pcb_port_176",
+        "pcb_port_177",
+        "pcb_port_55",
+        "pcb_port_63"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [],
+      "styleRemovedVersusControl": [],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "soft-only",
+      "physicalFindings": [
+        {
+          "type": "pcb_pad_pad_clearance_error",
+          "minimumClearance": 0.1,
+          "actualClearance": 0.07999999999999963,
+          "participants": [
+            {
+              "type": "pcb_smtpad",
+              "x": 6.4285,
+              "y": -1.524,
+              "layer": "top",
+              "width": 0.975,
+              "height": 1.4,
+              "shape": "rect",
+              "originalPortId": "pcb_port_42",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_29",
+                  "source_trace_29"
+                ]
+              }
+            },
+            {
+              "type": "pcb_via",
+              "x": 7.145999999999999,
+              "y": -1.159,
+              "layers": [
+                "top",
+                "bottom"
+              ],
+              "outerDiameter": 0.3,
+              "holeDiameter": 0.15,
+              "traceConnectionName": "source_trace_2",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_2",
+                  "source_trace_2"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "styleSegments": [],
+      "portFindingIds": [
+        "pcb_port_152",
+        "pcb_port_155",
+        "pcb_port_157",
+        "pcb_port_158",
+        "pcb_port_159",
+        "pcb_port_160",
+        "pcb_port_161",
+        "pcb_port_162",
+        "pcb_port_163",
+        "pcb_port_168",
+        "pcb_port_173",
+        "pcb_port_176",
+        "pcb_port_177",
+        "pcb_port_55",
+        "pcb_port_63"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [],
+      "styleRemovedVersusControl": [],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "archive-only",
+      "physicalFindings": [
+        {
+          "type": "pcb_pad_pad_clearance_error",
+          "minimumClearance": 0.1,
+          "actualClearance": 0.07999999999999963,
+          "participants": [
+            {
+              "type": "pcb_smtpad",
+              "x": 6.4285,
+              "y": -1.524,
+              "layer": "top",
+              "width": 0.975,
+              "height": 1.4,
+              "shape": "rect",
+              "originalPortId": "pcb_port_42",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_29",
+                  "source_trace_29"
+                ]
+              }
+            },
+            {
+              "type": "pcb_via",
+              "x": 7.145999999999999,
+              "y": -1.159,
+              "layers": [
+                "top",
+                "bottom"
+              ],
+              "outerDiameter": 0.3,
+              "holeDiameter": 0.15,
+              "traceConnectionName": "source_trace_2",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_2",
+                  "source_trace_2"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "styleSegments": [],
+      "portFindingIds": [
+        "pcb_port_152",
+        "pcb_port_155",
+        "pcb_port_157",
+        "pcb_port_158",
+        "pcb_port_159",
+        "pcb_port_160",
+        "pcb_port_161",
+        "pcb_port_162",
+        "pcb_port_163",
+        "pcb_port_168",
+        "pcb_port_173",
+        "pcb_port_176",
+        "pcb_port_177",
+        "pcb_port_55",
+        "pcb_port_63"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [],
+      "styleRemovedVersusControl": [],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "full",
+      "physicalFindings": [
+        {
+          "type": "pcb_pad_pad_clearance_error",
+          "minimumClearance": 0.1,
+          "actualClearance": 0.07999999999999963,
+          "participants": [
+            {
+              "type": "pcb_smtpad",
+              "x": 6.4285,
+              "y": -1.524,
+              "layer": "top",
+              "width": 0.975,
+              "height": 1.4,
+              "shape": "rect",
+              "originalPortId": "pcb_port_42",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_29",
+                  "source_trace_29"
+                ]
+              }
+            },
+            {
+              "type": "pcb_via",
+              "x": 7.145999999999999,
+              "y": -1.159,
+              "layers": [
+                "top",
+                "bottom"
+              ],
+              "outerDiameter": 0.3,
+              "holeDiameter": 0.15,
+              "traceConnectionName": "source_trace_2",
+              "ownerEvidence": {
+                "status": "exact_original_port_identity_component",
+                "connections": [
+                  "source_net_2",
+                  "source_trace_2"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "styleSegments": [],
+      "portFindingIds": [
+        "pcb_port_152",
+        "pcb_port_155",
+        "pcb_port_157",
+        "pcb_port_158",
+        "pcb_port_159",
+        "pcb_port_160",
+        "pcb_port_161",
+        "pcb_port_162",
+        "pcb_port_163",
+        "pcb_port_168",
+        "pcb_port_173",
+        "pcb_port_176",
+        "pcb_port_177",
+        "pcb_port_55",
+        "pcb_port_63"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [],
+      "styleRemovedVersusControl": [],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    }
+  ]
+}

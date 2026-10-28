@@ -75,6 +75,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   private readonly allowedLayers: number[] = []
   private readonly regionId: string = ""
   readonly copperCandidateSearch: boolean
+  readonly copperUnpriceFutureCosts: boolean
   private readonly candidateDomains: CopperRouteCandidate[][] = []
   private readonly candidateKeys: Map<string, CopperRouteCandidate>[] = []
   private readonly candidatePairConflicts = new Map<string, boolean>()
@@ -88,6 +89,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     super(params)
     this.aggregate = params.priorityDiagnostics
     this.copperCandidateSearch = params.copperCandidateSearch ?? false
+    this.copperUnpriceFutureCosts =
+      params.copperUnpriceFutureCosts ?? this.copperCandidateSearch
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
       throw new Error("Invalid priority coordinate scale")
@@ -351,9 +354,9 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
 
   private startTask(task: number, state: State): void {
     const opts = this.getOptions(task, state)
-    if (this.copperCandidateSearch) {
-      // The geometry selector handles actual competition between columns.
-      // Its oracle does not price speculative future endpoints. Keep the FULL
+    if (this.copperUnpriceFutureCosts) {
+      // Proposal pricing is independent of archived geometry selection.
+      // Do not price speculative future endpoints here. Keep the FULL
       // future list: Native also uses it as a hard via-to-future-trace guard.
       // Publication still uses the original, unmodified getOptions context.
       this.charge("priorityCandidateOraclePriceCopies", Object.keys(this.hyperParameters).length + 2)
@@ -403,7 +406,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
     this.activeSubSolver = new Native(opts)
     this.record("priorityNativeSearches")
-    if (this.copperCandidateSearch)
+    if (this.copperUnpriceFutureCosts)
       this.recordCandidate("copperCandidateUnpricedNativeSearches")
   }
 

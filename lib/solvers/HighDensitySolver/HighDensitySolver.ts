@@ -73,6 +73,7 @@ export class HighDensitySolver extends BaseSolver {
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
     copperCandidateSearch: boolean
+    copperUnpriceFutureCosts?: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -119,6 +120,7 @@ export class HighDensitySolver extends BaseSolver {
     captureSearchDebug,
     priorityDagSearch = false,
     copperCandidateSearch = false,
+    copperUnpriceFutureCosts,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -148,6 +150,7 @@ export class HighDensitySolver extends BaseSolver {
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
     copperCandidateSearch?: boolean
+    copperUnpriceFutureCosts?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -186,6 +189,7 @@ export class HighDensitySolver extends BaseSolver {
     this.priorityDagOptions = {
       priorityDagSearch,
       copperCandidateSearch,
+      copperUnpriceFutureCosts,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,

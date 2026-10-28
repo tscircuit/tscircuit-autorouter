@@ -51,3 +51,50 @@ complete SAT/SMT solver, Benders cuts across pipeline stages, or exact global
 column generation. Success needs actual corpus activation and independent DRC
 under the common benchmark rules. Functional A/B script: bun
 experiments/copper-candidate-compatibility/validate.ts srj18 1 (and srj24 25).
+Independent pricing ablation
+
+The optional copperUnpriceFutureCosts flag separates proposal soft prices from
+copperCandidateSearch, which still controls archiving, physical-fact memoization
+and simultaneous selection. If omitted, it follows copperCandidateSearch, so
+existing callers retain their behavior. The four explicit controls are:
+
+                         copperCandidateSearch   copperUnpriceFutureCosts
+same-source control      false                   false
+soft prices only         false                   true
+archive/CSP only         true                    false
+full original bundle     true                    true
+
+Only the two speculative future-proximity penalties are zeroed in proposal
+search. Original hyperparameters remain intact for publication. Full Native
+future lists, all hard guards, suspended-frontier preservation, and original
+aggregate caps remain unchanged.
+
+Sixteen fresh-process functional controls cover SRJ18 samples4,8,12,13. These
+are deliberately selected causal/negative cases, not corpus performance tests.
+On4 and13, soft-only and full emit identical copper; the archive is unnecessary
+for those observed output changes. On12, archive-only/full replace an existing
+Native witness and move its via0.4mm inside a CSP candidate. Final output has the
+corresponding old/new sites; the exact winning portfolio/growth attempt is not
+recorded, so traced end-to-end candidate provenance is not claimed. Soft pricing leaves that board's copper
+unchanged and increases its charged policy work. On8, soft-only retains the new
+library via-pad finding, so this simplification does not fix the quality tradeoff.
+No local timing or full-corpus gain is claimed.
+
+ablation/RESULTS.json records the per-board work, raw copper and quality details.
+All constructed PriorityDag clocks, including preempted supervisors, are counted.
+Other solver-family clocks remain separate; none are called CPU instructions.
+The review evidence retains every portfolio-generated candidate object's clock/cap/status/class/node
+as aligned columns, exact original inputs/final raw copper, original findings,
+and actual proposal/outcome geometry. Repeated debug dictionaries are projected
+out explicitly. The complete unprojected291MB local telemetry archive is retained
+with SHA256 and byte count in evidence/manifest.json. Small deterministic gzip
+parts avoid an oversized publication request.
+
+Verify retained evidence without rerouting:
+python3 experiments/copper-candidate-compatibility/ablation/verifyEvidence.py
+
+Replay a selected whole-board arm as a fresh process (functional check only):
+bun experiments/copper-candidate-compatibility/ablation-whole.ts srj18 4 soft-only /tmp/copper-soft-only
+
+Replay the two committed real hard nodes:
+bun experiments/copper-candidate-compatibility/ablation-replay.ts

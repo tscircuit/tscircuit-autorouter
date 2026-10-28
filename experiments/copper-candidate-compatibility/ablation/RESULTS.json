@@ -1,0 +1,726 @@
+{
+  "experiment": "Independent soft-future-price and archive/CSP ablation",
+  "sourceBaseline": "b87ce1f205090369b3fad050f1118185614cc101",
+  "defaults": "Omitted copperUnpriceFutureCosts follows copperCandidateSearch, preserving all existing callers.",
+  "arms": {
+    "control": [
+      false,
+      false
+    ],
+    "soft-only": [
+      false,
+      true
+    ],
+    "archive-only": [
+      true,
+      false
+    ],
+    "full": [
+      true,
+      true
+    ]
+  },
+  "armFieldOrder": [
+    "copperCandidateSearch",
+    "copperUnpriceFutureCosts"
+  ],
+  "protocol": {
+    "effort": 1,
+    "outerCacheProvider": null,
+    "freshProcessPerArm": true,
+    "localTimingClaim": false,
+    "selection": "4/13 test known gains;12 exercises selected-witness behavior;8 retains the known negative via-pad case. This is not a complete or random corpus.",
+    "guards": "Full Native future lists, final Native validation, retained frontier and all aggregate caps unchanged.",
+    "cacheLimit": "Fresh processes exclude cross-arm reuse; inherited within-sample caches are not claimed absent."
+  },
+  "conclusions": [
+    "On4, soft-only/full final copper match exactly; archive-only/control match exactly. Soft-only retains the via/point and charged Priority-clock gain.",
+    "On13, soft-only/full copper match exactly and both lower charged policy clocks; both add one via, twelve points and five net style warnings.",
+    "On12, control/soft-only match; archive-only/full match. A CSP candidate replaces an existing Native witness and relocates its via0.4mm. Final arms contain corresponding old/new sites, but the winning candidate/growth attempt identity is not recorded, so end-to-end provenance is not established. Soft pricing adds policy work with no output gain here.",
+    "On8, soft-only and full retain a new library via-pad finding. This simplification does not fix that quality tradeoff.",
+    "Archive/CSP has real selectable-geometry behavior, but it is not required for the4/13 gains. A full-corpus soft-only comparison is justified; no corpus or merge-readiness claim follows."
+  ],
+  "workMeaning": "AllPriorityChargedIterations includes every constructed PriorityDag object, even preempted supervisors. The767754 rows cover Portfolio.generateSolver objects; nested Native steps are charged by the parent and are not separate rows. Other-family clocks are retained but not summed as equivalent units. This is not CPU-instruction or timing measurement.",
+  "cases": [
+    {
+      "sample": 4,
+      "qualityDetailsFile": "QUALITY-srj18-4.json",
+      "arms": [
+        {
+          "arm": "control",
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 696295,
+          "highDensityIterations": 209805,
+          "allPriorityChargedIterations": 2245996,
+          "preemptedPriorityChargedIterations": 873829,
+          "priorityCandidateCount": 1880,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 16,
+            "byType": {
+              "pcb_port_not_connected_error": 15,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 137,
+          "routePointCount": 2063,
+          "summedWireLength": 985.0650189370391,
+          "rawTraceHash": "cc18ded38366a2ca8da34cc5e3860c27108c39c84a73fd9f206ca04b44236de0",
+          "tracePayloadHash": "31311da1367d6155298eb7335fe7264ab2eef34caf72a1efd9278d5986f29f15"
+        },
+        {
+          "arm": "soft-only",
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 679051,
+          "highDensityIterations": 194485,
+          "allPriorityChargedIterations": 1920726,
+          "preemptedPriorityChargedIterations": 866980,
+          "priorityCandidateCount": 1880,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 16,
+            "byType": {
+              "pcb_port_not_connected_error": 15,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 133,
+          "routePointCount": 1868,
+          "summedWireLength": 983.4686812530935,
+          "rawTraceHash": "3eb18b6feba23046132630bbce5fd8debd18f299a5b08245087ad58140ba4602",
+          "tracePayloadHash": "a2ea8ca1a26f34baecae51243864aaafe28ecb8f09531d1e9e127dccc8b91e73"
+        },
+        {
+          "arm": "archive-only",
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 696816,
+          "highDensityIterations": 210326,
+          "allPriorityChargedIterations": 2236912,
+          "preemptedPriorityChargedIterations": 800146,
+          "priorityCandidateCount": 1880,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 16,
+            "byType": {
+              "pcb_port_not_connected_error": 15,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 137,
+          "routePointCount": 2063,
+          "summedWireLength": 985.0650189370391,
+          "rawTraceHash": "cc18ded38366a2ca8da34cc5e3860c27108c39c84a73fd9f206ca04b44236de0",
+          "tracePayloadHash": "31311da1367d6155298eb7335fe7264ab2eef34caf72a1efd9278d5986f29f15"
+        },
+        {
+          "arm": "full",
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 679350,
+          "highDensityIterations": 194784,
+          "allPriorityChargedIterations": 1922058,
+          "preemptedPriorityChargedIterations": 832158,
+          "priorityCandidateCount": 1880,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 16,
+            "byType": {
+              "pcb_port_not_connected_error": 15,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 133,
+          "routePointCount": 1868,
+          "summedWireLength": 983.4686812530935,
+          "rawTraceHash": "3eb18b6feba23046132630bbce5fd8debd18f299a5b08245087ad58140ba4602",
+          "tracePayloadHash": "a2ea8ca1a26f34baecae51243864aaafe28ecb8f09531d1e9e127dccc8b91e73"
+        }
+      ]
+    },
+    {
+      "sample": 8,
+      "qualityDetailsFile": "QUALITY-srj18-8.json",
+      "arms": [
+        {
+          "arm": "control",
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2159684,
+          "highDensityIterations": 71247,
+          "allPriorityChargedIterations": 5789512,
+          "preemptedPriorityChargedIterations": 1500301,
+          "priorityCandidateCount": 5184,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 35,
+            "byType": {
+              "pcb_port_not_connected_error": 33,
+              "pcb_trace_style_warning": 1,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 280,
+          "routePointCount": 3542,
+          "summedWireLength": 1863.0925252015884,
+          "rawTraceHash": "f4f717b362da78e79c19ee01695e26454e9faa180778dc9419e2e56ef133ebb7",
+          "tracePayloadHash": "3143e131979794b085bee3bb292dfb176e5e078e96580412f340da1964b36552"
+        },
+        {
+          "arm": "soft-only",
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2162562,
+          "highDensityIterations": 71573,
+          "allPriorityChargedIterations": 5406624,
+          "preemptedPriorityChargedIterations": 1417573,
+          "priorityCandidateCount": 5184,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 36,
+            "byType": {
+              "pcb_port_not_connected_error": 33,
+              "pcb_trace_style_warning": 1,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 282,
+          "routePointCount": 3579,
+          "summedWireLength": 1868.678687514295,
+          "rawTraceHash": "bfe39d7a6b495a9d2b9d1ce8cb83dd4602c60dd098033e5b0db620b6fe7b1742",
+          "tracePayloadHash": "85f07f64fa71dfb9b6a50dc5228d645f2c3675005c7d284b23a387e3aa444ffe"
+        },
+        {
+          "arm": "archive-only",
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2161663,
+          "highDensityIterations": 71804,
+          "allPriorityChargedIterations": 5569699,
+          "preemptedPriorityChargedIterations": 1497892,
+          "priorityCandidateCount": 5184,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 37,
+            "byType": {
+              "pcb_port_not_connected_error": 33,
+              "pcb_trace_style_warning": 3,
+              "pcb_pad_pad_clearance_error": 1
+            }
+          },
+          "routeViaCount": 282,
+          "routePointCount": 3566,
+          "summedWireLength": 1862.6825326522774,
+          "rawTraceHash": "f421629465fb46d301a7c5dff6a77a51922b6f8f67432021fb05049ad22fe4a7",
+          "tracePayloadHash": "e1b61aad261fe4aec3e21e2dc442e8d51e67531fc772f19641d2a0bfcc32ee5d"
+        },
+        {
+          "arm": "full",
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2161861,
+          "highDensityIterations": 73025,
+          "allPriorityChargedIterations": 5391916,
+          "preemptedPriorityChargedIterations": 1419268,
+          "priorityCandidateCount": 5184,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 36,
+            "byType": {
+              "pcb_port_not_connected_error": 33,
+              "pcb_trace_style_warning": 1,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 282,
+          "routePointCount": 3544,
+          "summedWireLength": 1869.058416127184,
+          "rawTraceHash": "7bd3f38582736823671628c2da2b1e6dde2f62f9b16a54de319dae883ccc1c43",
+          "tracePayloadHash": "3e071c9030da116843379da3924323ee3abc3c8470db0ce137d035d737d92348"
+        }
+      ]
+    },
+    {
+      "sample": 12,
+      "qualityDetailsFile": "QUALITY-srj18-12.json",
+      "arms": [
+        {
+          "arm": "control",
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2144281,
+          "highDensityIterations": 19465,
+          "allPriorityChargedIterations": 4831839,
+          "preemptedPriorityChargedIterations": 4177545,
+          "priorityCandidateCount": 5048,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 103,
+            "byType": {
+              "pcb_port_not_connected_error": 101,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 293,
+          "routePointCount": 4286,
+          "summedWireLength": 5500.249006377891,
+          "rawTraceHash": "0b81ad62b6259e1a337339f8386b71f3ed9b7f2dea384c8b79fbdddf9be27f45",
+          "tracePayloadHash": "2568a7b7df7335697200afa177c825fab67d8b97213b0b8c33c52982ae40a996"
+        },
+        {
+          "arm": "soft-only",
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2144476,
+          "highDensityIterations": 19660,
+          "allPriorityChargedIterations": 5091191,
+          "preemptedPriorityChargedIterations": 4229869,
+          "priorityCandidateCount": 5048,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 103,
+            "byType": {
+              "pcb_port_not_connected_error": 101,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 293,
+          "routePointCount": 4286,
+          "summedWireLength": 5500.249006377891,
+          "rawTraceHash": "0b81ad62b6259e1a337339f8386b71f3ed9b7f2dea384c8b79fbdddf9be27f45",
+          "tracePayloadHash": "2568a7b7df7335697200afa177c825fab67d8b97213b0b8c33c52982ae40a996"
+        },
+        {
+          "arm": "archive-only",
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2144320,
+          "highDensityIterations": 19501,
+          "allPriorityChargedIterations": 4869934,
+          "preemptedPriorityChargedIterations": 4222543,
+          "priorityCandidateCount": 5048,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 103,
+            "byType": {
+              "pcb_port_not_connected_error": 101,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 293,
+          "routePointCount": 4285,
+          "summedWireLength": 5500.566117388717,
+          "rawTraceHash": "942068957cc295bc8ca7e493342e9e10af070d9b1083b404d19baf06d268f587",
+          "tracePayloadHash": "2d7e69f5e0e96c8b1d39d4f957c24200e3120c7e24ec6918bda84bc2cabc26af"
+        },
+        {
+          "arm": "full",
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2144487,
+          "highDensityIterations": 19668,
+          "allPriorityChargedIterations": 5128043,
+          "preemptedPriorityChargedIterations": 4265249,
+          "priorityCandidateCount": 5048,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 103,
+            "byType": {
+              "pcb_port_not_connected_error": 101,
+              "pcb_pad_pad_clearance_error": 2
+            }
+          },
+          "routeViaCount": 293,
+          "routePointCount": 4285,
+          "summedWireLength": 5500.566117388717,
+          "rawTraceHash": "942068957cc295bc8ca7e493342e9e10af070d9b1083b404d19baf06d268f587",
+          "tracePayloadHash": "2d7e69f5e0e96c8b1d39d4f957c24200e3120c7e24ec6918bda84bc2cabc26af"
+        }
+      ]
+    },
+    {
+      "sample": 13,
+      "qualityDetailsFile": "QUALITY-srj18-13.json",
+      "arms": [
+        {
+          "arm": "control",
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2044374,
+          "highDensityIterations": 60694,
+          "allPriorityChargedIterations": 6154345,
+          "preemptedPriorityChargedIterations": 919993,
+          "priorityCandidateCount": 3224,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 74,
+            "byType": {
+              "pcb_port_not_connected_error": 72,
+              "pcb_trace_style_warning": 2
+            }
+          },
+          "routeViaCount": 186,
+          "routePointCount": 2058,
+          "summedWireLength": 1672.0237833031674,
+          "rawTraceHash": "80fe7f539e65d3f83f9231bd826d555312e6f79656e155088b4a57d337df4378",
+          "tracePayloadHash": "6d1a9b17be83b8e57710fdae9e652c1841ab43fc0a3d70d5ca71cc8f07382809"
+        },
+        {
+          "arm": "soft-only",
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "effectiveOptions": {
+            "copperCandidateSearch": false,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2037385,
+          "highDensityIterations": 56247,
+          "allPriorityChargedIterations": 3175178,
+          "preemptedPriorityChargedIterations": 957872,
+          "priorityCandidateCount": 3224,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 79,
+            "byType": {
+              "pcb_port_not_connected_error": 72,
+              "pcb_trace_style_warning": 7
+            }
+          },
+          "routeViaCount": 187,
+          "routePointCount": 2070,
+          "summedWireLength": 1668.5504606709374,
+          "rawTraceHash": "9740c87f93a38d9dd3e2956e7ff9494f19152efe3720f8a3ad1c5dbb280f1cb8",
+          "tracePayloadHash": "dc231e4c6559989674c011380f3155278c043bb26c5f5347eaebd5c00615d0c1"
+        },
+        {
+          "arm": "archive-only",
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": false
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2041786,
+          "highDensityIterations": 60088,
+          "allPriorityChargedIterations": 5980496,
+          "preemptedPriorityChargedIterations": 851304,
+          "priorityCandidateCount": 3224,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 77,
+            "byType": {
+              "pcb_port_not_connected_error": 72,
+              "pcb_trace_style_warning": 5
+            }
+          },
+          "routeViaCount": 191,
+          "routePointCount": 2019,
+          "summedWireLength": 1666.5033760388346,
+          "rawTraceHash": "aac149ce1f5d06f873b7c47a9d2bfd6deec8638e3c8d8b1ad7d20a8d18c3cc8a",
+          "tracePayloadHash": "82762d96faa22d6e5b405d403ff2d157685acee675a589fa201dcd6b97d52ac5"
+        },
+        {
+          "arm": "full",
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "effectiveOptions": {
+            "copperCandidateSearch": true,
+            "copperUnpriceFutureCosts": true
+          },
+          "solved": true,
+          "failed": false,
+          "inputMutated": false,
+          "totalIterations": 2037481,
+          "highDensityIterations": 56343,
+          "allPriorityChargedIterations": 3170107,
+          "preemptedPriorityChargedIterations": 949383,
+          "priorityCandidateCount": 3224,
+          "referenceChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "boardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "viaBoardChecks": {
+            "count": 0,
+            "byType": {}
+          },
+          "libraryChecks": {
+            "count": 79,
+            "byType": {
+              "pcb_port_not_connected_error": 72,
+              "pcb_trace_style_warning": 7
+            }
+          },
+          "routeViaCount": 187,
+          "routePointCount": 2070,
+          "summedWireLength": 1668.5504606709374,
+          "rawTraceHash": "9740c87f93a38d9dd3e2956e7ff9494f19152efe3720f8a3ad1c5dbb280f1cb8",
+          "tracePayloadHash": "dc231e4c6559989674c011380f3155278c043bb26c5f5347eaebd5c00615d0c1"
+        }
+      ]
+    }
+  ],
+  "priorGeometryProof": "PRIOR-VIA-RELOCATION-srj18-12.json; full exact node/rules/owner/before/after data are in evidence.",
+  "validation": {
+    "focusedTests": 24,
+    "assertions": 35136,
+    "failures": 0,
+    "typecheck": "full repo passes",
+    "build": "workers+ESM+DTS passes",
+    "wholeSelectedArms": 16,
+    "wholeReferenceBoard": "All16 zero reference+board+via-board findings; broader library findings explicitly retained.",
+    "capturedRealNodes": "Both real hard nodes remain UNKNOWN in all4 arms under identical caps; default endpoints exactly match published charged counts/status."
+  },
+  "evidence": "evidence/manifest.json + verifyEvidence.py. Complete clocks/caps/statuses for767754 portfolio-generated candidate objects, exact input/final copper/finding payloads and changed-route geometry. Repeated per-instance debug diagnostics are projected out; complete291793431-byte telemetry is retained locally in the hashed6.25MB gzip archive."
+}

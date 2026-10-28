@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "compression": "deterministic gzip,mtime0",
+  "decompressedBytes": 31278923,
+  "decompressedSha256": "c9c29ba8e4ec9d83585ca659e3565df4be730b9166286f8d760444727618b95f",
+  "compressedBytes": 1117876,
+  "compressedSha256": "40c93af7d352144628907a2769f1647df22bd9955066a5c656e54d27207f00d9",
+  "parts": [
+    {
+      "path": "essential-evidence.json.gz.part000",
+      "bytes": 24576,
+      "sha256": "a1666c68e341b2c4f71875bd1dc5e5cdb7b21ba29faa719371cfd7235527c878"
+    },
+    {
+      "path": "essential-evidence.json.gz.part001",
+      "bytes": 24576,
+      "sha256": "82a1ea91276bdb72031ee0480568cd5af6805bdf61249bb26ce92d7463f4cc13"
+    },
+    {
+      "path": "essential-evidence.json.gz.part002",
+      "bytes": 24576,
+      "sha256": "a5138588dc00600b8960887a0573c0caf0b2c0011f97cc3d4a1b65e438162fa6"
+    },
+    {
+      "path": "essential-evidence.json.gz.part003",
+      "bytes": 24576,
+      "sha256": "85ad12e04ce8a0ea3601d0c964951013cdbd8d3a69fe106a3ba3ce4f435c46a7"
+    },
+    {
+      "path": "essential-evidence.json.gz.part004",
+      "bytes": 24576,
+      "sha256": "a20e127fdc0c5ff248b00be0d359cb656c93111da1512f221003a891ac0711bc"
+    },
+    {
+      "path": "essential-evidence.json.gz.part005",
+      "bytes": 24576,
+      "sha256": "8638ae7cd9d00ba006eecf200aa5f85db90dbd325c609d3f7aea681ec04eeae1"
+    },
+    {
+      "path": "essential-evidence.json.gz.part006",
+      "bytes": 24576,
+      "sha256": "5fd75c2a0898f531b4ba96708f8a6a25f274ffe2b593275da23ce309faca76d2"
+    },
+    {
+      "path": "essential-evidence.json.gz.part007",
+      "bytes": 24576,
+      "sha256": "67a5b20e48f6cc5ccf77f7062ad6cc853f86b472b0b14ab3bd5f0f09c9a19906"
+    },
+    {
+      "path": "essential-evidence.json.gz.part008",
+      "bytes": 24576,
+      "sha256": "6e517223db18dd62d62a7e4893296769503da0186a184643e6cd6d60c6038ab2"
+    },
+    {
+      "path": "essential-evidence.json.gz.part009",
+      "bytes": 24576,
+      "sha256": "489bc6cdbb47917058ed8366d62443e2dd41a5ee83aed33448541880209991b8"
+    },
+    {
+      "path": "essential-evidence.json.gz.part010",
+      "bytes": 24576,
+      "sha256": "ac88ba70a1e9f71ce36876c0b6b48277fb514ff079ac153fc18c41f7d95b3995"
+    },
+    {
+      "path": "essential-evidence.json.gz.part011",
+      "bytes": 24576,
+      "sha256": "ea7bc07cb3030506c4fa24c156989dc18aa63cec84f5c8c929d62a471431d3bb"
+    },
+    {
+      "path": "essential-evidence.json.gz.part012",
+      "bytes": 24576,
+      "sha256": "a0c7936e053fbaa73683c76ceb8061919e159b0d47258a916a432a7345e78e88"
+    },
+    {
+      "path": "essential-evidence.json.gz.part013",
+      "bytes": 24576,
+      "sha256": "35f96af7f71e862e581c05b1b38b13b65242f7b89444e261972162b65f0eb4de"
+    },
+    {
+      "path": "essential-evidence.json.gz.part014",
+      "bytes": 24576,
+      "sha256": "802b6811aee62d1812381166b4cae2e9e6bea04c02d6c0f714e73ffbb2242301"
+    },
+    {
+      "path": "essential-evidence.json.gz.part015",
+      "bytes": 24576,
+      "sha256": "b9f8ba20a52554cf146c6b9c01b33f46383e52ed755a315e4717c4c794f0f662"
+    },
+    {
+      "path": "essential-evidence.json.gz.part016",
+      "bytes": 24576,
+      "sha256": "8dcc1daf663693c2bef278327b357bc2897f802ed26e435c748b30d0c077e000"
+    },
+    {
+      "path": "essential-evidence.json.gz.part017",
+      "bytes": 24576,
+      "sha256": "b24dff3e93f1a9a2845570712f714a437016253500d7defaae8a8f7dc648be59"
+    },
+    {
+      "path": "essential-evidence.json.gz.part018",
+      "bytes": 24576,
+      "sha256": "a3fc0009be54eb7b4d3b76a3cbf90d64bfb55f53e2c861a5d9255de46ea6f3bf"
+    },
+    {
+      "path": "essential-evidence.json.gz.part019",
+      "bytes": 24576,
+      "sha256": "184ae78297170e0d679115ebef21957e05b1d24b385b4abbf3f80b8c62a29cf0"
+    },
+    {
+      "path": "essential-evidence.json.gz.part020",
+      "bytes": 24576,
+      "sha256": "30f4713b321ac9d047b4877dd3c3b054c0f05c2c024d681e708eac6b4888f56b"
+    },
+    {
+      "path": "essential-evidence.json.gz.part021",
+      "bytes": 24576,
+      "sha256": "01a0f1579f0a3cf91259233791ce970a03c3016bf5a1cf04174a70ed3f09da4e"
+    },
+    {
+      "path": "essential-evidence.json.gz.part022",
+      "bytes": 24576,
+      "sha256": "4fab2b7e73ea153ef330cc9547d72150b7b2aa5d185a233df12a52a6e1db82db"
+    },
+    {
+      "path": "essential-evidence.json.gz.part023",
+      "bytes": 24576,
+      "sha256": "debf762158217def45840e7e794d09527b6cbb4dfeca57d9b9a1ff954210b419"
+    },
+    {
+      "path": "essential-evidence.json.gz.part024",
+      "bytes": 24576,
+      "sha256": "cc7a3d69b99eccfffdbb78515de49820a1428e4a46022a61821c7b8caadebd29"
+    },
+    {
+      "path": "essential-evidence.json.gz.part025",
+      "bytes": 24576,
+      "sha256": "e243c4707e454692092d1dd7fd4dd5729a89de5ea56c29e8ecd4c4d4321e3596"
+    },
+    {
+      "path": "essential-evidence.json.gz.part026",
+      "bytes": 24576,
+      "sha256": "5d36ba3e272d5cce405e5852d1f299b6c3753f76fdf6cd28dbd007243f52ff96"
+    },
+    {
+      "path": "essential-evidence.json.gz.part027",
+      "bytes": 24576,
+      "sha256": "926db434034aeb4583f920fcb784c7c02e1452c8e4da24122fbdb9ad539fabbe"
+    },
+    {
+      "path": "essential-evidence.json.gz.part028",
+      "bytes": 24576,
+      "sha256": "948046a3b40cbac88437326402da35dbdaeed7b6c7aa3fc5f883ba9e61286107"
+    },
+    {
+      "path": "essential-evidence.json.gz.part029",
+      "bytes": 24576,
+      "sha256": "cd973305cbf634d203b7c7b17b83cb68d0259955dc2b309f5ec6c871e23540f4"
+    },
+    {
+      "path": "essential-evidence.json.gz.part030",
+      "bytes": 24576,
+      "sha256": "1c5ede4d967ca783c688041c59a0561302518b50c066bfdfb004c4f73f93378b"
+    },
+    {
+      "path": "essential-evidence.json.gz.part031",
+      "bytes": 24576,
+      "sha256": "8dddea632df0b5511f0b5d88f3584239ed47cfc8a3ad753ecfcfb49e1806051c"
+    },
+    {
+      "path": "essential-evidence.json.gz.part032",
+      "bytes": 24576,
+      "sha256": "7234a12c8991f6fbda35f59011e7d8c3189fa3340cbe59d52872fadacc371428"
+    },
+    {
+      "path": "essential-evidence.json.gz.part033",
+      "bytes": 24576,
+      "sha256": "bfb9aed6a82064575f385f12b7e5cde99dcdce2610734cc1909f06bf26cfed3d"
+    },
+    {
+      "path": "essential-evidence.json.gz.part034",
+      "bytes": 24576,
+      "sha256": "1172eec2f6a83924b471cf259b1301feb2f04b81f02c3e5d153a8cc1764731bd"
+    },
+    {
+      "path": "essential-evidence.json.gz.part035",
+      "bytes": 24576,
+      "sha256": "7341c728c5f043382155e9a78d64137e08a77644e4100ba24f2f2a0b96cd626d"
+    },
+    {
+      "path": "essential-evidence.json.gz.part036",
+      "bytes": 24576,
+      "sha256": "84a7b660827cf8306be799d9f160f9c568f40a4eb2f46663d410a1811b15b8d6"
+    },
+    {
+      "path": "essential-evidence.json.gz.part037",
+      "bytes": 24576,
+      "sha256": "af4e4dbc67b2d5fd466935f86fabf192b2742ac9535c900e6ef541ac8935b0e4"
+    },
+    {
+      "path": "essential-evidence.json.gz.part038",
+      "bytes": 24576,
+      "sha256": "1c1c796312b815041cb5b9bce2327812284a38e9cbe2cf6c3e8dfe1a3a7a4f4a"
+    },
+    {
+      "path": "essential-evidence.json.gz.part039",
+      "bytes": 24576,
+      "sha256": "5ae040f6934d790fa6b3911d29973f82c333455dc17a7d506304b0bb4816899e"
+    },
+    {
+      "path": "essential-evidence.json.gz.part040",
+      "bytes": 24576,
+      "sha256": "bd9beb5c8d776f4e3d3c3226a75fd5491d8b587cb41b2cf4d8cf1878d943ca0d"
+    },
+    {
+      "path": "essential-evidence.json.gz.part041",
+      "bytes": 24576,
+      "sha256": "6d356023ae5990a695cfe7069d2ec39bf0add3a9b94ba317873d3c34b0521290"
+    },
+    {
+      "path": "essential-evidence.json.gz.part042",
+      "bytes": 24576,
+      "sha256": "a28982463bbebc3e2bc6d419c9e9106a08dd2f1ed9e8aba813f798c3f4f821e7"
+    },
+    {
+      "path": "essential-evidence.json.gz.part043",
+      "bytes": 24576,
+      "sha256": "89428b649de693cc3927cc3002ce28e772b1dde3972e11669a3e3da7f9e7df92"
+    },
+    {
+      "path": "essential-evidence.json.gz.part044",
+      "bytes": 24576,
+      "sha256": "58b7a47a70fbf42829681313f8aca3418d8eea24ac966956bd0014c9766628c3"
+    },
+    {
+      "path": "essential-evidence.json.gz.part045",
+      "bytes": 11956,
+      "sha256": "4185364ef10836386a6583174d83bfb5d66c1b8f12fd6db5c7caefa16421f3c5"
+    }
+  ],
+  "completeUnprojectedArchive": {
+    "path": "/workspace/experiment-audit/copper-ablation-complete-telemetry.tar.gz",
+    "bytes": 6253091,
+    "sha256": "9d2e954577ca8057545ead8437141bdc3ade36ea2042e25839153879ff74d25e",
+    "files": 164,
+    "uncompressedFileBytes": 291793431
+  }
+}

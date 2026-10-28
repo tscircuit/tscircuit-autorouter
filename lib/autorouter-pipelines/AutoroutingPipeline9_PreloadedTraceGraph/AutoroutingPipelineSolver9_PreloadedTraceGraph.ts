@@ -116,6 +116,8 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
   /** Experiment: select compatible archived native copper alternatives. */
   copperCandidateSearch?: boolean
+  /** Ablation: separate native soft future prices from archived selection. */
+  copperUnpriceFutureCosts?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -646,6 +648,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
             copperCandidateSearch: cms.opts.copperCandidateSearch,
+            copperUnpriceFutureCosts: cms.opts.copperUnpriceFutureCosts,
           },
         ]
       },

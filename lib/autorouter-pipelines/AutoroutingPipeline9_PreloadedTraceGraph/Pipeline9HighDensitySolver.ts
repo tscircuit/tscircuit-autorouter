@@ -59,6 +59,7 @@ export type Pipeline9HighDensitySolverParams = {
   enableRegionalFallback?: boolean
   maxB01Rips?: number
   copperCandidateSearch?: boolean
+  copperUnpriceFutureCosts?: boolean
 }
 
 type NodeBounds = {
@@ -333,6 +334,7 @@ export type Pipeline9RegularNodeSolverParams = {
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   copperCandidateSearch?: boolean
+  copperUnpriceFutureCosts?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -353,6 +355,7 @@ export const createPipeline9RegularNodeSolver = ({
   priorityDiagnostics,
   priorityDagSearch = false,
   copperCandidateSearch = false,
+  copperUnpriceFutureCosts,
   traceWidth,
   obstacleMargin,
   effort,
@@ -385,6 +388,7 @@ export const createPipeline9RegularNodeSolver = ({
     captureSearchDebug: false,
     priorityDagSearch,
     copperCandidateSearch,
+    copperUnpriceFutureCosts,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -689,6 +693,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
       copperCandidateSearch: this.params.copperCandidateSearch ?? true,
+      copperUnpriceFutureCosts: this.params.copperUnpriceFutureCosts,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

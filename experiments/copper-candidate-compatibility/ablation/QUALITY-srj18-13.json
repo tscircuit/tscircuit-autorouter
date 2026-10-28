@@ -1,0 +1,1092 @@
+{
+  "sample": 13,
+  "identityMethod": "Exact generated circuit participant IDs resolve raw via geometry/trace names and original pad ports. Logical groups union original connection records through exact pcb_port_id only; coordinate proximity never merges owners. Styles compare explicit layer/endpoints/source trace. Original raw findings remain in evidence.",
+  "arms": [
+    {
+      "arm": "control",
+      "physicalFindings": [],
+      "styleSegments": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.178769928343215,
+              "y": -4.290423347228833
+            },
+            {
+              "x": 32.378933598799705,
+              "y": -4.690263337654906
+            }
+          ],
+          "angleDeviationDegrees": 4.3968148217777525
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.280256168527224,
+              "y": -3.9873115946045226
+            },
+            {
+              "x": 32.37907268415122,
+              "y": -4.386508179766044
+            }
+          ],
+          "angleDeviationDegrees": 4.476669761485937
+        }
+      ],
+      "portFindingIds": [
+        "pcb_port_101",
+        "pcb_port_103",
+        "pcb_port_107",
+        "pcb_port_108",
+        "pcb_port_109",
+        "pcb_port_11",
+        "pcb_port_111",
+        "pcb_port_113",
+        "pcb_port_117",
+        "pcb_port_118",
+        "pcb_port_119",
+        "pcb_port_121",
+        "pcb_port_13",
+        "pcb_port_131",
+        "pcb_port_132",
+        "pcb_port_140",
+        "pcb_port_141",
+        "pcb_port_17",
+        "pcb_port_18",
+        "pcb_port_19",
+        "pcb_port_2",
+        "pcb_port_229",
+        "pcb_port_230",
+        "pcb_port_231",
+        "pcb_port_232",
+        "pcb_port_241",
+        "pcb_port_242",
+        "pcb_port_244",
+        "pcb_port_245",
+        "pcb_port_247",
+        "pcb_port_248",
+        "pcb_port_249",
+        "pcb_port_25",
+        "pcb_port_250",
+        "pcb_port_260",
+        "pcb_port_262",
+        "pcb_port_263",
+        "pcb_port_264",
+        "pcb_port_265",
+        "pcb_port_266",
+        "pcb_port_271",
+        "pcb_port_272",
+        "pcb_port_273",
+        "pcb_port_274",
+        "pcb_port_28",
+        "pcb_port_30",
+        "pcb_port_34",
+        "pcb_port_35",
+        "pcb_port_36",
+        "pcb_port_38",
+        "pcb_port_40",
+        "pcb_port_44",
+        "pcb_port_45",
+        "pcb_port_46",
+        "pcb_port_48",
+        "pcb_port_58",
+        "pcb_port_59",
+        "pcb_port_6",
+        "pcb_port_67",
+        "pcb_port_68",
+        "pcb_port_7",
+        "pcb_port_75",
+        "pcb_port_79",
+        "pcb_port_8",
+        "pcb_port_80",
+        "pcb_port_81",
+        "pcb_port_84",
+        "pcb_port_86",
+        "pcb_port_90",
+        "pcb_port_91",
+        "pcb_port_92",
+        "pcb_port_98"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [],
+      "styleRemovedVersusControl": [],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "soft-only",
+      "physicalFindings": [],
+      "styleSegments": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_94",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 28.907935035832573,
+              "y": -2.886508179766044
+            },
+            {
+              "x": 29.81064153018821,
+              "y": 2.3130850650585
+            }
+          ],
+          "angleDeviationDegrees": 9.849007384818208
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.107742171691182,
+              "y": -4.785187462090396
+            },
+            {
+              "x": 35.3142244075898,
+              "y": -3.586001752384818
+            }
+          ],
+          "angleDeviationDegrees": 8.313599788904042
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.55793503583257,
+              "y": -4.42
+            },
+            {
+              "x": 35.103643974856055,
+              "y": -2.586501054291135
+            }
+          ],
+          "angleDeviationDegrees": 12.10934351601469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_78",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.808095247789886,
+              "y": -3.98704192552902
+            },
+            {
+              "x": 34.79869773798877,
+              "y": -1.5892703736516736
+            }
+          ],
+          "angleDeviationDegrees": 16.70313067247747
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.607935057207413,
+              "y": -4.686507990446035
+            },
+            {
+              "x": 35.80802633353655,
+              "y": -5.378358658014538
+            }
+          ],
+          "angleDeviationDegrees": 6.367134123479957
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_34",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": -28.71027663056661,
+              "y": -4.4799999999999995
+            },
+            {
+              "x": -34.01027663056661,
+              "y": -1.7799999999999994
+            }
+          ],
+          "angleDeviationDegrees": 18.004161605913396
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 30.008034273538662,
+              "y": -5.085378985096585
+            },
+            {
+              "x": 35.9078913566686,
+              "y": -5.590481739335935
+            }
+          ],
+          "angleDeviationDegrees": 4.893314997579068
+        }
+      ],
+      "portFindingIds": [
+        "pcb_port_101",
+        "pcb_port_103",
+        "pcb_port_107",
+        "pcb_port_108",
+        "pcb_port_109",
+        "pcb_port_11",
+        "pcb_port_111",
+        "pcb_port_113",
+        "pcb_port_117",
+        "pcb_port_118",
+        "pcb_port_119",
+        "pcb_port_121",
+        "pcb_port_13",
+        "pcb_port_131",
+        "pcb_port_132",
+        "pcb_port_140",
+        "pcb_port_141",
+        "pcb_port_17",
+        "pcb_port_18",
+        "pcb_port_19",
+        "pcb_port_2",
+        "pcb_port_229",
+        "pcb_port_230",
+        "pcb_port_231",
+        "pcb_port_232",
+        "pcb_port_241",
+        "pcb_port_242",
+        "pcb_port_244",
+        "pcb_port_245",
+        "pcb_port_247",
+        "pcb_port_248",
+        "pcb_port_249",
+        "pcb_port_25",
+        "pcb_port_250",
+        "pcb_port_260",
+        "pcb_port_262",
+        "pcb_port_263",
+        "pcb_port_264",
+        "pcb_port_265",
+        "pcb_port_266",
+        "pcb_port_271",
+        "pcb_port_272",
+        "pcb_port_273",
+        "pcb_port_274",
+        "pcb_port_28",
+        "pcb_port_30",
+        "pcb_port_34",
+        "pcb_port_35",
+        "pcb_port_36",
+        "pcb_port_38",
+        "pcb_port_40",
+        "pcb_port_44",
+        "pcb_port_45",
+        "pcb_port_46",
+        "pcb_port_48",
+        "pcb_port_58",
+        "pcb_port_59",
+        "pcb_port_6",
+        "pcb_port_67",
+        "pcb_port_68",
+        "pcb_port_7",
+        "pcb_port_75",
+        "pcb_port_79",
+        "pcb_port_8",
+        "pcb_port_80",
+        "pcb_port_81",
+        "pcb_port_84",
+        "pcb_port_86",
+        "pcb_port_90",
+        "pcb_port_91",
+        "pcb_port_92",
+        "pcb_port_98"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.107742171691182,
+              "y": -4.785187462090396
+            },
+            {
+              "x": 35.3142244075898,
+              "y": -3.586001752384818
+            }
+          ],
+          "angleDeviationDegrees": 8.313599788904042
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 30.008034273538662,
+              "y": -5.085378985096585
+            },
+            {
+              "x": 35.9078913566686,
+              "y": -5.590481739335935
+            }
+          ],
+          "angleDeviationDegrees": 4.893314997579068
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.607935057207413,
+              "y": -4.686507990446035
+            },
+            {
+              "x": 35.80802633353655,
+              "y": -5.378358658014538
+            }
+          ],
+          "angleDeviationDegrees": 6.367134123479957
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_78",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.808095247789886,
+              "y": -3.98704192552902
+            },
+            {
+              "x": 34.79869773798877,
+              "y": -1.5892703736516736
+            }
+          ],
+          "angleDeviationDegrees": 16.70313067247747
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_94",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 28.907935035832573,
+              "y": -2.886508179766044
+            },
+            {
+              "x": 29.81064153018821,
+              "y": 2.3130850650585
+            }
+          ],
+          "angleDeviationDegrees": 9.849007384818208
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.55793503583257,
+              "y": -4.42
+            },
+            {
+              "x": 35.103643974856055,
+              "y": -2.586501054291135
+            }
+          ],
+          "angleDeviationDegrees": 12.10934351601469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_34",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": -28.71027663056661,
+              "y": -4.4799999999999995
+            },
+            {
+              "x": -34.01027663056661,
+              "y": -1.7799999999999994
+            }
+          ],
+          "angleDeviationDegrees": 18.004161605913396
+        }
+      ],
+      "styleRemovedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.280256168527224,
+              "y": -3.9873115946045226
+            },
+            {
+              "x": 32.37907268415122,
+              "y": -4.386508179766044
+            }
+          ],
+          "angleDeviationDegrees": 4.476669761485937
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.178769928343215,
+              "y": -4.290423347228833
+            },
+            {
+              "x": 32.378933598799705,
+              "y": -4.690263337654906
+            }
+          ],
+          "angleDeviationDegrees": 4.3968148217777525
+        }
+      ],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "archive-only",
+      "physicalFindings": [],
+      "styleSegments": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_90",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 29.789175646565454,
+              "y": -5.790203635793825
+            },
+            {
+              "x": 35.28965428007813,
+              "y": -4.488962758335674
+            }
+          ],
+          "angleDeviationDegrees": 13.309695430841941
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_77",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 29.5890584082614,
+              "y": -2.9864521932306736
+            },
+            {
+              "x": 34.89567678468417,
+              "y": -1.5857913528080312
+            }
+          ],
+          "angleDeviationDegrees": 14.785786669287859
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.989073184151213,
+              "y": -5.186508179766044
+            },
+            {
+              "x": 35.68903974325991,
+              "y": -5.590029162888453
+            }
+          ],
+          "angleDeviationDegrees": 4.049416949367469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.68907357257677,
+              "y": -4.586504246957254
+            },
+            {
+              "x": 35.789100031863406,
+              "y": -5.37984253123909
+            }
+          ],
+          "angleDeviationDegrees": 5.593860748170698
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.088965950914265,
+              "y": -4.78577563434735
+            },
+            {
+              "x": 35.389073184151215,
+              "y": -3.586508179766044
+            }
+          ],
+          "angleDeviationDegrees": 8.2216643328357
+        }
+      ],
+      "portFindingIds": [
+        "pcb_port_101",
+        "pcb_port_103",
+        "pcb_port_107",
+        "pcb_port_108",
+        "pcb_port_109",
+        "pcb_port_11",
+        "pcb_port_111",
+        "pcb_port_113",
+        "pcb_port_117",
+        "pcb_port_118",
+        "pcb_port_119",
+        "pcb_port_121",
+        "pcb_port_13",
+        "pcb_port_131",
+        "pcb_port_132",
+        "pcb_port_140",
+        "pcb_port_141",
+        "pcb_port_17",
+        "pcb_port_18",
+        "pcb_port_19",
+        "pcb_port_2",
+        "pcb_port_229",
+        "pcb_port_230",
+        "pcb_port_231",
+        "pcb_port_232",
+        "pcb_port_241",
+        "pcb_port_242",
+        "pcb_port_244",
+        "pcb_port_245",
+        "pcb_port_247",
+        "pcb_port_248",
+        "pcb_port_249",
+        "pcb_port_25",
+        "pcb_port_250",
+        "pcb_port_260",
+        "pcb_port_262",
+        "pcb_port_263",
+        "pcb_port_264",
+        "pcb_port_265",
+        "pcb_port_266",
+        "pcb_port_271",
+        "pcb_port_272",
+        "pcb_port_273",
+        "pcb_port_274",
+        "pcb_port_28",
+        "pcb_port_30",
+        "pcb_port_34",
+        "pcb_port_35",
+        "pcb_port_36",
+        "pcb_port_38",
+        "pcb_port_40",
+        "pcb_port_44",
+        "pcb_port_45",
+        "pcb_port_46",
+        "pcb_port_48",
+        "pcb_port_58",
+        "pcb_port_59",
+        "pcb_port_6",
+        "pcb_port_67",
+        "pcb_port_68",
+        "pcb_port_7",
+        "pcb_port_75",
+        "pcb_port_79",
+        "pcb_port_8",
+        "pcb_port_80",
+        "pcb_port_81",
+        "pcb_port_84",
+        "pcb_port_86",
+        "pcb_port_90",
+        "pcb_port_91",
+        "pcb_port_92",
+        "pcb_port_98"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.68907357257677,
+              "y": -4.586504246957254
+            },
+            {
+              "x": 35.789100031863406,
+              "y": -5.37984253123909
+            }
+          ],
+          "angleDeviationDegrees": 5.593860748170698
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_90",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 29.789175646565454,
+              "y": -5.790203635793825
+            },
+            {
+              "x": 35.28965428007813,
+              "y": -4.488962758335674
+            }
+          ],
+          "angleDeviationDegrees": 13.309695430841941
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_77",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 29.5890584082614,
+              "y": -2.9864521932306736
+            },
+            {
+              "x": 34.89567678468417,
+              "y": -1.5857913528080312
+            }
+          ],
+          "angleDeviationDegrees": 14.785786669287859
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.989073184151213,
+              "y": -5.186508179766044
+            },
+            {
+              "x": 35.68903974325991,
+              "y": -5.590029162888453
+            }
+          ],
+          "angleDeviationDegrees": 4.049416949367469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.088965950914265,
+              "y": -4.78577563434735
+            },
+            {
+              "x": 35.389073184151215,
+              "y": -3.586508179766044
+            }
+          ],
+          "angleDeviationDegrees": 8.2216643328357
+        }
+      ],
+      "styleRemovedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.280256168527224,
+              "y": -3.9873115946045226
+            },
+            {
+              "x": 32.37907268415122,
+              "y": -4.386508179766044
+            }
+          ],
+          "angleDeviationDegrees": 4.476669761485937
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.178769928343215,
+              "y": -4.290423347228833
+            },
+            {
+              "x": 32.378933598799705,
+              "y": -4.690263337654906
+            }
+          ],
+          "angleDeviationDegrees": 4.3968148217777525
+        }
+      ],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    },
+    {
+      "arm": "full",
+      "physicalFindings": [],
+      "styleSegments": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_94",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 28.907935035832573,
+              "y": -2.886508179766044
+            },
+            {
+              "x": 29.81064153018821,
+              "y": 2.3130850650585
+            }
+          ],
+          "angleDeviationDegrees": 9.849007384818208
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.107742171691182,
+              "y": -4.785187462090396
+            },
+            {
+              "x": 35.3142244075898,
+              "y": -3.586001752384818
+            }
+          ],
+          "angleDeviationDegrees": 8.313599788904042
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.55793503583257,
+              "y": -4.42
+            },
+            {
+              "x": 35.103643974856055,
+              "y": -2.586501054291135
+            }
+          ],
+          "angleDeviationDegrees": 12.10934351601469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_78",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.808095247789886,
+              "y": -3.98704192552902
+            },
+            {
+              "x": 34.79869773798877,
+              "y": -1.5892703736516736
+            }
+          ],
+          "angleDeviationDegrees": 16.70313067247747
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.607935057207413,
+              "y": -4.686507990446035
+            },
+            {
+              "x": 35.80802633353655,
+              "y": -5.378358658014538
+            }
+          ],
+          "angleDeviationDegrees": 6.367134123479957
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_34",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": -28.71027663056661,
+              "y": -4.4799999999999995
+            },
+            {
+              "x": -34.01027663056661,
+              "y": -1.7799999999999994
+            }
+          ],
+          "angleDeviationDegrees": 18.004161605913396
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 30.008034273538662,
+              "y": -5.085378985096585
+            },
+            {
+              "x": 35.9078913566686,
+              "y": -5.590481739335935
+            }
+          ],
+          "angleDeviationDegrees": 4.893314997579068
+        }
+      ],
+      "portFindingIds": [
+        "pcb_port_101",
+        "pcb_port_103",
+        "pcb_port_107",
+        "pcb_port_108",
+        "pcb_port_109",
+        "pcb_port_11",
+        "pcb_port_111",
+        "pcb_port_113",
+        "pcb_port_117",
+        "pcb_port_118",
+        "pcb_port_119",
+        "pcb_port_121",
+        "pcb_port_13",
+        "pcb_port_131",
+        "pcb_port_132",
+        "pcb_port_140",
+        "pcb_port_141",
+        "pcb_port_17",
+        "pcb_port_18",
+        "pcb_port_19",
+        "pcb_port_2",
+        "pcb_port_229",
+        "pcb_port_230",
+        "pcb_port_231",
+        "pcb_port_232",
+        "pcb_port_241",
+        "pcb_port_242",
+        "pcb_port_244",
+        "pcb_port_245",
+        "pcb_port_247",
+        "pcb_port_248",
+        "pcb_port_249",
+        "pcb_port_25",
+        "pcb_port_250",
+        "pcb_port_260",
+        "pcb_port_262",
+        "pcb_port_263",
+        "pcb_port_264",
+        "pcb_port_265",
+        "pcb_port_266",
+        "pcb_port_271",
+        "pcb_port_272",
+        "pcb_port_273",
+        "pcb_port_274",
+        "pcb_port_28",
+        "pcb_port_30",
+        "pcb_port_34",
+        "pcb_port_35",
+        "pcb_port_36",
+        "pcb_port_38",
+        "pcb_port_40",
+        "pcb_port_44",
+        "pcb_port_45",
+        "pcb_port_46",
+        "pcb_port_48",
+        "pcb_port_58",
+        "pcb_port_59",
+        "pcb_port_6",
+        "pcb_port_67",
+        "pcb_port_68",
+        "pcb_port_7",
+        "pcb_port_75",
+        "pcb_port_79",
+        "pcb_port_8",
+        "pcb_port_80",
+        "pcb_port_81",
+        "pcb_port_84",
+        "pcb_port_86",
+        "pcb_port_90",
+        "pcb_port_91",
+        "pcb_port_92",
+        "pcb_port_98"
+      ],
+      "physicalAddedVersusControl": [],
+      "physicalRemovedVersusControl": [],
+      "styleAddedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 27.107742171691182,
+              "y": -4.785187462090396
+            },
+            {
+              "x": 35.3142244075898,
+              "y": -3.586001752384818
+            }
+          ],
+          "angleDeviationDegrees": 8.313599788904042
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_71",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 30.008034273538662,
+              "y": -5.085378985096585
+            },
+            {
+              "x": 35.9078913566686,
+              "y": -5.590481739335935
+            }
+          ],
+          "angleDeviationDegrees": 4.893314997579068
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_70",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 29.607935057207413,
+              "y": -4.686507990446035
+            },
+            {
+              "x": 35.80802633353655,
+              "y": -5.378358658014538
+            }
+          ],
+          "angleDeviationDegrees": 6.367134123479957
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_78",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.808095247789886,
+              "y": -3.98704192552902
+            },
+            {
+              "x": 34.79869773798877,
+              "y": -1.5892703736516736
+            }
+          ],
+          "angleDeviationDegrees": 16.70313067247747
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_94",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": 28.907935035832573,
+              "y": -2.886508179766044
+            },
+            {
+              "x": 29.81064153018821,
+              "y": 2.3130850650585
+            }
+          ],
+          "angleDeviationDegrees": 9.849007384818208
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "inner2",
+          "segment": [
+            {
+              "x": 26.55793503583257,
+              "y": -4.42
+            },
+            {
+              "x": 35.103643974856055,
+              "y": -2.586501054291135
+            }
+          ],
+          "angleDeviationDegrees": 12.10934351601469
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_34",
+          "layer": "inner1",
+          "segment": [
+            {
+              "x": -28.71027663056661,
+              "y": -4.4799999999999995
+            },
+            {
+              "x": -34.01027663056661,
+              "y": -1.7799999999999994
+            }
+          ],
+          "angleDeviationDegrees": 18.004161605913396
+        }
+      ],
+      "styleRemovedVersusControl": [
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_89",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.280256168527224,
+              "y": -3.9873115946045226
+            },
+            {
+              "x": 32.37907268415122,
+              "y": -4.386508179766044
+            }
+          ],
+          "angleDeviationDegrees": 4.476669761485937
+        },
+        {
+          "type": "long_segment_at_odd_angle",
+          "sourceTraceId": "source_trace_85",
+          "layer": "top",
+          "segment": [
+            {
+              "x": 27.178769928343215,
+              "y": -4.290423347228833
+            },
+            {
+              "x": 32.378933598799705,
+              "y": -4.690263337654906
+            }
+          ],
+          "angleDeviationDegrees": 4.3968148217777525
+        }
+      ],
+      "portFindingIdsAddedVersusControl": [],
+      "portFindingIdsRemovedVersusControl": []
+    }
+  ]
+}
