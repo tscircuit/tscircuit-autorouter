@@ -38,6 +38,8 @@ import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolv
 export type Pipeline9HighDensitySolverParams = {
   /** Explicit null disables process-local route caches, including fallback work. */
   cacheProvider?: null
+  /** Owned callers select the experimental policy explicitly. */
+  useNativeRegionalRouting?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -425,6 +427,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
   readonly effort: number
+  readonly useNativeRegionalRouting: boolean
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
   readonly includeBoardObstacles: boolean
@@ -462,6 +465,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
+    this.useNativeRegionalRouting = params.useNativeRegionalRouting === true
     this.nodePfById =
       params.nodePfById instanceof Map
         ? new Map(params.nodePfById)
@@ -767,7 +771,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
-      useNativeRouting: true,
+      useNativeRouting: this.useNativeRegionalRouting,
       cacheProvider: this.params.cacheProvider,
       boardGeometry: this.boardGeometry,
       viaHoleDiameter: this.params.viaHoleDiameter,

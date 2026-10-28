@@ -1,0 +1,639 @@
+{
+  "basedOnPublished": "fac5f6b05d411648c1460b25ac5a279b680cfa2c",
+  "localBase": "4d4c34a070480b4fcbad747a5bea057a443a38ac",
+  "status": "Local scope correction; not a new full-corpus qualification.",
+  "change": "Direct high-density callers default to legacy regional routing unless explicitly selected. Owned Pipeline9 selects native regional routing only after emitting physical forest branches. Native configuration, guards, and search caps are unchanged.",
+  "sourceFileSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts": "5303cd2449b64a6ea976236fd384fea243bc1af28e7cdb0a60f397996fd9085a",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts": "3bd1f460191273315470fa7a2b780d8f3962b002efadb210d6deada007cf888a"
+  },
+  "validation": {
+    "focused": {
+      "tests": 9,
+      "assertions": 233,
+      "failures": 0
+    },
+    "originalNonForestRegressions": "HTTP exact route parity, explicit0.15mm fixed copper gap, and through-obstacle reconstruction all pass unchanged.",
+    "policyScopeCases": "Native selected only with actual generated branches; forest:false, ineligible input, and genuine-only user preload stay legacy.",
+    "typecheck": "Full repository tsc --noEmit passes.",
+    "build": "Serialized worker/ESM/DTS build passes.",
+    "localControlEquivalence": [
+      {
+        "dataset": "srj18",
+        "sample": 5,
+        "forest": false,
+        "outputSha256": "0168c4ec9b64d407be42e24f6da301d9826ad65ba90caedc82c04eadc6a008bd",
+        "allCandidateLedgersExact": true
+      },
+      {
+        "dataset": "srj18",
+        "sample": 5,
+        "forest": true,
+        "outputSha256": "eaecf342b30f8ccb98a70bc1ffc2e008a17dae621ab872936a2f66f7d89013da",
+        "allCandidateLedgersExact": true
+      },
+      {
+        "dataset": "srj24",
+        "sample": 25,
+        "forest": false,
+        "outputSha256": "ced0afc49af926a861e7ee1f5d1db417b296c93b0514f4327f250f380c37abe2",
+        "allCandidateLedgersExact": true
+      },
+      {
+        "dataset": "srj24",
+        "sample": 25,
+        "forest": true,
+        "outputSha256": "8cb07f5c56741444bbff2ac533b5da400d56a4ed70d7c458dbb6f7e132b61a36",
+        "allCandidateLedgersExact": true
+      }
+    ]
+  },
+  "requestedCorpusScopeAudit": {
+    "oldV3LocalCommit": "4d4c34a070480b4fcbad747a5bea057a443a38ac",
+    "oldV3PublishedCommit": "fac5f6b05d411648c1460b25ac5a279b680cfa2c",
+    "requestedPopulation": {
+      "srj18": 16,
+      "srj24": 26,
+      "total": 42
+    },
+    "prefixAudit": {
+      "path": "/workspace/experiment-audit/3198-scope-prefix-audit.json",
+      "sha256": "1b7b7c91baffa1a75ec021f58107e8fda0ccfa59305d69abb63f562a66002cee",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "usePhysicalNetForest": true
+      },
+      "inputLoader": "loadScenarios(dataset,{effort:1}), identical pinned harness input identities checked for all 42",
+      "stop": "netToPointPairsSolver before pair decomposition or HD",
+      "fullRoutingRun": false,
+      "branchPositiveCount": 36
+    },
+    "availableV3Records": {
+      "srj18": {
+        "path": "/workspace/experiment-audit/3198-v3-srj18-records.jsonl",
+        "present": true,
+        "rows": 32,
+        "candidateRows": 16,
+        "sha256": "16604e9b45a58e51e38819005c2de7b622af2bc4248e79150df1f160e5e4f3a8"
+      },
+      "srj24": {
+        "path": "/workspace/experiment-audit/3198-v3-srj24-records.jsonl",
+        "present": false
+      }
+    },
+    "sourceHashesAtAudit": {
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts": "3bd1f460191273315470fa7a2b780d8f3962b002efadb210d6deada007cf888a",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts": "5303cd2449b64a6ea976236fd384fea243bc1af28e7cdb0a60f397996fd9085a"
+    },
+    "sourceDiffAgainstV3": "diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\nindex cbb0bd79..e4efbcb5 100644\n--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\n+++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\n@@ -659,6 +659,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {\n             effort: Math.min(1, cms.effort),\n             includeBoardObstacles: true,\n             cacheProvider: cms.cacheProvider === null ? null : undefined,\n+            useNativeRegionalRouting:\n+              (cms.physicalNetForestSolver?.branches.length ?? 0) > 0,\n             nodePfById: portPointPathingSolver.computeNodePfMap(),\n             preserveTerminalPcbPortIds: true,\n           },\ndiff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\nindex 274ca466..a1f869ab 100644\n--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\n+++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\n@@ -38,6 +38,8 @@ import { Pipeline9RegionalFallbackSolver } from \"./Pipeline9RegionalFallbackSolv\n export type Pipeline9HighDensitySolverParams = {\n   /** Explicit null disables process-local route caches, including fallback work. */\n   cacheProvider?: null\n+  /** Owned callers select the experimental policy explicitly. */\n+  useNativeRegionalRouting?: boolean\n   nodePortPoints: NodeWithPortPoints[]\n   fixedHdRoutes: PreloadedHighDensityRoute[]\n   connMap: ConnectivityMap\n@@ -425,6 +427,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {\n   readonly obstacleMargin: number\n   readonly viaToPadClearance?: number\n   readonly effort: number\n+  readonly useNativeRegionalRouting: boolean\n   readonly nodePfById: Map<CapacityMeshNodeId, number | null>\n   readonly preserveTerminalPcbPortIds: boolean\n   readonly includeBoardObstacles: boolean\n@@ -462,6 +465,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {\n     this.obstacleMargin = params.obstacleMargin\n     this.viaToPadClearance = params.viaToPadClearance\n     this.effort = params.effort\n+    this.useNativeRegionalRouting = params.useNativeRegionalRouting === true\n     this.nodePfById =\n       params.nodePfById instanceof Map\n         ? new Map(params.nodePfById)\n@@ -767,7 +771,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {\n       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,\n     })\n     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({\n-      useNativeRouting: true,\n+      useNativeRouting: this.useNativeRegionalRouting,\n       cacheProvider: this.params.cacheProvider,\n       boardGeometry: this.boardGeometry,\n       viaHoleDiameter: this.params.viaHoleDiameter,\n",
+    "unchangedRegionalImplementation": true,
+    "summary": {
+      "execution_equivalent_positive_forest": 36,
+      "execution_equivalent_no_regional_call": 1,
+      "changed_policy_path_requires_retest": 1,
+      "unknown_regional_execution_requires_evidence_or_retest": 4
+    },
+    "limitations": [
+      "Execution equivalence is a conditional routing-path argument, not a new timed benchmark or a guarantee that nondeterministic wall-clock timeouts repeat.",
+      "No inference of no fallback is made from a missing progress snapshot or absent incomplete counter map.",
+      "All 42 inputs cannot be called unchanged: SRJ18 sample4 demonstrably selects a different executed policy, and zero-forest SRJ24 cases remain unknown until final V3 evidence or retest.",
+      "No algorithm or test files were edited by this audit."
+    ],
+    "rows": [
+      {
+        "dataset": "srj18",
+        "sampleNumber": 1,
+        "inputSha256": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+        "committedBranches": 9,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 9
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 2,
+        "inputSha256": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+        "committedBranches": 8,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 2
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 3,
+        "inputSha256": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+        "committedBranches": 0,
+        "classification": "execution_equivalent_no_regional_call",
+        "reason": "Zero generated branches and completed HD plus final counter object prove no regional constructor call; the changed selection is never executed.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 0
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 4,
+        "inputSha256": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+        "committedBranches": 0,
+        "classification": "changed_policy_path_requires_retest",
+        "reason": "Zero generated branches but completed old V3 HD records show regional native constructor activation. Narrowing selects legacy regional policy on an executed path.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 2
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 5,
+        "inputSha256": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+        "committedBranches": 14,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 8
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 6,
+        "inputSha256": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+        "committedBranches": 18,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 121
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 7,
+        "inputSha256": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+        "committedBranches": 8,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 7
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 8,
+        "inputSha256": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+        "committedBranches": 5,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 10
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 9,
+        "inputSha256": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+        "committedBranches": 25,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 17
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 10,
+        "inputSha256": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+        "committedBranches": 19,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 7
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 11,
+        "inputSha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+        "committedBranches": 6,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 4
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 12,
+        "inputSha256": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+        "committedBranches": 34,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 15
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 13,
+        "inputSha256": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+        "committedBranches": 14,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 17
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 14,
+        "inputSha256": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+        "committedBranches": 4,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": false,
+            "didTimeout": false,
+            "hdPhaseComplete": false,
+            "finalHdCounterObjectPresent": false,
+            "regionalNativeRouteInstancesWhenHdComplete": null
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 15,
+        "inputSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+        "committedBranches": 20,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": false,
+            "didTimeout": true,
+            "hdPhaseComplete": false,
+            "finalHdCounterObjectPresent": false,
+            "regionalNativeRouteInstancesWhenHdComplete": null
+          }
+        ]
+      },
+      {
+        "dataset": "srj18",
+        "sampleNumber": 16,
+        "inputSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+        "committedBranches": 25,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": [
+          {
+            "round": 1,
+            "didSolve": true,
+            "didTimeout": false,
+            "hdPhaseComplete": true,
+            "finalHdCounterObjectPresent": true,
+            "regionalNativeRouteInstancesWhenHdComplete": 19
+          }
+        ]
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 1,
+        "inputSha256": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+        "committedBranches": 68,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 2,
+        "inputSha256": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+        "committedBranches": 28,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 3,
+        "inputSha256": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+        "committedBranches": 24,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 4,
+        "inputSha256": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+        "committedBranches": 9,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 5,
+        "inputSha256": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+        "committedBranches": 0,
+        "classification": "unknown_regional_execution_requires_evidence_or_retest",
+        "reason": "Zero generated branches without complete old V3 regional activation evidence. Prefix counts alone do not prove the regional path is unused.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 6,
+        "inputSha256": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+        "committedBranches": 30,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 7,
+        "inputSha256": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+        "committedBranches": 14,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 8,
+        "inputSha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+        "committedBranches": 84,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 9,
+        "inputSha256": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+        "committedBranches": 0,
+        "classification": "unknown_regional_execution_requires_evidence_or_retest",
+        "reason": "Zero generated branches without complete old V3 regional activation evidence. Prefix counts alone do not prove the regional path is unused.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 10,
+        "inputSha256": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+        "committedBranches": 0,
+        "classification": "unknown_regional_execution_requires_evidence_or_retest",
+        "reason": "Zero generated branches without complete old V3 regional activation evidence. Prefix counts alone do not prove the regional path is unused.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 11,
+        "inputSha256": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+        "committedBranches": 22,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 12,
+        "inputSha256": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+        "committedBranches": 4,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 13,
+        "inputSha256": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+        "committedBranches": 63,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 14,
+        "inputSha256": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+        "committedBranches": 25,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 15,
+        "inputSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+        "committedBranches": 54,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 16,
+        "inputSha256": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+        "committedBranches": 0,
+        "classification": "unknown_regional_execution_requires_evidence_or_retest",
+        "reason": "Zero generated branches without complete old V3 regional activation evidence. Prefix counts alone do not prove the regional path is unused.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 17,
+        "inputSha256": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+        "committedBranches": 34,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 18,
+        "inputSha256": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+        "committedBranches": 105,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 19,
+        "inputSha256": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+        "committedBranches": 19,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 20,
+        "inputSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+        "committedBranches": 95,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 21,
+        "inputSha256": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+        "committedBranches": 46,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 22,
+        "inputSha256": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+        "committedBranches": 11,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 23,
+        "inputSha256": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+        "committedBranches": 16,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 24,
+        "inputSha256": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+        "committedBranches": 139,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 25,
+        "inputSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+        "committedBranches": 9,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      },
+      {
+        "dataset": "srj24",
+        "sampleNumber": 26,
+        "inputSha256": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+        "committedBranches": 4,
+        "classification": "execution_equivalent_positive_forest",
+        "reason": "Pinned exact-input prefix constructs branches; old unconditional native=true equals narrowed flag=true whenever detailed routing is reached.",
+        "observedV3": []
+      }
+    ]
+  },
+  "knownBoundary": "37 requested inputs are conditionally execution-equivalent to measured fac5; SRJ18/4 demonstrably changes; SRJ24/5,9,10,16 need complete activation evidence or retest. No all42-equivalence claim. Old-head timings and quality remain attributed to fac5.",
+  "notRun": [
+    "No full requested-corpus rerun.",
+    "No huge bug107/T113/reading-lamp solve.",
+    "No snapshots or formatting/linting changes."
+  ],
+  "requestedOriginalInputsHaveNoUserPreloads": {
+    "checked": 42,
+    "withUserPreloads": 0,
+    "evidence": "/workspace/experiment-audit/3198-scope-input-preloads.json"
+  }
+}

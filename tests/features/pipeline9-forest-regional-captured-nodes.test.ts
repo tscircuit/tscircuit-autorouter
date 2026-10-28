@@ -18,7 +18,8 @@ test("actual SRJ24 forest regions retain native acceptance and use less observed
       candidates.clear()
       const connMap = new ConnectivityMap(input.connectivityNetMap)
       const params = structuredClone(input)
-      const solver = new Pipeline9HighDensitySolver({ ...params, connMap, cacheProvider: null })
+      const solver = new Pipeline9HighDensitySolver({ ...params, connMap, cacheProvider: null,
+        useNativeRegionalRouting: true })
       solver.solve()
       expect(solver.failed, solver.error ?? "").toBe(false)
       expect(solver.solved).toBe(true)

@@ -210,3 +210,26 @@ The two captured regional test inputs are also deterministic gzip archives
 (7,269 and 7,346 bytes). Their shared loader verifies compressed and original
 SHA-256 hashes before parsing; `--verify-packaged` checks these inputs too.
 Their decompressed bytes remain identical to the originally reviewed fixtures.
+
+## Local policy scope correction
+
+The original v3 regional opt-in also reached local callers without generated
+forest copper. The local follow-up makes direct HD callers retain the legacy
+policy by default and makes the owned pipeline select the new policy only when
+forest construction actually emits branches. Explicit feature callers can still
+select native regional routing. Native configuration, physical guards, and
+search caps are unchanged. The original HTTP route-parity, fixed-copper gap,
+and through-obstacle reconstruction regressions pass without changing assertions.
+The four SRJ18/5 and SRJ24/25 forest-on/off controls retain the exact published v3
+output hashes and complete candidate-work ledgers.
+
+This correction cannot inherit all 42 published v3 corpus results without
+qualification. Construction-only checks with pinned input hashes establish 36
+branch-positive inputs where policy selection stays the same. SRJ18/3 also
+completes without regional fallback. SRJ18/4 constructs no branches but invoked
+native regional routing twice, so its executed path changes. SRJ24/5, /9, /10,
+and /16 construct no branches and require complete v3 activation evidence or
+retesting. The current boundary is 37 conditionally unchanged, one changed, and
+four unknown. Published measurements remain attributed to `fac5f6b`; they are
+not presented as a new full-corpus scope-correction measurement.
+`physical-net-forest/SCOPE-FOLLOWUP.json` records the checks and this limitation.

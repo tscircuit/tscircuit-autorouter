@@ -21,6 +21,7 @@ test("regional native routing retains physical board, drill, cache, and preload-
     width: 0.4, height: 0.4, layers: ["top"], connectedTo: ["foreign"], ccwRotationDegrees: 20 }
   for (const allowBlindAndBuriedVias of [true, false]) {
     const outer = new Pipeline9HighDensitySolver({
+      useNativeRegionalRouting: true,
       nodePortPoints: [node], fixedHdRoutes: [{ connectionName: "forest-fixed", rootConnectionName: "forest",
         traceThickness: 0.12, viaDiameter: 0.55, route: [{ x: -2, y: 0, z: 2 }, { x: 2, y: 0, z: 2 }],
         vias: [], preloadedTraceIndex: 0, preloadedRouteIndex: 0 }],

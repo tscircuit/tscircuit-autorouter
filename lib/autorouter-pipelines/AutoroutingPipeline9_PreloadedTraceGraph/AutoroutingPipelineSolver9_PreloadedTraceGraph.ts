@@ -659,6 +659,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
             cacheProvider: cms.cacheProvider === null ? null : undefined,
+            useNativeRegionalRouting:
+              (cms.physicalNetForestSolver?.branches.length ?? 0) > 0,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },
