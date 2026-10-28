@@ -128,7 +128,7 @@ export function getLayerTopologiesForCoveredNodes({
   return [...layerTopologyBySignature.values()]
 }
 
-export function restoreAuthoritativeTargetRegions({
+export function restorePassthroughRegions({
   regions,
   preparedNodeBySourceKey,
 }: {
@@ -136,6 +136,9 @@ export function restoreAuthoritativeTargetRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
+  const targetSources = [...preparedNodeBySourceKey.values()].filter(
+    ({ node }) => node._containsObstacle && node._containsTarget,
+  )
   for (const region of regions) {
     for (const sourceKey of region.sourceKeys) {
       const topologyModes =
@@ -149,8 +152,14 @@ export function restoreAuthoritativeTargetRegions({
   const restorableSourceKeys = new Set(
     [...topologyModesBySourceKey.entries()]
       .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+        ([sourceKey, topologyModes]) =>
+          topologyModes.size === 1 &&
+          (topologyModes.has("target-passthrough") ||
+            (topologyModes.has("passthrough") &&
+              !doesSourceOverlapTarget(
+                preparedNodeBySourceKey.get(sourceKey)!,
+                targetSources,
+              ))),
       )
       .map(([sourceKey]) => sourceKey),
   )
@@ -158,29 +167,46 @@ export function restoreAuthoritativeTargetRegions({
 
   const retainedRegions = regions.filter(
     (region) =>
-      region.topologyMode !== "target-passthrough" ||
+      (region.topologyMode !== "target-passthrough" &&
+        region.topologyMode !== "passthrough") ||
       !restorableSourceKeys.has(region.sourceKeys[0]!),
   )
   const restoredRegions = [...restorableSourceKeys].map((sourceKey) => {
     const preparedNode = preparedNodeBySourceKey.get(sourceKey)
     if (!preparedNode) {
       throw new Error(
-        `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
+        `TopologyMergingSolver: missing passthrough source "${sourceKey}"`,
       )
     }
+    const topologyMode = [...topologyModesBySourceKey.get(sourceKey)!][0]!
     return {
       bounds: { ...preparedNode.bounds },
       availableZ: [...preparedNode.node.availableZ],
       sourceKeys: [sourceKey],
-      topologyMode: "target-passthrough" as const,
+      topologyMode,
       topologySignature: JSON.stringify({
-        mode: "target-passthrough",
+        mode: topologyMode,
         sourceKeys: [sourceKey],
       }),
     }
   })
 
   return [...retainedRegions, ...restoredRegions]
+}
+
+function doesSourceOverlapTarget(
+  source: PreparedTopologyMergingNode,
+  targets: readonly PreparedTopologyMergingNode[],
+): boolean {
+  const { bounds, node } = source
+  // Free regions clipped by target ownership must retain those cuts.
+  return targets.some((target) =>
+    Math.min(bounds.maxX, target.bounds.maxX) -
+      Math.max(bounds.minX, target.bounds.minX) > TOPOLOGY_MERGING_EPSILON &&
+    Math.min(bounds.maxY, target.bounds.maxY) -
+      Math.max(bounds.minY, target.bounds.minY) > TOPOLOGY_MERGING_EPSILON &&
+    node.availableZ.some((z) => target.node.availableZ.includes(z)),
+  )
 }
 
 function getRegionMergeKey(region: TopologyMergingRegion): string {

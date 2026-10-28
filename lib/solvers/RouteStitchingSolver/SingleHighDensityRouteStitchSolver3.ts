@@ -25,6 +25,17 @@ export {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
+const getTerminalDistance = (
+  terminal: StitchTerminal,
+  point: Point3,
+  preserveTerminalPcbPortIds: boolean | undefined,
+): number => {
+  if (preserveTerminalPcbPortIds && terminal.pcb_port_id && terminal.z !== point.z) {
+    return Infinity
+  }
+  return distance(terminal, point)
+}
+
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
     const { toNextSegmentType, ...rest } = point
@@ -188,10 +199,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst = getTerminalDistance(opts.start, firstPoint, opts.preserveTerminalPcbPortIds)
+      const distStartToLast = getTerminalDistance(opts.start, lastPoint, opts.preserveTerminalPcbPortIds)
+      const distEndToFirst = getTerminalDistance(opts.end, firstPoint, opts.preserveTerminalPcbPortIds)
+      const distEndToLast = getTerminalDistance(opts.end, lastPoint, opts.preserveTerminalPcbPortIds)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -234,8 +245,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
+    const distToFirst = getTerminalDistance(this.start, firstRouteFirstPoint, opts.preserveTerminalPcbPortIds)
+    const distToLast = getTerminalDistance(this.start, firstRouteLastPoint, opts.preserveTerminalPcbPortIds)
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&

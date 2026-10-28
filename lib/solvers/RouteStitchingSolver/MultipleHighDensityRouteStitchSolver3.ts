@@ -265,6 +265,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         }))
 
         if (
+          !this.preserveTerminalPcbPortIds &&
           distance(start, connection.pointsToConnect[1]) <
           distance(end, connection.pointsToConnect[0])
         ) {
@@ -273,11 +274,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminals: this.preserveTerminalPcbPortIds
+            ? [globalStart]
+            : [globalStart, globalEnd],
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminals: this.preserveTerminalPcbPortIds
+            ? [globalEnd]
+            : [globalStart, globalEnd],
         })
       } else {
         start = {

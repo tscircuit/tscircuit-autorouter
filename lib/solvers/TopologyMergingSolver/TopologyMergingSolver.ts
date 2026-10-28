@@ -13,7 +13,7 @@ import {
   doesBoundsContainPoint,
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
-  restoreAuthoritativeTargetRegions,
+  restorePassthroughRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -80,7 +80,7 @@ export class TopologyMergingSolver extends BaseSolver {
       return
     }
 
-    const topologyRegions = restoreAuthoritativeTargetRegions({
+    const topologyRegions = restorePassthroughRegions({
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
@@ -98,6 +98,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    this.atomicRegions.length = 0
     this.solved = true
   }
 
