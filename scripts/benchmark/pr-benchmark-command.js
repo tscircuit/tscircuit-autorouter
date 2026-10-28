@@ -191,7 +191,11 @@ export const parsePrBenchmarkCommand = (body) => {
 
   // Plain /benchmark defaults to dataset18; benchmark.sh itself defaults to
   // dataset01, so the dataset has to be passed explicitly.
-  if (isBenchmark && !isNetworkedPipeline9 && !parsedArgs.includes("--dataset")) {
+  if (
+    isBenchmark &&
+    !isNetworkedPipeline9 &&
+    !parsedArgs.includes("--dataset")
+  ) {
     benchmarkArgs.push("--dataset", datasetName)
   }
 
