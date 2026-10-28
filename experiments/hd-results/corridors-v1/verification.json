@@ -1,0 +1,1400 @@
+{
+  "variant": "corridors",
+  "expectedHead": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+  "expectedRun": 40634273127,
+  "verified": true,
+  "errors": [],
+  "notes": [
+    "Exact downloaded ZIP digest, dependency-lock bytes, protocol hashes,84 raw record identities and independently recomputed comparisons were verified; see artifact-verification.json.",
+    "Dependencies are resolved fresh once per CI pair; the earlier local install is not assumed identical."
+  ],
+  "ciComplete": true,
+  "uniqueRecordCount": 84,
+  "dependencyLockSha256": "62ee3213e32eb76d9dbec37933768663da7c47eea69e4c07cefcf9aa4c5bd041",
+  "workerSha256": "a38701372b453e939ec3698703fec73a896b822214a957b8301e978088890858",
+  "resourceProfile": {
+    "MemTotal": 101049638912,
+    "MemAvailable": 88181002240,
+    "effectiveLimitBytes": 101049638912,
+    "profile": "blacksmith-large48GiB",
+    "reservationBudgetGiB": 48,
+    "observedRssGuardGiB": 48,
+    "allowHeavyOverlap": true
+  },
+  "datasets": [
+    {
+      "dataset": "srj18",
+      "countPerRevision": 16,
+      "control": {
+        "solved": 16,
+        "clean": 16,
+        "timeouts": 0,
+        "otherFailures": 0,
+        "failurePenalizedSecondsSum": 891.4269704699999,
+        "maxRssBytes": 2683695104
+      },
+      "experiment": {
+        "solved": 10,
+        "clean": 7,
+        "timeouts": 0,
+        "otherFailures": 6,
+        "failurePenalizedSecondsSum": 3584.5919936409996,
+        "maxRssBytes": 2458566656
+      },
+      "failurePenalizedSpeedup": 0.2486829664439844,
+      "pairedCleanCount": 7,
+      "pairedCleanSpeedup": 0.9235118183666818,
+      "pairedCleanBeforeSeconds": 318.234778642,
+      "pairedCleanAfterSeconds": 344.591993641,
+      "pairedHdCompletedCount": 16,
+      "pairedHdSpeedup": 0.9042329333228071,
+      "pairedHdBeforeSeconds": 310.920808004,
+      "pairedHdAfterSeconds": 343.850347124,
+      "viaBefore": 1557,
+      "viaAfter": 1559,
+      "viaDelta": 2,
+      "wireBeforeMm": 18666.41426332993,
+      "wireAfterMm": 19305.49094823208,
+      "wireDeltaMm": 639.0766849021493,
+      "wireCoverage": {
+        "commonCleanCount": 7,
+        "finitePairCount": 6,
+        "missingPairs": [
+          {
+            "sampleNumber": 3,
+            "controlWireLengthMm": null,
+            "experimentWireLengthMm": null
+          }
+        ],
+        "exportedControlSumWithNullAsZeroMm": 18666.41426332993,
+        "exportedExperimentSumWithNullAsZeroMm": 19305.49094823208
+      },
+      "sameUpstreamFailureCount": 0,
+      "sameUpstreamFailurePhaseCount": 0,
+      "upstreamPairs": [],
+      "changedOutcomePairs": [
+        {
+          "dataset": "srj18",
+          "sampleNumber": 4,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 52904.10468,
+          "experimentSolveMs": 27833.165075,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_90\" for \"source_trace_17__source_net_17\"",
+          "sameHdInput": true,
+          "controlHdMs": 20187.249503000003,
+          "experimentHdMs": 20911.156011,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 137,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 985.0650189370389,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 6,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 85983.232496,
+          "experimentSolveMs": 78286.503732,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_69\" for \"source_trace_1__source_net_1_mst2\"",
+          "sameHdInput": true,
+          "controlHdMs": 27304.359564000006,
+          "experimentHdMs": 33695.88761099999,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 269,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 1703.004599253872,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 8,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 60978.784477,
+          "experimentSolveMs": 42883.318648,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_115\" for \"source_trace_57__source_net_57_mst0\"",
+          "sameHdInput": true,
+          "controlHdMs": 19645.676421,
+          "experimentHdMs": 23857.690155999997,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 280,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": null,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 9,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 23120.980536,
+          "experimentSolveMs": 16798.235842000002,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_286\" for \"source_trace_16__source_net_16\"",
+          "sameHdInput": true,
+          "controlHdMs": 5736.337208999999,
+          "experimentHdMs": 6980.694255,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 115,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": null,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 10,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 27163.551463,
+          "experimentSolveMs": 42114.484651000006,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 8447.905334000001,
+          "experimentHdMs": 10632.183273999999,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 162,
+          "experimentViaCount": 163,
+          "controlWireLengthMm": 1668.9608624660368,
+          "experimentWireLengthMm": 1802.9266618332333,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 11,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 24439.375643,
+          "experimentSolveMs": 19612.917909999996,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_351\" for \"source_trace_5__source_net_5_mst14\"",
+          "sameHdInput": true,
+          "controlHdMs": 5734.5260610000005,
+          "experimentHdMs": 7208.106624000002,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 188,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 1871.4671581001292,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 14,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 132709.840597,
+          "experimentSolveMs": 189429.32036699998,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 58556.36953899999,
+          "experimentHdMs": 62136.389351,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 244,
+          "experimentViaCount": 266,
+          "controlWireLengthMm": 2171.67633805638,
+          "experimentWireLengthMm": 2412.851366197129,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 15,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 129593.138085,
+          "experimentSolveMs": 85882.47313900001,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_549\" for \"source_trace_73__source_net_73\"",
+          "sameHdInput": true,
+          "controlHdMs": 48651.802354,
+          "experimentHdMs": 51518.384917,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 342,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 2245.881362700964,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj18",
+          "sampleNumber": 16,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 36299.183850999994,
+          "experimentSolveMs": 60041.567777000004,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 18603.131413,
+          "experimentHdMs": 20386.00122,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 103,
+          "experimentViaCount": 110,
+          "controlWireLengthMm": 981.8342296882131,
+          "experimentWireLengthMm": 1037.9399777429844,
+          "outputHashMatches": false
+        }
+      ],
+      "pairedCompletedStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 16,
+          "controlSeconds": 1.0444651349999996,
+          "experimentSeconds": 0.9600558610000003,
+          "speedup": 1.0879212110762786
+        },
+        "componentDetectionSolver": {
+          "count": 16,
+          "controlSeconds": 0.18698549300000036,
+          "experimentSeconds": 0.17592768300000022,
+          "speedup": 1.0628542922377948
+        },
+        "edgeSolver": {
+          "count": 16,
+          "controlSeconds": 3.044858434999999,
+          "experimentSeconds": 3.0978867309999996,
+          "speedup": 0.982882429021902
+        },
+        "effortCleanupSolver": {
+          "count": 10,
+          "controlSeconds": 18.277559535999988,
+          "experimentSeconds": 21.571031696999984,
+          "speedup": 0.8473196735667473
+        },
+        "escapeViaLocationSolver": {
+          "count": 16,
+          "controlSeconds": 0.5597536349999996,
+          "experimentSeconds": 0.5440148020000003,
+          "speedup": 1.028930891112039
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 10,
+          "controlSeconds": 9.939640135999996,
+          "experimentSeconds": 9.97314170900001,
+          "speedup": 0.9966408205179937
+        },
+        "highDensityForceImproveSolver": {
+          "count": 16,
+          "controlSeconds": 50.85939041,
+          "experimentSeconds": 47.408113422999996,
+          "speedup": 1.072799289779914
+        },
+        "highDensityRepairSolver": {
+          "count": 16,
+          "controlSeconds": 43.159629437999975,
+          "experimentSeconds": 42.593023173999995,
+          "speedup": 1.013302795194539
+        },
+        "highDensityRouteSolver": {
+          "count": 16,
+          "controlSeconds": 310.920808004,
+          "experimentSeconds": 343.850347124,
+          "speedup": 0.9042329333228071
+        },
+        "highDensityStitchSolver": {
+          "count": 10,
+          "controlSeconds": 1.1948599159999975,
+          "experimentSeconds": 0.9196406039999965,
+          "speedup": 1.2992683346112914
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 10,
+          "controlSeconds": 0.3854725349999972,
+          "experimentSeconds": 0.4436975409999904,
+          "speedup": 0.8687732055743024
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 10,
+          "controlSeconds": 0.28406732899999043,
+          "experimentSeconds": 0.3065693679999804,
+          "speedup": 0.9266004978031875
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 16,
+          "controlSeconds": 3.259559558,
+          "experimentSeconds": 3.2198323629999988,
+          "speedup": 1.012338280544204
+        },
+        "netToPointPairsSolver": {
+          "count": 16,
+          "controlSeconds": 0.9355634799999998,
+          "experimentSeconds": 0.9173132649999995,
+          "speedup": 1.0198952917136768
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 16,
+          "controlSeconds": 0.2019321879999991,
+          "experimentSeconds": 0.1992021509999995,
+          "speedup": 1.01370485703239
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 10,
+          "controlSeconds": 82.32851576399999,
+          "experimentSeconds": 184.348951929,
+          "speedup": 0.44659063641277397
+        },
+        "portPointPathingSolver": {
+          "count": 16,
+          "controlSeconds": 102.548794446,
+          "experimentSeconds": 103.77274214,
+          "speedup": 0.9882054991632699
+        },
+        "powerTraceExpansionSolver": {
+          "count": 10,
+          "controlSeconds": 0.00027355700002044617,
+          "experimentSeconds": 0.0003163189999959286,
+          "speedup": 0.8648136849951067
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 16,
+          "controlSeconds": 0.08887973899999975,
+          "experimentSeconds": 0.0893395999999982,
+          "speedup": 0.9948526633206499
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 16,
+          "controlSeconds": 2.698856548,
+          "experimentSeconds": 2.677192521,
+          "speedup": 1.0080920691470885
+        },
+        "topologyMergingSolver": {
+          "count": 16,
+          "controlSeconds": 6.8754874039999985,
+          "experimentSeconds": 7.17191144,
+          "speedup": 0.9586687540023499
+        },
+        "topologyPlanningSolver": {
+          "count": 16,
+          "controlSeconds": 16.225614328,
+          "experimentSeconds": 16.196166748,
+          "speedup": 1.0018181820709913
+        },
+        "traceSimplificationSolver": {
+          "count": 10,
+          "controlSeconds": 30.935803368000002,
+          "experimentSeconds": 32.572770702,
+          "speedup": 0.9497443017980818
+        },
+        "traceWidthSolver": {
+          "count": 10,
+          "controlSeconds": 5.591755667999996,
+          "experimentSeconds": 6.009246731999992,
+          "speedup": 0.9305252251040378
+        },
+        "uniformPortDistributionSolver": {
+          "count": 16,
+          "controlSeconds": 6.252456702000005,
+          "experimentSeconds": 6.706284876999999,
+          "speedup": 0.9323279306913352
+        }
+      },
+      "pairedCleanStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 7,
+          "controlSeconds": 0.45230048499999953,
+          "experimentSeconds": 0.3283724940000004,
+          "speedup": 1.3774006448907958
+        },
+        "componentDetectionSolver": {
+          "count": 7,
+          "controlSeconds": 0.06978856999999994,
+          "experimentSeconds": 0.0678698139999999,
+          "speedup": 1.028271125068945
+        },
+        "edgeSolver": {
+          "count": 7,
+          "controlSeconds": 1.2085922619999994,
+          "experimentSeconds": 1.1711425569999996,
+          "speedup": 1.0319770678438422
+        },
+        "effortCleanupSolver": {
+          "count": 7,
+          "controlSeconds": 15.114451575000015,
+          "experimentSeconds": 18.275114509999977,
+          "speedup": 0.8270509914851435
+        },
+        "escapeViaLocationSolver": {
+          "count": 7,
+          "controlSeconds": 0.21586366999999995,
+          "experimentSeconds": 0.20504648500000008,
+          "speedup": 1.05275479362643
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 7,
+          "controlSeconds": 6.843724599999996,
+          "experimentSeconds": 7.023066430000013,
+          "speedup": 0.974463885286072
+        },
+        "highDensityForceImproveSolver": {
+          "count": 7,
+          "controlSeconds": 25.233653459999996,
+          "experimentSeconds": 22.71063952099999,
+          "speedup": 1.1110939186308264
+        },
+        "highDensityRepairSolver": {
+          "count": 7,
+          "controlSeconds": 13.399135625,
+          "experimentSeconds": 13.169300986999998,
+          "speedup": 1.0174523035221748
+        },
+        "highDensityRouteSolver": {
+          "count": 7,
+          "controlSeconds": 98.053450606,
+          "experimentSeconds": 106.52385370500001,
+          "speedup": 0.9204835085814923
+        },
+        "highDensityStitchSolver": {
+          "count": 7,
+          "controlSeconds": 0.8288110669999951,
+          "experimentSeconds": 0.6380629169999993,
+          "speedup": 1.2989488104039058
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 7,
+          "controlSeconds": 0.28294795400000655,
+          "experimentSeconds": 0.33347304899998925,
+          "speedup": 0.848488220707802
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 7,
+          "controlSeconds": 0.21584336599999368,
+          "experimentSeconds": 0.2239435149999863,
+          "speedup": 0.9638294995950515
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 7,
+          "controlSeconds": 1.4065414420000002,
+          "experimentSeconds": 1.2530165119999994,
+          "speedup": 1.122524267262011
+        },
+        "netToPointPairsSolver": {
+          "count": 7,
+          "controlSeconds": 0.27375203799999975,
+          "experimentSeconds": 0.27949040699999966,
+          "speedup": 0.9794684581070436
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 7,
+          "controlSeconds": 0.08372336199999972,
+          "experimentSeconds": 0.06838731199999984,
+          "speedup": 1.2242528555589365
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 7,
+          "controlSeconds": 47.92393977799999,
+          "experimentSeconds": 63.40294916399999,
+          "speedup": 0.7558629434419285
+        },
+        "portPointPathingSolver": {
+          "count": 7,
+          "controlSeconds": 31.947842167999998,
+          "experimentSeconds": 31.738053944,
+          "speedup": 1.006609990151575
+        },
+        "powerTraceExpansionSolver": {
+          "count": 7,
+          "controlSeconds": 0.0001994970000032481,
+          "experimentSeconds": 0.00024099899999237094,
+          "speedup": 0.8277918166032364
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 7,
+          "controlSeconds": 0.02987592100000029,
+          "experimentSeconds": 0.031552590999999665,
+          "speedup": 0.9468610992992812
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 7,
+          "controlSeconds": 1.4365000690000003,
+          "experimentSeconds": 1.43599069,
+          "speedup": 1.0003547230518606
+        },
+        "topologyMergingSolver": {
+          "count": 7,
+          "controlSeconds": 2.248517942999999,
+          "experimentSeconds": 2.376234041,
+          "speedup": 0.946252727721107
+        },
+        "topologyPlanningSolver": {
+          "count": 7,
+          "controlSeconds": 6.956986553000001,
+          "experimentSeconds": 6.374398707999999,
+          "speedup": 1.0913949490277164
+        },
+        "traceSimplificationSolver": {
+          "count": 7,
+          "controlSeconds": 25.357676231000006,
+          "experimentSeconds": 26.83231581799999,
+          "speedup": 0.9450424034584912
+        },
+        "traceWidthSolver": {
+          "count": 7,
+          "controlSeconds": 4.342682957000003,
+          "experimentSeconds": 4.5031229899999925,
+          "speedup": 0.964371385512615
+        },
+        "uniformPortDistributionSolver": {
+          "count": 7,
+          "controlSeconds": 1.3703013849999996,
+          "experimentSeconds": 1.3935347739999961,
+          "speedup": 0.9833277292870796
+        }
+      }
+    },
+    {
+      "dataset": "srj24",
+      "countPerRevision": 26,
+      "control": {
+        "solved": 19,
+        "clean": 17,
+        "timeouts": 6,
+        "otherFailures": 1,
+        "failurePenalizedSecondsSum": 4002.435913597,
+        "maxRssBytes": 7741255680
+      },
+      "experiment": {
+        "solved": 15,
+        "clean": 9,
+        "timeouts": 6,
+        "otherFailures": 5,
+        "failurePenalizedSecondsSum": 6477.270680545999,
+        "maxRssBytes": 9358741504
+      },
+      "failurePenalizedSpeedup": 0.6179201257742738,
+      "pairedCleanCount": 8,
+      "pairedCleanSpeedup": 0.9085267383694858,
+      "pairedCleanBeforeSeconds": 195.311256119,
+      "pairedCleanAfterSeconds": 214.975793084,
+      "pairedHdCompletedCount": 21,
+      "pairedHdSpeedup": 0.927065776447731,
+      "pairedHdBeforeSeconds": 588.226069605,
+      "pairedHdAfterSeconds": 634.503057441,
+      "viaBefore": 965,
+      "viaAfter": 965,
+      "viaDelta": 0,
+      "wireBeforeMm": 12527.383794590349,
+      "wireAfterMm": 13084.33622458211,
+      "wireDeltaMm": 556.9524299917612,
+      "wireCoverage": {
+        "commonCleanCount": 8,
+        "finitePairCount": 8,
+        "missingPairs": [],
+        "exportedControlSumWithNullAsZeroMm": 12527.383794590349,
+        "exportedExperimentSumWithNullAsZeroMm": 13084.33622458211
+      },
+      "sameUpstreamFailureCount": 2,
+      "sameUpstreamFailurePhaseCount": 2,
+      "upstreamPairs": [
+        {
+          "dataset": "srj24",
+          "sampleNumber": 13,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": false,
+          "experimentSolved": false,
+          "controlClean": false,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 102212.526661,
+          "experimentSolveMs": 104975.99133199999,
+          "controlFailurePhase": "portPointPathingSolver",
+          "experimentFailurePhase": "portPointPathingSolver",
+          "controlError": "PreparedPortPointRoutingSolver ran out of iterations",
+          "experimentError": "PreparedPortPointRoutingSolver ran out of iterations",
+          "sameHdInput": false,
+          "controlHdMs": null,
+          "experimentHdMs": null,
+          "controlHdCompleted": false,
+          "experimentHdCompleted": false,
+          "controlViaCount": 0,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 0,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 24,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": false,
+          "experimentSolved": false,
+          "controlClean": false,
+          "experimentClean": false,
+          "controlTimeout": true,
+          "experimentTimeout": true,
+          "controlSolveMs": 360504.7528319999,
+          "experimentSolveMs": 360596.9124090002,
+          "controlFailurePhase": "edgeSolver",
+          "experimentFailurePhase": "edgeSolver",
+          "controlError": "timeout: parent stopped or observed an incomplete child",
+          "experimentError": "timeout: parent stopped or observed an incomplete child",
+          "sameHdInput": false,
+          "controlHdMs": null,
+          "experimentHdMs": null,
+          "controlHdCompleted": false,
+          "experimentHdCompleted": false,
+          "controlViaCount": null,
+          "experimentViaCount": null,
+          "controlWireLengthMm": null,
+          "experimentWireLengthMm": null,
+          "outputHashMatches": false
+        }
+      ],
+      "changedOutcomePairs": [
+        {
+          "dataset": "srj24",
+          "sampleNumber": 2,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": false,
+          "experimentClean": true,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 197380.269532,
+          "experimentSolveMs": 142294.88746199998,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 53364.488708,
+          "experimentHdMs": 51588.924708000006,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 322,
+          "experimentViaCount": 336,
+          "controlWireLengthMm": 2224.698518061933,
+          "experimentWireLengthMm": 2201.712141743847,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 6,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 36741.840677,
+          "experimentSolveMs": 55722.115917,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 7801.638084999999,
+          "experimentHdMs": 11600.276384,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 235,
+          "experimentViaCount": 235,
+          "controlWireLengthMm": 2431.9836082409765,
+          "experimentWireLengthMm": 2558.684595189797,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 7,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 15515.058147,
+          "experimentSolveMs": 23168.49318,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 5452.165952,
+          "experimentHdMs": 6325.060499,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 96,
+          "experimentViaCount": 99,
+          "controlWireLengthMm": 640.3887700932723,
+          "experimentWireLengthMm": 679.0538983054878,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 8,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 46560.836247,
+          "experimentSolveMs": 32930.16766499999,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_591\" for \"source_trace_61__source_net_61_mst0\"",
+          "sameHdInput": true,
+          "controlHdMs": 8396.611776999998,
+          "experimentHdMs": 10594.388934999999,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 241,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 3250.5717553329623,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 12,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 127287.770829,
+          "experimentSolveMs": 188907.166584,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 56210.294248000006,
+          "experimentHdMs": 61815.801509,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 244,
+          "experimentViaCount": 266,
+          "controlWireLengthMm": 2171.67633805638,
+          "experimentWireLengthMm": 2412.851366197129,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 19,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 26744.900522,
+          "experimentSolveMs": 40524.673784,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 8197.824364,
+          "experimentHdMs": 10300.984035,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 162,
+          "experimentViaCount": 163,
+          "controlWireLengthMm": 1668.9608624660368,
+          "experimentWireLengthMm": 1802.9266618332333,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 20,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 186219.07541,
+          "experimentSolveMs": 123785.04980499999,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_523\" for \"source_trace_27__source_net_27_mst0\"",
+          "sameHdInput": true,
+          "controlHdMs": 65322.86831199999,
+          "experimentHdMs": 69774.56784,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 442,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 3792.07498678801,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 21,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 108496.533991,
+          "experimentSolveMs": 85567.664929,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_altium_2033\" for \"source_net_altium_pcb_58_mst16\"",
+          "sameHdInput": true,
+          "controlHdMs": 28748.078300999994,
+          "experimentHdMs": 30246.026991000006,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 265,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 3058.870161389176,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 22,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": false,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 14138.144590999998,
+          "experimentSolveMs": 9993.815301,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": "highDensityStitchSolver",
+          "controlError": null,
+          "experimentError": "MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_altium_989\" for \"source_net_altium_pcb_42_mst0\"",
+          "sameHdInput": true,
+          "controlHdMs": 3161.07424,
+          "experimentHdMs": 3375.0929989999995,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 65,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 668.6077272783925,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 25,
+          "variant": "corridors",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "ccb8c46bb767052c3bbefc77d4ebba89c7fc6bb0",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": true,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 5420.497064,
+          "experimentSolveMs": 9204.592093000001,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 1059.6254450000006,
+          "experimentHdMs": 1175.434287,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 25,
+          "experimentViaCount": 24,
+          "controlWireLengthMm": 220.6082933751671,
+          "experimentWireLengthMm": 283.90486779184823,
+          "outputHashMatches": false
+        }
+      ],
+      "pairedCompletedStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 24,
+          "controlSeconds": 3.131697089999999,
+          "experimentSeconds": 3.172363803999998,
+          "speedup": 0.9871809425045378
+        },
+        "componentDetectionSolver": {
+          "count": 24,
+          "controlSeconds": 0.3156955309999987,
+          "experimentSeconds": 0.3172853009999997,
+          "speedup": 0.994989462181228
+        },
+        "edgeSolver": {
+          "count": 24,
+          "controlSeconds": 8.378216396999992,
+          "experimentSeconds": 8.842058429000001,
+          "speedup": 0.9475413970938364
+        },
+        "effortCleanupSolver": {
+          "count": 15,
+          "controlSeconds": 13.922975495999987,
+          "experimentSeconds": 16.627242207999984,
+          "speedup": 0.8373592759297825
+        },
+        "escapeViaLocationSolver": {
+          "count": 24,
+          "controlSeconds": 1.1148998820000002,
+          "experimentSeconds": 1.1428619609999993,
+          "speedup": 0.975533284023617
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 15,
+          "controlSeconds": 14.578882563999993,
+          "experimentSeconds": 16.290125026000005,
+          "speedup": 0.8949521590983023
+        },
+        "highDensityForceImproveSolver": {
+          "count": 19,
+          "controlSeconds": 51.13841628800002,
+          "experimentSeconds": 47.77070889500003,
+          "speedup": 1.0704973292400206
+        },
+        "highDensityRepairSolver": {
+          "count": 19,
+          "controlSeconds": 36.438826533999986,
+          "experimentSeconds": 33.040130414,
+          "speedup": 1.1028656993000205
+        },
+        "highDensityRouteSolver": {
+          "count": 21,
+          "controlSeconds": 588.226069605,
+          "experimentSeconds": 634.503057441,
+          "speedup": 0.927065776447731
+        },
+        "highDensityStitchSolver": {
+          "count": 15,
+          "controlSeconds": 1.3768853249999988,
+          "experimentSeconds": 0.9909591580000197,
+          "speedup": 1.3894470966683083
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 15,
+          "controlSeconds": 0.4973150019999953,
+          "experimentSeconds": 0.4248330959999921,
+          "speedup": 1.1706126633787601
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 15,
+          "controlSeconds": 0.31489869999999065,
+          "experimentSeconds": 0.4101828460000056,
+          "speedup": 0.7677032403251361
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 24,
+          "controlSeconds": 10.377980583999996,
+          "experimentSeconds": 10.208095364000004,
+          "speedup": 1.0166422054205244
+        },
+        "netToPointPairsSolver": {
+          "count": 24,
+          "controlSeconds": 1.503491418999999,
+          "experimentSeconds": 1.547293876,
+          "speedup": 0.97169092589364
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 24,
+          "controlSeconds": 0.38168832200000136,
+          "experimentSeconds": 0.3857522069999973,
+          "speedup": 0.9894650375908388
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 15,
+          "controlSeconds": 169.11250703700003,
+          "experimentSeconds": 216.971178131,
+          "speedup": 0.779423831744581
+        },
+        "portPointPathingSolver": {
+          "count": 24,
+          "controlSeconds": 414.15068736800004,
+          "experimentSeconds": 417.11332823099997,
+          "speedup": 0.9928972759619917
+        },
+        "powerTraceExpansionSolver": {
+          "count": 15,
+          "controlSeconds": 0.00039715999997542897,
+          "experimentSeconds": 0.0003537599999754093,
+          "speedup": 1.1226820443324188
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 24,
+          "controlSeconds": 0.1998977699999946,
+          "experimentSeconds": 0.1888456879999985,
+          "speedup": 1.0585244075045872
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 24,
+          "controlSeconds": 13.224686391,
+          "experimentSeconds": 14.144231312,
+          "speedup": 0.93498798904541
+        },
+        "topologyMergingSolver": {
+          "count": 24,
+          "controlSeconds": 21.300585979999997,
+          "experimentSeconds": 20.859589662,
+          "speedup": 1.021141178956332
+        },
+        "topologyPlanningSolver": {
+          "count": 24,
+          "controlSeconds": 37.310174455,
+          "experimentSeconds": 37.342406327999996,
+          "speedup": 0.999136856025911
+        },
+        "traceSimplificationSolver": {
+          "count": 15,
+          "controlSeconds": 25.912819319999997,
+          "experimentSeconds": 23.759459149999984,
+          "speedup": 1.090631699838168
+        },
+        "traceWidthSolver": {
+          "count": 15,
+          "controlSeconds": 6.028810895000012,
+          "experimentSeconds": 6.089042230999998,
+          "speedup": 0.990108241376067
+        },
+        "uniformPortDistributionSolver": {
+          "count": 24,
+          "controlSeconds": 76.22956725800003,
+          "experimentSeconds": 77.24829763600003,
+          "speedup": 0.986812261121917
+        }
+      },
+      "pairedCleanStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 8,
+          "controlSeconds": 0.3759026370000004,
+          "experimentSeconds": 0.3999351149999984,
+          "speedup": 0.939909057497994
+        },
+        "componentDetectionSolver": {
+          "count": 8,
+          "controlSeconds": 0.06923550399999999,
+          "experimentSeconds": 0.06153615600000012,
+          "speedup": 1.1251190925868015
+        },
+        "edgeSolver": {
+          "count": 8,
+          "controlSeconds": 1.0988339260000002,
+          "experimentSeconds": 1.0757827190000007,
+          "speedup": 1.0214273817499382
+        },
+        "effortCleanupSolver": {
+          "count": 8,
+          "controlSeconds": 7.653416299999992,
+          "experimentSeconds": 10.80242506300001,
+          "speedup": 0.7084905709009856
+        },
+        "escapeViaLocationSolver": {
+          "count": 8,
+          "controlSeconds": 0.20259244399999965,
+          "experimentSeconds": 0.20376051799999936,
+          "speedup": 0.9942674174002654
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 8,
+          "controlSeconds": 8.599372589999998,
+          "experimentSeconds": 9.778995103999994,
+          "speedup": 0.8793718064632751
+        },
+        "highDensityForceImproveSolver": {
+          "count": 8,
+          "controlSeconds": 8.239935324000005,
+          "experimentSeconds": 6.158133035000002,
+          "speedup": 1.3380573750466243
+        },
+        "highDensityRepairSolver": {
+          "count": 8,
+          "controlSeconds": 5.726855468999999,
+          "experimentSeconds": 4.765888280000007,
+          "speedup": 1.2016344346619874
+        },
+        "highDensityRouteSolver": {
+          "count": 8,
+          "controlSeconds": 53.09756666,
+          "experimentSeconds": 63.686979431,
+          "speedup": 0.8337271940731178
+        },
+        "highDensityStitchSolver": {
+          "count": 8,
+          "controlSeconds": 0.6440969590000118,
+          "experimentSeconds": 0.42662890100000367,
+          "speedup": 1.5097358793327653
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 8,
+          "controlSeconds": 0.2210547840000022,
+          "experimentSeconds": 0.19596128899999257,
+          "speedup": 1.1280533268997357
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 8,
+          "controlSeconds": 0.1318765330000033,
+          "experimentSeconds": 0.17793273799999998,
+          "speedup": 0.7411594655504222
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 8,
+          "controlSeconds": 1.3819218510000004,
+          "experimentSeconds": 1.2414307090000003,
+          "speedup": 1.1131687342527308
+        },
+        "netToPointPairsSolver": {
+          "count": 8,
+          "controlSeconds": 0.25634355099999995,
+          "experimentSeconds": 0.2628117550000004,
+          "speedup": 0.9753884524685722
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 8,
+          "controlSeconds": 0.08595336000000088,
+          "experimentSeconds": 0.08267988199999945,
+          "speedup": 1.0395921948703488
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 8,
+          "controlSeconds": 13.902830391000007,
+          "experimentSeconds": 21.181474157999986,
+          "speedup": 0.656367459946081
+        },
+        "portPointPathingSolver": {
+          "count": 8,
+          "controlSeconds": 33.273862783999995,
+          "experimentSeconds": 33.404411634,
+          "speedup": 0.9960918680014372
+        },
+        "powerTraceExpansionSolver": {
+          "count": 8,
+          "controlSeconds": 0.00020625999999674606,
+          "experimentSeconds": 0.00017503999999735244,
+          "speedup": 1.1783592321747363
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 8,
+          "controlSeconds": 0.038915396999999304,
+          "experimentSeconds": 0.0351072820000004,
+          "speedup": 1.1084708010149822
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 8,
+          "controlSeconds": 1.6933838949999998,
+          "experimentSeconds": 1.4748016080000002,
+          "speedup": 1.1482113158911063
+        },
+        "topologyMergingSolver": {
+          "count": 8,
+          "controlSeconds": 2.1400223969999996,
+          "experimentSeconds": 2.099573523,
+          "speedup": 1.019265281047269
+        },
+        "topologyPlanningSolver": {
+          "count": 8,
+          "controlSeconds": 8.056844772,
+          "experimentSeconds": 8.044675228000001,
+          "speedup": 1.0015127452202972
+        },
+        "traceSimplificationSolver": {
+          "count": 8,
+          "controlSeconds": 13.563735991999994,
+          "experimentSeconds": 12.38485516899999,
+          "speedup": 1.095187291810308
+        },
+        "traceWidthSolver": {
+          "count": 8,
+          "controlSeconds": 3.181320890000002,
+          "experimentSeconds": 3.115633719,
+          "speedup": 1.0210830851519623
+        },
+        "uniformPortDistributionSolver": {
+          "count": 8,
+          "controlSeconds": 2.383291694000005,
+          "experimentSeconds": 2.198547362000002,
+          "speedup": 1.0840301806516202
+        }
+      }
+    }
+  ],
+  "experimentCounters": {
+    "srj18/corridors": {
+      "sparseInstances": 14818.0,
+      "sparseUnknown": 9623.0,
+      "sparseOrdersAttempted": 7514.0,
+      "sparseGeometryTests": 7653896.0,
+      "sparseBroadphaseTests": 44320742.0,
+      "sparseEdgesChecked": 5241621.0,
+      "sparseExpandedStates": 284709.0,
+      "sparseRefinements": 10865.0,
+      "sparseEvents": 163181.0,
+      "sparseSolvedTasks": 17904.0,
+      "sparseSearchTimeMs": 37213.13453800064,
+      "sparseBoardValidationCalls": 5187.0,
+      "sparseBoardValidationIssues": 90.0,
+      "sparseWins": 5149.0
+    },
+    "srj24/corridors": {
+      "sparseInstances": 26912.0,
+      "sparseOrdersAttempted": 11920.0,
+      "sparseGeometryTests": 11516163.0,
+      "sparseBroadphaseTests": 57883950.0,
+      "sparseEdgesChecked": 8544611.0,
+      "sparseExpandedStates": 542418.0,
+      "sparseRefinements": 16875.0,
+      "sparseEvents": 231816.0,
+      "sparseSolvedTasks": 27391.0,
+      "sparseSearchTimeMs": 69898.37110099758,
+      "sparseBoardValidationCalls": 8087.0,
+      "sparseBoardValidationIssues": 202.0,
+      "sparseWins": 8053.0,
+      "sparseUnknown": 18817.0
+    }
+  },
+  "artifactVerification": {
+    "verified": true,
+    "errors": [],
+    "artifactZipSha256": "50abc403fae87da929b9eeabf42a6e7c2f1d9e41907cf5ab899139d72c9353ff",
+    "dependencyLockSha256": "62ee3213e32eb76d9dbec37933768663da7c47eea69e4c07cefcf9aa4c5bd041",
+    "dependencyLockMatches": true,
+    "fullRecords": 84,
+    "uniqueFullRecords": 84,
+    "independentSummaryMatches": true,
+    "protocolFilesVerified": 10
+  },
+  "wallSeconds": 3199.68211407,
+  "sourceLimitations": [
+    "One measured run per board and variant; speed ratios are exploratory, not confidence intervals.",
+    "Shared CPU quota, GC and memory pressure can affect wall time despite fixed worker count and optional CPU affinity.",
+    "Clean means the repository's existing benchmark relaxed DRC, not every manufacturing constraint.",
+    "Unsuccessful full-pipeline boards receive their configured timeout as a quality-aware runtime score; raw early failure time is also retained.",
+    "HD stage timing comparisons require both HD stages completed AND identical captured HD-input hashes, independently of later-stage success. Downstream phase comparisons also require identical HD inputs. HD replays do not imply final DRC success.",
+    "Identical pre-HD inputs are verified by constructor-input hashes. Identical upstream failures are reported separately, not counted as HD algorithm evidence.",
+    "Capture serialization/disk overhead is included for all variants and reported separately per sample."
+  ],
+  "wireLengthLimitation": "The original worker emits null for some nonfinite wire-length calculations, and its summary treats null as zero. Corrected wire comparisons here use ONLY common DRC-clean boards with finite lengths on BOTH revisions; per-dataset coverage and missing samples are explicit. Original exports are preserved unchanged."
+}
