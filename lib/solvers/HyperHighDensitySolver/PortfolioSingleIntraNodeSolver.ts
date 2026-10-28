@@ -31,6 +31,7 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { SparseVisibilityIntraNodeSolver } from "./SparseVisibilityIntraNodeSolver"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -202,6 +203,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
+      ["sparseVisibility"],
       ["majorCombinations", "orderings6", "cellSizeFactor"],
       ["noVias"],
       ["orderings50"],
@@ -248,6 +250,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
     }
     return [
+      {
+        name: "sparseVisibility",
+        possibleValues: [{ SPARSE_VISIBILITY: true }],
+      },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -533,6 +539,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
+    if (solver instanceof SparseVisibilityIntraNodeSolver) {
+      return solver.sparseDiagnostics.geometryTests / 100_000
+    }
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
     }
@@ -592,6 +601,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
+    if (hyperParameters.SPARSE_VISIBILITY) {
+      return new SparseVisibilityIntraNodeSolver({
+        ...this.constructorParams,
+        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
+      })
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
