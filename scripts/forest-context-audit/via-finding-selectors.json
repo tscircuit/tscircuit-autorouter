@@ -1,0 +1,580 @@
+{
+  "artifactRun": 40630414562,
+  "candidate": "fac5f6b05d411648c1460b25ac5a279b680cfa2c",
+  "selectors": [
+    {
+      "dataset": "srj18",
+      "sample": 6,
+      "arm": "B",
+      "finding": "987523cb1ff030ea889f2af9e42e13a930ab074ae4b8469afc520e84e4541cb3",
+      "viaId": "via_15",
+      "padId": "pcb_smtpad_329",
+      "exactPhysicalParticipantKeyHash": "65376e0a57d14612f6fbcc16e1297f8e93928aafbcbf3276e7673bdef675568e",
+      "originalObstacleIndexes": [
+        329
+      ],
+      "firstOccurrence": {
+        "traceIndex": 29,
+        "routePointIndex": 11,
+        "pcb_trace_id": "source_trace_158__source_net_158_0",
+        "connection_name": "source_trace_158",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_158"
+        },
+        "traceGeometryHash": "d5dd2f7021f4adb253be7d48973491f0ceef904bacd19dfa578b59e28aac01ad"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_15",
+        "pcb_trace_id": "source_trace_158__source_net_158_0",
+        "x": 22.42292,
+        "y": -4.165,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "inner3",
+          "inner4",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "6744cfb6693fd7e78294ceb5d573c0081df4119c6e6e19727d8868ca2f934776",
+      "viaId": "via_17",
+      "padId": "pcb_smtpad_207",
+      "exactPhysicalParticipantKeyHash": "2760c377dbf2a6f15b3c6033db26fbb6f7edfa2121da74feff69266fbafe689b",
+      "originalObstacleIndexes": [
+        207
+      ],
+      "firstOccurrence": {
+        "traceIndex": 44,
+        "routePointIndex": 11,
+        "pcb_trace_id": "source_trace_57__source_net_57_mst5_0",
+        "connection_name": "source_trace_57",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_57"
+        },
+        "traceGeometryHash": "71eb5238b4b193983a5ca3df5f6a3a6bf0b3c6f535946b2e259f82e1ab3c2e61"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_17",
+        "pcb_trace_id": "source_trace_57__source_net_57_mst5_0",
+        "x": -16.436,
+        "y": 1.563,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "9fdad90b19e75ab94a52f03836c60563c8657b6b551a7bbd17b0939242ae372f",
+      "viaId": "via_29",
+      "padId": "pcb_smtpad_231",
+      "exactPhysicalParticipantKeyHash": "283edc5f7d857a9f1f4d0df0a8328e95281b5d876d334a7c1169d56dcd977b43",
+      "originalObstacleIndexes": [
+        231
+      ],
+      "firstOccurrence": {
+        "traceIndex": 53,
+        "routePointIndex": 9,
+        "pcb_trace_id": "source_trace_54__source_net_54_mst2_0",
+        "connection_name": "source_trace_54",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_54"
+        },
+        "traceGeometryHash": "90173a701ddb4ea32e35648cc12c4b549d734dcae660576a7371ad8b83b60577"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_29",
+        "pcb_trace_id": "source_trace_54__source_net_54_mst2_0",
+        "x": -16.442135286603897,
+        "y": 13.796224683403615,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "62db77e7914674898fc20b664b934d28cce3edc2da0905f51681b3bb075bf459",
+      "viaId": "via_42",
+      "padId": "pcb_smtpad_9",
+      "exactPhysicalParticipantKeyHash": "c5ea0b8d0c892e75d185413435e2d6026b8dc2a1186d6ab6d11837822749a1be",
+      "originalObstacleIndexes": [
+        9
+      ],
+      "firstOccurrence": {
+        "traceIndex": 59,
+        "routePointIndex": 13,
+        "pcb_trace_id": "source_trace_52__source_net_52_mst2_0",
+        "connection_name": "source_trace_52",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_52"
+        },
+        "traceGeometryHash": "c16eb4a64cdcb9d16fd2bea9d94af172a7330175fd757e619fe10c2fdeda4e07"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_42",
+        "pcb_trace_id": "source_trace_52__source_net_52_mst2_0",
+        "x": -12.144,
+        "y": 14.373,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "792956bc8688f1596a75c2ac533b81eba41e9ddcd70041b1ba698a4413ca7408",
+      "viaId": "via_43",
+      "padId": "pcb_smtpad_24",
+      "exactPhysicalParticipantKeyHash": "d4111b3d7c0651a9f4e28c95be7a0a2515301a2219f6f7692d37cd2ccd6ab72c",
+      "originalObstacleIndexes": [
+        24
+      ],
+      "firstOccurrence": {
+        "traceIndex": 59,
+        "routePointIndex": 18,
+        "pcb_trace_id": "source_trace_52__source_net_52_mst2_0",
+        "connection_name": "source_trace_52",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_52"
+        },
+        "traceGeometryHash": "c16eb4a64cdcb9d16fd2bea9d94af172a7330175fd757e619fe10c2fdeda4e07"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_43",
+        "pcb_trace_id": "source_trace_52__source_net_52_mst2_0",
+        "x": -4.603,
+        "y": 16,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "89748cb653e04d2e8c6743de63cc81dafded9397c50f896db2ad80ecbf261a66",
+      "viaId": "via_65",
+      "padId": "pcb_smtpad_102",
+      "exactPhysicalParticipantKeyHash": "ba1a2773e6b6ff6fd218924ee29364f4a1169b1669c025e721089d0f35562f4c",
+      "originalObstacleIndexes": [
+        102
+      ],
+      "firstOccurrence": {
+        "traceIndex": 75,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_trace_48__source_net_48_mst1_0",
+        "connection_name": "source_trace_48",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_48"
+        },
+        "traceGeometryHash": "12401122248c3a52ace1eca152adbac16c637be582ddf63f16c05729f841399f"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_65",
+        "pcb_trace_id": "source_trace_48__source_net_48_mst1_0",
+        "x": -39.83300100000001,
+        "y": 1.8460955217493544,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "3b0e78043ad8ac0fc939d706150add1339666d14a164016f4740fca28b497d1a",
+      "viaId": "via_124",
+      "padId": "pcb_smtpad_48",
+      "exactPhysicalParticipantKeyHash": "f5a8589eb76a8fa6bfb22049f55e9d6eef03fbabf81ebbe673fc2092751fe5e2",
+      "originalObstacleIndexes": [
+        48
+      ],
+      "firstOccurrence": {
+        "traceIndex": 139,
+        "routePointIndex": 4,
+        "pcb_trace_id": "source_trace_17__source_net_17_mst1_0",
+        "connection_name": "source_trace_17",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_17"
+        },
+        "traceGeometryHash": "5497077cf7297a3044b27499e8c0115213c0595443b18c583099714005b38a3e"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_124",
+        "pcb_trace_id": "source_trace_17__source_net_17_mst1_0",
+        "x": 7.357,
+        "y": 14.451,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "f7692148ce30974b240f7dde9b0292cd9dc95026d8162c1fea9a232b5c85b8cb",
+      "viaId": "via_173",
+      "padId": "pcb_smtpad_322",
+      "exactPhysicalParticipantKeyHash": "005699467092200975e1a84051aa77b09bc3aafc0425808d37d283133cdf8f50",
+      "originalObstacleIndexes": [
+        322
+      ],
+      "firstOccurrence": {
+        "traceIndex": 232,
+        "routePointIndex": 12,
+        "pcb_trace_id": "source_trace_7__source_net_7_mst4_0",
+        "connection_name": "source_trace_7",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_7"
+        },
+        "traceGeometryHash": "f9ff2b73b32ed3fb5b625bbe01ce03a031498f213b89241c74a2814e47c679b8"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_173",
+        "pcb_trace_id": "source_trace_7__source_net_7_mst4_0",
+        "x": 2.752671246677794,
+        "y": 15.852273961759472,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7,
+      "arm": "B",
+      "finding": "502b252bb1d926aec8e191d5ada7f5934e4c65e09204dd32e4cacc41cb038d7b",
+      "viaId": "via_178",
+      "padId": "pcb_smtpad_322",
+      "exactPhysicalParticipantKeyHash": "c010985146322e1f0ba7400a192411bf288ecca7d2692b3c746fe43f97802112",
+      "originalObstacleIndexes": [
+        322
+      ],
+      "firstOccurrence": {
+        "traceIndex": 237,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_trace_6__source_net_6_mst4_0",
+        "connection_name": "source_trace_6",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_6"
+        },
+        "traceGeometryHash": "6f4e58b6af3d87226a01103e1cfe162f1bdd8a34978327ba41b6f1e8983c1347"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_178",
+        "pcb_trace_id": "source_trace_6__source_net_6_mst4_0",
+        "x": 3.079243656705264,
+        "y": 16.349865070021234,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 8,
+      "arm": "B",
+      "finding": "30ff2ac17e703551ea02883b45eafc6b6d102b62214aae334da09b071299cd8c",
+      "viaId": "via_166",
+      "padId": "pcb_smtpad_12",
+      "exactPhysicalParticipantKeyHash": "1df955e30198ce5e3e98a972dd0a56a566069bf733d0b1e790a088067a9b6ed6",
+      "originalObstacleIndexes": [
+        12
+      ],
+      "firstOccurrence": {
+        "traceIndex": 186,
+        "routePointIndex": 17,
+        "pcb_trace_id": "source_trace_12__source_net_12_mst29_0",
+        "connection_name": "source_trace_12",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_12"
+        },
+        "traceGeometryHash": "1d29305687239ff019268276669c73ae47f994d8cab1e75e3571ca08bb3cd230"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_166",
+        "pcb_trace_id": "source_trace_12__source_net_12_mst29_0",
+        "x": 13.379499,
+        "y": -3.31300001,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 16,
+      "arm": "B",
+      "finding": "ed86ea673b410fd776d4f3ff3ec87a46caa6b4b36bfd76a15a9f06380da8a719",
+      "viaId": "via_63",
+      "padId": "pcb_smtpad_272",
+      "exactPhysicalParticipantKeyHash": "1d1f327b1eefd059886377c8b28979fef39d40c33b37076d790bed6260519b0f",
+      "originalObstacleIndexes": [
+        294
+      ],
+      "firstOccurrence": {
+        "traceIndex": 210,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_trace_0__source_net_0_mst38_0",
+        "connection_name": "source_trace_0",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_0"
+        },
+        "traceGeometryHash": "c9f683f26e2e2d0e38d8bf32decb46b5cbd55c7fe5bb6021d18acecf5e198235"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_63",
+        "pcb_trace_id": "source_trace_0__source_net_0_mst38_0",
+        "x": -1.5513928965341683,
+        "y": 16.68959593875758,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 16,
+      "arm": "B",
+      "finding": "418773fe2c35dd4713e6d0bc698b95feb8d255c56b80e816a17c9ff61a51563d",
+      "viaId": "via_82",
+      "padId": "pcb_smtpad_152",
+      "exactPhysicalParticipantKeyHash": "d41b6101187e5b01f20ee8ce71f1cbbc26323f020495d39f7c32119a6a146b58",
+      "originalObstacleIndexes": [
+        174
+      ],
+      "firstOccurrence": {
+        "traceIndex": 246,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_trace_0__source_net_0_mst74_0",
+        "connection_name": "source_trace_0",
+        "owner": {
+          "kind": "declared",
+          "name": "source_trace_0"
+        },
+        "traceGeometryHash": "972fe2e94be82ad186b6cb3cec396ebcc8cefa8675799905d45dd7b580890ed8"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_82",
+        "pcb_trace_id": "source_trace_0__source_net_0_mst74_0",
+        "x": 0.33288499999999993,
+        "y": -2.4000823256720176,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj24",
+      "sample": 7,
+      "arm": "B",
+      "finding": "a27bbd80944f5ce24ff3f1758657cc570a860e7666d939bd6ab3ca271be79c25",
+      "viaId": "via_1",
+      "padId": "pcb_smtpad_32",
+      "exactPhysicalParticipantKeyHash": "7046158df19423397b63652fa740fb2d5822d0304bec91fd604d48111dd74169",
+      "originalObstacleIndexes": [
+        32
+      ],
+      "firstOccurrence": {
+        "traceIndex": 8,
+        "routePointIndex": 11,
+        "pcb_trace_id": "pipeline9_forest_8",
+        "connection_name": "source_trace_22__source_net_22",
+        "owner": {
+          "kind": "unresolved",
+          "declaredAlias": "source_trace_22__source_net_22",
+          "status": "unresolved"
+        },
+        "traceGeometryHash": "c1b3aece26b316916d12e78e796363efd693d8a0365b47bcca49f3b68d2ac32e"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_1",
+        "pcb_trace_id": "pipeline9_forest_8",
+        "x": -2.782175666768285,
+        "y": 7.3704474079690465,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj24",
+      "sample": 22,
+      "arm": "B",
+      "finding": "dd4f1ef3b4cca821fe261a60f3526953cf951997b5ff2d7fc106cd904a9b626e",
+      "viaId": "via_2",
+      "padId": "pcb_smtpad_altium_852",
+      "exactPhysicalParticipantKeyHash": "1eedd6bfe6c98992664ec0fc93942a2e5c3bb88a097e245d0ffc77f030c23ede",
+      "originalObstacleIndexes": [
+        12
+      ],
+      "firstOccurrence": {
+        "traceIndex": 16,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_net_altium_pcb_41_mst1_0",
+        "connection_name": "source_net_altium_pcb_41",
+        "owner": {
+          "kind": "declared",
+          "name": "source_net_altium_pcb_41"
+        },
+        "traceGeometryHash": "89cefda57e836632ccc608585d9e30d2ae6d8cabe28d9866764b4d786f3d0b9d"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_2",
+        "pcb_trace_id": "source_net_altium_pcb_41_mst1_0",
+        "x": 30.831525512838333,
+        "y": 57.067531373928105,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "dataset": "srj24",
+      "sample": 22,
+      "arm": "B",
+      "finding": "d5f7f6ef319e277491e94080dac772c09de81c366402328b63a97af94116a934",
+      "viaId": "via_2",
+      "padId": "pcb_smtpad_altium_849",
+      "exactPhysicalParticipantKeyHash": "285676ac6f6fe24301b86251880d37776601b637d2c5fd0900c70775f4e59c1d",
+      "originalObstacleIndexes": [
+        9
+      ],
+      "firstOccurrence": {
+        "traceIndex": 16,
+        "routePointIndex": 5,
+        "pcb_trace_id": "source_net_altium_pcb_41_mst1_0",
+        "connection_name": "source_net_altium_pcb_41",
+        "owner": {
+          "kind": "declared",
+          "name": "source_net_altium_pcb_41"
+        },
+        "traceGeometryHash": "89cefda57e836632ccc608585d9e30d2ae6d8cabe28d9866764b4d786f3d0b9d"
+      },
+      "materializedVia": {
+        "type": "pcb_via",
+        "pcb_via_id": "via_2",
+        "pcb_trace_id": "source_net_altium_pcb_41_mst1_0",
+        "x": 30.831525512838333,
+        "y": 57.067531373928105,
+        "outer_diameter": 0.3,
+        "hole_diameter": 0.15,
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ]
+      }
+    }
+  ],
+  "requested": "For each unique traceIndex+routePointIndex fetch raw-new-traces.json (including input preloads in allocation index), routeType/XY/Z \u00b14 vertices, trace header except route, rawOutput same trace counterpart \u00b14, and any point-pair-context traces matching pcb_trace_id or connection_name of forest branches. Print actual trace hashes, original input sha256, and compare via coordinate exactly. No routing."
+}

@@ -1,0 +1,59 @@
+name: Read-only original forest V3 bounded contexts
+
+on:
+  push:
+    branches: [codex/deep-experiment-forest-context-audit]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    name: Retained V3 ${{ matrix.dataset }} exact route contexts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dataset: srj18
+            artifactName: pinned-experiment-3198-srj18
+          - dataset: srj24
+            artifactName: pinned-experiment-3198-srj24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify bounded context inspector invariants without routing
+        run: python3 scripts/forest-context-audit/test-forest-context.py
+      - name: Verify exact retained V3 artifact metadata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/forest-context-audit/verify-artifact-metadata.py
+          --expected 'scripts/forest-context-audit/expected-forest-v3-${{ matrix.dataset }}.json'
+          --output context-report/source-artifact-metadata.json
+      - name: Download only the exact retained full V3 artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40630414562
+          name: ${{ matrix.artifactName }}
+          path: downloaded
+      - name: Query captured geometry and missing-file coverage without rerouting
+        run: >-
+          python3 scripts/forest-context-audit/inspect-forest-context.py
+          --directory downloaded
+          --expected 'scripts/forest-context-audit/expected-forest-v3-${{ matrix.dataset }}.json'
+          --source-metadata context-report/source-artifact-metadata.json
+          --selectors scripts/forest-context-audit/via-finding-selectors.json
+          --output context-report/bounded-contexts.json
+      - name: Retain bounded geometry, strict provenance and missing-file inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: readonly-original-forest-v3-contexts-${{ matrix.dataset }}
+          path: context-report
+          if-no-files-found: error
+          retention-days: 30
