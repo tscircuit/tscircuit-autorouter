@@ -39,6 +39,7 @@ export class TopologyMergingSolver extends BaseSolver {
   }
   private readonly xCoordinates: number[]
   private readonly atomicRegions: TopologyMergingRegion[] = []
+  private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
 
@@ -83,6 +84,7 @@ export class TopologyMergingSolver extends BaseSolver {
     const topologyRegions = restoreAuthoritativeTargetRegions({
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+      overruledTargetSourceKeys: this.overruledTargetSourceKeys,
     })
     const compactedRegions = compactTopologyMergingRegions(topologyRegions)
     this.outputNodes = createTopologyMergingOutputNodes({
@@ -194,11 +196,15 @@ export class TopologyMergingSolver extends BaseSolver {
       )
       if (coveringNodes.length === 0) continue
 
-      const layerTopologies = getLayerTopologiesForCoveredNodes({
-        coveringNodes,
-        nodeGroups: this.inputProblem.nodeGroups,
-        layerCount: this.inputProblem.layerCount,
-      })
+      const { layerTopologies, overruledTargetSourceKeys } =
+        getLayerTopologiesForCoveredNodes({
+          coveringNodes,
+          nodeGroups: this.inputProblem.nodeGroups,
+          layerCount: this.inputProblem.layerCount,
+        })
+      for (const sourceKey of overruledTargetSourceKeys) {
+        this.overruledTargetSourceKeys.add(sourceKey)
+      }
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },
