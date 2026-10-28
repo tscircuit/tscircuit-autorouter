@@ -1,0 +1,52 @@
+{
+  "runId": 40760310372,
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40760310372",
+  "measuredSource": "5b4c680c842eafe17e2830fc9a29d16d17d6a9b2",
+  "benchmarkBaseline": "637b6c581128238f6c61227a1c15be423d24baca",
+  "approvedConfigSha256": "a85774025edd59295e93d7ca708cffd91872073950092e06bb9d0d1184ca50d0",
+  "copiedArtifactVerificationSha256": "8f7dc7c032bb7ed852d17b15ee3148020d1bde28c16b5d5dcdbe4d80c2ec72c9",
+  "originalArtifactVerificationPath": "/workspace/hd-refinements-2026-10-28/artifacts/remote/confirmation/verified/artifact-verification.json",
+  "reportDestination": "experiments/hd-results/refinement-round2-confirmation/results.md",
+  "publicationScope": "A later documentation head is not the measured source; source implementation remains unchanged. Full raw/protocol validation precedes report publication.",
+  "priorRoundTimingsPooled": false,
+  "publicationBundleManifestSha256": "91ae505ccf68be44f157d097b249d4ecceb9ff771bc82e180f38e4359a73f877",
+  "memoryAttribution": "Dataset24 control global max is sample4 HD timeout; optimized global max is sample24 edge timeout before HD. Both matched sample24 attempts time out in edge. Global maxima across different boards/stages do not isolate a memory effect of lazy setup.",
+  "memoryPeakProvenance": {
+    "sourceCompactCsvSha256": "47f68b905308bbf1752dce2291419a0cfcb7b783dbec1c743159637a26d71c25",
+    "sourceCompactCsvRelativeDestination": "experiments/hd-results/refinement-round2-confirmation/arm-samples-compact.csv",
+    "records": [
+      {
+        "arm": "control",
+        "boardId": "srj24-004",
+        "peakRssBytes": "6493028352",
+        "failurePhase": "highDensityRouteSolver",
+        "hdCompleted": "false",
+        "timeout": "true"
+      },
+      {
+        "arm": "control",
+        "boardId": "srj24-024",
+        "peakRssBytes": "5098319872",
+        "failurePhase": "edgeSolver",
+        "hdCompleted": "false",
+        "timeout": "true"
+      },
+      {
+        "arm": "optimized-lazy",
+        "boardId": "srj24-004",
+        "peakRssBytes": "6284042240",
+        "failurePhase": "highDensityRouteSolver",
+        "hdCompleted": "false",
+        "timeout": "true"
+      },
+      {
+        "arm": "optimized-lazy",
+        "boardId": "srj24-024",
+        "peakRssBytes": "9270620160",
+        "failurePhase": "edgeSolver",
+        "hdCompleted": "false",
+        "timeout": "true"
+      }
+    ]
+  }
+}

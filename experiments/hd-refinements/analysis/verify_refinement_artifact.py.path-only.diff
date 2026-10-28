@@ -1,0 +1,14 @@
+--- local/verify_refinement_artifact.py
++++ portable/verify_refinement_artifact.py
+@@ -30,9 +30,9 @@
+ RULE = re.compile(r"clearance|gap|tracewidth|diameter", re.IGNORECASE)
+ SOURCE_METHOD = "Exact JSON.stringify of loaded source SRJ after metadata migration and effort override, before runTask/timed solve; scenario hash also includes scenarioName. No configuration fields removed or normalized."
+ KNOWN_NONEXECUTING_OMISSIONS = {".gitignore"}
+-CONFIRMATION_TEMPLATE = ROOT / "artifacts/confirmation/combined-confirmation.json.in"
++CONFIRMATION_TEMPLATE = ROOT / "confirmation/combined-confirmation.json.in"
+ CONFIRMATION_TEMPLATE_SHA256 = "611973ae75130fb4dded3a17e8ef3d744270e0a344e9cbad65ca993fe2bf9c95"
+-LEGAL_CONFIRMATION_TEMPLATE = ROOT / "artifacts/confirmation-legal-only/legalization-final-confirmation.json.in"
++LEGAL_CONFIRMATION_TEMPLATE = ROOT / "confirmation-legal-only/legalization-final-confirmation.json.in"
+ LEGAL_CONFIRMATION_TEMPLATE_SHA256 = "59fc336f47993d670c15d94a65321bcf8e144c9b80ab1b316a1d1391e22417e6"
+ 
+ 
