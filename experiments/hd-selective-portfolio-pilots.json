@@ -1,0 +1,100 @@
+{
+  "scope": "Two development-fixture smoke runs, not paired full-board benchmark. First run did not save routes; second used CPU3. Physical findings are intermediate node output before downstream repair.",
+  "nodeFixture": "tests/fixtures/srj18-sample002-large-node.json",
+  "records": [
+    {
+      "elapsedMs": 3220.307437,
+      "solved": true,
+      "failed": false,
+      "scaleFactor": 1,
+      "routeCount": 19,
+      "sourceArtifact": "portfolio-focused-smoke-final.json",
+      "attemptBudgetMs": 3431.9489321162746,
+      "winner": {
+        "family": "a01",
+        "shuffleSeed": 2,
+        "elapsedMs": 807.9607470000013,
+        "searchMs": 806.6797850000013,
+        "bestProgress": 1,
+        "iterations": 1715575,
+        "maxIterations": 2000000,
+        "solved": true,
+        "failed": false,
+        "quanta": 58
+      },
+      "physicalChecks": null,
+      "a13PrimitiveViolations": null
+    },
+    {
+      "elapsedMs": 4440.366135,
+      "solved": true,
+      "failed": false,
+      "scaleFactor": 2,
+      "routeCount": 19,
+      "sourceArtifact": "portfolio-focused-smoke-physical-check.json",
+      "attemptBudgetMs": 2654.8638157893984,
+      "winner": {
+        "family": "a01",
+        "shuffleSeed": 5,
+        "elapsedMs": 236.51590499999838,
+        "searchMs": 235.7311809999983,
+        "bestProgress": 1,
+        "iterations": 470196,
+        "maxIterations": 2000000,
+        "solved": true,
+        "failed": false,
+        "quanta": 22
+      },
+      "physicalChecks": [
+        {
+          "clearance": 0,
+          "copperConflictPairs": 24
+        },
+        {
+          "clearance": 0.15,
+          "copperConflictPairs": 54
+        }
+      ],
+      "a13PrimitiveViolations": 576
+    }
+  ],
+  "policy": "Superseded elapsed-clock/min-rate development implementation; final branch uses process CPU and a frozen median-probe budget.",
+  "finalCpuClockSmoke": {
+    "wallMs": 4525.279992,
+    "cpuMs": 4524.743,
+    "solved": true,
+    "failed": false,
+    "scaleFactor": 1,
+    "routeCount": 19,
+    "physicalChecks": [
+      {
+        "clearance": 0,
+        "conflictingRoutePairs": 1
+      },
+      {
+        "clearance": 0.15,
+        "conflictingRoutePairs": 45
+      }
+    ],
+    "sourceArtifact": "portfolio-focused-cpu-warmup-clock.json",
+    "clockSource": "cpu",
+    "attemptBudgetMs": 23259.5108695651,
+    "calibrationRates": [
+      0.0012842881944444375,
+      0.0033043064024390043,
+      0.0029074388586956376
+    ],
+    "winner": {
+      "family": "a01",
+      "shuffleSeed": 5,
+      "elapsedMs": 770.476000000003,
+      "searchMs": 769.846000000003,
+      "bestProgress": 1,
+      "iterations": 1474214,
+      "maxIterations": 2000000,
+      "solved": true,
+      "failed": false,
+      "quanta": 52
+    }
+  }
+}

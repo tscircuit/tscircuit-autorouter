@@ -139,6 +139,8 @@ export class CachedPortfolioSingleIntraNodeSolver
       normalizedNodeData,
       normalizedHyperParameters,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
+      selectivePortfolio: this.selectivePortfolio,
+      selectivePortfolioTiming: this.selectivePortfolio ? this.selectiveClockSource : undefined,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
