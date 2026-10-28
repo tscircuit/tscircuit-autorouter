@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "checkedDate": "2026-10-28",
+  "purpose": "Additional primary-source assumption check accompanying the five implemented experiments. This supplements earlier research; it neither claims exhaustive coverage nor adds new solver runs.",
+  "interpretation": "Findings paraphrase cited sources. Transfer limits and ourInference are our critical assessment, not claims made by their authors. None of these papers certifies the experimental code or its PCB outputs.",
+  "sources": [
+    {
+      "id": "pbs2019",
+      "title": "Searching with Consistent Prioritization for Multi-Agent Path Finding",
+      "year": 2019,
+      "url": "https://www.cs.sfu.ca/~hangma/pub/aaai19a.pdf",
+      "read": "Full theoretical section and algorithm framing",
+      "relevantPrs": [
+        3201
+      ],
+      "finding": "Conflict-driven search over partial priorities can improve prioritized planning. The paper also proves general incompleteness and suboptimality, including sensitivity to equally good individual path choices.",
+      "transferLimit": "The model contains moving agents and time; PCB copper remains in place. Its guarantees do not certify this bounded finite-width, multilayer router.",
+      "ourInference": "Searching priority orders cannot substitute for testing alternative physical witnesses. The accepted prior-witness move is useful mechanism evidence, while the soft-only ablation is needed to attribute the bundle's benefit."
+    },
+    {
+      "id": "smtcbs2019",
+      "title": "Multi-Agent Path Finding with Continuous Time and Geometric Agents Viewed through Satisfiability Modulo Theories (SMT)",
+      "year": 2019,
+      "url": "https://ojs.aaai.org/index.php/SOCS/article/view/18490",
+      "read": "Publisher abstract and model description",
+      "relevantPrs": [
+        3201
+      ],
+      "finding": "Lazy conflict generation extends an SMT encoding when geometric agent conflicts are discovered.",
+      "transferLimit": "Circular moving agents on predefined straight-line connections differ from permanent copper, drilled vias and board ownership. The short publication does not validate our candidate archive.",
+      "ourInference": "Conditional conflict facts are a reasonable design pattern, but domain exhaustion only rejects the archived candidates. It does not prove the physical board unroutable."
+    },
+    {
+      "id": "flute2008",
+      "title": "FLUTE: Fast Lookup Table Based Rectilinear Steiner Minimal Tree Algorithm for VLSI Design",
+      "year": 2008,
+      "url": "https://ieeexplore.ieee.org/document/4358497/",
+      "read": "Publisher abstract and low-degree/high-degree scope",
+      "relevantPrs": [
+        3198
+      ],
+      "finding": "Lookup-table Steiner construction optimizes rectilinear tree length for low-degree nets, with decomposition for larger nets.",
+      "transferLimit": "A short abstract tree is not a routed, finite-width, obstacle-avoiding PCB tree. It does not account for all later interactions created by fixing copper.",
+      "ourInference": "Forest sharing can reduce demand and drills yet worsen global routability. Eligibility and downstream effects must be measured instead of treating tree length as the final objective."
+    },
+    {
+      "id": "fastroute2009",
+      "title": "FastRoute 4.0: Global Router with Efficient Via Minimization",
+      "year": 2009,
+      "url": "https://doi.org/10.1109/ASPDAC.2009.4796542",
+      "additionalUrl": "https://home.engineering.iastate.edu/~cnchu/pubs/c52.pdf",
+      "read": "Author-hosted indexed text covering overview and via-aware tree construction; direct PDF fetch rejected",
+      "relevantPrs": [
+        3198,
+        3199
+      ],
+      "finding": "The flow combines via-aware trees, bounded pattern routing, congestion handling and ordered layer assignment rather than relying only on a via penalty in maze routing.",
+      "transferLimit": "The global grid-capacity model and preferred-direction layers differ from this PCB pipeline's exact copper. Reported contest improvements cannot be transferred numerically.",
+      "ourInference": "The forest result argues for evaluating sharing together with congestion and future layer cost. Committing geometrically valid copper too early can trade fewer demands for more difficult remaining routes."
+    },
+    {
+      "id": "sketch1985",
+      "title": "Algorithms for Routing and Testing Routability of Planar VLSI Layouts",
+      "year": 1985,
+      "url": "https://doi.org/10.1145/22145.22153",
+      "read": "Publisher model and abstract",
+      "relevantPrs": [
+        3199,
+        3200
+      ],
+      "finding": "For a supplied planar layout sketch, topology and feature positions support routability testing and wire-length optimization through a rubber-band representation.",
+      "transferLimit": "A fixed one-layer rectilinear sketch is narrower than multilayer PCB routing with irregular pads, width changes and vias. Preserving order alone does not certify that broader problem.",
+      "ourInference": "Constructive local witnesses improve the portal experiment's evidence, but the remaining certified cells must be profiled before assuming witness replay removes expensive global search."
+    },
+    {
+      "id": "channel1982",
+      "title": "A \u201cGreedy\u201d Channel Router",
+      "year": 1982,
+      "url": "https://people.csail.mit.edu/rivest/pubs/RF82.pdf",
+      "read": "Author-hosted indexed algorithm and density discussion",
+      "relevantPrs": [
+        3199,
+        3200
+      ],
+      "finding": "Channel density supplies a width lower bound, while vertical conflicts and routing choices still affect feasibility and via/length tradeoffs.",
+      "transferLimit": "The algorithm may add tracks or route outside the channel ends to succeed. A fixed PCB region cannot assume those extra resources. Its track model does not directly certify arbitrary board regions.",
+      "ourInference": "Crossing counts and point spacing are limited surrogate objectives. An inactive later refinement does not reject earlier joint incidence or layer planning."
+    },
+    {
+      "id": "trackgraph1987",
+      "title": "Rectilinear Shortest Paths and Minimum Spanning Trees in the Presence of Rectilinear Obstacles",
+      "year": 1987,
+      "url": "https://ieeexplore.ieee.org/document/1676904/",
+      "read": "Publisher abstract and graph assumptions",
+      "relevantPrs": [
+        3202
+      ],
+      "finding": "Obstacle- and terminal-induced track graphs support efficient shortest-path and spanning-tree searches under a rectilinear model.",
+      "transferLimit": "The theorem depends on the graph and obstacle model. The experiment has rotated shapes, finite widths, permanent traces, vias and explicitly bounded event generation.",
+      "ourInference": "Restricted-graph exhaustion and query-cap exhaustion are implementation outcomes, not proofs of physical impossibility. Simple direct-routing wins should remain separate from full replacement claims."
+    },
+    {
+      "id": "escape2025",
+      "title": "A Matching-Based Escape Routing Algorithm With Variable Design Rules and Multiple Constraints",
+      "year": 2025,
+      "url": "https://ieeexplore.ieee.org/document/11003110",
+      "read": "Publisher abstract and bibliographic metadata; full method not independently reproduced",
+      "relevantPrs": [
+        3199,
+        3200
+      ],
+      "finding": "The reported escape-routing flow combines obstacle-aware pin projection, hierarchical sequencing, global congestion optimization and detailed routing with variable rules.",
+      "transferLimit": "Its reported industrial escape instances are not our full-board populations. The abstract alone does not disclose enough to reproduce its performance or certify its baselines.",
+      "ourInference": "Early escape sequencing remains plausible. The zero accepted decisions in our later planner constitute a narrow implementation nonwin, not a rejection of that broader research direction."
+    },
+    {
+      "id": "oer2025",
+      "title": "Two stage Ordered Escape Routing combined with LP and heuristic algorithm for large scaled PCB",
+      "year": 2025,
+      "url": "https://doi.org/10.1016/j.vlsi.2024.102270",
+      "read": "Publisher indexed abstract/highlights; direct full-page retrieval rejected",
+      "relevantPrs": [
+        3199
+      ],
+      "finding": "The described method combines a multicommodity-flow/linear-programming stage with heuristic congestion handling for ordered escape routing.",
+      "transferLimit": "Relaxed flow is not an exact finite-width copper certificate, and escape routing is not an end-to-end whole-board benchmark.",
+      "ourInference": "This is a resource for an earlier decision formulation, not evidence that adding another optimizer after the current pathing stage would help."
+    },
+    {
+      "id": "pcbw2026",
+      "title": "PCBWorld: A Benchmark Environment for Engine-Grounded PCB Design Automation",
+      "year": 2026,
+      "url": "https://arxiv.org/html/2607.05915v4",
+      "codeUrl": "https://github.com/LGAI-Research/PCBWorld",
+      "read": "Primary full-text environment/actions, evaluation, check catalog and rollout-selection descriptions; public repository metadata verified",
+      "relevantPrs": [
+        3198,
+        3199,
+        3200,
+        3201,
+        3202
+      ],
+      "finding": "Engine-native operations and independent completed-board evaluation connect routing actions to actual geometric checks. The release includes synthetic and real-board data; main results distinguish selected rollouts from single-rollout outcomes.",
+      "transferLimit": "The engine, input format, rule catalog, supported actions and rollout budgets differ from our pinned SRJ/360-second protocol. This study is not a head-to-head evaluation of our solvers.",
+      "ourInference": "It is a useful future external validation resource. Its emphasis on connectivity plus checks supports keeping completion, full-copper findings, style and runtime distinct; no requested benchmark is replaced here."
+    },
+    {
+      "id": "rldrt2026",
+      "title": "Routing Dense Layouts with History-Aware Offline Reinforcement Learning using LSTM",
+      "year": 2026,
+      "url": "https://arxiv.org/html/2609.08232v1",
+      "codeUrl": "https://github.com/realise-lab/RLDRT",
+      "read": "Primary full-text methodology, controls, training/evaluation split and result tables",
+      "relevantPrs": [
+        3201
+      ],
+      "finding": "An iteration-level learned controller changes four existing cost knobs in OpenROAD. The paper evaluates unseen density/adjustment settings on designs also present during training; hard cases can retain violations despite large reductions.",
+      "transferLimit": "These are IC detailed-routing experiments with router-specific features and substantial training. They do not show transfer to unseen PCB designs or a guaranteed clean solution.",
+      "ourInference": "Cost calibration can matter without replacing search. Our cheap deterministic pricing ablation should establish its own effect and quality limits before a learned controller adds complexity."
+    },
+    {
+      "id": "omnirouting2026",
+      "title": "OmniRouting: A Semantic-Coupled Multimodal Benchmark for Constraint-Aware Spatial Reasoning in PCB Routing",
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2608.04434v1",
+      "read": "Primary abstract and release statement only",
+      "relevantPrs": [
+        3198,
+        3199,
+        3200,
+        3201,
+        3202
+      ],
+      "finding": "The proposed benchmark jointly considers geometric rules, connectivity and schematic semantics in PCB routing.",
+      "transferLimit": "The inspected abstract promises a future open-source release; data and evaluator availability were not independently established. Its claims are not used as measured evidence here.",
+      "ourInference": "Useful context for evaluating representation/identity loss, but not a runnable substitute for the requested datasets or an independently verified solver improvement."
+    }
+  ],
+  "implementationObservationsNotNewMeasuredVariants": [
+    {
+      "pr": 3201,
+      "source": "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts:getFutureConnectionPenalty",
+      "observation": "The zero-factor pricing mode still calculates the nearest future point before multiplying by zero. A zero-factor fast path is a possible implementation simplification; it was not implemented or benchmarked in this campaign.",
+      "limit": "This does not alter or invalidate the measured c57 mode; no speedup is attributed to an unimplemented shortcut. Hard future-segment checks remain a separate policy."
+    }
+  ]
+}
