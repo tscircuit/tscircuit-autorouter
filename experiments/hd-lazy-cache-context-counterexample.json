@@ -1,0 +1,43 @@
+{
+  "controlScope": "Same current refined source and strict native-worker two-batch fixture, with exactly one temporary factory literal changed from lazy to eager; factory restored byte-for-byte after run.",
+  "factorySha256ForEager": "380120854aa68119d5d7ac120e9e7b8c290cf9faf8ab4e61ef96840798a7a8de",
+  "duplicateCacheContext": true,
+  "serialHash": "e0fd7e71afb4f49a6c08402850a2066c0f2478ce9d04e991005e913134028791",
+  "workerHash": "1613ae469d4147757d39e65290feeaf2bab5b7f59b54d53fb0f5e4ce320c4a6e",
+  "processReturnCode": 1,
+  "differences": [
+    {
+      "batchIndex": 1,
+      "nodeIndex": 0,
+      "routesMatch": false,
+      "routeRegionIds": {
+        "serial": [
+          "native-lazy-0-0",
+          "native-lazy-0-0"
+        ],
+        "worker": [
+          "native-lazy-1-0",
+          "native-lazy-1-0"
+        ]
+      },
+      "work": {
+        "serial": 5,
+        "worker": 5
+      },
+      "deterministicDiagnosticsMatch": true
+    }
+  ],
+  "allLeafDifferences": [
+    {
+      "path": "output[1][0].routes[0].regionId",
+      "serial": "native-lazy-0-0",
+      "worker": "native-lazy-1-0"
+    },
+    {
+      "path": "output[1][0].routes[1].regionId",
+      "serial": "native-lazy-0-0",
+      "worker": "native-lazy-1-0"
+    }
+  ],
+  "interpretation": "Repeated identical net/geometry context with different node IDs fails strict serial/native-worker metadata equality under the corrected EAGER twin too. This exists independently of setup deferral. No routing output was normalized, rebased, sorted or rounded; no shared-cache fix is included. Separate equally cold, distinct-net worker tests retain complete strict equality."
+}
