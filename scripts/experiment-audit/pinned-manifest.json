@@ -81,14 +81,15 @@
     },
     {
       "pr": 3201,
-      "candidateSha": "32c17c49f095860a487d8f95f381b958b639ed6f",
-      "label": "copper-conflict-learning",
+      "candidateSha": "c57b1b58eb8ed4e6d1de5172aa8283179fe31088",
+      "label": "soft-future-pricing-only",
       "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
       "options": {
         "cacheProvider": null,
         "effort": 1,
-        "copperCandidateSearch": true
+        "copperCandidateSearch": false,
+        "copperUnpriceFutureCosts": true
       },
       "evidencePaths": [
         "highDensityRouteSolver.benchmarkDiagnosticCounters"
@@ -110,7 +111,7 @@
     }
   ],
   "runPrNumbers": [
-    3198
+    3201
   ],
-  "replicationPolicy": "Predeclared full AB-only qualification for forest v3; compare each candidate only with its same-job A. No optional BA; lower timing confidence than repeated campaigns."
+  "replicationPolicy": "Predeclared full AB-only qualification of independent soft future pricing; compare candidate with its same-job baseline only. No optional BA; lower timing confidence than repeated campaigns."
 }
