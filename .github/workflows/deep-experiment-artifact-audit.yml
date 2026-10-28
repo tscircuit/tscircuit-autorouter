@@ -1,0 +1,49 @@
+name: Read-only pinned experiment artifact inspection
+
+on:
+  push:
+    branches: [codex/deep-experiment-artifact-audit]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout read-only artifact inspector
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify immutable source artifact metadata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/experiment-artifact-audit/verify-artifact-metadata.py
+          --expected scripts/experiment-artifact-audit/expected-source.json
+          --output compact-report/source-artifact-metadata.json
+      - name: Download retained exact-source benchmark artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40601528317
+          name: pinned-experiment-3202-srj18
+          path: downloaded
+      - name: Inspect captured evidence without routing or validator changes
+        run: >-
+          python3 scripts/experiment-artifact-audit/inspect-artifact.py
+          --directory downloaded
+          --expected scripts/experiment-artifact-audit/expected-source.json
+          --output compact-report/inspection.json
+          --source-metadata compact-report/source-artifact-metadata.json
+          --example-limit 3
+      - name: Retain compact inspection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinned-experiment-3202-srj18-readonly-inspection
+          path: compact-report
+          if-no-files-found: error
+          retention-days: 30
