@@ -61,7 +61,17 @@ export type Jumper = {
 
 export type JumperType = "1206x4" | "0603"
 
+/** Board-world mm, +X right/+Y up. Regions prohibit via copper, not traces. */
+export type ViaKeepout = {
+  layers: string[]
+} & (
+  | { shape: "rect"; center: { x: number; y: number }; width: number; height: number }
+  | { shape: "circle"; center: { x: number; y: number }; radius: number }
+  | { shape: "outline"; outline: { x: number; y: number }[]; strokeWidth: number }
+)
+
 export interface SimpleRouteJson {
+  viaKeepouts?: ViaKeepout[]
   layerCount: number
   /** Whether autorouters may use vias that do not span the full board stack. */
   allowBlindAndBuriedVias?: boolean

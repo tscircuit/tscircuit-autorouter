@@ -1,3 +1,4 @@
+import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -610,6 +611,40 @@ const buildSerializedTinyGraph = (
     const endRegion = serializedRegionById.get(connection.endRegion.regionId)
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
+
+    // A physical multilayer terminal is an existing connection, not a new via.
+    // Give its synthetic terminal access to every containing region/layer. The
+    // synthetic junction is absent from originalRegionIds, so it emits no copper.
+    for (const [point, terminalPortId, label] of [
+      [startPoint, startTerminalPortId, "start"],
+      [endPoint, endTerminalPortId, "end"],
+    ] as const) {
+      if (!point || getConnectionPointLayers(point).length < 2) continue
+      const pointZ = getConnectionPointLayers(point).map(layer => mapLayerNameToZ(layer, params.layerCount))
+      const candidates = params.graph.regions.filter(region => checkIfConnectionPointIsInRegion({
+        point, region, layerCount: params.layerCount, pointZLayers: pointZ,
+      }))
+      const accesses = candidates.flatMap(region => region.d.availableZ.filter(z => pointZ.includes(z)).map(z => ({ region, z })))
+      if (accesses.length < 2) continue
+      const terminalPort = ports.find(port => port.portId === terminalPortId)!
+      const oldRegion = serializedRegionById.get(terminalPort.region1Id)!
+      oldRegion.pointIds = oldRegion.pointIds.filter(id => id !== terminalPortId)
+      const junctionId = `tiny-terminal:${label}-access:${connection.connectionId}`
+      terminalPort.region1Id = junctionId
+      const junctionPorts = accesses.map(({ region, z }, i) => {
+        const portId = `${junctionId}:${i}`
+        serializedRegionById.get(region.regionId)!.pointIds.push(portId)
+        ports.push({ portId, region1Id: region.regionId, region2Id: junctionId,
+          d: { ...terminalPort.d, portId, z, terminalConnectionId: connection.connectionId } })
+        return portId
+      })
+      regions.push({ regionId: junctionId, pointIds: [terminalPortId, ...junctionPorts], d: {
+        capacityMeshNodeId: junctionId, center: { x: point.x, y: point.y },
+        width: TINY_TERMINAL_REGION_SIZE, height: TINY_TERMINAL_REGION_SIZE,
+        availableZ: pointZ, _containsTarget: true, _tinyTerminal: true,
+        _tinyTerminalNetId: connection.mutuallyConnectedNetworkId, netId: routeNetIndex,
+      } })
+    }
 
     solvedRoutes.push({
       connection: {
@@ -1652,7 +1687,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connectionName,
       rootConnectionName,
       ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
+      typeof portMetadata?.pcb_port_id === "string" &&
+      // Access to an existing same-net contact is transit for other routes,
+      // not one of their endpoints. Keep endpoint locking on its owning route.
+      (portMetadata.terminalConnectionId === undefined ||
+        portMetadata.terminalConnectionId === routeMetadata?.connectionId)
         ? { pcb_port_id: portMetadata.pcb_port_id }
         : {}),
       prevPortPointId:
