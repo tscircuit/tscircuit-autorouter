@@ -21,6 +21,8 @@ test("lazy setup preserves every legacy scheduling decision and the rare last A0
       if (legacy.solved || legacy.failed) break
     }
     expect(observedExpansion).toBe(true)
+    expect(lazy.stats.lazyGridSetupDeferredCount).toBeGreaterThan(0)
+    expect(lazy.stats.lazyGridSetupMaterializedCount).toBeGreaterThan(0)
     for (const portfolio of [legacy, eager, lazy]) {
       expect(portfolio.solved).toBe(true)
       expect(portfolio.failed).toBe(false)

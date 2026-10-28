@@ -5,7 +5,7 @@ import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolv
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { policySnapshot } from "./lazyPortfolioTestUtils"
 
-type MethodCase = "setup-readonly" | "getOutput-readonly" | "setup-accessor" | "getOutput-accessor"
+type MethodCase = "setup-readonly" | "getOutput-readonly" | "setup-accessor" | "getOutput-accessor" | "setup-own" | "getOutput-own"
 type Params = ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0]
 
 class FixedMethodPortfolio extends PortfolioSingleIntraNodeSolver {
@@ -21,8 +21,9 @@ class FixedMethodPortfolio extends PortfolioSingleIntraNodeSolver {
     if (external instanceof HighDensitySolverA01) {
       const method = this.methodCase.startsWith("setup") ? "setup" : "getOutput"
       const original = external[method]
-      if (this.methodCase.endsWith("readonly")) {
-        Object.defineProperty(external, method, { value: original, writable: false, configurable: true })
+      if (!this.methodCase.endsWith("accessor")) {
+        Object.defineProperty(external, method, { value: original,
+          writable: this.methodCase.endsWith("own"), configurable: true })
       } else {
         Object.defineProperty(external, method, { configurable: true, get: (): typeof original => {
           this.getterReads++
@@ -34,14 +35,14 @@ class FixedMethodPortfolio extends PortfolioSingleIntraNodeSolver {
   }
 }
 
-test("non-writable or accessor grid methods retain eager behavior without deferred wrapper assignment", (): void => {
+test("own or accessor grid methods retain eager behavior without shadowing shared deferred methods", (): void => {
   const node: NodeWithPortPoints = { capacityMeshNodeId: "method-descriptor-contract",
     center: { x: 0, y: 0 }, width: 2, height: 2, availableZ: [0, 1],
     portPoints: [
       { connectionName: "A", x: -1, y: 0, z: 0 },
       { connectionName: "A", x: 1, y: 0, z: 1 },
     ] }
-  for (const methodCase of ["setup-readonly", "getOutput-readonly", "setup-accessor", "getOutput-accessor"] as const) {
+  for (const methodCase of ["setup-readonly", "getOutput-readonly", "setup-accessor", "getOutput-accessor", "setup-own", "getOutput-own"] as const) {
     const params = { nodeWithPortPoints: node, traceWidth: 0.1, viaDiameter: 0.3, cacheProvider: null }
     const eager = new FixedMethodPortfolio({ ...params, portfolioMode: "eager" }, methodCase)
     const lazy = new FixedMethodPortfolio({ ...params, portfolioMode: "lazy" }, methodCase)

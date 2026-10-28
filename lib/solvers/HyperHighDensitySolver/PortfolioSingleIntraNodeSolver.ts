@@ -478,11 +478,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) {
       if (this.portfolioMode === "lazy") {
         const cap = this.getGridSearchIterationBudget()
-        if (DeferredHighDensityGridSetup.isEligible(solver, cap)) {
-          const deferred = new DeferredHighDensityGridSetup(solver, cap, (): void => {
-            this.lazyMaterializedCount++
-            this.updateLazySetupStats()
-          })
+        const deferred = DeferredHighDensityGridSetup.createIfEligible(solver, cap, (): void => {
+          this.lazyGridSetups.delete(solver)
+          this.lazyMaterializedCount++
+          this.updateLazySetupStats()
+        })
+        if (deferred) {
           this.lazyGridSetups.set(solver, deferred)
           this.lazyDeferredCount++
           this.updateLazySetupStats()

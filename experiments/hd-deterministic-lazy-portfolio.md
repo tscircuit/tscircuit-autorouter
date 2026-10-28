@@ -57,7 +57,8 @@ remain eagerly initialized. This is an explicit optimization eligibility limit,
 not a recovery strategy after a failed solve.
 
 Deferral also requires the known pinned constructor and unchanged `setup`/`_setup`
-methods and writable ordinary `setup`/`getOutput` descriptors, the factory's
+methods, inherited ordinary `setup`/`getOutput` descriptors and no own method
+shadows, the factory's
 fixed cell/border recipe, finite valid node geometry and
 physical parameters, unique valid layers with every terminal on an available
 layer, and no custom penalty callback or maximum-cell restriction. Unsupported
@@ -71,7 +72,7 @@ After setup, the implementation checks the exact cap, setup completion, zero wor
 zero progress and unchanged unsolved/unfailed state, then reapplies the cap. A
 certificate violation throws. Direct candidate `step()`/`setup()` calls also take
 this path. Explicit `getOutput()` or public debug-getter inspection materializes only that
-candidate, then restores its original methods/getters. Inspecting the selected
+candidate, then restores its exact original prototype. Inspecting the selected
 best candidate also materializes it. Existing output methods therefore receive
 the same initialized state; inspection pays the corresponding setup cost.
 
@@ -81,6 +82,24 @@ The same `MIN_SUBSTEPS=100`, fitness functions, first-match ties, candidate orde
 tracked work, expansion budget and limits remain. A known deferred candidate has
 zero progress; this avoids reading A03's uninitialized solved-map getter without
 changing the eager value. There is no reduced failed-search allocation.
+
+The current wrapper uses one shared pending prototype per native prototype. It
+does not add or delete own methods/accessors on an A01/A03 instance. Before native
+setup, it restores the original prototype, so allocation and hot grid search use
+the native property layout and methods. A single eligibility pass replaces the
+earlier duplicate certificate walk. Materialized candidates leave the portfolio's
+pending lookup map. Cached pending method/getter references remain valid through
+a separate weak state entry, whose parent callback is cleared after first setup.
+
+This follows a negative result for the first own-accessor wrapper implementation
+at published source `c879c9d5f4689502a279ed9d92a0299946eafcfb`. Its verified four-arm
+dataset18/24 run preserved all 35 solved final-output hashes and all 37 comparable
+completed-HD iteration counts, while skipping about 84% of eager grid setups.
+Nevertheless, against the source-derived eager twin it increased HD time by
+16.1%/15.2% and common-clean routing time by 6.3%/1.8%. That implementation is not
+an optimization win. Own-property definition/deletion and retained pending-map
+entries are plausible overhead sources; the stable-prototype refinement requires
+its own Blacksmith measurement before any speed claim.
 
 The certificate is specific to the pinned kernel source. Changing that dependency
 requires auditing the bound, recipe and setup side effects again.
@@ -148,6 +167,14 @@ immutable/accessor method eligibility, exact legacy/eager/lazy parity at 0.15 an
 charged PriorityDAG constructor work and cold native-worker parity. Centralized
 compile/build checks remain separate required validation; no earlier race speedup
 is inferred from these tests.
+
+The stable-prototype follow-up passes 14 lazy/certificate checks with 552
+assertions and 27 relevant legacy/research/priority/native-worker regressions with
+35,050 assertions. Its new property-contract test checks unchanged native own
+descriptors while pending, exact original prototypes and eager descriptor layouts
+after setup, and retained pre-setup method/getter references. Rare-seed scheduling
+continues to exercise actual deferral. Compiler, full-board and performance
+validation remain separately coordinated.
 
 The superseded corrected-policy source and its adverse evidence are retained:
 lazy source `fbf95287d98e067e314eae1c47999664f3305fb6` passed A64, T113 and

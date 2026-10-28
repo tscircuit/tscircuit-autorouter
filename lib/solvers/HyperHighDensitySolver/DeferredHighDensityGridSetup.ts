@@ -16,6 +16,42 @@ const a01InspectionGetters = new Map<InspectionName, InspectionGetter | undefine
   [name, Object.getOwnPropertyDescriptor(HighDensitySolverA01.prototype, name)?.get] as const))
 const a03InspectionGetters = new Map<InspectionName, InspectionGetter | undefined>(inspectionNames.map((name) =>
   [name, Object.getOwnPropertyDescriptor(HighDensitySolverA03.prototype, name)?.get] as const))
+const deferredBySolver = new WeakMap<GridSolver, DeferredHighDensityGridSetup>()
+const deferredPrototypeByOriginal = new WeakMap<object, object>()
+
+const getDeferredSetup = (solver: GridSolver): DeferredHighDensityGridSetup => {
+  const deferred = deferredBySolver.get(solver)
+  if (!deferred) {
+    throw new Error("Deferred grid prototype is missing its setup certificate")
+  }
+  return deferred
+}
+
+/** Shared cold wrappers never add or delete properties on a search instance. */
+const getDeferredPrototype = (original: object, getters: Map<InspectionName, InspectionGetter | undefined>): object => {
+  const existing = deferredPrototypeByOriginal.get(original)
+  if (existing) return existing
+  const prototype: object = Object.create(original)
+  Object.defineProperties(prototype, {
+    setup: { value: function setup(this: GridSolver): void {
+      getDeferredSetup(this).materialize()
+    } },
+    getOutput: { value: function getOutput(this: GridSolver): ReturnType<GridSolver["getOutput"]> {
+      return getDeferredSetup(this).getOutput()
+    } },
+  })
+  for (const name of inspectionNames) {
+    const getter = getters.get(name)
+    if (!getter) throw new Error(`Pinned grid inspection getter is missing: ${name}`)
+    Object.defineProperty(prototype, name, { get: function inspect(this: GridSolver): unknown {
+      getDeferredSetup(this).materialize()
+      return getter.call(this)
+    } })
+  }
+  Object.freeze(prototype)
+  deferredPrototypeByOriginal.set(original, prototype)
+  return prototype
+}
 
 /**
  * Defers only allocation, with an exact advertised post-setup iteration cap.
@@ -26,11 +62,15 @@ export class DeferredHighDensityGridSetup {
   private readonly setupRequest: number
   private readonly originalSetup: GridSolver["setup"]
   private readonly originalGetOutput: GridSolver["getOutput"]
+  private readonly originalPrototype: object
+  private readonly deferredPrototype: object
+  private onMaterialized: (() => void) | undefined
 
   static isEligible(solver: GridSolver, iterationCap: number): boolean {
-    // Installing and restoring wrappers requires ordinary writable methods.
-    // Reading descriptors avoids invoking custom accessors during certification.
+    // Own methods would shadow the shared pending prototype. Descriptor reads
+    // also avoid invoking custom accessors during certification.
     for (const name of ["setup", "getOutput"] as const) {
+      if (Object.hasOwn(solver, name)) return false
       let owner: object | null = solver
       while (owner) {
         const descriptor = Object.getOwnPropertyDescriptor(owner, name)
@@ -96,32 +136,37 @@ export class DeferredHighDensityGridSetup {
           solver.highResolutionCellThickness === 8
   }
 
-  constructor(
+  static createIfEligible(
+    solver: GridSolver,
+    iterationCap: number,
+    onMaterialized: () => void,
+  ): DeferredHighDensityGridSetup | undefined {
+    if (!DeferredHighDensityGridSetup.isEligible(solver, iterationCap)) return undefined
+    return new DeferredHighDensityGridSetup(solver, iterationCap, onMaterialized)
+  }
+
+  private constructor(
     readonly solver: GridSolver,
     readonly iterationCap: number,
-    private readonly onMaterialized: () => void,
+    onMaterialized: () => void,
   ) {
-    if (!DeferredHighDensityGridSetup.isEligible(solver, iterationCap)) {
-      throw new Error("Grid setup does not have a certified deferred iteration cap")
-    }
     this.setupRequest = solver.MAX_ITERATIONS
     this.originalSetup = solver.setup
     this.originalGetOutput = solver.getOutput
-    solver.MAX_ITERATIONS = iterationCap
-    solver.setup = this.materialize.bind(this)
-    solver.getOutput = (): ReturnType<GridSolver["getOutput"]> => {
-      this.materialize()
-      return this.originalGetOutput.call(solver)
-    }
+    this.originalPrototype = Object.getPrototypeOf(solver) as object
     const getters = solver instanceof HighDensitySolverA01 ? a01InspectionGetters : a03InspectionGetters
-    for (const name of inspectionNames) {
-      const getter = getters.get(name)
-      if (!getter) throw new Error(`Pinned grid inspection getter is missing: ${name}`)
-      Object.defineProperty(solver, name, { configurable: true, get: (): unknown => {
-        this.materialize()
-        return getter.call(solver)
-      } })
-    }
+    this.deferredPrototype = getDeferredPrototype(this.originalPrototype, getters)
+    this.onMaterialized = onMaterialized
+    deferredBySolver.set(solver, this)
+    solver.MAX_ITERATIONS = iterationCap
+    Object.setPrototypeOf(solver, this.deferredPrototype)
+  }
+
+  getOutput(): ReturnType<GridSolver["getOutput"]> {
+    // A caller may retain the shared pending method before setup. Its state
+    // remains valid after materialization without keeping the portfolio alive.
+    this.materialize()
+    return this.originalGetOutput.call(this.solver)
   }
 
   materialize(): void {
@@ -132,6 +177,14 @@ export class DeferredHighDensityGridSetup {
     if (this.solver.MAX_ITERATIONS !== this.iterationCap) {
       throw new Error("Deferred grid iteration allocation changed before setup")
     }
+    if (Object.getPrototypeOf(this.solver) !== this.deferredPrototype ||
+      Object.hasOwn(this.solver, "setup") || Object.hasOwn(this.solver, "getOutput") ||
+      inspectionNames.some((name) => Object.hasOwn(this.solver, name))) {
+      throw new Error("Deferred grid inspection contract changed before setup")
+    }
+    // Restore the native prototype before allocation or search. Installing and
+    // deleting own accessors here would change every hot search object's shape.
+    Object.setPrototypeOf(this.solver, this.originalPrototype)
     // The kernel's natural budget depends on its constructor MAX request.
     // Passing the advertised small cap into setup would reduce it a second time.
     this.solver.MAX_ITERATIONS = this.setupRequest
@@ -145,10 +198,10 @@ export class DeferredHighDensityGridSetup {
       throw new Error("Pinned grid setup violated its deferred budget/state certificate")
     }
     this.solver.MAX_ITERATIONS = actualCap
+    if (!this.onMaterialized) throw new Error("Deferred grid materialization callback is missing")
+    const onMaterialized = this.onMaterialized
     this.pending = false
-    this.solver.setup = this.originalSetup
-    this.solver.getOutput = this.originalGetOutput
-    for (const name of inspectionNames) Reflect.deleteProperty(this.solver, name)
-    this.onMaterialized()
+    this.onMaterialized = undefined
+    onMaterialized()
   }
 }

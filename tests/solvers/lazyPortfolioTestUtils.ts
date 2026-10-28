@@ -35,20 +35,7 @@ export class RareOrderingPortfolio extends GridOnlyPortfolio {
     const isA01 = external instanceof HighDensitySolverA01
     const isA13 = external instanceof HighDensitySolverA13
     if (isA13) external.MAX_ITERATIONS = 4096
-    external.step = (): void => {
-      if (!external._setupDone) external.setup()
-      if (external.solved || external.failed) return
-      external.iterations += 256
-      external.progress = 0.25
-      if (isA13) external.routingIterations += 256
-      if (isA01 && hyperParameters.SHUFFLE_SEED === 5 && external.iterations >= 4096) {
-        external.solved = true
-      } else if (external.iterations >= external.MAX_ITERATIONS) {
-        external.failed = true
-        external.error = "Deterministic test search allocation exhausted"
-      }
-    }
-    external.getOutput = (): HighDensityIntraNodeRoute[] => {
+    const solvedOutput = (): HighDensityIntraNodeRoute[] => {
       const points = this.nodeWithPortPoints.portPoints
       const routes: HighDensityIntraNodeRoute[] = []
       for (let index = 0; index < points.length; index += 2) {
@@ -57,6 +44,20 @@ export class RareOrderingPortfolio extends GridOnlyPortfolio {
           route: [{ ...points[index]! }, { ...points[index + 1]! }], vias: [] })
       }
       return routes
+    }
+    external.step = (): void => {
+      if (!external._setupDone) external.setup()
+      if (external.solved || external.failed) return
+      external.iterations += 256
+      external.progress = 0.25
+      if (isA13) external.routingIterations += 256
+      if (isA01 && hyperParameters.SHUFFLE_SEED === 5 && external.iterations >= 4096) {
+        external.solved = true
+        external.getOutput = solvedOutput
+      } else if (external.iterations >= external.MAX_ITERATIONS) {
+        external.failed = true
+        external.error = "Deterministic test search allocation exhausted"
+      }
     }
     return solver
   }
