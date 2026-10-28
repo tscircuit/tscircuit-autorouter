@@ -10,8 +10,53 @@ permissions:
 
 jobs:
   inspect:
+    name: Inspect ${{ matrix.sourceKey }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sourceKey: forest-v2-srj18
+            expectedFile: expected-forest-v2-srj18.json
+            runId: 40605289097
+            artifactName: pinned-experiment-3198-srj18
+          - sourceKey: forest-v2-srj24
+            expectedFile: expected-forest-v2-srj24.json
+            runId: 40605289097
+            artifactName: pinned-experiment-3198-srj24
+          - sourceKey: joint-exits-srj18
+            expectedFile: expected-joint-exits-srj18.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3199-srj18
+          - sourceKey: joint-exits-srj24
+            expectedFile: expected-joint-exits-srj24.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3199-srj24
+          - sourceKey: portals-srj18
+            expectedFile: expected-portals-srj18.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3200-srj18
+          - sourceKey: portals-srj24
+            expectedFile: expected-portals-srj24.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3200-srj24
+          - sourceKey: copper-candidates-srj18
+            expectedFile: expected-copper-candidates-srj18.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3201-srj18
+          - sourceKey: copper-candidates-srj24
+            expectedFile: expected-copper-candidates-srj24.json
+            runId: 40602253584
+            artifactName: pinned-experiment-3201-srj24
+          - sourceKey: geometry-v2-srj18
+            expectedFile: expected-geometry-v2-srj18.json
+            runId: 40606288448
+            artifactName: pinned-experiment-3202-srj18
+          - sourceKey: geometry-v2-srj24
+            expectedFile: expected-geometry-v2-srj24.json
+            runId: 40606288448
+            artifactName: pinned-experiment-3202-srj24
     steps:
       - name: Checkout read-only artifact inspector
         uses: actions/checkout@v4
@@ -22,20 +67,20 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python3 scripts/experiment-artifact-audit/verify-artifact-metadata.py
-          --expected scripts/experiment-artifact-audit/expected-source.json
+          --expected 'scripts/experiment-artifact-audit/${{ matrix.expectedFile }}'
           --output compact-report/source-artifact-metadata.json
       - name: Download retained exact-source benchmark artifact
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
-          run-id: 40601528317
-          name: pinned-experiment-3202-srj18
+          run-id: ${{ matrix.runId }}
+          name: ${{ matrix.artifactName }}
           path: downloaded
       - name: Inspect captured evidence without routing or validator changes
         run: >-
           python3 scripts/experiment-artifact-audit/inspect-artifact.py
           --directory downloaded
-          --expected scripts/experiment-artifact-audit/expected-source.json
+          --expected 'scripts/experiment-artifact-audit/${{ matrix.expectedFile }}'
           --output compact-report/inspection.json
           --source-metadata compact-report/source-artifact-metadata.json
           --example-limit 3
@@ -43,7 +88,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pinned-experiment-3202-srj18-readonly-inspection
+          name: readonly-inspection-${{ matrix.sourceKey }}
           path: compact-report
           if-no-files-found: error
           retention-days: 30

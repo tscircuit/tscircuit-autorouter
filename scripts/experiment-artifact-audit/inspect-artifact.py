@@ -42,20 +42,56 @@ def compact_geometry(obj):
     return result
 
 
-def identifier_index(value, prefix):
+def declared_owner(connection):
+    return next((connection[key] for key in ["__netConnectionName", "netConnectionName", "rootConnectionName"] if connection.get(key)), None) or (connection.get("__rootConnectionNames") or [connection.get("name")])[0]
+
+
+def tagged_owner(resolve, alias):
+    if not isinstance(alias, str):
+        return {"kind": "unresolved", "declaredAlias": alias, "status": "not_a_string_alias"}
+    status, owner = resolve(alias)
+    return {"kind": "declared", "name": owner} if owner is not None else {"kind": "unresolved", "declaredAlias": alias, "status": status}
+
+
+def connection_digest(connection):
+    points = connection.get("pointsToConnect", [])
+    locations = [canonical({"x": p.get("x"), "y": p.get("y"), "z": p.get("z"), "layers": sorted(p.get("layers") or ([p["layer"]] if p.get("layer") else []))}) for p in points]
+    ports = {p["pcb_port_id"] for p in points if isinstance(p.get("pcb_port_id"), str)}
+    invalid = sum(not all(type(p.get(k)) in [int, float] and math.isfinite(p[k]) for k in ["x", "y"]) or not (p.get("layer") or p.get("layers") or type(p.get("z")) in [int, float]) for p in points)
+    return {"name": connection.get("name"), "source_trace_id": connection.get("source_trace_id"), "rootConnectionNames": connection.get("__rootConnectionNames"), "rootConnectionName": connection.get("rootConnectionName"), "netConnectionName": connection.get("__netConnectionName", connection.get("netConnectionName")), "declaredOwner": declared_owner(connection), "pointCount": len(points), "distinctPhysicalPointCount": len(set(locations)), "invalidOrLayerlessPointCount": invalid, "distinctPcbPortCount": len(ports), "terminalExamples": [{**compact_geometry(p), **{k: p[k] for k in ["pcb_port_id", "pointId"] if k in p}} for p in points[:8]]}
+
+
+def obstacle_digest(obstacle, resolve):
+    metadata = obstacle.get("circuitJsonMetadata") or {}
+    references = obstacle.get("connectedTo") or []
+    return {**compact_geometry(obstacle), **{k: obstacle[k] for k in ["obstacleId", "ccwRotationDegrees", "isNonPlatedHole", "isVia", "isPad"] if k in obstacle}, "rawObstacleHash": digest(obstacle), "connectedTo": references, "sourceIdentity": metadata,
+        "declaredOwnerReferences": [{"rawReference": reference, "owner": tagged_owner(resolve, reference)} for reference in references] if resolve else [],
+        "qualification": "Containing raw obstacle for an exact identifier match; metadata and connectedTo references only. No converted pad-fragment identity is inferred."}
+
+
+def identifier_index(value, prefix, resolve=None):
     index = collections.defaultdict(list)
-    def visit(obj, path):
+    def visit(obj, path, obstacle=None, connection=None):
         if isinstance(obj, dict):
+            if re.fullmatch(re.escape(prefix) + r"\.obstacles\[\d+\]", path):
+                obstacle = obj
+            if re.fullmatch(re.escape(prefix) + r"\.connections\[\d+\]", path):
+                connection = obj
             for key, item in obj.items():
                 if key.endswith("_id") or key.endswith("_ids") or key in ["pointId", "obstacleId"]:
                     for identifier in item if isinstance(item, list) else [item]:
                         if isinstance(identifier, str):
-                            index[identifier].append({"path": path, "field": key, "objectHash": digest(obj), "geometry": compact_geometry(obj)})
+                            entry = {"path": path, "field": key, "objectHash": digest(obj), "geometry": compact_geometry(obj)}
+                            if obstacle is not None:
+                                entry["containingObstacle"] = obstacle_digest(obstacle, resolve)
+                            if connection is not None:
+                                entry["containingConnection"] = connection_digest(connection)
+                            index[identifier].append(entry)
                 if isinstance(item, (dict, list)):
-                    visit(item, path + "." + key)
+                    visit(item, path + "." + key, obstacle, connection)
         elif isinstance(obj, list):
             for n, item in enumerate(obj):
-                visit(item, path + f"[{n}]")
+                visit(item, path + f"[{n}]", obstacle, connection)
     visit(value, prefix)
     return index
 
@@ -76,13 +112,18 @@ def owner_maps(original, context):
     ports = collections.defaultdict(list)
     for source, srj in [("original", original), ("pointPairs", context)]:
         for connection in srj.get("connections", []):
-            owner = next((connection[key] for key in ["__netConnectionName", "netConnectionName", "rootConnectionName"] if connection.get(key)), None)
-            owner = owner or (connection.get("__rootConnectionNames") or [connection.get("name")])[0]
+            owner = declared_owner(connection)
+            if isinstance(owner, str):
+                aliases[owner].add(owner)
             for alias in [connection.get("name"), connection.get("source_trace_id"), *(connection.get("__rootConnectionNames") or []), *(connection.get("mergedConnectionNames") or [])]:
                 if isinstance(alias, str):
                     aliases[alias].add(owner)
             for point in connection.get("pointsToConnect", []):
                 port_id = point.get("pcb_port_id")
+                if source == "original":
+                    for alias in [port_id, point.get("pointId")]:
+                        if isinstance(alias, str):
+                            aliases[alias].add(owner)
                 if isinstance(port_id, str) and source == "original":
                     port_owners[port_id].add(owner)
                     ports[port_id].append(point)
@@ -107,6 +148,116 @@ def via_defaults(original, context):
     outer = dimensions_pad if outer is None else outer
     resolved_hole = hole if hole is not None else (outer * 0.5 if original.get("minViaDiameter") is not None else dimensions_pad * 0.5)
     return outer, resolved_hole
+
+
+def materialized_via(original, context, point):
+    count = context.get("layerCount", original.get("layerCount"))
+    stack = ["top"] + [f"inner{i}" for i in range(1, count - 1)] + (["bottom"] if count > 1 else []) if type(count) is int and count >= 1 else []
+    outer, hole = via_defaults(original, context)
+    if original.get("allowBlindAndBuriedVias") is True and point.get("layers") is not None:
+        layers = point["layers"]
+    elif original.get("allowBlindAndBuriedVias") is not True:
+        layers = stack
+    elif point.get("from_layer") in stack and point.get("to_layer") in stack:
+        a, b = sorted([stack.index(point["from_layer"]), stack.index(point["to_layer"])])
+        layers = stack[a:b + 1]
+    else:
+        layers = None
+    return {"x": point.get("x"), "y": point.get("y"), "outer_diameter": point.get("via_diameter") if point.get("via_diameter") is not None else outer, "hole_diameter": point.get("via_hole_diameter") if point.get("via_hole_diameter") is not None else hole, "layers": layers}
+
+
+def converter_via_allocations(original, context, traces, resolve):
+    supported = all(trace.get("type") == "pcb_trace" for trace in traces)
+    if not supported:
+        return {}, {"applicable": False, "reason": "Combined trace format is not uniformly simplified pcb_trace; allocation map was not emulated"}
+    known_layers = {"top", "bottom", *[f"inner{i}" for i in range(1, 9)]}
+    allocations = {}
+    by_location = {}
+    skipped = []
+    occurrence_count = 0
+    for trace_index, trace in enumerate(traces):
+        for point_index, point in enumerate(trace.get("route", [])):
+            if point.get("route_type") != "via":
+                continue
+            occurrence_count += 1
+            if point.get("from_layer") not in known_layers or point.get("to_layer") not in known_layers:
+                skipped.append({"traceIndex": trace_index, "routePointIndex": point_index, "from_layer": point.get("from_layer"), "to_layer": point.get("to_layer")})
+                continue
+            # Numeric tuple equality matches JS finite-number string keys,
+            # including 0/-0 and integer/float spelling. The transition order
+            # is retained: top->bottom and bottom->top are separate keys.
+            key = (point.get("x"), point.get("y"), point.get("from_layer"), point.get("to_layer"))
+            occurrence = {"traceIndex": trace_index, "routePointIndex": point_index, "pcb_trace_id": trace.get("pcb_trace_id"), "connection_name": trace.get("connection_name"), "owner": tagged_owner(resolve, trace.get("connection_name")), "rawRoutePoint": point, "materializationIfFirst": materialized_via(original, context, point), "traceGeometryHash": digest(trace_payload(trace))}
+            if key not in by_location and (occurrence["materializationIfFirst"]["layers"] is None or not occurrence["materializationIfFirst"]["layers"] and not (original.get("allowBlindAndBuriedVias") is True and point.get("layers") == [])):
+                return {}, {"applicable": False, "reason": "Pinned getViaLayers would reject the board count or blind-via endpoint span", "traceIndex": trace_index, "routePointIndex": point_index}
+            if key not in by_location:
+                via_id = f"via_{len(allocations)}"
+                by_location[key] = via_id
+                allocations[via_id] = {"pcb_via_id": via_id, "firstRawOccurrence": occurrence, "materializedGeometry": {"type": "pcb_via", "pcb_via_id": via_id, "pcb_trace_id": trace.get("pcb_trace_id"), **occurrence["materializationIfFirst"]}, "rawOccurrences": []}
+            allocations[by_location[key]]["rawOccurrences"].append(occurrence)
+    for allocation in allocations.values():
+        occurrences = allocation["rawOccurrences"]
+        tags = {canonical(o["owner"]) for o in occurrences}
+        declared = {o["owner"]["name"] for o in occurrences if o["owner"]["kind"] == "declared"}
+        allocation["rawOccurrenceCount"] = len(occurrences)
+        allocation["deduplicatedOccurrenceCount"] = len(occurrences) - 1
+        allocation["rawOccurrenceOwnerTags"] = [json.loads(tag) for tag in sorted(tags)]
+        allocation["hasDistinctResolvedRawOwners"] = len(declared) > 1
+        allocation["hasUnresolvedRawOwner"] = any(o["owner"]["kind"] != "declared" for o in occurrences)
+        allocation["rawOccurrenceExamples"] = occurrences[:8]
+        del allocation["rawOccurrences"]
+    summary = {"applicable": True, "allocatedViaCount": len(allocations), "rawViaOccurrenceCount": occurrence_count, "deduplicatedRawOccurrenceCount": sum(a["deduplicatedOccurrenceCount"] for a in allocations.values()), "skippedInvalidLayerOccurrenceCount": len(skipped), "skippedInvalidLayerExamples": skipped[:8], "allocationMapHash": digest(allocations),
+        "source": "Pinned convertToCircuitJson.ts extractViasFromRoutes simplified pcb_trace branch: first valid raw occurrence allocates via_N in combined trace/point order, dedup key x,y,from_layer,to_layer ignores owner; known names top,bottom,inner1..inner8. This map reports that behavior without changing it."}
+    return allocations, summary
+
+
+def port_demand_evidence(port_id, original, context, traces, resolve):
+    original_matches = [c for c in original.get("connections", []) if any(p.get("pcb_port_id") == port_id for p in c.get("pointsToConnect", []))]
+    context_matches = [c for c in context.get("connections", []) if any(p.get("pcb_port_id") == port_id for p in c.get("pointsToConnect", []))]
+    owners = {declared_owner(c) for c in original_matches}
+    owner = next(iter(owners)) if len(owners) == 1 else None
+    owner_group = [c for c in original.get("connections", []) if owner is not None and declared_owner(c) == owner]
+    owner_points = [p for c in owner_group for p in c.get("pointsToConnect", [])]
+    owner_summary = connection_digest({"name": "raw original declared-owner group", "pointsToConnect": owner_points})
+    group_names = {c.get("name") for c in owner_group}
+    hints = []
+    for c in owner_group:
+        for key in ["isOffBoard", "externallyConnectedPointIds"]:
+            if c.get(key):
+                hints.append({"connectionName": c.get("name"), "field": key, "value": c[key]})
+        if len(set(c.get("__rootConnectionNames") or [])) > 1 and not (c.get("__netConnectionName") or c.get("netConnectionName")):
+            hints.append({"connectionName": c.get("name"), "field": "multiple_roots_without_explicit_net", "value": c["__rootConnectionNames"]})
+        for p in c.get("pointsToConnect", []):
+            for key in ["terminalVia", "busId"]:
+                if p.get(key):
+                    hints.append({"connectionName": c.get("name"), "field": key, "value": p[key]})
+    for key in ["buses", "differentialPairs"]:
+        for family in original.get(key, []):
+            if group_names.intersection(family.get("connectionNames", [])):
+                hints.append({"field": key, "value": family})
+    group_aliases = {owner, *group_names, *[c.get("source_trace_id") for c in owner_group], *[alias for c in owner_group for alias in c.get("__rootConnectionNames", [])], *[p.get("pcb_port_id") for p in owner_points], *[p.get("pointId") for p in owner_points]}
+    group_aliases.discard(None)
+    for obstacle in original.get("obstacles", []):
+        if obstacle.get("offBoardConnectsTo") and any(reference in group_aliases for reference in obstacle.get("connectedTo", []) if isinstance(reference, str)):
+            hints.append({"field": "obstacle_offBoardConnectsTo", "value": obstacle.get("offBoardConnectsTo"), "connectedTo": obstacle.get("connectedTo")})
+    owner_alias_status = resolve(owner)[0] if isinstance(owner, str) else "unresolved"
+    if not original_matches or owner is None or owner_summary["invalidOrLayerlessPointCount"] or owner_alias_status == "ambiguous":
+        classification = "unresolved_original_port_or_declared_owner"
+    elif hints:
+        classification = "unresolved_special_or_external_demand_hints"
+    elif owner_summary["distinctPhysicalPointCount"] >= 2:
+        classification = "raw_declared_owner_group_has_two_or_more_distinct_terminals"
+    elif owner_summary["distinctPhysicalPointCount"] == 1:
+        classification = "no_multiterminal_physical_demand_in_raw_declared_owner_group"
+    else:
+        classification = "unresolved_empty_terminal_group"
+    same_owner = [t for t in traces if owner is not None and resolve(t.get("connection_name"))[1] == owner]
+    unresolved = [t for t in traces if resolve(t.get("connection_name"))[1] is None]
+    return {"classification": classification, "originalExactPortConnectionCount": len(original_matches), "originalExactPortConnections": [connection_digest(c) for c in original_matches[:8]],
+        "declaredOwnerGroup": {"owner": {"kind": "declared", "name": owner} if owner is not None else {"kind": "unresolved"}, "ownerAliasResolutionStatus": owner_alias_status, "originalConnectionCount": len(owner_group), "pointCount": owner_summary["pointCount"], "distinctPhysicalPointCount": owner_summary["distinctPhysicalPointCount"], "distinctPcbPortCount": owner_summary["distinctPcbPortCount"], "connectionExamples": [connection_digest(c) for c in owner_group[:8]], "specialOrExternalDemandHints": hints[:8]},
+        "pointPairContextExactPortMembership": {"connectionCount": len(context_matches), "pointOccurrenceCount": sum(p.get("pcb_port_id") == port_id for c in context_matches for p in c.get("pointsToConnect", [])), "connectionExamples": [connection_digest(c) for c in context_matches[:8]]},
+        "routedDeclaredOwnerPresence": {"traceCount": len(same_owner), "connectionNameExamples": sorted({t.get("connection_name") for t in same_owner}, key=str)[:8], "unresolvedOrAmbiguousTraceCount": len(unresolved), "exactOriginalConnectionNameTraceCounts": {str(c.get("name")): sum(t.get("connection_name") == c.get("name") for t in traces) for c in original_matches[:8]}},
+        "qualification": "Terminal demand is conditional on exact identities in the raw original SRJ declared-owner group, not a claim about a schematic outside that input. Absence from point-pair context is reported separately and never erases an original demand. No owner merge by coordinate proximity."}
 
 
 def physical_metrics(original, context, traces, resolve):
@@ -165,11 +316,11 @@ def physical_metrics(original, context, traces, resolve):
         "definition": "Raw combined preloaded/new traces; replaced preload IDs removed exactly as pinned evaluator. No coordinate rounding or cross-owner deduplication. Trace payload hash removes pcb_trace_id only and sorts trace order. Primitive hash retains ownership, metadata, every route point/adjacent edge and duplicate multiplicity; route segmentation can change its hash without changing a geometric union. Raw via spans emulate pinned converter getViaDrillLayers before its owner-blind location deduplication. Counts with ambiguous owners cannot establish absence of foreign coincidences."}
 
 
-def port_copper_evidence(port_id, traces, resolve, ports, port_owners):
+def port_copper_evidence(port_id, traces, resolve, ports, port_owners, original=None, context=None):
     points = ports.get(port_id, [])
     owners = port_owners.get(port_id, set())
     if not points or len(owners) != 1:
-        return {"pcb_port_id": port_id, "status": "no_exact_original_port" if not points else "ambiguous_declared_owner"}
+        return {"pcb_port_id": port_id, "status": "no_exact_original_port" if not points else "ambiguous_declared_owner", **({"terminalDemandEvidence": port_demand_evidence(port_id, original, context, traces, resolve)} if original is not None and context is not None else {})}
     owner = next(iter(owners))
     answers = []
     for point in points[:4]:
@@ -204,7 +355,52 @@ def port_copper_evidence(port_id, traces, resolve, ports, port_owners):
                     best = candidate
         answers.append({"point": compact_geometry(point), "nearestSameDeclaredOwnerCopper": best})
     return {"pcb_port_id": port_id, "status": "exact_original_port_and_unique_declared_owner", "declaredOwner": owner, "points": answers,
+        **({"terminalDemandEvidence": port_demand_evidence(port_id, original, context, traces, resolve)} if original is not None and context is not None else {}),
         "qualification": "Geometric point/centerline evidence only; this does not excuse source-connectivity checker errors, establish pad identity or merge owners by proximity. Variable widths are bounded by endpoint widths."}
+
+
+def trace_participant_digest(trace, error, original, resolve):
+    route = trace.get("route", [])
+    result = {"pcb_trace_id": trace.get("pcb_trace_id"), "connection_name": trace.get("connection_name"), "owner": tagged_owner(resolve, trace.get("connection_name")), "connectsTo": trace.get("connectsTo"), "geometry": compact_geometry(trace), "firstRoutePoint": route[0] if route else None, "lastRoutePoint": route[-1] if route else None}
+    center = error.get("center") or error.get("pcb_center")
+    if isinstance(center, dict) and all(type(center.get(k)) in [int, float] for k in ["x", "y"]):
+        result["errorLocationEndpointDistances"] = [{"endpoint": label, "distance": math.hypot(center["x"] - point["x"], center["y"] - point["y"]), "layer": point.get("layer"), "exactCoordinateMatch": point["x"] == center["x"] and point["y"] == center["y"]} for label, point in ([("first", route[0]), ("last", route[-1])] if route else []) if all(type(point.get(k)) in [int, float] for k in ["x", "y"])]
+        original_matches = []
+        for connection in original.get("connections", []):
+            for point in connection.get("pointsToConnect", []):
+                if point.get("x") == center["x"] and point.get("y") == center["y"]:
+                    original_matches.append({"connectionName": connection.get("name"), "declaredOwner": declared_owner(connection), "point": {**compact_geometry(point), **{k: point[k] for k in ["pcb_port_id", "pointId"] if k in point}}})
+        result["originalTerminalsAtExactErrorXY"] = original_matches[:8]
+        result["originalTerminalsAtExactErrorXYCount"] = len(original_matches)
+    return result
+
+
+def via_pad_owner_relations(participants):
+    vias = [p for p in participants if p.get("pinnedConverterViaAllocation")]
+    pads = [p for p in participants if p not in vias and (any(m.get("containingObstacle") for m in p.get("originalExactIdentifierMatches", [])) or p.get("originalExactIdentifierMatchCount", 0) > len(p.get("originalExactIdentifierMatches", [])))]
+    results = []
+    for via in vias:
+        allocation = via["pinnedConverterViaAllocation"]
+        via_owner = allocation["firstRawOccurrence"]["owner"]
+        for pad in pads:
+            original_match_count = pad.get("originalExactIdentifierMatchCount", len(pad["originalExactIdentifierMatches"]))
+            truncated_matches = original_match_count > len(pad["originalExactIdentifierMatches"])
+            references = [r for m in pad["originalExactIdentifierMatches"] for r in m.get("containingObstacle", {}).get("declaredOwnerReferences", [])]
+            unique_refs = {canonical(r): r for r in references}
+            references = list(unique_refs.values())
+            owners = {r["owner"]["name"] for r in references if r["owner"]["kind"] == "declared"}
+            all_resolved = bool(references) and all(r["owner"]["kind"] == "declared" for r in references)
+            if via_owner["kind"] != "declared" or not all_resolved or via.get("originalExactIdentifierMatches") or truncated_matches:
+                relation = "unresolved_or_identifier_collision"
+            elif owners == {via_owner["name"]}:
+                relation = "same_resolved_declared_owner"
+            elif via_owner["name"] not in owners:
+                relation = "distinct_resolved_declared_owners"
+            else:
+                relation = "multiple_pad_owner_references_include_via_owner"
+            results.append({"viaId": via["id"], "padId": pad["id"], "firstAllocatedViaOwner": via_owner, "padRawConnectedToOwnerReferences": references, "originalExactIdentifierMatchCount": original_match_count, "originalExactIdentifierMatchesTruncated": truncated_matches, "relation": relation,
+                "qualification": "Relation follows exact allocated raw via identity and exact raw obstacle metadata ID matches/connectedTo aliases. It does not replace the source library connectivity map or excuse the reported clearance finding."})
+    return results
 
 
 def error_fingerprint(error, trace_hashes):
@@ -240,12 +436,14 @@ def inspect_raw(raw, record, expected, issue, example_limit):
     traces = combined_traces(original, new)
     trace_hashes = {t["pcb_trace_id"]: digest(trace_payload(t)) for t in traces if isinstance(t.get("pcb_trace_id"), str)}
     new_ids = {t.get("pcb_trace_id") for t in new}
-    input_index = identifier_index(original, "original")
-    context_index = identifier_index(context, "pointPairs")
     resolve, ports, port_owners = owner_maps(original, context)
+    input_index = identifier_index(original, "original", resolve)
+    context_index = identifier_index(context, "pointPairs", resolve)
+    via_allocations, via_allocation_summary = converter_via_allocations(original, context, traces, resolve)
+    via_allocation_summary["pinnedConverterSourceHash"] = expected["validatorHashes"]["lib/testing/utils/convertToCircuitJson.ts"]
     result = {"capture": {key: capture.get(key) for key in ["actualConstructorName", "options", "inputHash", "inputMutated", "rawNewTracesHash", "constructorTimeMs"]},
         "inputGeometry": {"originalHash": file_digest(raw / "original-input.json"), "pointPairContextHash": file_digest(raw / "point-pair-context.json"), "obstacleCount": len(original.get("obstacles", [])), "connectionCount": len(original.get("connections", []))},
-        "rawPhysicalCopper": physical_metrics(original, context, traces, resolve), "supplementalAvailable": supplemental is not None}
+        "rawPhysicalCopper": physical_metrics(original, context, traces, resolve), "pinnedConverterViaAllocationSummary": via_allocation_summary, "supplementalAvailable": supplemental is not None}
     if supplemental is None:
         return result
     input_only = {name: {error_fingerprint(error, trace_hashes) for error in (supplemental.get(name) or {}).get("errors", [])} for name in ["inputOnlyPhysicalChecks", "inputOnlyConnectivityFindings"]}
@@ -258,6 +456,8 @@ def inspect_raw(raw, record, expected, issue, example_limit):
         examples_by_type = collections.defaultdict(list)
         all_physical_examples = []
         port_touch_counts = collections.Counter()
+        port_demand_counts = collections.Counter()
+        via_pad_owner_counts = collections.Counter()
         for error, fingerprint in zip(errors, fingerprints):
             participants = []
             participant_ids = []
@@ -268,11 +468,14 @@ def inspect_raw(raw, record, expected, issue, example_limit):
                         if not isinstance(identifier, str):
                             continue
                         participant_ids.append(identifier)
-                        entry = {"field": field, "id": identifier, "originalExactIdentifierMatches": input_index.get(identifier, [])[:4], "pointPairExactIdentifierMatches": context_index.get(identifier, [])[:4]}
+                        entry = {"field": field, "id": identifier, "originalExactIdentifierMatchCount": len(input_index.get(identifier, [])), "originalExactIdentifierMatches": input_index.get(identifier, [])[:4], "pointPairExactIdentifierMatchCount": len(context_index.get(identifier, [])), "pointPairExactIdentifierMatches": context_index.get(identifier, [])[:4]}
                         if identifier in trace_hashes and field in ["pcb_trace_id", "pcb_trace_ids"]:
                             entry["traceGeometryHash"] = trace_hashes[identifier]
                             entry["newlyRoutedTrace"] = identifier in new_ids
                             new_trace_participant |= identifier in new_ids
+                            entry["rawTraceParticipantDigests"] = [trace_participant_digest(t, error, original, resolve) for t in traces if t.get("pcb_trace_id") == identifier][:4]
+                        if identifier in via_allocations and field in ["pcb_pad_id", "pcb_pad_ids", "pcb_via_id", "pcb_via_ids"]:
+                            entry["pinnedConverterViaAllocation"] = via_allocations[identifier]
                         participants.append(entry)
             exact_physical = fingerprint in input_only["inputOnlyPhysicalChecks"]
             exact_connectivity = fingerprint in input_only["inputOnlyConnectivityFindings"]
@@ -288,11 +491,18 @@ def inspect_raw(raw, record, expected, issue, example_limit):
                 origin = "origin_unresolved"
             origins[origin] += 1
             example = {"fingerprint": fingerprint, "type": error.get("type"), "message": str(error.get("message", ""))[:800], "location": {key: error[key] for key in ["center", "pcb_center", "x", "y"] if key in error}, "originEvidence": origin, "participants": participants[:12]}
+            owner_relations = via_pad_owner_relations(participants)
+            if owner_relations:
+                example["viaPadDeclaredOwnerRelations"] = owner_relations
+                via_pad_owner_counts.update(relation["relation"] for relation in owner_relations)
             if error.get("type") == "pcb_port_not_connected_error":
                 port_ids = [p["id"] for p in participants if p["field"] in ["pcb_port_id", "pcb_port_ids"]]
-                evidence = [port_copper_evidence(identifier, traces, resolve, ports, port_owners) for identifier in port_ids[:4]]
-                example["exactPortCopperEvidence"] = evidence
+                evidence = [port_copper_evidence(identifier, traces, resolve, ports, port_owners, original, context) for identifier in port_ids]
+                example["exactPortCopperEvidence"] = evidence[:4]
+                if not evidence:
+                    port_demand_counts["no_exact_pcb_port_participant"] += 1
                 for finding in evidence:
+                    port_demand_counts[finding.get("terminalDemandEvidence", {}).get("classification", "unresolved")] += 1
                     points = finding.get("points", [])
                     if points and all(p.get("nearestSameDeclaredOwnerCopper", {}).get("withinMinimumEndpointHalfWidth") is True for p in points if p.get("nearestSameDeclaredOwnerCopper")) and all(p.get("nearestSameDeclaredOwnerCopper") is not None for p in points):
                         port_touch_counts["exact_port_point_within_same_owner_copper_min_halfwidth"] += 1
@@ -307,6 +517,10 @@ def inspect_raw(raw, record, expected, issue, example_limit):
             checks[name]["boundedTraceAndPadFindings"] = all_physical_examples
         if port_touch_counts:
             checks[name]["portCopperEvidenceCounts"] = dict(port_touch_counts)
+        if port_demand_counts:
+            checks[name]["portTerminalDemandEvidenceCounts"] = dict(port_demand_counts)
+        if via_pad_owner_counts:
+            checks[name]["viaPadDeclaredOwnerRelationCounts"] = dict(via_pad_owner_counts)
     result["checks"] = checks
     result["originalSupplementalPhysicalMetrics"] = supplemental.get("physicalCopper")
     result["validationConfiguration"] = supplemental.get("validationConfiguration")
@@ -425,7 +639,15 @@ def main():
         if row["round"] != 1 or "inspection" not in row:
             continue
         library = row["inspection"].get("checks", {}).get("libraryRoutingChecks", {})
-        print("ARTIFACT_INSPECTION_FINDINGS_JSON " + canonical({"sample": row["sample"], "arm": row["arm"], "rawPhysicalCopper": row["inspection"]["rawPhysicalCopper"], "libraryCounts": library.get("byType"), "originEvidenceCounts": library.get("originEvidenceCounts"), "portCopperEvidenceCounts": library.get("portCopperEvidenceCounts"), "boundedTraceAndPadFindings": library.get("boundedTraceAndPadFindings", []), "boundedPortAndStyleExamples": {key: value for key, value in library.get("examplesByType", {}).items() if key in ["pcb_port_not_connected_error", "pcb_trace_style_warning"]}, "inputOnlyPhysicalFindings": row["inspection"].get("checks", {}).get("inputOnlyPhysicalChecks")}))
+        context = {"sample": row["sample"], "arm": row["arm"]}
+        input_physical = row["inspection"].get("checks", {}).get("inputOnlyPhysicalChecks", {})
+        print("ARTIFACT_INSPECTION_FINDINGS_JSON " + canonical({**context, "rawPhysicalCopper": row["inspection"]["rawPhysicalCopper"], "pinnedConverterViaAllocationSummary": row["inspection"]["pinnedConverterViaAllocationSummary"], "libraryCounts": library.get("byType"), "originEvidenceCounts": library.get("originEvidenceCounts"), "portCopperEvidenceCounts": library.get("portCopperEvidenceCounts"), "portTerminalDemandEvidenceCounts": library.get("portTerminalDemandEvidenceCounts"), "viaPadDeclaredOwnerRelationCounts": library.get("viaPadDeclaredOwnerRelationCounts"), "inputOnlyPhysicalFindings": {key: input_physical.get(key) for key in ["count", "byType", "normalizedErrorFingerprintMultisetHash", "originEvidenceCounts"]}}))
+        for finding in library.get("boundedTraceAndPadFindings", []):
+            print("ARTIFACT_INSPECTION_PHYSICAL_FINDING_JSON " + canonical({**context, "finding": finding}))
+        for kind, examples in library.get("examplesByType", {}).items():
+            if kind in ["pcb_port_not_connected_error", "pcb_trace_style_warning"]:
+                for example in examples:
+                    print("ARTIFACT_INSPECTION_PORT_STYLE_EXAMPLE_JSON " + canonical({**context, "type": kind, "example": example}))
     if result["integrityIssues"]:
         print("ARTIFACT_INSPECTION_ISSUES_JSON " + canonical(result["integrityIssues"][:20]))
         raise SystemExit(1)

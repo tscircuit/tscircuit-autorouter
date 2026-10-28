@@ -1,0 +1,84 @@
+{
+  "artifact": {
+    "id": 12785018829,
+    "name": "pinned-experiment-3198-srj24",
+    "sizeBytes": 10522954,
+    "digest": "sha256:23531389651d6d2994b029bda7509772eb3dcc6d16995976eef8750a753a3d11"
+  },
+  "runId": 40605289097,
+  "controllerSha": "4c368b18211f571ad3bc1da6913cf0d08de020a9",
+  "baselineSha": "637b6c581128238f6c61227a1c15be423d24baca",
+  "candidateSha": "d24d6e9a692ce49560ad66f8f6438177aeb7849d",
+  "pr": 3198,
+  "dataset": "srj24",
+  "configs": {
+    "A": {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1
+      },
+      "evidencePaths": [
+        "stats",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    "B": {
+      "pr": 3198,
+      "candidateSha": "d24d6e9a692ce49560ad66f8f6438177aeb7849d",
+      "label": "connected-net-trees",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "usePhysicalNetForest": true
+      },
+      "evidencePaths": [
+        "physicalNetForestSolver.diagnostics",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    }
+  },
+  "inputHashes": {
+    "1": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+    "2": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+    "3": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+    "4": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+    "5": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+    "6": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+    "7": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+    "8": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+    "9": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+    "10": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+    "11": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+    "12": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+    "13": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+    "14": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+    "15": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+    "16": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+    "17": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+    "18": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+    "19": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+    "20": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+    "21": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+    "22": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+    "23": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+    "24": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+    "25": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+    "26": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113"
+  },
+  "repository": "tscircuit/tscircuit-autorouter",
+  "harnessSourceHashes": {
+    "officialHarnessHash": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66",
+    "benchmarkShellHash": "615e710ec3705e693a03edd124ced32b1cb8beb6e86e4af7c345cd87910d47bb"
+  },
+  "validatorHashes": {
+    "lib/testing/evaluate-relaxed-drc.ts": "d774e4d05931e0e24b2462e9436c9b0aba604aafddc88c99e67e588a4c2fcd59",
+    "lib/testing/getDrcErrors.ts": "8f3aba2532e216d530db5efe3d514ec114f33b4ac0e32d68170522660257a994",
+    "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+    "lib/testing/utils/convertToCircuitJson.ts": "ed6f4c1e7506c7aea52679dc52a0af80af8cacdfc638bb74c852208ba7e32212",
+    "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata.ts": "6ce2359e7c76d888cf9a8c91aee28750ea8b083ed09e6913b8446266bb779f13"
+  }
+}
