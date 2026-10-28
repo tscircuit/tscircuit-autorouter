@@ -74,3 +74,5 @@ Source: [paired benchmark run](https://github.com/tscircuit/tscircuit-autorouter
 Artifacts: [42 paired samples](per-sample.csv) and [numeric diagnostics](diagnostics.json).
 
 Reproduction dependency snapshot: [verified experiment-only Bun lock](../resolved-dependencies-62ee3213.bun.lock) (SHA-256 `62ee3213e32eb76d9dbec37933768663da7c47eea69e4c07cefcf9aa4c5bd041`). This archive does not change project dependencies. To reproduce the measured resolution, prepopulate the paired controller’s `--deps` directory with these exact bytes named `bun.lock` before its normal install; use the recorded Bun 1.4.3 and matching package manifest.
+
+[All paired pipeline-stage times](stage-times.json) retain each comparison subset and sample count, including downstream force and repair costs.
