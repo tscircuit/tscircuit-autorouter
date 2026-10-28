@@ -619,7 +619,12 @@ const buildSerializedTinyGraph = (
       [startPoint, startTerminalPortId, "start"],
       [endPoint, endTerminalPortId, "end"],
     ] as const) {
-      if (!point || getConnectionPointLayers(point).length < 2) continue
+      if (
+        !params.preserveMultilayerTerminalAccess ||
+        !point ||
+        getConnectionPointLayers(point).length < 2
+      )
+        continue
       const pointZ = getConnectionPointLayers(point).map((layer) =>
         mapLayerNameToZ(layer, params.layerCount),
       )
