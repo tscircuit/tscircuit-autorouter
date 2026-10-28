@@ -25,7 +25,7 @@ jobs:
       HD_BASE_SHA: 637b6c581128238f6c61227a1c15be423d24baca
       HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-worktrees
       HD_RESULTS: ${{ github.workspace }}/hd-paired-results
-      HD_DEPS: ${{ runner.temp }}/hd-paired-dependencies
+      HD_DEPS: ${{ github.workspace }}/hd-paired-dependencies
 
     steps:
       - name: Resolve the authorized experiment branch
