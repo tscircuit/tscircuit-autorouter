@@ -1,15 +1,19 @@
 # Experiment: compact A01 frontier and collision state
 
-The hypothesis is that the measured A01 leaf spends avoidable work allocating
-object labels, processing duplicate queue entries and scanning linked victim
-histories. This branch replaces those representations in the normal
-`PortfolioSingleIntraNodeSolver` A01 candidates. It does not change A03, A13,
-priority-DAG search, copper sizes, endpoints or the downstream repair stages.
+The measured A01 leaf spends work allocating object labels and repeatedly
+checking owner/rip metadata. This branch uses compact label/heap arenas and
+numeric membership in normal `PortfolioSingleIntraNodeSolver` A01 candidates.
+Duplicate-queue pruning remains a separate explicit class ablation. The shared
+A01 kernel can also be constructed during later repair/regional work. A03, A13,
+priority-DAG and repair orchestration retain their existing policies, copper
+sizes and endpoints.
 
 `HighDensitySolverA01Compact` remains an instance of the pinned external A01,
 so its scheduler work classification and initialized iteration budget remain
-unchanged. A01 setup, via occupancy, collision predicates and route finalization
-come from `@tscircuit/high-density-a01` at `10cdce5ad507adfaaec8ac32ea905ab02ffefa8a`.
+unchanged. Setup, via-occupancy/geometry helpers and route finalization are
+inherited from `@tscircuit/high-density-a01` at
+`10cdce5ad507adfaaec8ac32ea905ab02ffefa8a`. The move-cost loop is adapted to numeric
+ownership/victim metadata and checked against the original implementation.
 The adapted search and cost code is copyright 2026 tscircuit, under MIT; the
 repository's LICENSE contains the license terms.
 
@@ -161,7 +165,8 @@ This preserves the representation/memory finding without relabeling earlier
 pruning regressions as improvements. It is neither a whole-board nor a
 dataset-wide result, and byte parity preserves any inherited baseline geometry
 or connectivity limitations rather than certifying them as correct. No further
-kernel tuning or timing followed this final ablation.
+kernel tuning followed this final ablation. The final complete-dataset paired
+follow-up is reported separately.
 
 ## Dataset evaluation
 
