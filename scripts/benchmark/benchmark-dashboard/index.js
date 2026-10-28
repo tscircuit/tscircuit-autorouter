@@ -73,6 +73,34 @@ const metricDefinitions = [
     direction: "lower",
   },
   {
+    key: "p50PeakRssBytes",
+    label: "P50",
+    group: "Memory",
+    unit: "bytes",
+    direction: "lower",
+  },
+  {
+    key: "p80PeakRssBytes",
+    label: "P80",
+    group: "Memory",
+    unit: "bytes",
+    direction: "lower",
+  },
+  {
+    key: "p90PeakRssBytes",
+    label: "P90",
+    group: "Memory",
+    unit: "bytes",
+    direction: "lower",
+  },
+  {
+    key: "maxPeakRssBytes",
+    label: "Maximum",
+    group: "Memory",
+    unit: "bytes",
+    direction: "lower",
+  },
+  {
     key: "avgVia",
     label: "Average",
     group: "Vias",
@@ -236,6 +264,7 @@ function formatMetricValue(metric, value) {
     throw new Error("Cannot format a non-finite metric")
   if (metric.unit === "%") return value.toFixed(1) + " %"
   if (metric.unit === "ms") return formatDuration(value)
+  if (metric.unit === "bytes") return formatMemory(value)
   return value.toFixed(1) + " vias"
 }
 
@@ -246,7 +275,18 @@ function formatMetricDelta(metric, delta) {
   const prefix = delta > 0 ? "+" : ""
   if (metric.unit === "%") return prefix + delta.toFixed(1) + " pp"
   if (metric.unit === "ms") return prefix + formatDuration(delta)
+  if (metric.unit === "bytes") return prefix + formatMemory(delta)
   return prefix + delta.toFixed(1) + " vias"
+}
+
+function formatMemory(value) {
+  if (value === null || value === undefined) return "n/a"
+  if (!Number.isFinite(value))
+    throw new Error("Cannot format non-finite memory usage")
+  if (Math.abs(value) >= 1024 ** 3) {
+    return (value / 1024 ** 3).toFixed(2) + " GiB"
+  }
+  return (value / 1024 ** 2).toFixed(1) + " MiB"
 }
 
 function getDeltaTone(metric, delta) {
@@ -298,6 +338,10 @@ async function getScopedSeriesPoints() {
         p90TimeMs: sample.elapsedTimeMs,
         p95TimeMs: sample.elapsedTimeMs,
         maxTimeMs: sample.elapsedTimeMs,
+        p50PeakRssBytes: sample.peakRssBytes ?? null,
+        p80PeakRssBytes: sample.peakRssBytes ?? null,
+        p90PeakRssBytes: sample.peakRssBytes ?? null,
+        maxPeakRssBytes: sample.peakRssBytes ?? null,
         avgVia: sample.viaCount ?? null,
         medianVia: sample.viaCount ?? null,
         maxVia: sample.viaCount ?? null,
@@ -380,20 +424,37 @@ async function renderHealth() {
     formatDate(latest.createdAt, true)
   const healthMetricKeys =
     sampleSelect.value === ""
-      ? ["completedRate", "relaxedDrcRate", "p50TimeMs", "p95TimeMs", "avgVia"]
-      : ["completedRate", "relaxedDrcRate", "p50TimeMs", "avgVia"]
+      ? [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p95TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
+      : [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
   healthGrid.innerHTML = healthMetricKeys
     .map((metricKey) => {
       const metric = metricByKey.get(metricKey)
       const label =
         sampleSelect.value !== "" && metricKey === "p50TimeMs"
           ? "Elapsed time"
-          : metric.label +
-            (metric.group === "Solve time"
-              ? " solve time"
-              : metric.group === "Vias"
-                ? " vias"
-                : "")
+          : metric.group === "Memory"
+            ? sampleSelect.value === ""
+              ? "P50 peak memory"
+              : "Peak memory"
+            : metric.label +
+              (metric.group === "Solve time"
+                ? " solve time"
+                : metric.group === "Vias"
+                  ? " vias"
+                  : "")
       const delta =
         previous && latest[metricKey] !== null && previous[metricKey] !== null
           ? latest[metricKey] - previous[metricKey]
@@ -420,17 +481,24 @@ function renderMetricToolbar() {
   const sampleScoped = sampleSelect.value !== ""
   const availableMetrics = sampleScoped
     ? metricDefinitions.filter((metric) =>
-        ["completedRate", "relaxedDrcRate", "p50TimeMs", "avgVia"].includes(
-          metric.key,
-        ),
+        [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ].includes(metric.key),
       )
     : metricDefinitions
   if (
     !availableMetrics.some((metric) => metric.key === dashboardState.metricKey)
   ) {
-    dashboardState.metricKey = "p50TimeMs"
+    dashboardState.metricKey =
+      metricByKey.get(dashboardState.metricKey).group === "Memory"
+        ? "p50PeakRssBytes"
+        : "p50TimeMs"
   }
-  const groups = uniqueSorted(availableMetrics.map((metric) => metric.group))
+  const groups = [...new Set(availableMetrics.map((metric) => metric.group))]
   getRequiredElement("metric-toolbar").innerHTML = groups
     .map((group) => {
       const buttons = availableMetrics
@@ -439,9 +507,11 @@ function renderMetricToolbar() {
           const label =
             sampleScoped && metric.key === "p50TimeMs"
               ? "Elapsed time"
-              : sampleScoped && metric.key === "avgVia"
-                ? "Via count"
-                : metric.label
+              : sampleScoped && metric.group === "Memory"
+                ? "Peak RSS"
+                : sampleScoped && metric.key === "avgVia"
+                  ? "Via count"
+                  : metric.label
           return (
             '<button class="metric-button" type="button" data-metric="' +
             metric.key +
@@ -469,6 +539,11 @@ function getAxisScale(metric, maximum) {
   if (metric.unit === "ms" && maximum >= 1000) {
     return { divisor: 1000, unit: "s", maximum: Math.max(maximum * 1.08, 1) }
   }
+  if (metric.unit === "bytes") {
+    const divisor = maximum >= 1024 ** 3 ? 1024 ** 3 : 1024 ** 2
+    const unit = maximum >= 1024 ** 3 ? "GiB" : "MiB"
+    return { divisor, unit, maximum: Math.max(maximum * 1.08, divisor) }
+  }
   return { divisor: 1, unit: metric.unit, maximum: Math.max(maximum * 1.08, 1) }
 }
 
@@ -489,7 +564,9 @@ function makeSvgElement(name, attributes) {
 
 function appendChartTitle(metric, points) {
   const title = makeSvgElement("title", { id: "chart-title" })
-  title.textContent = metric.label + " history for " + datasetSelect.value
+  const label =
+    metric.group === "Memory" ? metric.label + " peak memory" : metric.label
+  title.textContent = label + " history for " + datasetSelect.value
   const description = makeSvgElement("desc", { id: "chart-description" })
   description.textContent =
     points.length +
@@ -738,14 +815,23 @@ async function renderChart() {
     formatDate(points[points.length - 1].createdAt, false)
   const scopeLabel =
     sampleSelect.value === "" ? "All samples" : "Sample " + sampleSelect.value
+  const metricLabel =
+    metric.group === "Memory"
+      ? sampleSelect.value === ""
+        ? metric.label + " peak memory (RSS)"
+        : "Peak memory (RSS)"
+      : metric.label
   getRequiredElement("chart-unit").textContent =
-    metric.label + " · " + scopeLabel + " · axis in " + scale.unit
+    metricLabel + " · " + scopeLabel + " · axis in " + scale.unit
 }
 
 function getSampleSortValue(sample, key) {
   if (key === "status") return formatStatus(sample)
   if (key === "drc") return sample.relaxedDrcPassed ? 1 : 0
   if (key === "vias") return sample.viaCount ?? Number.POSITIVE_INFINITY
+  if (key === "peakRssBytes") {
+    return sample.peakRssBytes ?? Number.POSITIVE_INFINITY
+  }
   return sample[key] ?? ""
 }
 
@@ -1050,6 +1136,16 @@ function renderSamples(point, previous) {
         sample.elapsedTimeMs,
         previousSample?.elapsedTimeMs,
       ) +
+      '</td><td class="number-cell">' +
+      escapeHtml(formatMemory(sample.peakRssBytes)) +
+      (sample.peakRssBytes !== undefined &&
+      previousSample?.peakRssBytes !== undefined
+        ? renderDeltaText(
+            metricByKey.get("p50PeakRssBytes"),
+            sample.peakRssBytes,
+            previousSample.peakRssBytes,
+          )
+        : "") +
       '</td><td><span class="badge ' +
       (sample.relaxedDrcPassed ? "passed" : "failed") +
       '">' +
@@ -1078,6 +1174,8 @@ function renderSamples(point, previous) {
     header("Status", "status") +
     "</th><th>" +
     header("Solve time", "elapsedTimeMs") +
+    "</th><th>" +
+    header("Peak memory (RSS)", "peakRssBytes") +
     "</th><th>" +
     header("DRC", "drc") +
     "</th><th>" +
@@ -1168,8 +1266,21 @@ async function renderRunDetails() {
     .join("")
   const detailMetricKeys =
     sampleSelect.value === ""
-      ? ["completedRate", "relaxedDrcRate", "p50TimeMs", "p95TimeMs", "avgVia"]
-      : ["completedRate", "relaxedDrcRate", "p50TimeMs", "avgVia"]
+      ? [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p95TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
+      : [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
   getRequiredElement("selected-metrics").innerHTML = detailMetricKeys
     .map((metricKey) => {
       const metric = metricByKey.get(metricKey)
@@ -1180,7 +1291,11 @@ async function renderRunDetails() {
       const label =
         sampleSelect.value !== "" && metricKey === "p50TimeMs"
           ? "Elapsed time"
-          : metric.label + (metric.group === "Vias" ? " vias" : "")
+          : metric.group === "Memory"
+            ? sampleSelect.value === ""
+              ? "P50 peak memory"
+              : "Peak memory"
+            : metric.label + (metric.group === "Vias" ? " vias" : "")
       return (
         '<div class="selected-metric"><span>' +
         escapeHtml(label) +
@@ -1235,6 +1350,13 @@ async function renderRecentRuns() {
         formatMetricValue(metricByKey.get("p95TimeMs"), point.p95TimeMs),
       ) +
       "</td><td>" +
+      escapeHtml(
+        formatMetricValue(
+          metricByKey.get("p50PeakRssBytes"),
+          point.p50PeakRssBytes,
+        ),
+      ) +
+      "</td><td>" +
       escapeHtml(formatMetricValue(metricByKey.get("avgVia"), point.avgVia)) +
       '</td><td><a href="' +
       escapeHtml(point.runUrl) +
@@ -1245,7 +1367,7 @@ async function renderRecentRuns() {
   recentRunsTable.innerHTML =
     "<caption>Recent runs for the selected dataset, solver, effort, and sample scope</caption>" +
     "<thead><tr><th>Date</th><th>Completion (%)</th><th>DRC (%)</th><th>P50 solve time</th>" +
-    "<th>P95 solve time</th><th>Average vias</th><th>Workflow</th></tr></thead><tbody>" +
+    "<th>P95 solve time</th><th>Peak memory (P50)</th><th>Average vias</th><th>Workflow</th></tr></thead><tbody>" +
     rows.join("") +
     "</tbody>"
   recentRunsTable.querySelectorAll("[data-run-id]").forEach((row) => {
@@ -1343,8 +1465,7 @@ async function initializeControls() {
   const datasets = uniqueSorted(
     dashboardData.points.map((point) => point.datasetName),
   )
-  const preferredDataset =
-    initialHash.get("dataset") ?? latestPoint?.datasetName ?? null
+  const preferredDataset = initialHash.get("dataset") ?? "srj18"
   setSelectOptions(datasetSelect, datasets, preferredDataset)
   await rebuildSeriesControls(
     initialHash.get("solver") ?? latestPoint?.solverName ?? null,
@@ -1434,6 +1555,10 @@ async function buildSelectedSummary() {
     "relaxedDrcRate",
     "p50TimeMs",
     "p95TimeMs",
+    "p50PeakRssBytes",
+    "p80PeakRssBytes",
+    "p90PeakRssBytes",
+    "maxPeakRssBytes",
     "avgVia",
   ]) {
     const metric = metricByKey.get(metricKey)
@@ -1443,7 +1568,9 @@ async function buildSelectedSummary() {
         : null
     lines.push(
       "- " +
-        metric.label +
+        (metric.group === "Memory"
+          ? metric.label + " peak memory"
+          : metric.label) +
         ": " +
         formatMetricValue(metric, point[metricKey]) +
         " (" +
@@ -1567,6 +1694,8 @@ getRequiredElement("download-csv").addEventListener("click", () =>
           "status",
           "solve_time_ms",
           "previous_solve_time_ms",
+          "peak_rss_bytes",
+          "previous_peak_rss_bytes",
           "drc_passed",
           "previous_drc_passed",
           "via_count",
@@ -1594,6 +1723,8 @@ getRequiredElement("download-csv").addEventListener("click", () =>
           formatStatus(sample),
           sample.elapsedTimeMs,
           previousSample?.elapsedTimeMs,
+          sample.peakRssBytes,
+          previousSample?.peakRssBytes,
           sample.relaxedDrcPassed,
           previousSample?.relaxedDrcPassed,
           sample.viaCount,
@@ -1627,6 +1758,10 @@ async function initializeDashboard() {
   ) {
     throw new Error("Benchmark dashboard index is invalid")
   }
+  dashboardData.points = dashboardData.points.filter(
+    (point) =>
+      point.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+  )
   for (const run of dashboardData.runs) {
     if (!run || typeof run.runId !== "string" || typeof run.path !== "string") {
       throw new Error("Benchmark dashboard index contains an invalid run")

@@ -14,6 +14,7 @@ const TARGET_CONNECTION_NAME = "DDR3_m2_fpga_ddr_dram_ba0"
 
 test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal regions", () => {
   const inputSrj = structuredClone(sample007) as SimpleRouteJson
+  expect(inputSrj.minTraceToPadEdgeClearance).toBe(0.075)
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
     cacheProvider: null,
   })
@@ -145,6 +146,10 @@ test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal region
       inputSrj,
       srjWithPointPairs: pipeline9.srjWithPointPairs ?? fannedOutSrj,
       routedTraces: targetNetTraces,
+      // Sample007 declares 0.075mm pad clearance, below the benchmark default.
+      drcOptions: {
+        traceClearance: inputSrj.minTraceToPadEdgeClearance,
+      },
     }).errors,
   ).toHaveLength(0)
 

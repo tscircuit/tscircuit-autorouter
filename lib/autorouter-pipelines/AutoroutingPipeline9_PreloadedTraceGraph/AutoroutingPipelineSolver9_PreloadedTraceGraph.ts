@@ -5,7 +5,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -262,7 +262,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
-  highDensityForceImproveSolver?: HighDensityForceImproveSolver
+  highDensityForceImproveSolver?: Pipeline9HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
@@ -539,6 +539,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -632,6 +633,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            minViaHoleEdgeToViaHoleEdgeClearance:
+              cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
@@ -645,7 +649,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "highDensityForceImproveSolver",
-      HighDensityForceImproveSolver,
+      Pipeline9HighDensityForceImproveSolver,
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
@@ -1134,7 +1138,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   currentPipelineStepIndex = 0
   private asyncRunning = false
 
-  /** Orchestrate on the host so independent high-density batches can use its pool. */
+  /** Keep orchestration on the host while independent node work uses its pool. */
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
@@ -1147,7 +1151,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return
       }
       while (!this.solved && !this.failed) {
-        if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
+        if (
+          this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof
+            TinyHypergraphPortPointPathingSolver ||
+          this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
+          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
+        ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
           await phase.solveAsync(
