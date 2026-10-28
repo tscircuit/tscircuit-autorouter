@@ -67,3 +67,11 @@ This change does not fix all board DRC errors or establish fabrication readiness
 It does not optimize later pathfinding or high-density repair stages. The earlier
 rough 66-minute observation came from cache-file timestamps during a run with
 other work and frequent previews; it is not a controlled end-to-end benchmark.
+
+## Visual regression check
+
+The reproduction branch now includes captured input/output board SVGs and a live
+preload-output SVG baseline (`b5e07e0`). Both visual tests pass on this fix
+without updating snapshots (2 tests, 6 assertions). The complete output SHA-256
+is also asserted. No baseline SVG or PNG changes appear in this fix's diff.
+See [the reproduction images](motherboard-power-phase-repro.md#visual-snapshots).
