@@ -4,10 +4,10 @@ import { HighDensitySolverA01Compact } from "lib/solvers/HyperHighDensitySolver/
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("normal portfolio preserves earlier pruning and uses storage-only for newly eligible grids", () => {
+test("normal portfolio uses storage-only on every supported scene while keeping explicit pruning available", () => {
   const diagnostics: Record<string, number> = {}
   for (const [width, height, owners, expected] of [
-    [1, 1, 12, "pruned"],
+    [1, 1, 12, "storage"],
     [51.2, 51.2, 12, "storage"],
     [102.4, 51.2, 12, "storage"],
     [102.4, 51.2, 33, "original"],
@@ -29,10 +29,15 @@ test("normal portfolio preserves earlier pruning and uses storage-only for newly
     if (expected === "original") expect(solver).not.toBeInstanceOf(HighDensitySolverA01Compact)
     else {
       expect(solver).toBeInstanceOf(HighDensitySolverA01Compact)
-      expect((solver as unknown as HighDensitySolverA01Compact).compactFrontierPruning).toBe(expected === "pruned")
+      const compact = solver as unknown as HighDensitySolverA01Compact
+      expect(compact.compactFrontierPruning).toBe(false)
+      const explicitPruning = new HighDensitySolverA01Compact({
+        ...compact.getConstructorParams()[0], compactFrontierPruning: true,
+      })
+      expect(explicitPruning.compactFrontierPruning).toBe(true)
     }
   }
   expect(diagnostics.compactA01Candidates).toBe(3)
   expect(diagnostics.compactA01UnsupportedCandidates).toBe(1)
-  expect(diagnostics.compactA01StorageOnlyCandidates).toBe(2)
+  expect(diagnostics.compactA01StorageOnlyCandidates).toBe(3)
 })

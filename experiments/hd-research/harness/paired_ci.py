@@ -14,6 +14,8 @@ import subprocess
 import sys
 import time
 
+from cpu_resources import get_cpu_capacity, validate_cpu_request
+
 BASE = "637b6c581128238f6c61227a1c15be423d24baca"
 VARIANTS = {"portfolio", "kernel", "legalization", "corridors", "compatibility"}
 GIB = 1024 ** 3
@@ -78,17 +80,23 @@ def main(args):
             raise RuntimeError(f"Expected Bun1.4.3, received {bun_version}")
         metadata["runtime"]["bun"] = bun_version
         allowed_cpus = sorted(os.sched_getaffinity(0))
-        if len(allowed_cpus) < 3:
+        cpu_capacity = get_cpu_capacity(allowed_cpus, metadata["cpuMax"])
+        if cpu_capacity["effectiveCpuCount"] < 3:
             raise RuntimeError("The paired benchmark requires at least three allowed CPUs")
-        cpus = allowed_cpus[:3]
         metadata["allowedCpus"] = allowed_cpus
-        metadata["sampleCpus"] = cpus
+        metadata["cpuCapacity"] = cpu_capacity
         meminfo = {line.split(":")[0]: int(line.split()[1]) * 1024 for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith(("MemTotal:", "MemAvailable:"))}
         memory_limit = metadata["memoryMax"]
         effective_memory = min(meminfo["MemTotal"], int(memory_limit)) if memory_limit and memory_limit.isdigit() else meminfo["MemTotal"]
         generous_memory = min(effective_memory, meminfo["MemAvailable"]) >= 56 * GIB
         if effective_memory < 15 * GIB:
             raise RuntimeError("The conservative paired benchmark requires at least15GiB of memory")
+        concurrency = 6 if generous_memory and cpu_capacity["effectiveCpuCount"] >= 6 else 3
+        validate_cpu_request(concurrency, cpu_capacity)
+        cpus = allowed_cpus[:concurrency]
+        metadata["concurrency"] = concurrency
+        metadata["sampleCpus"] = cpus
+        metadata["method"] = f"Unmodified benchmark worker and repository runTask. Both complete42-sample passes run sequentially on this one runner, with one fresh Bun process per sample, identical resolved dependencies, {concurrency} affinity-pinned sample lanes and explicit memory admission. Numeric cgroup quota and allowed affinity constrain the requested lanes; missing quota is explicitly unavailable. Baseline runs first; this is one exploratory paired pass, not a repeated randomized estimate."
         metadata["memory"] = {
             **meminfo,
             "effectiveLimitBytes": effective_memory,
@@ -151,10 +159,14 @@ def main(args):
         write_json(out / "paired-ci-metadata.json", metadata)
 
         for variant in ["control", args.variant]:
-            driver = [sys.executable, str(harness / "run_matrix.py"), "--worktree-root", str(root), "--out", str(out), "--variants", variant, "--datasets", "srj18,srj24", "--samples", "all", "--concurrency", "3", "--cpus", ",".join(map(str, cpus)), "--timeout", "360", "--startup-timeout", "120", "--reservation-budget-gib", "48" if generous_memory else "13", "--memory-guard-gib", "48" if generous_memory else "12"]
+            driver = [sys.executable, str(harness / "run_matrix.py"), "--worktree-root", str(root), "--out", str(out), "--variants", variant, "--datasets", "srj18,srj24", "--samples", "all", "--concurrency", str(concurrency), "--cpus", ",".join(map(str, cpus)), "--timeout", "360", "--startup-timeout", "120", "--reservation-budget-gib", "48" if generous_memory else "13", "--memory-guard-gib", "48" if generous_memory else "12"]
             if generous_memory:
                 driver.append("--allow-heavy-overlap")
-            entry = {"variant": variant, "startedAt": utc(), "command": driver}
+            entry = {"variant": variant, "startedAt": utc(), "command": driver,
+                "concurrency": concurrency, "sampleCpus": cpus,
+                "effectiveCpuCount": cpu_capacity["effectiveCpuCount"],
+                "reservationBudgetGiB": 48 if generous_memory else 13,
+                "allowHeavyOverlap": generous_memory}
             metadata["passes"].append(entry)
             write_json(out / "paired-ci-metadata.json", metadata)
             print(f"Starting full42-sample pass: {variant}", flush=True)

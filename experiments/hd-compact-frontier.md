@@ -25,12 +25,14 @@ is safe at equality. With 12 owners, every Uint32-addressable grid meets the
 key bound. This changes eligibility, not the costs or the pruning rule of
 already-supported scenes.
 
-The normal portfolio keeps the earlier experiment's pruning on its original
-`S < 2^21` domain. Newly eligible larger grids use **storage-only** compact A01,
-preserving the original backend's search policy there. Direct construction still
-accepts the explicit `compactFrontierPruning` flag for either ablation. The
-`compactA01StorageOnlyCandidates` aggregate reports how often the newly covered
-representation is used without pruning.
+The capacity follow-up retained pruning on its original `S < 2^21` domain and
+used storage-only mode on newly eligible larger grids. The final isolated
+ablation instead makes the normal portfolio **storage-only on every supported
+scene**, preserving original A01's search and work policy throughout. Direct
+class construction retains `compactFrontierPruning: true` for research. The
+`compactA01StorageOnlyCandidates` aggregate reports how often normal routing uses
+the representation without changing queue pruning. Earlier pruned and hybrid
+measurements remain separate evidence rather than being relabeled as this mode.
 
 The implementation adds:
 
@@ -43,8 +45,8 @@ The implementation adds:
 - Optional queue pruning by `(cell, exact victim mask)` and best queued cost.
   For `N` named owners and `S` grid states, capacity requires `N <= 32`,
   `S <= 2^32`, and `2^N * S <= 2^53`. Unsigned masks and these bounds keep every
-  numeric key injective through `Number.MAX_SAFE_INTEGER`. The default
-  experiment enables pruning.
+  numeric key injective through `Number.MAX_SAFE_INTEGER`. Pruning remains an
+  explicit class ablation; the normal portfolio disables it.
 - Per-candidate `stats.compactA01` counters, delta-aggregated into the shared HD
   `benchmarkDiagnosticCounters` through `priorityDiagnostics`, so metrics survive
   retirement of earlier nodes. Peak counters are maxima; other counters are sums.
@@ -141,6 +143,25 @@ forty literal-overlap route pairs in these intermediate physical routes; those
 existing conflicts are unchanged. This is one complete-node same-output gain,
 not a complete-board or dataset speedup estimate. Earlier adverse pruning and
 candidate-budget observations remain part of the experiment.
+
+The final storage-only ablation replayed the complete 751-node dataset18
+sample002 HD stage against original control `637b6c58`, using captured input
+`33ff83e61ea7d8cd738fc8f5b78ea0870bf621731162c2df27fd683f4df27238`, natural
+budgets, identical measurement workers and two serial fresh processes alone on
+CPU2. Both completed 751 nodes and 1,589 routes in exactly 485,280 outer HD
+iterations. Every node's route hash, route count and iteration count matched;
+the complete output bytes had identical SHA256
+`a01afa89b675cb1fd54862c493272ac3f22e8b349eeeb188f9ebb6f522202399`.
+All 780 compact candidates used storage-only mode and no equivalent labels were
+pruned. Elapsed time was 54.649s original versus 53.999s storage-only: a 1.19%
+difference that is effectively flat in one pair, not an established CPU speedup.
+Peak RSS fell from 761,769,984 to 642,772,992 bytes, a 15.62% reduction. The
+unchanged worker reports elapsed wall time and RSS, not separate CPU milliseconds.
+This preserves the representation/memory finding without relabeling earlier
+pruning regressions as improvements. It is neither a whole-board nor a
+dataset-wide result, and byte parity preserves any inherited baseline geometry
+or connectivity limitations rather than certifying them as correct. No further
+kernel tuning or timing followed this final ablation.
 
 ## Dataset evaluation
 
