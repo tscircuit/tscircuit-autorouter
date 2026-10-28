@@ -1,0 +1,25 @@
+{
+  "sourceHead": "9fedfe9a54be2ae0b10abdf732790e46e3b5e090",
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=5s",
+    "180s",
+    "taskset",
+    "-c",
+    "3",
+    "bun",
+    "test",
+    "--timeout",
+    "9999999",
+    "tests/features/pipeline9-srj18-sample01-thread-parity.test.ts"
+  ],
+  "exitCode": 0,
+  "censored": false,
+  "elapsedSeconds": 55.890881359999184,
+  "maxChildRssBytes": 1526124544,
+  "unchangedExistingTestIncludingSvg": true,
+  "timingComparisonValid": false,
+  "statusAfter": "",
+  "originalHashesUnchanged": true
+}

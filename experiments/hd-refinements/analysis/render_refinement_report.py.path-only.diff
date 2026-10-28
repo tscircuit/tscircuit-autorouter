@@ -1,0 +1,23 @@
+--- local/render_refinement_report.py
++++ portable/render_refinement_report.py
+@@ -14,7 +14,7 @@
+ import sys
+ import tempfile
+ 
+-ROOT = Path('/workspace/hd-refinements-2026-10-28')
++ROOT = Path(__file__).resolve().parents[1]
+ HARNESS = ROOT / 'harness'
+ sys.path.insert(0, str(HARNESS))
+ import arm_profiles as profiles
+@@ -30,9 +30,9 @@
+ 
+ DATASETS = {'srj18': 16, 'srj24': 26}
+ GIB = 1024 ** 3
+-CONFIRMATION_TEMPLATE = ROOT / 'artifacts/confirmation/combined-confirmation.json.in'
++CONFIRMATION_TEMPLATE = ROOT / 'confirmation/combined-confirmation.json.in'
+ CONFIRMATION_TEMPLATE_SHA256 = '611973ae75130fb4dded3a17e8ef3d744270e0a344e9cbad65ca993fe2bf9c95'
+-LEGAL_CONFIRMATION_TEMPLATE = ROOT / 'artifacts/confirmation-legal-only/legalization-final-confirmation.json.in'
++LEGAL_CONFIRMATION_TEMPLATE = ROOT / 'confirmation-legal-only/legalization-final-confirmation.json.in'
+ LEGAL_CONFIRMATION_TEMPLATE_SHA256 = '59fc336f47993d670c15d94a65321bcf8e144c9b80ab1b316a1d1391e22417e6'
+ 
+ 

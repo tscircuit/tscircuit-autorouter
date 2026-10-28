@@ -6,6 +6,17 @@ iteration cap can be certified. CPU timing does not select, promote, terminate o
 budget candidates in this mode. The earlier timing-based race remains available
 only as an explicit research mode; its reports remain historical evidence.
 
+The [completed refinement confirmation](hd-results/refinement-round2-confirmation/results.md)
+does not demonstrate a substantial optimization: common-clean routing changes
+by +0.662% on dataset18 and -2.130% on dataset24, with unchanged clean outcomes.
+All 35 paired solved outputs match, but completed-HD work is identical on only
+36 of 37 boards; dataset24 sample21 differs by one HD iteration. The intended
+policy equivalence below is not a claim of universal measured work equality.
+The [earlier negative refinement](hd-results/refinement-round1-portfolio/results.md)
+and [validation details](hd-results/refinement-round2-validation/VALIDATION.md)
+remain available. These results do not justify prioritizing lazy setup as a
+performance breakthrough.
+
 ## Modes and comparison boundaries
 
 | Mode | Scheduling and initialization | Candidate physical contracts |

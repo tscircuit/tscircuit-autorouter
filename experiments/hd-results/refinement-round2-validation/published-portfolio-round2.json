@@ -1,0 +1,19 @@
+{
+  "number": 3327,
+  "url": "https://github.com/tscircuit/tscircuit-autorouter/pull/3327",
+  "branch": "codex/hd-exp-1-selective-portfolio",
+  "remoteHead": "5b4c680c842eafe17e2830fc9a29d16d17d6a9b2",
+  "remoteTree": "11c12962d5e5a29c1b2915a8b5afeacfd7c0be74",
+  "localHead": "a5c026177ec39816a2c193acf6e660d20d81ab4d",
+  "algorithmLocalHead": "9fedfe9a54be2ae0b10abdf732790e46e3b5e090",
+  "algorithmTree": "346f3a36f5dd833beb5a54d3ae70f7d35d5078b4",
+  "previousMeasuredHead": "c879c9d5f4689502a279ed9d92a0299946eafcfb",
+  "localChecks": {
+    "focusedTests": 41,
+    "focusedAssertions": 35602,
+    "typecheckExitCode": 0,
+    "buildExitCode": 0,
+    "unchangedSample01IncludingSvgExitCode": 0
+  },
+  "benchmarkStatus": "AWAITING_SHARED_CONFIRMATION"
+}

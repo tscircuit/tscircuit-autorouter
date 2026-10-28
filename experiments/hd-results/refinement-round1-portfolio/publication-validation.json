@@ -1,0 +1,16 @@
+{
+  "allOriginalRendererFilesUnchanged": true,
+  "deterministicArchiveRebuildMatches": true,
+  "standaloneDecoderResult": {
+    "directory": "/tmp/hd-report-publication-mvcipqcb/decoded",
+    "verifiedMembers": 11,
+    "armRows": 168,
+    "archiveSha256": "067016eb5fcccf27d1b736d97fa4eef6e88bd52a6e86c4834a9c7b3de98c1a1d"
+  },
+  "allElevenMemberBytesAndSizesMatch": true,
+  "allCsvMemberRowCountsMatch": true,
+  "allCompactCoreStringsAndExtractedHashesMatch": true,
+  "allArmRowsPreserved": 168,
+  "markdownNumericalTableLinesExactlyMatch": true,
+  "armsContrastsVerificationCopiedByteForByte": true
+}
