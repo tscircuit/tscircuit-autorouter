@@ -106,6 +106,7 @@ export interface HgPortPointPathingSolverParams {
     USE_PREPARED_PORT_POINT_ROUTING?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
+    RETAIN_BEST_PARTIAL_ROUTING?: boolean
   }
   weights: {
     /** Seed used for deterministic shuffling in rip-selection ordering. */

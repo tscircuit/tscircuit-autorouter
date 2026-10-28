@@ -109,6 +109,8 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Retain improved partial routing before global rerips; experimental, default off. */
+  retainBestPartialRouting?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -541,6 +543,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               USE_SELECTIVE_RERIP_ROUTING: true,
               USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
+              RETAIN_BEST_PARTIAL_ROUTING:
+                cms.opts.retainBestPartialRouting === true,
             },
             weights: {
               SHUFFLE_SEED: 0,
