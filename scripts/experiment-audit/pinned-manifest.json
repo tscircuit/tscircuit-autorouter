@@ -96,7 +96,7 @@
     },
     {
       "pr": 3202,
-      "candidateSha": "cefb6bf3b7be31d1ac9dc678fb3fb1af128d0fac",
+      "candidateSha": "5352d16e621abae988ac91edac45898713119eb9",
       "label": "direct-geometry-engine",
       "solverName": "GeometryAutoroutingPipelineSolver",
       "solverModule": "lib/testing/GeometryAutoroutingPipelineSolver.ts",
@@ -110,6 +110,6 @@
     }
   ],
   "runPrNumbers": [
-    3198
+    3202
   ]
 }
