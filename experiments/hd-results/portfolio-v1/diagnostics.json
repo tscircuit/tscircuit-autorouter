@@ -1,0 +1,171 @@
+{
+  "measurementKind": "measured-single-paired-pass",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "experimentCommit": "69f911acf376cef278780f307184aee151d64741",
+  "variant": "portfolio",
+  "concurrency": 3,
+  "resourceProfile": "3-lane original",
+  "metricCoverage": [
+    {
+      "dataset": "srj18",
+      "metric": "vias",
+      "commonCleanCount": 15,
+      "matchedFinitePairCount": 15,
+      "matchedControlTotal": 3282,
+      "matchedExperimentTotal": 3387,
+      "originalReportedControlTotal": 3282,
+      "originalReportedExperimentTotal": 3387,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 15,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30140.74260551197,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30140.74260551197,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8
+      ],
+      "missingExperimentSamples": [
+        3,
+        8
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "metric": "vias",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 17,
+      "matchedControlTotal": 2740,
+      "matchedExperimentTotal": 2784,
+      "originalReportedControlTotal": 2740,
+      "originalReportedExperimentTotal": 2784,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj24",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 27372.256136221546,
+      "matchedExperimentTotal": 27247.52674411897,
+      "originalReportedControlTotal": 30431.12629761072,
+      "originalReportedExperimentTotal": 27247.52674411897,
+      "originalAggregatesMatchMatchedFinitePairs": false,
+      "missingControlSamples": [],
+      "missingExperimentSamples": [
+        21
+      ]
+    }
+  ],
+  "metricLimitations": [
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 15,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30140.74260551197,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30140.74260551197,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8
+      ],
+      "missingExperimentSamples": [
+        3,
+        8
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 27372.256136221546,
+      "matchedExperimentTotal": 27247.52674411897,
+      "originalReportedControlTotal": 30431.12629761072,
+      "originalReportedExperimentTotal": 27247.52674411897,
+      "originalAggregatesMatchMatchedFinitePairs": false,
+      "missingControlSamples": [],
+      "missingExperimentSamples": [
+        21
+      ]
+    }
+  ],
+  "numericDiagnosticTotals": {
+    "srj18/control": {
+      "priorityInstances": 50704.0,
+      "priorityRemovedNativeCandidates": 392956.0,
+      "priorityAllocatedWorkUnits": 2467132222.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 53408.0,
+      "priorityScaledInstances": 1136.0,
+      "priorityCompletedCandidates": 1688.0,
+      "prioritySolvedCandidates": 35.0,
+      "priorityUnknownCandidates": 1653.0,
+      "priorityCompletedWorkUnits": 46523438.0
+    },
+    "srj24/control": {
+      "priorityInstances": 85928.0,
+      "priorityRemovedNativeCandidates": 665942.0,
+      "priorityAllocatedWorkUnits": 4692017962.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 187152.0,
+      "priorityScaledInstances": 6440.0,
+      "priorityCompletedCandidates": 6880.0,
+      "prioritySolvedCandidates": 78.0,
+      "priorityUnknownCandidates": 6802.0,
+      "priorityCompletedWorkUnits": 107602838.0
+    },
+    "srj18/portfolio": {
+      "portfolioSelectiveAttempts": 14876.0,
+      "portfolioSelectiveAdmitted": 71167.0,
+      "portfolioSelectiveUnconstructed": 713877.0,
+      "portfolioSelectiveElapsedMicros": 185206065.0,
+      "portfolioSelectiveUnknownAttempts": 189.0,
+      "portfolioSelectiveWallMicros": 190870817.0,
+      "portfolioSelectiveCpuMicros": 190844283.0,
+      "priorityInstances": 12578.0,
+      "priorityRemovedNativeCandidates": 79556.0,
+      "priorityAllocatedWorkUnits": 985695354.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 14899.0,
+      "priorityScaledInstances": 981.0,
+      "priorityCompletedCandidates": 7970.0,
+      "prioritySolvedCandidates": 4472.0,
+      "priorityUnknownCandidates": 3498.0,
+      "priorityCompletedWorkUnits": 31019228.0
+    },
+    "srj24/portfolio": {
+      "priorityInstances": 27208.0,
+      "priorityRemovedNativeCandidates": 179082.0,
+      "priorityAllocatedWorkUnits": 2686655738.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 100876.0,
+      "priorityScaledInstances": 5990.0,
+      "portfolioSelectiveAttempts": 28716.0,
+      "portfolioSelectiveAdmitted": 146512.0,
+      "portfolioSelectiveUnconstructed": 1413803.0,
+      "portfolioSelectiveElapsedMicros": 547653899.0,
+      "portfolioSelectiveUnknownAttempts": 887.0,
+      "portfolioSelectiveWallMicros": 557882563.0,
+      "portfolioSelectiveCpuMicros": 557772496.0,
+      "priorityCompletedCandidates": 17346.0,
+      "prioritySolvedCandidates": 7294.0,
+      "priorityUnknownCandidates": 10052.0,
+      "priorityCompletedWorkUnits": 53225061.0
+    }
+  },
+  "warnings": []
+}

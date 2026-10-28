@@ -58,6 +58,29 @@ acceptance rules are weakened. Missing full drill/NPTH-rule context and remainin
 DRC/worker-parity concerns remain open; v2's full dataset validation is separate
 from the preserved v1 results above.
 
+## Final v2 promotion blocker
+
+At published final solver source `c7f2715d98117a4b28dbe9fcaceab873a0cd72cd`,
+centralized local TypeScript/build checks and CI compilation passed. The packed
+Bun runtime check failed: the preceding exact final route JSON equality passed,
+but worker iterations1901 differed from serial1902, masking the later HD-stats
+assertion. A separate native four-worker sample001 test also failed complete
+serialized routed-SRJ equality, so the limitation goes beyond iteration counts.
+These are failures of this timing-based policy and block promotion. Thread CPU
+scope fixes interference from unrelated workers; it does not make timing-driven
+selection deterministic. No assertion or snapshot has been weakened.
+
+Final-source T113 same-net drill validation still failed at line86: expected zero
+via-clearance errors, received two (job122666541989). This is a real unresolved
+numerical defect, separately from worker parity and the measured initial-HD gain.
+
+The final-source job also reached bug94/88 SVG comparisons after their preceding
+numerical checks passed. That specific evidence does not clear every board,
+physical-rule context or parity concern. The one-routing-thread final dataset18/24
+follow-up is still pending and remains separate from the preserved v1 evidence:
+https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40643404125
+Current CI: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40643404157
+
 ## Hypothesis
 
 An attempt that exhausts six A01 seeds repeatedly spends most of its time proving
