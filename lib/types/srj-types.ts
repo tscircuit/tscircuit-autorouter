@@ -65,9 +65,18 @@ export type JumperType = "1206x4" | "0603"
 export type ViaKeepout = {
   layers: string[]
 } & (
-  | { shape: "rect"; center: { x: number; y: number }; width: number; height: number }
+  | {
+      shape: "rect"
+      center: { x: number; y: number }
+      width: number
+      height: number
+    }
   | { shape: "circle"; center: { x: number; y: number }; radius: number }
-  | { shape: "outline"; outline: { x: number; y: number }[]; strokeWidth: number }
+  | {
+      shape: "outline"
+      outline: { x: number; y: number }[]
+      strokeWidth: number
+    }
 )
 
 export interface SimpleRouteJson {

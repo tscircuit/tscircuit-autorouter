@@ -993,8 +993,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         portPoints: [],
         portPointsInPairs: [],
         availableZ: this.params.preserveNodeLayerConstraints
-        ? this.activeNode.availableZ
-        : Array.from({ length: this.layerCount }, (_, z) => z),
+          ? this.activeNode.availableZ
+          : Array.from({ length: this.layerCount }, (_, z) => z),
       },
       this.getUpdatedFixedHdRoutes(),
     )

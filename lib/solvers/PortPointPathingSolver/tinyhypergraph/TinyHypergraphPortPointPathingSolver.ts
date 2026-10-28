@@ -620,30 +620,61 @@ const buildSerializedTinyGraph = (
       [endPoint, endTerminalPortId, "end"],
     ] as const) {
       if (!point || getConnectionPointLayers(point).length < 2) continue
-      const pointZ = getConnectionPointLayers(point).map(layer => mapLayerNameToZ(layer, params.layerCount))
-      const candidates = params.graph.regions.filter(region => checkIfConnectionPointIsInRegion({
-        point, region, layerCount: params.layerCount, pointZLayers: pointZ,
-      }))
-      const accesses = candidates.flatMap(region => region.d.availableZ.filter(z => pointZ.includes(z)).map(z => ({ region, z })))
+      const pointZ = getConnectionPointLayers(point).map((layer) =>
+        mapLayerNameToZ(layer, params.layerCount),
+      )
+      const candidates = params.graph.regions.filter((region) =>
+        checkIfConnectionPointIsInRegion({
+          point,
+          region,
+          layerCount: params.layerCount,
+          pointZLayers: pointZ,
+        }),
+      )
+      const accesses = candidates.flatMap((region) =>
+        region.d.availableZ
+          .filter((z) => pointZ.includes(z))
+          .map((z) => ({ region, z })),
+      )
       if (accesses.length < 2) continue
-      const terminalPort = ports.find(port => port.portId === terminalPortId)!
+      const terminalPort = ports.find((port) => port.portId === terminalPortId)!
       const oldRegion = serializedRegionById.get(terminalPort.region1Id)!
-      oldRegion.pointIds = oldRegion.pointIds.filter(id => id !== terminalPortId)
+      oldRegion.pointIds = oldRegion.pointIds.filter(
+        (id) => id !== terminalPortId,
+      )
       const junctionId = `tiny-terminal:${label}-access:${connection.connectionId}`
       terminalPort.region1Id = junctionId
       const junctionPorts = accesses.map(({ region, z }, i) => {
         const portId = `${junctionId}:${i}`
         serializedRegionById.get(region.regionId)!.pointIds.push(portId)
-        ports.push({ portId, region1Id: region.regionId, region2Id: junctionId,
-          d: { ...terminalPort.d, portId, z, terminalConnectionId: connection.connectionId } })
+        ports.push({
+          portId,
+          region1Id: region.regionId,
+          region2Id: junctionId,
+          d: {
+            ...terminalPort.d,
+            portId,
+            z,
+            terminalConnectionId: connection.connectionId,
+          },
+        })
         return portId
       })
-      regions.push({ regionId: junctionId, pointIds: [terminalPortId, ...junctionPorts], d: {
-        capacityMeshNodeId: junctionId, center: { x: point.x, y: point.y },
-        width: TINY_TERMINAL_REGION_SIZE, height: TINY_TERMINAL_REGION_SIZE,
-        availableZ: pointZ, _containsTarget: true, _tinyTerminal: true,
-        _tinyTerminalNetId: connection.mutuallyConnectedNetworkId, netId: routeNetIndex,
-      } })
+      regions.push({
+        regionId: junctionId,
+        pointIds: [terminalPortId, ...junctionPorts],
+        d: {
+          capacityMeshNodeId: junctionId,
+          center: { x: point.x, y: point.y },
+          width: TINY_TERMINAL_REGION_SIZE,
+          height: TINY_TERMINAL_REGION_SIZE,
+          availableZ: pointZ,
+          _containsTarget: true,
+          _tinyTerminal: true,
+          _tinyTerminalNetId: connection.mutuallyConnectedNetworkId,
+          netId: routeNetIndex,
+        },
+      })
     }
 
     solvedRoutes.push({
