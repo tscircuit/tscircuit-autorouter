@@ -535,6 +535,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         if (cms.opts.constrainViaPadPlacement) {
           constrainPipeline9RegionLayerChanges({
             graph,
+            viaDiameter: cms.viaDiameter,
             routingNetIds: connections.map((connection) => connection.mutuallyConnectedNetworkId),
             originalSrj: cms.originalSrj,
             physicalOwnership: getPipeline9PhysicalOwnership({

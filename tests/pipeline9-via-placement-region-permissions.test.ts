@@ -24,7 +24,7 @@ test("only fully covered original regions restrict foreign layer changes and ret
     "routing-signal": ["signal", "signal-port"] })
   const physicalOwnership = getPipeline9PhysicalOwnership({ originalSrj: srj, routingConnMap: connMap })
   const originalSecondNode = graph.regions[1]!.d
-  expect(constrainPipeline9RegionLayerChanges({ graph, originalSrj: srj, physicalOwnership,
+  expect(constrainPipeline9RegionLayerChanges({ viaDiameter: 0.3, graph, originalSrj: srj, physicalOwnership,
     routingNetIds: ["routing-owner", "routing-signal"] })).toBe(1)
   expect(graph.regions[0]!.d.layerChangeAllowedNetIds).toEqual(["routing-owner"])
   expect(graph.regions[0]!.d.availableZ).toEqual([1, 3])
@@ -32,8 +32,12 @@ test("only fully covered original regions restrict foreign layer changes and ret
   expect(graph.regions[1]!.d.layerChangeAllowedNetIds).toBeUndefined()
   const blindGraph = structuredClone(graph)
   blindGraph.regions[0]!.d.layerChangeAllowedNetIds = undefined
-  expect(constrainPipeline9RegionLayerChanges({ graph: blindGraph,
+  expect(constrainPipeline9RegionLayerChanges({ viaDiameter: 0.3, graph: blindGraph,
     originalSrj: { ...srj, allowBlindAndBuriedVias: true }, physicalOwnership,
+    routingNetIds: ["routing-owner", "routing-signal"] })).toBe(0)
+  expect(blindGraph.regions[0]!.d.layerChangeAllowedNetIds).toBeUndefined()
+  expect(constrainPipeline9RegionLayerChanges({ viaDiameter: 0.3, graph: blindGraph,
+    originalSrj: { ...srj, layerCount: 2 }, physicalOwnership,
     routingNetIds: ["routing-owner", "routing-signal"] })).toBe(0)
   expect(blindGraph.regions[0]!.d.layerChangeAllowedNetIds).toBeUndefined()
 })

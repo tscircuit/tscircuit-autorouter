@@ -6,6 +6,7 @@ import {
   getPipeline9PhysicalRouteOwner,
   type Pipeline9PhysicalOwnership,
 } from "./getPipeline9PhysicalOwnership"
+import { getPipeline9PadPointDistance } from "./getPipeline9PadPointDistance"
 import { getPipeline9PhysicalBoardObstaclesInBounds } from "./getPipeline9PhysicalBoardObstaclesInBounds"
 
 export type Pipeline9ViaPlacementContext = {
@@ -54,20 +55,7 @@ export const getPipeline9ViaPlacementValidator = (
       const layers = obstacle.__zLayers ?? obstacle.zLayers ??
         obstacle.layers.map((layer) => mapLayerNameToZ(layer, context.layerCount))
       if (!obstacle.isNonPlatedHole && !layers.some((z) => z >= minZ && z <= maxZ)) continue
-      const dx = placement.x - obstacle.center.x
-      const dy = placement.y - obstacle.center.y
-      let distance: number
-      if (obstacle.shape === "circle") {
-        distance = Math.hypot(dx, dy) - obstacle.width / 2
-      } else {
-        const radians = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-        const localX = dx * Math.cos(radians) - dy * Math.sin(radians)
-        const localY = dx * Math.sin(radians) + dy * Math.cos(radians)
-        const outsideX = Math.abs(localX) - obstacle.width / 2
-        const outsideY = Math.abs(localY) - obstacle.height / 2
-        distance = Math.hypot(Math.max(outsideX, 0), Math.max(outsideY, 0)) +
-          Math.min(Math.max(outsideX, outsideY), 0)
-      }
+      const distance = getPipeline9PadPointDistance(placement, obstacle, "outer")
       if (distance < padding) return false
     }
     return true
