@@ -32,12 +32,45 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
       pcb_trace_error_id: "overlap_source_net_25_0_source_net_2_mst1_0",
     }),
   )
+  expect(errors).toContainEqual(
+    expect.objectContaining({
+      pcb_trace_error_id: "overlap_source_net_25_0_pcb_smtpad_9.800_2.600",
+    }),
+  )
+  expect(input).toEqual(sample051 as unknown as SimpleRouteJson)
   const traceA = result.routedTraces.find(
     (trace) => trace.pcb_trace_id === "source_net_25_0",
   )!
   const traceB = result.routedTraces.find(
     (trace) => trace.pcb_trace_id === "source_net_2_mst1_0",
   )!
+  // Lowering the DRC count by moving a terminal off its original center is
+  // not a valid repair. Keep both traces connected at their input coordinates.
+  const inputPoints = input.connections.flatMap(
+    (connection) => connection.pointsToConnect,
+  )
+  for (const trace of [traceA, traceB]) {
+    const terminalPoints = inputPoints.filter(
+      (point) =>
+        point.pcb_port_id !== undefined &&
+        trace.connectsTo?.includes(point.pcb_port_id),
+    )
+    expect(terminalPoints).toHaveLength(2)
+    for (const point of terminalPoints) {
+      expect([trace.route[0], trace.route.at(-1)]).toContainEqual(
+        expect.objectContaining({
+          x: point.x,
+          y: point.y,
+          layer: point.layer,
+        }),
+      )
+    }
+    for (const point of trace.route) {
+      if (point.route_type === "wire") {
+        expect(point.width).toBe(input.minTraceWidth)
+      }
+    }
+  }
   let minimumPairClearance = Number.POSITIVE_INFINITY
   for (let i = 1; i < traceA.route.length; i++) {
     const a = traceA.route[i - 1]!
