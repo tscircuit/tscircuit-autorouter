@@ -119,15 +119,9 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
         const dx1 = b.x - a.x, dy1 = b.y - a.y, dx2 = point.x - b.x, dy2 = point.y - b.y
         const scale = Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2)
         if (a.z !== b.z || b.z !== point.z || b.pcb_port_id || b.insideJumperPad || b.toNextSegmentType ||
-          // Bridge repair repeats route ownership on every point. Those labels
-          // are redundant only when both adjoining points agree with the route.
-          Object.keys(b).some((key) => {
-            if (key === "x" || key === "y" || key === "z" || key === "traceThickness") return false
-            if (key !== "connectionName" && key !== "rootConnectionName") return true
-            const owner = route[key]
-            return [a, b, point].some((vertex) =>
-              (vertex as unknown as Record<string, unknown>)[key] !== owner)
-          }) ||
+          // Owner annotations can anchor a shared branch endpoint on this
+          // segment. Equality with adjacent owners does not make them removable.
+          Object.keys(b).some((key) => key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness") ||
           node.portPoints.some((port) => port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9) ||
           a.toNextSegmentType || b.toNextSegmentCircuitJsonMetadata ||
           (a.traceThickness ?? route.traceThickness) !== (b.traceThickness ?? route.traceThickness) ||

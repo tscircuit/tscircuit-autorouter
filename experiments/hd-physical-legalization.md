@@ -88,18 +88,23 @@ optimization iteration, then alternates both families for at most 32 passes,
 stopping when vertex adjustments are below 1e-12. The same exact nonlinear
 obstacle, board and per-drill-pair guards still decide trial and final acceptance.
 A capacity-node inset includes each vertex's starting coordinate, keeping trial
-motion continuous as step size decreases. Redundant point owner annotations may
-be compressed only when they match the route and both adjacent points; distinct
-point identities and physical metadata remain protected.
+motion continuous as step size decreases. Point owner annotations remain protected:
+even repeated labels can anchor a shared branch endpoint on another route.
+Matching route and adjacent-point owners does not prove that deleting the vertex
+will preserve the shared junction during later motion.
 
-A correctness-only replay of that captured node reduces literal overlaps 121→12
-and drill-hole pairs 8→0 with all guards passing, versus 121→22 and 8→8 for the old
+A correctness-only replay with conservative metadata anchors reduces literal
+overlaps 121→18 and drill-hole pairs 8→0 with all guards passing, versus 121→22
+and 8→8 for the old
 full proposal. The old result additionally violates two new per-pair drill
 nonregression constraints; its aggregate hole count hid that trade. The replay
 shows a useful local geometry improvement, not a measured whole-board speed or
-clean-solve claim. Operation counters drop from 8208288 geometry operations for a
-naive 32-pass joint implementation to 1543881 with cached half-spaces and early
-convergence; these counters are not wall-clock measurements.
+clean-solve claim. The replay preserves all 80 explicit node-port pairs and all
+504 originally connected same-net port pairs under both centerline and physical
+copper audits. It records 1304460 geometry operations; this is an operation count,
+not a wall-clock measurement. A superseded owner-label compression variant reached
+12 overlaps but broke a separate branch-weld regression and is not the current
+implementation.
 
 Pipeline 9 currently grows node coordinates, routes with unchanged copper sizes,
 then divides coordinates back to the physical node. Widths and via diameters do
@@ -123,8 +128,9 @@ physical embedding, before established board-wide force improvement and repair.
   terminal metadata remain intact. Jumpers and `through_obstacle` segments are
   explicitly recorded as unsupported and retained for established processing.
 - Strictly collinear points with no distinct metadata are removed without changing
-  the copper. Repeated connection/root owner labels are redundant only when the
-  route and both adjacent points agree; unknown point metadata stays intact. This reduces grid stair-step sampling overhead while retaining corners,
+  the copper. Point connection/root owner labels and unknown metadata stay intact,
+  preserving their role in shared branch junctions. This reduces grid stair-step
+  sampling overhead while retaining corners,
   vias, terminals and width changes. Compression is a separate ablation because
   it changes the input discretization of downstream numerical repair.
 - Deterministic projected gradient steps reduce squared physical penetration of
@@ -220,3 +226,12 @@ board-specific pad/hole rules, still require full-pipeline validation. A local
 overlap reduction may reduce later work, but preprocessing/projection also costs
 time and downstream numerical repair may respond differently to compressed
 routes. Full-board measurements, including negative results, decide promotion.
+
+
+## Final reported via repair after preloaded routing
+
+The conservative joint-projection source still exposes a later MIDI drill-clearance residual. A captured-stage replay proves that the existing `Pipeline9ReportedViaMergeSolver` can clear this single error with full reference DRC. Its usual caller is inside bounded regional negotiation; that entire stage intentionally exits before negotiation whenever preloaded traces or synthetic sections exist. The MIDI input has 21 preloaded traces, so that route never invokes the otherwise successful merger.
+
+A final stepped child now applies the existing reported merger to the completed joint output. Eligibility requires exactly one explicit via-pair error, actual reference-circuit identities, matching drill/annulus/layers, overlapping same-net copper, and ownership by newly routed traces. Synthetic/preloaded routes are excluded. Publication requires zero full reference DRC errors and an independent check that route endpoints, terminal/jumper/through-obstacle points, immutable routes and fixed-copper via contacts remain protected. The existing finite merger limit remains active; child failure propagates normally. Output and error-count statistics distinguish the bounded stage from this final pass.
+
+This is a repair scheduling correction, separate from the high-density projection improvement. Its small reference-DRC tests and captured MIDI stage replay establish candidate correctness; the complete MIDI pipeline must still be tested on the frozen source. It does not address Bug107's broad remaining conflict set and establishes no whole-dataset speedup.

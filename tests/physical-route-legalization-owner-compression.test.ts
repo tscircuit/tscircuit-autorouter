@@ -1,36 +1,47 @@
 import { expect, test } from "bun:test"
 import { legalizeHighDensityRouteProposal } from "lib/solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
+import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "lib/types/high-density-types"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
-type AnnotatedPoint = HighDensityIntraNodeRoute["route"][number] & {
-  connectionName?: string
-  rootConnectionName?: string
-  eventId?: string
-}
-
-test("redundant route owner annotations do not prevent exact compression or erase point identities", () => {
-  const routes: HighDensityIntraNodeRoute[] = Array.from({ length: 9 }, (_, index) => {
-    const connectionName = `route-${index}`, rootConnectionName = index === 8 ? undefined : `root-${index}`
-    const route: AnnotatedPoint[] = [-1, 0, 1].map((x) => ({ x, y: index, z: 0,
-      connectionName, rootConnectionName }))
-    if (index === 1) route[1]!.eventId = "physical-event"
-    if (index === 2) route[1]!.connectionName = "different-owner"
-    if (index === 3) route[0]!.rootConnectionName = "different-root"
-    if (index === 4) route[1]!.pcb_port_id = "interior-terminal"
-    if (index === 7) route[1]!.traceThickness = 0.2
-    return { connectionName, rootConnectionName, route, traceThickness: 0.1, viaDiameter: 0.3,
-      vias: index === 5 ? [{ x: 0, y: index }] : [] }
-  })
+test("owner-bearing collinear points preserve a shared branch weld during projection", () => {
+  const trunk = [
+    { x: -1, y: -0.3, z: 0 }, { x: -0.5, y: 0, z: 0 }, { x: 0, y: 0, z: 0 },
+    { x: 0.5, y: 0, z: 0 }, { x: 1, y: -0.3, z: 0 },
+  ].map((point) => ({ ...point, connectionName: "shared", rootConnectionName: "shared" }))
+  const branch = [{ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }]
+    .map((point) => ({ ...point, connectionName: "shared", rootConnectionName: "shared" }))
+  const routes: HighDensityIntraNodeRoute[] = [
+    { connectionName: "shared", rootConnectionName: "shared", traceThickness: 0.1,
+      viaDiameter: 0.3, route: trunk, vias: [] },
+    { connectionName: "shared", rootConnectionName: "shared", traceThickness: 0.1,
+      viaDiameter: 0.3, route: branch, vias: [] },
+    { connectionName: "other", traceThickness: 0.1, viaDiameter: 0.3,
+      route: [{ x: -1, y: 0.2, z: 0 }, { x: 1, y: 0.2, z: 0 }], vias: [] },
+  ]
+  const node: NodeWithPortPoints = { capacityMeshNodeId: "branch", center: { x: 0, y: 0 }, width: 4, height: 4,
+    portPoints: [
+      { x: -1, y: -0.3, z: 0, connectionName: "shared" },
+      { x: 1, y: -0.3, z: 0, connectionName: "shared" },
+      { x: 0, y: 1, z: 0, connectionName: "shared" },
+      { x: -1, y: 0.2, z: 0, connectionName: "other" },
+      { x: 1, y: 0.2, z: 0, connectionName: "other" },
+    ] }
   const original = structuredClone(routes)
-  const result = legalizeHighDensityRouteProposal({ routes, mode: "compression-only", layerCount: 2, clearance: 0.1,
-    node: { capacityMeshNodeId: "owners", center: { x: 0, y: 4 }, width: 3, height: 10,
-      portPoints: [{ connectionName: "route-6", x: 0, y: 6, z: 0 }] } })
-  expect(result.status).toBe("compressed")
-  expect(result.routes.map((route) => route.route.length)).toEqual([2, 3, 3, 3, 3, 3, 3, 3, 2])
-  expect(result.routes[0]!.route).toEqual([original[0]!.route[0]!, original[0]!.route[2]!])
-  expect(result.routes[8]!.route).toEqual([original[8]!.route[0]!, original[8]!.route[2]!])
-  for (let index = 1; index < 8; index++) expect(result.routes[index]).toEqual(original[index])
-  expect(result.routes.map(({ connectionName, rootConnectionName }) => ({ connectionName, rootConnectionName })))
-    .toEqual(original.map(({ connectionName, rootConnectionName }) => ({ connectionName, rootConnectionName })))
+  expect(areNodePortPointPairsConnectedByRoutes(routes, node)).toBe(true)
+  const result = legalizeHighDensityRouteProposal({ routes, node, mode: "full", layerCount: 2, clearance: 0.4 })
+  expect(result.iterations).toBeGreaterThan(0)
+  expect(result.status).toBe("improved-needs-repair")
+  expect(areNodePortPointPairsConnectedByRoutes(result.routes, node)).toBe(true)
+  const junction = result.routes[1]!.route[0]!
+  const trunkDistance = Math.min(...result.routes[0]!.route.slice(1).map((point, index) =>
+    minimumDistanceBetweenSegments(result.routes[0]!.route[index]!, point, junction, junction)))
+  expect(trunkDistance).toBeLessThanOrEqual(1e-9)
+  expect(result.routes[0]!.route).toContainEqual(trunk[2]!)
+  expect(junction).toEqual(branch[0]!)
+  for (const [index, route] of result.routes.entries()) {
+    expect(route.route[0]).toEqual(original[index]!.route[0]!)
+    expect(route.route.at(-1)).toEqual(original[index]!.route.at(-1)!)
+  }
   expect(routes).toEqual(original)
 })

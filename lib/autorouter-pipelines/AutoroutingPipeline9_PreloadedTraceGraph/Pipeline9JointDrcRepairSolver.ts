@@ -32,6 +32,7 @@ import {
   type ClearanceMarginDrcEvaluator,
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9FinalViaMergeSolver } from "./Pipeline9FinalViaMergeSolver"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -660,6 +661,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private prepareFinalViaMergeDrcInput?: (routes: HighDensityRoute[]) => {
+    errors: Array<Record<string, unknown>>
+    circuitJson: AnyCircuitElement[]
+  }
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
@@ -780,7 +785,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
     },
+    {
+      solverName: "finalViaMergeSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator || !this.prepareFinalViaMergeDrcInput) {
+          throw new Error("Pipeline9 final reported via merge is missing completed input")
+        }
+        this.finalViaMergeSolver = new Pipeline9FinalViaMergeSolver({
+          srj: this.params.srj,
+          routes: this.combinedOutput,
+          fixedRoutes: this.fixedPreloadedObstacleRoutes,
+          connMap: this.params.connMap,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          drcEvaluator: this.cachedReferenceDrcEvaluator,
+          prepareReference: this.prepareFinalViaMergeDrcInput,
+        })
+        return this.finalViaMergeSolver
+      },
+      onSolved: (): void => this.finishFinalViaMerge(),
+    },
   ]
+  finalViaMergeSolver?: Pipeline9FinalViaMergeSolver
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
 
@@ -1284,7 +1310,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson,
       movableTraceIds,
       solverTraceIdByEvaluationTraceId,
+      captureCircuitJson,
     }: {
+      captureCircuitJson?: (circuitJson: AnyCircuitElement[]) => void
       errors: Array<Record<string, unknown>>
       errorsWithCenters: Array<Record<string, unknown>>
       circuitJson: AnyCircuitElement[]
@@ -1304,6 +1332,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ? { ...element, pcb_trace_id: solverTraceId }
           : element
       })
+      captureCircuitJson?.(remappedCircuitJson)
       return {
         errors: normalizePipeline9DrcErrorsForRepair({
           errors: remapDrcTraceIds(errors, solverTraceIdByEvaluationTraceId),
@@ -1339,6 +1368,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
+      captureCircuitJson?: (circuitJson: AnyCircuitElement[]) => void,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1388,6 +1418,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       return normalizeCandidateDrcResult({
+        captureCircuitJson,
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
         circuitJson: evaluatedDrc.circuitJson,
@@ -1419,6 +1450,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    // Capture actual reference via identities only for the final one-error
+    // candidate. Rich circuit geometry does not enter either DRC cache.
+    this.prepareFinalViaMergeDrcInput = (routes) => {
+      let circuitJson: AnyCircuitElement[] | undefined
+      this.referenceDrcValidationCount += 1
+      const evaluated = referenceDrcEvaluator({ traces: [], routes, hdRoutes: routes }, true,
+        (elements) => { circuitJson = elements })
+      if (!circuitJson) throw new Error("Pipeline9 via coalescence requires captured reference geometry")
+      return { errors: Array.isArray(evaluated) ? evaluated : evaluated.errors, circuitJson }
+    }
     this.clearancePrecisionDrcEvaluator = ({
       routes,
       hdRoutes,
@@ -2015,6 +2056,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
+    }
+  }
+
+  private finishFinalViaMerge(): void {
+    if (!this.finalViaMergeSolver?.solved) {
+      throw new Error("Pipeline9 final reported via merge is not complete")
+    }
+    const result = this.finalViaMergeSolver.getResult()
+    this.combinedOutput = result.routes
+    this.stats = {
+      ...this.stats,
+      finalViaMergeAttempted: result.attempted,
+      finalViaMergeReferenceValidationCount: result.referenceValidationCount,
+      finalViaMergeInitialDrcIssueCount: result.initialDrcIssueCount,
+      finalViaMergePublishedDrcIssueCount: result.remainingDrcIssueCount,
+      finalViaMergeRepaired: result.repaired,
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
     }
     this.solved = true
   }

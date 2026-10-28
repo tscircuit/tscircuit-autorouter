@@ -1,4 +1,4 @@
-name: HD confirmation refinements datasets18 and24
+name: HD final legalization confirmation datasets18 and24
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hd-confirmation-combined-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  group: hd-legal-confirmation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -16,45 +16,37 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.head.ref == 'codex/hd-exp-3-physical-legalization'
-    name: Pipeline9 four-source confirmation on datasets18 and24
+    name: Pipeline9 three-source legal confirmation on datasets18 and24
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 240
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       HD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      HD_PORTFOLIO_SHA: "5b4c680c842eafe17e2830fc9a29d16d17d6a9b2"
-      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-confirmation-worktrees
-      HD_RESULTS: ${{ github.workspace }}/hd-confirmation-results
-      HD_DEPS: ${{ github.workspace }}/hd-confirmation-dependencies
-      HD_CONFIG: ${{ github.workspace }}/hd-confirmation-config.json
+      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-legal-confirmation-worktrees
+      HD_RESULTS: ${{ github.workspace }}/hd-legal-confirmation-results
+      HD_DEPS: ${{ github.workspace }}/hd-legal-confirmation-dependencies
+      HD_CONFIG: ${{ github.workspace }}/hd-legal-confirmation-config.json
 
     steps:
       - name: Checkout exact baseline
         uses: actions/checkout@v4
         with:
           ref: 637b6c581128238f6c61227a1c15be423d24baca
-          path: hd-confirmation-worktrees/control
+          path: hd-legal-confirmation-worktrees/control
           persist-credentials: false
 
       - name: Checkout exact historical full legalization
         uses: actions/checkout@v4
         with:
           ref: 8115e35a4517191c306820438b14a197dc911c7a
-          path: hd-confirmation-worktrees/old-full
+          path: hd-legal-confirmation-worktrees/old-full
           persist-credentials: false
 
-      - name: Checkout exact corrected full legalization
+      - name: Checkout exact final full legalization
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          path: hd-confirmation-worktrees/fixed-full
-          persist-credentials: false
-
-      - name: Checkout exact revised lazy portfolio
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.HD_PORTFOLIO_SHA }}
-          path: hd-confirmation-worktrees/optimized-lazy
+          path: hd-legal-confirmation-worktrees/final-full
           persist-credentials: false
 
       - name: Setup Bun1.4.3
@@ -62,17 +54,17 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Bind confirmation to exact source commits
+      - name: Bind confirmation to exact final source
         shell: bash
         run: |
-          python3 "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/confirmation/bind_confirmation.py" \
-            --harness "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/harness" \
-            --head-sha "$HD_HEAD_SHA" --portfolio-sha "$HD_PORTFOLIO_SHA" --out "$HD_CONFIG"
+          python3 "$HD_WORKTREE_ROOT/final-full/experiments/hd-refinements/confirmation-legal-only/bind_legal_confirmation.py" \
+            --harness "$HD_WORKTREE_ROOT/final-full/experiments/hd-refinements/harness" \
+            --head-sha "$HD_HEAD_SHA" --out "$HD_CONFIG"
 
-      - name: Measure all168 fresh source-arm samples with global admission
+      - name: Measure all126 fresh source-arm samples with global admission
         shell: bash
         run: |
-          python3 "$HD_WORKTREE_ROOT/fixed-full/experiments/hd-refinements/harness/multiarm_ci.py" \
+          python3 "$HD_WORKTREE_ROOT/final-full/experiments/hd-refinements/harness/multiarm_ci.py" \
             --root "$HD_WORKTREE_ROOT" --out "$HD_RESULTS" \
             --deps "$HD_DEPS" --config "$HD_CONFIG"
 
@@ -80,8 +72,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hd-confirmation-combined-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
-          path: hd-confirmation-results
+          name: hd-legal-confirmation-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: hd-legal-confirmation-results
           if-no-files-found: warn
           include-hidden-files: true
           compression-level: 9
