@@ -3,7 +3,7 @@ import { buildMinimumSpanningTree } from "lib/solvers/NetToPointPairsSolver/buil
 
 type Terminal = { x: number; y: number; pointId: number }
 
-test("build a local tree without skipping neighboring terminals", (): void => {
+test("preserve already connected local tree pairs", (): void => {
   const points: Terminal[] = Array.from({ length: 4 }, (_, x): Terminal[] =>
     Array.from(
       { length: 7 },
@@ -27,15 +27,11 @@ test("build a local tree without skipping neighboring terminals", (): void => {
     [2, 9],
     [3, 10],
     [3, 4],
-    [4, 11],
-    [4, 5],
-    [5, 6],
-    [5, 12],
-    [6, 13],
     [7, 14],
     [8, 15],
     [9, 16],
     [10, 17],
+    [10, 11],
     [11, 18],
     [12, 19],
     [13, 20],
@@ -44,7 +40,11 @@ test("build a local tree without skipping neighboring terminals", (): void => {
     [16, 23],
     [17, 24],
     [18, 25],
+    [18, 19],
     [19, 26],
+    [19, 20],
     [20, 27],
+    [3, 5],
+    [6, 20],
   ])
 })
