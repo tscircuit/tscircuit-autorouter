@@ -3,20 +3,25 @@ import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchin
 
 test("nearby PCB terminals remain distinct after island snapping", (): void => {
   const solver = new MultipleHighDensityRouteStitchSolver3({
-    connections: [{
-      name: "signal",
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "top", pcb_port_id: "start" },
-        { x: 1, y: 0, layer: "top", pcb_port_id: "end" },
-      ],
-    }],
+    connections: [
+      {
+        name: "signal",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "start" },
+          { x: 1, y: 0, layer: "top", pcb_port_id: "end" },
+        ],
+      },
+    ],
     hdRoutes: [
       {
         connectionName: "signal",
         endPcbPortId: "end",
         traceThickness: 0.1,
         viaDiameter: 0.3,
-        route: [{ x: 0.6, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
+        route: [
+          { x: 0.6, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+        ],
         vias: [],
       },
     ],

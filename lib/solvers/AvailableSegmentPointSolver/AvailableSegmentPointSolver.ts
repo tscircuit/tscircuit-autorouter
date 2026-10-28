@@ -293,8 +293,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           distToCentermostPortOnZ,
           cramped: edgeTouchesNarrowQfpPadGap,
           allowDuplication:
-            !edgeTouchesNarrowQfpPadGap ||
-            segmentLength >= 2 * this.traceWidth,
+            !edgeTouchesNarrowQfpPadGap || segmentLength >= 2 * this.traceWidth,
         }
         portPoints.push(portPoint)
       }

@@ -269,7 +269,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               [route.endPcbPortId, route.route[route.route.length - 1]],
             ] as const) {
               if (!pcbPortId) continue
-              if (pcbPortId === globalStart.pcb_port_id) startEndpoint = endpoint
+              if (pcbPortId === globalStart.pcb_port_id)
+                startEndpoint = endpoint
               if (pcbPortId === globalEnd.pcb_port_id) endEndpoint = endpoint
             }
           }
@@ -285,7 +286,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (
           !this.preserveTerminalPcbPortIds &&
           distance(start, connection.pointsToConnect[1]) <
-          distance(end, connection.pointsToConnect[0])
+            distance(end, connection.pointsToConnect[0])
         ) {
           ;[start, end] = [end, start]
         }

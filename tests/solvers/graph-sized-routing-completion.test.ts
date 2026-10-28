@@ -24,11 +24,13 @@ test("routing completion can traverse a graph larger than its old fixed budget",
       region2Id: `region-${index + 1}`,
       d: { x: index + 0.5, y: 0, z: 0 },
     })),
-    connections: [{
-      connectionId: "long-route",
-      startRegionId: "region-0",
-      endRegionId: `region-${regionCount - 1}`,
-    }],
+    connections: [
+      {
+        connectionId: "long-route",
+        startRegionId: "region-0",
+        endRegionId: `region-${regionCount - 1}`,
+      },
+    ],
   }
   const { topology, problem } = loadSerializedHyperGraph(graph)
   for (const Solver of [
@@ -43,7 +45,9 @@ test("routing completion can traverse a graph larger than its old fixed budget",
       RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
     })
     solver.solve()
-    if (Solver === SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments) {
+    if (
+      Solver === SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+    ) {
       expect(solver.failed).toBe(true)
       continue
     }

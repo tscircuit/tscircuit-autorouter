@@ -9,8 +9,11 @@ test("SRJ18 sample 15 preserves routing through cramped boundaries", async (): P
     { cacheProvider: null, effort: 1 },
   )
 
-  while (!solver.solved && !solver.failed &&
-    solver.getCurrentPhase() !== "uniformPortDistributionSolver") {
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    solver.getCurrentPhase() !== "uniformPortDistributionSolver"
+  ) {
     solver.step()
   }
 

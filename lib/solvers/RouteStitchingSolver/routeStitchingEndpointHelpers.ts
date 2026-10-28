@@ -151,15 +151,17 @@ export const selectIslandEndpoints = (params: {
   const startCandidates = sortedEndpoints.filter(
     (point) => point !== params.endEndpoint,
   )
-  const start = params.startEndpoint ?? startCandidates.reduce((bestPoint, point) => {
-    const pointDistance = distance(point, params.globalStart)
-    const bestDistance = distance(bestPoint, params.globalStart)
-    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
-      ? point
-      : bestPoint
-  })
+  const start =
+    params.startEndpoint ??
+    startCandidates.reduce((bestPoint, point) => {
+      const pointDistance = distance(point, params.globalStart)
+      const bestDistance = distance(bestPoint, params.globalStart)
+      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
+          comparePoints(point, bestPoint) < 0)
+        ? point
+        : bestPoint
+    })
 
   const remainingEndpoints = sortedEndpoints.filter((point) => point !== start)
 
@@ -168,15 +170,17 @@ export const selectIslandEndpoints = (params: {
       ? remainingEndpoints
       : params.possibleEndpoints
 
-  const end = params.endEndpoint ?? endCandidates.reduce((bestPoint, point) => {
-    const pointDistance = distance(point, params.globalEnd)
-    const bestDistance = distance(bestPoint, params.globalEnd)
-    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
-      ? point
-      : bestPoint
-  })
+  const end =
+    params.endEndpoint ??
+    endCandidates.reduce((bestPoint, point) => {
+      const pointDistance = distance(point, params.globalEnd)
+      const bestDistance = distance(bestPoint, params.globalEnd)
+      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
+          comparePoints(point, bestPoint) < 0)
+        ? point
+        : bestPoint
+    })
 
   return { start, end }
 }
