@@ -18,7 +18,9 @@ test("bounded repair clears the Linux sample 14 residue without restarting broad
   expect(solver.failed, solver.error ?? "").toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(solver.stats.initialBoundedRegionalRepairAccepted).toBeTrue()
-  expect(solver.stats.initialBoundedRegionalRepairPublishedDrcIssueCount).toBe(0)
+  expect(solver.stats.initialBoundedRegionalRepairPublishedDrcIssueCount).toBe(
+    0,
+  )
   expect(solver.exactRepairSolver).toBeUndefined()
   expect(solver.regionalB01RepairSolver).toBeUndefined()
   const bounded = solver.initialBoundedRegionalRepairSolver!
