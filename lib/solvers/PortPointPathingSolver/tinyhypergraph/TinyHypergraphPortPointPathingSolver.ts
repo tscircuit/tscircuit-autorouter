@@ -393,6 +393,9 @@ const toSerializedRegionData = (
     width: region.d.width,
     height: region.d.height,
     availableZ: [...region.d.availableZ],
+    ...(region.d.layerChangeAllowedNetIds !== undefined
+      ? { layerChangeAllowedNetIds: [...region.d.layerChangeAllowedNetIds] }
+      : {}),
     ...(bounds
       ? {
           bounds: {

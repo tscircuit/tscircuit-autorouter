@@ -53,6 +53,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     viaDiameter?: number
     traceThickness?: number
     obstacleMargin?: number
+    viaPlacementValidator?: import("lib/types/high-density-types").ViaPlacementValidator
   }) {
     super()
 
@@ -95,6 +96,14 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         min: this.bounds.minY + margin,
         max: this.bounds.maxY - margin,
       }),
+    }
+    if (params.viaPlacementValidator && !params.viaPlacementValidator({
+      ...viaPosition, zStart: route.A.z, zEnd: route.B.z,
+      viaDiameter: this.viaDiameter,
+    }, route.connectionName)) {
+      this.failed = true
+      this.error = "Closed-form via placement violates original board constraints"
+      return
     }
     this.solvedRoutes.push(
       this.createTransitionRoute({

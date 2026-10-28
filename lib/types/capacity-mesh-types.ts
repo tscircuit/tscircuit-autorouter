@@ -12,6 +12,8 @@ export interface CapacityMeshNode {
   height: number
   layer: string
   availableZ: number[]
+  /** Original-pad permissions for layer transitions; same-layer travel remains free. */
+  layerChangeAllowedNetIds?: string[]
 
   _depth?: number
 

@@ -7,6 +7,7 @@ import {
 import { CachableSolver, CacheProvider } from "lib/cache/types"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
+import { areRouteViasAllowed } from "./areRouteViasAllowed"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
 type CachedSolvedIntraNodeRouteSolver =
@@ -40,6 +41,8 @@ export class CachedIntraNodeRouteSolver
   }
 
   cacheProvider: CacheProvider | null
+  private readonly viaPlacementLayerCount: number
+  private readonly viaPlacementAllowsBlindVias: boolean
   cacheHit = false
   hasAttemptedToUseCache = false
   declare cacheKey?: string | undefined
@@ -58,6 +61,8 @@ export class CachedIntraNodeRouteSolver
     },
   ) {
     super(params)
+    this.viaPlacementLayerCount = params.layerCount ?? 2
+    this.viaPlacementAllowsBlindVias = params.allowBlindAndBuriedVias ?? false
     this.cacheProvider =
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
@@ -204,6 +209,12 @@ export class CachedIntraNodeRouteSolver
   }
 
   applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
+    if (this.viaPlacementValidator && (
+      !cachedSolution.success || !cachedSolution.solvedRoutes.every((route) =>
+        areRouteViasAllowed(route, this.viaPlacementValidator!,
+          this.viaPlacementLayerCount, this.viaPlacementAllowsBlindVias),
+      )
+    )) return
     if (cachedSolution.success) {
       this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
       this.solved = true
@@ -241,23 +252,23 @@ export class CachedIntraNodeRouteSolver
       return false
     }
 
+    let cachedSolution: CachedSolvedIntraNodeRouteSolver | undefined | null
     try {
-      const cachedSolution = this.cacheProvider.getCachedSolutionSync(
-        this.cacheKey,
-      )
-
-      if (cachedSolution !== undefined && cachedSolution !== null) {
-        this.applyCachedSolution(cachedSolution)
-        return true
-      }
+      cachedSolution = this.cacheProvider.getCachedSolutionSync(this.cacheKey)
     } catch (error) {
       console.error("Error attempting to use cache:", error)
+      return false
     }
-
+    if (cachedSolution !== undefined && cachedSolution !== null) {
+      // Validator invariant errors propagate; only recoverable cache I/O is caught.
+      this.applyCachedSolution(cachedSolution)
+      return this.cacheHit
+    }
     return false
   }
 
   saveToCacheSync(): void {
+    if (this.failed && this.viaPlacementValidator) return
     if (!this.cacheProvider?.isSyncCache) {
       return
     }

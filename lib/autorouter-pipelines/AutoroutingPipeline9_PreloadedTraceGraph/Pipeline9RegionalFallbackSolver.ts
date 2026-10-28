@@ -12,6 +12,9 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getPipeline9ViaPlacementValidator, type Pipeline9ViaPlacementContext } from "./getPipeline9ViaPlacementValidator"
+import { areRouteViasAllowed } from "lib/solvers/HighDensitySolver/areRouteViasAllowed"
+import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
@@ -32,6 +35,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   viaToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
+  viaPlacementContext?: Pipeline9ViaPlacementContext
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -159,6 +163,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       layerCount: params.layerCount,
+      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+      viaPlacementValidator: params.viaPlacementContext ? getPipeline9ViaPlacementValidator(params.viaPlacementContext) : undefined,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
@@ -178,6 +184,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (this.params.viaPlacementContext) {
+      const validator = getPipeline9ViaPlacementValidator(this.params.viaPlacementContext)
+      if (!routes.every((route) => areRouteViasAllowed(route, validator,
+        this.params.layerCount, this.params.allowBlindAndBuriedVias))) return false
+    }
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
@@ -224,12 +235,15 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.forceImproveSolver = new HighDensityForceImproveSolver({
+      const ForceImproveSolver = this.params.viaPlacementContext
+        ? Pipeline9HighDensityForceImproveSolver : HighDensityForceImproveSolver
+      this.forceImproveSolver = new ForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
         colorMap: this.params.colorMap,
         totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
         nodeAssignmentMargin: this.params.obstacleMargin,
+        ...(this.params.viaPlacementContext ? { viaPlacementContext: this.params.viaPlacementContext } : {}),
       })
       this.activeSubSolver = this.forceImproveSolver
       this.phase = "improve"
@@ -261,6 +275,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         repairMargin: this.params.obstacleMargin,
         minimumTraceWidth: this.params.traceWidth,
         connMap: this.params.connMap,
+        viaPlacementContext: this.params.viaPlacementContext,
       })
       this.activeSubSolver = this.repairSolver
       this.phase = "repair"
