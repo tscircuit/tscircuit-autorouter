@@ -39,10 +39,7 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import {
-  NativeRoutingSolverWithGraphSizedCompletion,
-  PreparedRoutingSolverWithGraphSizedCompletion,
-} from "./graphSizedCompletionSolvers"
+import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -944,8 +941,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? PreparedRoutingSolverWithGraphSizedCompletion
-        : NativeRoutingSolverWithGraphSizedCompletion
+        ? PreparedPortPointRoutingSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -987,7 +984,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         this.inputProblem.serializedHyperGraph,
       )
       this.initialVisualizationSolver =
-        new NativeRoutingSolverWithGraphSizedCompletion(
+        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
           topology,
           problem,
           this.getSolveGraphOptions(),
