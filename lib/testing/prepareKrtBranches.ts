@@ -7,6 +7,7 @@ import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj
 import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getKrtUnsupportedFeatureReason } from "./getKrtUnsupportedFeatureReason"
 
 interface KrtRequestConnection extends SimpleRouteConnection {
   sourceTraceId: string
@@ -29,31 +30,8 @@ export interface PreparedKrtBranches {
 export const prepareKrtBranches = (
   original: SimpleRouteJson,
 ): PreparedKrtBranches => {
-  if (
-    original.traces?.length ||
-    original.allowBlindAndBuriedVias ||
-    original.allowViaInPad === true ||
-    original.jumpers?.length ||
-    original.allowJumpers ||
-    original.differentialPairs?.length ||
-    original.buses?.length ||
-    original.minTraceToPadEdgeClearance !== undefined ||
-    original.minViaEdgeToPadEdgeClearance !== undefined ||
-    original.minPlatedHoleDrillEdgeToDrillEdgeClearance !== undefined ||
-    original.minPadEdgeToPadEdgeClearance !== undefined ||
-    original.connections.some(
-      (connection) =>
-        connection.isOffBoard ||
-        connection.externallyConnectedPointIds?.length ||
-        connection.pointsToConnect.some(
-          (point) => "terminalVia" in point && point.terminalVia,
-        ),
-    )
-  ) {
-    throw new Error(
-      "Direct KRT routing does not support preloaded copper, blind/buried vias, via-in-pad, jumpers, paired/bus constraints, typed pad/plated-hole rules, off-board connectivity or terminal via hints",
-    )
-  }
+  const unsupportedReason = getKrtUnsupportedFeatureReason(original)
+  if (unsupportedReason) throw new Error(unsupportedReason)
 
   // The approximator may alter obstacle objects. Never lend it original input.
   const srj = addApproximatingRectsToSrj(structuredClone(original))

@@ -1,0 +1,44 @@
+Certified direct routing selection (PR 3202 refinement)
+
+Select CertifiedDirectAutoroutingPipelineSolver from
+lib/testing/CertifiedDirectAutoroutingPipelineSolver.ts explicitly. No existing
+Pipeline9 class or default selection changes. The constructor accepts the exact
+Pipeline9 input/options contract used by the comparison harness.
+
+Before constructing either routing solver, a finite applicability check builds
+the original terminal MST branches. Each branch must have a clear straight
+segment on a common terminal layer, at its requested manufactured width. The
+check uses original rotated/circular pad geometry, full-stack mechanical holes,
+actual copper clearance, board outline/edge clearance, and every previously
+committed foreign branch. Same-owner permission comes exclusively from original
+typed electrical declarations. Nearby/rounded coordinates never connect owners.
+All terminals remain in the complete branch set. The complete proposed output
+must pass the unchanged original-input KRT qualifier before direct selection.
+
+A certified board returns those qualified routes with zero vias and no mesh,
+path search, per-cell routing or downstream repair. Direct output is unavailable
+until solve completes. Ineligibility chooses the original Pipeline9 class with
+the identical original input and options before any solver work. This is explicit
+strategy applicability, not a switch after a failed direct solver. Unexpected
+certificate/qualification errors propagate. A selected general solver's failures
+and worker runtime are also preserved; no failed state is cleared or retried.
+
+The applicability check is bounded to 128 terminal branches, 1024 obstacles and
+32 board layers. This bounds added preflight work outside a small-board scope;
+none of the original general solver's budgets or acceptance rules change.
+Configured pipeline policies/cache providers and unsupported input features
+select the original solver. In particular genuine user preloads are retained,
+not omitted to make a direct certificate possible.
+
+The input-only audit on all 16 SRJ18 and 26 SRJ24 samples certifies only SRJ24/23
+(16 branches). The other 41 select Pipeline9. Finite elbow, one-via and two-via
+explorations certified no additional board, so their complexity was removed.
+These negative attempts and applicability counts are retained separately in
+certified-direct-qualification.json; no board geometry fixture is added.
+
+The historical direct engine was about 88% faster on SRJ24/23, but that result
+does not measure this selector. No significant aggregate speedup or new solved
+sample is claimed. Blacksmith qualification must count construction, eligibility,
+original-input checks, general routing on ineligible boards and final output.
+Compare all 42 boards, preserve every original passing board, keep all failed and
+timeout rows, and repeat execution order before making a timing claim.

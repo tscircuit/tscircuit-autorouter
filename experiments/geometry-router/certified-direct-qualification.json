@@ -1,0 +1,652 @@
+{
+  "status": "LOCAL_FUNCTIONAL_QUALIFICATION_NO_NEW_BENCHMARK",
+  "experiment": "Explicit certified direct routing selection before original Pipeline9",
+  "constructor": "CertifiedDirectAutoroutingPipelineSolver",
+  "module": "lib/testing/CertifiedDirectAutoroutingPipelineSolver.ts",
+  "defaultChanged": false,
+  "contract": {
+    "eligible": "Every original terminal branch has a directly clear same-layer segment at requested width; exact original physical ownership; original-input acceptance required before selecting direct execution.",
+    "ineligible": "Original Pipeline9 receives identical original input/options before any solver work. No failed direct solver or caught qualification error selects it.",
+    "unsupported": "Genuine preloads and other unsupported constraints/configured pipeline policies select the original solver without discarding their data.",
+    "scope": {
+      "maximumBranches": 128,
+      "maximumBoardLayers": 32,
+      "maximumObstacles": 1024
+    },
+    "scopeMeaning": "These bound applicability work; general routing budgets and validators are unchanged."
+  },
+  "inputOnlyAudit": {
+    "population": 42,
+    "eligible": [
+      [
+        24,
+        23
+      ]
+    ],
+    "ineligibilityReasons": {
+      "direct-certificate-branch-limit": 35,
+      "no-clear-direct-layer": 3,
+      "terminal-layer-transition-required": 3
+    },
+    "rows": [
+      {
+        "dataset": 18,
+        "sample": 1,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 262,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 2,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 360,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 3,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 198,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 4,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 163,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 5,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 238,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 6,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 321,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 7,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 324,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 8,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 442,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 9,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 328,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 10,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 373,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 11,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 365,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 12,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 605,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 13,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 290,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 14,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 294,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 15,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 568,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 18,
+        "sample": 16,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 332,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 1,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 1363,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 2,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 458,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 3,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 607,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 4,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 1035,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 5,
+        "eligible": false,
+        "reason": "no-clear-direct-layer",
+        "diagnostics": {
+          "branchCount": 126,
+          "checkedBranches": 2,
+          "geometryChecks": 1,
+          "candidatesChecked": 2,
+          "rejectedBranch": "krt_branch_1"
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 6,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 483,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 7,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 229,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 8,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 671,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 9,
+        "eligible": false,
+        "reason": "terminal-layer-transition-required",
+        "diagnostics": {
+          "branchCount": 125,
+          "checkedBranches": 1,
+          "geometryChecks": 0,
+          "candidatesChecked": 0,
+          "rejectedBranch": "krt_branch_0"
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 10,
+        "eligible": false,
+        "reason": "terminal-layer-transition-required",
+        "diagnostics": {
+          "branchCount": 126,
+          "checkedBranches": 1,
+          "geometryChecks": 0,
+          "candidatesChecked": 0,
+          "rejectedBranch": "krt_branch_0"
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 11,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 676,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 12,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 294,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 13,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 1417,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 14,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 332,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 15,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 763,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 16,
+        "eligible": false,
+        "reason": "no-clear-direct-layer",
+        "diagnostics": {
+          "branchCount": 34,
+          "checkedBranches": 2,
+          "geometryChecks": 1,
+          "candidatesChecked": 2,
+          "rejectedBranch": "krt_branch_1"
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 17,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 605,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 18,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 1014,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 19,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 373,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 20,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 760,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 21,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 458,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 22,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 220,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 23,
+        "eligible": true,
+        "reason": null,
+        "diagnostics": {
+          "branchCount": 16,
+          "checkedBranches": 16,
+          "geometryChecks": 55,
+          "candidatesChecked": 16
+        },
+        "traceCount": 16
+      },
+      {
+        "dataset": 24,
+        "sample": 24,
+        "eligible": false,
+        "reason": "direct-certificate-branch-limit",
+        "diagnostics": {
+          "branchCount": 1934,
+          "checkedBranches": 0,
+          "geometryChecks": 0,
+          "candidatesChecked": 0
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 25,
+        "eligible": false,
+        "reason": "terminal-layer-transition-required",
+        "diagnostics": {
+          "branchCount": 57,
+          "checkedBranches": 1,
+          "geometryChecks": 0,
+          "candidatesChecked": 0,
+          "rejectedBranch": "krt_branch_0"
+        },
+        "traceCount": null
+      },
+      {
+        "dataset": 24,
+        "sample": 26,
+        "eligible": false,
+        "reason": "no-clear-direct-layer",
+        "diagnostics": {
+          "branchCount": 75,
+          "checkedBranches": 4,
+          "geometryChecks": 1,
+          "candidatesChecked": 4,
+          "rejectedBranch": "krt_branch_3"
+        },
+        "traceCount": null
+      }
+    ],
+    "sourceJsonlSha256": "5a4c632256909dd43c93a6c4637c116066cbd155e95dd56baf63d9ccd73cff15"
+  },
+  "negativeExplorations": [
+    {
+      "prototype": "straight",
+      "rows": 42,
+      "eligible": [
+        [
+          24,
+          23
+        ]
+      ],
+      "sha256": "78b22b938b68d76c1328ac9d589099ae235e12c5fd55bed5c1d615c57b7a0488",
+      "interpretation": "Exploratory candidate expansion added no eligible boards; only the final reviewed straight certificate ships.",
+      "prototypeSourceShipped": false
+    },
+    {
+      "prototype": "finite elbows",
+      "rows": 42,
+      "eligible": [
+        [
+          24,
+          23
+        ]
+      ],
+      "sha256": "7902fd80089b87cd9f33935fbb19d1044ec910ac438bfce4e300a469856aed84",
+      "interpretation": "Exploratory candidate expansion added no eligible boards; only the final reviewed straight certificate ships.",
+      "prototypeSourceShipped": false
+    },
+    {
+      "prototype": "finite one-through-via",
+      "rows": 42,
+      "eligible": [
+        [
+          24,
+          23
+        ]
+      ],
+      "sha256": "3e6765237b129de7f156ad1101ae95943739049aa67a9a5d734ef4c20f70cc0f",
+      "interpretation": "Exploratory candidate expansion added no eligible boards; only the final reviewed straight certificate ships.",
+      "prototypeSourceShipped": false
+    },
+    {
+      "prototype": "finite two-through-via escape pairs",
+      "rows": 42,
+      "eligible": [
+        [
+          24,
+          23
+        ]
+      ],
+      "sha256": "59dc409229164925c589742b72b2f35d87d81bc8fa3cb894a33b9dc3d25c4b2e",
+      "interpretation": "Exploratory candidate expansion added no eligible boards; only the final reviewed straight certificate ships.",
+      "prototypeSourceShipped": false
+    }
+  ],
+  "limits": [
+    "Only SRJ24/23 is selected in this42-board input-only audit. This is a scoped optimization, not a corpus-wide speedup or new completion result.",
+    "The historical ~88% SRJ24/23 direct-engine gain does not qualify the new selector runtime. A same-job benchmark must measure all constructor/preflight/qualification/selection costs.",
+    "Outside this strict geometric scope, the original solver can still fail; no zero-regression qualification is claimed before full42 matched runs.",
+    "No board-derived fixture or geometry output was added by this refinement."
+  ],
+  "validation": {
+    "focusedTests": 29,
+    "assertions": 1045,
+    "publicSrj24Sample23FunctionalControl": "PASS:16branches,0vias,0Pipeline9stages,0search expansions; no timing claim"
+  }
+}

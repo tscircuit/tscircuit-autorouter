@@ -40,7 +40,7 @@ const pointSegmentDistance = (p: Point, a: Point, b: Point): number => {
   return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
 }
 
-const segmentDistance = (a: Point, b: Point, c: Point, d: Point): number => {
+export const segmentDistance = (a: Point, b: Point, c: Point, d: Point): number => {
   const cross = (p: Point, q: Point, r: Point): number => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)
   const abC = cross(a, b, c)
   const abD = cross(a, b, d)
@@ -50,7 +50,7 @@ const segmentDistance = (a: Point, b: Point, c: Point, d: Point): number => {
   return Math.min(pointSegmentDistance(a, c, d), pointSegmentDistance(b, c, d), pointSegmentDistance(c, a, b), pointSegmentDistance(d, a, b))
 }
 
-const obstacleDistance = (a: Point, b: Point, obstacle: Obstacle): number => {
+export const obstacleDistance = (a: Point, b: Point, obstacle: Obstacle): number => {
   if (obstacle.shape === "circle") return pointSegmentDistance(obstacle.center, a, b) - Math.max(obstacle.width, obstacle.height) / 2
   const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
   const transform = (p: Point): Point => ({ x: (p.x - obstacle.center.x) * Math.cos(angle) - (p.y - obstacle.center.y) * Math.sin(angle), y: (p.x - obstacle.center.x) * Math.sin(angle) + (p.y - obstacle.center.y) * Math.cos(angle) })
