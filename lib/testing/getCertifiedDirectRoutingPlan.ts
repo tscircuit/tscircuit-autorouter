@@ -9,7 +9,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { acceptKrtBranches } from "./acceptKrtBranches"
 import { obstacleDistance, segmentDistance } from "./GeometryAutoroutingPipelineSolver"
 import { getKrtUnsupportedFeatureReason } from "./getKrtUnsupportedFeatureReason"
-import { prepareKrtBranches } from "./prepareKrtBranches"
+import { getKrtBranches } from "./getKrtBranches"
 
 type Point = { x: number; y: number }
 export type CertifiedDirectRoutingDiagnostics = {
@@ -80,7 +80,7 @@ export const getCertifiedDirectRoutingPlan = (
     return { eligible: false, reason: "ambiguous-original-electrical-identity", diagnostics }
   }
   const layers: string[] = Array.from({ length: original.layerCount }, (_, z) => mapZToLayerName(z, original.layerCount))
-  const { branches } = prepareKrtBranches(original)
+  const branches = getKrtBranches(original)
   const index = original.obstacles.length ? new Flatbush(original.obstacles.length) : null
   for (const obstacle of original.obstacles) {
     const angle = (obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
