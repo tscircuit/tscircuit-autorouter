@@ -258,10 +258,28 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             params.layerCount,
           ),
         }
+        let startEndpoint: Point3 | undefined
+        let endEndpoint: Point3 | undefined
+        if (this.preserveTerminalPcbPortIds) {
+          // Terminal tags identify the island side even when both pads are
+          // closer to the same endpoint than to the island's other endpoint.
+          for (const route of hdRoutes) {
+            for (const [pcbPortId, endpoint] of [
+              [route.startPcbPortId, route.route[0]],
+              [route.endPcbPortId, route.route[route.route.length - 1]],
+            ] as const) {
+              if (!pcbPortId) continue
+              if (pcbPortId === globalStart.pcb_port_id) startEndpoint = endpoint
+              if (pcbPortId === globalEnd.pcb_port_id) endEndpoint = endpoint
+            }
+          }
+        }
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
           globalEnd,
+          startEndpoint,
+          endEndpoint,
         }))
 
         if (

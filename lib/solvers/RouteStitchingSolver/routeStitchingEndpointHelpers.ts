@@ -138,15 +138,20 @@ const addAdjacencyEdge = (
 
 /**
  * Chooses the island endpoints that best align to the requested connection
- * terminals, with deterministic tie-breaking.
+ * terminals, honoring known terminal endpoints before distance comparisons.
  */
 export const selectIslandEndpoints = (params: {
   possibleEndpoints: Point3[]
   globalStart: Point3
   globalEnd: Point3
-}) => {
+  startEndpoint?: Point3
+  endEndpoint?: Point3
+}): { start: Point3; end: Point3 } => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
-  const start = sortedEndpoints.reduce((bestPoint, point) => {
+  const startCandidates = sortedEndpoints.filter(
+    (point) => point !== params.endEndpoint,
+  )
+  const start = params.startEndpoint ?? startCandidates.reduce((bestPoint, point) => {
     const pointDistance = distance(point, params.globalStart)
     const bestDistance = distance(bestPoint, params.globalStart)
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
@@ -163,7 +168,7 @@ export const selectIslandEndpoints = (params: {
       ? remainingEndpoints
       : params.possibleEndpoints
 
-  const end = endCandidates.reduce((bestPoint, point) => {
+  const end = params.endEndpoint ?? endCandidates.reduce((bestPoint, point) => {
     const pointDistance = distance(point, params.globalEnd)
     const bestDistance = distance(bestPoint, params.globalEnd)
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
