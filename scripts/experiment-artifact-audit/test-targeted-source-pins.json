@@ -1,0 +1,163 @@
+{
+  "qualificationScope": "FOREST_SCOPE_TARGETED_AFFECTED_CASES_ONLY",
+  "runId": 40640929032,
+  "controllerSha": "afc0e47ba5a03fe2d01959840d7bd92c165b7b1b",
+  "controllerTree": "bf8fdd2f1085e1563387af61299657a3f0f04d4a",
+  "controllerBranch": "codex/deep-experiment-forest-scope-targeted",
+  "baselineSha": "637b6c581128238f6c61227a1c15be423d24baca",
+  "candidateSha": "58873007d669bbeb0d53ea4cb19b983c10ab1c66",
+  "candidateTree": "2b189aba98051506dcf7df7b426a06f3653dc99e",
+  "pr": 3198,
+  "controllerManifest": {
+    "schemaVersion": 1,
+    "repository": "tscircuit/tscircuit-autorouter",
+    "baselineSha": "637b6c581128238f6c61227a1c15be423d24baca",
+    "datasets": {
+      "srj18": 16,
+      "srj24": 26
+    },
+    "sampleTimeoutSeconds": 360,
+    "firstRound": [
+      "A",
+      "B"
+    ],
+    "optionalSecondRound": [
+      "B",
+      "A"
+    ],
+    "optionalRepeatBeforeSeconds": 0,
+    "jobBudgetSeconds": 19800,
+    "baseline": {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "options": {
+        "cacheProvider": null,
+        "effort": 1
+      },
+      "evidencePaths": [
+        "stats",
+        "highDensityRouteSolver.benchmarkDiagnosticCounters"
+      ]
+    },
+    "experiments": [
+      {
+        "pr": 3198,
+        "candidateSha": "58873007d669bbeb0d53ea4cb19b983c10ab1c66",
+        "label": "forest-native-scope-targeted-five",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+        "options": {
+          "cacheProvider": null,
+          "effort": 1,
+          "usePhysicalNetForest": true
+        },
+        "evidencePaths": [
+          "physicalNetForestSolver.diagnostics",
+          "highDensityRouteSolver.benchmarkDiagnosticCounters"
+        ]
+      }
+    ],
+    "runPrNumbers": [
+      3198
+    ],
+    "replicationPolicy": "TARGETED5 affected cases only: original SRJ18[4] and SRJ24[5,9,10,16], own fresh-process matched AB, no BA. This is NOT a new full42 sweep and its timings must never be pooled with any full-corpus campaign. The other37 have conditional unchanged-path evidence only.",
+    "qualificationScope": "FOREST_SCOPE_TARGETED_AFFECTED_CASES_ONLY",
+    "targetedSampleNumbers": {
+      "srj18": [
+        4
+      ],
+      "srj24": [
+        5,
+        9,
+        10,
+        16
+      ]
+    },
+    "expectedInputHashesByDataset": {
+      "srj18": {
+        "1": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+        "2": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+        "3": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+        "4": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+        "5": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+        "6": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+        "7": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+        "8": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+        "9": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+        "10": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+        "11": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+        "12": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+        "13": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+        "14": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+        "15": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+        "16": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9"
+      },
+      "srj24": {
+        "1": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+        "2": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+        "3": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+        "4": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+        "5": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+        "6": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+        "7": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+        "8": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+        "9": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+        "10": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+        "11": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+        "12": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+        "13": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+        "14": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+        "15": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+        "16": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+        "17": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+        "18": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+        "19": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+        "20": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+        "21": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+        "22": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+        "23": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+        "24": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+        "25": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+        "26": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113"
+      }
+    },
+    "candidatePublication": {
+      "status": "PUBLISHED_EXACT_TREE_REVIEWED",
+      "publishedCommit": "58873007d669bbeb0d53ea4cb19b983c10ab1c66",
+      "reviewedLocalCommit": "cc2eaf512c4c197c8d0d85a24c7c9baa0af1c244",
+      "expectedTree": "2b189aba98051506dcf7df7b426a06f3653dc99e"
+    },
+    "runtimeSourceHashes": {
+      "run-pinned-experiment.py": "6490b82018a553a224cdbb053947d817f4843bb98cf24151e33d1803f06fcea1",
+      "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+      "prepare-pinned-harness.py": "05bfc8d70d04d90f703d8ab4811452b239f945d0b3cab272ae9c8298b385a881",
+      "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+      "experiment-audit-adapter.ts": "1ca120e864fc40aae392cb01e6ac485c6052cd30a6c5aafc02ebac6e39cd4b2c",
+      "qualify-pinned-output.ts": "26d5f289257fc243f1b1b2cb69f743bae0d1ff074f81b1c71624adc9b5ad7713",
+      "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8"
+    },
+    "runSampleSourceSha256": "c1d0e2572e06750a104c09e68df550873718945c707e76aacd1ecd8d2ad9a77e",
+    "expectedHarnessSourceHashes": {
+      "officialHarnessHash": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66",
+      "benchmarkShellHash": "615e710ec3705e693a03edd124ced32b1cb8beb6e86e4af7c345cd87910d47bb"
+    },
+    "expectedValidatorHashes": {
+      "lib/testing/evaluate-relaxed-drc.ts": "d774e4d05931e0e24b2462e9436c9b0aba604aafddc88c99e67e588a4c2fcd59",
+      "lib/testing/getDrcErrors.ts": "8f3aba2532e216d530db5efe3d514ec114f33b4ac0e32d68170522660257a994",
+      "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+      "lib/testing/utils/convertToCircuitJson.ts": "ed6f4c1e7506c7aea52679dc52a0af80af8cacdfc638bb74c852208ba7e32212",
+      "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata.ts": "6ce2359e7c76d888cf9a8c91aee28750ea8b083ed09e6913b8446266bb779f13"
+    }
+  },
+  "targetedWrapperSha256": "3831fbd3dfdd18065195e43c91709cffaa0de2405fa27c7760b1a3c09d205b5b",
+  "jobs": {
+    "srj18": 122658719165,
+    "srj24": 122658719190
+  },
+  "artifacts": {
+    "srj18": null,
+    "srj24": null
+  },
+  "status": "PENDING_COMPLETED_JOB_LOGS_AND_EXACT_ARTIFACT_METADATA",
+  "fullPopulationComplete": false
+}

@@ -1,0 +1,49 @@
+Read-only TARGETED5 analysis boundary
+
+This adapter is tied to run 40640929032, controller afc0e47ba5a03fe2d01959840d7bd92c165b7b1b,
+candidate 58873007d669bbeb0d53ea4cb19b983c10ab1c66 and the exact published reviewed
+controller manifest. It handles only original SRJ18 [4] and SRJ24 [5,9,10,16].
+Denominators remain 1 and 4, with 2 and 8 attempts respectively. It does not reroute
+the other 37 cases, qualify a new full 42 sweep, or pool full-corpus runtime.
+
+parse-targeted-job-log.py accepts only TARGETED_SCOPE_* markers. The full parser
+is unchanged and must not receive these selected populations. Targeted source
+preparation requires both original-number AB records, exact run/controller/job
+and artifact ID/name/size/digest pins, original input hashes, factory/options,
+AB-only policy and zero integrity issues. Failed/timeout unavailable metrics stay
+unavailable; only matched clean routes enter timing/via totals. Missing arms are
+missing, never regression or improvement.
+
+inspect-targeted-forest-scope-artifact.py separately verifies the complete original
+preflight input population and the selected routing population, both configs,
+checkout/harness/validator hashes, exact controller manifest and runtime source
+pins, original-number output paths, each record, and the explicit 1/4 summary.
+Only after these checks does it reuse unchanged inspect_raw and typed identity
+functions. It does not alter artifacts, original graphs, converters, validators
+or routing. The existing full inspect_artifact completeness gate is unchanged.
+
+Actions integration uses the existing read-only auxiliary branch/workflow:
+1. Run test-targeted-parser-source.py and test-inspect-targeted-forest-scope-artifact.py.
+   The test-targeted-source-pins.json fixture is self-contained public metadata;
+   the tests mock routing/raw helper boundaries and never route a board.
+2. Use unchanged verify-artifact-metadata.py with one exact expected-targeted-
+   forest-scope-DATASET.json and write compact-report/source-artifact-metadata.json.
+3. actions/download-artifact@v4 uses run-id 40640929032 and exact artifact name
+   targeted-forest-scope-3198-srj18 or targeted-forest-scope-3198-srj24.
+4. Invoke python3 scripts/experiment-artifact-audit/inspect-targeted-forest-scope-artifact.py
+   --directory downloaded --expected scripts/experiment-artifact-audit/EXPECTED.json
+   --source-metadata compact-report/source-artifact-metadata.json
+   --output compact-report/targeted-inspection.json --example-limit 3
+5. Retain compact-report with upload-artifact even on failure. The report preserves
+   detailed physical finding/identity evidence; stdout emits bounded TARGETED_AUDIT
+   summaries and board metrics rather than complete copper dumps.
+
+Every public report retains qualificationScope, original selected numbers,
+fullPopulationComplete:false and isFullCorpusSweep:false. Official completion,
+unchanged reference checks, typed electrical identity and library/manufacturing
+coverage remain separate. Unknown owner/width coverage is not a physical gain.
+Source artifact ZIP digests are verified through GitHub metadata/download tooling;
+the script does not independently reconstruct and rehash the original ZIP.
+
+No remote publication or routing was performed by the analysis preparer. The
+existing full parsers/inspectors and frozen targeted controller files are unchanged.

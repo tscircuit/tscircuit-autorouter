@@ -17,10 +17,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - sourceKey: forest-v3-srj24
-            expectedFile: expected-forest-v3-srj24.json
-            runId: 40630414562
-            artifactName: pinned-experiment-3198-srj24
+          - sourceKey: copper-soft-only-srj18
+            kind: full
+            expectedFile: expected-copper-soft-only-srj18.json
+            runId: 40639451020
+            artifactName: pinned-experiment-3201-srj18
+          - sourceKey: forest-scope-targeted-srj18
+            kind: targeted
+            expectedFile: expected-targeted-forest-scope-srj18.json
+            runId: 40640929032
+            artifactName: targeted-forest-scope-3198-srj18
+          - sourceKey: forest-scope-targeted-srj24
+            kind: targeted
+            expectedFile: expected-targeted-forest-scope-srj24.json
+            runId: 40640929032
+            artifactName: targeted-forest-scope-3198-srj24
     steps:
       - name: Checkout read-only artifact inspector
         uses: actions/checkout@v4
@@ -30,6 +41,10 @@ jobs:
         run: python3 scripts/experiment-artifact-audit/test-via-identity-equivalence.py
       - name: Verify supplemental intended-reference invariants
         run: python3 scripts/experiment-artifact-audit/test-intended-trace-references.py
+      - name: Verify targeted parsing and inspection boundaries
+        run: |
+          python3 scripts/experiment-artifact-audit/test-targeted-parser-source.py
+          python3 scripts/experiment-artifact-audit/test-inspect-targeted-forest-scope-artifact.py
       - name: Verify immutable source artifact metadata
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -45,6 +60,7 @@ jobs:
           name: ${{ matrix.artifactName }}
           path: downloaded
       - name: Inspect captured evidence without routing or validator changes
+        if: matrix.kind == 'full'
         run: >-
           python3 scripts/experiment-artifact-audit/inspect-artifact.py
           --directory downloaded
@@ -54,10 +70,12 @@ jobs:
           --example-limit 3
           > compact-report/full-inspection.log
       - name: Print compact verified inspection facts
+        if: matrix.kind == 'full'
         run: >-
           python3 scripts/experiment-artifact-audit/print-compact-inspection.py
           --report compact-report/inspection.json
       - name: Resolve declared electrical identities separately from coordinate unions
+        if: matrix.kind == 'full'
         run: >-
           python3 scripts/experiment-artifact-audit/inspect-via-identity-equivalence.py
           --directory downloaded
@@ -67,6 +85,7 @@ jobs:
           --examples-per-class 3
           --output compact-report/identity-equivalence.json
       - name: Query intended original ownership without extending original identities
+        if: matrix.kind == 'full'
         run: >-
           python3 scripts/experiment-artifact-audit/inspect-intended-trace-references.py
           --directory downloaded
@@ -74,6 +93,15 @@ jobs:
           --inspection compact-report/inspection.json
           --examples-per-class 3
           --output compact-report/intended-trace-references.json
+      - name: Inspect exact targeted original cases without qualifying a full corpus
+        if: matrix.kind == 'targeted'
+        run: >-
+          python3 scripts/experiment-artifact-audit/inspect-targeted-forest-scope-artifact.py
+          --directory downloaded
+          --expected 'scripts/experiment-artifact-audit/${{ matrix.expectedFile }}'
+          --source-metadata compact-report/source-artifact-metadata.json
+          --output compact-report/targeted-inspection.json
+          --example-limit 3
       - name: Retain compact inspection report
         if: always()
         uses: actions/upload-artifact@v4
