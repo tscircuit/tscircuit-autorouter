@@ -692,10 +692,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     node.f = this.computeF(node.g, node.h)
   }
 
-  getNodeKey(node: Node) {
-    const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
-    const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-    return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+  getNodeKey(node: Node): number {
+    return this.getNodeKeyFromCoordinates(node.x, node.y, node.z)
+  }
+
+  private getNodeKeyFromCoordinates(
+    x: number,
+    y: number,
+    z: number,
+  ): number {
+    const xIndex = Math.round(x / this.cellStep) - this.gridMinXIndex
+    const yIndex = Math.round(y / this.cellStep) - this.gridMinYIndex
+    return (z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
   getNeighbors(node: Node) {
@@ -709,20 +717,27 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
+        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
+        const neighborKey = this.getNodeKeyFromCoordinates(
+          neighborX,
+          neighborY,
+          node.z,
+        )
+        // Explored grid points cannot be queued again. Check their coordinates
+        // before allocating a search node for a discarded neighbor.
+        if (this.exploredNodes.has(neighborKey)) {
+          continue
+        }
+
         const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
+          x: neighborX,
+          y: neighborY,
           z: node.z,
           g: node.g,
           h: node.h,
           f: node.f,
           parent: node,
-        }
-
-        const neighborKey = this.getNodeKey(neighbor)
-
-        if (this.exploredNodes.has(neighborKey)) {
-          continue
         }
 
         if (!queriedPlanarNeighbors) {
@@ -773,6 +788,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
+      if (
+        this.exploredNodes.has(
+          this.getNodeKeyFromCoordinates(node.x, node.y, newZ),
+        )
+      ) {
+        continue
+      }
 
       const viaNeighbor: Node = {
         x: node.x,
@@ -785,7 +807,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
