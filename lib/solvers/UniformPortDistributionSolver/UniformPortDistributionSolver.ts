@@ -1,7 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
-import type { SimpleRouteJson } from "lib/types/srj-types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
@@ -22,7 +21,6 @@ import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSh
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
-import { optimizeJointPortCoordinates } from "./optimizeJointPortCoordinates"
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -32,8 +30,6 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
-  /** Optional original-board geometry for coupled shared-port optimization. */
-  jointPortCoordinateOptimization?: { srj: SimpleRouteJson }
 }
 
 /**
@@ -124,15 +120,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
   step(): void {
     if (this.ownerPairsToProcess.length === 0) {
       this.rebuildNodes()
-      if (this.input.jointPortCoordinateOptimization) {
-        const result = optimizeJointPortCoordinates({
-          nodes: this.redistributedNodes,
-          inputNodes: this.input.inputNodesWithPortPoints,
-          srj: this.input.jointPortCoordinateOptimization.srj,
-        })
-        this.redistributedNodes = result.nodes
-        this.stats.experimentJointPorts = result.stats
-      }
       this.solved = true
       return
     }
