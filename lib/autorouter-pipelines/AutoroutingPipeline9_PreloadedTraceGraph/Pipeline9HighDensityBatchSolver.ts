@@ -6,6 +6,7 @@ import {
   type Pipeline9HighDensitySolverParams,
 } from "./Pipeline9HighDensitySolver"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
+import type { PathPackingAudit } from "lib/solvers/HighDensitySolver/pathPackingGeometry"
 
 export type Pipeline9HighDensityBatchInput = Omit<
   Pipeline9HighDensitySolverParams,
@@ -19,6 +20,7 @@ export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
+  pathPackingStats?: PathPackingAudit
   iterations: number
   consumedNodeCount: number
   solved: boolean
@@ -58,6 +60,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         routes: solver.routes,
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
+        ...(solver.pathPackingStats ? { pathPackingStats: solver.pathPackingStats } : {}),
         iterations: solver.iterations,
         consumedNodeCount: 1 - solver.unsolvedNodePortPoints.length,
         solved: solver.solved,

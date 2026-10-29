@@ -7,8 +7,6 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
-import { RELAXED_DRC_OPTIONS as NATIVE_RELAXED_DRC_OPTIONS } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/drcPresets"
-import { GlobalDeltaDrcEngine, type GlobalDeltaDrcStats } from "./GlobalDeltaDrcEngine"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -52,6 +50,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -107,12 +106,12 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Experimental upstream finite-domain full-path packing; default off. */
+  experimentPathPacking?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
-  /** Experimental persistent changed-copper DRC evaluation; defaults to off. */
-  experimentDeltaDrc?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -250,7 +249,6 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
-  globalDeltaDrcStats?: GlobalDeltaDrcStats
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
@@ -648,6 +646,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            ...(cms.opts.experimentPathPacking === true ? {
+              experimentPathPacking: true,
+              pathPackingHoleClearance: cms.srj.minTraceToHoleEdgeClearance,
+              pathPackingViaToPadClearance: getViaToPadClearance(cms.srj),
+            } : {}),
           },
         ]
       },
@@ -821,21 +824,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         const srjWithMaterializedPreloadedTraces =
           cms.getSrjWithMaterializedPreloadedTraces()
-        const deltaEngine = cms.opts.experimentDeltaDrc === true
-          ? new GlobalDeltaDrcEngine(srjWithMaterializedPreloadedTraces as any, {
-              connMap: cms.connMap,
-              traceClearance: srjWithMaterializedPreloadedTraces.minTraceToPadEdgeClearance ??
-                NATIVE_RELAXED_DRC_OPTIONS.traceClearance,
-              viaClearance: srjWithMaterializedPreloadedTraces.minTraceToPadEdgeClearance ??
-                NATIVE_RELAXED_DRC_OPTIONS.viaClearance,
-              includeTraceViaOwnerMetadata: false,
-            })
-          : undefined
-        if (deltaEngine) cms.globalDeltaDrcStats = deltaEngine.globalStats
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
-            ...(deltaEngine ? { autoroutingDrcEngine: deltaEngine } : {}),
             hdRoutes: lockHdRouteTerminals({
               hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
@@ -880,7 +871,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
-            ...(cms.opts.experimentDeltaDrc === true ? { experimentDeltaDrc: true } : {}),
           },
         ]
       },

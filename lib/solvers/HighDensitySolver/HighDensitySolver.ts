@@ -19,6 +19,7 @@ import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/Portfo
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import { createPathPackingAudit, type PathPackingAudit } from "./pathPackingGeometry"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -75,6 +76,10 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
+    experimentPathPacking?: boolean
+    pathPackingStats?: PathPackingAudit
+    pathPackingHoleClearance?: number
+    pathPackingViaToPadClearance?: number
   }
 
   failedSolvers: HighDensityIntraNodeSolver[]
@@ -121,6 +126,10 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
+    experimentPathPacking,
+    pathPackingStats,
+    pathPackingHoleClearance,
+    pathPackingViaToPadClearance,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -149,6 +158,10 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
+    experimentPathPacking?: boolean
+    pathPackingStats?: PathPackingAudit
+    pathPackingHoleClearance?: number
+    pathPackingViaToPadClearance?: number
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -185,6 +198,12 @@ export class HighDensitySolver extends BaseSolver {
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,
+      ...(experimentPathPacking === true ? {
+        experimentPathPacking: true,
+        pathPackingStats: pathPackingStats ?? createPathPackingAudit(),
+        pathPackingHoleClearance,
+        pathPackingViaToPadClearance,
+      } : {}),
     }
     this.MAX_ITERATIONS =
       10e6 *

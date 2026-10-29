@@ -13,6 +13,7 @@ import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNode
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
 import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntraNodeSolver"
+import { PathPackingIntraNodeSolver } from "../HighDensitySolver/PathPackingIntraNodeSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -70,6 +71,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly rejectOverlappingTerminals: boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
+  private pathPackingEligible = false
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
@@ -201,6 +203,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
+      ...(this.pathPackingEligible ? [["pathPacking"]] : []),
       ["multiHeadPolyLine"],
       ["majorCombinations", "orderings6", "cellSizeFactor"],
       ["noVias"],
@@ -215,6 +218,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getHyperParameterDefs() {
+    if (this.constructorParams.experimentPathPacking === true) {
+      const stats = this.constructorParams.pathPackingStats
+      if (!stats) throw new Error("Requested path packing has no owned audit object")
+      const small = PathPackingIntraNodeSolver.hasSmallDomain(this.nodeWithPortPoints)
+      stats.workUnits += small ? this.nodeWithPortPoints.portPoints.length ** 2 + 1 : 1
+      if (small) this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(this.nodeWithPortPoints)
+      this.pathPackingEligible = small && PathPackingIntraNodeSolver.isApplicable({
+        ...this.constructorParams, pathPackingStats: stats,
+        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
+      })
+    }
     let priorityEligible = false
     if (this.constructorParams.priorityDagSearch) {
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
@@ -248,6 +262,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
     }
     return [
+      ...(this.pathPackingEligible ? [{ name: "pathPacking", possibleValues: [{ PATH_PACKING: true }] }] : []),
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -592,6 +607,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
+    if (hyperParameters.PATH_PACKING === true) {
+      const stats = this.constructorParams.pathPackingStats
+      if (!stats) throw new Error("Packing portfolio lost its audit object")
+      return new PathPackingIntraNodeSolver({ ...this.constructorParams,
+        pathPackingStats: stats, hyperParameters,
+        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams })
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
