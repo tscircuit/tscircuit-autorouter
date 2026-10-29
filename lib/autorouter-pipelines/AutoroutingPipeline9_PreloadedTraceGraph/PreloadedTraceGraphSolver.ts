@@ -251,9 +251,10 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     super()
     this.MAX_ITERATIONS = 1
     this.primitives = getPreloadedTracePrimitives(srj)
-    this.boundaryIndex = sharedEdgeSegments.length > 0
-      ? new Flatbush(sharedEdgeSegments.length)
-      : null
+    this.boundaryIndex =
+      sharedEdgeSegments.length > 0
+        ? new Flatbush(sharedEdgeSegments.length)
+        : null
     if (this.boundaryIndex) {
       for (const segment of sharedEdgeSegments) {
         this.boundaryIndex.add(
@@ -277,12 +278,14 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       if (this.boundaryIndex === null) break
       // Include near misses accepted by the exact geometric predicate. Keep
       // boundary order stable: competing fixed-net assignments are ordered.
-      const candidates: number[] = this.boundaryIndex.search(
-        Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
-        Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
-        Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
-        Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
-      ).sort((left, right) => left - right)
+      const candidates: number[] = this.boundaryIndex
+        .search(
+          Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
+          Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
+          Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
+          Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
+        )
+        .sort((left, right) => left - right)
       for (const index of candidates) {
         const segment = this.sharedEdgeSegments[index]!
         boundaryDistanceCheckCount++

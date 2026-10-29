@@ -52,7 +52,7 @@ The package build, including worker bundles and TypeScript declarations, passes.
 
 ## Repeatable inspection
 
-Run `bun scripts/inspect-motherboard-preload.ts` from this checkout. It disables
+Run `bun tests/bugs/bugreport3342/inspect-preload.ts` from this checkout. It disables
 cache, stops after preload, and reports stage time, input/output SHA-256 hashes,
 and assignment counts. To compare the reproduction revision, copy this script
 to that revision and run it there with the same Bun version and lockfile.
@@ -74,4 +74,4 @@ The reproduction branch now includes captured input/output board SVGs and a live
 preload-output SVG baseline (`b5e07e0`). Both visual tests pass on this fix
 without updating snapshots (2 tests, 6 assertions). The complete output SHA-256
 is also asserted. No baseline SVG or PNG changes appear in this fix's diff.
-See [the reproduction images](motherboard-power-phase-repro.md#visual-snapshots).
+See [the reproduction images](repro.md#visual-snapshots).
