@@ -13,7 +13,6 @@ import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNode
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
 import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntraNodeSolver"
-import { PathPackingIntraNodeSolver } from "../HighDensitySolver/PathPackingIntraNodeSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -32,6 +31,7 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { getLazyHdGridPlan, initializeLazyHdCandidateCounters, isUnmaterializedLazyHdCandidate, LazyHighDensitySolverA01, LazyHighDensitySolverA03, type LazyHdCandidateCounters } from "./lazyHdGridCandidates"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -69,9 +69,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  declare private readonly lazyHdCounters?: LazyHdCandidateCounters
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
-  private pathPackingEligible = false
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
@@ -80,6 +80,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   >()
 
   private getSolvedSegmentCount(solver: unknown): number | null {
+    if (isUnmaterializedLazyHdCandidate(solver)) return 0
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
     if (!(solvedConnectionsMap instanceof Map)) return null
 
@@ -126,6 +127,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      experimentLazyHdCandidates?: boolean
+      lazyHdStats?: LazyHdCandidateCounters
       enableNegotiatedSearch?: boolean
       gridSearchSegmentWork?: number
       gridSearchWorkScale?: number
@@ -137,6 +140,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    if (opts.experimentLazyHdCandidates === true) {
+      this.lazyHdCounters = opts.lazyHdStats ?? initializeLazyHdCandidateCounters({})
+    }
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -203,7 +209,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
-      ...(this.pathPackingEligible ? [["pathPacking"]] : []),
       ["multiHeadPolyLine"],
       ["majorCombinations", "orderings6", "cellSizeFactor"],
       ["noVias"],
@@ -218,17 +223,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getHyperParameterDefs() {
-    if (this.constructorParams.experimentPathPacking === true) {
-      const stats = this.constructorParams.pathPackingStats
-      if (!stats) throw new Error("Requested path packing has no owned audit object")
-      const small = PathPackingIntraNodeSolver.hasSmallDomain(this.nodeWithPortPoints)
-      stats.workUnits += small ? this.nodeWithPortPoints.portPoints.length ** 2 + 1 : 1
-      if (small) this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(this.nodeWithPortPoints)
-      this.pathPackingEligible = small && PathPackingIntraNodeSolver.isApplicable({
-        ...this.constructorParams, pathPackingStats: stats,
-        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
-      })
-    }
     let priorityEligible = false
     if (this.constructorParams.priorityDagSearch) {
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
@@ -262,7 +256,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
     }
     return [
-      ...(this.pathPackingEligible ? [{ name: "pathPacking", possibleValues: [{ PATH_PACKING: true }] }] : []),
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -414,7 +407,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    */
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
-    if (solver instanceof HighDensitySolverA13) return
+    if (solver instanceof HighDensitySolverA13 || isUnmaterializedLazyHdCandidate(solver)) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
     if (
@@ -607,13 +600,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
-    if (hyperParameters.PATH_PACKING === true) {
-      const stats = this.constructorParams.pathPackingStats
-      if (!stats) throw new Error("Packing portfolio lost its audit object")
-      return new PathPackingIntraNodeSolver({ ...this.constructorParams,
-        pathPackingStats: stats, hyperParameters,
-        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams })
-    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
@@ -668,7 +654,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const solver = new HighDensitySolverA01({
+      const props = {
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -679,11 +665,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
-      })
-      return solver as any
+      }
+      const counters = this.lazyHdCounters
+      if (counters) {
+        counters.lazyHdCandidates++
+        counters.lazyHdA01Candidates++
+        const parametersAreFinite = [this.effort, props.viaDiameter, props.traceThickness, props.traceMargin, props.viaMinDistFromBorder].every(Number.isFinite) && this.effort > 0 && props.viaDiameter > 0 && props.traceThickness > 0 && props.traceMargin >= 0 && props.viaMinDistFromBorder >= 0
+        const plan = parametersAreFinite ? getLazyHdGridPlan(this.nodeWithPortPoints, "A01", () => this.getGridSearchIterationBudget()) : null
+        if (plan) return new LazyHighDensitySolverA01(props, plan, counters) as any
+        counters.lazyHdEagerCandidates++
+      }
+      return new HighDensitySolverA01(props) as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
-      const solver = new HighDensityA03Solver({
+      const props = {
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
@@ -698,8 +693,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters,
-      })
-      return solver as any
+      }
+      const counters = this.lazyHdCounters
+      if (counters) {
+        counters.lazyHdCandidates++
+        counters.lazyHdA03Candidates++
+        const parametersAreFinite = [this.effort, props.viaDiameter, props.traceThickness, props.traceMargin, props.viaMinDistFromBorder].every(Number.isFinite) && this.effort > 0 && props.viaDiameter > 0 && props.traceThickness > 0 && props.traceMargin >= 0 && props.viaMinDistFromBorder >= 0
+        const plan = parametersAreFinite ? getLazyHdGridPlan(this.nodeWithPortPoints, "A03", () => this.getGridSearchIterationBudget()) : null
+        if (plan) return new LazyHighDensitySolverA03(props, plan, counters) as any
+        counters.lazyHdEagerCandidates++
+      }
+      return new HighDensityA03Solver(props) as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
@@ -780,10 +784,5 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
-    if (solver.solver instanceof PathPackingIntraNodeSolver) {
-      const diagnostics = this.constructorParams.priorityDiagnostics
-      if (diagnostics) diagnostics.pathPackingPortfolioSelectedNodes =
-        (diagnostics.pathPackingPortfolioSelectedNodes ?? 0) + 1
-    }
   }
 }

@@ -13,7 +13,6 @@ import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
-import type { PathPackingAudit } from "./pathPackingGeometry"
 import {
   precomputeIntraNodeRouteParams,
   type PrecomputedIntraNodeRouteParams,
@@ -112,10 +111,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
-    experimentPathPacking?: boolean
-    pathPackingStats?: PathPackingAudit
-    pathPackingHoleClearance?: number
-    pathPackingViaToPadClearance?: number
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
     const { nodeWithPortPoints, colorMap } = params

@@ -50,7 +50,6 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -106,8 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
-  /** Experimental upstream finite-domain full-path packing; default off. */
-  experimentPathPacking?: boolean
+  experimentLazyHdCandidates?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -646,11 +644,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
-            ...(cms.opts.experimentPathPacking === true ? {
-              experimentPathPacking: true,
-              pathPackingHoleClearance: cms.srj.minTraceToHoleEdgeClearance,
-              pathPackingViaToPadClearance: getViaToPadClearance(cms.srj),
-            } : {}),
+            ...(cms.opts.experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true } : {}),
           },
         ]
       },

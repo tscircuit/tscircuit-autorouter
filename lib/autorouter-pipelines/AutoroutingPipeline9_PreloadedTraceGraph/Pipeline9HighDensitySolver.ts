@@ -1,5 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
+import { initializeLazyHdCandidateCounters, type LazyHdCandidateCounters } from "lib/solvers/HyperHighDensitySolver/lazyHdGridCandidates"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -34,12 +35,9 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
-import { createPathPackingAudit, type PathPackingAudit } from "lib/solvers/HighDensitySolver/pathPackingGeometry"
 
 export type Pipeline9HighDensitySolverParams = {
-  experimentPathPacking?: boolean
-  pathPackingHoleClearance?: number
-  pathPackingViaToPadClearance?: number
+  experimentLazyHdCandidates?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -335,11 +333,9 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
+  experimentLazyHdCandidates?: boolean
+  lazyHdStats?: LazyHdCandidateCounters
   priorityDiagnostics?: Record<string, number>
-  experimentPathPacking?: boolean
-  pathPackingStats?: PathPackingAudit
-  pathPackingHoleClearance?: number
-  pathPackingViaToPadClearance?: number
   layerCount: number
 }
 
@@ -358,10 +354,8 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  experimentPathPacking,
-  pathPackingStats,
-  pathPackingHoleClearance,
-  pathPackingViaToPadClearance,
+  experimentLazyHdCandidates,
+  lazyHdStats,
   traceWidth,
   obstacleMargin,
   effort,
@@ -393,12 +387,11 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
+    ...(experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats } : {}),
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
-    ...(experimentPathPacking === true ? { experimentPathPacking: true,
-      pathPackingStats, pathPackingHoleClearance, pathPackingViaToPadClearance } : {}),
   })
 
 /**
@@ -407,7 +400,6 @@ export const createPipeline9RegularNodeSolver = ({
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
-  readonly pathPackingStats?: PathPackingAudit
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
@@ -445,11 +437,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
-    if (params.experimentPathPacking === true) {
-      this.pathPackingStats = createPathPackingAudit()
-      this.benchmarkDiagnosticCounters.pathPackingPortfolioSelectedNodes = 0
-    }
     this.fixedHdRoutes = params.fixedHdRoutes
+    if (params.experimentLazyHdCandidates === true) this.lazyHdStats = initializeLazyHdCandidateCounters({})
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -490,6 +479,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
+  declare readonly lazyHdStats?: LazyHdCandidateCounters
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
 
   override getSolverName(): string {
@@ -568,12 +558,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               // Each batch promise owns execution telemetry exactly once,
               // including completed nodes outside the accepted serial prefix.
               for (const result of results) {
-                if (result.pathPackingStats) {
-                  if (!this.pathPackingStats) throw new Error("Unexpected packing worker evidence on default-OFF host")
-                  this.pathPackingStats.activated ||= result.pathPackingStats.activated
-                  for (const key of Object.keys(result.pathPackingStats) as (keyof PathPackingAudit)[]) {
-                    if (key !== "requested" && key !== "activated")
-                      this.pathPackingStats[key] += result.pathPackingStats[key]
+                if (result.lazyHdStats) {
+                  if (!this.lazyHdStats) throw new Error("Unexpected lazy HD worker evidence on default-OFF host")
+                  for (const key of Object.keys(result.lazyHdStats) as (keyof LazyHdCandidateCounters)[]) {
+                    this.lazyHdStats[key] += result.lazyHdStats[key]
                   }
                 }
                 for (const [key, value] of Object.entries(
@@ -711,10 +699,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      ...(this.params.experimentPathPacking === true ? { experimentPathPacking: true,
-        pathPackingStats: this.pathPackingStats,
-        pathPackingHoleClearance: this.params.pathPackingHoleClearance,
-        pathPackingViaToPadClearance: this.params.pathPackingViaToPadClearance ?? this.viaToPadClearance } : {}),
+      ...(this.params.experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats: this.lazyHdStats } : {}),
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

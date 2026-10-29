@@ -1,3 +1,4 @@
+import type { LazyHdCandidateCounters } from "lib/solvers/HyperHighDensitySolver/lazyHdGridCandidates"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -6,7 +7,6 @@ import {
   type Pipeline9HighDensitySolverParams,
 } from "./Pipeline9HighDensitySolver"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
-import type { PathPackingAudit } from "lib/solvers/HighDensitySolver/pathPackingGeometry"
 
 export type Pipeline9HighDensityBatchInput = Omit<
   Pipeline9HighDensitySolverParams,
@@ -20,7 +20,7 @@ export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
-  pathPackingStats?: PathPackingAudit
+  lazyHdStats?: LazyHdCandidateCounters
   iterations: number
   consumedNodeCount: number
   solved: boolean
@@ -60,7 +60,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         routes: solver.routes,
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
-        ...(solver.pathPackingStats ? { pathPackingStats: solver.pathPackingStats } : {}),
+        ...(solver.lazyHdStats ? { lazyHdStats: solver.lazyHdStats } : {}),
         iterations: solver.iterations,
         consumedNodeCount: 1 - solver.unsolvedNodePortPoints.length,
         solved: solver.solved,

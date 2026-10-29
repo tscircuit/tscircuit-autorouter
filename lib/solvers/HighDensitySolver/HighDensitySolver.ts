@@ -1,3 +1,4 @@
+import { initializeLazyHdCandidateCounters, type LazyHdCandidateCounters } from "../HyperHighDensitySolver/lazyHdGridCandidates"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -19,7 +20,6 @@ import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/Portfo
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
-import { createPathPackingAudit, type PathPackingAudit } from "./pathPackingGeometry"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -73,13 +73,11 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
+    experimentLazyHdCandidates?: boolean
+    lazyHdStats?: LazyHdCandidateCounters
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
-    experimentPathPacking?: boolean
-    pathPackingStats?: PathPackingAudit
-    pathPackingHoleClearance?: number
-    pathPackingViaToPadClearance?: number
   }
 
   failedSolvers: HighDensityIntraNodeSolver[]
@@ -122,14 +120,12 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
+    experimentLazyHdCandidates,
+    lazyHdStats,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
-    experimentPathPacking,
-    pathPackingStats,
-    pathPackingHoleClearance,
-    pathPackingViaToPadClearance,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -154,14 +150,12 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
+    experimentLazyHdCandidates?: boolean
+    lazyHdStats?: LazyHdCandidateCounters
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
-    experimentPathPacking?: boolean
-    pathPackingStats?: PathPackingAudit
-    pathPackingHoleClearance?: number
-    pathPackingViaToPadClearance?: number
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -195,15 +189,10 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
+      ...(experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats: lazyHdStats ?? initializeLazyHdCandidateCounters({}) } : {}),
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,
-      ...(experimentPathPacking === true ? {
-        experimentPathPacking: true,
-        pathPackingStats: pathPackingStats ?? createPathPackingAudit(),
-        pathPackingHoleClearance,
-        pathPackingViaToPadClearance,
-      } : {}),
     }
     this.MAX_ITERATIONS =
       10e6 *
