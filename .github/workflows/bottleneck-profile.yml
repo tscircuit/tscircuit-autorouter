@@ -1,0 +1,73 @@
+name: Bottleneck baseline CPU diagnostic
+
+on:
+  push:
+    branches: [codex/bottleneck-experiments-controller-20261029]
+    paths: [scripts/experiment-audit/bottleneck-profile-manifest.json]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify exact diagnostic source, assets and three-case scope
+        id: plan
+        run: python3 scripts/experiment-audit/run-bottleneck-profile.py --mode plan
+  profile:
+    needs: plan
+    name: CPU / ${{ matrix.dataset }} / ${{ matrix.sample }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '10000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: e703f0499188f858b2b5e571ac80091d4c10733a
+          path: pinned-main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: e703f0499188f858b2b5e571ac80091d4c10733a
+          path: baseline
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Verify frozen baseline source and validators
+        run: python3 controller/scripts/experiment-audit/run-bottleneck-profile.py --mode verify-checkout --checkout baseline
+      - name: Install immutable dependency pins with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Verify complete pinned installed dependency bytes
+        run: python3 controller/scripts/experiment-audit/run-bottleneck-profile.py --mode verify-dependencies --checkout baseline
+      - name: Build unchanged baseline
+        working-directory: baseline
+        run: bun run build
+      - name: Prepare diagnostic-only actual-child CPU sampling and flush policy
+        run: python3 controller/scripts/experiment-audit/prepare-bottleneck-profile.py --controller pinned-main --target baseline --expected-sha e703f0499188f858b2b5e571ac80091d4c10733a
+      - name: Profile one original sample, preserving official result and all evidence
+        run: python3 controller/scripts/experiment-audit/run-bottleneck-profile.py --mode run --checkout baseline --dataset '${{ matrix.dataset }}' --sample '${{ matrix.sample }}' --output 'results/${{ matrix.dataset }}-${{ matrix.sample }}'
+      - name: Retain CPU profiles, raw inputs, phase clocks, outputs and source provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bottleneck-profile-${{ matrix.dataset }}-${{ matrix.sample }}
+          path: results
+          if-no-files-found: error
+          retention-days: 30
