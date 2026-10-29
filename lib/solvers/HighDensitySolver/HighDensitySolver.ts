@@ -1,3 +1,4 @@
+import { createFuturePointDistancePruningStats, type FuturePointDistancePruningStats } from "./futurePointDistancePruningContext"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -72,6 +73,8 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
+    experimentFuturePointDistancePruning?: boolean
+    futurePointDistancePruningStats?: FuturePointDistancePruningStats
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -117,6 +120,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
+    experimentFuturePointDistancePruning,
+    futurePointDistancePruningStats,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -145,6 +150,8 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
+    experimentFuturePointDistancePruning?: boolean
+    futurePointDistancePruningStats?: FuturePointDistancePruningStats
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -182,6 +189,7 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
+      ...(experimentFuturePointDistancePruning === true ? { experimentFuturePointDistancePruning: true, futurePointDistancePruningStats: futurePointDistancePruningStats ?? createFuturePointDistancePruningStats() } : {}),
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,

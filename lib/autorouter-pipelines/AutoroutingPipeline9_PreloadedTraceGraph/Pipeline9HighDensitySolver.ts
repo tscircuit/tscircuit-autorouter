@@ -1,3 +1,4 @@
+import { createFuturePointDistancePruningStats, type FuturePointDistancePruningStats } from "lib/solvers/HighDensitySolver/futurePointDistancePruningContext"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -36,6 +37,7 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
+  experimentFuturePointDistancePruning?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -331,6 +333,8 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
+  experimentFuturePointDistancePruning?: boolean
+  futurePointDistancePruningStats?: FuturePointDistancePruningStats
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -350,6 +354,8 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
+  experimentFuturePointDistancePruning,
+  futurePointDistancePruningStats,
   traceWidth,
   obstacleMargin,
   effort,
@@ -381,6 +387,7 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
+    ...(experimentFuturePointDistancePruning === true ? { experimentFuturePointDistancePruning: true, futurePointDistancePruningStats } : {}),
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -431,6 +438,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
+    if (params.experimentFuturePointDistancePruning === true) this.futurePointDistancePruningStats = createFuturePointDistancePruningStats()
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -471,6 +479,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
+  declare readonly futurePointDistancePruningStats?: FuturePointDistancePruningStats
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
 
   override getSolverName(): string {
@@ -549,6 +558,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               // Each batch promise owns execution telemetry exactly once,
               // including completed nodes outside the accepted serial prefix.
               for (const result of results) {
+                if (result.futurePointDistancePruningStats) {
+                  if (!this.futurePointDistancePruningStats) throw new Error("Unexpected future-point worker evidence on default-OFF host")
+                  for (const key of Object.keys(result.futurePointDistancePruningStats) as (keyof FuturePointDistancePruningStats)[]) this.futurePointDistancePruningStats[key] += result.futurePointDistancePruningStats[key]
+                }
                 for (const [key, value] of Object.entries(
                   result.benchmarkDiagnosticCounters,
                 )) {
@@ -684,6 +697,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      ...(this.params.experimentFuturePointDistancePruning === true ? { experimentFuturePointDistancePruning: true, futurePointDistancePruningStats: this.futurePointDistancePruningStats } : {}),
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

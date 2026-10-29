@@ -1,3 +1,4 @@
+import type { FuturePointDistancePruningStats } from "lib/solvers/HighDensitySolver/futurePointDistancePruningContext"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -19,6 +20,7 @@ export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
+  futurePointDistancePruningStats?: FuturePointDistancePruningStats
   iterations: number
   consumedNodeCount: number
   solved: boolean
@@ -58,6 +60,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         routes: solver.routes,
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
+        ...(solver.futurePointDistancePruningStats ? { futurePointDistancePruningStats: solver.futurePointDistancePruningStats } : {}),
         iterations: solver.iterations,
         consumedNodeCount: 1 - solver.unsolvedNodePortPoints.length,
         solved: solver.solved,

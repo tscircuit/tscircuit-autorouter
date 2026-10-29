@@ -1,3 +1,4 @@
+import { registerOwnedFuturePointDistancePruningOptions } from "./futurePointDistancePruningContext"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import {
   doPipeline9RoutesHaveCopperConflict,
@@ -291,7 +292,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           obstacleRoutes.push(witness.route)
       } else if (i !== task) futureConnections.push(this.tasks[i])
     }
-    return {
+    const opts = {
       ...this.tasks[task],
       A: this.tasks[task].points[0],
       B: this.tasks[task].points[1],
@@ -309,6 +310,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
     }
+    if (this.futurePointDistancePruningStats) registerOwnedFuturePointDistancePruningOptions(opts, this.futurePointDistancePruningStats)
+    return opts
   }
 
   protected override getSingleRouteSolverOpts(
@@ -361,6 +364,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     // As in native Intra, a rejected endpoint-via test continues to the SAME
     // native Single search. Both constructions and the failed check are paid.
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
+    if (this.futurePointDistancePruningStats) registerOwnedFuturePointDistancePruningOptions(opts, this.futurePointDistancePruningStats)
     this.activeSubSolver = new Native(opts)
     this.record("priorityNativeSearches")
   }

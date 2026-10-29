@@ -1,3 +1,4 @@
+import { createFuturePointDistancePruningStats, registerOwnedFuturePointDistancePruningOptions, type FuturePointDistancePruningStats } from "./futurePointDistancePruningContext"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
@@ -76,6 +77,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  declare protected readonly futurePointDistancePruningStats?: FuturePointDistancePruningStats
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -103,6 +105,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    experimentFuturePointDistancePruning?: boolean
+    futurePointDistancePruningStats?: FuturePointDistancePruningStats
     obstacles?: Obstacle[]
     layerCount?: number
     priorityCoordinateScale?: number
@@ -125,6 +129,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    if (params.experimentFuturePointDistancePruning === true) this.futurePointDistancePruningStats = params.futurePointDistancePruningStats ?? createFuturePointDistancePruningStats()
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -226,7 +231,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
   >[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
-    return {
+    const opts = {
       connectionName,
       rootConnectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
@@ -265,6 +270,13 @@ export class IntraNodeRouteSolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
     }
+    // A public subclass overriding the option getter does not inherit cache
+    // admission. Actual PriorityDag construction admits its own private context.
+    if (this.futurePointDistancePruningStats &&
+      this.getSingleRouteSolverOpts === IntraNodeRouteSolver.prototype.getSingleRouteSolverOpts) {
+      registerOwnedFuturePointDistancePruningOptions(opts, this.futurePointDistancePruningStats)
+    }
+    return opts
   }
 
   protected trySolveSamePointLayerChange(unsolvedConnection: {

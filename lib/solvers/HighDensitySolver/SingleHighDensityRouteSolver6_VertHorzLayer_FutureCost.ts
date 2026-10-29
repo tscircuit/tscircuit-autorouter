@@ -2,6 +2,8 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
+import { consumeOwnedFuturePointDistancePruningOptions, type FuturePointDistancePruningStats } from "./futurePointDistancePruningContext"
+
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
@@ -22,6 +24,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  #futurePointDistancePruning?: { stats: FuturePointDistancePruningStats; pruned: boolean }
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -46,9 +49,18 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    // Exact internal options are consumed once. Public/copied/replayed options
+    // retain the native cache and miss loop, with no admission coordinate reads.
+    const stats = consumeOwnedFuturePointDistancePruningOptions(opts, this.futureConnections)
+    if (stats && this.futureConnectionPoints.length >= 8 &&
+      this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey) {
+      this.#futurePointDistancePruning = { stats, pruned: false }
+      stats.instances++
+    }
   }
 
   getClosestFutureConnectionPoint(node: Node) {
+    if (this.#futurePointDistancePruning) return this.#getClosestPrunedFutureConnectionPoint(node)
     if (
       this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
       this.cachedFutureConnectionPointCount !==
@@ -89,6 +101,104 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       const dist =
         distance(node, point) +
         (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      if (dist < minDist) {
+        minDist = dist
+        closestPoint = point
+        closestPointIndex = pointIndex
+      }
+      pointIndex++
+    }
+
+    // A fixed workspace avoids retaining every explored coordinate in large
+    // portfolio searches. Colliding slots simply perform the original scan.
+    if (cacheSlot >= 0) {
+      this.closestFuturePointCacheCoordinates[coordinateIndex] = node.x
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 1] = node.y
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 2] = node.z
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 3] =
+        viaPenaltyDistance
+      this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
+    }
+    return closestPoint
+  }
+
+  #getClosestPrunedFutureConnectionPoint(node: Node) {
+    if (
+      this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
+      this.cachedFutureConnectionPointCount !==
+        this.futureConnectionPoints.length
+    ) {
+      this.closestFuturePointCacheIndices.fill(-2)
+      this.cachedFutureConnectionPoints = this.futureConnectionPoints
+      this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
+    }
+    const pointKey = this.getNodeKey(node)
+    const cacheSlot = Number.isSafeInteger(pointKey)
+      ? Math.abs(pointKey % CLOSEST_FUTURE_POINT_CACHE_SLOTS)
+      : -1
+    const coordinateIndex = cacheSlot * 4
+    const viaPenaltyDistance = this.viaPenaltyDistance
+    const cachedPointIndex = this.closestFuturePointCacheIndices[cacheSlot]
+    // Rounded grid keys can alias coordinates or layers outside the grid.
+    // Verify the exact query and layer penalty before reusing a selection.
+    if (
+      cacheSlot >= 0 &&
+      cachedPointIndex >= -1 &&
+      this.closestFuturePointCacheCoordinates[coordinateIndex] === node.x &&
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 1] === node.y &&
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 2] === node.z &&
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 3] ===
+        viaPenaltyDistance
+    ) {
+      return cachedPointIndex === -1
+        ? null
+        : this.futureConnectionPoints[cachedPointIndex]
+    }
+    let minDist = Infinity
+    let closestPoint = null
+    let closestPointIndex = -1
+    let pointIndex = 0
+
+    const experiment = this.#futurePointDistancePruning!
+    let recordUse = !experiment.pruned
+    let sameMinSq = Infinity, foreignMinSq = Infinity
+    let previousForeignPenalty: unknown
+    let prune = true
+    for (const point of this.futureConnectionPoints) {
+      // Exact @tscircuit/math-utils distance arithmetic and observable reads.
+      const dx = node.x - point.x
+      const dy = node.y - point.y
+      const sq = dx * dx + dy * dy
+      // Native sqrt(BigInt) fails before either Z or penalty is read.
+      if (typeof sq !== "number") Math.sqrt(sq)
+      const foreign = node.z !== point.z
+      const penalty = foreign ? this.viaPenaltyDistance : 0
+      // A string cost can make global < comparisons lexical and increase its
+      // numeric value. Stop using ALL numeric bounds for this query thereafter.
+      if (typeof penalty !== "number") prune = false
+      if (foreign && penalty !== previousForeignPenalty) {
+        previousForeignPenalty = penalty
+        foreignMinSq = Infinity
+      }
+      const minimum = foreign ? foreignMinSq : sameMinSq
+      const orderedPenalty = typeof penalty === "number" && penalty === penalty
+      if (prune && orderedPenalty && sq >= minimum) {
+        if (recordUse) {
+          recordUse = false
+          // A coordinate/penalty getter may have recorded use in a nested query.
+          if (!experiment.pruned) {
+            experiment.pruned = true
+            experiment.stats.contextsPruned++
+          }
+        }
+        pointIndex++
+        continue
+      }
+      const dist = Math.sqrt(sq) + penalty
+      if (prune && orderedPenalty && sq < minimum) {
+        if (foreign) foreignMinSq = sq
+        else sameMinSq = sq
+      }
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
