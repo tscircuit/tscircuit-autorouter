@@ -190,4 +190,65 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
   )
   expect(detachedErrors).toHaveLength(2)
   expect(detachedErrors[1]!.center).toEqual({ x: 0.8, y: 0 })
+
+  const bottomTrace = structuredClone(goodTrace)
+  for (const point of bottomTrace.route) {
+    if (point.route_type === "wire") point.layer = "bottom"
+  }
+  if (bottomTrace.route[0]?.route_type !== "wire")
+    throw new Error("Expected a wire endpoint")
+  bottomTrace.route[0].start_pcb_port_id = "pcb_port_a"
+  const layerCircuit = convertToCircuitJson(srj, [bottomTrace])
+  for (const hasBridge of [false, true]) {
+    const circuit: AnyCircuitElement[] = structuredClone(layerCircuit)
+    if (hasBridge) {
+      circuit.push({
+        type: "pcb_via",
+        pcb_via_id: "port_bridge",
+        pcb_trace_id: "good",
+        x: 0,
+        y: 0,
+        outer_diameter: 0.3,
+        hole_diameter: 0.15,
+        layers: ["top", "bottom"],
+      })
+    }
+    const expected = checkTracesAreContiguous(circuit)
+    expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
+    expect(
+      expected.filter((error) =>
+        error.pcb_trace_error_id.startsWith("missing_layer_connection_"),
+      ),
+    ).toHaveLength(hasBridge ? 0 : 1)
+  }
+
+  for (const endX of [1.85, 1.7]) {
+    const sibling = createTrace("bottom_sibling", [
+      { x: 2, y: 0 },
+      { x: 4, y: 0 },
+    ])
+    for (const point of sibling.route) {
+      if (point.route_type === "wire") point.layer = "bottom"
+    }
+    const circuit = convertToCircuitJson(srj, [
+      createTrace("top_sibling", [
+        { x: 0, y: 0 },
+        { x: endX, y: 0 },
+      ]),
+      sibling,
+    ])
+    circuit.push({
+      type: "pcb_via",
+      pcb_via_id: "sibling_bridge",
+      pcb_trace_id: "bottom_sibling",
+      x: 2,
+      y: 0,
+      outer_diameter: 0.4,
+      hole_diameter: 0.2,
+      layers: ["top", "bottom"],
+    })
+    const expected = checkTracesAreContiguous(circuit)
+    expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
+    expect(expected).toHaveLength(endX === 1.85 ? 0 : 1)
+  }
 })
