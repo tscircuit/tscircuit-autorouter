@@ -4,7 +4,7 @@ import { PriorityDagIntraNodeSolver } from "lib/solvers/HighDensitySolver/Priori
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { priorityParams } from "./priorityDagTestUtils"
 
-test("native6/20 permutation families collapse to real DAG candidates within original summed allocation", () => {
+test("priority families retain native route diversity within the original summed allocation", () => {
   const params = priorityParams()
   const native = new PortfolioSingleIntraNodeSolver({
     ...params,
@@ -27,11 +27,17 @@ test("native6/20 permutation families collapse to real DAG candidates within ori
   const original = all(native),
     replacement = all(candidate)
   const families = replacement.filter((hp) => hp.PRIORITY_DAG_FAMILY_SIZE)
-  expect(families).toHaveLength(8)
+  expect(families).toHaveLength(7)
   expect(
     families.reduce((sum, hp) => sum + hp.PRIORITY_DAG_FAMILY_SIZE, 0),
-  ).toBe(62)
-  expect(original.length - replacement.length).toBe(54)
+  ).toBe(42)
+  expect(original.length - replacement.length).toBe(35)
+  const nativeOrderings = replacement.filter(
+    (hp) => hp.SHUFFLE_SEED >= 100 && hp.SHUFFLE_SEED < 120,
+  )
+  expect(nativeOrderings.map((hp) => hp.SHUFFLE_SEED)).toEqual(
+    Array.from({ length: 20 }, (_, index) => 100 + index),
+  )
   const nativeUnit =
     Math.floor(new IntraNodeRouteSolver(params).MAX_ITERATIONS) + 1
   let total = 0
@@ -42,6 +48,12 @@ test("native6/20 permutation families collapse to real DAG candidates within ori
       nativeUnit * hp.PRIORITY_DAG_FAMILY_SIZE,
     )
     total += solver.MAX_ITERATIONS + 1
+  }
+  for (const hp of nativeOrderings) {
+    const solver = candidate.generateSolver(hp)
+    expect(solver).toBeInstanceOf(IntraNodeRouteSolver)
+    expect(solver).not.toBeInstanceOf(PriorityDagIntraNodeSolver)
+    total += Math.floor(solver.MAX_ITERATIONS) + 1
   }
   expect(total).toBe(nativeUnit * 62)
   const multipoint = structuredClone(params.nodeWithPortPoints)

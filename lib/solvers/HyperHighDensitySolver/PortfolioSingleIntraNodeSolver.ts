@@ -318,11 +318,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "orderings50",
-        possibleValues: priorityEligible
-          ? [{ SHUFFLE_SEED: 0, PRIORITY_DAG_FAMILY_SIZE: 20 }]
-          : Array.from({ length: 20 }, (_, i) => ({
-              SHUFFLE_SEED: 100 + i,
-            })),
+        // Keep native sequential routing in the portfolio. Priority search
+        // changes both ordering and future-connection costs, so replacing
+        // this family too can discard routes that use fewer vias.
+        possibleValues: Array.from({ length: 20 }, (_, i) => ({
+          SHUFFLE_SEED: 100 + i,
+        })),
       },
       // {
       //   name: "closedFormTwoTrace",

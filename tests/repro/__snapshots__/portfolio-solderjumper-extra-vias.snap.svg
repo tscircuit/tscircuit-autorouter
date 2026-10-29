@@ -1,0 +1,194 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-3.01,0.5724999999999998 -3,0.6000000000000001" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="109.30000000000001,524.925 110,523" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-3,0.6000000000000001 -2.6,0.6000000000000001" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="110,523 138,523" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.6,0.6000000000000001 -2.2,0.6000000000000001" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="138,523 166,523" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.2,0.6000000000000001 -1.8000000000000003,0.6000000000000001" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="166,523 194,523" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.8000000000000003,0.6000000000000001 -1.4000000000000004,0.20000000000000007" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="194,523 221.99999999999997,551" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.4000000000000004,0.20000000000000007 -1.0000000000000004,0.20000000000000007" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="221.99999999999997,551 249.99999999999997,551" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.0000000000000004,0.20000000000000007 -0.6000000000000004,-0.19999999999999996" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="249.99999999999997,551 278,579" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.6000000000000004,-0.19999999999999996 -0.37749999999999995,-0.5" data-type="line" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" points="278,579 293.575,600" fill="none" stroke="rgba(191,255,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="3.01,0.21499999999999986 3,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="530.7,549.95 530,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="3,0.2 2.6,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="530,551 502,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.6,0.2 2.2,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="502,551 474,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.2,0.2 1.8000000000000003,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="474,551 446,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.8000000000000003,0.2 1.4000000000000004,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="446,551 418,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.4000000000000004,0.2 1.0000000000000004,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="418,551 390,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.0000000000000004,0.2 0.6000000000000004,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="390,551 362,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.6000000000000004,0.2 0.2000000000000004,0.2" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="362,551 334,551" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.2000000000000004,0.2 -0.19999999999999962,0.6000000000000001" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="334,551 306,523" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.19999999999999962,0.6000000000000001 -0.5999999999999996,0.6000000000000001" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="306,523 278,523" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.5999999999999996,0.6000000000000001 -0.9999999999999997,0.6000000000000001" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="278,523 250.00000000000003,523" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.9999999999999997,0.6000000000000001 -1.3999999999999997,1" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="250.00000000000003,523 222.00000000000003,495" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.3999999999999997,1 -1.7999999999999998,1" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="222.00000000000003,495 194,495" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,1 -2.1999999999999997,1" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="194,495 166.00000000000003,495" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.1999999999999997,1 -2.5999999999999996,1" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="166.00000000000003,495 138.00000000000003,495" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.5999999999999996,1 -3.01,1.25" data-type="line" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" points="138.00000000000003,495 109.30000000000001,477.5" fill="none" stroke="rgba(255,0,0,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.1325,-0.5 -2.2,-0.4" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="170.72500000000002,600 166,593" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.2,-0.4 -1.8000000000000003,0" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="166,593 194,565" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.8000000000000003,0 -1.8000000000000003,0" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="194,565 194,565" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.8000000000000003,0 -1.4000000000000004,0.4" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 1" points="194,565 221.99999999999997,537" fill="none" stroke="rgba(0,64,255,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.4000000000000004,0.4 -1.0000000000000004,0.8" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 1" points="221.99999999999997,537 249.99999999999997,509" fill="none" stroke="rgba(0,64,255,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.0000000000000004,0.8 -0.6000000000000004,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 1" points="249.99999999999997,509 278,481" fill="none" stroke="rgba(0,64,255,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.6000000000000004,1.2000000000000002 -0.6000000000000004,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 1" points="278,481 278,481" fill="none" stroke="rgba(0,64,255,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.6000000000000004,1.2000000000000002 -0.2000000000000004,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="278,481 306,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.2000000000000004,1.2000000000000002 0.19999999999999962,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="306,481 334,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.19999999999999962,1.2000000000000002 0.5999999999999996,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="334,481 362,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.5999999999999996,1.2000000000000002 0.9999999999999997,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="362,481 390,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.9999999999999997,1.2000000000000002 1.3999999999999997,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="390,481 418,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.3999999999999997,1.2000000000000002 1.7999999999999998,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="418,481 446,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.7999999999999998,1.2000000000000002 2.1999999999999997,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="446,481 474,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.1999999999999997,1.2000000000000002 2.5999999999999996,1.2000000000000002" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="474,481 502,481" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.5999999999999996,1.2000000000000002 3.01,1.25" data-type="line" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" points="502,481 530.7,477.5" fill="none" stroke="rgba(0,64,255,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="3.01,4.535 3,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="530.7,247.55 530,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="3,4.6000000000000005 2.6,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="530,242.99999999999994 502,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.6,4.6000000000000005 2.2,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="502,242.99999999999994 474,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="2.2,4.6000000000000005 1.8000000000000003,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="474,242.99999999999994 446,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.8000000000000003,4.6000000000000005 1.4000000000000004,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="446,242.99999999999994 418,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.4000000000000004,4.6000000000000005 1.0000000000000004,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="418,242.99999999999994 390,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="1.0000000000000004,4.6000000000000005 0.6000000000000004,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="390,242.99999999999994 362,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.6000000000000004,4.6000000000000005 0.2000000000000004,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="362,242.99999999999994 334,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="0.2000000000000004,4.6000000000000005 -0.19999999999999962,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="334,242.99999999999994 306,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.19999999999999962,4.6000000000000005 -0.5999999999999996,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="306,242.99999999999994 278,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.5999999999999996,4.6000000000000005 -0.9999999999999997,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="278,242.99999999999994 250.00000000000003,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-0.9999999999999997,4.6000000000000005 -1.3999999999999997,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="250.00000000000003,242.99999999999994 222.00000000000003,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.3999999999999997,4.6000000000000005 -1.7999999999999998,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="222.00000000000003,242.99999999999994 194,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,4.6000000000000005 -1.7999999999999998,4.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="194,242.99999999999994 194,242.99999999999994" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,4.6000000000000005 -1.7999999999999998,4.2" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,242.99999999999994 194,271" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,4.2 -1.7999999999999998,3.8000000000000003" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,271 194,299" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,3.8000000000000003 -1.7999999999999998,3.4000000000000004" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,299 194,327" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,3.4000000000000004 -1.7999999999999998,3.0000000000000004" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,327 194,355" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,3.0000000000000004 -1.7999999999999998,2.6000000000000005" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,355 194,383" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,2.6000000000000005 -1.7999999999999998,2.2000000000000006" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,383 194,410.99999999999994" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,2.2000000000000006 -1.7999999999999998,1.8000000000000007" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,410.99999999999994 194,438.99999999999994" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,1.8000000000000007 -1.7999999999999998,1.4000000000000008" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,438.99999999999994 194,466.99999999999994" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,1.4000000000000008 -1.7999999999999998,1.0000000000000009" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,466.99999999999994 194,494.99999999999994" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-1.7999999999999998,1.0000000000000009 -2.1999999999999997,0.6000000000000009" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="194,494.99999999999994 166.00000000000003,522.9999999999999" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.1999999999999997,0.6000000000000009 -2.5999999999999996,0.20000000000000084" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="166.00000000000003,522.9999999999999 138.00000000000003,550.9999999999999" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.5999999999999996,0.20000000000000084 -2.5999999999999996,0.20000000000000084" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 1" points="138.00000000000003,550.9999999999999 138.00000000000003,550.9999999999999" fill="none" stroke="rgba(0,255,128,0.2)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-2.5999999999999996,0.20000000000000084 -3.01,-0.14250000000000007" data-type="line" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" points="138.00000000000003,550.9999999999999 109.30000000000001,574.975" fill="none" stroke="rgba(0,255,128,0.8)" stroke-linejoin="round" stroke-width="10.5"/></g><g><polyline data-points="-3.01,-0.5 3.01,-0.5 3.01,7.5 -3.01,7.5 -3.01,-0.5" data-type="line" data-label="" points="109.30000000000001,600 530.7,600 530.7,40 109.30000000000001,40 109.30000000000001,600" fill="none" stroke="rgba(255, 0, 0, 0.25)" stroke-linejoin="round" stroke-width="1px" stroke-dasharray="4 4"/></g><circle data-type="circle" data-label="" data-x="-1.8000000000000003" data-y="0" cx="194" cy="565" r="10.5" fill="rgba(0,64,255,0.5)" stroke="black" stroke-width="0.014285714285714285"/><circle data-type="circle" data-label="" data-x="-0.6000000000000004" data-y="1.2000000000000002" cx="278" cy="481" r="10.5" fill="rgba(0,64,255,0.5)" stroke="black" stroke-width="0.014285714285714285"/><circle data-type="circle" data-label="" data-x="-1.7999999999999998" data-y="4.6000000000000005" cx="194" cy="242.99999999999994" r="10.5" fill="rgba(0,255,128,0.5)" stroke="black" stroke-width="0.014285714285714285"/><circle data-type="circle" data-label="" data-x="-2.5999999999999996" data-y="0.20000000000000084" cx="138.00000000000003" cy="550.9999999999999" r="10.5" fill="rgba(0,255,128,0.5)" stroke="black" stroke-width="0.014285714285714285"/><g><circle data-type="point" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" data-x="3.01" data-y="0.21499999999999986" cx="530.7" cy="549.95" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_3
+rootConnectionName: connectivity_net0
+layer: 0" data-x="-3.01" data-y="1.25" cx="109.30000000000001" cy="477.5" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" data-x="-0.37749999999999995" data-y="-0.5" cx="293.575" cy="600" r="3" fill="hsl(75, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_2
+rootConnectionName: connectivity_net1
+layer: 0" data-x="-3.01" data-y="0.5724999999999998" cx="109.30000000000001" cy="524.925" r="3" fill="hsl(75, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" data-x="3.01" data-y="4.535" cx="530.7" cy="247.55" r="3" fill="hsl(150, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_1
+rootConnectionName: connectivity_net2
+layer: 0" data-x="-3.01" data-y="-0.14250000000000007" cx="109.30000000000001" cy="574.975" r="3" fill="hsl(150, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" data-x="3.01" data-y="1.25" cx="530.7" cy="477.5" r="3" fill="hsl(225, 100%, 50%)"/></g><g><circle data-type="point" data-label="source_trace_0
+rootConnectionName: connectivity_net3
+layer: 0" data-x="-2.1325" data-y="-0.5" cx="170.72500000000002" cy="600" r="3" fill="hsl(225, 100%, 50%)"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":70,"c":0,"e":320,"b":0,"d":-70,"f":565};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="via-count-summary"><rect x="12" y="64" width="300" height="44" rx="6" fill="white" stroke="#334155"/><text x="24" y="92" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#334155">Routed vias: 4</text></g></svg>
