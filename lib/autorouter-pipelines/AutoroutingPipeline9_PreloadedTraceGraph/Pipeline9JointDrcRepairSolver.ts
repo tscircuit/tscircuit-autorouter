@@ -1618,6 +1618,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableTraceViaOwnerTargeting: true,
       enablePostSolveClearanceRelaxation: false,
       deferTraceContactGuard: true,
+      prioritizeMultipleTraceContactRepair: true,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
       viaInPadMaxIterations: maxRepairIterations,
@@ -1969,6 +1970,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
+    }
+    // Regional search can resolve an isolated crossing. Batch multiple new
+    // contacts together before spending more search on their unsafe geometry.
+    if (
+      this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
+        .length > 1
+    ) {
+      this.combinedOutput = terminalEscapeResult.routes
+      this.finishWithTraceContactCheck()
     }
   }
 
