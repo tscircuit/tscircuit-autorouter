@@ -4,10 +4,6 @@ import {
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import {
-  Pipeline9JointLayerAssignmentSolver,
-  type JointLayerAssignmentParams,
-} from "./Pipeline9JointLayerAssignmentSolver"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -16,7 +12,6 @@ type CleanupParams = {
   viaRemovalPasses?: 1 | 2
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
-  jointLayerAssignment?: Omit<JointLayerAssignmentParams, "routes">
 }
 
 /** Post-repair cleanup commits only valid improvements, including at default effort. */
@@ -28,7 +23,6 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
   readonly params: CleanupParams
-  jointLayerAssignmentSolver?: Pipeline9JointLayerAssignmentSolver
 
   constructor(params: CleanupParams) {
     super()
@@ -81,22 +75,6 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.jointLayerAssignmentSolver) {
-      const joint = this.jointLayerAssignmentSolver
-      joint.step()
-      this.stats.jointLayers = joint.stats
-      if (joint.failed) {
-        this.failed = true
-        this.error = joint.error
-        return
-      }
-      if (joint.solved) {
-        this.bestRoutes = joint.getOutput()
-        this.bestCost = this.params.getCost(this.bestRoutes)
-        this.solved = true
-      }
-      return
-    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -125,7 +103,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.viaRemovalSolver = this.createViaRemovalSolver()
         return
       }
-      this.finishCleanup()
+      this.solved = true
       return
     }
     const simplifier = this.simplifier
@@ -155,23 +133,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    if (simplifier.solved) this.finishCleanup()
-  }
-
-  private finishCleanup(): void {
-    if (!this.params.jointLayerAssignment) {
-      this.solved = true
-      return
-    }
-    this.jointLayerAssignmentSolver = new Pipeline9JointLayerAssignmentSolver({
-      ...this.params.jointLayerAssignment,
-      routes: this.bestRoutes,
-    })
-    this.stats.jointLayers = this.jointLayerAssignmentSolver.stats
-    if (this.jointLayerAssignmentSolver.solved) {
-      this.bestRoutes = this.jointLayerAssignmentSolver.getOutput()
-      this.solved = true
-    }
+    this.solved = simplifier.solved
   }
 
   getOutput(): HighDensityRoute[] {
