@@ -1,0 +1,32 @@
+{
+  "phase": "probe",
+  "base_sha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "candidates": {
+    "retention": "2b71e6da78810ab6634cea6a331ad853949586b2",
+    "hd_cache": "2930ac148c7e2cdc1c43dac3bad97dc18fc1a9c6",
+    "endpoint_broadphase": "a9c98a85b2ecc87b2e048d7da60034cba0a88c75"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 2,
+  "orders": [
+    "AB"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ]
+}
