@@ -1,0 +1,29 @@
+{
+  "localCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
+  "remoteSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
+  "tree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
+  "remoteParent": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "branch": "codex/experiment-witness-via-pad-20261029",
+  "sourceIsCurrentPrHead": false,
+  "status": "QUALIFIED_PUBLISHED_STANDALONE_NO_ACTUAL_BOARD_YET",
+  "qaPath": "witness-via-repair/QA-FINAL.json",
+  "qaSha256": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2",
+  "reviewPath": "quality-portfolio-analysis/WITNESS-VIA-PAD-INDEPENDENT-REVIEW-v1.json",
+  "reviewSha256": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213",
+  "flag": "experimentWitnessViaPadRepair",
+  "evidencePaths": [
+    "witnessViaPadRepairSolver.stats",
+    "witnessViaPadRepairSolver.qualification",
+    "witnessViaPadRepairSolver.stats.reasons.0",
+    "witnessViaPadRepairSolver.stats.lastRejectionReasons.0"
+  ],
+  "optionalEvidencePaths": [
+    "witnessViaPadRepairSolver.stats.reasons.0",
+    "witnessViaPadRepairSolver.stats.lastRejectionReasons.0"
+  ],
+  "localRealBoards": 0,
+  "noOriginalOracleHarnessOrCheckerEdits": true,
+  "localBenchmarks": 0,
+  "runtimeBuildVersion": "Bun1.4.2",
+  "atUtc": "2026-10-29T21:39:50.361066+00:00"
+}

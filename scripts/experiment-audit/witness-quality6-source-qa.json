@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_LOCAL_SYNTHETIC_QA_NO_REAL_DATASET_QUALIFICATION",
+  "localCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
+  "tree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "worktree": "/tmp/autorouter-witness-via-repair",
+  "option": {
+    "experimentWitnessViaPadRepair": true
+  },
+  "evidencePaths": [
+    "witnessViaPadRepairSolver.stats",
+    "witnessViaPadRepairSolver.qualification"
+  ],
+  "qualificationScalarFieldCount": 16,
+  "defaultOff": true,
+  "tests": {
+    "runtimeBun": "1.4.2",
+    "files": 21,
+    "passed": 21,
+    "failed": 0,
+    "assertions": 153,
+    "oneTestPerFile": true,
+    "command": "/tmp/autorouter-post588-bun/package/bin/bun test --timeout 9999999 tests/features/witness-via-pad-*.test.ts"
+  },
+  "types": {
+    "command": "bun node_modules/typescript/bin/tsc --noEmit",
+    "exit": 0,
+    "scope": "Full project command with all tracked TS/TSX/MTS source and imports available in sparse checkout.",
+    "toolRuntimeBun": "1.4.3"
+  },
+  "build": {
+    "command": "PATH=/tmp/autorouter-post588-bun/package/bin:$PATH /tmp/autorouter-post588-bun/package/bin/bun run build",
+    "exit": 0,
+    "workerEsmAndDts": true,
+    "compilerBun": "1.4.2",
+    "runtimeControlsBun": "1.4.2",
+    "compiledIndexSha256": "b24542910adb1fc5cd1e5f80c31e6ac6bf67787f191393a1186db44158437ba3",
+    "packageRunnerBun": "1.4.2",
+    "workerBundlerBun": "1.4.2",
+    "tsupNode": "v24.19.0",
+    "bunExecutable": "/tmp/autorouter-post588-bun/package/bin/bun"
+  },
+  "freshTinyWholePipelineControls": {
+    "count": 7,
+    "baselineIterations": 550,
+    "candidateOmittedOrFalseIterations": 550,
+    "candidateTrueIterations": 552,
+    "allMaximumIterations": 100000532,
+    "allOutputSha256": "585ce105ac18cc1587d6c68b5340ae1ac6d8c4b8b15d989489e045dab4fe7360",
+    "allCommonStageWorkEqual": true,
+    "omittedAndFalseHaveNoNewOwnKey": true,
+    "enabledResult": "NO_PROPOSAL with 0 proposals; exact baseline geometry",
+    "noTimingCredit": true
+  },
+  "compiledFinalStageControls": {
+    "count": 3,
+    "scope": "Injected completed synthetic power-export fixtures, not preceding whole routing",
+    "positive": "Foreign via-pad findings 1 to 0; full scoped certificate PASS; 1 accepted proposal; both public getters agree",
+    "noop": "exact original output",
+    "exhaustion": "Published foreign via-pad findings 1 to 0 observed; another SRJ violation remains; 0 accepted proposals; throws, failed state, no public output"
+  },
+  "originalOraclesAndHarnessUnchanged": true,
+  "originalInputAndRawProtectedContextUnchanged": true,
+  "realDatasetRoutingRuns": 0,
+  "realDatasetCheckerReplays": 0,
+  "realDatasetPerformanceOrQualityCredit": false,
+  "remoteMutations": 0,
+  "prior568AndClean336Unchanged": true,
+  "scope": [
+    "One generated manufactured via site and its exact coupled raw occurrences after power expansion; no HD export roundtrip or global reroute.",
+    "Original-owner seven published copper predicates, independent conservative demanded-contact graph, native reference/board/hole checks, original SRJ obstacle envelopes and native via-pad policy, plus forbidden via-in-pad check. This is not universal manufacturing certification.",
+    "NO_PROPOSAL/UNKNOWN for unsupported ownership, geometry or connectivity; preloaded, replaced or fixed-via copper; unsupported active drill policies; pair, bus or jumper constraints; or conflicting original numeric/named layers.",
+    "Known unrelated existing rule failures retain their own counts. Rejected-proposal finding removal is diagnostic evidence and receives no final quality credit.",
+    "Constructor cloning is charged to measured constructor cost and the existing outer process deadline. Certification and every proposal run in the one ordinary solve/sample deadline. No second solve, deadline or timer reset is created. The unchanged harness starts its official solve clock after construction; those metrics remain separate. Twenty finite terminal steps reserve orchestration only and add no native routing budget.",
+    "Historical SRJ24:8 remains unmeasured. Planned targeted gain and negative controls must test activation, mapping and quality before any full 42-input qualification."
+  ],
+  "sourceInventory": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "bytes": 66177,
+      "sha256": "1fb72a65774b9df8baa91147a741f085ed7ab30d2d570f26aa75fd0d5b5afea4"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9WitnessViaPadRepairSolver.ts",
+      "bytes": 17557,
+      "sha256": "4cff98d94bea9ef15d41ae150b285fa89887ac9f8dc6420f56af18b108ddc852"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts",
+      "bytes": 27442,
+      "sha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+      "bytes": 29943,
+      "sha256": "5cac7b6c682f85b0dc056147e06b8e03b4f95e22c281c7451854427a849e03ef"
+    },
+    {
+      "path": "tests/features/witness-via-pad-bounded-qualification.test.ts",
+      "bytes": 1116,
+      "sha256": "7310945502286730c5b3d851e667737e98e91785e0be275b062086f5f96cb6ff"
+    },
+    {
+      "path": "tests/features/witness-via-pad-certified-repair.test.ts",
+      "bytes": 1929,
+      "sha256": "fb1892661d461136c8c90084b6267762936865498caedecee31d4c3af6f35518"
+    },
+    {
+      "path": "tests/features/witness-via-pad-connected-generic-wire.test.ts",
+      "bytes": 1010,
+      "sha256": "04d95507a5452ca7e10ad205a151eb019d6aeaa1fb362e220e44dafc3a49fcde"
+    },
+    {
+      "path": "tests/features/witness-via-pad-exhaustion.test.ts",
+      "bytes": 1807,
+      "sha256": "ca4f957e6817c89711bc44ba05b89099862cc0bb5adace94d49657d68fbba0b1"
+    },
+    {
+      "path": "tests/features/witness-via-pad-explicit-obstacle-margin.test.ts",
+      "bytes": 1177,
+      "sha256": "151dcc31924ff544dde0a851348ebbace24b9ee93da1c020c291d9451917b19d"
+    },
+    {
+      "path": "tests/features/witness-via-pad-global-inventory.test.ts",
+      "bytes": 819,
+      "sha256": "841cc8a4aecca37428996133a217e4b408e9139aa9d7ea6858dcf0158d090096"
+    },
+    {
+      "path": "tests/features/witness-via-pad-invalid-board-rule.test.ts",
+      "bytes": 945,
+      "sha256": "753931d79d257e56e6df746db9ad78553bd0e66ba4a4ebf3112f6019f8b419f9"
+    },
+    {
+      "path": "tests/features/witness-via-pad-invalid-outline.test.ts",
+      "bytes": 816,
+      "sha256": "8f7313f2b2bfdde7aa0e5bc25ccb5be2b72792a0aff2452159550bb83d2eef2f"
+    },
+    {
+      "path": "tests/features/witness-via-pad-manufactured-layer-order.test.ts",
+      "bytes": 1242,
+      "sha256": "dd3cd4228e948ed6af2c1a162dc57b59cf189f256bc70f026032cccaecfe5e21"
+    },
+    {
+      "path": "tests/features/witness-via-pad-missing-demand.test.ts",
+      "bytes": 697,
+      "sha256": "7ab5f8aebe8c6a976f0663104fcad2db70f272f864fe7598ce8e6274e9a79257"
+    },
+    {
+      "path": "tests/features/witness-via-pad-native-error.test.ts",
+      "bytes": 973,
+      "sha256": "b85ad63a1a8bfd45aa9169146c917a9ce2a7c8314c817a75e6f698ce342b209a"
+    },
+    {
+      "path": "tests/features/witness-via-pad-numeric-layer-provenance.test.ts",
+      "bytes": 858,
+      "sha256": "ec31923499d8f6f4e5c0157a77c44427a9819047ae9a6347f9293b99fb0d570b"
+    },
+    {
+      "path": "tests/features/witness-via-pad-original-snapshot.test.ts",
+      "bytes": 1260,
+      "sha256": "91ff22e8a4518e6a4bb18ce662b1cdb285d6da5f30f859af8950f11aa8ca4562"
+    },
+    {
+      "path": "tests/features/witness-via-pad-owner-wide-demand.test.ts",
+      "bytes": 1137,
+      "sha256": "79cedc025b3f1444311e2c8a2c9ffa469be371beddf314f2fe7efee47e20a51c"
+    },
+    {
+      "path": "tests/features/witness-via-pad-preserves-via-in-pad-policy.test.ts",
+      "bytes": 1365,
+      "sha256": "49216d921a14ec2a9411eb36b54b6340f934f691bb6a9206d1dc9977107c6aad"
+    },
+    {
+      "path": "tests/features/witness-via-pad-shared-occurrences.test.ts",
+      "bytes": 1183,
+      "sha256": "3a590ffd035ff680acf8d32f2cd291ac51a9a74f9b717f4be852fcc49c5f84bd"
+    },
+    {
+      "path": "tests/features/witness-via-pad-terminal-component-intersection.test.ts",
+      "bytes": 1308,
+      "sha256": "eae542334981199be0b03348edd77b129367bae96364cfeac85c3c6f28f47f21"
+    },
+    {
+      "path": "tests/features/witness-via-pad-terminal-stage-budget.test.ts",
+      "bytes": 1538,
+      "sha256": "c9ffc98fd0f142122dcef6353ac07b8cdd87dd1e55a3faaea023b6defabb07e4"
+    },
+    {
+      "path": "tests/features/witness-via-pad-unsupported-drill-policy.test.ts",
+      "bytes": 968,
+      "sha256": "7faa0babeafa00e28b551cca95531bda8da5a87e8092244fd9a68de09b377273"
+    },
+    {
+      "path": "tests/features/witness-via-pad-unsupported-noop.test.ts",
+      "bytes": 1024,
+      "sha256": "bf4f2402fd01f13765e72856856f36dbad0f2a9f55399953bdfd65225001fd62"
+    },
+    {
+      "path": "tests/features/witness-via-pad-valid-noop.test.ts",
+      "bytes": 856,
+      "sha256": "6aa9e10ba0e7f9af1fa773ecfed472e5b2b1b416afadb716ff6e5bc4b9749afd"
+    },
+    {
+      "path": "tests/features/witnessViaPadRepairFixture.ts",
+      "bytes": 2814,
+      "sha256": "3d4840f451a809a2b6876d6597eb9b6660df4e715adc82e874e476ef5e2d80c9"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/focused-tests-bun142.log",
+      "bytes": 3542,
+      "sha256": "28fb42b5777832062ae9c602af1650306b5ea1949032d4b77bcb1f761620a8cd"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/types-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/types-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/build-bun142.log",
+      "bytes": 1191,
+      "sha256": "4f22f92284acb899664ff931ad1959cbbad39dd7d53231e1955d3caafb9fe523"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/build-bun142.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/build-runtime-bun142.json",
+      "bytes": 133,
+      "sha256": "bb6f67adbb455bfa5245d2c7cef4777c8fed32c49d59dbede44f9731136691b2"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/tiny-pipeline-parity-bun142.json",
+      "bytes": 39985,
+      "sha256": "0386292799ed47a855560bdeb17ca33f39a6d9556df15a31f9f13e0a0516bf20"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/compiled-terminal-controls-bun142.json",
+      "bytes": 9843,
+      "sha256": "be3a6366afb441e56b86005555e0e62295caa6af0e3daa39354878c6f4fe3ebc"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/original-oracles-unchanged.json",
+      "bytes": 1091,
+      "sha256": "f4ee3108a1b7fbabad5f4afe90df58d26aa6fa561822395098dd22d106d4e278"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/feasibility-wording-correction.json",
+      "bytes": 909,
+      "sha256": "949ef882d60fa9f8a60c6fd8b9a745b48b9411c25f1cb414eb7009c36f48a497"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/run-synthetic-runtime-controls.py",
+      "bytes": 4664,
+      "sha256": "7bb70614f45b0bd73c1974dce6868a7fa0d08e0c75be696bba491adadc180673"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/tiny-parity-child.ts",
+      "bytes": 2739,
+      "sha256": "fdf78313901d6e744b9e6ffc6387619a54c54d7d8cb3fd8b69a0a0752075b2b8"
+    },
+    {
+      "path": "/tmp/autorouter-witness-via-repair-audit/compiled-terminal-child.ts",
+      "bytes": 2141,
+      "sha256": "6bf09f49386e013c02060c505532187275963410d7936ba83682701c98c51255"
+    }
+  ],
+  "feasibilityCorrection": "Native getDrcErrors already enriches via-pad IDs. The explained defect is layer-blind endpoint containment in createSourceTraces, rather than the entire SRJ connectivity-map helper. Frozen reference files remain unchanged.",
+  "selectedRuntimeControlsCommand": "python3 /tmp/autorouter-witness-via-repair-audit/run-synthetic-runtime-controls.py /tmp/autorouter-post588-bun/package/bin/bun bun142",
+  "unselectedEarlierQa": {
+    "path": "/tmp/autorouter-witness-via-repair-audit/QA-COMPILER143-UNSELECTED.json",
+    "sha256": "cd2a5fa511450c9f2ab6d00f85caa919209c359f2854df6b1d642909fd95ab9e",
+    "reason": "Compiler1.4.3 evidence retained as history. Final selected worker build and affected runtime controls all use absolute Bun1.4.2."
+  }
+}
