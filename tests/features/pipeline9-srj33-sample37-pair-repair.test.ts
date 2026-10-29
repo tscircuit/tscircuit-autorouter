@@ -42,9 +42,9 @@ test("Pipeline9 jointly repairs SRJ33 sample37 with fixed terminals and preload 
   expect(input).toEqual(scenario)
   expect(joint.getUpdatedPreloadedTraces()).toHaveLength(preloadedTraces.length)
   for (const preload of preloadedTraces) {
-    const returned = joint.getUpdatedPreloadedTraces().find(
-      (trace) => trace.pcb_trace_id === preload.pcb_trace_id,
-    )!
+    const returned = joint
+      .getUpdatedPreloadedTraces()
+      .find((trace) => trace.pcb_trace_id === preload.pcb_trace_id)!
     expect(returned.route).toEqual(preload.route)
   }
   // All original routed terminal anchors remain fixed, including the two

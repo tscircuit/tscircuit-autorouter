@@ -73,10 +73,8 @@ export const preparePipeline9TracePairRepair = ({
       for (const anchor of [other.route[0]!, other.route.at(-1)!]) {
         if (
           (anchor.z === routeStart.z &&
-            Math.hypot(
-              anchor.x - routeStart.x,
-              anchor.y - routeStart.y,
-            ) < 1e-9) ||
+            Math.hypot(anchor.x - routeStart.x, anchor.y - routeStart.y) <
+              1e-9) ||
           (anchor.z === routeEnd.z &&
             Math.hypot(anchor.x - routeEnd.x, anchor.y - routeEnd.y) < 1e-9)
         ) {
