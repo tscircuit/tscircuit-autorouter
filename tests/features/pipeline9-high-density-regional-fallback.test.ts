@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { applyFixedRouteReplacementsToPreloadedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/apply-fixed-route-replacements-to-preloaded-traces"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
-import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
+import { applyFixedRouteReplacementsToPreloadedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyFixedRouteReplacementsToPreloadedTraces"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
@@ -85,6 +85,8 @@ const fixedRoutes: PreloadedHighDensityRoute[] = [
     vias: [],
     preloadedTraceIndex: 0,
     preloadedRouteIndex: 0,
+    preloadedRoutePositionStart: 0,
+    preloadedRoutePositionEnd: 1,
   },
   {
     connectionName: "source_net_0_fixed_0_1",
@@ -98,6 +100,8 @@ const fixedRoutes: PreloadedHighDensityRoute[] = [
     vias: [],
     preloadedTraceIndex: 0,
     preloadedRouteIndex: 1,
+    preloadedRoutePositionStart: 1,
+    preloadedRoutePositionEnd: 2,
   },
   {
     connectionName: "source_net_0_fixed_0_2",
@@ -111,6 +115,8 @@ const fixedRoutes: PreloadedHighDensityRoute[] = [
     vias: [],
     preloadedTraceIndex: 0,
     preloadedRouteIndex: 2,
+    preloadedRoutePositionStart: 2,
+    preloadedRoutePositionEnd: 3,
   },
 ]
 
@@ -172,6 +178,14 @@ test("Pipeline9 falls back to regional rerouting and splices fixed traces", () =
     fixedRoutes[1]!.route.at(-1),
   )
   expect(updatedFixedRoutes[1]).toBe(fixedRoutes[2])
+  expect(
+    solver.preloadedTraceMutationMasks.get(
+      updatedFixedRoutes[0]!.connectionName,
+    ),
+  ).toEqual(Array(updatedFixedRoutes[0]!.route.length - 1).fill(true))
+  expect(
+    solver.preloadedTraceMutationMasks.has(fixedRoutes[2]!.connectionName),
+  ).toBeFalse()
 
   const { updatedPreloadedTraces, mutatedPreloadedTraces } =
     applyFixedRouteReplacementsToPreloadedTraces({

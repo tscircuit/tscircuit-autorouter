@@ -12,6 +12,7 @@ export interface PreloadedTracePortAssignment {
   traceId: string
   fixedNetId: string
   routePosition: number
+  tracePoint: { x: number; y: number }
   z: number
 }
 

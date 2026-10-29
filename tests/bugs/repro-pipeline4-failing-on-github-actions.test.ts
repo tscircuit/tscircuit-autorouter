@@ -5,11 +5,11 @@ import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import circuit101 from "./assets/circuit101.json" with { type: "json" }
 import { getLastStepGraphicsObject } from "tests/fixtures/getLastStepGraphicsObject"
-import { AutoroutingPipelineSolver } from "lib/index"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/index"
 
 test.skip("pipeline4 failing on github actions", async () => {
   const srj = circuit101 as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver(srj)
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(srj)
   solver.solve()
 
   expect(solver.failed).toBe(false)

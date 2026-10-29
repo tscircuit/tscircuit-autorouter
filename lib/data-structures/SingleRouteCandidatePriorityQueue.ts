@@ -21,48 +21,6 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     }
   }
 
-  private getLeftChildIndex(parentIndex: number): number {
-    return 2 * parentIndex + 1
-  }
-
-  private getRightChildIndex(parentIndex: number): number {
-    return 2 * parentIndex + 2
-  }
-
-  private getParentIndex(childIndex: number) {
-    return Math.floor((childIndex - 1) / 2)
-  }
-
-  private hasLeftChild(index: number): boolean {
-    return this.getLeftChildIndex(index) < this.heap.length
-  }
-
-  private hasRightChild(index: number): boolean {
-    return this.getRightChildIndex(index) < this.heap.length
-  }
-
-  private hasParent(index: number): boolean {
-    return this.getParentIndex(index) >= 0
-  }
-
-  private leftChild(index: number): T {
-    return this.heap[this.getLeftChildIndex(index)]
-  }
-
-  private rightChild(index: number): T {
-    return this.heap[this.getRightChildIndex(index)]
-  }
-
-  private parent(index: number): T {
-    return this.heap[this.getParentIndex(index)]
-  }
-
-  private swap(i: number, j: number) {
-    const temp = this.heap[i]
-    this.heap[i] = this.heap[j]
-    this.heap[j] = temp
-  }
-
   // Removing an element will remove the
   // top element with highest priority then
   // heapifyDown will be called
@@ -91,29 +49,40 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
 
   heapifyUp() {
     let index = this.heap.length - 1
-    while (this.hasParent(index) && this.parent(index).f > this.heap[index].f) {
-      this.swap(this.getParentIndex(index), index)
-      index = this.getParentIndex(index)
+    const item = this.heap[index]
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2)
+      const parent = this.heap[parentIndex]
+      if (parent.f <= item.f) break
+      this.heap[index] = parent
+      index = parentIndex
     }
+    this.heap[index] = item
   }
 
   heapifyDown() {
     let index = 0
-    while (this.hasLeftChild(index)) {
-      let smallerChildIndex = this.getLeftChildIndex(index)
+    const heapLength = this.heap.length
+    const item = this.heap[index]
+    if (!item) return
+    while (true) {
+      const leftChildIndex = 2 * index + 1
+      if (leftChildIndex >= heapLength) break
+      const rightChildIndex = leftChildIndex + 1
+      let smallerChildIndex = leftChildIndex
       if (
-        this.hasRightChild(index) &&
-        this.rightChild(index).f < this.leftChild(index).f
+        rightChildIndex < heapLength &&
+        this.heap[rightChildIndex].f < this.heap[leftChildIndex].f
       ) {
-        smallerChildIndex = this.getRightChildIndex(index)
+        smallerChildIndex = rightChildIndex
       }
-      if (this.heap[index].f < this.heap[smallerChildIndex].f) {
+      if (item.f < this.heap[smallerChildIndex].f) {
         break
-      } else {
-        this.swap(index, smallerChildIndex)
       }
+      this.heap[index] = this.heap[smallerChildIndex]
       index = smallerChildIndex
     }
+    this.heap[index] = item
   }
 
   /**

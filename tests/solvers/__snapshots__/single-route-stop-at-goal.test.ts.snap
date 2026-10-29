@@ -1,0 +1,158 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`route search stops expanding after accepting its checked goal connection: accepted goals keep the complete route and produce no further neighbors 1`] = `
+[
+  {
+    "expansionsAfterSuccess": 0,
+    "iterations": 10,
+    "neighborExpansions": 9,
+    "route": {
+      "connectionName": "signal",
+      "regionId": undefined,
+      "rootConnectionName": undefined,
+      "route": [
+        {
+          "x": 1,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.2,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.4,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.5999999999999999,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.7999999999999998,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.9999999999999998,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.1999999999999997,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.4,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.6,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.8000000000000003,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "z": 0,
+        },
+      ],
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "vias": [],
+    },
+    "solver": "SingleHighDensityRouteSolver",
+  },
+  {
+    "expansionsAfterSuccess": 0,
+    "iterations": 10,
+    "neighborExpansions": 9,
+    "route": {
+      "connectionName": "signal",
+      "regionId": undefined,
+      "rootConnectionName": undefined,
+      "route": [
+        {
+          "x": 1,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.2,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.4,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.5999999999999999,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.7999999999999998,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 1.9999999999999998,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.1999999999999997,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.4,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.6,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 2.8000000000000003,
+          "y": 1,
+          "z": 0,
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "z": 0,
+        },
+      ],
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "vias": [],
+    },
+    "solver": "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost",
+  },
+]
+`;

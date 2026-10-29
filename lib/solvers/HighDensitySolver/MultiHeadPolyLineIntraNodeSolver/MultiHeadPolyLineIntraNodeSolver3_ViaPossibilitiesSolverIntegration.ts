@@ -38,7 +38,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     this.MAX_ITERATIONS = 1000
   }
 
-  createInitialCandidateFromSeed(shuffleSeed: number): Candidate | null {
+  createInitialCandidateFromSeed(
+    shuffleSeed: number,
+    retainedPolylineHashes?: ReadonlySet<string>,
+  ): Candidate | null {
     // 1. Run ViaPossibilitiesSolver2 to get a valid path layout
     const viaSolver = new ViaPossibilitiesSolver2({
       nodeWithPortPoints: this.nodeWithPortPoints,
@@ -209,6 +212,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       return null
     }
 
+    // Setup retains only the first candidate for each existing geometry hash.
+    // Check completed geometry before computing scores for discarded seeds.
+    if (retainedPolylineHashes?.has(hashPolyLines(polyLines))) return null
+
     const minGaps = this.computeMinGapBtwPolyLines(polyLines)
     const h = this.computeH({ minGaps, forces: [] }) // Initial forces are zero
 
@@ -233,8 +240,16 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       factorial(this.uniqueConnections),
     )
     const candidatePolylineHashes = new Set<string>()
+    const canRejectBeforeScoring =
+      this.createInitialCandidateFromSeed ===
+        nativeCreateInitialCandidateFromSeed &&
+      this.computeMinGapBtwPolyLines === nativeComputeMinGapBtwPolyLines &&
+      this.computeH === nativeComputeH &&
+      this.computeG === nativeComputeG
     for (let i = 0; i < maxCandidatesToGenerate; i++) {
-      const newCandidate = this.createInitialCandidateFromSeed(i)
+      const newCandidate = canRejectBeforeScoring
+        ? this.createInitialCandidateFromSeed(i, candidatePolylineHashes)
+        : this.createInitialCandidateFromSeed(i)
       if (!newCandidate) continue
       const newCandidatePolylineHash = hashPolyLines(newCandidate.polyLines)
       if (candidatePolylineHashes.has(newCandidatePolylineHash)) continue
@@ -244,3 +259,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     this.candidates.sort((a, b) => a.f - b.f) // Sort in case we add more initial candidates later
   }
 }
+
+const nativeCreateInitialCandidateFromSeed =
+  MultiHeadPolyLineIntraNodeSolver3.prototype.createInitialCandidateFromSeed
+const nativeComputeMinGapBtwPolyLines =
+  MultiHeadPolyLineIntraNodeSolver.prototype.computeMinGapBtwPolyLines
+const nativeComputeH = MultiHeadPolyLineIntraNodeSolver2.prototype.computeH
+const nativeComputeG = MultiHeadPolyLineIntraNodeSolver2.prototype.computeG

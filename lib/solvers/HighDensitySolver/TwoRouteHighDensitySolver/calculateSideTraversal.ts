@@ -1,3 +1,5 @@
+import { BOUNDARY_COORDINATE_TOLERANCE_MM } from "lib/utils/classifyPointInBounds"
+
 interface Point {
   x: number
   y: number
@@ -17,8 +19,8 @@ interface SidePercentages {
   bottom: number
 }
 
-// Keep a small epsilon for floating point comparisons
-const EPSILON = 1e-9 // Using a slightly smaller epsilon can sometimes help precision
+// Keep a small epsilon for dimension and angular floating-point comparisons.
+const EPSILON = 1e-9
 
 /**
  * Calculates the percentage of each side traversed when going from point A to point B
@@ -97,34 +99,34 @@ export function pointToAngle(point: Point, bounds: Bounds): number {
 
   // Check sides using epsilon comparisons
   if (
-    Math.abs(point.y - bounds.maxY) < EPSILON &&
-    point.x >= bounds.minX - EPSILON &&
-    point.x <= bounds.maxX + EPSILON
+    Math.abs(point.y - bounds.maxY) <= BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.x >= bounds.minX - BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.x <= bounds.maxX + BOUNDARY_COORDINATE_TOLERANCE_MM
   ) {
     // Top side (y is maxY)
     // Ensure x is clamped within bounds for distance calculation robustness
     distance = Math.max(0, Math.min(width, point.x - bounds.minX))
   } else if (
-    Math.abs(point.x - bounds.maxX) < EPSILON &&
-    point.y >= bounds.minY - EPSILON &&
-    point.y <= bounds.maxY + EPSILON
+    Math.abs(point.x - bounds.maxX) <= BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.y >= bounds.minY - BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.y <= bounds.maxY + BOUNDARY_COORDINATE_TOLERANCE_MM
   ) {
     // Right side (x is maxX)
     // Ensure y is clamped within bounds
     distance = width + Math.max(0, Math.min(height, bounds.maxY - point.y))
   } else if (
-    Math.abs(point.y - bounds.minY) < EPSILON &&
-    point.x >= bounds.minX - EPSILON &&
-    point.x <= bounds.maxX + EPSILON
+    Math.abs(point.y - bounds.minY) <= BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.x >= bounds.minX - BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.x <= bounds.maxX + BOUNDARY_COORDINATE_TOLERANCE_MM
   ) {
     // Bottom side (y is minY)
     // Ensure x is clamped within bounds
     distance =
       width + height + Math.max(0, Math.min(width, bounds.maxX - point.x))
   } else if (
-    Math.abs(point.x - bounds.minX) < EPSILON &&
-    point.y >= bounds.minY - EPSILON &&
-    point.y <= bounds.maxY + EPSILON
+    Math.abs(point.x - bounds.minX) <= BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.y >= bounds.minY - BOUNDARY_COORDINATE_TOLERANCE_MM &&
+    point.y <= bounds.maxY + BOUNDARY_COORDINATE_TOLERANCE_MM
   ) {
     // Left side (x is minX)
     // Ensure y is clamped within bounds

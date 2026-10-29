@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/create-pipeline9-autorouting-drc-evaluator"
-import { preparePipeline9DrcRoutedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/prepare-pipeline9-drc-routed-traces"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import { preparePipeline9DrcRoutedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9DrcRoutedTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -70,7 +70,8 @@ test("Pipeline9 native DRC preserves colliding preloaded ids and replaces only m
     center: { x: 0, y: 0 },
   })
   expect(collision.errors[0]?.pcb_trace_error_id).toBe(
-    (reference.errors[0] as unknown as Record<string, unknown>).pcb_trace_error_id,
+    (reference.errors[0] as unknown as Record<string, unknown>)
+      .pcb_trace_error_id,
   )
   expect(collision.errorsWithCenters[0]?.center).toEqual(
     reference.errorsWithCenters[0]?.center,
@@ -94,13 +95,16 @@ test("Pipeline9 native DRC preserves colliding preloaded ids and replaces only m
     newTraces: [newTrace],
   })
   const repaired = evaluate(replacedTraces)
-  expect(repaired.circuitJson.filter((element) => element.type === "pcb_trace"))
-    .toHaveLength(2)
+  expect(
+    repaired.circuitJson.filter((element) => element.type === "pcb_trace"),
+  ).toHaveLength(2)
   expect(repaired.errors).toHaveLength(0)
-  expect(evaluateRelaxedDrc({
-    inputSrj: srj,
-    srjWithPointPairs: srj,
-    routedTraces: replacedTraces,
-  }).errors).toHaveLength(0)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: srj,
+      routedTraces: replacedTraces,
+    }).errors,
+  ).toHaveLength(0)
   expect(evaluate(collidingTraces).errors).toEqual(collision.errors)
 })

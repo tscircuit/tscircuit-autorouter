@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
@@ -26,11 +26,15 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
 
+    // Circuit 10 selects a different equal-cost route on Linux.
+    const snapshotPath =
+      sampleNumber === 10 && process.platform === "linux"
+        ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+        : import.meta.path
     await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
+      snapshotPath,
       {
         svgName: scenarioName,
-        // Circuit 10 selects a different equal-cost route on Linux.
         tolerance: sampleNumber === 10 ? 0.035 : 0.01,
       },
     )

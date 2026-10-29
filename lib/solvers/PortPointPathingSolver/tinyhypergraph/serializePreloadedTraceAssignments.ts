@@ -10,6 +10,23 @@ type SerializedSolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
 
+export type PreloadedTraceConnectionId = string & {
+  readonly __brand: "PreloadedTraceConnectionId"
+}
+
+export type PreloadedTraceSectionMetadata = {
+  traceId: string
+  startRoutePosition: number
+  endRoutePosition: number
+  startPoint: { x: number; y: number; z: number }
+  endPoint: { x: number; y: number; z: number }
+}
+
+export type PreloadedTraceConnectionMetadata = {
+  connectionId: PreloadedTraceConnectionId
+  preloadedTraceSection: PreloadedTraceSectionMetadata
+}
+
 type PortMetadataWithPreloadedAssignments = {
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
@@ -34,8 +51,34 @@ export type SerializedPreloadedTraceStats = {
 const PRELOADED_TRACE_CONNECTION_PREFIX = "__tscircuit_preloaded_trace__:"
 const ROUTE_POSITION_TOLERANCE = 1e-6
 
-export const isPreloadedTraceConnectionId = (connectionId: string) =>
-  connectionId.startsWith(PRELOADED_TRACE_CONNECTION_PREFIX)
+export const hasPreloadedTraceSectionMetadata = (
+  metadata: unknown,
+): metadata is PreloadedTraceConnectionMetadata => {
+  if (typeof metadata !== "object" || metadata === null) return false
+  const candidate = metadata as {
+    connectionId?: unknown
+    preloadedTraceSection?: {
+      traceId?: unknown
+      startRoutePosition?: unknown
+      endRoutePosition?: unknown
+      startPoint?: { x?: unknown; y?: unknown; z?: unknown }
+      endPoint?: { x?: unknown; y?: unknown; z?: unknown }
+    }
+  }
+  const section = candidate.preloadedTraceSection
+  return (
+    typeof candidate.connectionId === "string" &&
+    typeof section?.traceId === "string" &&
+    typeof section.startRoutePosition === "number" &&
+    typeof section.endRoutePosition === "number" &&
+    typeof section.startPoint?.x === "number" &&
+    typeof section.startPoint.y === "number" &&
+    typeof section.startPoint.z === "number" &&
+    typeof section.endPoint?.x === "number" &&
+    typeof section.endPoint.y === "number" &&
+    typeof section.endPoint.z === "number"
+  )
+}
 
 const getPreloadedTraceConnectionId = (
   traceId: string,
@@ -44,7 +87,7 @@ const getPreloadedTraceConnectionId = (
   `${PRELOADED_TRACE_CONNECTION_PREFIX}${JSON.stringify([
     traceId,
     contiguousRunIndex,
-  ])}`
+  ])}` as PreloadedTraceConnectionId
 
 const getIncidentRegionIds = (port: SerializedPort) => [
   port.region1Id,
@@ -242,17 +285,41 @@ export const serializePreloadedTraceAssignments = (
       const lastSegment = run.at(-1)!
       const firstPort = firstSegment.from.port
       const lastPort = lastSegment.to.port
-      const connection: SerializedConnection = {
+      const connection: SerializedConnection &
+        PreloadedTraceConnectionMetadata = {
         connectionId,
         mutuallyConnectedNetworkId: fixedNetIdByTraceId.get(traceId) ?? traceId,
         startRegionId: getEndpointRegionId(firstPort, firstSegment.regionId),
         endRegionId: getEndpointRegionId(lastPort, lastSegment.regionId),
+        preloadedTraceSection: {
+          traceId,
+          startRoutePosition: firstSegment.from.assignment.routePosition,
+          endRoutePosition: lastSegment.to.assignment.routePosition,
+          startPoint: {
+            x: firstSegment.from.assignment.tracePoint.x,
+            y: firstSegment.from.assignment.tracePoint.y,
+            z: firstSegment.from.assignment.z,
+          },
+          endPoint: {
+            x: lastSegment.to.assignment.tracePoint.x,
+            y: lastSegment.to.assignment.tracePoint.y,
+            z: lastSegment.to.assignment.z,
+          },
+        } satisfies PreloadedTraceSectionMetadata,
       }
       connections.push(connection)
       solvedRoutes.push({
-        connection: { connectionId },
-        path: [{ portId: firstPort.portId }, { portId: lastPort.portId }],
-      } as SerializedSolvedRoute)
+        requiredRip: false,
+        connection,
+        path: [firstPort, lastPort].map((port) => ({
+          portId: port.portId,
+          g: 0,
+          h: 0,
+          f: 0,
+          hops: 0,
+          ripRequired: false,
+        })),
+      })
     }
     if (contiguousRuns.length > 0) {
       preloadedTraceCount++
@@ -269,10 +336,10 @@ export const serializePreloadedTraceAssignments = (
 export const getSerializedPreloadedTraceStats = (
   serializedHyperGraph: SerializedHyperGraph,
 ): SerializedPreloadedTraceStats => {
-  const preloadedConnectionIds = new Set(
+  const preloadedConnectionIds = new Set<string>(
     (serializedHyperGraph.connections ?? [])
-      .map((connection) => connection.connectionId)
-      .filter(isPreloadedTraceConnectionId),
+      .filter(hasPreloadedTraceSectionMetadata)
+      .map((connection) => connection.connectionId),
   )
   const preloadedPortCount = serializedHyperGraph.ports.filter(
     (port) =>

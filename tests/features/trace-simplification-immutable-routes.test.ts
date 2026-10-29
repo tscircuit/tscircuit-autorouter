@@ -2,9 +2,11 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { stackSvgsHorizontally } from "stack-svgs"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import {
+  SameNetViaMergerSolver,
+  TraceSimplificationSolver,
+  UselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 

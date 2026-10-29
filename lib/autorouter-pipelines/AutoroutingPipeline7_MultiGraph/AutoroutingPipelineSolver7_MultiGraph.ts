@@ -38,8 +38,8 @@ import {
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -65,7 +65,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
@@ -439,7 +439,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
-            numberOfCrampedPortPointsToKeep: 5,
           },
         ]
       },
@@ -483,7 +482,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -562,6 +561,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           useGrowShrinkHighDensityIntraNodeSolver: true,
           preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
+          captureSearchDebug: false,
         },
       ]
     }),
@@ -573,7 +573,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
+          totalStepsPerNode: Math.max(
+            12,
+            Math.round(20 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -590,7 +593,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-          maxSampleEntries: 80,
+          minimumTraceWidth: cms.srj.minTraceWidth,
+          connMap: cms.connMap,
         },
       ],
     ),
@@ -624,6 +628,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
           iterations: 2,
         },
@@ -647,17 +652,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockHdRouteTerminals(
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-            cms.netToPointPairsSolver?.newConnections ?? [],
-            new Map(
-              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                (route) => [route.connectionName, route],
-              ),
-            ),
-          ),
+          hdRoutes: lockHdRouteTerminals({
+            hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          }),
           connMap: cms.connMap,
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
@@ -668,6 +668,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
+        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
@@ -682,14 +683,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             srj: cms.srjWithPointPairs! as any,
-            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            hdRoutes,
             connMap: cms.connMap,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             viaHoleDiameter: cms.viaHoleDiameter,
             drcEvaluator: autoroutingDrcEvaluator,
             viaInPadDrcEvaluator: autoroutingDrcEvaluator,
             maxIterations: 32,
             enableLargeBoardBroadFallback: false,
+            enableBroadFallback: false,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
             enableSafeTraceLayerMoves: true,
@@ -749,7 +751,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                 `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
             if (pair.traceGap === undefined)
-              return { connectionNames, lengthTolerance: pair.lengthTolerance }
+              return {
+                connectionNames,
+                lengthTolerance: pair.lengthTolerance,
+                maxUncoupledLength: pair.maxUncoupledLength,
+              }
             const pairRoutes = connectionNames.map((connectionName) => {
               const matchingRoutes = hdRoutes.filter(
                 (route) => route.connectionName === connectionName,
@@ -770,6 +776,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             return {
               connectionNames,
               lengthTolerance: pair.lengthTolerance,
+              maxUncoupledLength: pair.maxUncoupledLength,
               minimumCenterlineDistance: centerlineDistance,
               maximumCenterlineDistance: centerlineDistance,
             }
@@ -867,6 +874,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   currentPipelineStepIndex = 0
+
+  computeProgress(): number {
+    const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
+    return (
+      (this.currentPipelineStepIndex + activeSubSolverProgress) /
+      this.pipelineDef.length
+    )
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
@@ -895,6 +911,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (this.activeSubSolver instanceof TraceSimplificationSolver) {
+      this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
+          Math.min(1, this.effort),
+      )
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"

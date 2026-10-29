@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/create-pipeline9-autorouting-drc-evaluator"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -69,14 +69,19 @@ test("Pipeline9 native DRC keeps the reference repair center for parallel trace 
     reference.errorsWithCenters as unknown[],
   )
 
-  const separated = [traces[0]!, {
-    ...traces[1]!,
-    route: traces[1]!.route.map((point) => ({ ...point, y: 0.3 })),
-  }]
-  expect(evaluateRelaxedDrc({
-    inputSrj: srj,
-    srjWithPointPairs: srj,
-    routedTraces: separated,
-  }).errors).toHaveLength(0)
+  const separated = [
+    traces[0]!,
+    {
+      ...traces[1]!,
+      route: traces[1]!.route.map((point) => ({ ...point, y: 0.3 })),
+    },
+  ]
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: srj,
+      routedTraces: separated,
+    }).errors,
+  ).toHaveLength(0)
   expect(evaluate(separated).errors).toHaveLength(0)
 })

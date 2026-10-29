@@ -18,12 +18,36 @@ export {
   AutoroutingPipelineSolver6,
   AutoroutingPipelineSolver6_PolyHypergraph,
 } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
-export {
-  AutoroutingPipelineSolver7_MultiGraph,
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+export { AutoroutingPipelineSolver7_MultiGraph } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
-export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+export {
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver,
+} from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+export {
+  AutoroutingPipelineSolver9_Networked,
+  type AutoroutingPipelineSolver9NetworkedOptions,
+} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
+export { AUTOROUTER_VERSION } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+export { DEFAULT_HD_CACHE2_SERVER_URL } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
+export type {
+  Pipeline9NetworkedCacheSource,
+  Pipeline9NetworkedHighDensityNodeInput,
+  Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedSolveBatchCacheMiss,
+  Pipeline9NetworkedSolveBatchItem,
+  Pipeline9NetworkedSolveBatchRequest,
+  Pipeline9NetworkedSolveBatchResult,
+  Pipeline9NetworkedSolveRequest,
+  Pipeline9NetworkedSolveResponse,
+} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
+export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
+export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
+export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+export {
+  AutoroutingPipelineSolver11_Simplification,
+  type AutoroutingPipelineSolver11SimplificationOptions,
+} from "./autorouter-pipelines/AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
 export { PolyIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyIntraNodeSolver"
@@ -81,6 +105,7 @@ export type {
   MultiLayerConnectionPoint,
   Obstacle,
   SimpleRouteBus,
+  SimpleRouteBusTermination,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -88,3 +113,7 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export {
+  Pipeline9HighDensitySolver,
+  type Pipeline9HighDensitySolverParams,
+} from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"

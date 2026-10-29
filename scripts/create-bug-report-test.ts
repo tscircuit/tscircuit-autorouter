@@ -103,16 +103,22 @@ const testTemplate = `import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../fixtures/bug-reports/${dirName}/${jsonFileName}" with { type: "json" }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("${jsonFileName}", () => {
-  const solver = new AutoroutingPipelineSolver(srj)
+test("${jsonFileName}", async () => {
+  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  await expect(
+    getBugReportSnapshotSvg({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
 `
 

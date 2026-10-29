@@ -8,7 +8,7 @@ import { EscapeViaLocationSolver } from "lib/solvers/EscapeViaLocationSolver/Esc
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "lib/solvers/TraceWidthSolver/TraceWidthSolver"
 import { getColorMap } from "lib/solvers/colors"
 import type {
@@ -183,7 +183,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs!,
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
           concavityTolerance: cms.opts.polyConcavityTolerance,
           portSpacing: cms.opts.polyPortSpacing,
           portMarginFromSegmentEndpoint:
@@ -236,7 +236,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           viaDiameter: cms.viaDiameter,
           traceWidth: cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
         },
       ],
     ),
@@ -298,7 +298,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
         },
       ],
     ),

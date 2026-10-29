@@ -36,11 +36,17 @@ export type ConvertSrjToGraphicsObjectOptions = {
 }
 
 function getGraphicsLayerColor(layerName: string): string {
-  if (!Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
-    throw new Error(`No visualization color for layer "${layerName}"`)
+  if (Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
+    return GRAPHICS_LAYER_COLORS[layerName as LayerName]
   }
 
-  return GRAPHICS_LAYER_COLORS[layerName as LayerName]
+  const innerLayerMatch = /^inner([1-9]\d*)$/.exec(layerName)
+  if (innerLayerMatch) {
+    const innerLayerIndex = Number(innerLayerMatch[1])
+    return `hsl(${(innerLayerIndex * 137) % 360}, 70%, 45%)`
+  }
+
+  throw new Error(`No visualization color for layer "${layerName}"`)
 }
 
 export const convertSrjToGraphicsObject = (
@@ -156,11 +162,13 @@ export const convertSrjToGraphicsObject = (
         }
       }
 
+      let currentWireLine: Line | undefined
       for (let j = 0; j < trace.route.length - 1; j++) {
         const routePoint = trace.route[j]
         const nextRoutePoint = trace.route[j + 1]
 
         if (routePoint.route_type === "jumper") {
+          currentWireLine = undefined
           // Draw jumper pads and body
           const color =
             colorMap[trace.connection_name] ?? "rgba(255, 165, 0, 0.8)"
@@ -227,6 +235,7 @@ export const convertSrjToGraphicsObject = (
               { x: nextRoutePoint.x, y: nextRoutePoint.y },
             )
           ) {
+            currentWireLine = undefined
             continue
           }
 
@@ -237,13 +246,25 @@ export const convertSrjToGraphicsObject = (
               ? colorMap[trace.connection_name]!
               : getGraphicsLayerColor(routePoint.layer)
 
-          // Create a line between consecutive wire segments on the same layer
-          lines.push({
+          const layer = `z${mapLayerNameToZ(routePoint.layer, layerCount)}`
+          if (
+            currentWireLine &&
+            currentWireLine.layer === layer &&
+            currentWireLine.strokeWidth === traceWidth
+          ) {
+            currentWireLine.points.push({
+              x: nextRoutePoint.x,
+              y: nextRoutePoint.y,
+            })
+            continue
+          }
+
+          currentWireLine = {
             points: [
               { x: routePoint.x, y: routePoint.y },
               { x: nextRoutePoint.x, y: nextRoutePoint.y },
             ],
-            layer: `z${mapLayerNameToZ(routePoint.layer, layerCount)}`,
+            layer,
             strokeWidth: traceWidth,
             strokeColor: isTopLayer
               ? baseColor
@@ -253,7 +274,10 @@ export const convertSrjToGraphicsObject = (
               : {}),
             // Use dashed line for non-top layers
             ...(isTopLayer ? {} : { strokeDash: [0.2, 0.2] }),
-          })
+          }
+          lines.push(currentWireLine)
+        } else {
+          currentWireLine = undefined
         }
       }
     }

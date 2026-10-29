@@ -1,13 +1,17 @@
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
+  checkHoleTraceClearance,
   checkPadTraceClearance,
+  checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -27,11 +31,17 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
+type ViaPadDrcError = PcbPadPadClearanceError & {
+  pcb_via_ids: string[]
+  pcb_trace_id?: string
+}
+
 type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | ViaPadDrcError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -47,7 +57,10 @@ export interface GetDrcErrorsResult {
 }
 
 export interface GetDrcErrorsOptions {
+  holeClearance?: number
   viaClearance?: number
+  /** Via copper edge to unrelated pad copper edge; independent of drill spacing. */
+  viaToPadClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
@@ -73,6 +86,17 @@ export const getDrcErrors = (
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
+  const vias = circuitJson.filter(
+    (
+      element,
+    ): element is CircuitJsonElement & {
+      type: "pcb_via"
+      pcb_via_id: string
+      x: number
+      y: number
+    } => element.type === "pcb_via",
+  )
+  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
@@ -80,7 +104,7 @@ export const getDrcErrors = (
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
-  })
+  }).filter((error) => error.type !== "pcb_keepout_overlap_warning")
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
   const viaTraceErrors = includeTypedTraceClearance
@@ -95,6 +119,25 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
+  const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
+    minClearance: options.holeClearance,
+  })
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap,
+    minClearance: options.viaToPadClearance,
+  }).map((error): ViaPadDrcError => {
+    const viaIds = error.pcb_pad_ids.filter((id) => viasById.has(id))
+    const via = viasById.get(viaIds[0])
+    // Preserve explicit ownership for evaluators that consume reference errors
+    // directly, as well as the Pipeline9 repair normalizer.
+    return {
+      ...error,
+      pcb_via_ids: viaIds,
+      ...(via && typeof via.pcb_trace_id === "string"
+        ? { pcb_trace_id: via.pcb_trace_id }
+        : {}),
+    }
+  })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
@@ -108,26 +151,16 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
+    ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
+    ...holeTraceErrors,
+    ...viaPadErrors,
     ...viaErrors,
   ]
-
-  const vias = circuitJson.filter(
-    (
-      element,
-    ): element is CircuitJsonElement & {
-      type: "pcb_via"
-      pcb_via_id: string
-      x: number
-      y: number
-    } => element.type === "pcb_via",
-  )
-
-  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
     if (

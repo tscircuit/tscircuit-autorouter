@@ -24,7 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+// Version 6 replaces typed object serialization with tagged JSON.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -61,7 +62,12 @@ export class CachedIntraNodeRouteSolver
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
-    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+    this.initialUnsolvedConnections = this.unsolvedConnections.map(
+      (connection) => ({
+        ...connection,
+        points: connection.points.map((point) => ({ ...point })),
+      }),
+    )
 
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       this.saveToCacheSync()
@@ -172,10 +178,23 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
-      respectType: false,
-      unorderedObjects: false,
-    })}`
+    // Tags retain special numbers and optional values without string collisions.
+    const serializedKeyData = JSON.stringify(
+      keyData,
+      (_key: string, value: unknown): unknown => {
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          return `n:${value.toString()}`
+        }
+        if (
+          typeof value === "string" &&
+          (value === "u:" || value.startsWith("n:") || value.startsWith("s:"))
+        ) {
+          return `s:${value}`
+        }
+        return value === undefined ? "u:" : value
+      },
+    )
+    const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey

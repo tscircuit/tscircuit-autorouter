@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "./connection-point-utils"
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import {
   distance as calculateDistance,
@@ -16,7 +17,6 @@ const ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.4
 const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
 const SLENDER_OBSTACLE_ASPECT_RATIO = 2
 const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
-const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
   const normalizedRotation = normalizeRotation(rotationDegrees)
@@ -86,9 +86,6 @@ interface Rect {
   width: number
   height: number
 }
-
-const getConnectionPointLayers = (point: ConnectionPoint): string[] =>
-  "layers" in point ? point.layers : [point.layer]
 
 const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
   if (
@@ -309,44 +306,6 @@ const generateConservativeApproximatingRects = (
   return rects
 }
 
-const generateCenterlineApproximatingRects = (
-  rotatedRect: RotatedRect,
-  rectCount: number,
-): Rect[] => {
-  const { center, width, height, rotation } = rotatedRect
-  const longSide = Math.max(width, height)
-  const shortSide = Math.min(width, height)
-  const clampedRectCount = Math.max(1, Math.ceil(rectCount))
-  const stepLength = longSide / clampedRectCount
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
-  const rectSize = Math.max(
-    stepLength,
-    shortSide * CENTERLINE_APPROX_RECT_SIZE_FACTOR,
-  )
-  const rects: Rect[] = []
-
-  for (let i = 0; i < clampedRectCount; i++) {
-    const localOffset = (i - clampedRectCount / 2 + 0.5) * stepLength
-    const rotatedX =
-      width >= height ? localOffset * cosAngle : -localOffset * sinAngle
-    const rotatedY =
-      width >= height ? localOffset * sinAngle : localOffset * cosAngle
-
-    rects.push({
-      center: {
-        x: center.x + rotatedX,
-        y: center.y + rotatedY,
-      },
-      width: rectSize,
-      height: rectSize,
-    })
-  }
-
-  return rects
-}
-
 const getMaxLocalApproximationRectLength = (obstacle: Obstacle): number => {
   if (obstacle.obstacleId?.startsWith("trace_obstacle_")) {
     return TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH
@@ -419,16 +378,18 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   const useConservativeApproximation =
     obstacle.connectedTo.length > 0 &&
     !obstacle.obstacleId?.startsWith("trace_obstacle_")
-  const rects = useConservativeApproximation
+  const needsConservativeApproximation =
+    obstacle.isNonPlatedHole || useConservativeApproximation
+  // Bound each complete slice of unconnected obstacles too. Centerline
+  // squares can leave parts of a rotated keepout available for routing.
+  const rects = needsConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
           rotatedRect,
           getMaxLocalApproximationRectLength(obstacle),
         )
-      : obstacle.obstacleId?.startsWith("trace_obstacle_")
-        ? generateApproximatingRects(rotatedRect, rectCount)
-        : generateCenterlineApproximatingRects(rotatedRect, rectCount)
+      : generateApproximatingRects(rotatedRect, rectCount)
   const connectedRectIndex =
     obstacle.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {
@@ -479,6 +440,7 @@ export const addApproximatingRectsToSrj = (
         converted.width.toFixed(6),
         converted.height.toFixed(6),
         converted.layers.join(","),
+        converted.isNonPlatedHole ? "hole" : "",
       ].join(":")
       const existingObstacle = obstaclesByRect.get(key)
 

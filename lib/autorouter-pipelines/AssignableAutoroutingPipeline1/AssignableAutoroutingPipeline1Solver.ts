@@ -36,11 +36,13 @@ import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSe
 import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
 import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
 import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import {
+  MultiSimplifiedPathSolver,
+  UselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"

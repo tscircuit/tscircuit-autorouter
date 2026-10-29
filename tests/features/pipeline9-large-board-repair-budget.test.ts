@@ -1,0 +1,132 @@
+import { expect, test } from "bun:test"
+import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { getPipeline9BoundedRepairBudget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import type { SimpleRouteJson } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+
+const makeParams = (
+  padHeight: number,
+  effort: number,
+): ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0] => {
+  const routes: HighDensityRoute[] = Array.from({ length: 480 }, (_, i) => ({
+    connectionName: `signal_${i}`,
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [
+      { x: -1, y: i * 2, z: 0 },
+      { x: 1, y: i * 2, z: 0 },
+    ],
+    vias: [],
+  }))
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -2, minY: -3, maxX: 2, maxY: 960 },
+    connections: routes.map((route) => ({
+      name: route.connectionName,
+      pointsToConnect: route.route.map((point, i) => ({
+        x: point.x,
+        y: point.y,
+        layer: "top",
+        pcb_port_id: `pcb_port_${route.connectionName}_${i}`,
+      })),
+    })),
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 0, y: 20 },
+        width: 0.2,
+        height: padHeight,
+        layers: ["top"],
+        connectedTo: ["foreign_net"],
+        circuitJsonMetadata: { pcb_smtpad_id: "pcb_smtpad_foreign" },
+      },
+    ],
+  }
+  return {
+    srj,
+    srjWithPointPairs: srj,
+    originalSrj: srj,
+    newConnections: srj.connections,
+    newHdRoutes: routes,
+    updatedPreloadedTraces: [],
+    mutatedPreloadedTraceIds: new Set(),
+    connMap: getConnectivityMapFromSimpleRouteJson(srj),
+    obstacles: srj.obstacles,
+    layerCount: 2,
+    defaultViaDiameter: 0.3,
+    defaultViaHoleDiameter: 0.15,
+    effort,
+    colorMap: {},
+  }
+}
+
+const createExactBranch = (
+  params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0],
+): Pipeline9JointDrcRepairSolver => {
+  const solver = new Pipeline9JointDrcRepairSolver(params)
+  solver.pipelineDef
+    .find((stage) => stage.solverName === "exactRepairSolver")!
+    .createSolver()
+  return solver
+}
+
+test("regional work allowances depend on effort and verified progress rather than board size", (): void => {
+  const budget = getPipeline9BoundedRepairBudget(1, 1, 1)
+  // Adding clean routes or changing error density must not switch policies.
+  for (const routeCount of [0, 1, 119, 120, 121, 237, 479, 480, 481, 1000]) {
+    for (const errors of [0, 1, 9, 10, 20, 199, 500]) {
+      expect(getPipeline9BoundedRepairBudget(routeCount, errors, 1)).toEqual(
+        budget,
+      )
+    }
+  }
+  expect(budget.initialMaxPathSearchNodes).toBeLessThan(
+    budget.maxPathSearchNodes,
+  )
+  expect(budget.initialMaxCandidateAttempts).toBeLessThan(
+    budget.maxCandidateAttempts,
+  )
+  expect(budget.pathSearchNodesPerAcceptedRepair).toBeGreaterThan(0)
+  expect(budget.candidateAttemptsPerAcceptedRepair).toBeGreaterThan(0)
+  for (const effort of [1.01, 1.5, 2, 4]) {
+    const scaled = getPipeline9BoundedRepairBudget(500, 20, effort)
+    expect(scaled.maxPathSearchNodes).toBe(
+      Math.ceil(budget.maxPathSearchNodes * effort),
+    )
+    expect(scaled.initialMaxCandidateAttempts).toBe(
+      Math.ceil(budget.initialMaxCandidateAttempts! * effort),
+    )
+    expect(scaled.maxRegions).toBe(Math.ceil(budget.maxRegions * effort))
+  }
+  for (const invalidEffort of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+    expect(() =>
+      getPipeline9BoundedRepairBudget(500, 20, invalidEffort),
+    ).toThrow()
+  }
+  const conflicted = createExactBranch(makeParams(40, 1))
+  expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
+  expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
+  expect(conflicted.exactRepairSolver!.params.broadMaxIterations).toBe(4)
+  expect(conflicted.exactRepairSolver!.params.broadPassMultiplier).toBe(0.75)
+
+  const heavilyConflicted = createExactBranch(makeParams(800, 1))
+  expect(
+    heavilyConflicted.stats.initialJointDrcIssueCount,
+  ).toBeGreaterThanOrEqual(200)
+  expect(heavilyConflicted.exactRepairSolver!.params.maxIterations).toBe(2)
+  expect(heavilyConflicted.exactRepairSolver!.params.broadMaxIterations).toBe(1)
+  expect(heavilyConflicted.exactRepairSolver!.params.broadPassMultiplier).toBe(
+    0.1875,
+  )
+
+  const nearClean = createExactBranch(makeParams(0.2, 1))
+  expect(nearClean.stats.initialJointDrcIssueCount).toBe(1)
+  expect(nearClean.exactRepairSolver!.params.maxIterations).toBe(32)
+
+  const higherEffort = createExactBranch(makeParams(800, 4))
+  expect(higherEffort.exactRepairSolver!.params.maxIterations).toBe(32)
+  expect(higherEffort.exactRepairSolver!.params.broadMaxIterations).toBe(12)
+  expect(higherEffort.exactRepairSolver!.params.broadPassMultiplier).toBe(3)
+})

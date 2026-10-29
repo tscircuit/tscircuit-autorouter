@@ -15,18 +15,23 @@ export function selectConnectionPointRegion({
   point,
   layerCount,
 }: SelectConnectionPointRegionParams): RegionHg | undefined {
-  const candidates = graph.regions.filter((region) =>
-    checkIfConnectionPointIsInRegion({
-      point,
-      region,
-      layerCount,
-    }),
-  )
   const pointZLayers = getConnectionPointZLayers({ point, layerCount })
-
-  return (
-    candidates.find((region) =>
-      hasIncidentPortOnConnectionPointLayer({ region, pointZLayers }),
-    ) ?? candidates[0]
-  )
+  let firstCandidate: RegionHg | undefined
+  for (const region of graph.regions) {
+    if (
+      !checkIfConnectionPointIsInRegion({
+        point,
+        region,
+        layerCount,
+        pointZLayers,
+      })
+    ) {
+      continue
+    }
+    firstCandidate ??= region
+    if (hasIncidentPortOnConnectionPointLayer({ region, pointZLayers })) {
+      return region
+    }
+  }
+  return firstCandidate
 }

@@ -55,7 +55,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { SplitNodesIntoSingleLayerNodeSolver } from "./SplitNodesIntoSingleLayerNodeSolver"
@@ -263,7 +263,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
           simpleRouteJson: cms.srjWithPointPairs!,
-          numberOfCrampedPortPointsToKeep: 5,
         },
       ],
     ),
@@ -307,7 +306,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -395,7 +394,10 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             cms.highDensityRouteSolver!.routes,
           ),
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
+          totalStepsPerNode: Math.max(
+            20,
+            Math.round(60 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -424,6 +426,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          minimumTraceWidth: cms.srj.minTraceWidth,
+          connMap: cms.connMap,
         },
       ],
       {
@@ -496,7 +500,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
         },
       ],
     ),

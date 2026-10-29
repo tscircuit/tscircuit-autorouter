@@ -68,11 +68,15 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
-}): TopologyMergingLayerTopology[] {
+}): {
+  layerTopologies: TopologyMergingLayerTopology[]
+  overruledTargetSourceKeys: string[]
+} {
   const layerTopologyBySignature = new Map<
     string,
     TopologyMergingLayerTopology
   >()
+  const overruledTargetSourceKeys = new Set<string>()
   for (let z = 0; z < layerCount; z++) {
     const nodesOnLayer = coveringNodes
       .filter(({ node }) => node.availableZ.includes(z))
@@ -99,6 +103,19 @@ export function getLayerTopologiesForCoveredNodes({
         : activeGroupIndexes.size === 1
           ? "passthrough"
           : "merged"
+    // Global target obstacles own this layer here, so component targets
+    // covering the same point lose it and must not be restored to their full
+    // source bounds later.
+    if (
+      topologyMode === "target-passthrough" &&
+      globalTargetObstacleNodes.length > 0
+    ) {
+      for (const { sourceKey, groupIndex } of targetObstacleNodes) {
+        if (nodeGroups[groupIndex]!.isComponent) {
+          overruledTargetSourceKeys.add(sourceKey)
+        }
+      }
+    }
     const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
       topologyMode,
       nodesOnLayer,
@@ -125,15 +142,20 @@ export function getLayerTopologiesForCoveredNodes({
     }
   }
 
-  return [...layerTopologyBySignature.values()]
+  return {
+    layerTopologies: [...layerTopologyBySignature.values()],
+    overruledTargetSourceKeys: [...overruledTargetSourceKeys],
+  }
 }
 
 export function restoreAuthoritativeTargetRegions({
   regions,
   preparedNodeBySourceKey,
+  overruledTargetSourceKeys,
 }: {
   regions: TopologyMergingRegion[]
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  overruledTargetSourceKeys: ReadonlySet<string>
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
   for (const region of regions) {
@@ -149,8 +171,10 @@ export function restoreAuthoritativeTargetRegions({
   const restorableSourceKeys = new Set(
     [...topologyModesBySourceKey.entries()]
       .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+        ([sourceKey, topologyModes]) =>
+          topologyModes.size === 1 &&
+          topologyModes.has("target-passthrough") &&
+          !overruledTargetSourceKeys.has(sourceKey),
       )
       .map(([sourceKey]) => sourceKey),
   )

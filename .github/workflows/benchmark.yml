@@ -8,8 +8,13 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      effort_compare:
+        description: Compare 1x, 1.5x, and 2x effort on dataset18
+        required: false
+        default: false
+        type: boolean
       solver_name:
-        description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver7_MultiGraph; use "all" for all solvers)'
+        description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver9_PreloadedTraceGraph; use "all" for all solvers)'
         required: false
         type: string
       scenario_limit:
@@ -25,13 +30,17 @@ on:
         required: false
         default: "auto"
         type: string
+      threads:
+        description: Routing threads per sample (1 = inline; Pipeline9 only)
+        required: false
+        type: string
       include_assignable:
         description: Include assignable pipelines
         required: false
         default: false
         type: boolean
       dataset_name:
-        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, srj18, srj19, srj20, srj21, srj23, or srj24)"
+        description: "Dataset to benchmark (optional: dataset01, zdwiel, srj05, srj11, srj12, srj13, srj14, srj15, srj16, srj18, srj19, srj20, srj21, srj23, srj24, srj27, srj28, srj29, or srj33)"
         required: false
         type: string
       profile_solvers:
@@ -56,23 +65,40 @@ on:
         required: false
         default: false
         type: boolean
+      same_machine_compare:
+        description: Run the PR base and head sequentially on one Blacksmith runner
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
   issues: write
 
 jobs:
+  effort-comparison:
+    if: github.event_name == 'workflow_dispatch' && inputs.effort_compare == true
+    uses: ./.github/workflows/benchmark-effort.yml
+    secrets: inherit
+    with:
+      ref: ${{ inputs.ref }}
+      pr_number: ${{ inputs.pr_number }}
+
   benchmark:
     name: Run benchmark
     if: |
-      github.event_name == 'workflow_dispatch' || (
+      (
+        github.event_name == 'workflow_dispatch' &&
+        inputs.same_machine_compare != true &&
+        inputs.effort_compare != true
+      ) || (
         github.event_name == 'push' &&
         github.ref_name == 'main'
       ) || (
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.title, '[BENCHMARK TEST]')
       )
-    runs-on: ${{ inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
+    runs-on: ${{ (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || inputs.long_benchmark && 'blacksmith-8vcpu-ubuntu-2404-arm' || vars.BENCHMARK_RUNNER || 'blacksmith-32vcpu-ubuntu-2404-arm' }}
     timeout-minutes: ${{ inputs.long_benchmark && 480 || 120 }}
 
     steps:
@@ -83,6 +109,12 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const allSolversAliases = new Set(['all', '_'])
+            const usesNetworkedPipeline9 = (args) => args.some(
+              (arg, index) =>
+                (arg === '--pipeline' &&
+                  String(args[index + 1] || '').toLowerCase() === '9net') ||
+                arg === 'AutoroutingPipelineSolver9_Networked',
+            )
 
             let benchmarkArgs = []
             let benchmarkConcurrency = ''
@@ -99,6 +131,7 @@ jobs:
                 if (
                   [
                     '--scenario-limit',
+                    '--limit',
                     '--dataset',
                     '--effort',
                     '--concurrency',
@@ -107,7 +140,10 @@ jobs:
                 ) {
                   const value = args[i + 1]
                   if (value && !value.startsWith('-')) {
-                    profileArgs.push(arg, value)
+                    profileArgs.push(
+                      arg === '--limit' ? '--scenario-limit' : arg,
+                      value,
+                    )
                     i += 1
                   }
                   continue
@@ -142,7 +178,7 @@ jobs:
             if (context.eventName === 'workflow_dispatch') {
               const inputs = context.payload.inputs || {}
               const forwardedArgsJson = (inputs.benchmark_args_json || '').trim()
-              const datasetName = (inputs.dataset_name || '').trim()
+              let datasetName = (inputs.dataset_name || '').trim()
 
               if (forwardedArgsJson) {
                 const forwardedArgs = JSON.parse(forwardedArgsJson)
@@ -166,6 +202,8 @@ jobs:
                 const scenarioLimit = (inputs.scenario_limit || '').trim()
                 const effort = (inputs.effort || '').trim()
                 const concurrency = (inputs.concurrency || '').trim()
+                const threads = (inputs.threads || '').trim()
+                if (threads) benchmarkArgs.push('--threads', threads)
                 const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
                 if (scenarioLimit) {
                   benchmarkArgs.push('--scenario-limit', scenarioLimit)
@@ -183,6 +221,20 @@ jobs:
 
                 if (datasetName) {
                   benchmarkArgs.push('--dataset', datasetName)
+                }
+              }
+              if (usesNetworkedPipeline9(benchmarkArgs)) {
+                const datasetFlagIndex = benchmarkArgs.lastIndexOf('--dataset')
+                if (datasetFlagIndex >= 0) {
+                  const argumentDataset = benchmarkArgs[datasetFlagIndex + 1]
+                  if (typeof argumentDataset !== 'string' || !argumentDataset.trim()) {
+                    throw new Error('--dataset requires a dataset name')
+                  }
+                  datasetName = argumentDataset
+                } else if (datasetName) {
+                  benchmarkArgs.push('--dataset', datasetName)
+                } else {
+                  datasetName = 'srj18'
                 }
               }
               profileSolvers = inputs.profile_solvers === true || inputs.profile_solvers === 'true'
@@ -208,12 +260,33 @@ jobs:
               ref = context.payload.pull_request.head.sha
             }
 
+            if (profileSolvers && benchmarkArgs.includes('--threads')) {
+              throw new Error('--threads cannot be combined with profiling')
+            }
             core.setOutput('benchmark_args_json', JSON.stringify(benchmarkArgs))
             core.setOutput('benchmark_concurrency', benchmarkConcurrency)
             core.setOutput('profile_solvers', profileSolvers ? 'true' : 'false')
             core.setOutput('profile_solvers_args_json', JSON.stringify(buildProfileSolversArgs(benchmarkArgs)))
+            core.setOutput('pipeline9_networked', usesNetworkedPipeline9(benchmarkArgs) ? 'true' : 'false')
+            core.setOutput('networked_remote', benchmarkArgs.includes('--networked-remote') ? 'true' : 'false')
             core.setOutput('ref', ref)
             core.setOutput('status_comment_id', statusCommentId)
+
+      - name: Create Pipeline9 network cache benchmark namespace
+        id: networked-cache
+        if: steps.parse.outputs.pipeline9_networked == 'true' && steps.parse.outputs.networked_remote == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { randomUUID } = require('node:crypto')
+            const repositoryId = String(context.payload.repository.id)
+            const runId = String(process.env.GITHUB_RUN_ID)
+            const runAttempt = String(process.env.GITHUB_RUN_ATTEMPT)
+            if (![repositoryId, runId, runAttempt].every((value) => /^\d+$/.test(value))) {
+              throw new Error('GitHub repository/run identifiers are unavailable')
+            }
+            const cacheVersion = `benchmark-${repositoryId}-${runId}-${runAttempt}-${randomUUID()}`
+            core.setOutput('cache_version', cacheVersion)
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -221,13 +294,68 @@ jobs:
           ref: ${{ steps.parse.outputs.ref }}
           persist-credentials: false
 
+      - name: Checkout local network benchmark controller
+        if: steps.parse.outputs.pipeline9_networked == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: work/networked-benchmark-controller
+          persist-credentials: false
+
+      - name: Use the controller network benchmark harness
+        if: steps.parse.outputs.pipeline9_networked == 'true'
+        run: |
+          rm -rf scripts/benchmark
+          cp -a work/networked-benchmark-controller/scripts/benchmark scripts/benchmark
+          cp work/networked-benchmark-controller/benchmark.sh benchmark.sh
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.2
 
       - name: Install dependencies
         run: bun install
+
+      - name: Verify production Pipeline9 network cache support
+        if: steps.parse.outputs.pipeline9_networked == 'true' && steps.parse.outputs.networked_remote == 'true'
+        env:
+          HD_CACHE2_SERVER_URL: https://hd-cache2.tscircuit.com
+          HD_CACHE2_CACHE_VERSION: ${{ steps.networked-cache.outputs.cache_version }}
+        run: |
+          node <<'NODE'
+          const { readFileSync } = require('node:fs')
+
+          const run = async () => {
+            const autorouterVersion = JSON.parse(readFileSync('package.json', 'utf8')).version
+            const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
+            const response = await fetch(`${process.env.HD_CACHE2_SERVER_URL}/health`, {
+              headers: { accept: 'application/json' },
+            })
+            const responseText = await response.text()
+            let body
+            try {
+              body = responseText ? JSON.parse(responseText) : null
+            } catch {
+              throw new Error(`hd-cache2 preflight returned invalid JSON (${response.status})`)
+            }
+            if (
+              !response.ok ||
+              body?.ok !== true ||
+              body.autorouterVersion !== autorouterVersion ||
+              body.benchmarkCacheVersionSupported !== true ||
+              body.benchmarkCacheVersionAccess !== 'open'
+            ) {
+              throw new Error(`hd-cache2 preflight failed (${response.status}): ${body?.message || 'invalid response'}`)
+            }
+            console.log(`hd-cache2 supports autorouter ${autorouterVersion}; using fresh benchmark namespace ${cacheVersion}`)
+          }
+
+          run().catch((error) => {
+            console.error(error.message)
+            process.exit(1)
+          })
+          NODE
 
       - name: Load main branch benchmark datasets
         id: main-datasets
@@ -264,6 +392,9 @@ jobs:
           BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
           BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
           BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+          BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: ${{ steps.parse.outputs.networked_remote == 'true' && '65000' || '0' }}
+          HD_CACHE2_SERVER_URL: ${{ steps.parse.outputs.networked_remote == 'true' && 'https://hd-cache2.tscircuit.com' || '' }}
+          HD_CACHE2_CACHE_VERSION: ${{ steps.networked-cache.outputs.cache_version }}
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -285,14 +416,6 @@ jobs:
               nextArgs.push(arg)
             }
             nextArgs.push('--dataset', datasetName)
-            return nextArgs
-          }
-
-          const withMainBranchDatasetArgs = (baseArgs, datasetName) => {
-            const nextArgs = withDataset(baseArgs, datasetName)
-            if (datasetName === 'srj18') {
-              nextArgs.push('--pipeline', '7')
-            }
             return nextArgs
           }
 
@@ -319,7 +442,8 @@ jobs:
             const textReports = []
 
             for (const datasetName of mainBranchDatasets) {
-              runBenchmark(withMainBranchDatasetArgs(args, datasetName))
+              // Every tracked dataset uses benchmark.sh's default Pipeline 9 solver.
+              runBenchmark(withDataset(args, datasetName))
 
               const report = JSON.parse(fs.readFileSync('benchmark-result.json', 'utf8'))
               const text = fs.readFileSync('benchmark-result.txt', 'utf8').trim()
@@ -479,6 +603,20 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const fs = require('node:fs')
+            const { pathToFileURL } = require('node:url')
+            const comparisonUrl = pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
+            ).href
+            const comparisonModule = await import(comparisonUrl)
+            const { renderBenchmarkComparison } = comparisonModule
+            const isNetworkedColdHotReport =
+              typeof comparisonModule.isNetworkedColdHotReport === 'function'
+                ? comparisonModule.isNetworkedColdHotReport
+                : (report) => {
+                    if (!Array.isArray(report?.summary)) return false
+                    const names = new Set(report.summary.map((row) => row.solverName))
+                    return names.has('Pipeline9_Networked Cold') && names.has('Pipeline9_Networked Hot')
+                  }
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -513,9 +651,9 @@ jobs:
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
             const formatEffortSuffix = (effortLabel) => {
               const label = String(effortLabel ?? '')
-              const match = label.match(/^(\d+)x effort$/)
+              const match = label.match(/^(\d+(?:\.\d+)?)x effort$/)
               if (!match) return label === 'mixed effort' ? '(mixed)' : ''
-              const effort = Number.parseInt(match[1], 10)
+              const effort = Number.parseFloat(match[1])
               return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
             }
             const formatSolverDisplayName = (solverName, effortLabel) =>
@@ -706,6 +844,7 @@ jobs:
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
+            const networkedColdHot = isNetworkedColdHotReport(prReport)
 
             const renderBody = (options = {}) => [
               `## ${benchmarkLabel} Results`,
@@ -716,18 +855,28 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Previous main run',
+              networkedColdHot
+                ? '### Pipeline9_Networked Cold vs Hot'
+                : '### Main vs PR',
               '',
-              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
-              '',
-              ...renderReport(mainDatasetReport, '', {
-                detailsLabel: 'Previous main run details',
-                omitSummary: true,
+              ...renderBenchmarkComparison({
+                mainReport: mainDatasetReport,
+                prReport,
+                fallbackText: prText ?? '(benchmark results were not produced)',
+                maxLength,
               }),
               '',
+              ...(networkedColdHot
+                ? []
+                : renderReport(mainDatasetReport, '', {
+                    detailsLabel: 'Previous main run details',
+                    omitSummary: true,
+                  })),
+              '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                detailsLabel: 'PR run details',
-                includeDelta: true,
+                detailsLabel: networkedColdHot ? 'Cold/hot run details' : 'PR run details',
+                omitSummary: true,
+                includeDelta: !networkedColdHot,
                 mainIndex,
                 viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
@@ -962,6 +1111,20 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const fs = require('node:fs')
+            const { pathToFileURL } = require('node:url')
+            const comparisonUrl = pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
+            ).href
+            const comparisonModule = await import(comparisonUrl)
+            const { renderBenchmarkComparison } = comparisonModule
+            const isNetworkedColdHotReport =
+              typeof comparisonModule.isNetworkedColdHotReport === 'function'
+                ? comparisonModule.isNetworkedColdHotReport
+                : (report) => {
+                    if (!Array.isArray(report?.summary)) return false
+                    const names = new Set(report.summary.map((row) => row.solverName))
+                    return names.has('Pipeline9_Networked Cold') && names.has('Pipeline9_Networked Hot')
+                  }
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -996,9 +1159,9 @@ jobs:
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
             const formatEffortSuffix = (effortLabel) => {
               const label = String(effortLabel ?? '')
-              const match = label.match(/^(\d+)x effort$/)
+              const match = label.match(/^(\d+(?:\.\d+)?)x effort$/)
               if (!match) return label === 'mixed effort' ? '(mixed)' : ''
-              const effort = Number.parseInt(match[1], 10)
+              const effort = Number.parseFloat(match[1])
               return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
             }
             const formatSolverDisplayName = (solverName, effortLabel) =>
@@ -1300,6 +1463,7 @@ jobs:
                 prProfileSolversReport,
             )
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
+            const networkedColdHot = isNetworkedColdHotReport(prReport)
 
             const renderBody = (options = {}) => [
               benchmarkFailed ? `## ${benchmarkLabel} Failed` : `## ${benchmarkLabel} Results`,
@@ -1320,14 +1484,23 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Previous main run',
+              networkedColdHot
+                ? '### Pipeline9_Networked Cold vs Hot'
+                : '### Main vs PR',
               '',
-              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
-              '',
-              ...renderReport(mainDatasetReport, '', {
-                detailsLabel: 'Previous main run details',
-                omitSummary: true,
+              ...renderBenchmarkComparison({
+                mainReport: mainDatasetReport,
+                prReport,
+                fallbackText: prText ?? '(benchmark results were not produced)',
+                maxLength,
               }),
+              '',
+              ...(networkedColdHot
+                ? []
+                : renderReport(mainDatasetReport, '', {
+                    detailsLabel: 'Previous main run details',
+                    omitSummary: true,
+                  })),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
                     'Previous main profile details',
@@ -1336,8 +1509,9 @@ jobs:
                 : []),
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                detailsLabel: 'PR run details',
-                includeDelta: true,
+                detailsLabel: networkedColdHot ? 'Cold/hot run details' : 'PR run details',
+                omitSummary: true,
+                includeDelta: !networkedColdHot,
                 mainIndex,
                 viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
@@ -1368,6 +1542,248 @@ jobs:
               repo: context.repo.repo,
               comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: finalBody,
+            })
+
+  same-machine-benchmark:
+    name: Same machine benchmark
+    if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
+    runs-on: ${{ (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || 'blacksmith-8vcpu-ubuntu-2404-arm' }}
+    timeout-minutes: ${{ inputs.long_benchmark && (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 480 || (contains(inputs.benchmark_args_json, '"--threads"') || inputs.threads != '') && 360 || 180 }}
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+
+    steps:
+      - name: Resolve comparison refs
+        id: refs
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          DATASET_NAME: ${{ inputs.dataset_name }}
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const prNumber = Number.parseInt(process.env.PR_NUMBER || '', 10)
+            if (!Number.isInteger(prNumber) || prNumber < 1) {
+              throw new Error('same_machine_compare requires a valid pr_number')
+            }
+
+            const inputs = context.payload.inputs || {}
+            const forwardedArgsJson = (inputs.benchmark_args_json || '').trim()
+            const benchmarkArgs = forwardedArgsJson ? JSON.parse(forwardedArgsJson) : []
+            if (!Array.isArray(benchmarkArgs) || benchmarkArgs.some((arg) => typeof arg !== 'string')) {
+              throw new Error('benchmark_args_json must be a JSON array of strings')
+            }
+            if (!forwardedArgsJson) {
+              const solverName = (inputs.solver_name || '').trim()
+              if (solverName) benchmarkArgs.push('--solver', solverName)
+              for (const [name, flag] of [
+                ['scenario_limit', '--scenario-limit'],
+                ['effort', '--effort'],
+                ['concurrency', '--concurrency'],
+                ['threads', '--threads'],
+              ]) {
+                const value = (inputs[name] || '').trim()
+                if (value && value.toLowerCase() !== 'auto') benchmarkArgs.push(flag, value)
+              }
+              if (inputs.include_assignable === true || inputs.include_assignable === 'true') {
+                benchmarkArgs.push('--include-assignable')
+              }
+            }
+            const networked = benchmarkArgs.some(
+              (arg, index) =>
+                (arg === '--pipeline' && String(benchmarkArgs[index + 1] || '').toLowerCase() === '9net') ||
+                arg === 'AutoroutingPipelineSolver9_Networked',
+            )
+            if (networked && !benchmarkArgs.includes('--networked-cold-hot')) {
+              benchmarkArgs.push('--networked-cold-hot')
+            }
+            const networkedRemote = networked && benchmarkArgs.includes('--networked-remote')
+            const datasetFlagIndex = benchmarkArgs.lastIndexOf('--dataset')
+            const dataset = datasetFlagIndex >= 0
+              ? benchmarkArgs[datasetFlagIndex + 1]
+              : (process.env.DATASET_NAME || '').trim() || 'srj18'
+            if (typeof dataset !== 'string' || !dataset.trim()) {
+              throw new Error('--dataset requires a dataset name')
+            }
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            })
+            const baseSha = pr.data.base.sha
+            const requestedRef = (inputs.ref || '').trim()
+            const prSha = networked && requestedRef
+              ? (await github.rest.repos.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: requestedRef,
+                })).data.sha
+              : pr.data.head.sha
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            const statusComment = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: [
+                '## Same Machine Benchmark Results',
+                '',
+                `Queued \`${dataset}\` on PR base \`${baseSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
+                '',
+                'Both revisions will run sequentially in one Blacksmith job. With --threads above one, each revision runs inline and again with the requested routing workers.',
+                '',
+                ...(networkedRemote ? [
+                  'Remote mode validates every cold response and requires a fully cached hot pass; incompatible responses or local transport fallbacks fail the run.',
+                  '',
+                ] : []),
+                `Workflow: [View run](${runUrl})`,
+              ].join('\n'),
+            })
+
+            core.setOutput('dataset', dataset)
+            core.setOutput('benchmark_args_json', JSON.stringify(benchmarkArgs))
+            core.setOutput('pipeline9_networked', networked ? 'true' : 'false')
+            core.setOutput('networked_remote', networkedRemote ? 'true' : 'false')
+            core.setOutput('base_sha', baseSha)
+            core.setOutput('pr_sha', prSha)
+            core.setOutput('status_comment_id', String(statusComment.data.id))
+
+      - name: Checkout benchmark controller
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: same-machine-controller
+          persist-credentials: false
+
+      - name: Checkout PR base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: same-machine-base
+          persist-credentials: false
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.pr_sha }}
+          path: same-machine-pr
+          persist-credentials: false
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install base dependencies
+        working-directory: same-machine-base
+        run: bun install
+
+      - name: Install PR dependencies
+        working-directory: same-machine-pr
+        run: bun install
+
+      - name: Use identical local network benchmark harnesses
+        if: steps.refs.outputs.pipeline9_networked == 'true'
+        run: |
+          for revision in base pr; do
+            rm -rf "same-machine-$revision/scripts/benchmark"
+            cp -a same-machine-controller/scripts/benchmark "same-machine-$revision/scripts/benchmark"
+            cp same-machine-controller/benchmark.sh "same-machine-$revision/benchmark.sh"
+          done
+
+      - name: Benchmark comparison passes
+        id: compare
+        working-directory: same-machine-controller
+        env:
+          BENCHMARK_ARGS_JSON: ${{ steps.refs.outputs.benchmark_args_json }}
+          BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: ${{ steps.refs.outputs.networked_remote == 'true' && '65000' || '0' }}
+          HD_CACHE2_SERVER_URL: ${{ steps.refs.outputs.networked_remote == 'true' && 'https://hd-cache2.tscircuit.com' || '' }}
+        run: bun scripts/benchmark/runSameMachineBenchmarks.ts
+
+      - name: Render same-machine comparison
+        working-directory: same-machine-controller
+        env:
+          BASE_SHA: ${{ steps.refs.outputs.base_sha }}
+          PR_SHA: ${{ steps.refs.outputs.pr_sha }}
+          RUNNER_NAME: ${{ runner.name }}
+          COMPARISON_THREADS: ${{ steps.compare.outputs.threads }}
+        run: |
+          threaded_args=()
+          if [ -n "$COMPARISON_THREADS" ]; then
+            threaded_args=(
+              --threads "$COMPARISON_THREADS"
+              --base-threaded-report ../same-machine-results/base-threaded/benchmark-result.json
+              --pr-threaded-report ../same-machine-results/pr-threaded/benchmark-result.json
+            )
+          fi
+          bun scripts/benchmark/same-machine-results.ts \
+            --base-report ../same-machine-results/base/benchmark-result.json \
+            --pr-report ../same-machine-results/pr/benchmark-result.json \
+            --base-sha "$BASE_SHA" \
+            --pr-sha "$PR_SHA" \
+            --repository "${{ github.repository }}" \
+            --runner-name "$RUNNER_NAME" \
+            "${threaded_args[@]}" \
+            --output ../same-machine-results/comment.md
+
+      - name: Preserve interrupted comparison diagnostics
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const activePass = 'same-machine-results/active-pass.json'
+          if (!fs.existsSync(activePass)) process.exit(0)
+          const { revision, output } = JSON.parse(fs.readFileSync(activePass, 'utf8'))
+          if (!['base', 'pr'].includes(revision) || !['base', 'pr', 'base-threaded', 'pr-threaded'].includes(output)) {
+            throw new Error('Invalid active comparison pass')
+          }
+          for (const filename of ['benchmark-interrupted.json', 'benchmark-failure.json']) {
+            const source = `same-machine-${revision}/${filename}`
+            if (fs.existsSync(source)) fs.copyFileSync(source, `same-machine-results/${output}/${filename}`)
+          }
+          NODE
+
+      - name: Upload same-machine benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: same-machine-benchmark-${{ steps.refs.outputs.dataset }}
+          path: same-machine-results
+          if-no-files-found: warn
+
+      - name: Post same-machine benchmark comment
+        if: always() && steps.refs.outputs.status_comment_id != ''
+        uses: actions/github-script@v7
+        env:
+          STATUS_COMMENT_ID: ${{ steps.refs.outputs.status_comment_id }}
+          JOB_STATUS: ${{ job.status }}
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs')
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            const resultPath = 'same-machine-results/comment.md'
+            const resultBody = fs.existsSync(resultPath)
+              ? fs.readFileSync(resultPath, 'utf8').trim()
+              : [
+                  '## Same Machine Benchmark Results',
+                  '',
+                  `The paired benchmark ended with **${process.env.JOB_STATUS}** before all comparison reports were produced.`,
+                ].join('\n')
+            const body = [
+              resultBody,
+              '',
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: [Download raw reports](${runUrl})`,
+            ].join('\n')
+
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: Number(process.env.STATUS_COMMENT_ID),
+              body,
             })
 
   benchmark-history:

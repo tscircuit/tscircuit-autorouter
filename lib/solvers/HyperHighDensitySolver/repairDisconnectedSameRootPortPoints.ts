@@ -3,6 +3,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
@@ -51,6 +52,47 @@ const getConnectedPointKeysForConnection = (
   }
 
   return connected
+}
+
+export const areNodePortPointPairsConnectedByRoutes = (
+  routes: HighDensityIntraNodeRoute[],
+  nodeWithPortPoints: NodeWithPortPoints,
+): boolean => {
+  const explicitPairs = nodeWithPortPoints.portPointsInPairs ?? []
+  if (explicitPairs.length > 0) {
+    for (const [start, end] of explicitPairs) {
+      const connectedPointKeys = getConnectedPointKeysForConnection(
+        routes,
+        start.connectionName,
+        pointKey(start),
+      )
+      if (!connectedPointKeys.has(pointKey(end))) return false
+    }
+    return true
+  }
+
+  const portPointsByConnection = new Map<string, PortPoint[]>()
+  for (const portPoint of nodeWithPortPoints.portPoints) {
+    const connectionPortPoints =
+      portPointsByConnection.get(portPoint.connectionName) ?? []
+    connectionPortPoints.push(portPoint)
+    portPointsByConnection.set(portPoint.connectionName, connectionPortPoints)
+  }
+
+  for (const [connectionName, connectionPortPoints] of portPointsByConnection) {
+    for (const [start, end] of getConnectionPortPointPairs(
+      connectionPortPoints,
+    )) {
+      const connectedPointKeys = getConnectedPointKeysForConnection(
+        routes,
+        connectionName,
+        pointKey(start),
+      )
+      if (!connectedPointKeys.has(pointKey(end))) return false
+    }
+  }
+
+  return true
 }
 
 export const repairDisconnectedSameRootPortPoints = (

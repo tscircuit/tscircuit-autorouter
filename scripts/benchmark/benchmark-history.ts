@@ -11,9 +11,10 @@ import {
 } from "node:fs/promises"
 import { join } from "node:path"
 import stableStringify from "fast-json-stable-stringify"
+import type { BenchmarkStageTimingBreakdown } from "./benchmark-types"
 
-// Older benchmark artifacts predate avgVia and sampleNumber. The parser accepts
-// those two omissions only, then normalizes them before building dashboard data.
+// Older benchmark artifacts predate avgVia, sampleNumber, stageTiming, and memory.
+// The parser accepts those omissions, then normalizes them for dashboard data.
 type BenchmarkHistorySummary = {
   [key: string]: unknown
   solverName: string
@@ -31,12 +32,14 @@ type BenchmarkHistorySample = {
   scenarioName: string
   sampleNumber?: number
   elapsedTimeMs: number
+  peakRssBytes?: number
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
   viaCount?: number
   errorPhaseName?: string
   error?: string
+  stageTiming?: BenchmarkStageTimingBreakdown
 }
 
 type BenchmarkHistoryReport = {
@@ -102,6 +105,10 @@ type DashboardPoint = {
   p90TimeMs: number | null
   p95TimeMs: number | null
   maxTimeMs: number | null
+  p50PeakRssBytes: number | null
+  p80PeakRssBytes: number | null
+  p90PeakRssBytes: number | null
+  maxPeakRssBytes: number | null
   avgVia: number | null
   medianVia: number | null
   maxVia: number | null
@@ -222,6 +229,55 @@ const parseBenchmarkSummaryOrThrow = (
   }
 }
 
+const parseBenchmarkStageTimingOrThrow = (
+  value: unknown,
+  expectedStatus: BenchmarkStageTimingBreakdown["status"],
+  sourceLabel: string,
+): BenchmarkStageTimingBreakdown => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !("status" in value) ||
+    (value.status !== "complete" && value.status !== "partial") ||
+    !("stages" in value) ||
+    !Array.isArray(value.stages)
+  ) {
+    throw new Error(`Invalid stageTiming in ${sourceLabel}`)
+  }
+  if (value.status !== expectedStatus) {
+    throw new Error(`Inconsistent stageTiming status in ${sourceLabel}`)
+  }
+  const stageNames = new Set<string>()
+  const stages = value.stages.map((stage, index) => {
+    if (
+      typeof stage !== "object" ||
+      stage === null ||
+      Array.isArray(stage) ||
+      !("stageName" in stage) ||
+      typeof stage.stageName !== "string" ||
+      stage.stageName.trim() === "" ||
+      !("elapsedTimeMs" in stage) ||
+      typeof stage.elapsedTimeMs !== "number" ||
+      !Number.isFinite(stage.elapsedTimeMs) ||
+      stage.elapsedTimeMs < 0
+    ) {
+      throw new Error(`Invalid stageTiming stage ${index} in ${sourceLabel}`)
+    }
+    if (stageNames.has(stage.stageName)) {
+      throw new Error(
+        `Duplicate stageTiming stage ${stage.stageName} in ${sourceLabel}`,
+      )
+    }
+    stageNames.add(stage.stageName)
+    return {
+      stageName: stage.stageName,
+      elapsedTimeMs: stage.elapsedTimeMs,
+    }
+  })
+  return { status: expectedStatus, stages }
+}
+
 const parseBenchmarkSampleOrThrow = (
   value: unknown,
   sourceLabel: string,
@@ -265,6 +321,15 @@ const parseBenchmarkSampleOrThrow = (
   ) {
     throw new Error(`Invalid viaCount in ${sourceLabel}`)
   }
+  const peakRssBytes = "peakRssBytes" in value ? value.peakRssBytes : undefined
+  if (
+    peakRssBytes !== undefined &&
+    (typeof peakRssBytes !== "number" ||
+      !Number.isFinite(peakRssBytes) ||
+      peakRssBytes < 0)
+  ) {
+    throw new Error(`Invalid peakRssBytes in ${sourceLabel}`)
+  }
   const errorPhaseName =
     "errorPhaseName" in value ? value.errorPhaseName : undefined
   const error = "error" in value ? value.error : undefined
@@ -284,18 +349,28 @@ const parseBenchmarkSampleOrThrow = (
       `Unsolved benchmark sample passed relaxed DRC in ${sourceLabel}`,
     )
   }
+  const stageTiming =
+    "stageTiming" in value
+      ? parseBenchmarkStageTimingOrThrow(
+          value.stageTiming,
+          value.didSolve ? "complete" : "partial",
+          sourceLabel,
+        )
+      : undefined
   return {
     ...value,
     solverName: value.solverName,
     scenarioName: value.scenarioName,
     sampleNumber,
     elapsedTimeMs: value.elapsedTimeMs,
+    peakRssBytes,
     didSolve: value.didSolve,
     didTimeout: value.didTimeout,
     relaxedDrcPassed: value.relaxedDrcPassed,
     viaCount,
     errorPhaseName,
     error,
+    stageTiming,
   }
 }
 
@@ -453,6 +528,13 @@ const makeDashboardPoint = (
   const viaCounts = completedSamples
     .map((sample) => sample.viaCount)
     .filter((viaCount): viaCount is number => typeof viaCount === "number")
+  // Match the benchmark runner: memory includes failed and timed-out samples.
+  const peakRssValues = samples
+    .map((sample) => sample.peakRssBytes)
+    .filter(
+      (peakRssBytes): peakRssBytes is number =>
+        typeof peakRssBytes === "number",
+    )
 
   return {
     runId: run.runId,
@@ -473,6 +555,11 @@ const makeDashboardPoint = (
     p90TimeMs: getPercentile(solveTimes, 0.9),
     p95TimeMs: summary.p95TimeMs,
     maxTimeMs: solveTimes.length === 0 ? null : Math.max(...solveTimes),
+    p50PeakRssBytes: getPercentile(peakRssValues, 0.5),
+    p80PeakRssBytes: getPercentile(peakRssValues, 0.8),
+    p90PeakRssBytes: getPercentile(peakRssValues, 0.9),
+    maxPeakRssBytes:
+      peakRssValues.length === 0 ? null : Math.max(...peakRssValues),
     avgVia: summary.avgVia === undefined ? null : summary.avgVia,
     medianVia: getPercentile(viaCounts, 0.5),
     maxVia: viaCounts.length === 0 ? null : Math.max(...viaCounts),

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preloaded-trace-graph-solver"
+import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver"
 import type {
   SegmentPortPoint,
   SharedEdgeSegment,
@@ -100,6 +100,7 @@ test("preloaded traces reserve existing ports without changing graph topology", 
         traceId: "fixed-trace",
         fixedNetId,
         routePosition: 0.5,
+        tracePoint: { x: 0, y: 0.42 },
         z: 0,
       },
     ],

@@ -2,6 +2,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
@@ -58,9 +59,23 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  enableNegotiatedSearch: boolean
+  gridSearchSegmentWork: number
+  gridSearchWorkScale: number
+  rejectOverlappingTerminals: boolean
+  boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
+  growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  captureSearchDebug: boolean
+  readonly benchmarkDiagnosticCounters: Record<string, number>
+  readonly priorityDagOptions: {
+    priorityDagSearch: boolean
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
+  }
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -91,9 +106,21 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    enableNegotiatedSearch = false,
+    gridSearchSegmentWork = 10_000,
+    gridSearchWorkScale = 1,
+    rejectOverlappingTerminals = false,
+    boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
+    growShrinkSolutionValidator,
+    captureSearchDebug,
+    priorityDagSearch = false,
+    priorityDiagnostics,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
+    allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -105,9 +132,23 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    enableNegotiatedSearch?: boolean
+    gridSearchSegmentWork?: number
+    gridSearchWorkScale?: number
+    rejectOverlappingTerminals?: boolean
+    boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+    growShrinkSolutionValidator?: (
+      routes: HighDensityIntraNodeRoute[],
+    ) => boolean
+    captureSearchDebug?: boolean
+    priorityDagSearch?: boolean
+    priorityDiagnostics?: Record<string, number>
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -124,6 +165,11 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.gridSearchSegmentWork = gridSearchSegmentWork
+    this.gridSearchWorkScale = gridSearchWorkScale
+    this.rejectOverlappingTerminals = rejectOverlappingTerminals
+    this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -131,6 +177,15 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
+    this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.captureSearchDebug = captureSearchDebug ?? true
+    this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
+    this.priorityDagOptions = {
+      priorityDagSearch,
+      viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias,
+    }
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -223,6 +278,9 @@ export class HighDensitySolver extends BaseSolver {
   private getIntraNodeStrategyName(
     hyperParameters: Record<string, any> | undefined,
   ): string {
+    if (hyperParameters?.PRIORITY_DAG_FAMILY_SIZE) {
+      return "PriorityDagIntraNodeSolver"
+    }
     if (hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
       return "MultiHeadPolyLineIntraNodeSolver3"
     }
@@ -363,6 +421,13 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      ...this.priorityDagOptions,
+      priorityDiagnostics: this.benchmarkDiagnosticCounters,
+      enableNegotiatedSearch: this.enableNegotiatedSearch,
+      gridSearchSegmentWork: this.gridSearchSegmentWork,
+      gridSearchWorkScale: this.gridSearchWorkScale,
+      rejectOverlappingTerminals: this.rejectOverlappingTerminals,
+      boardGeometry: this.boardGeometry,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -375,6 +440,8 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
+      growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

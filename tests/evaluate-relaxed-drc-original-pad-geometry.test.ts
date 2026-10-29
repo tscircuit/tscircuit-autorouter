@@ -17,6 +17,10 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
         height: 1.025,
         ccwRotationDegrees: 45,
         connectedTo: ["pcb_smtpad_start", "pcb_port_start", "trace"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pcb_smtpad_start",
+          pcb_port_id: "pcb_port_start",
+        },
       },
       {
         type: "rect",
@@ -26,6 +30,10 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
         height: 1.025,
         ccwRotationDegrees: 45,
         connectedTo: ["pcb_smtpad_end", "pcb_port_end", "trace"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pcb_smtpad_end",
+          pcb_port_id: "pcb_port_end",
+        },
       },
     ],
     connections: [

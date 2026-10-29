@@ -48,6 +48,27 @@ Repo helpers:
 
 ## Minimal SVG Tests
 
+For solved bug-report boards, use `getBugReportSnapshotSvg` from
+`lib/testing/getBugReportSnapshotSvg`. It renders the board with a relaxed-DRC
+error-count overlay, using the same evaluator as benchmarks. Supply the original
+input, the solver's point-paired SRJ, and newly routed traces. The helper includes
+preloaded copper and honors replacement metadata in both DRC and the drawing.
+
+```ts
+expect(solver.solved).toBe(true)
+await expect(
+  getBugReportSnapshotSvg({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  }),
+).toMatchSvgSnapshot(import.meta.path)
+```
+
+Defaults are benchmark relaxed rules. If a report intentionally uses a board's
+custom clearances, pass explicit `drcOptions` and document that policy in the test.
+Do not hard-code the error count. The bug-report creation script uses this helper.
+
 Prefer minimal SVG snapshot tests over large debug dumps.
 
 Use one of these patterns:

@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { EvaluateRelaxedDrcInput } from "lib/testing/evaluate-relaxed-drc"
 
-test("Pipeline7 and Pipeline9 route and repair without calling checks", async () => {
+test("Pipeline7, Pipeline9 and A13 route and validate without calling checks", async () => {
   // Keep module mocks out of the process running the independent DRC oracle.
   const child = Bun.spawn(
     [process.execPath, "tests/fixtures/autorouter-without-checks.ts"],
@@ -27,7 +27,7 @@ test("Pipeline7 and Pipeline9 route and repair without calling checks", async ()
   const results = JSON.parse(
     resultLine!.slice("AUTOROUTER_RESULT=".length),
   ) as EvaluateRelaxedDrcInput[]
-  expect(results).toHaveLength(2)
+  expect(results).toHaveLength(3)
   for (const result of results) {
     expect(evaluateRelaxedDrc(result).errors).toHaveLength(0)
   }

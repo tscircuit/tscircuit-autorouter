@@ -170,12 +170,13 @@ export function buildHyperGraph(params: {
     regions: [],
   }
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
+  const regionById = new Map<string, RegionHg>()
 
   for (const cmnNode of params.capacityMeshNodes) {
     const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
       getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
     )
-    graph.regions.push({
+    const region: RegionHg = {
       regionId: cmnNode.capacityMeshNodeId,
       d: connectedNetIds
         ? {
@@ -184,17 +185,17 @@ export function buildHyperGraph(params: {
           }
         : cmnNode,
       ports: [],
-    })
+    }
+    graph.regions.push(region)
+    if (!regionById.has(region.regionId)) {
+      regionById.set(region.regionId, region)
+    }
   }
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-    const region1 = graph.regions.find(
-      (region) => region.regionId === region1Id,
-    )
-    const region2 = graph.regions.find(
-      (region) => region.regionId === region2Id,
-    )
+    const region1 = regionById.get(region1Id)
+    const region2 = regionById.get(region2Id)
 
     assertDefined(
       region1,

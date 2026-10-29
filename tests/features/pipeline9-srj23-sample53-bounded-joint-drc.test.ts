@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 bounds preliminary joint DRC work for SRJ23 sample 53", async () => {
+test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 53", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 53)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -17,9 +17,21 @@ test("Pipeline9 bounds preliminary joint DRC work for SRJ23 sample 53", async ()
   expect(
     Number(
       solver.pipeline9JointDrcRepairSolver?.stats
-        .globalDrcForceImproveMaxIterations,
+        .exactRepairConfiguredMaxIterations,
     ),
-  ).toBeLessThanOrEqual(8)
+  ).toBe(32)
+  expect(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .exactRepairConfiguredViaInPadMaxIterations,
+    ),
+  ).toBe(32)
+  expect(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .exactRepairConfiguredBroadMaxIterations,
+    ),
+  ).toBe(12)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

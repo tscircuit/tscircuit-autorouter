@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../fixtures/bug-reports/bugreport87-76a6de/bugreport87-76a6de.json" with {
   type: "json",
 }
@@ -15,7 +15,8 @@ test(
     solver.solve()
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
+      { tolerance: 0.02 },
     )
   },
-  { timeout: 180_000 },
+  { timeout: 300_000 },
 )

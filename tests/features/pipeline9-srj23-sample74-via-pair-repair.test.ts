@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 repairs a via pair introduced by SRJ23 sample 74 regional fallback", async () => {
+test("Pipeline9 layer-aware fallback avoids the SRJ23 sample 74 via-pair conflict", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 74)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -16,7 +16,7 @@ test("Pipeline9 repairs a via pair introduced by SRJ23 sample 74 regional fallba
   expect(solver.failed).toBeFalse()
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.initialJointDrcIssueCount,
-  ).toBeGreaterThan(0)
+  ).toBe(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

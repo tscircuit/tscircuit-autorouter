@@ -163,15 +163,24 @@ export function validateTopologyMergingOutput({
 
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
+    const boundsA = getCapacityMeshNodeBounds(nodeA)
     for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
       const nodeB = nodes[bIndex]!
+      if (
+        nodeB.center.x - nodeB.width / 2 > boundsA.maxX ||
+        nodeB.center.x + nodeB.width / 2 < boundsA.minX ||
+        nodeB.center.y - nodeB.height / 2 > boundsA.maxY ||
+        nodeB.center.y + nodeB.height / 2 < boundsA.minY
+      ) {
+        continue
+      }
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
       )
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
+        boundsA,
         getCapacityMeshNodeBounds(nodeB),
       )
       if (!intersection) continue

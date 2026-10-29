@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
+import {
+  HighDensityRouteSpatialIndex,
+  ObstacleSpatialHashIndex,
+  SingleRouteUselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("does not move endpoint sections when no endpoint obstacle proves layer support", () => {

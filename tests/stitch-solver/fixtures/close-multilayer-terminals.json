@@ -1,0 +1,232 @@
+{
+  "connections": [
+    {
+      "name": "signal",
+      "pointsToConnect": [
+        {
+          "x": 32.520005,
+          "y": -1.929998,
+          "layer": "top",
+          "pcb_port_id": "start"
+        },
+        {
+          "x": 32.545,
+          "y": -1.45,
+          "layer": "bottom",
+          "pcb_port_id": "end"
+        }
+      ]
+    }
+  ],
+  "hdRoutes": [
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 31.895005999999995,
+          "y": -2.1799990000000005,
+          "z": 0
+        },
+        {
+          "x": 31.787614434782604,
+          "y": -2.2815,
+          "z": 0
+        },
+        {
+          "x": 31.680222869565206,
+          "y": -2.392,
+          "z": 0
+        },
+        {
+          "x": 31.680222869565206,
+          "y": -2.392,
+          "z": 3
+        },
+        {
+          "x": 31.680222869565206,
+          "y": -2.2815,
+          "z": 3
+        },
+        {
+          "x": 31.680222869565206,
+          "y": -2.171,
+          "z": 3
+        },
+        {
+          "x": 31.680222869565206,
+          "y": -2.0604999999999998,
+          "z": 3
+        },
+        {
+          "x": 31.587502999999995,
+          "y": -1.95,
+          "z": 3
+        }
+      ],
+      "vias": [
+        {
+          "x": 31.680222869565206,
+          "y": -2.392
+        }
+      ]
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 31.587502999999995,
+          "y": -1.95,
+          "z": 3
+        },
+        {
+          "x": 31.895005999999995,
+          "y": -1.787499,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.145005499999996,
+          "y": -2.1799990000000005,
+          "z": 0
+        },
+        {
+          "x": 31.895005999999995,
+          "y": -2.1799990000000005,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 31.895005999999995,
+          "y": -1.787499,
+          "z": 3
+        },
+        {
+          "x": 32.145005499999996,
+          "y": -1.6625,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.270005,
+          "y": -2.0549980000000003,
+          "z": 0
+        },
+        {
+          "x": 32.145005499999996,
+          "y": -2.1799990000000005,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.39500475,
+          "y": -1.9299980000000003,
+          "z": 0
+        },
+        {
+          "x": 32.270005,
+          "y": -2.0549980000000003,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.145005499999996,
+          "y": -1.6625,
+          "z": 3
+        },
+        {
+          "x": 32.25,
+          "y": -1.6625,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.25,
+          "y": -1.6625,
+          "z": 3
+        },
+        {
+          "x": 32.545,
+          "y": -1.45,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "signal",
+      "rootConnectionName": "signal",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 32.520005,
+          "y": -1.929998,
+          "z": 0
+        },
+        {
+          "x": 32.39500475,
+          "y": -1.9299980000000003,
+          "z": 0
+        }
+      ],
+      "vias": []
+    }
+  ],
+  "layerCount": 4,
+  "preserveTerminalPcbPortIds": true,
+  "preferSameLayerTerminalEndpoints": true
+}

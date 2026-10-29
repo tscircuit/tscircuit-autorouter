@@ -1,5 +1,6 @@
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import {
   type ConnectionPoint,
   type Obstacle,
@@ -8,7 +9,6 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
@@ -17,6 +17,7 @@ type Point = {
   z: number
   traceThickness?: number
   toNextSegmentType?: "through_obstacle"
+  toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
 }
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
 const SAME_POINT_TOLERANCE = 1e-12
@@ -27,6 +28,7 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   terminalViaAttachTolerance?: number
   defaultViaHoleDiameter?: number
   obstacles?: ReadonlyArray<Obstacle>
+  connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
 }
 
@@ -62,13 +64,21 @@ const isThroughObstacleSegment = (
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
 
+  if (opts.connectedMultilayerObstacles) {
+    return opts.connectedMultilayerObstacles.some(
+      (obstacle) =>
+        pointInsideObstacle(start, obstacle) &&
+        pointInsideObstacle(end, obstacle),
+    )
+  }
+
   return (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap) &&
         pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+        pointInsideObstacle(end, obstacle) &&
+        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
 }
@@ -128,6 +138,13 @@ const attachTerminalViasToSimplifiedRoute = ({
   ) {
     return route
   }
+  if (
+    !connectionPoints.some(
+      (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
+    )
+  ) {
+    return route
+  }
 
   const linearRoute = route.filter(
     (segment) => segment.route_type !== "jumper",
@@ -183,7 +200,7 @@ const attachTerminalViasToSimplifiedRoute = ({
       !(
         firstLinearRouteSegment?.route_type === "wire" &&
         firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
-        distance(firstLinearRouteSegment, startTerminalViaPoint) <= 1e-3
+        areSameXyPoint(firstLinearRouteSegment, startTerminalViaPoint)
       )
     ) {
       prependSegments.push({
@@ -201,7 +218,7 @@ const attachTerminalViasToSimplifiedRoute = ({
       !(
         lastLinearRouteSegment?.route_type === "wire" &&
         lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
-        distance(lastLinearRouteSegment, endTerminalViaPoint) <= 1e-3
+        areSameXyPoint(lastLinearRouteSegment, endTerminalViaPoint)
       )
     ) {
       appendSegments.push({
@@ -273,6 +290,12 @@ export const convertHdRouteToSimplifiedRoute = (
           from_layer: layerName,
           to_layer: nextLayerName,
           width: previousPoint.traceThickness ?? hdRoute.traceThickness,
+          ...(previousPoint.toNextSegmentCircuitJsonMetadata
+            ? {
+                circuitJsonMetadata:
+                  previousPoint.toNextSegmentCircuitJsonMetadata,
+              }
+            : {}),
         })
       } else {
         // Check if a via exists at this position

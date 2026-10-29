@@ -1,8 +1,20 @@
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import type { LocalHighDensityClusterStats } from "./startLocalHighDensityCluster"
 
 export type BenchmarkTask = {
   datasetName: string
+  /** Display/report name; may differ for two passes of the same constructor. */
   solverName: string
+  solverConstructorName?: string
+  threads?: number
+  networkedCachePass?: "cold" | "hot"
+  networkedServer?: {
+    url: string
+    cacheVersion: string
+    backend?: "local" | "remote"
+    /** Local node deadlines share the sample budget, including server queueing. */
+    requestTimeoutMs?: number
+  }
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
@@ -30,17 +42,81 @@ export type WorkerTaskMessage = {
   task: BenchmarkTask
 }
 
+export type BenchmarkStageTiming = {
+  stageName: string
+  elapsedTimeMs: number
+}
+
+export type BenchmarkStageTimingBreakdown = {
+  status: "complete" | "partial"
+  stages: BenchmarkStageTiming[]
+}
+
 export type WorkerProgress = {
   solverName: string
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  peakRssBytes?: number
   phaseName?: string
   phaseSolverName?: string
   solverProgress?: number
   solverIterations?: number
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
+  stageTiming?: BenchmarkStageTimingBreakdown
+}
+
+export type TinyHypergraphBenchmarkMetrics = {
+  routeCount: number
+  traceDensityCandidateEvaluated?: boolean
+  traceDensityCandidateSelected?: boolean
+  downstreamNodePfSum?: number
+  downstreamNodePfSquaredSum?: number
+  downstreamNodePfMax?: number
+  downstreamSquaredNodePortPointCount?: number
+  iterations: number
+  timeMs?: number
+  ripCount?: number
+  partialRipCount?: number
+  partiallyRippedRouteCount?: number
+  partiallyRippedSegmentCount?: number
+  retainedPartialRipSegmentCount?: number
+  firstMaxRegionCost?: number
+  bestMaxRegionCost?: number
+  firstTotalRegionCost?: number
+  bestTotalRegionCost?: number
+  firstSegmentCount?: number
+  bestSolvedSegmentCount?: number
+  bestSolvedMaxRegionSegmentCount?: number
+  bestSolvedSquaredRegionSegmentCount?: number
+  finalMaxRegionSegmentCount: number
+  finalSquaredRegionSegmentCount: number
+  finalSegmentCount?: number
+  finalLayerChangeCount?: number
+  warmupFullRipAttempts?: number
+  complexityAwareSelection?: boolean
+  targetReached?: boolean
+  outsideInCompletedRouteCount?: number
+  outsideInFallbackRouteCount?: number
+  outsideInForwardExpansionCount?: number
+  outsideInReverseExpansionCount?: number
+}
+
+export type RoutingBenchmarkMetrics = {
+  tinyHypergraph?: TinyHypergraphBenchmarkMetrics
+  highDensityIterations?: number
+  phaseTimeMs?: Record<string, number>
+  networkedHighDensity?: {
+    remoteRequestsStarted: number
+    remoteRequestsCompleted: number
+    remoteBatchCacheMisses: number
+    remoteSingleRequestsStarted: number
+    remoteCacheHits: number
+    remoteSolverResults: number
+    remoteTransportFallbacks: number
+    remoteFallbackReasonCounts?: Record<string, number>
+  }
 }
 
 export type WorkerResult<
@@ -50,11 +126,17 @@ export type WorkerResult<
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  /** Peak resident set size through routing completion in the isolated sample process. */
+  peakRssBytes?: number
+  /** Configured per-sample limit used to score unsuccessful runs in percentiles. */
+  sampleTimeoutMs?: number
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
   viaCount?: number
   drcErrorCount?: number
+  /** Per-type style issue counts; absent in historical/unlinted results. */
+  traceLintIssueCounts?: Record<string, number>
   drcErrorTypes?: Record<string, number>
   drcErrorMessages?: Array<{
     message: string
@@ -63,6 +145,8 @@ export type WorkerResult<
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+  stageTiming?: BenchmarkStageTimingBreakdown
+  routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
 }
 
@@ -94,8 +178,27 @@ export type SolverRunSummary = {
   relaxedDrcRateLabel: string
   timedOutLabel: string
   p50TimeMs: number | null
+  // Optional so previously published version 1 artifacts remain readable.
+  p60TimeMs?: number | null
+  p70TimeMs?: number | null
+  p80TimeMs?: number | null
+  p90TimeMs?: number | null
   p95TimeMs: number | null
+  /** Optional so previously published version 1 artifacts remain readable. */
+  p50PeakRssBytes?: number | null
+  p80PeakRssBytes?: number | null
+  p90PeakRssBytes?: number | null
   avgVia: number | null
+  /** Average issues per completed, linted sample; absent in older artifacts. */
+  avgTraceLintIssues?: Record<string, number | null>
+  networkCache?: {
+    remoteRequests: number
+    cacheHits: number
+    solverResults: number
+    batchCacheMisses: number
+    localFallbacks: number
+    validationRejections?: number
+  }
 }
 
 export type BestViaCountRecord = {
@@ -126,9 +229,41 @@ export type BenchmarkBestViaCellsReport = {
   cells: BestViaCountCell[]
 }
 
+export type BenchmarkRuntimeMetadata = {
+  bunVersion: string
+  platform: string
+  architecture: string
+  cpuModel: string
+  logicalCpuCount: number
+  availableParallelism: number
+  memoryLimitBytes: number
+  memoryBudgetPerWorkerBytes: number
+  /** Requested routing-worker budget, not observed worker usage. */
+  threadsPerSample?: number
+  effectiveThreadsPerSample?: number
+  cpuBudgetPerSample?: number
+  requestedConcurrency: number
+  workerCount: number
+  localHighDensityCluster?: {
+    serversPerLane: 8
+    laneCount: number
+    effectiveCpuCount: number
+    laneCpuIds: number[][]
+    sampleAssignment: "fixed_round_robin"
+    cacheIsolation: "per_sample"
+    passStats?: Array<{
+      pass: "cold" | "hot"
+      lanes: LocalHighDensityClusterStats[]
+    }>
+  }
+}
+
 export type BenchmarkReport = {
   version: 1
   datasetName: string
+  memoryMeasurementMode?: "isolated_process_per_sample"
+  /** Optional so historical benchmark reports remain readable. */
+  runtime?: BenchmarkRuntimeMetadata
   scenarioCount: number
   effortLabel: string
   summary: SolverRunSummary[]

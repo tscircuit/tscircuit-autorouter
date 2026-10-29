@@ -57,6 +57,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
               traceId: "fixed-trace",
               fixedNetId: "fixed-root",
               routePosition,
+              tracePoint: { x, y },
               z: 0,
             },
           ],

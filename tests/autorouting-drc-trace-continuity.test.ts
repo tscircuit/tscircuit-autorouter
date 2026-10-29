@@ -6,8 +6,8 @@ import {
 import type { AnyCircuitElement } from "circuit-json"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { checkTraceContinuity } from "lib/utils/autorouting-drc/check-trace-continuity"
-import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotate-trace-endpoint-ports"
+import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
+import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 
 const createTrace = (
   id: string,
@@ -47,23 +47,37 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
         connectedTo: ["pcb_plated_hole_b", "pcb_port_b"],
       },
     ],
-    connections: [{
-      name: "net",
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "top", pcb_port_id: "pcb_port_a" },
-        { x: 4, y: 0, layer: "top", pcb_port_id: "pcb_port_b" },
-      ],
-    }],
+    connections: [
+      {
+        name: "net",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "pcb_port_a" },
+          { x: 4, y: 0, layer: "top", pcb_port_id: "pcb_port_b" },
+        ],
+      },
+    ],
   }
-  const goodTrace = createTrace("good", [{ x: 0, y: 0 }, { x: 4, y: 0 }])
-  const missingTrace = createTrace("missing", [{ x: 0, y: 0 }, { x: 3, y: 0 }])
+  const goodTrace = createTrace("good", [
+    { x: 0, y: 0 },
+    { x: 4, y: 0 },
+  ])
+  const missingTrace = createTrace("missing", [
+    { x: 0, y: 0 },
+    { x: 3, y: 0 },
+  ])
   const viaTrace: SimplifiedPcbTrace = {
     ...goodTrace,
     pcb_trace_id: "misaligned",
     route: [
       { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
       { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "top" },
-      { route_type: "via", x: 2.02, y: 0, from_layer: "top", to_layer: "bottom" },
+      {
+        route_type: "via",
+        x: 2.02,
+        y: 0,
+        from_layer: "top",
+        to_layer: "bottom",
+      },
       { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "bottom" },
       { route_type: "wire", x: 4, y: 0, width: 0.1, layer: "bottom" },
     ],
@@ -73,8 +87,14 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     [missingTrace],
     [viaTrace],
     [
-      createTrace("branch_a", [{ x: 0, y: 0 }, { x: 2, y: 0 }]),
-      createTrace("branch_b", [{ x: 2, y: 0 }, { x: 4, y: 0 }]),
+      createTrace("branch_a", [
+        { x: 0, y: 0 },
+        { x: 2, y: 0 },
+      ]),
+      createTrace("branch_b", [
+        { x: 2, y: 0 },
+        { x: 4, y: 0 },
+      ]),
     ],
   ]
   const circuits = traceCases.map((traces) => convertToCircuitJson(srj, traces))
@@ -89,9 +109,14 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     { x: 4 + Math.SQRT1_2, y: Math.SQRT1_2 },
   ])
   circuits.push(convertToCircuitJson(rotatedSrj, [rotatedBoundaryTrace]))
-  circuits.push(convertToCircuitJson(rotatedSrj, [
-    createTrace("outside_rotated_pad", [{ x: 0, y: 0.8 }, { x: 4, y: 0.8 }]),
-  ]))
+  circuits.push(
+    convertToCircuitJson(rotatedSrj, [
+      createTrace("outside_rotated_pad", [
+        { x: 0, y: 0.8 },
+        { x: 4, y: 0.8 },
+      ]),
+    ]),
+  )
   circuits.push([
     {
       type: "pcb_trace",
@@ -119,14 +144,22 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     expect<unknown>(checkTraceContinuity(circuitJson)).toEqual(expected)
     errorCounts.push(expected.length)
   }
-  expect(errorCounts).toEqual([0, 1, 1, 0, 0, 2, 2, 1])
+  // A via connects the incoming/outgoing copper on its declared layers even
+  // when the wire endpoints do not duplicate the via center.
+  expect(errorCounts).toEqual([0, 1, 0, 0, 0, 2, 2, 1])
 
   const edgeSrj = structuredClone(srj)
   edgeSrj.obstacles[1]!.layers = ["top"]
   edgeSrj.obstacles[1]!.connectedTo = ["pcb_smtpad_b", "pcb_port_b"]
   const edgeCircuit = convertToCircuitJson(edgeSrj, [
-    createTrace("edge_a", [{ x: 0, y: 0 }, { x: 2, y: 0 }]),
-    createTrace("edge_b", [{ x: 2, y: 0 }, { x: 3.46, y: 0 }]),
+    createTrace("edge_a", [
+      { x: 0, y: 0 },
+      { x: 2, y: 0 },
+    ]),
+    createTrace("edge_b", [
+      { x: 2, y: 0 },
+      { x: 3.46, y: 0 },
+    ]),
   ])
   const referenceEdgeCircuit = structuredClone(edgeCircuit)
   // Reference overlap checking adds endpoint ids before continuity runs.
@@ -134,13 +167,17 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
   expect(checkTraceContinuity(edgeCircuit)).toHaveLength(1)
   annotateTraceEndpointPorts(edgeCircuit)
   expect(edgeCircuit).toEqual(referenceEdgeCircuit)
-  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(0)
+  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(1)
   expect<unknown>(checkTraceContinuity(edgeCircuit)).toEqual(
     checkTracesAreContiguous(referenceEdgeCircuit),
   )
 
-  const detachedTrace = createTrace("detached", [{ x: 0.8, y: 0 }, { x: 3, y: 0 }])
-  if (detachedTrace.route[0]?.route_type !== "wire") throw new Error("Expected a wire endpoint")
+  const detachedTrace = createTrace("detached", [
+    { x: 0.8, y: 0 },
+    { x: 3, y: 0 },
+  ])
+  if (detachedTrace.route[0]?.route_type !== "wire")
+    throw new Error("Expected a wire endpoint")
   detachedTrace.route[0].start_pcb_port_id = "pcb_port_b"
   const detachedCircuit = convertToCircuitJson(srj, [detachedTrace])
   const referenceDetachedCircuit = structuredClone(detachedCircuit)

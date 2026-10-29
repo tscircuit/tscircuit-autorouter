@@ -43,7 +43,9 @@ test("checks classifies pad/via pairs once through getDrcErrors", () => {
     (error) => error.type === "pcb_pad_trace_clearance_error",
   )
   expect(padClearanceErrors).toHaveLength(1)
-  expect(padClearanceErrors[0]).toMatchObject({ center: { x: 0, y: 0 } })
+  // The shared checker locates the gap between the nearest copper edges.
+  expect(padClearanceErrors[0]?.center?.x).toBeCloseTo(-0.1)
+  expect(padClearanceErrors[0]?.center?.y).toBeCloseTo(0.075)
   expect(
     errors.filter((error) => error.type === "pcb_via_trace_clearance_error"),
   ).toHaveLength(0)

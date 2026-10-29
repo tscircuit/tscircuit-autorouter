@@ -122,7 +122,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     }
 
     this.solvedRoutes.push(
-      ...this.routes.map((route) => ({
+      ...this.routes.map((route, routeIndex) => ({
         connectionName: route.connectionName,
         rootConnectionName: route.rootConnectionName,
         regionId: this.nodeWithPortPoints.capacityMeshNodeId,
@@ -132,7 +132,15 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
             y: route.A.y,
             z: route.A.z!,
             ...(route.A.z !== route.B.z
-              ? { toNextSegmentType: "through_obstacle" as const }
+              ? {
+                  toNextSegmentType: "through_obstacle" as const,
+                  ...(containingObstacles[routeIndex]!.circuitJsonMetadata
+                    ? {
+                        toNextSegmentCircuitJsonMetadata:
+                          containingObstacles[routeIndex]!.circuitJsonMetadata,
+                      }
+                    : {}),
+                }
               : {}),
           },
           { x: route.B.x, y: route.B.y, z: route.B.z! },

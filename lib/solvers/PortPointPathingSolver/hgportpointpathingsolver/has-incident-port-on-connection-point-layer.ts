@@ -1,4 +1,3 @@
-import { sharedZLayers } from "./sharedZLayers"
 import type { RegionHg } from "./types"
 
 type HasIncidentPortOnConnectionPointLayerParams = {
@@ -13,7 +12,7 @@ export function hasIncidentPortOnConnectionPointLayer({
   return region.ports.some(
     (port) =>
       pointZLayers.includes(port.d.z) &&
-      sharedZLayers(pointZLayers, port.region1.d.availableZ).length > 0 &&
-      sharedZLayers(pointZLayers, port.region2.d.availableZ).length > 0,
+      pointZLayers.some((z) => port.region1.d.availableZ.includes(z)) &&
+      pointZLayers.some((z) => port.region2.d.availableZ.includes(z)),
   )
 }

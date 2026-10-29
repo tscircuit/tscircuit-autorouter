@@ -1,3 +1,6 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
+import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
@@ -10,35 +13,65 @@ import type {
 import type {
   BenchmarkSnapshotWithImage,
   BenchmarkTask,
+  RoutingBenchmarkMetrics,
+  TinyHypergraphBenchmarkMetrics,
   WorkerProgress,
   WorkerResultWithImage,
 } from "./benchmark-types"
+import {
+  extractBenchmarkStageTiming,
+  type PipelineStageTimingSource,
+} from "./benchmark-stage-timing"
+import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
 
-type SolverInstance = {
+type SubSolverInstance = {
+  progress?: number
+  iterations?: number
+  error?: string | null
+  getSolverName?: () => string
+}
+
+type HighDensityBenchmarkSource = {
+  iterations?: number
+  stats?: Record<string, unknown>
+  waitForAllRemoteRequests?: () => Promise<void>
+}
+
+type BenchmarkPipelineStep = {
+  solverName: string
+  solverClass?: Function
+  getConstructorParams?: (...args: any[]) => readonly unknown[]
+}
+
+type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   solved?: boolean
   failed?: boolean
   progress?: number
   iterations?: number
   error?: string | null
-  activeSubSolver?: SolverInstance | null
-  currentPipelineStepIndex?: number
-  pipelineDef?: Array<{
-    solverName?: string
-    solverClass?: {
-      name?: string
-    }
-  }>
+  activeSubSolver?: SubSolverInstance | null
+  pipelineDef: ReadonlyArray<BenchmarkPipelineStep>
   srjWithPointPairs?: SimpleRouteJson
   step?: () => void
   solve?: () => void | Promise<void>
-  solveAsync?: () => Promise<void>
+  solveAsync?: (runtime?: SolverRuntimeExecutor) => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
+  portPointPathingSolver?: {
+    getSolveGraphBenchmarkMetrics?: () =>
+      | TinyHypergraphBenchmarkMetrics
+      | undefined
+  }
+  highDensityRouteSolver?: HighDensityBenchmarkSource
+  highDensityRepairSolver?: HighDensityBenchmarkSource
+  timeSpentOnPhase: Record<string, number>
 }
 
 type SolverOptions = {
   effort?: number
+  hdCache2ServerUrl?: string
+  hdCache2CacheVersion?: string
 }
 
 type SolverConstructor = new (
@@ -94,9 +127,9 @@ export const getBenchmarkSolverOptions = (
   }
 }
 
-const getSolverConstructor = (solverName: string) => {
+const getSolverConstructor = (solverName: string): SolverConstructor => {
   if (solverName === "KrtAutoroutingPipelineSolver") {
-    return KrtAutoroutingPipelineSolver as SolverConstructor
+    return KrtAutoroutingPipelineSolver
   }
 
   const ctor = (autorouterModule as Record<string, unknown>)[solverName]
@@ -106,12 +139,89 @@ const getSolverConstructor = (solverName: string) => {
   return ctor as SolverConstructor
 }
 
-export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
-  const SolverConstructor = getSolverConstructor(task.solverName)
-  return new SolverConstructor(
-    task.scenario,
-    getBenchmarkSolverOptions(task.scenario),
+export const configureNetworkedBenchmarkRequestTimeout = (
+  solver: SolverInstance,
+  requestTimeoutMs: number,
+): void => {
+  if (!Number.isFinite(requestTimeoutMs) || requestTimeoutMs <= 0) {
+    throw new Error("Networked benchmark request timeout must be positive")
+  }
+  let configuredRouteStage = false
+  // These subclasses already accept the option in older checkouts. Extend
+  // the public lazy constructor callbacks instead of changing measured lib.
+  solver.pipelineDef = solver.pipelineDef.map(
+    (step): SolverInstance["pipelineDef"][number] => {
+      const isRouteStage = step.solverName === "highDensityRouteSolver"
+      if (!isRouteStage && step.solverName !== "highDensityRepairSolver")
+        return step
+      const getConstructorParams = step.getConstructorParams
+      if (typeof getConstructorParams !== "function") {
+        throw new Error(
+          `Networked benchmark ${step.solverName} constructor parameters are unavailable`,
+        )
+      }
+      if (isRouteStage) configuredRouteStage = true
+      return {
+        ...step,
+        getConstructorParams: (
+          instance: SolverInstance,
+        ): readonly unknown[] => {
+          const constructorParams = getConstructorParams.call(step, instance)
+          const params = constructorParams[0]
+          const isNetworkedParams =
+            params !== null &&
+            typeof params === "object" &&
+            !Array.isArray(params) &&
+            typeof (params as Record<string, unknown>).autorouterVersion ===
+              "string"
+          if (!isNetworkedParams) {
+            if (isRouteStage)
+              throw new Error(
+                "Networked benchmark high-density routing constructor identity is unavailable",
+              )
+            return constructorParams // Older checkouts perform repair locally.
+          }
+          return [
+            { ...params, requestTimeoutMs },
+            ...constructorParams.slice(1),
+          ]
+        },
+      }
+    },
   )
+  if (!configuredRouteStage) {
+    throw new Error(
+      "Networked benchmark high-density routing stage is unavailable",
+    )
+  }
+}
+
+export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
+  const constructorName = task.solverConstructorName ?? task.solverName
+  const SolverConstructor = getSolverConstructor(constructorName)
+  const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
+  if (constructorName !== "AutoroutingPipelineSolver9_Networked") {
+    return new SolverConstructor(task.scenario, scenarioOptions)
+  }
+
+  const networkedServer = task.networkedServer
+  if (!networkedServer) {
+    throw new Error(
+      "Pipeline9_Networked benchmark requires a configured local cluster or explicit --networked-remote; use benchmark.sh",
+    )
+  }
+  const solver = new SolverConstructor(task.scenario, {
+    ...scenarioOptions,
+    hdCache2ServerUrl: networkedServer.url,
+    hdCache2CacheVersion: networkedServer.cacheVersion,
+  })
+  if (networkedServer.requestTimeoutMs !== undefined) {
+    configureNetworkedBenchmarkRequestTimeout(
+      solver,
+      networkedServer.requestTimeoutMs,
+    )
+  }
+  return solver
 }
 
 const getErrorMessage = (error: unknown): string | undefined => {
@@ -203,7 +313,9 @@ const summarizeDrcErrors = (errors: object[]): DrcSummary => {
   }
 }
 
-const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
+const getSolverInstanceName = (
+  solver: SubSolverInstance | null | undefined,
+) => {
   if (!solver) {
     return undefined
   }
@@ -220,11 +332,7 @@ const getFailureInfo = (
   solver: SolverInstance,
   fallbackError?: string,
 ): FailureInfo => {
-  const pipelineStep =
-    Array.isArray(solver.pipelineDef) &&
-    typeof solver.currentPipelineStepIndex === "number"
-      ? solver.pipelineDef[solver.currentPipelineStepIndex]
-      : undefined
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
   const activeSubSolver = solver.activeSubSolver ?? null
 
   return {
@@ -243,11 +351,7 @@ const getProgressInfo = (
   solver: SolverInstance,
   elapsedTimeMs: number,
 ): WorkerProgress => {
-  const pipelineStep =
-    Array.isArray(solver.pipelineDef) &&
-    typeof solver.currentPipelineStepIndex === "number"
-      ? solver.pipelineDef[solver.currentPipelineStepIndex]
-      : undefined
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
   const activeSubSolver = solver.activeSubSolver ?? null
 
   return {
@@ -262,18 +366,147 @@ const getProgressInfo = (
     solverIterations: solver.iterations,
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
+    stageTiming: extractBenchmarkStageTiming(solver, "partial"),
   }
 }
 
-const getProgressKey = (progress: WorkerProgress) =>
-  [progress.phaseName ?? "", progress.phaseSolverName ?? ""].join("|")
+const getProgressKey = (solver: SolverInstance): string => {
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
+  const phaseName = pipelineStep?.solverName ?? ""
+  const phaseSolverName =
+    pipelineStep?.solverClass?.name ??
+    getSolverInstanceName(solver.activeSubSolver) ??
+    ""
+  return `${phaseName}|${phaseSolverName}`
+}
 
-const solveWithProgress = async (
+export const getRoutingBenchmarkMetrics = (
+  solver: SolverInstance,
+): RoutingBenchmarkMetrics => {
+  const networkedStats = [
+    solver.highDensityRouteSolver?.stats,
+    solver.highDensityRepairSolver?.stats,
+  ].filter(
+    (stats): stats is Record<string, unknown> =>
+      stats !== undefined && typeof stats.remoteRequestsStarted === "number",
+  )
+  let networkedHighDensity: RoutingBenchmarkMetrics["networkedHighDensity"]
+  if (networkedStats.length > 0) {
+    networkedHighDensity = {
+      remoteRequestsStarted: 0,
+      remoteRequestsCompleted: 0,
+      remoteBatchCacheMisses: 0,
+      remoteSingleRequestsStarted: 0,
+      remoteCacheHits: 0,
+      remoteSolverResults: 0,
+      remoteTransportFallbacks: 0,
+    }
+    for (const stats of networkedStats) {
+      for (const key of [
+        "remoteRequestsStarted",
+        "remoteRequestsCompleted",
+        "remoteBatchCacheMisses",
+        "remoteSingleRequestsStarted",
+        "remoteCacheHits",
+        "remoteSolverResults",
+        "remoteTransportFallbacks",
+      ] as const) {
+        networkedHighDensity[key] += Number(stats[key] ?? 0)
+      }
+      const reasonCounts = stats.remoteFallbackReasonCounts as
+        | Record<string, number>
+        | undefined
+      if (reasonCounts) {
+        const combined = (networkedHighDensity.remoteFallbackReasonCounts ??=
+          {})
+        for (const [reason, count] of Object.entries(reasonCounts)) {
+          combined[reason] = (combined[reason] ?? 0) + count
+        }
+      }
+    }
+  }
+  return {
+    tinyHypergraph:
+      solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
+    highDensityIterations: solver.highDensityRouteSolver?.iterations,
+    phaseTimeMs: solver.timeSpentOnPhase,
+    networkedHighDensity,
+  }
+}
+
+const getNetworkedBenchmarkValidationError = (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+): string | undefined => {
+  if (!task.networkedCachePass) return undefined
+  const stats = getRoutingBenchmarkMetrics(solver).networkedHighDensity
+  if (!stats) return "Pipeline9_Networked did not expose remote cache metrics"
+  const validationRejections =
+    task.networkedServer?.backend === "local"
+      ? countDeterministicNetworkedValidationRejections(stats)
+      : 0
+  if (stats.remoteTransportFallbacks > validationRejections) {
+    return `Pipeline9_Networked used ${stats.remoteTransportFallbacks} local transport fallback(s)`
+  }
+  if (stats.remoteRequestsCompleted !== stats.remoteRequestsStarted) {
+    return `Pipeline9_Networked did not drain all requests (${stats.remoteRequestsCompleted}/${stats.remoteRequestsStarted})`
+  }
+  if (
+    task.networkedCachePass === "hot" &&
+    (stats.remoteBatchCacheMisses > 0 ||
+      stats.remoteSingleRequestsStarted > 0 ||
+      stats.remoteSolverResults > 0 ||
+      stats.remoteCacheHits + validationRejections !==
+        stats.remoteRequestsStarted)
+  ) {
+    return `Pipeline9_Networked hot pass was not fully cached (${stats.remoteCacheHits}/${stats.remoteRequestsStarted} cache hit(s), ${stats.remoteBatchCacheMisses} batch miss(es), ${stats.remoteSingleRequestsStarted} single solve(s), ${stats.remoteSolverResults} solver result(s))`
+  }
+  return undefined
+}
+
+export const validateNetworkedBenchmark = async (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+): Promise<void> => {
+  if (!task.networkedCachePass) return
+  const sources = [
+    {
+      name: "highDensityRouteSolver",
+      source: solver.highDensityRouteSolver,
+      required: true,
+    },
+    {
+      name: "highDensityRepairSolver",
+      source: solver.highDensityRepairSolver,
+      required:
+        typeof solver.highDensityRepairSolver?.stats?.remoteRequestsStarted ===
+        "number",
+    },
+  ]
+  const drains = await Promise.allSettled(
+    sources.map(async ({ name, source, required }): Promise<void> => {
+      if (typeof source?.waitForAllRemoteRequests === "function") {
+        await source.waitForAllRemoteRequests()
+      } else if (required) {
+        throw new Error(
+          `Pipeline9_Networked benchmark requires an explicit remote-request drain for ${name}`,
+        )
+      }
+    }),
+  )
+  for (const drain of drains) {
+    if (drain.status === "rejected") throw drain.reason
+  }
+  const validationError = getNetworkedBenchmarkValidationError(task, solver)
+  if (validationError) throw new Error(validationError)
+}
+
+export const solveWithProgress = async (
   task: BenchmarkTask,
   solver: SolverInstance,
   start: number,
   options: RunTaskOptions,
-) => {
+): Promise<void> => {
   const progressIntervalMs =
     options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS
   let lastProgressAt = -Infinity
@@ -285,8 +518,7 @@ const solveWithProgress = async (
     }
 
     const elapsedTimeMs = performance.now() - start
-    const progress = getProgressInfo(task, solver, elapsedTimeMs)
-    const progressKey = getProgressKey(progress)
+    const progressKey = getProgressKey(solver)
     if (
       !force &&
       progressKey === lastProgressKey &&
@@ -297,22 +529,46 @@ const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
-    options.onProgress(progress)
+    // Building stage timings walks the completed pipeline and allocates a
+    // report. Do that only for emitted updates, not every routing iteration.
+    options.onProgress(getProgressInfo(task, solver, elapsedTimeMs))
   }
 
   emitProgress(true)
+
+  if (
+    (task.threads ?? 1) > 1 &&
+    ((task.solverConstructorName ?? task.solverName) !==
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph" ||
+      typeof solver.solveAsync !== "function")
+  ) {
+    throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
+  }
 
   if (typeof solver.solveAsync === "function") {
     const interval =
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
         : null
+    let runtime:
+      | (SolverRuntimeExecutor & { dispose(): Promise<void> })
+      | undefined
     try {
-      await solver.solveAsync()
+      if ((task.threads ?? 1) > 1) {
+        const { createAutorouterSolverRuntime } = await import(
+          "../../lib/runtime/bun"
+        )
+        runtime = createAutorouterSolverRuntime({
+          workerCount: task.threads!,
+          requireWorker: true,
+        })
+      }
+      await solver.solveAsync(runtime)
     } finally {
       if (interval) {
         clearInterval(interval)
       }
+      await runtime?.dispose()
     }
     emitProgress(true)
     return
@@ -393,8 +649,23 @@ export const runTask = async (
     solveError = getErrorMessage(error)
   }
 
+  if (task.networkedCachePass) {
+    try {
+      await validateNetworkedBenchmark(task, solver)
+    } catch (error) {
+      solver.solved = false
+      solveError = getErrorMessage(error)
+    }
+  }
   const elapsedTimeMs = performance.now() - start
+
   const didSolve = Boolean(solver.solved)
+  const routingMetrics = getRoutingBenchmarkMetrics(solver)
+  let stageTimingStatus: "complete" | "partial" = "partial"
+  if (didSolve) {
+    stageTimingStatus = "complete"
+  }
+  const stageTiming = extractBenchmarkStageTiming(solver, stageTimingStatus)
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
@@ -406,6 +677,8 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
+      routingMetrics,
       ...failureInfo,
     }
   }
@@ -414,6 +687,19 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    if (typeof solver.getOutputSimpleRouteJson !== "function") {
+      throw new Error(
+        "Cannot lint a solved benchmark without routed SimpleRouteJson",
+      )
+    }
+    const traceLinter = runTraceLinting(solver.getOutputSimpleRouteJson())
+    const traceLintIssueCounts: Record<string, number> = Object.fromEntries(
+      Object.keys(TRACE_LINT_LABELS).map((type) => [type, 0]),
+    )
+    for (const issue of traceLinter.getOutput()) {
+      traceLintIssueCounts[issue.type] =
+        (traceLintIssueCounts[issue.type] ?? 0) + 1
+    }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,
@@ -449,6 +735,9 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      traceLintIssueCounts,
+      stageTiming,
+      routingMetrics,
       benchmarkSnapshot,
       ...drcSummary,
     }
@@ -461,6 +750,8 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
+      routingMetrics,
       error: error instanceof Error ? error.message : String(error),
     }
   }

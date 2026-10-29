@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"
-import { AutoroutingPipelineSolver } from "../lib"
+import { AutoroutingPipelineSolver7_MultiGraph } from "../lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 
 test("Pipeline7 bypasses signal-only traces without changing their DRC result", () => {
   const inputSrj = e2e3Fixture as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver(inputSrj)
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(inputSrj)
   solver.solve()
 
   expect(solver.failed).toBe(false)

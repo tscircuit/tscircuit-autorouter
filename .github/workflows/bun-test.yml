@@ -16,11 +16,13 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The full-board bugreport107 repro takes about sixteen minutes locally.
+    # Allow its thirty-minute test budget plus checkout and installation.
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8]
+        node: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     steps:
       - name: Checkout code
@@ -29,7 +31,7 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: 1.3.8
+          bun-version: 1.4.3
 
       - name: Install dependencies
         run: bun install
@@ -40,7 +42,7 @@ jobs:
       - name: Generate balanced test plans
         run: bun scripts/generate-balanced-test-plan.ts
         env:
-          NODE_COUNT: 8
+          NODE_COUNT: 9
 
       - name: Run tests for node ${{ matrix.node }}
         run: |
@@ -57,7 +59,31 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          bun test "${test_files[@]}" --timeout 300000
+          # Full-board sample 2 tests can take over five minutes on CI.
+          # Keep their assertions and allow the same runner-variance budget.
+          regular_tests=()
+          slow_tests=()
+          full_board_tests=()
+          for test_file in "${test_files[@]}"; do
+            case "$test_file" in
+              tests/bugs/bugreport107-board-1726.test.ts)
+                full_board_tests+=("$test_file")
+                ;;
+              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts)
+                slow_tests+=("$test_file")
+                ;;
+              *) regular_tests+=("$test_file") ;;
+            esac
+          done
+          if [ "${#regular_tests[@]}" -gt 0 ]; then
+            bun test "${regular_tests[@]}" --timeout 300000
+          fi
+          if [ "${#slow_tests[@]}" -gt 0 ]; then
+            bun test "${slow_tests[@]}" --timeout 600000
+          fi
+          if [ "${#full_board_tests[@]}" -gt 0 ]; then
+            bun test "${full_board_tests[@]}" --timeout 1800000
+          fi
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()
@@ -67,4 +93,5 @@ jobs:
           path: |
             **/*.diff.png
             **/*.received.svg
+            **/*-drc.received.json
             **/*.snap.svg

@@ -41,7 +41,7 @@ import {
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { getColorMap } from "../../solvers/colors"
 import type {
@@ -317,7 +317,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             initialAssignedPortPoints: portPointSolver.assignedPortPoints,
             initialNodeAssignedPortPoints:
               portPointSolver.nodeAssignedPortPoints,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
           },
         ]
       },
@@ -357,7 +357,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
         traceWidth: cms.minTraceWidth,
-        effort: cms.effort,
+        effort: Math.min(1, cms.effort),
       },
     ]),
     definePipelineStep(

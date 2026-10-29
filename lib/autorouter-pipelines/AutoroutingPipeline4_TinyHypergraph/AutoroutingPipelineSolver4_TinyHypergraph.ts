@@ -45,13 +45,14 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { hasImpossibleSameLayerCrossingGeometry } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/invalidSameLayerCrossingGeometry"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "./PreprocessSimpleRouteJsonSolver"
 
@@ -256,7 +257,6 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
           simpleRouteJson: cms.srjWithPointPairs!,
-          numberOfCrampedPortPointsToKeep: 5,
         },
       ],
     ),
@@ -282,7 +282,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -334,12 +334,23 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const routableNodePortPoints = nodePortPointsSource.map((node) =>
+        hasImpossibleSameLayerCrossingGeometry(node)
+          ? {
+              ...node,
+              availableZ: Array.from(
+                { length: cms.srj.layerCount },
+                (_, z) => z,
+              ),
+            }
+          : node,
+      )
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+      cms.highDensityNodePortPoints = structuredClone(routableNodePortPoints)
 
       return [
         {
-          nodePortPoints: nodePortPointsSource,
+          nodePortPoints: routableNodePortPoints,
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
@@ -368,7 +379,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
+          totalStepsPerNode: Math.max(
+            20,
+            Math.round(60 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -385,6 +399,8 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          minimumTraceWidth: cms.srj.minTraceWidth,
+          connMap: cms.connMap,
         },
       ],
     ),
@@ -440,7 +456,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
         },
       ],
     ),

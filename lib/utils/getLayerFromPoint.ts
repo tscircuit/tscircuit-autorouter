@@ -1,14 +1,12 @@
-/**
- * Returns the first layer name from a point that may have `layer` or `layers`.
- */
+import type { ConnectionPoint } from "lib/types"
+import { getConnectionPointLayer } from "./connection-point-utils"
+
+/** Returns the primary routing layer of a connection point, if present. */
 export function getLayerFromPoint({
   point,
 }: {
-  point: { layer?: string; layers?: string[] } | null | undefined
+  point: ConnectionPoint | null | undefined
 }): string | undefined {
   if (!point) return undefined
-  if ("layers" in point && Array.isArray(point.layers)) {
-    return point.layers[0]
-  }
-  return point.layer
+  return getConnectionPointLayer(point)
 }

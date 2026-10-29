@@ -1,5 +1,6 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import { SimpleRouteJson } from "lib/types"
+import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 
 export type DatasetCircuit = {
@@ -10,6 +11,7 @@ export type DatasetCircuit = {
 type DatasetBenchmarkFixtureProps = {
   datasetLabel: string
   circuits: readonly DatasetCircuit[]
+  renderDebugger?: (circuit: DatasetCircuit) => ReactNode
 }
 
 type ViewState = "unavailable" | "ready"
@@ -23,6 +25,7 @@ const normalizeCircuitId = (value: string) => {
 export const DatasetBenchmarkFixture = ({
   datasetLabel,
   circuits,
+  renderDebugger,
 }: DatasetBenchmarkFixtureProps) => {
   const sortedCircuits = useMemo(
     () => [...circuits].sort((a, b) => Number(a.id) - Number(b.id)),
@@ -138,10 +141,14 @@ export const DatasetBenchmarkFixture = ({
 
           {error && <div style={{ color: "red" }}>{error}</div>}
 
-          <AutoroutingPipelineDebugger
-            key={`${datasetLabel}-${currentCircuit.id}`}
-            srj={currentCircuit.srj}
-          />
+          {renderDebugger ? (
+            renderDebugger(currentCircuit)
+          ) : (
+            <AutoroutingPipelineDebugger
+              key={`${datasetLabel}-${currentCircuit.id}`}
+              srj={currentCircuit.srj}
+            />
+          )}
         </div>
       )
     }

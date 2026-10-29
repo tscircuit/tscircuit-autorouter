@@ -12,6 +12,7 @@ const solverParams = {
   obstacles: [],
   layerCount: 2,
   effort: 1,
+  captureSearchDebug: false,
 }
 
 test("the supervisor derives its limit without advancing candidates", () => {
@@ -116,5 +117,14 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
     solver.winningSolver!.MAX_ITERATIONS,
   )
+  const failedGridSearchCandidates =
+    solver.winningSolver!.supervisedSolvers!.filter(
+      ({ solver: candidate }) =>
+        candidate.failed && Array.isArray(candidate.failedSubSolvers),
+    )
+  expect(failedGridSearchCandidates.length).toBeGreaterThan(0)
+  for (const { solver: candidate } of failedGridSearchCandidates) {
+    expect(candidate.failedSubSolvers).toEqual([])
+  }
   expect(solver.solvedRoutes).toHaveLength(19)
 }, 60_000)

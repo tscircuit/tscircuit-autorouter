@@ -1,0 +1,31 @@
+Prepared routing: dataset18 sample006
+
+Three fresh-process trials per mode, rotated order, Bun 1.4.4, four-CPU quota.
+Effort 1; cache disabled; includes setup, preparation, worker lifecycle, search,
+and section completion. No other local validation workload ran during timing.
+
+Port-point stage medians:
+  Original serial: 21.720s
+  Prepared serial: 14.099s
+  Prepared four workers: 14.110s
+
+Four-worker speedup over original: 1.539x (35.04% less time).
+Prepared serial change: -35.09% (a speedup, not a slowdown).
+Prepared serial/four-worker ratio: 0.999x. Most improvement comes from
+cheaper serial search operations, not parallel search. SolverRuntime handles
+only static distance preparation; route search and commits remain serial.
+
+All nine outputs match the original byte for byte. All sixteen dataset18
+port-point outputs also match the original, including samples 8, 14, and 15.
+Raw trial results/environment: runtime-results.json.
+Per-sample output hashes: dataset18-output-parity.json.
+The recorded revision is the parent commit; prepared changes were in the working tree.
+
+Build, full TypeScript check, eleven focused tests, and built Node package
+four-worker full-pipeline parity/cleanup pass. The PR discussion contains the
+separate full-dataset Blacksmith comparison, completion/DRC, and full-pipeline
+timings. The initial snapshot-batch results are superseded and remain in Git history.
+
+The implementation subsequently moved to tiny-hypergraph PR #297 without
+algorithm changes. The timings above and the linked Blacksmith comparison
+measure the implementation before extraction, not a new timing run.

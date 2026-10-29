@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { isDeepStrictEqual } from "node:util"
-import { createPipeline7RelaxedDrcEvaluator } from "lib/testing/create-pipeline7-relaxed-drc-evaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "lib/testing/createPipeline7RelaxedDrcEvaluator"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -33,6 +33,7 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
         width: 0.2,
         height: 0.2,
         connectedTo: ["pcb_smtpad_foreign"],
+        circuitJsonMetadata: { pcb_smtpad_id: "pcb_smtpad_foreign" },
       },
     ],
   }

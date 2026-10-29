@@ -29,6 +29,8 @@ export type UnsolvedRoute3 = {
   end: Point3
 }
 
+type ConnectionName = string
+
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "MultipleHighDensityRouteStitchSolver3"
@@ -42,7 +44,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
-  private endpointIndex = new EndpointClusterIndex()
+  private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
   private canStitchBetweenTerminals(params: {
@@ -82,14 +84,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         stitchSolver.mergedHdRoute.route.length - 1
       ]
 
-    const directDistance =
-      distance(routeStart, params.start) + distance(routeEnd, params.end)
-    const swappedDistance =
-      distance(routeStart, params.end) + distance(routeEnd, params.start)
-
     return (
-      Math.min(directDistance, swappedDistance) <=
-      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      routeStart.z === stitchSolver.start.z &&
+      routeEnd.z === stitchSolver.end.z &&
+      distance(routeStart, stitchSolver.start) +
+        distance(routeEnd, stitchSolver.end) <=
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     )
   }
 
@@ -144,8 +144,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preferSameLayerTerminalEndpoints?: boolean
   }) {
     super()
+    this.endpointIndex = new EndpointClusterIndex(
+      params.preferSameLayerTerminalEndpoints,
+    )
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
@@ -417,6 +421,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const unsolvedRoute = this.unsolvedRoutes.pop()
 
     if (!unsolvedRoute) {
+      const connectionNamesWithCompleteTerminalRoutes =
+        new Set<ConnectionName>()
+      for (const route of this.mergedHdRoutes) {
+        if (route.startPcbPortId && route.endPcbPortId) {
+          connectionNamesWithCompleteTerminalRoutes.add(route.connectionName)
+        }
+      }
+      this.mergedHdRoutes = this.mergedHdRoutes.filter(
+        (route) =>
+          !connectionNamesWithCompleteTerminalRoutes.has(
+            route.connectionName,
+          ) || Boolean(route.startPcbPortId && route.endPcbPortId),
+      )
       this.solved = true
       return
     }

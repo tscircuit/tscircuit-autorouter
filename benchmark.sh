@@ -8,8 +8,11 @@ SAMPLE_TIMEOUT=""
 SAMPLE_NUMBERS=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
-DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver7_MultiGraph"
+DATASET_WAS_SET=false
+DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver9_PreloadedTraceGraph"
 PIPELINE_ID=""
+NETWORKED_COLD_HOT=false
+NETWORKED_REMOTE=false
 
 resolve_pipeline_solver_name() {
   case "$1" in
@@ -21,6 +24,8 @@ resolve_pipeline_solver_name() {
     6) echo "AutoroutingPipelineSolver6" ;;
     7) echo "AutoroutingPipelineSolver7_MultiGraph" ;;
     9) echo "AutoroutingPipelineSolver9_PreloadedTraceGraph" ;;
+    9net|9NET) echo "AutoroutingPipelineSolver9_Networked" ;;
+    10) echo "AutoroutingPipelineSolver10_BgaFanout" ;;
     krt|KRT) echo "KrtAutoroutingPipelineSolver" ;;
     *)
       echo "Unknown pipeline: $1" >&2
@@ -30,9 +35,10 @@ resolve_pipeline_solver_name() {
 }
 
 default_concurrency() {
-  getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4
+  bun --eval 'import { getBenchmarkConcurrency } from "./scripts/benchmark/benchmarkRuntime.ts"; console.log(getBenchmarkConcurrency())'
 }
 
+THREADS=""
 CONCURRENCY_WAS_SET=false
 if [ -n "${BENCHMARK_CONCURRENCY:-}" ]; then
   CONCURRENCY="$BENCHMARK_CONCURRENCY"
@@ -76,41 +82,53 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline ID        Run a pipeline alias (1-7, 9, or krt)
-  --scenario-limit N   Run only first N scenarios (same as second positional arg)
-  --concurrency N      Number of Bun workers used per solver, or "auto"
+  --pipeline ID        Run a pipeline alias (1-7, 9, 9net, 10, or krt). 9net runs local cold then hot passes.
+  --networked-remote   Explicitly use HD_CACHE2_SERVER_URL instead of local servers
+  --limit N            Run only first N scenarios (same as second positional arg)
+  --scenario-limit N   Backward-compatible alias for --limit
+  --concurrency N      Maximum concurrent samples, or "auto"
+  --threads N          Routing threads per sample (1 = inline; Pipeline9 only)
   --effort N           Override scenario effort multiplier
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
-  --sample-numbers L   Run comma-separated 1-based sample numbers from the dataset order
-  --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, or 28/srj28
+  --sample N           Run one 1-based sample number from the dataset order
+  --sample-numbers L   Run comma-separated 1-based sample numbers
+  --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, or 29/srj29
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
 
 Defaults:
-  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver7_MultiGraph.
+  Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver9_PreloadedTraceGraph.
+  Every sample runs in a fresh process so its peak memory can be reported.
+  Pipeline 9net defaults to dataset18 and eight local servers per sample lane.
+  Local networked samples run serially per lane; two lanes require 16 effective cores.
   Use "all" to benchmark every available solver.
 
 Examples:
   ./benchmark.sh
-  ./benchmark.sh AutoroutingPipelineSolver7_MultiGraph
+  ./benchmark.sh AutoroutingPipelineSolver9_PreloadedTraceGraph
   ./benchmark.sh all 20 --concurrency auto
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --effort 2
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --sample-timeout 90s
+  ./benchmark.sh --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --effort 2
+  ./benchmark.sh --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --sample-timeout 90s
+  ./benchmark.sh --pipeline 10 --dataset 29 --sample 1
+  ./benchmark.sh --pipeline 10 --dataset 29 --limit 5
   ./benchmark.sh --sample-numbers 120,139,148 --concurrency 8 --sample-timeout 120s
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --scenario-limit 20
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset zdwiel --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --dataset zdwiel --scenario-limit 20
   ./benchmark.sh --pipeline 4
   ./benchmark.sh --pipeline 5
   ./benchmark.sh --pipeline 6
   ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline 9
+  ./benchmark.sh --pipeline 9 --dataset 24 --sample 21
+  ./benchmark.sh --pipeline 9net --dataset 18
+  ./benchmark.sh --pipeline 10 --dataset 29
   ./benchmark.sh --pipeline krt
-  ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset srj05 --scenario-limit 20
+  ./benchmark.sh --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --dataset srj05 --scenario-limit 20
   ./benchmark.sh --dataset 11 --scenario-limit 20
   ./benchmark.sh --dataset 12 --scenario-limit 10
   ./benchmark.sh --dataset 13
@@ -125,6 +143,7 @@ Examples:
   ./benchmark.sh --dataset 24
   ./benchmark.sh --dataset 27
   ./benchmark.sh --dataset 28
+  ./benchmark.sh --dataset 29 --pipeline 10
   ./benchmark.sh --include-assignable
 EOF
 
@@ -164,16 +183,21 @@ while [ "$#" -gt 0 ]; do
       PIPELINE_ID="${2:-}"
       shift 2
       ;;
-    --scenario-limit)
+    --limit|--scenario-limit)
       SCENARIO_LIMIT="${2:-}"
       shift 2
       ;;
     --concurrency)
       CONCURRENCY="${2:-}"
       CONCURRENCY_WAS_SET=true
-      if [ "$CONCURRENCY" = "auto" ]; then
-        CONCURRENCY="$(default_concurrency)"
+      shift 2
+      ;;
+    --threads)
+      if [ -z "${2:-}" ] || [[ "$2" == --* ]]; then
+        echo "--threads requires a positive integer" >&2
+        exit 1
       fi
+      THREADS="$2"
       shift 2
       ;;
     --effort)
@@ -184,13 +208,22 @@ while [ "$#" -gt 0 ]; do
       SAMPLE_TIMEOUT="${2:-}"
       shift 2
       ;;
-    --sample-numbers)
+    --sample|--sample-numbers)
       SAMPLE_NUMBERS="${2:-}"
       shift 2
       ;;
     --dataset)
       DATASET="${2:-}"
+      DATASET_WAS_SET=true
       shift 2
+      ;;
+    --networked-cold-hot)
+      NETWORKED_COLD_HOT=true
+      shift
+      ;;
+    --networked-remote)
+      NETWORKED_REMOTE=true
+      shift
       ;;
     --include-assignable)
       INCLUDE_ASSIGNABLE=true
@@ -206,6 +239,37 @@ done
 
 if [ -n "$PIPELINE_ID" ]; then
   SOLVER_NAME="$(resolve_pipeline_solver_name "$PIPELINE_ID")"
+  case "$PIPELINE_ID" in
+    9net|9NET) NETWORKED_COLD_HOT=true ;;
+  esac
+fi
+
+if [ "$SOLVER_NAME" = "AutoroutingPipelineSolver9_Networked" ]; then
+  NETWORKED_COLD_HOT=true
+  if [ "$DATASET_WAS_SET" = false ]; then
+    DATASET="srj18"
+  fi
+  if [ "$NETWORKED_REMOTE" = false ] && [ "$CONCURRENCY_WAS_SET" = false ]; then
+    CONCURRENCY="auto"
+  fi
+elif [ "$NETWORKED_REMOTE" = true ]; then
+  echo "--networked-remote requires Pipeline 9net" >&2
+  exit 1
+fi
+
+if [ "$CONCURRENCY" = "auto" ] && { [ "$SOLVER_NAME" != "AutoroutingPipelineSolver9_Networked" ] || [ "$NETWORKED_REMOTE" = true ]; }; then
+  CONCURRENCY="$(default_concurrency)"
+fi
+
+if [ "$NETWORKED_COLD_HOT" = true ]; then
+  if [ -n "$EFFORT" ] && [ "$EFFORT" != "1" ]; then
+    echo "Pipeline 9net only supports --effort 1" >&2
+    exit 1
+  fi
+  if [ "$NETWORKED_REMOTE" = true ] && [ -z "${HD_CACHE2_CACHE_VERSION:-}" ]; then
+    echo "Pipeline 9net requires HD_CACHE2_CACHE_VERSION" >&2
+    exit 1
+  fi
 fi
 
 if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipelineSolver7_MultiGraph" ]; then
@@ -219,6 +283,17 @@ if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipeline
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
+if [ -n "$THREADS" ]; then
+  CMD+=("--threads" "$THREADS")
+fi
+
+if [ "$NETWORKED_COLD_HOT" = true ]; then
+  CMD+=("--networked-cold-hot")
+fi
+
+if [ "$NETWORKED_REMOTE" = true ]; then
+  CMD+=("--networked-remote")
+fi
 
 if [ -z "$SOLVER_NAME" ]; then
   SOLVER_NAME="$DEFAULT_SOLVER_NAME"

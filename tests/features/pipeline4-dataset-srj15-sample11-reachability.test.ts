@@ -48,7 +48,6 @@ test("pipeline4 dataset-srj15 sample11 edgeSolver fixture passes portPointPathin
       capacityMeshNodes: capacityNodes,
       sharedEdgeSegments: availableSegmentPointSolver.getOutput(),
       simpleRouteJson: pipeline.srjWithPointPairs!,
-      numberOfCrampedPortPointsToKeep: 5,
     })
   necessaryCrampedPortPointSolver.solve()
 

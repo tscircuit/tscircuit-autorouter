@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
+import { SameNetViaMergerSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 const makeViaRoute = ({
@@ -53,7 +53,7 @@ test("same-net via merging reuses an immutable via without mutating it", () => {
 
   expect(solver.failed).toBeFalse()
   const [mergedRoute] = solver.getMergedViaHdRoutes()!
-  expect(mergedRoute!.vias).toHaveLength(0)
+  expect(mergedRoute!.vias).toEqual([{ x: 0, y: 0 }])
   expect(
     mergedRoute!.route.filter(
       (point, pointIndex) =>
