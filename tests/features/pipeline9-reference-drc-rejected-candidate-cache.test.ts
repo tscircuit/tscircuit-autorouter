@@ -5,7 +5,12 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { issue3130Input } from "../fixtures/issue3130-via-pad-clearance"
 
-test("reference DRC reuses a rejected proposal's original without confusing mutated geometry", (): void => {
+type ReferenceEvaluator = {
+  cachedReferenceDrcEvaluator: DrcEvaluator
+  referenceDrcValidationCount: number
+}
+
+test("reference DRC retains four geometries with exact errors and bounded FIFO eviction", (): void => {
   const srj = structuredClone(issue3130Input)
   const routes: HighDensityRoute[] = [0.95, 0.97].map(
     (x, index): HighDensityRoute => {
@@ -25,26 +30,25 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
       }
     },
   )
-  const solver = new Pipeline9JointDrcRepairSolver({
-    srj,
-    originalSrj: srj,
-    srjWithPointPairs: srj,
-    newConnections: srj.connections,
-    newHdRoutes: routes,
-    updatedPreloadedTraces: [],
-    mutatedPreloadedTraceIds: new Set(),
-    connMap: getConnectivityMapFromSimpleRouteJson(srj),
-    obstacles: srj.obstacles,
-    layerCount: srj.layerCount,
-    defaultViaDiameter: 0.6,
-    defaultViaHoleDiameter: 0.3,
-    effort: 1,
-    colorMap: {},
-  })
-  const reference = solver as unknown as {
-    cachedReferenceDrcEvaluator: DrcEvaluator
-    referenceDrcValidationCount: number
+  const createSolver = (): Pipeline9JointDrcRepairSolver => {
+    return new Pipeline9JointDrcRepairSolver({
+      srj,
+      originalSrj: srj,
+      srjWithPointPairs: srj,
+      newConnections: srj.connections,
+      newHdRoutes: routes,
+      updatedPreloadedTraces: [],
+      mutatedPreloadedTraceIds: new Set(),
+      connMap: getConnectivityMapFromSimpleRouteJson(srj),
+      obstacles: srj.obstacles,
+      layerCount: srj.layerCount,
+      defaultViaDiameter: 0.6,
+      defaultViaHoleDiameter: 0.3,
+      effort: 1,
+      colorMap: {},
+    })
   }
+  const reference = createSolver() as unknown as ReferenceEvaluator
   const evaluate = (
     candidate: HighDensityRoute[],
   ): Array<Record<string, unknown>> => {
@@ -53,6 +57,16 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
       routes: candidate,
       hdRoutes: candidate,
     })
+    // A fresh solver has no candidate cache: compare complete normalized
+    // errors, centers, identifiers and their order against the full checker.
+    const cold = createSolver() as unknown as ReferenceEvaluator
+    const expected = cold.cachedReferenceDrcEvaluator({
+      traces: [],
+      routes: candidate,
+      hdRoutes: candidate,
+    })
+    expect(cold.referenceDrcValidationCount).toBe(1)
+    expect(result).toEqual(expected)
     return Array.isArray(result) ? result : result.errors
   }
   const original = evaluate(routes)
@@ -90,9 +104,45 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
   expect(reference.referenceDrcValidationCount).toBe(
     validationsBeforeReturn + 1,
   )
-  // Three distinct geometries evict the oldest, bounding retained board data.
+  // The original survives a third geometry and repeated accepted proposals.
   expect(evaluate(routes)).toEqual(original)
   expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 1,
+  )
+
+  const fourth = structuredClone(routes)
+  fourth[0]!.route[1]!.y += 0.01
+  expect(evaluate(fourth)).toHaveLength(2)
+  expect(reference.referenceDrcValidationCount).toBe(
     validationsBeforeReturn + 2,
+  )
+  for (const candidate of [routes, cleanProposal, proposal, fourth]) {
+    evaluate(candidate)
+  }
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 2,
+  )
+
+  const fifth = structuredClone(fourth)
+  fifth[1]!.route[1]!.y += 0.01
+  expect(evaluate(fifth)).toHaveLength(2)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 3,
+  )
+  // Hits preserve FIFO insertion order. The fifth geometry evicts only the
+  // oldest; rechecking it then evicts the second, proving the four-entry bound.
+  for (const candidate of [cleanProposal, proposal, fourth, fifth]) {
+    evaluate(candidate)
+  }
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 3,
+  )
+  expect(evaluate(routes)).toEqual(original)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 4,
+  )
+  expect(evaluate(cleanProposal)).toHaveLength(0)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 5,
   )
 })
