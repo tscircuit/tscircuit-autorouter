@@ -1,0 +1,104 @@
+name: Strongest experiment refinement boundary-vs-native-clean-controls-ba
+
+on:
+  push:
+    branches: [codex/boundary-vs-native-clean-controls-ba-20261029]
+  workflow_dispatch:
+    inputs:
+      population:
+        description: 'Only original18/15 and24/12; one isolated reversed-order confirmation'
+        type: choice
+        options: [screen]
+        default: screen
+      order:
+        description: 'One fresh BA confirmation only; AB evidence stays separate'
+        type: choice
+        options: [BA]
+        default: BA
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate activation gate and plan original screen
+        id: plan
+        env:
+          POPULATION: screen
+          EXECUTION_ORDER: BA
+        run: python3 scripts/experiment-audit/run-native-clean-controls-ba.py --mode plan --manifest scripts/experiment-audit/strongest-refinement-boundary-vs-native-clean-controls-ba.json --population "$POPULATION" --order "$EXECUTION_ORDER"
+  experiment:
+    name: boundary-vs-native-clean-controls-ba / ${{ matrix.population }} / ${{ matrix.dataset }} (${{ matrix.count }}, ${{ matrix.order }})
+    needs: plan
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Validate frozen source and unchanged budgets
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-native-clean-controls-ba.py --mode select --manifest controller/scripts/experiment-audit/strongest-refinement-boundary-vs-native-clean-controls-ba.json --dataset '${{ matrix.dataset }}'
+      - name: Checkout original immutable harness
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-harness
+          persist-credentials: false
+      - name: Checkout arm A
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: baseline
+          persist-credentials: false
+      - name: Checkout arm B
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify exact source commit and tree in each arm
+        run: python3 controller/scripts/experiment-audit/run-native-clean-controls-ba.py --mode verify-checkouts --manifest controller/scripts/experiment-audit/strongest-refinement-boundary-vs-native-clean-controls-ba.json --baseline baseline --candidate candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install arm A dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Install arm B dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Verify exact installed Tiny source bytes and immutable pins
+        run: python3 controller/scripts/experiment-audit/run-native-clean-controls-ba.py --mode verify-dependencies --manifest controller/scripts/experiment-audit/strongest-refinement-boundary-vs-native-clean-controls-ba.json --baseline baseline --candidate candidate
+      - name: Build arm A
+        working-directory: baseline
+        run: bun run build
+      - name: Build arm B
+        working-directory: candidate
+        run: bun run build
+      - name: Install identical pinned harness and synchronous observer
+        run: |
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target baseline --expected-sha '${{ steps.refs.outputs.baseline_sha }}'
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Fresh matched pairs in the declared order in the selected original population
+        run: python3 controller/scripts/experiment-audit/run-native-clean-controls-ba.py --mode run --manifest controller/scripts/experiment-audit/strongest-refinement-boundary-vs-native-clean-controls-ba.json --population '${{ matrix.population }}' --order '${{ matrix.order }}' --dataset '${{ matrix.dataset }}' --baseline baseline --candidate candidate --output 'results/boundary-vs-native-clean-controls-ba-${{ matrix.population }}-${{ matrix.order }}-${{ matrix.dataset }}'
+      - name: Retain full provenance, checkpoints, raw copper and original checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strongest-refinement-boundary-vs-native-clean-controls-ba-${{ matrix.population }}-${{ matrix.order }}-${{ matrix.dataset }}
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
