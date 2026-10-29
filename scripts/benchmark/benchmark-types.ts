@@ -52,12 +52,19 @@ export type BenchmarkStageTimingBreakdown = {
   stages: BenchmarkStageTiming[]
 }
 
+export type HighDensityStageMeasurement = {
+  /** Elapsed time and cumulative process peak through high-density completion. */
+  elapsedTimeMs: number
+  peakRssBytes: number
+}
+
 export type WorkerProgress = {
   solverName: string
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
   peakRssBytes?: number
+  highDensityStage?: HighDensityStageMeasurement
   phaseName?: string
   phaseSolverName?: string
   solverProgress?: number
@@ -128,8 +135,10 @@ export type WorkerResult<
   elapsedTimeMs: number
   /** Peak resident set size through routing completion in the isolated sample process. */
   peakRssBytes?: number
+  highDensityStage?: HighDensityStageMeasurement
   /** Configured per-sample limit used to score unsuccessful runs in percentiles. */
   sampleTimeoutMs?: number
+  sampleMaxRssBytes?: number
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean

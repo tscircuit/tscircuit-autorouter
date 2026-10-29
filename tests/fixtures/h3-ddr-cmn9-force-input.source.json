@@ -1,0 +1,32 @@
+{
+  "description": "Exact H3 cmn_9 force-improvement constructor input, captured after high-density routing of original SRJ36 sample001; original collinear points retained.",
+  "source": {
+    "repo": "hvwyl/allwinner-h3-ddr3-16x1-kicad",
+    "commit": "02e365b21363a17710e0f96072c0844940495567",
+    "path": "project/allwinner-h3.kicad_pcb",
+    "sha256": "4a1f99d157a4ed5dc15b2dff2fed9f3765226296c1da3930cdd00413254509bb"
+  },
+  "license": "NOASSERTION: no explicit upstream source license found; preserve source attribution.",
+  "dataset": {
+    "repository": "ShiboSoftwareDev/dataset-srj36-real-ddr",
+    "commit": "f5e1d6886ee74f136a627e0e4f92aafbf3375154",
+    "sample": "sample001",
+    "sha256": "b4c5d5151c0bc0fb3032f230af12c6428e7148318b39f22d3d14c8803f4c7c1e"
+  },
+  "capture": {
+    "autorouterCommit": "dce0868770955001c30815c8ab1d49284f5f37fa",
+    "dependencyCommit": "27b3392c38ed4474b0557c73640b261155e28c27",
+    "bunVersion": "1.4.3",
+    "effort": 1,
+    "cacheProvider": null,
+    "stage": "highDensityForceImproveSolver",
+    "regionId": "cmn_9"
+  },
+  "decompressedSha256": "004ec3c148124419661f2cede4162c2f9c6a25d8ff165f9cdf6ad142c66a58f1",
+  "routeCount": 23,
+  "pointCount": 2459,
+  "projectionSegmentCount": 2377,
+  "baselineExactDistanceCallsPerClearanceScan": 1333470,
+  "fixedExactDistanceCallsPerClearanceScan": 4426,
+  "expectedPairOrder": "Recorded using the original unfiltered predicate from dependency 27b3392; all 45 pairs remain in original order."
+}

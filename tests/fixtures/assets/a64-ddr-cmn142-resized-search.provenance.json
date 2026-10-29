@@ -1,0 +1,20 @@
+{
+  "source": {
+    "repo": "OLIMEX/OLINUXINO",
+    "commit": "85eee9c17ee13af65617d73bdd94de7ec49cfb42",
+    "path": "HARDWARE/A64-OLinuXino/1. Latest hardware revision/A64-OLinuXino hardware revision H/A64-OlinuXino_Rev_H.kicad_pcb",
+    "sourceSha256": "3acf7af7d39d54ba87343845d78851b0245a6290841cb463c42c7e41696404f4"
+  },
+  "copyright": "OLIMEX Ltd.",
+  "license": "CC-BY-SA-3.0-US",
+  "routerRevision": "637b6c581128238f6c61227a1c15be423d24baca",
+  "runtime": "Bun 1.4.3",
+  "checkpoint": "Actual Pipeline9 regular-node request for cmn_142, including its original obstacle/ownership context and search configuration. ConnectivityMap is serialized as netMap records and restored by the loader.",
+  "terminals": 38,
+  "localRouteRequests": 19,
+  "boardObstacles": 2133,
+  "decompressedSha256": "4252c7e47c6ef5bb811338b5c9733c56f7b6344ba8a9f39123705e10fde70e4a",
+  "baseline": "One region exceeds 2 GiB before completion. Enlarging coordinates with fixed-pitch uniform grids creates millions of states in each ordering candidate.",
+  "reproduce": "timeout 120s bun scripts/repro-ddr-resized-search.ts --report /tmp/ddr-memory.json",
+  "limits": "RSS/time limits are checked between local solver steps. External timeout supplies a hard wall-clock guard. Resource stops exit 2 and are never accepted as solved."
+}
