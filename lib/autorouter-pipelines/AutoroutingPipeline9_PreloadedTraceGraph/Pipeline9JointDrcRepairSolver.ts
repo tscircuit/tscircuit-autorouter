@@ -1407,6 +1407,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateKey = JSON.stringify(evaluatedRoutes)
       const cachedResult = referenceDrcCache.get(candidateKey)
       if (cachedResult !== undefined) {
+        referenceDrcCache.delete(candidateKey)
+        referenceDrcCache.set(candidateKey, cachedResult)
         return cachedResult
       }
       this.referenceDrcValidationCount += 1
