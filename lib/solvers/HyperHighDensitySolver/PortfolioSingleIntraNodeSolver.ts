@@ -651,6 +651,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaPlacementValidator: this.constructorParams.viaPlacementValidator,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin: 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
@@ -668,6 +669,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaPlacementValidator: this.constructorParams.viaPlacementValidator,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin: 0.1,
         // This likely needs to be corrected to use the actual trace width-
