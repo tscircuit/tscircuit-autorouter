@@ -1,0 +1,50 @@
+{
+  "phase": "regional-probe",
+  "base_sha": "c88f449b6a92fd96711991485ce9f5ea37928a2c",
+  "candidates": {
+    "regional": "237fc5205fb3506e84b5df3eae7f8d274110d7c9"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 3,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Pure incremental screen against frozen retention-fix c88f449b on this machine only. This is not a current-main proof; do not pool with other hardware or promote these three cases as all42 acceptance.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  }
+}
