@@ -271,6 +271,8 @@ function collectRawViaSites(
 ): { reasons: string[]; sites: WitnessViaSite[] } {
   const reasons: string[] = []
   const sites = new Map<string, WitnessViaSite>()
+  const exportedTransitions = new Set<string>()
+  const expectedExports: { site: WitnessViaSite; traceId: string }[] = []
   const dimensions = getViaDimensions(pointPairs)
   const diameter = original.minViaDiameter ?? dimensions.padDiameter
   const drill = pointPairs.min_via_hole_diameter ?? pointPairs.minViaHoleDiameter ?? (original.minViaDiameter !== undefined ? diameter * 0.5 : dimensions.holeDiameter)
@@ -309,6 +311,14 @@ function collectRawViaSites(
         if (previous.owner !== site.owner || previous.diameter !== outer || previous.drill !== hole || JSON.stringify(previous.layers) !== JSON.stringify(layers)) reasons.push("Ambiguous coincident raw via ownership/material/span")
         previous.occurrences.push({ traceIndex, pointIndex })
       } else sites.set(key, site)
+      // Native export retains the first occurrence of each directed transition.
+      // Several transitions can describe one manufactured through-via site;
+      // all occurrences still share the owner/material/span checks above.
+      const transition = JSON.stringify([point.x, point.y, point.from_layer, point.to_layer])
+      if (!exportedTransitions.has(transition)) {
+        exportedTransitions.add(transition)
+        expectedExports.push({ site, traceId: trace.pcb_trace_id })
+      }
       expected.push({ route_type: "via", x: point.x, y: point.y, from_layer: point.from_layer, to_layer: point.to_layer })
     }
     // Native checking adds inferred port annotations to its own canonical
@@ -319,16 +329,19 @@ function collectRawViaSites(
     if (trace.route.length < 2 || canonical.length !== 1 || JSON.stringify(actualGeometry) !== JSON.stringify(expected)) reasons.push("Raw trace is not losslessly represented in final export")
   }
   const exported = circuit.filter((element) => element.type === "pcb_via")
-  for (const site of sites.values()) {
-    const matches = exported.filter((via) => via.x === site.x && via.y === site.y)
-    if (matches.length !== 1 || matches[0]!.outer_diameter !== site.diameter || matches[0]!.hole_diameter !== site.drill || JSON.stringify(matches[0]!.layers) !== JSON.stringify(site.layers)) reasons.push("Raw via inventory is not losslessly represented in export")
-    else {
-      const linked = traces.find((trace) => trace.pcb_trace_id === matches[0]!.pcb_trace_id)
+  for (const [index, expected] of expectedExports.entries()) {
+    const { site, traceId } = expected
+    const via = exported[index]
+    if (!via || via.pcb_via_id !== `via_${index}` || via.pcb_trace_id !== traceId || via.x !== site.x || via.y !== site.y ||
+      via.outer_diameter !== site.diameter || via.hole_diameter !== site.drill || JSON.stringify(via.layers) !== JSON.stringify(site.layers)) {
+      reasons.push("Raw via inventory is not losslessly represented in export")
+    } else {
+      const linked = traces.find((trace) => trace.pcb_trace_id === via.pcb_trace_id)
       const owner = linked ? owners.traceReference(linked.connection_name) : undefined
       if (owner?.status !== "RESOLVED" || owner.owner !== site.owner) reasons.push("Exported via identity does not prove its raw owner")
     }
   }
-  if (exported.length !== sites.size) reasons.push("Unaccounted exported via geometry")
+  if (exported.length !== expectedExports.length) reasons.push("Unaccounted exported via geometry")
   return { reasons, sites: [...sites.values()] }
 }
 
