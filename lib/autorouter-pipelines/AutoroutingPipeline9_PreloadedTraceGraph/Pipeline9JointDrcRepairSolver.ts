@@ -1189,8 +1189,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    // Projection can reject B and return to A. Retain both exact evaluations
-    // without keeping a portfolio's worth of full-board keys and errors.
+    // Projection and regional repair revisit accepted and rejected geometries.
+    // Retain four exact evaluations without keeping a portfolio's worth of
+    // full-board keys and errors.
     const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
 
     const prepareCandidateDrcInput = (
@@ -1415,7 +1416,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCache.size >= 2) {
+      if (referenceDrcCache.size >= 4) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
       }
