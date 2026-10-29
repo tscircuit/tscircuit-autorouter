@@ -1,0 +1,71 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "3c42bb98f062c00cce2a5cd617553b7968c3f201",
+  "candidates": {
+    "growth_budget": "9422579943733c066a9902793ff9030c20fcc3ea"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 1,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "screening_scope": "One upstream TS dependency checkout per arm; all other physical dependency files shared. Same unmodified performance child and primary run scheduling. ABBA12 on three prespecified boards only.",
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "8426e3ab3183a385d35144bc1c2dee9eadf56f62",
+    "root_changed_files": [
+      "package.json",
+      "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+      "tests/features/portfolio-lazy-grid-budget.test.ts"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA03/HighDensitySolverA03.ts",
+      "tests/search-budget-a01.test.ts",
+      "tests/search-budget-a03.test.ts"
+    ]
+  }
+}
