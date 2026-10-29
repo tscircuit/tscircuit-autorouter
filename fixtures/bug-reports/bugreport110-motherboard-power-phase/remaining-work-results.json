@@ -1,0 +1,52 @@
+{
+  "baseline-1": {
+    "elapsedMs": 24206.194958,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a",
+    "peakRss": 2568736
+  },
+  "layer-1": {
+    "elapsedMs": 21941.898666999998,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a",
+    "peakRss": 2576816
+  },
+  "layer-2": {
+    "elapsedMs": 21921.273666999998,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a",
+    "peakRss": 2473536
+  },
+  "baseline-2": {
+    "elapsedMs": 24320.985292,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a",
+    "peakRss": 2317808
+  },
+  "force-work-counts": {
+    "forceSteps": 469922,
+    "endpointInteractions": 457566376,
+    "inertEndpointInteractions": 0,
+    "routeHash": "769eb197f0927e5bfbb3e563211998075583470aaf0fd136510ccf9b800c9850"
+  },
+  "expansion-work-candidates": {
+    "endpointQueries": 94902,
+    "repeatedEndpointQueries": 85829,
+    "blockedEndpoints": 8568,
+    "blockedGridCells": 11252678,
+    "candidateCount": 129982687,
+    "foreignLayerCandidateCount": 82097138,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a"
+  }
+}
