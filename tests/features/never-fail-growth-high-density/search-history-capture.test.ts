@@ -3,10 +3,12 @@ import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensi
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import nodeJson from "../../fixtures/srj18-sample15-sub-via-node.json"
 
+const inputNode: NodeWithPortPoints = nodeJson
+
 test("grow/shrink releases failed searches when capture is disabled without changing routes or failure diagnostics", (): void => {
   for (const maxGrowthAttempts of [undefined, 3]) {
     const solvers = [undefined, true, false].map((captureSearchDebug) => {
-      const node = structuredClone(nodeJson) as NodeWithPortPoints
+      const node = structuredClone(inputNode)
       const originalNode = structuredClone(node)
       const solver = new GrowShrinkHighDensityIntraNodeSolver({
         nodeWithPortPoints: node,
@@ -55,7 +57,7 @@ test("grow/shrink releases failed searches when capture is disabled without chan
         expect(route.viaDiameter).toBe(0.3)
         for (const endpoint of [route.route[0]!, route.route.at(-1)!]) {
           expect(
-            nodeJson.portPoints.some(
+            inputNode.portPoints.some(
               (port) =>
                 port.connectionName === route.connectionName &&
                 port.z === endpoint.z &&
