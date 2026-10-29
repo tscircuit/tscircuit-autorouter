@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
-import { ResizedHighDensityGridSolver } from "lib/solvers/HighDensitySolver/ResizedHighDensityGridSolver"
+import { HighDensitySolverA03 } from "@tscircuit/high-density-a01"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 
 test("incompatible fixed terminals fail before a resized grid is allocated", (): void => {
-  const solver = new ResizedHighDensityGridSolver({
+  const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: {
       capacityMeshNodeId: "crowded-resized-node",
       center: { x: 0, y: 0 },
@@ -16,18 +17,28 @@ test("incompatible fixed terminals fail before a resized grid is allocated", ():
         { x: 100, y: 10, z: 0, connectionName: "b" },
       ],
     },
-    coordinateScale: 32,
-    maxSearchIterations: 100_000,
+    useMultiResolutionGrid: true,
     traceWidth: 0.127,
     viaDiameter: 0.3,
-    traceMargin: 0.1,
     effort: 1,
-    shuffleSeed: 0,
   })
-  solver.step()
+  solver.initializeSolvers()
+  const gridCandidates = solver.supervisedSolvers!.filter(
+    (candidate) => candidate.solver instanceof HighDensitySolverA03,
+  )
+  expect(gridCandidates).toHaveLength(2)
+  for (const { solver: candidate } of gridCandidates) {
+    expect(candidate).toBeInstanceOf(HighDensitySolverA03)
+    if (!(candidate instanceof HighDensitySolverA03)) {
+      throw new Error("Expected the portfolio's native multiresolution candidate")
+    }
+    expect(candidate.solved).toBeFalse()
+    expect(candidate.failed).toBeTrue()
+    expect(candidate.error).toContain("terminals violate")
+    candidate.step()
+    expect(candidate.gridStats.states).toBe(0)
+    expect(candidate.solvedConnectionsMap.size).toBe(0)
+  }
   expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toContain("terminals violate")
-  expect(solver.gridStats.states).toBe(0)
-  expect(solver.solvedConnectionsMap.size).toBe(0)
+  expect(solver.failed).toBeFalse()
 })

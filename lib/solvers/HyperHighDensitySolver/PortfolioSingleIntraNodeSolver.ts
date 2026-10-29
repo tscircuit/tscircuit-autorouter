@@ -16,7 +16,6 @@ import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntr
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
-import { ResizedHighDensityGridSolver } from "../HighDensitySolver/ResizedHighDensityGridSolver"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
@@ -33,7 +32,7 @@ import {
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
-type PortfolioCandidate = IntraNodeRouteSolver | ResizedHighDensityGridSolver
+type PortfolioCandidate = IntraNodeRouteSolver | HighDensityA03Solver
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -60,7 +59,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
-    gridCoordinateScale?: number
+    useMultiResolutionGrid?: boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -133,7 +132,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      gridCoordinateScale?: number
+      useMultiResolutionGrid?: boolean
     },
   ) {
     super()
@@ -151,30 +150,34 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // These endpoints are fixed within this attempt. No route ordering can
     // separate overlapping copper; let the existing grow/shrink search move
     // to a feasible scale instead of exhausting every candidate here.
-    if (this.rejectOverlappingTerminals) {
-      const ports = this.nodeWithPortPoints.portPoints
-      const traceWidth = opts.traceWidth ?? 0.15
-      for (let i = 0; i < ports.length; i++) {
-        for (let j = i + 1; j < ports.length; j++) {
-          const a = ports[i]!
-          const b = ports[j]!
-          if (
-            a.z !== b.z ||
-            (a.rootConnectionName ?? a.connectionName) ===
-              (b.rootConnectionName ?? b.connectionName) ||
-            this.connMap?.areIdsConnected(a.connectionName, b.connectionName)
-          ) {
-            continue
-          }
-          if (Math.hypot(a.x - b.x, a.y - b.y) < traceWidth - 1e-6) {
-            this.failed = true
-            this.error =
-              "Unrelated route terminals overlap at the requested trace width"
-            return
-          }
+    if (this.rejectOverlappingTerminals && this.terminalsViolateClearance(0)) {
+      this.failed = true
+      this.error =
+        "Unrelated route terminals overlap at the requested trace width"
+    }
+  }
+
+  private terminalsViolateClearance(traceMargin: number): boolean {
+    const ports = this.nodeWithPortPoints.portPoints
+    const traceWidth = this.constructorParams.traceWidth ?? 0.15
+    for (let i = 0; i < ports.length; i++) {
+      for (let j = i + 1; j < ports.length; j++) {
+        const a = ports[i]!
+        const b = ports[j]!
+        if (
+          a.z !== b.z ||
+          (a.rootConnectionName ?? a.connectionName) ===
+            (b.rootConnectionName ?? b.connectionName) ||
+          this.connMap?.areIdsConnected(a.connectionName, b.connectionName)
+        ) {
+          continue
+        }
+        if (Math.hypot(a.x - b.x, a.y - b.y) < traceWidth + traceMargin - 1e-6) {
+          return true
         }
       }
     }
+    return false
   }
 
   private getGridSearchIterationBudget(): number {
@@ -406,7 +409,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // These candidates declare their search limits before allocating a grid.
     if (
       solver instanceof HighDensitySolverA13 ||
-      solver instanceof ResizedHighDensityGridSolver
+      (solver instanceof HighDensityA03Solver &&
+        solver.maxIterations !== undefined)
     ) {
       return
     }
@@ -655,23 +659,31 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       solver.MAX_ITERATIONS = maxSearchIterations * 2
       return solver as any
     }
-    if (hyperParameters.HIGH_DENSITY_A01 || hyperParameters.HIGH_DENSITY_A03) {
-      const coordinateScale = this.constructorParams.gridCoordinateScale ?? 1
-      if (coordinateScale > 1) {
-        // Crowded DDR guides can grow the region 16x or 32x. Keep fine edge
-        // cells while using the existing coarser interior and typed search.
-        return new ResizedHighDensityGridSolver({
-          nodeWithPortPoints: this.nodeWithPortPoints,
-          coordinateScale,
-          maxSearchIterations: this.getGridSearchIterationBudget(),
-          traceWidth: this.constructorParams.traceWidth ?? 0.15,
-          viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-          traceMargin: 0.1,
-          effort: this.effort,
-          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
-          connMap: this.connMap,
-        })
+    if (
+      this.constructorParams.useMultiResolutionGrid &&
+      (hyperParameters.HIGH_DENSITY_A01 || hyperParameters.HIGH_DENSITY_A03)
+    ) {
+      // Crowded DDR guides can grow the region 16x or 32x. Keep fine edge
+      // cells while using the existing coarser interior and typed search.
+      const solver = new HighDensityA03Solver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        highResolutionCellSize: 0.1,
+        highResolutionCellThickness: 8,
+        lowResolutionCellSize: 0.4,
+        maxIterations: this.getGridSearchIterationBudget(),
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceMargin: 0.1,
+        effort: this.effort,
+        hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
+      })
+      if (this.terminalsViolateClearance(solver.traceMargin)) {
+        solver.failed = true
+        solver.error =
+          "Resized grid terminals violate the requested copper clearance"
       }
+      return solver
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
