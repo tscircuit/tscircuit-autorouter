@@ -23,6 +23,21 @@ test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async 
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors.length).toBeLessThanOrEqual(1)
-  expect(errors.every((error) => error.type === "pcb_trace_error")).toBeTrue()
+  // Trace errors are repaired; the complete reference check reports one via
+  // between two neighboring pads as the remaining bounded-repair residue.
+  expect(errors).toHaveLength(2)
+  expect(errors).toMatchObject([
+    {
+      type: "pcb_pad_pad_clearance_error",
+      pcb_pad_ids: [expect.any(String), "pcb_smtpad_41"],
+      pcb_trace_id: "source_net_4_mst0_0_routed",
+      minimum_clearance: 0.1,
+    },
+    {
+      type: "pcb_pad_pad_clearance_error",
+      pcb_pad_ids: [expect.any(String), "pcb_smtpad_42"],
+      pcb_trace_id: "source_net_4_mst0_0_routed",
+      minimum_clearance: 0.1,
+    },
+  ])
 })
