@@ -10,6 +10,8 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
+const PLANAR_OBSTACLE_POINT_CACHE_SLOTS = 512
+
 export type FutureConnection = {
   connectionName: string
   rootConnectionName?: string
@@ -85,7 +87,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
-  freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
+  private freePlanarObstaclePointCoordinates?: Float64Array
+  private freePlanarObstaclePointValidity?: Uint8Array
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
 
@@ -307,22 +310,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const pointKey = canCachePlanarPoint
       ? (planarObstacleQuery?.pointKey ?? this.getNodeKey(node))
       : undefined
-    if (pointKey !== undefined) {
+    const cacheSlot =
+      pointKey !== undefined && Number.isSafeInteger(pointKey)
+        ? Math.abs(pointKey % PLANAR_OBSTACLE_POINT_CACHE_SLOTS)
+        : -1
+    if (cacheSlot >= 0) {
+      this.freePlanarObstaclePointCoordinates ??= new Float64Array(
+        PLANAR_OBSTACLE_POINT_CACHE_SLOTS * 3,
+      )
+      this.freePlanarObstaclePointValidity ??= new Uint8Array(
+        PLANAR_OBSTACLE_POINT_CACHE_SLOTS,
+      )
       if (
         this.cachedPlanarTraceProximity !== traceProximity ||
         this.cachedPlanarViaProximity !== viaProximity
       ) {
-        this.freePlanarObstaclePoints.clear()
+        this.freePlanarObstaclePointValidity.fill(0)
         this.cachedPlanarTraceProximity = traceProximity
         this.cachedPlanarViaProximity = viaProximity
       }
-      const freePoint = this.freePlanarObstaclePoints.get(pointKey)
+      const coordinateIndex = cacheSlot * 3
       // A rounded grid key can represent different floating-point coordinates.
       if (
-        freePoint &&
-        freePoint.x === node.x &&
-        freePoint.y === node.y &&
-        freePoint.z === node.z
+        this.freePlanarObstaclePointValidity[cacheSlot] === 1 &&
+        this.freePlanarObstaclePointCoordinates[coordinateIndex] === node.x &&
+        this.freePlanarObstaclePointCoordinates[coordinateIndex + 1] ===
+          node.y &&
+        this.freePlanarObstaclePointCoordinates[coordinateIndex + 2] === node.z
       ) {
         return false
       }
@@ -399,12 +413,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    if (pointKey !== undefined) {
-      this.freePlanarObstaclePoints.set(pointKey, {
-        x: node.x,
-        y: node.y,
-        z: node.z,
-      })
+    // Keep memoization bounded during large searches. A colliding slot only
+    // recomputes the same geometry checks; it never merges search states.
+    if (cacheSlot >= 0) {
+      const coordinateIndex = cacheSlot * 3
+      this.freePlanarObstaclePointCoordinates![coordinateIndex] = node.x
+      this.freePlanarObstaclePointCoordinates![coordinateIndex + 1] = node.y
+      this.freePlanarObstaclePointCoordinates![coordinateIndex + 2] = node.z
+      this.freePlanarObstaclePointValidity![cacheSlot] = 1
     }
     return false
   }
@@ -580,7 +596,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   buildObstacleIndexes() {
-    this.freePlanarObstaclePoints.clear()
+    this.freePlanarObstaclePointValidity?.fill(0)
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -1124,12 +1140,6 @@ type IndexedObstacleSegment = {
 }
 
 type IndexedObstacleVia = { x: number; y: number }
-
-type FreePlanarObstaclePoint = {
-  x: number
-  y: number
-  z: number
-}
 
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]
