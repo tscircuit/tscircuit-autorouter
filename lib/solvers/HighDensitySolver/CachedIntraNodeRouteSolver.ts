@@ -154,6 +154,7 @@ export class CachedIntraNodeRouteSolver
       : undefined
 
     const keyData = {
+      ...(this.experimentSearchState ? { experimentSearchState: true } : {}),
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),

@@ -58,6 +58,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  experimentSearchState?: boolean
 }
 
 type NodeBounds = {
@@ -332,6 +333,7 @@ export type Pipeline9RegularNodeSolverParams = {
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
+  experimentSearchState?: boolean
   layerCount: number
 }
 
@@ -350,6 +352,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
+  experimentSearchState = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -382,6 +385,7 @@ export const createPipeline9RegularNodeSolver = ({
     captureSearchDebug: false,
     priorityDagSearch,
     priorityDiagnostics,
+    experimentSearchState,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
@@ -468,6 +472,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
+    }
+    if (params.experimentSearchState === true) {
+      this.stats.searchStateEnabled = 1
+      this.benchmarkDiagnosticCounters.searchStateEnabledHighDensityStages = 1
     }
   }
 
@@ -666,6 +674,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
+    if (this.params.experimentSearchState === true) {
+      this.benchmarkDiagnosticCounters.searchStateEnabledRegularNodes =
+        (this.benchmarkDiagnosticCounters.searchStateEnabledRegularNodes ?? 0) + 1
+    }
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
@@ -683,6 +695,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.params.minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
+      experimentSearchState: this.params.experimentSearchState === true,
       priorityDagSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
