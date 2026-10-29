@@ -44,12 +44,23 @@ const coverViaCenterRegion = (
       return { covered: false, usedOwners }
     }
     const depth = cell.depth + 1
-    pending.push(
-      { minX: cell.minX, minY: cell.minY, maxX: x, maxY: y, depth },
-      { minX: x, minY: cell.minY, maxX: cell.maxX, maxY: y, depth },
-      { minX: cell.minX, minY: y, maxX: x, maxY: cell.maxY, depth },
-      { minX: x, minY: y, maxX: cell.maxX, maxY: cell.maxY, depth },
-    )
+    const width = cell.maxX - cell.minX
+    const height = cell.maxY - cell.minY
+    // When one bisection would still leave a >2:1 rectangle, subdividing
+    // the short axis wastes the bounded proof on unnecessarily thin cells.
+    // Near-square cells keep the existing quadrant resolution and depth.
+    if (width > 4 * height) {
+      pending.push({ ...cell, maxX: x, depth }, { ...cell, minX: x, depth })
+    } else if (height > 4 * width) {
+      pending.push({ ...cell, maxY: y, depth }, { ...cell, minY: y, depth })
+    } else {
+      pending.push(
+        { minX: cell.minX, minY: cell.minY, maxX: x, maxY: y, depth },
+        { minX: x, minY: cell.minY, maxX: cell.maxX, maxY: y, depth },
+        { minX: cell.minX, minY: y, maxX: x, maxY: cell.maxY, depth },
+        { minX: x, minY: y, maxX: cell.maxX, maxY: cell.maxY, depth },
+      )
+    }
   }
   return { covered: true, usedOwners }
 }
