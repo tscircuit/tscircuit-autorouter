@@ -76,7 +76,10 @@ test("declines via ownership when a normalized new trace id collides with immuta
       ),
     })
     const circuitJson = reference.circuitJson.map((element) => {
-      if (!("pcb_trace_id" in element) || typeof element.pcb_trace_id !== "string")
+      if (
+        !("pcb_trace_id" in element) ||
+        typeof element.pcb_trace_id !== "string"
+      )
         return element
       const solverId = solverIdByEvaluationId.get(element.pcb_trace_id)
       return solverId ? { ...element, pcb_trace_id: solverId } : element
@@ -113,7 +116,8 @@ test("declines via ownership when a normalized new trace id collides with immuta
   ).toEqual(new Set([collidedId]))
   const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const candidate = routes ?? hdRoutes
-    if (!candidate) throw new Error("Collision reference requires candidate routes")
+    if (!candidate)
+      throw new Error("Collision reference requires candidate routes")
     const reference = prepareReference(candidate)
     return { errors: reference.errors, errorsWithCenters: reference.errors }
   }
@@ -134,5 +138,7 @@ test("declines via ownership when a normalized new trace id collides with immuta
   expect(result.repaired).toBe(false)
   expect(result.remainingDrcIssueCount).toBe(1)
   expect(result.routes).toBe(fixture.routes)
-  expect({ routes: fixture.routes, fixedRoute, srj: fixture.srj }).toEqual(original)
+  expect({ routes: fixture.routes, fixedRoute, srj: fixture.srj }).toEqual(
+    original,
+  )
 })

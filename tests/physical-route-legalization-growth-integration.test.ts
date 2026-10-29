@@ -47,7 +47,9 @@ test("grown topology legalization runs after inverse scaling and reports through
       vias: [],
     },
   ]
-  const portfolio = new PortfolioSingleIntraNodeSolver({ nodeWithPortPoints: node })
+  const portfolio = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints: node,
+  })
   // Supply a completed relaxed candidate at the public child-solver boundary.
   portfolio.solvedRoutes = proposal
   portfolio.solved = true

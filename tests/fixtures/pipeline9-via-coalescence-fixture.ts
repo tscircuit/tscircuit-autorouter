@@ -11,22 +11,22 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 type ViaCoalescenceFixture = {
   routes: HighDensityRoute[]
   srj: SimpleRouteJson
-  evaluate: (candidate: HighDensityRoute[]) => ReturnType<typeof evaluateRelaxedDrc>
+  evaluate: (
+    candidate: HighDensityRoute[],
+  ) => ReturnType<typeof evaluateRelaxedDrc>
   drcEvaluator: DrcEvaluator
   connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
 }
 
-export const createPipeline9ViaCoalescenceFixture = (
-  {
-    distinctNets = false,
-    protectedViaEndpoints = false,
-    blockingPads = false,
-  }: {
-    distinctNets?: boolean
-    protectedViaEndpoints?: boolean
-    blockingPads?: boolean
-  } = {},
-): ViaCoalescenceFixture => {
+export const createPipeline9ViaCoalescenceFixture = ({
+  distinctNets = false,
+  protectedViaEndpoints = false,
+  blockingPads = false,
+}: {
+  distinctNets?: boolean
+  protectedViaEndpoints?: boolean
+  blockingPads?: boolean
+} = {}): ViaCoalescenceFixture => {
   const traceThickness = blockingPads ? 0.02 : 0.1
   const separation = blockingPads ? 0.2 : 0.006
   const routes: HighDensityRoute[] = [0, separation].map((y, index) => ({
@@ -117,7 +117,8 @@ export const createPipeline9ViaCoalescenceFixture = (
     const result = evaluate(evaluatedRoutes)
     return {
       errors: result.errors as unknown as Pipeline9DrcError[],
-      errorsWithCenters: result.errorsWithCenters as unknown as Pipeline9DrcError[],
+      errorsWithCenters:
+        result.errorsWithCenters as unknown as Pipeline9DrcError[],
     }
   }
   return {

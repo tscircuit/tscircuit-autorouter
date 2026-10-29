@@ -52,7 +52,8 @@ test("zero projection iterations isolate exact collinear compression while retai
     ...routes[0]!.route.slice(3),
   ])
   expect(
-    getPipeline9RouteCopperGeometry(result.routes[0]!, { layerCount: 2 }).viaSpans,
+    getPipeline9RouteCopperGeometry(result.routes[0]!, { layerCount: 2 })
+      .viaSpans,
   ).toEqual(
     getPipeline9RouteCopperGeometry(routes[0]!, { layerCount: 2 }).viaSpans,
   )

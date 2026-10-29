@@ -85,10 +85,7 @@ const partitionRoutes = (routes: Route[]): Partition => {
       const next = route.route[index + 1]
       const hasIdentity = Object.keys(point).some(
         (key) =>
-          key !== "x" &&
-          key !== "y" &&
-          key !== "z" &&
-          key !== "traceThickness",
+          key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness",
       )
       const widthChanges =
         next !== undefined &&
@@ -158,11 +155,13 @@ export class Pipeline9LayerPreservingPathSolver extends MultiSimplifiedPathSolve
         "Pipeline9 path simplification changed the anchored section count",
       )
     }
-    const merged = this.originalRoutes.map((route): Route => ({
-      ...route,
-      route: [],
-      vias: route.vias.map((via) => ({ ...via })),
-    }))
+    const merged = this.originalRoutes.map(
+      (route): Route => ({
+        ...route,
+        route: [],
+        vias: route.vias.map((via) => ({ ...via })),
+      }),
+    )
     const previousAnchor: Array<RoutePoint | undefined> =
       this.originalRoutes.map(() => undefined)
     for (const section of this.sections) {

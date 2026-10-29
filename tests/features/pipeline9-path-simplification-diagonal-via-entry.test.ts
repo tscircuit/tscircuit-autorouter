@@ -81,9 +81,9 @@ test("path entry materializes explicit endpoint vias without narrowing copper or
     ],
     vias: [],
   }
-  expect(
-    copperProjection(canonicalizePipeline9HdRoutes([nearby])[0]!),
-  ).toEqual(copperProjection(nearby))
+  expect(copperProjection(canonicalizePipeline9HdRoutes([nearby])[0]!)).toEqual(
+    copperProjection(nearby),
+  )
   const throughObstacle: HighDensityRoute = {
     ...nearby,
     route: [

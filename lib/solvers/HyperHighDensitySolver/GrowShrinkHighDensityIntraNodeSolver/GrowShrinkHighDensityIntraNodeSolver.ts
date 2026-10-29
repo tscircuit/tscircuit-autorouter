@@ -272,7 +272,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       if (diagnostics) {
         const counters = {
           physicalLegalizationProposalCount: 1,
-          physicalLegalizationMeasuredProposalCount: Number(result.metricsRecorded),
+          physicalLegalizationMeasuredProposalCount: Number(
+            result.metricsRecorded,
+          ),
           physicalLegalizationEnergyMeasuredProposalCount: Number(
             result.energyMetricsRecorded,
           ),
@@ -288,11 +290,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           physicalLegalizationSelectiveProposalCount: Number(
             result.mode === "selective",
           ),
-          physicalLegalizationEnergyEvaluationCount: result.energyEvaluationCount,
+          physicalLegalizationEnergyEvaluationCount:
+            result.energyEvaluationCount,
           physicalLegalizationGeometryWork: result.geometryWork,
           physicalLegalizationProjectionWork: result.projectionWork,
           physicalLegalizationMovableConflictCount: result.movableConflictCount,
-          physicalLegalizationImmutableConflictCount: result.immutableConflictCount,
+          physicalLegalizationImmutableConflictCount:
+            result.immutableConflictCount,
           physicalLegalizationMovableLossBefore: result.movableLossBefore,
           physicalLegalizationMovableLossAfter: result.movableLossAfter,
           physicalLegalizationNoMovableConflictsCount: Number(
@@ -348,7 +352,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           ),
         }
         for (const [name, value] of Object.entries(counters)) {
-          if (value !== null) diagnostics[name] = (diagnostics[name] ?? 0) + value
+          if (value !== null)
+            diagnostics[name] = (diagnostics[name] ?? 0) + value
         }
       }
     }

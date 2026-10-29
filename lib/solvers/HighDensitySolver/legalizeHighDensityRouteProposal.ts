@@ -271,8 +271,7 @@ const compressRoutes = (
           ) ||
           node.portPoints.some(
             (port) =>
-              port.z === b.z &&
-              Math.hypot(port.x - b.x, port.y - b.y) < 1e-9,
+              port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9,
           ) ||
           a.toNextSegmentType ||
           b.toNextSegmentCircuitJsonMetadata ||
@@ -280,12 +279,9 @@ const compressRoutes = (
             (b.traceThickness ?? route.traceThickness) ||
           (b.traceThickness ?? route.traceThickness) !==
             (point.traceThickness ?? route.traceThickness) ||
-          Math.abs(dx1 * dy2 - dy1 * dx2) >
-            1e-12 * Math.max(scale, 1e-12) ||
+          Math.abs(dx1 * dy2 - dy1 * dx2) > 1e-12 * Math.max(scale, 1e-12) ||
           dx1 * dx2 + dy1 * dy2 < 0 ||
-          route.vias.some(
-            (via) => Math.hypot(via.x - b.x, via.y - b.y) < 1e-9,
-          )
+          route.vias.some((via) => Math.hypot(via.x - b.x, via.y - b.y) < 1e-9)
         )
           break
         points.pop()
@@ -384,8 +380,10 @@ const isPhysicalProposalClean = (
       if (
         bounds &&
         (Math.min(capsule.a.x, capsule.b.x) < bounds.minX + edgeMargin - 1e-9 ||
-          Math.max(capsule.a.x, capsule.b.x) > bounds.maxX - edgeMargin + 1e-9 ||
-          Math.min(capsule.a.y, capsule.b.y) < bounds.minY + edgeMargin - 1e-9 ||
+          Math.max(capsule.a.x, capsule.b.x) >
+            bounds.maxX - edgeMargin + 1e-9 ||
+          Math.min(capsule.a.y, capsule.b.y) <
+            bounds.minY + edgeMargin - 1e-9 ||
           Math.max(capsule.a.y, capsule.b.y) > bounds.maxY - edgeMargin + 1e-9)
       )
         return false
@@ -498,7 +496,10 @@ export const legalizeHighDensityRouteProposal = (
   if (!["off", "compression-only", "full", "selective"].includes(mode))
     throw new Error(`Unknown physical legalization mode: ${mode}`)
   const original = params.routes
-  const pointsBefore = original.reduce((sum, route) => sum + route.route.length, 0)
+  const pointsBefore = original.reduce(
+    (sum, route) => sum + route.route.length,
+    0,
+  )
   const unmeasuredResult = (
     status: "disabled" | "compressed" | "unsupported",
     routes: HighDensityIntraNodeRoute[],
@@ -595,7 +596,8 @@ export const legalizeHighDensityRouteProposal = (
       getPipeline9RouteCopperGeometry(route, params),
     )
     const required =
-      params.viaHoleDiameter + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
+      params.viaHoleDiameter +
+      (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
     let count = 0
     for (let i = 0; i < geometries.length; i++)
       for (let j = i; j < geometries.length; j++) {
@@ -675,7 +677,10 @@ export const legalizeHighDensityRouteProposal = (
               (port.connectionName === route.connectionName ||
                 (port.rootConnectionName === route.rootConnectionName &&
                   port.rootConnectionName !== undefined) ||
-                connMap?.areIdsConnected(port.connectionName, route.connectionName)),
+                connMap?.areIdsConnected(
+                  port.connectionName,
+                  route.connectionName,
+                )),
           )
         const previous = vertexByOwnerXY.get(key)
         if (previous !== undefined) {
@@ -726,7 +731,10 @@ export const legalizeHighDensityRouteProposal = (
       })
     for (const via of geometry.viaSpans) {
       const index = vertexIndex(via.center)
-      vertices[index]!.radius = Math.max(vertices[index]!.radius, via.diameter / 2)
+      vertices[index]!.radius = Math.max(
+        vertices[index]!.radius,
+        via.diameter / 2,
+      )
       primitives.push({
         a: index,
         b: index,
@@ -756,7 +764,10 @@ export const legalizeHighDensityRouteProposal = (
         violations.add(`edge:${i}`)
       const outline = params.boardGeometry?.outline
       if (!outline) continue
-      if (!isPointInOrOnPolygon(a, outline) || !isPointInOrOnPolygon(b, outline))
+      if (
+        !isPointInOrOnPolygon(a, outline) ||
+        !isPointInOrOnPolygon(b, outline)
+      )
         violations.add(`outline:${i}`)
       for (let edge = 0; edge < outline.length; edge++)
         if (
@@ -800,7 +811,8 @@ export const legalizeHighDensityRouteProposal = (
     )
   const obstacles = (params.obstacles ?? [])
     .filter((obstacle) => {
-      const halfDiagonal = Math.hypot(obstacle.width, obstacle.height) / 2 + reach
+      const halfDiagonal =
+        Math.hypot(obstacle.width, obstacle.height) / 2 + reach
       return (
         obstacle.center.x + halfDiagonal >= bounds.minX &&
         obstacle.center.x - halfDiagonal <= bounds.maxX &&
@@ -875,7 +887,10 @@ export const legalizeHighDensityRouteProposal = (
   }
   let geometryWork = 0
   let energyEvaluationCount = 0
-  const obstacleContact = (primitive: Primitive, obstacle: Obstacle): Contact => {
+  const obstacleContact = (
+    primitive: Primitive,
+    obstacle: Obstacle,
+  ): Contact => {
     geometryWork += obstacle.shape === "circle" ? 1 : 4
     const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
     const cosine = Math.cos(angle),
@@ -896,7 +911,8 @@ export const legalizeHighDensityRouteProposal = (
         ...contact,
         dx: cosine * contact.dx + sine * contact.dy,
         dy: -sine * contact.dx + cosine * contact.dy,
-        distance: contact.distance - Math.max(obstacle.width, obstacle.height) / 2,
+        distance:
+          contact.distance - Math.max(obstacle.width, obstacle.height) / 2,
       }
     }
     const hx = obstacle.width / 2,
@@ -947,10 +963,12 @@ export const legalizeHighDensityRouteProposal = (
     obstacle: Obstacle
     minimumDistance: number
   }[] = []
-  const holeConstraints: { a: number; b: number; minimumDistance: number }[] = []
+  const holeConstraints: { a: number; b: number; minimumDistance: number }[] =
+    []
   if (params.viaHoleDiameter !== undefined) {
     const required =
-      params.viaHoleDiameter + (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
+      params.viaHoleDiameter +
+      (params.minViaHoleEdgeToViaHoleEdgeClearance ?? 0)
     const vias = primitives.filter((primitive) => primitive.via)
     for (let i = 0; i < vias.length; i++)
       for (let j = i + 1; j < vias.length; j++) {
@@ -980,16 +998,25 @@ export const legalizeHighDensityRouteProposal = (
       )
         continue
       const gap = primitive.via ? entry.viaClearance : entry.traceClearance
-      if (!primitiveNearObstacle(primitive, entry.obstacle, primitive.radius + gap))
+      if (
+        !primitiveNearObstacle(
+          primitive,
+          entry.obstacle,
+          primitive.radius + gap,
+        )
+      )
         continue
       const penetration = Math.max(
         0,
-        primitive.radius + gap - obstacleContact(primitive, entry.obstacle).distance,
+        primitive.radius +
+          gap -
+          obstacleContact(primitive, entry.obstacle).distance,
       )
-      obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex] = Math.max(
-        obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]!,
-        penetration,
-      )
+      obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex] =
+        Math.max(
+          obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]!,
+          penetration,
+        )
     }
   for (const primitive of primitives)
     for (const [obstacleIndex, entry] of obstacles.entries()) {
@@ -1005,7 +1032,8 @@ export const legalizeHighDensityRouteProposal = (
         primitive,
         obstacle: entry.obstacle,
         minimumDistance:
-          required - obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]!,
+          required -
+          obstaclePenetrationByRoute[obstacleIndex]![primitive.routeIndex]!,
       })
     }
   const preservesObstacleClearance = (): boolean => {
@@ -1031,9 +1059,7 @@ export const legalizeHighDensityRouteProposal = (
       geometryWork++
       const a = vertices[constraint.a]!,
         b = vertices[constraint.b]!
-      if (
-        Math.hypot(a.x - b.x, a.y - b.y) < constraint.minimumDistance - 1e-8
-      )
+      if (Math.hypot(a.x - b.x, a.y - b.y) < constraint.minimumDistance - 1e-8)
         return false
     }
     return true
@@ -1199,7 +1225,8 @@ export const legalizeHighDensityRouteProposal = (
     )
   if (
     params.projectionWorkLimit !== undefined &&
-    (!Number.isFinite(params.projectionWorkLimit) || params.projectionWorkLimit < 0)
+    (!Number.isFinite(params.projectionWorkLimit) ||
+      params.projectionWorkLimit < 0)
   ) {
     throw new Error(
       "Physical legalization work limit must be finite and nonnegative",
@@ -1211,7 +1238,8 @@ export const legalizeHighDensityRouteProposal = (
       ? (params.projectionWorkLimit ??
         Math.max(10_000, geometryWork * Math.max(8, maxIterations * 4)))
       : Infinity
-  let stopReason: PhysicalRouteLegalizationResult["stopReason"] = "iteration-limit"
+  let stopReason: PhysicalRouteLegalizationResult["stopReason"] =
+    "iteration-limit"
   let checkpointMovableLoss = initial.movableLoss
   const eligible = mode !== "selective" || initial.movableContacts > 0
   if (!eligible) stopReason = "no-movable-conflicts"
@@ -1261,7 +1289,11 @@ export const legalizeHighDensityRouteProposal = (
     for (const constraint of obstacleConstraints) {
       const { primitive, obstacle, minimumDistance } = constraint
       if (
-        !primitiveNearObstacle(primitive, obstacle, minimumDistance + maxMove * 3)
+        !primitiveNearObstacle(
+          primitive,
+          obstacle,
+          minimumDistance + maxMove * 3,
+        )
       )
         continue
       const contact = obstacleContact(primitive, obstacle)
@@ -1292,7 +1324,10 @@ export const legalizeHighDensityRouteProposal = (
       const dx = a.x - b.x,
         dy = a.y - b.y,
         distance = Math.hypot(dx, dy)
-      if (distance < 1e-12 || distance - constraint.minimumDistance > maxMove * 3)
+      if (
+        distance < 1e-12 ||
+        distance - constraint.minimumDistance > maxMove * 3
+      )
         continue
       const wa = Number(!a.fixed),
         wb = Number(!b.fixed)
@@ -1446,7 +1481,10 @@ export const legalizeHighDensityRouteProposal = (
     elapsedMs: performance.now() - startedAt,
     iterations,
     pointsBefore,
-    pointsAfter: acceptedRoutes.reduce((sum, route) => sum + route.route.length, 0),
+    pointsAfter: acceptedRoutes.reduce(
+      (sum, route) => sum + route.route.length,
+      0,
+    ),
     copperPairsBefore,
     copperPairsAfter: finalPairs,
     overlapPairsBefore,

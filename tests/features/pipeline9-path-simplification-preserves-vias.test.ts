@@ -2,7 +2,9 @@ import { expect, test } from "bun:test"
 import type { HighDensityRoute } from "@tscircuit/trace-simplification-solver"
 import { Pipeline9LayerPreservingPathSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9LayerPreservingPathSolver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import rawFixture from "../fixtures/pipeline9-path-layer-transition.json" with { type: "json" }
+import rawFixture from "../fixtures/pipeline9-path-layer-transition.json" with {
+  type: "json",
+}
 
 type CapturedPathFixture = {
   inputRoute: HighDensityRoute
