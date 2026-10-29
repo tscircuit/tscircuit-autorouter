@@ -58,10 +58,15 @@ def coverage(record, item):
     exercised = active and integer(executed) and executed > 0
     changed_work = complete and any(item > 0 for item in changed.values()) and all(item > 0 for item in prerequisites.values()) and all(pair["left"] > pair["right"] for pair in comparisons) and all(item is True for item in true_prerequisites.values())
     attributed = exercised and complete and eligible > 0 and changed_work
-    status = "ACTIVE_WITH_MECHANISM_WORK" if attributed else "ACTIVE_EXECUTED_WITHOUT_CHANGED_WORK" if exercised else "ACTIVE_WITHOUT_EXECUTION_PROOF" if active else "STAGE_NOT_REACHED_OR_ACTIVATION_UNPROVEN"
+    valid_activation_state = type(activation) is type(expected) and activation in [0, 1]
+    valid_census = isinstance(value, dict) and complete and valid_activation_state
+    no_eligible_work = valid_census and eligible == 0
+    status = "ACTIVE_WITH_MECHANISM_WORK" if attributed else "VALID_CENSUS_NO_ELIGIBLE_MECHANISM_WORK" if no_eligible_work else "ACTIVE_EXECUTED_WITHOUT_CHANGED_WORK" if exercised else "ACTIVE_WITHOUT_EXECUTION_PROOF" if active else "STAGE_NOT_REACHED_OR_ACTIVATION_UNPROVEN"
     return {"status": status, "actualEvidence": evidence, "requestedOption": item["option"],
             "requestedValue": True, "stageEvidencePresent": isinstance(value, dict),
             "activationObserved": active, "eligibleWorkCount": eligible,
+            "diagnosticCensusValid": valid_census, "noEligibleMechanismWork": no_eligible_work,
+            "observedEntryActivity": integer(executed) and executed > 0,
             "eligibleWorkDefinition": contract["eligibleDefinition"],
             "executedWorkCount": executed, "executedWorkDefinition": contract["executedDefinition"],
             "actualWorkExercised": exercised, "changedWorkCounters": changed,

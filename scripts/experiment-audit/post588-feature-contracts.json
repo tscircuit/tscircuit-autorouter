@@ -154,12 +154,13 @@
       "experimentIncrementalPath": true
     },
     "evidencePaths": [
-      "portPointPathingSolver.incrementalPath"
+      "portPointPathingSolver.incrementalPath",
+      "portPointPathingSolver.incrementalPathScope"
     ],
     "coverageContract": {
       "statsPath": "portPointPathingSolver.incrementalPath",
       "activationField": "activated",
-      "activationValue": true,
+      "activationValue": 1,
       "eligibleField": "eligibleQueries",
       "executedField": "queryStarts",
       "changedFields": [

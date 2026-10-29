@@ -48,7 +48,7 @@ def apply_sources(manifest, sources, runtime):
             raise ValueError("Agent source qualification bytes changed: " + item["id"])
         data = json.loads(raw)
         source = data.get("source") if isinstance(data.get("source"), dict) else {}
-        qa_tree = data.get("tree") or data.get("sourceTree") or source.get("tree")
+        qa_tree = data.get("tree") or data.get("sourceTree") or data.get("localTree") or source.get("tree")
         qa_commit = data.get("localCommit") or data.get("sourceCommit") or data.get("commit") or source.get("head") or source.get("sha")
         if qa_tree != receipt["candidateTree"] or qa_commit != receipt["reviewedLocalCommit"]:
             raise ValueError("QA identifies another local source/tree: " + item["id"])

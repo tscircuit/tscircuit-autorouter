@@ -12,7 +12,7 @@ fixture = importlib.util.module_from_spec(spec)
 with contextlib.redirect_stdout(io.StringIO()):
     spec.loader.exec_module(fixture)
 runtime, manifest = fixture.m, fixture.manifest
-item = next(value for value in manifest["experiments"] if value["id"] == "boundary-edges")
+item = manifest["experiments"][0]
 spec = importlib.util.spec_from_file_location("population_parser", ROOT / "parse-post588-experiments-log.py")
 parser = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(parser)

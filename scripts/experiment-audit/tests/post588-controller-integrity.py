@@ -1,11 +1,17 @@
 import pathlib,json,copy,importlib.util,hashlib
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 s=importlib.util.spec_from_file_location('independent_post588_runtime',ROOT/'run-post588-experiments.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
-manifest=json.loads((ROOT/'post588-experiments-20261029.json').read_text()); item=copy.deepcopy(next(x for x in manifest['experiments'] if x['id']=='boundary-edges'));item['candidateSha']='1'*40
+manifest=json.loads((ROOT/'post588-experiments-20261029.json').read_text()); item=copy.deepcopy(manifest['experiments'][0]);item['candidateSha']='1'*40
 z='0'*64
 record={'arm':'B','sha':item['candidateSha'],'sampleNumber':1,'expectedInputHash':z,'requestedOptions':copy.deepcopy(item['options']),'externalBenchmarkProcessWallMs':200,'controllerError':None,'supplementalValidationError':None,'declaredIntentValidationError':None,'phaseCheckpointAudit':{'errors':[]},'officialReportRuntime':{'threadsPerSample':1,'effectiveThreadsPerSample':1,'cpuBudgetPerSample':1,'requestedConcurrency':1,'workerCount':1,'bunVersion':'1.4.2'},'official':{'solverName':m.SOLVER,'sampleNumber':1,'sampleTimeoutMs':360000,'didSolve':True,'didTimeout':False,'relaxedDrcPassed':True,'elapsedTimeMs':100,'routingMetrics':{'experimentAudit':{'inputHash':z,'inputMutated':False,'options':item['options'],'actualCacheProviderState':'disabled','actualConstructorName':m.SOLVER,'actualSolverName':m.SOLVER,'solverModule':m.MODULE,'solverSolved':True,'solverFailed':False,'solverError':None,'constructorTimeMs':1,'rawOutputHash':z,'rawNewTracesHash':z,'evidence':{item['coverageContract']['statsPath']:{'activated':True,'nodeCount':2,'boundaryQueries':8,'targetQueries':0,'incidentVisits':0}}}}},'supplemental':{'canonicalCircuitJsonSha256':z,'physicalCopper':{'combinedRouteViaCount':0,'uniqueOwnedViaSiteSpanCount':0,'uniqueOwnedManufacturedViaSiteCount':0,'foreignOwnerCoincidentViaSiteSpans':0,'combinedRoutePointCount':2,'combinedCopperLength':1.0,'exactSegmentDeduplicatedCopperLength':1.0}},'declaredIntentCopper':{'schemaVersion':2,'status':'PASS','qualifiedSupportedCopper':True,'ownershipCoverageStatus':'COMPLETE','allPublishedCopperChecksRun':True,'checksRun':sorted(m.declared.CHECKS),'geometryUnchanged':True,'exactRetainedInputBytesVerified':True,'canonicalSemanticSha256':z,'copperGeometrySha256':z,'reportSha256':z,'findingInventorySha256':z,'sidecarSourceSha256':m.DECLARED_SOURCE_SHA256,'checker':{'moduleSha256':m.CHECKER_SOURCE_SHA256,'version':'0.0.259'},'inputHashes':{name:z for name in m.declared.INPUTS},'originalObstacleCoverage':{'unmappedDeclaredCopperCount':0}}}
 for k in m.CHECKS:record['supplemental'][k]={'count':0,'byType':{}}
 for k in m.declared.COUNTS:record['declaredIntentCopper'][k]=0
+contract=item['coverageContract']
+stats={contract['activationField']:contract['activationValue'],contract['eligibleField']:2,contract['executedField']:3}
+for field in contract['changedFields']+contract['positivePrerequisites']:stats[field]=1
+for field in contract['truePrerequisites']:stats[field]=True
+for left,right in contract['greaterThanFields']:stats[right]=2;stats[left]=3
+record['official']['routingMetrics']['experimentAudit']['evidence']={path:(stats if path==contract['statsPath'] else {}) for path in item['evidencePaths']}
 m.qualify_record(record,manifest,item);assert record['strictIntegrityQualified'],record['strictIntegrityIssues'];assert m.physical_clean(record)
 controls=[]
 def reject(name,mutation):
@@ -14,7 +20,7 @@ reject('wrong source SHA',lambda r:r.update(sha='2'*40))
 reject('wrong sample',lambda r:r['official'].update(sampleNumber=2))
 reject('wrong deadline',lambda r:r['official'].update(sampleTimeoutMs=100))
 reject('mutated input',lambda r:r['official']['routingMetrics']['experimentAudit'].update(inputMutated=True))
-reject('flag OFF',lambda r:r['official']['routingMetrics']['experimentAudit']['options'].update(experimentBoundaryEdges=False))
+reject('flag OFF',lambda r:r['official']['routingMetrics']['experimentAudit']['options'].update({item['option']:False}))
 reject('wrong constructor',lambda r:r['official']['routingMetrics']['experimentAudit'].update(actualConstructorName='OtherSolver'))
 reject('cache enabled',lambda r:r['official']['routingMetrics']['experimentAudit'].update(actualCacheProviderState='present'))
 reject('bool elapsed',lambda r:r['official'].update(elapsedTimeMs=True))
@@ -53,7 +59,7 @@ for case in ['external-deadline','throw-event','negative-offset','truncated','mi
  if case=='truncated':cp['status']['truncated']=True
  if case=='missing-chain':cp['stageBoundaries'][0]['event']='phase_run_enter'
  if case=='boolean-sequence':cp['stageBoundaries'][1]['sequence']=True
- if case=='wrong-options':cp['lastDurableCheckpoint']['observedRequestedOptions']['experimentBoundaryEdges']=False
+ if case=='wrong-options':cp['lastDurableCheckpoint']['observedRequestedOptions'][item['option']]=False
  if case=='future-offset':cp['stageBoundaries'][-1]['officialStartOffsetMs']=400000
  if case=='missing-runtime':x['officialReportRuntime']={}
  if case=='solve-throw-event':cp['stageBoundaries'].append({'sequence':3,'event':'solve_throw','phaseName':None,'solved':False,'failed':False,'officialStartOffsetMs':2});cp['rowCount']=4;cp['lastDurableCheckpoint'].update(sequence=3,event='solve_throw',officialStartOffsetMs=2)
