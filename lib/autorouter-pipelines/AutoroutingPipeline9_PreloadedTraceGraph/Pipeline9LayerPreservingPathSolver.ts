@@ -1,4 +1,5 @@
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 
 type PathParams = ConstructorParameters<typeof MultiSimplifiedPathSolver>[0]
 type Route = PathParams["unsimplifiedHdRoutes"][number]
@@ -74,13 +75,14 @@ export class Pipeline9LayerPreservingPathSolver extends MultiSimplifiedPathSolve
   private readonly sections: Section[]
 
   constructor(params: PathParams) {
-    const partition = partitionRoutes(params.unsimplifiedHdRoutes)
+    const canonicalRoutes = canonicalizePipeline9HdRoutes(params.unsimplifiedHdRoutes)
+    const partition = partitionRoutes(canonicalRoutes)
     super({
       ...params,
       unsimplifiedHdRoutes: partition.paths,
       otherHdRoutes: [...(params.otherHdRoutes ?? []), ...partition.fixedCopper],
     })
-    this.originalRoutes = params.unsimplifiedHdRoutes
+    this.originalRoutes = canonicalRoutes
     this.sections = partition.sections
   }
 

@@ -41,12 +41,18 @@ export const materializePipeline9HdRouteVias = (
           x: previousRoutePoint.x,
           y: previousRoutePoint.y,
           z: routePoint.z,
+          ...(previousRoutePoint.traceThickness !== undefined
+            ? { traceThickness: previousRoutePoint.traceThickness }
+            : {}),
         })
       } else {
         route.push({
           x: routePoint.x,
           y: routePoint.y,
           z: previousRoutePoint.z,
+          ...(routePoint.traceThickness !== undefined
+            ? { traceThickness: routePoint.traceThickness }
+            : {}),
         })
       }
       route.push(routePoint)
