@@ -1,3 +1,4 @@
+import type { FuturePointCacheShadowStats } from "lib/solvers/HighDensitySolver/futurePointCacheShadow"
 import type { FuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -21,6 +22,7 @@ export type Pipeline9HighDensityNodeOutput = {
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
   futurePointCacheStats?: FuturePointCacheStats
+  futurePointCacheShadowStats?: FuturePointCacheShadowStats
   iterations: number
   consumedNodeCount: number
   solved: boolean
@@ -61,6 +63,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
         ...(solver.futurePointCacheStats ? { futurePointCacheStats: solver.futurePointCacheStats } : {}),
+        ...(solver.futurePointCacheShadowStats ? { futurePointCacheShadowStats: solver.futurePointCacheShadowStats } : {}),
         iterations: solver.iterations,
         consumedNodeCount: 1 - solver.unsolvedNodePortPoints.length,
         solved: solver.solved,

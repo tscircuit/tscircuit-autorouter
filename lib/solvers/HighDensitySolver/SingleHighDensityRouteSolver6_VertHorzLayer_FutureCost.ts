@@ -2,7 +2,9 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
-import { consumeOwnedFuturePointCacheOptions, mixFuturePointCacheKey, type FuturePointCacheStats } from "./futurePointCacheContext"
+import { consumeOwnedFuturePointCacheOptions, getFuturePointCacheShadowStats, mixFuturePointCacheKey, type FuturePointCacheStats } from "./futurePointCacheContext"
+
+import { FuturePointCacheShadow } from "./futurePointCacheShadow"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
@@ -25,6 +27,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
   #futurePointCache?: { stats: FuturePointCacheStats; replacement: Uint8Array | null }
+  #futurePointCacheShadow?: FuturePointCacheShadow
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -57,6 +60,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.futureConnectionPoints.every((point) => typeof point.x === "number" && typeof point.y === "number" && typeof point.z === "number")) {
       this.#futurePointCache = { stats: cacheStats, replacement: null }
       cacheStats.instances++
+      this.#futurePointCacheShadow = new FuturePointCacheShadow(getFuturePointCacheShadowStats(cacheStats))
     }
   }
 
@@ -157,6 +161,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       }
     }
     const viaPenaltyDistance = this.viaPenaltyDistance
+    const queryX = node.x, queryY = node.y, queryZ = node.z
     let writeSlot = -1
     // Original exact query/penalty guards and native first-minimum semantics
     // remain authoritative. Only owned immutable contexts change placement.
@@ -172,6 +177,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           this.closestFuturePointCacheCoordinates[coordinateIndex + 2] === node.z &&
           this.closestFuturePointCacheCoordinates[coordinateIndex + 3] === viaPenaltyDistance) {
           if (stats) stats.hits++
+          this.#futurePointCacheShadow!.record(pointKey, queryX, queryY, queryZ, viaPenaltyDistance, this.futureConnectionPoints, cachedPointIndex, true, 0)
           return cachedPointIndex === -1 ? null : this.futureConnectionPoints[cachedPointIndex]
         }
         if (cachedPointIndex === -2) {
@@ -216,6 +222,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheIndices[writeSlot] = closestPointIndex
       if (stats) stats.stores++
     }
+    this.#futurePointCacheShadow!.record(pointKey, queryX, queryY, queryZ, viaPenaltyDistance, this.futureConnectionPoints, closestPointIndex, false, pointIndex)
     return closestPoint
   }
 

@@ -23,11 +23,19 @@ test("Pipeline9 actual factory and workers forward the experiment and merge actu
     outputs.push(serial.routes); iterations.push(serial.iterations)
     if (flag === true) {
       expect(Object.keys(serial.futurePointCacheStats!)).toHaveLength(16)
+      expect(Object.keys(serial.futurePointCacheShadowStats!)).toHaveLength(16)
+      expect(Object.getOwnPropertyDescriptor(serial, "futurePointCacheShadowStats")!.get).toBeUndefined()
+      expect(serial.futurePointCacheShadowStats!.lookups).toBe(serial.futurePointCacheStats!.lookups)
+      expect(serial.futurePointCacheShadowStats!.candidateDistanceEvaluations).toBe(serial.futurePointCacheStats!.distanceEvaluations)
+      expect(serial.futurePointCacheShadowStats!.indexMismatches).toBe(0)
       expect(Object.getOwnPropertyDescriptor(serial, "futurePointCacheStats")!.get).toBeUndefined()
       expect(serial.futurePointCacheStats!.instances).toBeGreaterThan(0)
       expect(serial.futurePointCacheStats!.mixedHashLookups).toBeGreaterThan(0)
       expect(serial.futurePointCacheStats!.lookups).toBe(serial.futurePointCacheStats!.hits + serial.futurePointCacheStats!.misses)
-    } else expect(Object.hasOwn(serial, "futurePointCacheStats")).toBeFalse()
+    } else {
+      expect(Object.hasOwn(serial, "futurePointCacheStats")).toBeFalse()
+      expect(Object.hasOwn(serial, "futurePointCacheShadowStats")).toBeFalse()
+    }
     const runtime = createPipeline9TestRuntime(2)
     try {
       const worker = new Pipeline9HighDensitySolver(params)
@@ -36,6 +44,7 @@ test("Pipeline9 actual factory and workers forward the experiment and merge actu
       // Native debug Symbols do not cross structured-clone worker messages.
       expect(worker.routes).toEqual(structuredClone(serial.routes))
       expect(worker.futurePointCacheStats).toEqual(serial.futurePointCacheStats)
+      expect(worker.futurePointCacheShadowStats).toEqual(serial.futurePointCacheShadowStats)
     } finally { await runtime.dispose() }
   }
   expect(outputs[1]).toEqual(outputs[0]); expect(outputs[2]).toEqual(outputs[0])

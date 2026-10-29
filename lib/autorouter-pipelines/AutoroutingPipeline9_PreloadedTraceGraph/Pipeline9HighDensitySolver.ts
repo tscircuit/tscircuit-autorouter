@@ -1,4 +1,5 @@
-import { createFuturePointCacheStats, type FuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
+import type { FuturePointCacheShadowStats } from "lib/solvers/HighDensitySolver/futurePointCacheShadow"
+import { createFuturePointCacheStats, getFuturePointCacheShadowStats, type FuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -438,7 +439,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
-    if (params.experimentFuturePointCache === true) this.futurePointCacheStats = createFuturePointCacheStats()
+    if (params.experimentFuturePointCache === true) {
+      this.futurePointCacheStats = createFuturePointCacheStats()
+      this.futurePointCacheShadowStats = getFuturePointCacheShadowStats(this.futurePointCacheStats)
+    }
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -480,6 +484,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   declare readonly futurePointCacheStats?: FuturePointCacheStats
+  declare readonly futurePointCacheShadowStats?: FuturePointCacheShadowStats
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
 
   override getSolverName(): string {
@@ -561,6 +566,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
                 if (result.futurePointCacheStats) {
                   if (!this.futurePointCacheStats) throw new Error("Unexpected future-point worker evidence on default-OFF host")
                   for (const key of Object.keys(result.futurePointCacheStats) as (keyof FuturePointCacheStats)[]) this.futurePointCacheStats[key] += result.futurePointCacheStats[key]
+                }
+                if (result.futurePointCacheShadowStats) {
+                  if (!this.futurePointCacheShadowStats) throw new Error("Unexpected future-point shadow evidence on default-OFF host")
+                  for (const key of Object.keys(result.futurePointCacheShadowStats) as (keyof FuturePointCacheShadowStats)[]) this.futurePointCacheShadowStats[key] += result.futurePointCacheShadowStats[key]
                 }
                 for (const [key, value] of Object.entries(
                   result.benchmarkDiagnosticCounters,

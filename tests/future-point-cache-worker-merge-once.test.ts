@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { InMemoryCache } from "lib/cache/InMemoryCache"
-import { createFuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
+import { createFuturePointCacheStats, getFuturePointCacheShadowStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
 import { makeFutureCacheNode } from "./fixtures/futurePointCacheSynthetic"
 
 test("multi-node promises merge completed execution once even when only a serial prefix is accepted", async () => {
@@ -13,6 +13,7 @@ test("multi-node promises merge completed execution once even when only a serial
     return node
   })
   const workerTotal = createFuturePointCacheStats()
+  const shadowTotal = getFuturePointCacheShadowStats(workerTotal)
   let jobs = 0, completedNodes = 0, largestBatch = 0
   const runtime = { executeAsync: async (Solver: any, input: any) => {
     jobs++; largestBatch = Math.max(largestBatch, input.nodePortPoints.length)
@@ -24,6 +25,7 @@ test("multi-node promises merge completed execution once even when only a serial
       const output = child.getOutput()
       for (const result of output) {
         completedNodes++
+        if (result.futurePointCacheShadowStats) for (const key of Object.keys(shadowTotal) as (keyof typeof shadowTotal)[]) shadowTotal[key] += result.futurePointCacheShadowStats[key]
         if (result.futurePointCacheStats) for (const key of Object.keys(workerTotal) as (keyof typeof workerTotal)[]) workerTotal[key] += result.futurePointCacheStats[key]
       }
       return output
@@ -40,6 +42,10 @@ test("multi-node promises merge completed execution once even when only a serial
   const expected = createFuturePointCacheStats()
   for (const key of Object.keys(expected) as (keyof typeof expected)[]) expected[key] = workerTotal[key] + serial.futurePointCacheStats![key]
   expect(threaded.futurePointCacheStats).toEqual(expected)
+  const expectedShadow = getFuturePointCacheShadowStats(expected)
+  for (const key of Object.keys(expectedShadow) as (keyof typeof expectedShadow)[]) expectedShadow[key] = shadowTotal[key] + serial.futurePointCacheShadowStats![key]
+  expect(threaded.futurePointCacheShadowStats).toEqual(expectedShadow)
+  expect(threaded.futurePointCacheShadowStats!.lookups).toBeGreaterThan(serial.futurePointCacheShadowStats!.lookups)
   expect(workerTotal.lookups).toBeGreaterThan(0)
   expect(threaded.futurePointCacheStats!.lookups).toBeGreaterThan(serial.futurePointCacheStats!.lookups)
 })

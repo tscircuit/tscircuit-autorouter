@@ -1,4 +1,5 @@
 import type { FutureConnection } from "./SingleHighDensityRouteSolver"
+import { createFuturePointCacheShadowStats, type FuturePointCacheShadowStats } from "./futurePointCacheShadow"
 
 const FUTURE_POINT_CACHE_COUNTER_KEYS = [
   "instances", "lookups", "hits", "misses", "distanceEvaluations",
@@ -49,4 +50,18 @@ export const mixFuturePointCacheKey = (key: number): number => {
   let mixed = low ^ high
   mixed = Math.imul(mixed ^ (mixed >>> 16), 0x9e3779b1)
   return (mixed ^ (mixed >>> 16)) >>> 0
+}
+
+// Diagnostic source only: the clean measured cache has no shadow workspace.
+const futurePointCacheShadows = new WeakMap<FuturePointCacheStats, FuturePointCacheShadowStats>()
+
+export const getFuturePointCacheShadowStats = (
+  stats: FuturePointCacheStats,
+): FuturePointCacheShadowStats => {
+  let shadow = futurePointCacheShadows.get(stats)
+  if (!shadow) {
+    shadow = createFuturePointCacheShadowStats()
+    futurePointCacheShadows.set(stats, shadow)
+  }
+  return shadow
 }
