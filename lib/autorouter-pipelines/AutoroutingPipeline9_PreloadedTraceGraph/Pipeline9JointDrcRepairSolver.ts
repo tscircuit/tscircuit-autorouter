@@ -55,6 +55,8 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
+import { DeltaAutoroutingDrcEngine } from "./DeltaAutoroutingDrcEngine"
+
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
@@ -76,6 +78,7 @@ type Pipeline9JointDrcRepairSolverParams = {
   defaultViaHoleDiameter: number
   effort: number
   colorMap: Record<string, string>
+  experimentDeltaDrc?: boolean
 }
 
 type MovablePreloadedSection = {
@@ -1101,6 +1104,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
+      ...(params.experimentDeltaDrc === true ? { experimentDeltaDrc: true, deltaDrcActivated: false, deltaDrcCalls: 0, deltaDrcTouchedQueries: 0, deltaDrcReusedQueries: 0 } : {}),
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
@@ -1149,7 +1153,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const autoroutingDrcEngine = new AutoroutingDrcEngine(
+    const DrcEngineConstructor = params.experimentDeltaDrc === true
+      ? DeltaAutoroutingDrcEngine : AutoroutingDrcEngine
+    const autoroutingDrcEngine = new DrcEngineConstructor(
       {
         ...extendedSrjWithPointPairs,
         obstacles: params.originalSrj.obstacles,
@@ -1170,7 +1176,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ) + Math.max(traceClearance, viaClearance),
       },
     )
-    const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
+    const evaluateIndexedTraces = (traces: RepairSimplifiedPcbTraces): ReturnType<AutoroutingDrcEngine["evaluate"]> => {
+      const result = autoroutingDrcEngine.evaluate(traces)
+      if (autoroutingDrcEngine instanceof DeltaAutoroutingDrcEngine) {
+        this.stats = { ...this.stats, deltaDrcActivated: true, ...autoroutingDrcEngine.deltaStats }
+      }
+      return result
+    }
+    const autoroutingBaselineDrcResult = evaluateIndexedTraces(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
     const autoroutingBaselineViaCircuitJson = getAutoroutingViaElements(
@@ -1476,7 +1489,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       // Ranking is private and must not populate the exact evaluator's cache
       // with results that have not undergone its reference-zero validation.
-      return autoroutingDrcEngine.evaluate(
+      return evaluateIndexedTraces(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
     }
@@ -1495,7 +1508,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = autoroutingDrcEngine.evaluate(
+      const evaluatedDrc = evaluateIndexedTraces(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
       const viaCircuitJson = getAutoroutingViaElements(

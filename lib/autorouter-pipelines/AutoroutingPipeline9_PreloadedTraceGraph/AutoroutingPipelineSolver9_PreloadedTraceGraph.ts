@@ -109,6 +109,8 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Experimental persistent changed-copper DRC evaluation; defaults to off. */
+  experimentDeltaDrc?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -863,6 +865,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
+            ...(cms.opts.experimentDeltaDrc === true ? { experimentDeltaDrc: true } : {}),
           },
         ]
       },
