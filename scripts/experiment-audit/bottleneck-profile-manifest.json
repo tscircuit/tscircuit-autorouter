@@ -27,11 +27,13 @@
     }
   ],
   "assets": {
-    ".github/workflows/bottleneck-profile.yml": "a048cfaaed739304eb6484c335e1b794b735e0d208018e8ce62a6da580ad18dc",
-    "scripts/experiment-audit/run-bottleneck-profile.py": "e62579ee0e5cb379f98436f490aaac434d761f6ca7d44737921ac87acc1c2d8f",
-    "scripts/experiment-audit/prepare-bottleneck-profile.py": "42a0f263dfab4e4455d02d89551f9e1f817c9188b19096b014a18af69bd64c78",
-    "scripts/experiment-audit/tests/bottleneck-profile-integrity.py": "a0debc6c2bb0e126f24174f3bbf0b67122be56ec731daafd19ddc39cd068a15c",
-    "scripts/experiment-audit/profile-clock-markers.ts": "c4deb902705320870ff3d4821c8c69f932e8621c0a662ad330f398300b982f89"
+    ".github/workflows/bottleneck-profile.yml": "402a45a80eb56564c5d0204b711235b8f84c7e5ef950a96dd4fcb690d4381897",
+    "scripts/experiment-audit/run-bottleneck-profile.py": "fb2e1afbf31a22403fbf1d594ef71765532bff05c6f4332fbc8b5ec507cccf31",
+    "scripts/experiment-audit/prepare-bottleneck-profile.py": "f1d9833449714998c28e160385f528065914ef130316421f2559bfc266adb001",
+    "scripts/experiment-audit/tests/bottleneck-profile-integrity.py": "e41852191ed6e0f945c45c369455bde7b856d7f27d7c9712aa4e54794221ad71",
+    "scripts/experiment-audit/profile-clock-markers.ts": "c4deb902705320870ff3d4821c8c69f932e8621c0a662ad330f398300b982f89",
+    "scripts/experiment-audit/framed-artifact-log.py": "08e5656a44766dd5b5cf36ae87ac73ff597c91ef05295b33373e66ca1736268b",
+    "scripts/experiment-audit/tests/framed-artifact-log-integrity.py": "33bc540297bc351e61642dfe82fc76c49d71c61fc09a874e71b85a8fa6c74a03"
   },
   "scope": "Three standalone frozen-baseline CPU diagnostic cases. No A/B timing comparison or full-dataset improvement claim. Prior568 campaign immutable."
 }

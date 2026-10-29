@@ -27,6 +27,14 @@ assert 'bottleneckProfileEndMarker()' in runtime.patch.profile_child(native_chil
 adapter = (ROOT/"experiment-audit-adapter.ts").read_text()
 profile_adapter = runtime.patch.profile_adapter(adapter)
 assert 'profilePid: process.pid' in profile_adapter and 'profilePerformanceTimeOriginMs: performance.timeOrigin' in profile_adapter
+assert runtime.patch.profile_child(native_child).startswith('#!/usr/bin/env bun\n')
+parse_program = 'const source=await Bun.stdin.text();new Bun.Transpiler({loader:"ts"}).transformSync(source);console.log("PARSE_PASS")'
+for name, source in [('parent',profile_parent),('child',runtime.patch.profile_child(native_child)),('adapter',profile_adapter),('markers',(ROOT/'profile-clock-markers.ts').read_text())]:
+    result=subprocess.run(['bun','--eval',parse_program],input=source,capture_output=True,text=True)
+    assert result.returncode==0,(name,result.stderr)
+bad_shebang='import {} from "./profile-clock-markers"\n'+native_child
+result=subprocess.run(['bun','--eval',parse_program],input=bad_shebang,capture_output=True,text=True)
+assert result.returncode!=0 and 'Syntax Error' in result.stderr
 for bad in [native_parent.replace('slot.child.kill("SIGKILL")','slot.child.kill("SIGTERM")'),native_parent+native_parent]:
     try: runtime.patch.profile_parent(bad)
     except ValueError: pass
@@ -35,7 +43,7 @@ for bad in [native_parent.replace('slot.child.kill("SIGKILL")','slot.child.kill(
 bun = subprocess.check_output(["which","bun"],text=True).strip()
 with tempfile.TemporaryDirectory(prefix="bottleneck-profile-synthetic-") as directory:
     root=pathlib.Path(directory);child=root/"child.ts"
-    child.write_text('import { bottleneckProfileStartMarker, bottleneckProfileEndMarker, recordBottleneckProfileMarker } from '+json.dumps(str(ROOT/'profile-clock-markers.ts'))+'\n'+'''import * as readline from "node:readline"
+    child.write_text('#!/usr/bin/env bun\nimport { bottleneckProfileStartMarker, bottleneckProfileEndMarker, recordBottleneckProfileMarker } from '+json.dumps(str(ROOT/'profile-clock-markers.ts'))+'\n'+'''import * as readline from "node:readline"
 recordBottleneckProfileMarker("bottleneckProfileStartMarker",bottleneckProfileStartMarker())
 const rl=readline.createInterface({input:process.stdin,crlfDelay:Infinity})
 function syntheticSetup(){let value=0;for(let i=0;i<30000000;i++)value+=Math.sqrt(i);return value}
@@ -45,6 +53,7 @@ for await(const line of rl){
  recordBottleneckProfileMarker("bottleneckProfileEndMarker",bottleneckProfileEndMarker())
  process.stdout.write(JSON.stringify({pid:process.pid,timeOrigin:performance.timeOrigin,marks,setup,search,input:line})+"\\n")
 }
+process.exit(0)
 ''')
     command=[bun,"--cpu-prof","--cpu-prof-interval=1000","--cpu-prof-dir="+str(root),str(child)]
     process=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=dict(os.environ,BOTTLENECK_PROFILE_DIRECTORY=str(root)))
@@ -77,7 +86,8 @@ for await(const line of rl){
         'evidence':evidence,'profileStartTimeEpochUs':data['startTime'],'profileEndTimeEpochUs':data['endTime'],
         'nonBoundarySamplesByFunction':counts,'boundarySamplesExcluded':boundary,'misassignedNonBoundarySamples':misassigned,
         'guardMs':2,'guardIsSyntheticCalibrationNotUniversalClockGuarantee':True,
-        'nativeTimeoutKillRetained':True,'normalEofExitCode':0,'samplingWeightsAreNotExactCpuTime':True}
+        'nativeTimeoutKillRetained':True,'normalEofExitCode':0,'samplingWeightsAreNotExactCpuTime':True,
+        'exactTransformedNativeParentChildAdapterMarkersSyntaxParsed':True,'nonleadingShebangRegressionRejected':True}
     destination=pathlib.Path('/tmp/bottleneck-profile-calibration-evidence');destination.mkdir(exist_ok=True)
     (destination/'calibration-child.ts').write_bytes(child.read_bytes())
     (destination/'calibration-profile.cpuprofile').write_bytes(profiles[0].read_bytes())

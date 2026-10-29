@@ -41,9 +41,18 @@ def profile_adapter(text):
 
 
 def profile_child(text):
-    text = 'import { bottleneckProfileStartMarker, bottleneckProfileEndMarker, recordBottleneckProfileMarker } from "./profile-clock-markers"\n' + text
+    prefix = 'import { bottleneckProfileStartMarker, bottleneckProfileEndMarker, recordBottleneckProfileMarker } from "./profile-clock-markers"\n'
+    if text.startswith("#!"):
+        shebang, remainder = text.split("\n", 1)
+        text = shebang + "\n" + prefix + remainder
+    else:
+        text = prefix + text
     text = replace_once(text, 'const rl = readline.createInterface({', 'recordBottleneckProfileMarker("bottleneckProfileStartMarker", bottleneckProfileStartMarker())\nconst rl = readline.createInterface({')
-    return replace_once(text, '    })\n    peakRssBytes = process.resourceUsage().maxRSS * 1024\n    const payload: WorkerResultMessage', '    })\n    recordBottleneckProfileMarker("bottleneckProfileEndMarker", bottleneckProfileEndMarker())\n    peakRssBytes = process.resourceUsage().maxRSS * 1024\n    const payload: WorkerResultMessage')
+    text = replace_once(text, '    })\n    peakRssBytes = process.resourceUsage().maxRSS * 1024\n    const payload: WorkerResultMessage', '    })\n    recordBottleneckProfileMarker("bottleneckProfileEndMarker", bottleneckProfileEndMarker())\n    peakRssBytes = process.resourceUsage().maxRSS * 1024\n    const payload: WorkerResultMessage')
+    # A diagnostic worker has exactly one task. After parent EOF, force normal
+    # Bun exit even if an imported package retained an unrelated async handle.
+    # CLI profiling flushes on normal exit; native timeout SIGKILL is unchanged.
+    return text.rstrip() + "\nprocess.exit(0)\n"
 
 
 def prepare(controller, target, expected_sha):

@@ -40,7 +40,7 @@ def validate():
     authority = old.validate_manifest(ROOT / "post588-experiments-20261029.json")
     for item in data["cases"]:
         assert item["inputHash"] == authority["expectedInputHashesByDataset"][item["dataset"]][str(item["sample"])]
-    expected = {".github/workflows/bottleneck-profile.yml", "scripts/experiment-audit/run-bottleneck-profile.py", "scripts/experiment-audit/prepare-bottleneck-profile.py", "scripts/experiment-audit/profile-clock-markers.ts", "scripts/experiment-audit/tests/bottleneck-profile-integrity.py"}
+    expected = {".github/workflows/bottleneck-profile.yml", "scripts/experiment-audit/run-bottleneck-profile.py", "scripts/experiment-audit/prepare-bottleneck-profile.py", "scripts/experiment-audit/profile-clock-markers.ts", "scripts/experiment-audit/tests/bottleneck-profile-integrity.py", "scripts/experiment-audit/framed-artifact-log.py", "scripts/experiment-audit/tests/framed-artifact-log-integrity.py"}
     assert set(data["assets"]) == expected
     assert all(old.sha(REPOSITORY / name) == value for name, value in data["assets"].items())
     return data, authority
@@ -125,6 +125,9 @@ def run(args, manifest, authority):
         "githubRunId":os.environ.get("GITHUB_RUN_ID"),"controllerSha":os.environ.get("GITHUB_SHA")})
     record["phaseCheckpointAudit"] = audit
     old.pinned.write_json(output/"profile-result.json",record)
+    if audit["errors"] or record.get("controllerError"):
+        benchmark_log = output/"attempt/benchmark.log"
+        print("BOTTLENECK_PROFILE_FAILURE_JSON "+json.dumps({"case":args.dataset+":"+str(args.sample),"observerErrors":audit["errors"],"controllerError":record.get("controllerError"),"benchmarkLogTail":benchmark_log.read_text()[-12000:] if benchmark_log.exists() else None}),flush=True)
     assert audit["errors"] == []
     terminal = ((record.get("official") or {}).get("routingMetrics") or {}).get("experimentAudit") or {}
     assert terminal.get("inputHash") == identity["inputHash"]
