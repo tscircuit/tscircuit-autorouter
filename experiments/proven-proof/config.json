@@ -1,0 +1,37 @@
+{
+  "phase": "full-gate",
+  "base_sha": "8f78190013a9105abf2c52ebe705e07f3895ca66",
+  "candidates": {
+    "retention": "c88f449b6a92fd96711991485ce9f5ea37928a2c"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 6,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": "all",
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  }
+}
