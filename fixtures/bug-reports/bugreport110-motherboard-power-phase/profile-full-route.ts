@@ -52,6 +52,13 @@ if (output) {
     serializedOutput,
   )
 }
+const expander = solver.powerTraceExpansionSolver?.powerTraceExpanderSolver
+if (expander) {
+  writeFileSync(
+    resolve(outputDirectory, `${label}.expansion-input.json`),
+    JSON.stringify([expander.inputProblem, expander.options]),
+  )
+}
 // Rendering, DRC, serialization and hashing are outside routing time.
 const validationInput = solver.solved
   ? {
