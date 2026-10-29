@@ -1,6 +1,7 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getPipeline9OriginalViaPlacementDrcErrors } from "./getPipeline9OriginalViaPlacementDrcErrors"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -920,6 +921,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
+            checkOriginalViaPlacement: cms.opts.constrainViaPadPlacement === true,
           },
         ]
       },
@@ -1000,8 +1002,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               }
             },
-            isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateRelaxedDrc({
+            isValid: (routes: HighDensityRoute[]): boolean => {
+              const reference = evaluateRelaxedDrc({
                 inputSrj,
                 srjWithPointPairs: cms.srjWithPointPairs!,
                 routedTraces: convert(routes),
@@ -1012,7 +1014,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                   viaClearance:
                     cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
                 },
-              }).errors.length === 0,
+              })
+              if (reference.errors.length !== 0) return false
+              return cms.opts.constrainViaPadPlacement !== true ||
+                getPipeline9OriginalViaPlacementDrcErrors({
+                  circuitJson: reference.circuitJson,
+                  minViaEdgeToPadEdgeClearance: cms.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
+                }).length === 0
+            },
           },
         ]
       },
