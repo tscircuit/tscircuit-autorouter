@@ -146,15 +146,45 @@ async def child(cfg, case, cpu, instrumented):
     return json.loads((directory / 'result.json').read_text())
 
 
+def memory_preflight(cpu_count, child_limit_mib, meminfo_path=pathlib.Path('/proc/meminfo'), cgroup_v2_path=pathlib.Path('/sys/fs/cgroup/memory.max'), cgroup_v1_path=pathlib.Path('/sys/fs/cgroup/memory/memory.limit_in_bytes')):
+    memory_lines = [line.split() for line in meminfo_path.read_text().splitlines() if line.startswith('MemTotal:')]
+    if len(memory_lines) != 1 or len(memory_lines[0]) != 3 or memory_lines[0][2] != 'kB':
+        raise ValueError('Cannot authenticate physical memory capacity from MemTotal')
+    physical = int(memory_lines[0][1]) * 1024
+    observations = {}
+    numeric_limits = []
+    for kind, path in [('v2', cgroup_v2_path), ('v1', cgroup_v1_path)]:
+        try:
+            path.stat()
+        except FileNotFoundError:
+            observations[kind] = {'path': str(path), 'state': 'interface-unavailable', 'value': None}
+            continue
+        if not path.is_file():
+            raise ValueError('Memory limit interface is not a regular readable file: ' + str(path))
+        text = path.read_text().strip()
+        if kind == 'v2' and text == 'max':
+            observations[kind] = {'path': str(path), 'state': 'unlimited', 'value': text}
+            continue
+        if not re.fullmatch('[0-9]+', text):
+            raise ValueError('Malformed ' + kind + ' memory limit: ' + str(path))
+        limit = int(text)
+        observations[kind] = {'path': str(path), 'state': 'numeric-limit', 'value': limit}
+        numeric_limits.append(limit)
+    effective = min([physical, *numeric_limits])
+    required = (cpu_count * child_limit_mib + 2048) * 1024 * 1024
+    info = {'physicalBytes': physical, 'cgroupInterfaces': observations, 'effectiveCapacityBytes': effective, 'requiredCapacityBytes': required, 'basis': 'Physical MemTotal bounded by every numeric v1/v2 ceiling exposed by this runner. Missing optional kernel interfaces are recorded explicitly; they are not read as files or assumed to impose a hidden numeric limit.'}
+    if physical <= 0 or effective < required:
+        raise ValueError('Insufficient isolated diagnostic memory capacity: ' + json.dumps(info, sort_keys=True))
+    return info
+
+
 async def run(cfg):
     cpus = sorted(os.sched_getaffinity(0))[:cfg['cpu_lanes']]
-    physical = next(int(line.split()[1]) * 1024 for line in pathlib.Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemTotal:'))
-    cgroup_text = pathlib.Path('/sys/fs/cgroup/memory.max').read_text().strip()
-    effective = min(physical, int(cgroup_text)) if cgroup_text != 'max' else physical
-    required = (len(cpus) * cfg['child_memory_limit_mib'] + 2048) * 1024 * 1024
-    if len(cpus) != cfg['cpu_lanes'] or effective < required:
-        raise ValueError('Insufficient isolated diagnostic CPU/memory capacity')
-    emit('LIFECYCLE_RUNTIME', {'controllerSha': os.environ.get('GITHUB_SHA'), 'bunVersion': command(['bun', '--version']), 'laneCpus': cpus, 'effectiveMemoryBytes': effective, 'requiredMemoryBytes': required, 'scope': cfg['scope']})
+    if len(cpus) != cfg['cpu_lanes']:
+        raise ValueError('Insufficient isolated diagnostic CPU capacity')
+    memory = memory_preflight(len(cpus), cfg['child_memory_limit_mib'])
+    effective, required = memory['effectiveCapacityBytes'], memory['requiredCapacityBytes']
+    emit('LIFECYCLE_RUNTIME', {'controllerSha': os.environ.get('GITHUB_SHA'), 'bunVersion': command(['bun', '--version']), 'laneCpus': cpus, 'effectiveMemoryBytes': effective, 'requiredMemoryBytes': required, 'memoryPreflight': memory, 'scope': cfg['scope']})
     async def lane(index, cpu):
         for case in cfg['cases'][index::len(cpus)]:
             reference = await child(cfg, case, cpu, False)
