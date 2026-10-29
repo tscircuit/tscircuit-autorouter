@@ -32,10 +32,10 @@ def artifact_metadata(raw, index=0, feature="witness-via-pad-sample-003", datase
 
 
 def manifest():
-    return {"repository": REPO, "campaign": "witness-quality6-20261029",
+    return {"repository": REPO, "campaign": "witness-quality6-repeat-20261029",
             "cases": [{"dataset": "srj24", "sample": 8, "order": "AB"}, {"dataset": "srj18", "sample": 3, "order": "BA"}, {"dataset": "srj24", "sample": 14, "order": "AB"}],
             "plannedJobs": 3, "plannedAttempts": 6, "heldOut": False, "fullPopulationSweep": False, "speedClaim": False,
-            "candidate": {"id": "witness-via-pad", "candidateSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b", "candidateTree": "b9085c5e472f3275af96b091f384f7345d0a08b4"}}
+            "candidate": {"id": "witness-via-pad", "candidateSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52", "candidateTree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23"}}
 
 
 def encode(spec, payload):

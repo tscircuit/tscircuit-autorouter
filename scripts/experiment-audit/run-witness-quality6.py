@@ -16,22 +16,22 @@ MANIFEST = ROOT / 'witness-quality6-20261029.json'
 AUTHORITY = ROOT / 'bottleneck-experiments-20261029.json'
 WORKFLOW = ROOT.parent.parent / '.github/workflows/witness-quality6-20261029.yml'
 BRANCH = 'codex/witness-quality6-controller-20261029'
-CAMPAIGN = 'witness-quality6-20261029'
+CAMPAIGN = 'witness-quality6-repeat-20261029'
 CASES = [('srj24', 8, 'AB'), ('srj18', 3, 'BA'), ('srj24', 14, 'AB')]
-CANDIDATE = '0df00ca0e6003dd679d3c1158b91c1ed2d66518b'
-CANDIDATE_TREE = 'b9085c5e472f3275af96b091f384f7345d0a08b4'
+CANDIDATE = '2109f9e96957c06f23aef2b079f6d59fba23ea52'
+CANDIDATE_TREE = '83d39c038ba8bdbb01fc53728e5069fd594d2d23'
 STAGE = 'witnessViaPadRepairSolver'
 PATHS = [STAGE + suffix for suffix in ['.stats', '.qualification', '.stats.reasons.0', '.stats.lastRejectionReasons.0']]
 QUAL_KEYS = {'status', 'initialForeignViaPadFindings', 'lastForeignViaPadFindings', 'bestForeignViaPadFindings', 'proposals', 'accepted', 'rejectionClass', 'protectedUnchanged', 'lastReferenceErrors', 'lastSrjObstacleViolations', 'lastViaPadPolicyViolations', 'lastViaInPadViolations', 'lastProofReasonCount', 'lastX', 'lastY', 'initialCertificateStatus'}
 RECEIPTS = {
-    'witness-quality6-source-qa.json': '433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2',
-    'witness-quality6-source-review.json': '98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213',
-    'witness-quality6-source-publication.json': 'ff6641a7055c26fc699a1aeb32c36f78e03077ad3f4be5bdbd53a88f6527fd1e',
+    'witness-quality6-source-qa.json': 'dbfc5a426f57c1c2bc19783ae98e8e14edaab01d8f0ed5402cb29867bfd337d2',
+    'witness-quality6-source-review.json': '2107a17d824431032e900c147771baf45163f24fc89fe63bf9d16c5b4be059a2',
+    'witness-quality6-source-publication.json': '4be1c3334486dbaa7a6373ed7aec6747136f92a0149ee050e61f4d09fc3c7205',
 }
 RESULT = 'WITNESS_QUALITY6_RESULT_JSON '
 ACTIVE = 'WITNESS_QUALITY6_ACTIVE_JSON '
 SUMMARY = 'WITNESS_QUALITY6_SUMMARY_JSON '
-NEW_ASSETS = {'run-witness-quality6.py', 'witness-quality6-raw-proof.py', 'seal-witness-quality6-manifest.py', 'witness-quality6-artifact-carrier.py', 'tests/witness-quality6-integrity.py', 'tests/witness-quality6-raw-binding-integrity.py', 'tests/witness-quality6-observer-integrity.ts', 'tests/witness-quality6-source-unknown-capture.ts', 'tests/fixtures/witness-quality6-source-unknown.json', 'tests/witness-quality6-artifact-carrier-integrity.py', *RECEIPTS}
+NEW_ASSETS = {'run-witness-quality6.py', 'witness-quality6-raw-proof.py', 'seal-witness-quality6-manifest.py', 'witness-quality6-artifact-carrier.py', 'tests/witness-quality6-integrity.py', 'tests/witness-quality6-raw-binding-integrity.py', 'tests/witness-quality6-observer-integrity.ts', 'tests/witness-quality6-source-unknown-capture.ts', 'tests/witness-quality6-alias-mask-integrity.py', 'tests/witness-quality6-terminal-projection-integrity.py', 'tests/fixtures/witness-quality6-source-unknown.json', 'tests/witness-quality6-artifact-carrier-integrity.py', *RECEIPTS}
 
 
 def load(name, filename):
@@ -57,14 +57,14 @@ def assets():
 
 def policy():
     return {
-        'scope': 'Three selected development cases, not held out and not a full dataset sweep; all six attempts retained.',
+        'scope': 'Fresh repeat of the same three selected development cases after the raw via inventory refinement; not held out and not a full dataset sweep. All six new attempts and all six prior attempts remain separate; no timing pool or new unique-board credit.',
         'quality': 'Strict source/input/runtime provenance plus independent unchanged seven-predicate original-owner and supplemental qualification. ACCEPTED additionally requires independent raw coordinate-only coupled-site mask and protected invariance; pinned source acceptance proves its full final certificate branch.',
         'noProposal': 'NO_PROPOSAL, including initial UNKNOWN or unrelated FAIL, requires exact raw output/copper and nonclock seven-report/owner parity; UNKNOWN is not certified PASS.',
         'failure': 'Attempted exhaustion/errors/timeouts remain failures. Definite rejected witness reduction is a component diagnostic with no final quality credit.',
         'clock': 'Every attempt retains constructorTimeMs, official solve elapsedTimeMs and fresh external wall; primary clock is constructor plus official solve. Own case/job pair only. No speed, held-out or general regression claim.',
         'deadline': 'Unchanged native solve360s after constructor and original outer process480s. Search and certification share this deadline; no reset, second solve or fallback.',
         'transport': 'Only exact authenticated original API server ZIP bytes reconstructed from authenticated successful carrier jobs qualify raw evidence. Inner/shadow/repacked ZIPs are not authority.',
-        'commonWork': 'Compare synchronous native phase event/iteration facts before the added final stage, with clocks and new-stage work separately retained.',
+        'commonWork': 'Compare every named synchronous native phase event/iteration fact before the added final stage. Only the final baseline empty phase-setup dispatch is accounted separately after both full logs prove the same explicit penultimate null event followed by successful solve_exit; every named work row stays. Clocks and new-stage work remain separate.',
     }
 
 
@@ -77,7 +77,9 @@ def validate():
     require(m.get('baselineSha') == MAIN and m.get('baselineTree') == common.MAIN_TREE and m.get('harnessSha') == MAIN, 'Baseline/harness pin changed')
     require(m.get('sampleTimeoutSeconds') == 360 and m.get('externalControllerGuardSeconds') == 480 and all(type(m.get(k)) is int and m[k] == 1 for k in ['threads', 'concurrency', 'effort']), 'Native budgets changed')
     require(m.get('freshProcessPerAttempt') is True and m.get('sourceIsCurrentPrHead') is False and m.get('heldOut') is False and m.get('fullPopulationSweep') is False and m.get('speedClaim') is False and m.get('candidateFallback') is False, 'Targeted/no-fallback policy changed')
-    require(m.get('inheritedControllerLocal') == '7bce7bde7d8cad121cbd48e3a86ee640f505696d' and m.get('inheritedControllerTree') == '89ef64b2a8ee6f57f0490ee4cb6d00d78c2e15e8' and m.get('expectedRemoteParent') == 'f60fbd2a4641112515e4e8fa11339a24afac356d', 'Additive controller base changed')
+    require(m.get('inheritedControllerLocal') == '105b4d11e770cf5bc9371a0e411ab628cd921e44' and m.get('inheritedControllerTree') == '886e9c86dac6862506166c53e2951732d51b2aeb' and m.get('expectedRemoteParent') == 'd8e7dc203691d037aedcf3e2ed23050554563f9f', 'Repeat controller base changed')
+    require(m.get('repeatOf') == {'runId': '40964225540', 'controllerSha': 'd8e7dc203691d037aedcf3e2ed23050554563f9f', 'manifestSha256': 'e1878100444cbebeb189a60bf2cc979e5df8bed7a114932cb607a75926fe7ba1', 'candidateSha': '0df00ca0e6003dd679d3c1158b91c1ed2d66518b'}, 'Original six-attempt authority changed')
+    require(m.get('priorBaselinesReused') is False and m.get('timingsPooledWithPriorCampaigns') is False and m.get('uniqueBoardDenominatorIncrease') is False, 'Repeat requires fresh own baselines and separate evidence')
     item = m.get('candidate', {})
     require(item.get('id') == 'witness-via-pad' and item.get('candidateSha') == CANDIDATE and item.get('candidateTree') == CANDIDATE_TREE and item.get('solverName') == SOLVER and item.get('solverModule') == MODULE, 'Published candidate changed')
     require(exact(item.get('options'), {'cacheProvider': None, 'effort': 1, 'experimentWitnessViaPadRepair': True}) and item.get('evidencePaths') == PATHS and item.get('optionalEvidencePaths') == PATHS[2:], 'Feature/options/evidence changed')
@@ -86,7 +88,7 @@ def validate():
     require(m.get('runSampleSourceSha256') == hashlib.sha256(inspect.getsource(common.pinned.run_sample).encode()).hexdigest(), 'Native run_sample changed')
     require(m.get('sourceReceiptHashes') == RECEIPTS and all(sha(ROOT / n) == h for n, h in RECEIPTS.items()), 'Qualified source receipts changed')
     publication = json.loads((ROOT / 'witness-quality6-source-publication.json').read_text())
-    require(publication.get('remoteSha') == CANDIDATE and publication.get('tree') == CANDIDATE_TREE and publication.get('remoteParent') == MAIN, 'Published source lineage changed')
+    require(publication.get('remoteSha') == CANDIDATE and publication.get('tree') == CANDIDATE_TREE and publication.get('parentRemote') == '0df00ca0e6003dd679d3c1158b91c1ed2d66518b', 'Published source lineage changed')
     require(all(x.get('inputHash') == a['expectedInputHashesByDataset'][x['dataset']][str(x['sample'])] for x in m['cases']), 'Selected original input changed')
     require(exact(m.get('policy'), policy()), 'Predeclared quality/clock/transport policy changed')
     return m, a

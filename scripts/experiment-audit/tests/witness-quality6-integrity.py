@@ -179,7 +179,7 @@ def main():
     # This fixture was emitted by actual frozen ebeb final-stage source through
     # the unchanged four-path observer on Bun1.4.2, not hand-authored zero counts.
     captured=json.loads((ROOT/'tests/fixtures/witness-quality6-source-unknown.json').read_text())
-    assert captured['sourceTree']=='b9085c5e472f3275af96b091f384f7345d0a08b4' and captured['runtime']=='1.4.2' and captured['observerErrors']==[] and captured['outputSameObject'] is True
+    assert captured['sourceTree']=='83d39c038ba8bdbb01fc53728e5069fd594d2d23' and captured['runtime']=='1.4.2' and captured['observerErrors']==[] and captured['outputSameObject'] is True
     assert captured['evidence'][r.PATHS[1]]['lastReferenceErrors']==-1
     def unknown_record():
         value=make(m,a,case,'B');value['official']['routingMetrics']['experimentAudit']['evidence']=copy.deepcopy(captured['evidence'])
@@ -199,9 +199,9 @@ def main():
     a_tr=[{'pcb_trace_id':'t','connection_name':'N','route':[wire(-1,0,'top'),wire(0,0,'top'),{'route_type':'via','x':0,'y':0,'from_layer':'top','to_layer':'bottom'},wire(0,0,'bottom'),wire(1,0,'bottom')]}]
     b_tr=copy.deepcopy(a_tr)
     for i in [1,2,3]:b_tr[0]['route'][i]['y']=-.2
-    via={'type':'pcb_via','pcb_via_id':'v','pcb_trace_id':'t','x':0,'y':0,'outer_diameter':.3,'hole_diameter':.15,'layers':['top','inner1','inner2','bottom']}
-    ca=[via,{'type':'pcb_smtpad','pcb_smtpad_id':'p','x':5,'y':5}];cb=copy.deepcopy(ca);cb[0]['y']=-.2
-    owner={'traceOwners':[{'originalId':'t','status':'RESOLVED','owner':'O'}],'allFindings':[{'checkClass':'viaPad','classification':'DECLARED_FOREIGN_COPPER','owners':[{'type':'pcb_via','id':'v','owner':'O'},{'type':'pcb_smtpad','id':'p','owner':'P'}]}]}
+    via={'type':'pcb_via','pcb_via_id':'via_0','pcb_trace_id':'t','x':0,'y':0,'outer_diameter':.3,'hole_diameter':.15,'layers':['top','inner1','inner2','bottom']}
+    ca=[via,{'type':'pcb_smtpad','pcb_smtpad_id':'p','x':5,'y':5},{'type':'pcb_trace','pcb_trace_id':'t','route':copy.deepcopy(a_tr[0]['route'])}];cb=copy.deepcopy(ca);cb[0]['y']=-.2;cb[2]['route']=copy.deepcopy(b_tr[0]['route'])
+    owner={'traceOwners':[{'originalId':'t','status':'RESOLVED','owner':'O'}],'allFindings':[{'checkClass':'viaPad','classification':'DECLARED_FOREIGN_COPPER','owners':[{'type':'pcb_via','id':'via_0','owner':'O'},{'type':'pcb_smtpad','id':'p','owner':'P'}]}]}
     original={'layerCount':4,'minViaDiameter':.3,'minViaHoleDiameter':.15,'obstacles':[]}
     proof=raw.mutation_mask(original,a_tr,b_tr,ca,cb,owner,owner)
     assert proof['rawViaOccurrences']==1 and len(proof['changedRawPoints'])==3;checks.append('accepted-exact-fullspan-coupled-mask')

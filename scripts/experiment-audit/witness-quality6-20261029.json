@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "campaign": "witness-quality6-20261029",
+  "campaign": "witness-quality6-repeat-20261029",
   "repository": "tscircuit/tscircuit-autorouter",
   "controllerBranch": "codex/witness-quality6-controller-20261029",
   "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
@@ -44,8 +44,8 @@
   ],
   "candidate": {
     "id": "witness-via-pad",
-    "candidateSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
-    "candidateTree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
+    "candidateSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+    "candidateTree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
     "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
     "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
     "options": {
@@ -65,22 +65,22 @@
     ]
   },
   "sourceReceiptHashes": {
-    "witness-quality6-source-qa.json": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2",
-    "witness-quality6-source-review.json": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213",
-    "witness-quality6-source-publication.json": "ff6641a7055c26fc699a1aeb32c36f78e03077ad3f4be5bdbd53a88f6527fd1e"
+    "witness-quality6-source-qa.json": "dbfc5a426f57c1c2bc19783ae98e8e14edaab01d8f0ed5402cb29867bfd337d2",
+    "witness-quality6-source-review.json": "2107a17d824431032e900c147771baf45163f24fc89fe63bf9d16c5b4be059a2",
+    "witness-quality6-source-publication.json": "4be1c3334486dbaa7a6373ed7aec6747136f92a0149ee050e61f4d09fc3c7205"
   },
   "policy": {
-    "scope": "Three selected development cases, not held out and not a full dataset sweep; all six attempts retained.",
+    "scope": "Fresh repeat of the same three selected development cases after the raw via inventory refinement; not held out and not a full dataset sweep. All six new attempts and all six prior attempts remain separate; no timing pool or new unique-board credit.",
     "quality": "Strict source/input/runtime provenance plus independent unchanged seven-predicate original-owner and supplemental qualification. ACCEPTED additionally requires independent raw coordinate-only coupled-site mask and protected invariance; pinned source acceptance proves its full final certificate branch.",
     "noProposal": "NO_PROPOSAL, including initial UNKNOWN or unrelated FAIL, requires exact raw output/copper and nonclock seven-report/owner parity; UNKNOWN is not certified PASS.",
     "failure": "Attempted exhaustion/errors/timeouts remain failures. Definite rejected witness reduction is a component diagnostic with no final quality credit.",
     "clock": "Every attempt retains constructorTimeMs, official solve elapsedTimeMs and fresh external wall; primary clock is constructor plus official solve. Own case/job pair only. No speed, held-out or general regression claim.",
     "deadline": "Unchanged native solve360s after constructor and original outer process480s. Search and certification share this deadline; no reset, second solve or fallback.",
     "transport": "Only exact authenticated original API server ZIP bytes reconstructed from authenticated successful carrier jobs qualify raw evidence. Inner/shadow/repacked ZIPs are not authority.",
-    "commonWork": "Compare synchronous native phase event/iteration facts before the added final stage, with clocks and new-stage work separately retained."
+    "commonWork": "Compare every named synchronous native phase event/iteration fact before the added final stage. Only the final baseline empty phase-setup dispatch is accounted separately after both full logs prove the same explicit penultimate null event followed by successful solve_exit; every named work row stays. Clocks and new-stage work remain separate."
   },
   "authoritySha256": "67d852edd48186ce5cc97413c773c11f2bd793edef9a1407d0531e6266339058",
-  "workflowSha256": "ffc34f902fba8f1946a1c0dfc1aed3fe90def8db264c27c1d1472cd85ecd7430",
+  "workflowSha256": "8271f68e91c80bb8d0f238ba86a5de0f59c51752d5baf65bd56439206a1e5106",
   "runtimeSourceHashes": {
     "bottleneck-artifact-carrier.py": "4fb63aa5ab8ffdab2b18342013eda457ffd329545bd63150fcd201657f6562d7",
     "bottleneck-coverage.py": "35c41c383d699c8bf3c9c422cbed8b115a3f216c7310d35018393e2ca0bd2ca9",
@@ -97,24 +97,35 @@
     "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
     "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
     "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
-    "run-witness-quality6.py": "21a2801e80348df54c38fed3aebad53a068c7504506ac2fb149457c8002641aa",
+    "run-witness-quality6.py": "edf9e405154fcf4a257c66cd34d25fb91b3ad79b4c8953e38c4e3189609f7afd",
     "seal-witness-quality6-manifest.py": "df6247f637a3bcacfbb68b6012f4d021a52e6b6874eb56e3cc8ed7cd8d376c6c",
     "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
     "tests/bottleneck-artifact-carrier-integrity.py": "40bef0b0b967f2e1971acbb2fda3c1ac42354dd4ec5e6d29addb07da978d2c63",
-    "tests/fixtures/witness-quality6-source-unknown.json": "60544bd77f0adf2207e223aa2b0e6c0bcde00ef9c0b97571a106e86b6d55062b",
-    "tests/witness-quality6-artifact-carrier-integrity.py": "acbcf6c5e6172e926bc29c2e737e80d13eb1d247961498c53fc98c1f8b2cc691",
-    "tests/witness-quality6-integrity.py": "deb04126e69b46853f9643701e795b4c704b833cf1d6b6c8a4ad6b9f080b5648",
+    "tests/fixtures/witness-quality6-source-unknown.json": "58196dc9c39a218115e5364d1e8b376d859d73a311d6eac339475ae69b808ed8",
+    "tests/witness-quality6-alias-mask-integrity.py": "6643564c3b0068d4d51e2930b96b4eb130b4c5d8aeca73321d5a29554d4a1920",
+    "tests/witness-quality6-artifact-carrier-integrity.py": "b23c8a54b59261544fe921c11ac632875753dbfacbb9f1884f91e1d50cd838e3",
+    "tests/witness-quality6-integrity.py": "80cbc020b16e4f27580b361e6e5307acd5c1dbb6f20e828a3525780eea68ee34",
     "tests/witness-quality6-observer-integrity.ts": "b572b6feb6dd8c1483ae89e41504d49481fbb33377e9cfa8103c981e5d3dac5a",
     "tests/witness-quality6-raw-binding-integrity.py": "f8793c86268be691ce91b29927f50a971f057be867d8aa94a5104bdaee5df521",
-    "tests/witness-quality6-source-unknown-capture.ts": "f6c5d71ddbdcf21e2f7ec69f88fd6649a48b4e61a4f07a502c8f527901754585",
-    "witness-quality6-artifact-carrier.py": "57e698670da33a7219ff3b3a52f7545e6b9ed7eafadbbacc4cc9f34fccfd6a70",
-    "witness-quality6-raw-proof.py": "c16633cc11e18fc39e59d238410c9b38d0690c405326a678681727019e805d1d",
-    "witness-quality6-source-publication.json": "ff6641a7055c26fc699a1aeb32c36f78e03077ad3f4be5bdbd53a88f6527fd1e",
-    "witness-quality6-source-qa.json": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2",
-    "witness-quality6-source-review.json": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213"
+    "tests/witness-quality6-source-unknown-capture.ts": "09ef45cd955f03b54767f4c3b018fb4c89e847ef08a51cd4001d50f157d4c4e8",
+    "tests/witness-quality6-terminal-projection-integrity.py": "c72549c58cc00c7422460a25b4500776a5a9abadd9ef0266b8ac87ff8dc42215",
+    "witness-quality6-artifact-carrier.py": "cb7379cf40f043dddad25068a3d67361123fa90aaa93c9dc81692d92ec3e1a1b",
+    "witness-quality6-raw-proof.py": "e18bd0cca23b396b96a2dde590040e0917362d3acb6f964b63762162ac1eb15a",
+    "witness-quality6-source-publication.json": "4be1c3334486dbaa7a6373ed7aec6747136f92a0149ee050e61f4d09fc3c7205",
+    "witness-quality6-source-qa.json": "dbfc5a426f57c1c2bc19783ae98e8e14edaab01d8f0ed5402cb29867bfd337d2",
+    "witness-quality6-source-review.json": "2107a17d824431032e900c147771baf45163f24fc89fe63bf9d16c5b4be059a2"
   },
   "runSampleSourceSha256": "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396",
-  "inheritedControllerLocal": "7bce7bde7d8cad121cbd48e3a86ee640f505696d",
-  "inheritedControllerTree": "89ef64b2a8ee6f57f0490ee4cb6d00d78c2e15e8",
-  "expectedRemoteParent": "f60fbd2a4641112515e4e8fa11339a24afac356d"
+  "inheritedControllerLocal": "105b4d11e770cf5bc9371a0e411ab628cd921e44",
+  "inheritedControllerTree": "886e9c86dac6862506166c53e2951732d51b2aeb",
+  "expectedRemoteParent": "d8e7dc203691d037aedcf3e2ed23050554563f9f",
+  "repeatOf": {
+    "runId": "40964225540",
+    "controllerSha": "d8e7dc203691d037aedcf3e2ed23050554563f9f",
+    "manifestSha256": "e1878100444cbebeb189a60bf2cc979e5df8bed7a114932cb607a75926fe7ba1",
+    "candidateSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b"
+  },
+  "priorBaselinesReused": false,
+  "timingsPooledWithPriorCampaigns": false,
+  "uniqueBoardDenominatorIncrease": false
 }

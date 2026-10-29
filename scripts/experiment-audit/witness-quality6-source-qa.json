@@ -1,80 +1,98 @@
 {
   "schemaVersion": 1,
-  "status": "PASS_LOCAL_SYNTHETIC_QA_NO_REAL_DATASET_QUALIFICATION",
-  "localCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
-  "tree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
+  "status": "SOURCE_V2_QA_PASS_PENDING_INDEPENDENT_FINAL_BINDING",
+  "atUtc": "2026-10-29T22:27:03.573114+00:00",
+  "localCommit": "818e615678a1fd3d8ddf2ca27b7939b0a9606b78",
+  "tree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
+  "parentLocalCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
+  "parentRemoteSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
+  "parentTree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
   "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
-  "worktree": "/tmp/autorouter-witness-via-repair",
-  "option": {
-    "experimentWitnessViaPadRepair": true
-  },
-  "evidencePaths": [
-    "witnessViaPadRepairSolver.stats",
-    "witnessViaPadRepairSolver.qualification"
-  ],
-  "qualificationScalarFieldCount": 16,
+  "worktree": "/tmp/autorouter-witness-via-repair-v2",
+  "option": "experimentWitnessViaPadRepair",
   "defaultOff": true,
+  "change": "Exact ordered canonical via-alias inventory from first raw directed-transition occurrences; retain physical-site owner/material/fullspan equality and all coupled raw occurrences. No geometric proposal or acceptance predicate changes.",
+  "productionDelta": {
+    "files": 1,
+    "insertions": 19,
+    "deletions": 6
+  },
+  "changedFiles": [
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+    "tests/features/witness-via-pad-export-alias-inventory-tamper.test.ts",
+    "tests/features/witness-via-pad-reversed-transition-aliases.test.ts",
+    "tests/features/witness-via-pad-through-subspan-aliases.test.ts"
+  ],
+  "actualDevelopmentEvidence": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/QUALITY6-SRJ24-8-STATIC-INVENTORY-DIAGNOSIS-v1.json",
+    "sha256": "bd5aec58a264c3b56d1a0b6131aa9220b411e9d8de18e69a4e178462bc54819f",
+    "scope": "Read-only old raw bytes match actual fresh A/B hash;241rawviaoccurrences/231sites/235canonicalaliases; all235 independently match native directed-transition projection. This is diagnosis, not new source execution or acceptance evidence."
+  },
+  "parentQA": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair/QA-FINAL.json",
+    "sha256": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2"
+  },
+  "parentIndependentReview": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/WITNESS-VIA-PAD-INDEPENDENT-REVIEW-v1.json",
+    "sha256": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213"
+  },
   "tests": {
+    "command": "/tmp/autorouter-post588-bun/package/bin/bun test --timeout 9999999 tests/features/witness-via-pad-*.test.ts",
     "runtimeBun": "1.4.2",
-    "files": 21,
-    "passed": 21,
+    "files": 24,
+    "passed": 24,
     "failed": 0,
-    "assertions": 153,
+    "assertions": 204,
     "oneTestPerFile": true,
-    "command": "/tmp/autorouter-post588-bun/package/bin/bun test --timeout 9999999 tests/features/witness-via-pad-*.test.ts"
+    "newCases": [
+      "reversed transition aliases move together",
+      "different through-via subspan aliases retain full manufactured stack",
+      "nine canonical count/order/identity/material/span/trace tamper variants rejected"
+    ]
   },
   "types": {
-    "command": "bun node_modules/typescript/bin/tsc --noEmit",
+    "command": "flock /workspace/experiment-audit/build.lock /tmp/autorouter-post588-bun/package/bin/bun node_modules/typescript/bin/tsc --noEmit",
     "exit": 0,
-    "scope": "Full project command with all tracked TS/TSX/MTS source and imports available in sparse checkout.",
-    "toolRuntimeBun": "1.4.3"
+    "scope": "Full project with same complete TS/TSX/MTS source and fixture sparse patterns as parent qualified source.",
+    "runtimeBun": "1.4.2"
   },
   "build": {
-    "command": "PATH=/tmp/autorouter-post588-bun/package/bin:$PATH /tmp/autorouter-post588-bun/package/bin/bun run build",
+    "command": "flock /workspace/experiment-audit/build.lock env PATH=/tmp/autorouter-post588-bun/package/bin:$PATH /tmp/autorouter-post588-bun/package/bin/bun run build",
     "exit": 0,
     "workerEsmAndDts": true,
     "compilerBun": "1.4.2",
     "runtimeControlsBun": "1.4.2",
-    "compiledIndexSha256": "b24542910adb1fc5cd1e5f80c31e6ac6bf67787f191393a1186db44158437ba3",
-    "packageRunnerBun": "1.4.2",
-    "workerBundlerBun": "1.4.2",
-    "tsupNode": "v24.19.0",
-    "bunExecutable": "/tmp/autorouter-post588-bun/package/bin/bun"
+    "compiledIndexSha256": "a49dec92910a5898a8f98d40912c81a7b85a781b8a45d21a70dccfe2b69549c8"
   },
   "freshTinyWholePipelineControls": {
     "count": 7,
     "baselineIterations": 550,
-    "candidateOmittedOrFalseIterations": 550,
-    "candidateTrueIterations": 552,
+    "omittedAndFalseIterations": 550,
+    "trueIterations": 552,
     "allMaximumIterations": 100000532,
     "allOutputSha256": "585ce105ac18cc1587d6c68b5340ae1ac6d8c4b8b15d989489e045dab4fe7360",
     "allCommonStageWorkEqual": true,
     "omittedAndFalseHaveNoNewOwnKey": true,
-    "enabledResult": "NO_PROPOSAL with 0 proposals; exact baseline geometry",
+    "realDatasetRuns": 0,
     "noTimingCredit": true
   },
   "compiledFinalStageControls": {
-    "count": 3,
-    "scope": "Injected completed synthetic power-export fixtures, not preceding whole routing",
-    "positive": "Foreign via-pad findings 1 to 0; full scoped certificate PASS; 1 accepted proposal; both public getters agree",
-    "noop": "exact original output",
-    "exhaustion": "Published foreign via-pad findings 1 to 0 observed; another SRJ violation remains; 0 accepted proposals; throws, failed state, no public output"
+    "count": 4,
+    "scope": "Injected completed synthetic power-export fixtures; no preceding whole routing or actual dataset board.",
+    "modes": [
+      "noop",
+      "positive",
+      "positive-alias",
+      "exhaustion"
+    ],
+    "positiveAndReversedAlias": "Full certificate PASS, accepted exactly1 and zero remaining foreignviaPad; reversed alias has2coupled occurrences.",
+    "noop": "Exact baseline output",
+    "exhaustion": "Throws with failed state and no public output despite witness-reduction diagnostic"
   },
+  "selectedRuntimeControlsCommand": "python /tmp/autorouter-witness-via-repair-v2-audit/run-synthetic-runtime-controls.py /tmp/autorouter-post588-bun/package/bin/bun bun142",
   "originalOraclesAndHarnessUnchanged": true,
   "originalInputAndRawProtectedContextUnchanged": true,
-  "realDatasetRoutingRuns": 0,
-  "realDatasetCheckerReplays": 0,
-  "realDatasetPerformanceOrQualityCredit": false,
-  "remoteMutations": 0,
-  "prior568AndClean336Unchanged": true,
-  "scope": [
-    "One generated manufactured via site and its exact coupled raw occurrences after power expansion; no HD export roundtrip or global reroute.",
-    "Original-owner seven published copper predicates, independent conservative demanded-contact graph, native reference/board/hole checks, original SRJ obstacle envelopes and native via-pad policy, plus forbidden via-in-pad check. This is not universal manufacturing certification.",
-    "NO_PROPOSAL/UNKNOWN for unsupported ownership, geometry or connectivity; preloaded, replaced or fixed-via copper; unsupported active drill policies; pair, bus or jumper constraints; or conflicting original numeric/named layers.",
-    "Known unrelated existing rule failures retain their own counts. Rejected-proposal finding removal is diagnostic evidence and receives no final quality credit.",
-    "Constructor cloning is charged to measured constructor cost and the existing outer process deadline. Certification and every proposal run in the one ordinary solve/sample deadline. No second solve, deadline or timer reset is created. The unchanged harness starts its official solve clock after construction; those metrics remain separate. Twenty finite terminal steps reserve orchestration only and add no native routing budget.",
-    "Historical SRJ24:8 remains unmeasured. Planned targeted gain and negative controls must test activation, mapping and quality before any full 42-input qualification."
-  ],
+  "sourceFrozenAndTrackedClean": true,
   "sourceInventory": [
     {
       "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -93,8 +111,8 @@
     },
     {
       "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
-      "bytes": 29943,
-      "sha256": "5cac7b6c682f85b0dc056147e06b8e03b4f95e22c281c7451854427a849e03ef"
+      "bytes": 30663,
+      "sha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c"
     },
     {
       "path": "tests/features/witness-via-pad-bounded-qualification.test.ts",
@@ -205,80 +223,104 @@
       "path": "tests/features/witnessViaPadRepairFixture.ts",
       "bytes": 2814,
       "sha256": "3d4840f451a809a2b6876d6597eb9b6660df4e715adc82e874e476ef5e2d80c9"
+    },
+    {
+      "path": "tests/features/witness-via-pad-export-alias-inventory-tamper.test.ts",
+      "bytes": 2760,
+      "sha256": "1eaa8be4e3806e8dd745d37ff145a6b1653fe1dad2abf8cd684a101eb00ac114"
+    },
+    {
+      "path": "tests/features/witness-via-pad-reversed-transition-aliases.test.ts",
+      "bytes": 2263,
+      "sha256": "92f80473cc848ccef006e2679fc1c7f3acde340d7fa6be79c66697b2603ba449"
+    },
+    {
+      "path": "tests/features/witness-via-pad-through-subspan-aliases.test.ts",
+      "bytes": 2260,
+      "sha256": "01d6de860799b1836538aa01c0dffcd995d704bfc07a883e47d97d2492f014ff"
     }
   ],
   "proofs": [
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/focused-tests-bun142.log",
-      "bytes": 3542,
-      "sha256": "28fb42b5777832062ae9c602af1650306b5ea1949032d4b77bcb1f761620a8cd"
-    },
-    {
-      "path": "/tmp/autorouter-witness-via-repair-audit/types-final.log",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "/tmp/autorouter-witness-via-repair-audit/types-final.exit",
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/build.exit",
       "bytes": 2,
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/build-bun142.log",
-      "bytes": 1191,
-      "sha256": "4f22f92284acb899664ff931ad1959cbbad39dd7d53231e1955d3caafb9fe523"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/build.log",
+      "bytes": 1194,
+      "sha256": "02803306b8efc9dd3c2912279f43b10237a3b3c103cb1ea5ebec231337a29d12"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/build-bun142.exit",
-      "bytes": 2,
-      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/compiled-terminal-child.ts",
+      "bytes": 2477,
+      "sha256": "093495d5d4a5efb36e5ce5f73c6e97727426b528c7bc87ac5e6ac830d76dc3d1"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/build-runtime-bun142.json",
-      "bytes": 133,
-      "sha256": "bb6f67adbb455bfa5245d2c7cef4777c8fed32c49d59dbede44f9731136691b2"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/compiled-terminal-controls-bun142.json",
+      "bytes": 12590,
+      "sha256": "ccc4b6ca77113f0a67ff2920b8f81d5fe9f5c0921a59f0266bc409b8acd682b5"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/tiny-pipeline-parity-bun142.json",
-      "bytes": 39985,
-      "sha256": "0386292799ed47a855560bdeb17ca33f39a6d9556df15a31f9f13e0a0516bf20"
-    },
-    {
-      "path": "/tmp/autorouter-witness-via-repair-audit/compiled-terminal-controls-bun142.json",
-      "bytes": 9843,
-      "sha256": "be3a6366afb441e56b86005555e0e62295caa6af0e3daa39354878c6f4fe3ebc"
-    },
-    {
-      "path": "/tmp/autorouter-witness-via-repair-audit/original-oracles-unchanged.json",
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/original-oracles-unchanged.json",
       "bytes": 1091,
       "sha256": "f4ee3108a1b7fbabad5f4afe90df58d26aa6fa561822395098dd22d106d4e278"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/feasibility-wording-correction.json",
-      "bytes": 909,
-      "sha256": "949ef882d60fa9f8a60c6fd8b9a745b48b9411c25f1cb414eb7009c36f48a497"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/run-synthetic-runtime-controls.py",
+      "bytes": 5015,
+      "sha256": "0fa2c79a6b6839d5a89202add09dd14fdc9070265411df55c98276f97d37a688"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/run-synthetic-runtime-controls.py",
-      "bytes": 4664,
-      "sha256": "7bb70614f45b0bd73c1974dce6868a7fa0d08e0c75be696bba491adadc180673"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/runtime-controls.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/tiny-parity-child.ts",
-      "bytes": 2739,
-      "sha256": "fdf78313901d6e744b9e6ffc6387619a54c54d7d8cb3fd8b69a0a0752075b2b8"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/runtime-controls.log",
+      "bytes": 267,
+      "sha256": "e4c3d97b70bb4508a34bb6e0e00f3aae7ce11cd67791d574fc6a37af4a20aa07"
     },
     {
-      "path": "/tmp/autorouter-witness-via-repair-audit/compiled-terminal-child.ts",
-      "bytes": 2141,
-      "sha256": "6bf09f49386e013c02060c505532187275963410d7936ba83682701c98c51255"
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/tests-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/tests-final.log",
+      "bytes": 4086,
+      "sha256": "0b24b547a7cdc00e2335d898a613fc6b07350218b9c0693f99ac28827b69172b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/tiny-parity-child.ts",
+      "bytes": 2742,
+      "sha256": "81acbd0e498b4b4fcc6d11829dccb10558943d89fd14c5ec011856c4f44cd966"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/tiny-pipeline-parity-bun142.json",
+      "bytes": 40003,
+      "sha256": "6b657825856ed90ca218ca3e894f6ea983f7d8c7a1e85b2d6089b02f9ed3bf21"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/types-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/types-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/types.log",
+      "bytes": 4939,
+      "sha256": "280e3ce56e0b80174413a5b1cb737edfb3d7bfcf95da676101382e354ee08a5d"
     }
   ],
-  "feasibilityCorrection": "Native getDrcErrors already enriches via-pad IDs. The explained defect is layer-blind endpoint containment in createSourceTraces, rather than the entire SRJ connectivity-map helper. Frozen reference files remain unchanged.",
-  "selectedRuntimeControlsCommand": "python3 /tmp/autorouter-witness-via-repair-audit/run-synthetic-runtime-controls.py /tmp/autorouter-post588-bun/package/bin/bun bun142",
-  "unselectedEarlierQa": {
-    "path": "/tmp/autorouter-witness-via-repair-audit/QA-COMPILER143-UNSELECTED.json",
-    "sha256": "cd2a5fa511450c9f2ab6d00f85caa919209c359f2854df6b1d642909fd95ab9e",
-    "reason": "Compiler1.4.3 evidence retained as history. Final selected worker build and affected runtime controls all use absolute Bun1.4.2."
-  }
+  "realDatasetRoutingRuns": 0,
+  "realDatasetCheckerReplays": 0,
+  "realDatasetPerformanceOrQualityCredit": false,
+  "remoteMutations": 0,
+  "priorSourcesAndOriginal336AndQuality6Immutable": true,
+  "scope": "Closes a legitimate native export representation pregate. Actual complete certificate, proposals and quality gain must still be demonstrated by fresh Blacksmith comparisons. PTH unsupported domain and all physical/original-owner/demand/protected/native guards remain unchanged."
 }

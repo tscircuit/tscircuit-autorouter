@@ -1,29 +1,20 @@
 {
-  "localCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
-  "remoteSha": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
-  "tree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
-  "remoteParent": "e703f0499188f858b2b5e571ac80091d4c10733a",
-  "branch": "codex/experiment-witness-via-pad-20261029",
-  "sourceIsCurrentPrHead": false,
-  "status": "QUALIFIED_PUBLISHED_STANDALONE_NO_ACTUAL_BOARD_YET",
-  "qaPath": "witness-via-repair/QA-FINAL.json",
-  "qaSha256": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2",
-  "reviewPath": "quality-portfolio-analysis/WITNESS-VIA-PAD-INDEPENDENT-REVIEW-v1.json",
-  "reviewSha256": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213",
-  "flag": "experimentWitnessViaPadRepair",
-  "evidencePaths": [
-    "witnessViaPadRepairSolver.stats",
-    "witnessViaPadRepairSolver.qualification",
-    "witnessViaPadRepairSolver.stats.reasons.0",
-    "witnessViaPadRepairSolver.stats.lastRejectionReasons.0"
-  ],
-  "optionalEvidencePaths": [
-    "witnessViaPadRepairSolver.stats.reasons.0",
-    "witnessViaPadRepairSolver.stats.lastRejectionReasons.0"
-  ],
-  "localRealBoards": 0,
-  "noOriginalOracleHarnessOrCheckerEdits": true,
-  "localBenchmarks": 0,
-  "runtimeBuildVersion": "Bun1.4.2",
-  "atUtc": "2026-10-29T21:39:50.361066+00:00"
+  "status": "PUBLISHED_EXACT_QA_AND_PEER_REVIEWED_SOURCE_TREE_FOR_FRESH_TRIAL",
+  "atUtc": "2026-10-29T22:28:33.157453+00:00",
+  "localCommit": "818e615678a1fd3d8ddf2ca27b7939b0a9606b78",
+  "remoteSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+  "tree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
+  "parentLocal": "ebebf96f851edca1c5ddefea496917eb11c52f57",
+  "parentRemote": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
+  "branch": "codex/experiment-witness-via-pad-v2-20261029",
+  "qaSha256": "dbfc5a426f57c1c2bc19783ae98e8e14edaab01d8f0ed5402cb29867bfd337d2",
+  "qaPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/QA-FINAL.json",
+  "independentReviewSha256": "2107a17d824431032e900c147771baf45163f24fc89fe63bf9d16c5b4be059a2",
+  "independentReviewPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/INDEPENDENT-REVIEW-v1.json",
+  "exportSha256": "2e4bdd1c5b0f833726366d0b5950f64f7e0afc5d11491660297f15ca298727ed",
+  "sourceDelta": "1productionfile19add6remove,3newtests; exact native directedtransition alias inventory, allphysical/demand/protectedchecks preserved.",
+  "actualBoardAttempts": 0,
+  "priorActualSixImmutable": true,
+  "noQualityOrSpeedClaim": true,
+  "remoteTreeSingleParentAndRefIndependentlyReadBack": true
 }

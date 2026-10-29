@@ -1,150 +1,120 @@
 {
   "schemaVersion": 1,
-  "status": "PASS_FROZEN_SOURCE_AND_SYNTHETIC_QA_FOR_CONTROLLED_TARGETED_BLACKSMITH_TRIAL",
-  "createdAtUtc": "2026-10-29T21:35:48.370913+00:00",
-  "reviewer": "/root/bottleneck_review",
-  "localCommit": "ebebf96f851edca1c5ddefea496917eb11c52f57",
-  "tree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
-  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
-  "worktree": "/tmp/autorouter-witness-via-repair",
-  "ownerQA": {
-    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/WITNESS-VIA-PAD-SOURCE-QA-v1.json",
-    "bytes": 12891,
-    "sha256": "433bba058bd63a094f521222973cfb32cedd7a60ee680d2d022f8311ce5cd3c2"
+  "status": "PASS_FROZEN_V2_SOURCE_FOR_FRESH_TARGETED_BLACKSMITH_TRIAL",
+  "createdAtUtc": "2026-10-29T22:27:48.156843+00:00",
+  "reviewer": "/root/quality_review",
+  "worktree": "/tmp/autorouter-witness-via-repair-v2",
+  "localCommit": "818e615678a1fd3d8ddf2ca27b7939b0a9606b78",
+  "tree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
+  "parentLocal": "ebebf96f851edca1c5ddefea496917eb11c52f57",
+  "parentRemote": "0df00ca0e6003dd679d3c1158b91c1ed2d66518b",
+  "parentTree": "b9085c5e472f3275af96b091f384f7345d0a08b4",
+  "ownerQaPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/witness-via-repair-v2/QA-FINAL.json",
+  "ownerQaSha256": "dbfc5a426f57c1c2bc19783ae98e8e14edaab01d8f0ed5402cb29867bfd337d2",
+  "parentIndependentReview": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/WITNESS-VIA-PAD-INDEPENDENT-REVIEW-v1.json",
+    "sha256": "98da1ee540213ae28abe6b99209e5b5e03709e00c444b381a6d74869c181b213"
   },
-  "originalOwnerQAPath": "/tmp/autorouter-witness-via-repair-audit/QA-FINAL.json",
-  "sourceAndProofArtifactsRehashed": 39,
-  "sourceInventoryFiles": 26,
-  "sourceFrozenAndTrackedClean": true,
-  "implementation": [
-    "Only true experimentWitnessViaPadRepair appends a bounded final stage after native power expansion. Default omitted/false gains no new own solver key. All pre-existing phase work remains native.",
-    "Constructor clones the raw original request only when opted in, before normalization/baseline work. Certification and immutable checks use original declarations, actual final Simplified traces, point-pair context and protected fixed copper. No HD export roundtrip.",
-    "Original-declaration-only typed owner core matches reviewedfee128 core after identifier normalization, except type-only signature adaptation, exact canonical JSON identity strings replacing crypto digests, and honestly renamed identityKey fields. Generated aliases cannot merge original owners. Five frozen validators and independent fee128 sidecar remain unchanged.",
-    "Global raw trace/via inventory proves every represented manufactured via site, effective dimensions/drills/spans/owners and export occurrence; conflicting hidden duplicates, fixed/preloaded/replaced/unsupported copper cannot certify.",
-    "Demand graph requires one physical component across all original-owner terminals and raw generated copper, with exact permitted-layer contacts, validated continuous raw adjacency/manufactured via spans and conservative exact SMT shape bridges. Unsupported/interior-only contacts can stayUNKNOWN.",
-    "Independent acceptance requires all seven unchanged original-owner published copper predicates, native reference/board/hole checks, original SRJ obstacle envelopes under strict original-owner tokens, existing raw SRJ via-pad policy, forbidden via-in-pad check and board copper envelope. Unsupported active drill/pair/bus/jumper/provenance cases stay explicitUNKNOWN. This is scoped certification, not universal manufacturing.",
-    "Deterministic single-site padface proposals move only coupled generated raw XY points, preserve all material/identity/other geometry and original terminals/fixed copper. Valid/no-eligible/unsupported baseline returns exact original output asNO_PROPOSAL, never certifiesUNKNOWN. Attempted search exhaustion or unexpected native/oracle failure remains failed with no output fallback."
-  ],
-  "criticalFindingsClosed": [
-    "Per-layer array order could omit bottom-layer via keepout contact; temporary native guard now uses min/max of ALL manufactured layers. Independent ordered/permuted pure repro both reject.",
-    "A foreign-clearance fix could create an own-net via-in-pad under defaultfalse; unchanged published via-in-pad predicate and original SRJ policy now reject it, with a safe later proposal accepted.",
-    "Nonempty unknown or foreign generic obstacle aliases could hide wire collision; ALL original SRJ envelopes now checked using only strict original-owner exemptions. Independent empty/unknown/foreign alias repro all reject.",
-    "Other reviewed fixes: complete owner-wide/global terminal intersection, original raw constructor snapshot, named/numeric layer consistency, invalid rule/outline pregates, offspan blind-via mask, fixed parent terminal budget, exact default-off ownstate and allpublicexport consistency.",
-    "Candidate witness counts are null unless all seven predicates actually ran with complete ownership; an unperformed UNKNOWN cannot fabricate a zero. Second own qualification record has exactly16 scalar/null fields and retains a real local gain even when another acceptance rule rejects it."
+  "actualStaticDiagnosis": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/QUALITY6-SRJ24-8-STATIC-INVENTORY-DIAGNOSIS-v1.json",
+    "sha256": "bd5aec58a264c3b56d1a0b6131aa9220b411e9d8de18e69a4e178462bc54819f",
+    "scope": "Read-only old raw bytes match actual fresh A/B hash;241rawviaoccurrences/231sites/235canonicalaliases; all235 independently match native directed-transition projection. This is diagnosis, not new source execution or acceptance evidence."
+  },
+  "reviewedDelta": {
+    "productionFiles": 1,
+    "insertions": 19,
+    "deletions": 6,
+    "newTestFiles": 3,
+    "changedFiles": [
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+      "tests/features/witness-via-pad-export-alias-inventory-tamper.test.ts",
+      "tests/features/witness-via-pad-reversed-transition-aliases.test.ts",
+      "tests/features/witness-via-pad-through-subspan-aliases.test.ts"
+    ],
+    "allOtherParentGitEntriesUnchanged": true,
+    "sourceFrozenClean": true
+  },
+  "proofArtifactsAndSourceFilesRehashed": 44,
+  "findingClosed": "The native converter de-duplicates via exports by directed layer transition. Different/reversed transitions at one identical through-drilled physical site legitimately export multiple canonical aliases. Old source incorrectly required one canonical element perphysicalsite. Actual firsttrial24:8 had241occurrences/231sites/235aliases andsixinventory-dependentUNKNOWNreasons; newsourceproves exactalias inventory instead of dropping the guard.",
+  "independentReasoning": [
+    "Perphysicalsite ALL rawoccurrences still must agree resolved originalowner, effectivepad/drill, and full manufacturedspan. Foreign/material/spanconflicts still produceUNKNOWN.",
+    "NewexpectedExports independently projects first raw directedtransition occurrences in native traceorder; every canonicalalias must match exactvia_i identity, first pcb_trace_id, X/Y, outer/drill/fullspan and resolved originalowner. Globalexactcountrejects unaccounted/missing aliases.",
+    "JSONtuple transition key equals nativecomma-delimitedkey on pre-gated finitecoordinates and closed validlayernames; both\u22120 representations coalesce. No arbitrarysource aliases gain ownership or geometry authority.",
+    "Onephysicalsite remains one contactgraph via across its validated actualmanufacturedlayers; allcoupled rawoccurrences stillmove together. Every physical/native/protected/input/demand/parentbudgetguard remains unchanged.",
+    "No nativeconverter, frozenreference, original-ownerchecker, validator, harness, or sourceDependencieschanged. Existing defaultoff andunsupportedPTHbehavior remain."
   ],
   "independentVerification": {
     "focusedTests": {
-      "runtimeBun": "1.4.2",
-      "files": 21,
-      "passed": 21,
-      "assertions": 153,
+      "bun": "1.4.2",
+      "files": 24,
+      "passed": 24,
+      "assertions": 204,
       "log": {
-        "path": "/tmp/witness-ebeb-independent-tests.log",
-        "bytes": 3543,
-        "sha256": "5dd3d8988c29d080942e0a1ddfb4ba5ffe9bcb14f40d2454ab3e55203c4388f9"
+        "path": "/tmp/witness-v2-independent-focused-final.log",
+        "bytes": 4084,
+        "sha256": "01195dbc0ab7dda15f8d090417814911b1952ad9b2f58fcde1bb32e1f558d9aa"
       }
     },
-    "tinyPositiveProbe": "Independent two-net synthetic scene: sole original-foreign via-pad defect1 to0, one proposal accepted, source/raw original context unchanged. No real dataset run.",
-    "deepFrozenMutationMaskProbe": "All input/context/raw/protected data deeply frozen. Accepted output changed exactly[trace0,point4/5/6] XY; after restoring those coordinates every other byte of raw geometry/material/identity/metadata matches baseline.",
-    "actualFrozenObserverProbe": {
-      "observer": "Unmodified phase-checkpoint-observer.ts from frozen diagnosticcontroller",
-      "accepted": {
-        "rows": 9,
-        "maxRowBytes": 2097,
-        "qualificationFieldsRetained": 16,
-        "bestForeignViaPadFindings": 0,
-        "accepted": 1,
-        "errors": []
+    "ownSyntheticAdversarialProbe": {
+      "status": "PASS",
+      "cases": [
+        "Reversedfullroute aliases accepted with both selected rawviaoccurrences moved together",
+        "Foreignowneralias remainsUNKNOWN exactoriginaloutputobject",
+        "Differentmaterialalias remainsUNKNOWN exactoriginaloutputobject"
+      ],
+      "allInputsUnchanged": true,
+      "probeSource": {
+        "path": "/tmp/witness-v2-independent-alias-probe.ts",
+        "bytes": 2486,
+        "sha256": "653baa8f6a571c98c6f8d4def886e30c41a6e9d8092505d3f9dcc793767df119"
       },
-      "exhausted": {
-        "rows": 9,
-        "maxRowBytes": 2306,
-        "qualificationFieldsRetained": 16,
-        "bestForeignViaPadFindings": 0,
-        "accepted": 0,
-        "rejectionClass": "SRJ_ENVELOPE",
-        "status": "SEARCH_EXHAUSTED",
-        "errors": []
-      },
-      "scope": "Actual P9 final-stage factory injected with completed synthetic prior-phase output; no preceding board routing or real dataset execution."
-    }
+      "probeResult": {
+        "path": "/tmp/witness-v2-independent-alias-probe.json",
+        "bytes": 4633,
+        "sha256": "db6b78dec1f72a8c14b24b5b2262dac441e7467d4d574360e00b4231cb426513"
+      }
+    },
+    "authorNewTestsReviewed": "Same-direction prioraliascoalescing retained; reversed and different through-subspan alias positive; nine forged canonical extra/missing/outer/drill/span/trace/identity/order/duplicate variants rejected. One test perfile."
   },
-  "ownerChecksReviewed": {
+  "fullQaReviewed": {
     "fullTypesExit": 0,
-    "fullWorkerEsmDtsBuildExit": 0,
-    "absoluteBuildBunAndPathChildBun": "/tmp/autorouter-post588-bun/package/bin/bun 1.4.2",
-    "freshActualTinyWholePipelineControls": 7,
-    "compiledInjectedFinalStageControls": 3,
-    "runtimeControlsBun": "1.4.2",
-    "compiledIndexSha256": "b24542910adb1fc5cd1e5f80c31e6ac6bf67787f191393a1186db44158437ba3",
-    "commonPriorPhaseWorkAndOutputsExact": true,
-    "omittedFalseIterations": 550,
-    "enabledNoProposalIterations": 552,
-    "allTinyMaximums": 100000532,
-    "typesToolBun": "1.4.3 explicitly separate; actual package/worker build and compiled execution pinned1.4.2"
+    "workerEsmDtsBuildExit": 0,
+    "buildAndRuntimeBun": "1.4.2",
+    "compiledIndexSha256": "a49dec92910a5898a8f98d40912c81a7b85a781b8a45d21a70dccfe2b69549c8",
+    "freshTinyControls": 7,
+    "tinyPriorPhaseWorkAndOutputExact": true,
+    "compiledTailControls": 4,
+    "aliasPositiveSelectedRawOccurrences": 2,
+    "exhaustionRetainsFailureAndNoOutput": true,
+    "earlierTestTypingFailureRetainedAsHistoricalLogOnly": true
   },
-  "parentBudgetProof": {
-    "forcedNearCapControl": "Starting parent iterations100/MAX100, Base.step increments to101; constructor childMAX20 and terminalreserve set parentMAX=max(100,101+20+1)=122 before poststep check. Actual independent rerun verifies122 and successful no-op.",
-    "worstPlannedChildSteps": "At most1initialization+16candidatechecks+1exhaustion=18 childsteps, within fixed20. No native routing budget or external deadline reset.",
-    "sameTinyMaximumExplanation": "Existing large terminal reserve100000532 already dominates ~550+21, so Math.max leaves it unchanged. Enabled adds two real orchestration steps for stage construction and no-proposal initialization."
-  },
-  "evidencePaths": [
-    "witnessViaPadRepairSolver.stats",
-    "witnessViaPadRepairSolver.qualification"
-  ],
-  "independentArtifacts": [
+  "artifacts": [
     {
-      "path": "/tmp/witness-ebeb-independent-tests.log",
-      "bytes": 3543,
-      "sha256": "5dd3d8988c29d080942e0a1ddfb4ba5ffe9bcb14f40d2454ab3e55203c4388f9"
+      "path": "/tmp/witness-v2-independent-focused-final.log",
+      "bytes": 4084,
+      "sha256": "01195dbc0ab7dda15f8d090417814911b1952ad9b2f58fcde1bb32e1f558d9aa"
     },
     {
-      "path": "/tmp/witness-via-independent-small-probe.ts",
-      "bytes": 2728,
-      "sha256": "90faa1666b1d5c9061d56c2c60ea84553b73e87702a1b6685f80ca493a016179"
+      "path": "/tmp/witness-v2-independent-alias-probe.ts",
+      "bytes": 2486,
+      "sha256": "653baa8f6a571c98c6f8d4def886e30c41a6e9d8092505d3f9dcc793767df119"
     },
     {
-      "path": "/tmp/witness-via-independent-layer-order-probe.ts",
-      "bytes": 1549,
-      "sha256": "599118fe98448c974568f8dfe5660badb0f02ce00a64fec2bdd1e29c62ed21ae"
+      "path": "/tmp/witness-v2-independent-alias-probe.json",
+      "bytes": 4633,
+      "sha256": "db6b78dec1f72a8c14b24b5b2262dac441e7467d4d574360e00b4231cb426513"
     },
     {
-      "path": "/tmp/witness-via-independent-via-in-pad-probe.ts",
-      "bytes": 1713,
-      "sha256": "c5cbc3730c5ce590b0efcb1d281a62054091e237dab171940ad2a3ad137596a3"
-    },
-    {
-      "path": "/tmp/witness-via-independent-connected-generic-probe.ts",
-      "bytes": 1103,
-      "sha256": "aec89defa239fb715962006f35c27e6cc421028f291df3aa0ed4a8d83ea3681e"
-    },
-    {
-      "path": "/tmp/witness-via-independent-mask-probe.ts",
-      "bytes": 1644,
-      "sha256": "da1216741061d0c54d4d0c6e82e2de024b01ecf114cd0265f8952f8c79346a84"
-    },
-    {
-      "path": "/tmp/witness-via-independent-observer-probe.ts",
-      "bytes": 3391,
-      "sha256": "2f144eb54eee0eb3c777069b47eeae800e2de16a544efe017a3fb07e0031cb28"
-    },
-    {
-      "path": "/tmp/witness-independent-observer/accepted/rows.json",
-      "bytes": 16455,
-      "sha256": "8be953ea1a1a0c8d2cc17287f90630222e5f43a6bf5fe14281fe94e61383edab"
-    },
-    {
-      "path": "/tmp/witness-independent-observer/exhausted/rows.json",
-      "bytes": 16849,
-      "sha256": "fb7b70ecc9851abf207a1bc99b0465e337d4e1a082ae51c3a828cb75f3e60b95"
+      "path": "/tmp/witness-v2-independent-frozen-source.json",
+      "bytes": 961,
+      "sha256": "a9c25b9762704446ba15fd2cef92b64a659aac5c0df44bc6a55e263ddba289c7"
     }
   ],
-  "constraintsAndNextStep": [
-    "No actual dataset boards/checker replays, timing trials, remote publication, or frozen source edits by reviewer. Prior568, clean336 and shadow3 contracts unchanged.",
-    "Approved for the planned fresh native/candidate feasibility pairs: knownsrj24:8 development positive, srj18:3 clean no-op, srj24:14 immutable pad-pad no-op. Actual activation may conservativelyUNKNOWN; no heldout/global/no-regression/quality or speed claim from synthetic QA.",
-    "All validation/proposal/clone work remains charged to one external request deadline; output preservation alone is not a latency/completion guarantee.",
-    "Actual native whole outputs, full original findings/owners, request/source provenance and total charged clocks must be qualified on Blacksmith before real-board gains. Rejected-proposal local witness removal is component evidence only, not accepted clean-board output."
-  ],
-  "actualRealBoardResultsQualified": false,
-  "remainingSourceBlockers": []
+  "remainingSourceBlockers": [],
+  "scope": [
+    "Approved for fresh matched actualtargeted Blacksmith trial using exactnewsource. Synthetic acceptance and static matching are NOT actual24:8 recovery or globalno-regression/speed evidence.",
+    "All prior sources, original336 and firstquality6 attemptsmustremain immutable. Need newsource/input/dependency/runtime/phase/physical/raw originalserverZIP qualification.",
+    "If broaderproofmusthandle selectedsiteswithmultiplecanonicalaliases, adapt independentrawmask prospectively with exactsamealiasbijection; actual24:8 selectedwitness35 is singlealias.",
+    "No localactualdataset routing or checkerexecution and no remotemutations byreviewer."
+  ]
 }

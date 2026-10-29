@@ -10,7 +10,7 @@ import { createPhaseCheckpointObserver } from "../phase-checkpoint-observer"
 const sourceRoot = resolve(process.argv[2]!)
 const outputPath = resolve(process.argv[3]!)
 const sourceTree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: sourceRoot, encoding: "utf8" }).trim()
-assert.equal(sourceTree, "b9085c5e472f3275af96b091f384f7345d0a08b4")
+assert.equal(sourceTree, "83d39c038ba8bdbb01fc53728e5069fd594d2d23")
 assert.equal(Bun.version, "1.4.2")
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: Pipeline } = await import(join(sourceRoot, "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts"))
 const { witnessViaPadRepairFixture } = await import(join(sourceRoot, "tests/features/witnessViaPadRepairFixture.ts"))
@@ -26,7 +26,7 @@ assert.equal(observerSourceSha256, "4541d446ad7c26e9900562e525c98c8d9bba19400d45
 const rows: any[] = []
 const directory = mkdtempSync(join(tmpdir(), "quality6-source-unknown-"))
 try {
-  const observer = createPhaseCheckpointObserver({ outputDirectory: directory, sourceSha256: observerSourceSha256, evidencePaths: paths, metadata: { campaign: "quality6-source-synthetic-unknown", algorithmSha: "0df00ca0e6003dd679d3c1158b91c1ed2d66518b", inputSha256: createHash("sha256").update(JSON.stringify(input.originalSrj)).digest("hex"), dataset: "synthetic", originalSample: 1, arm: "B", executionOrder: "AB", githubRunId: "1", controllerSha: "c".repeat(40) }, append: (_path, text) => rows.push(JSON.parse(text)) })
+  const observer = createPhaseCheckpointObserver({ outputDirectory: directory, sourceSha256: observerSourceSha256, evidencePaths: paths, metadata: { campaign: "quality6-source-synthetic-unknown", algorithmSha: "2109f9e96957c06f23aef2b079f6d59fba23ea52", inputSha256: createHash("sha256").update(JSON.stringify(input.originalSrj)).digest("hex"), dataset: "synthetic", originalSample: 1, arm: "B", executionOrder: "AB", githubRunId: "1", controllerSha: "c".repeat(40) }, append: (_path, text) => rows.push(JSON.parse(text)) })
   observer.install(pipeline); observer.solveEnter(performance.now()); pipeline.solve(); observer.solveExit()
   assert.deepEqual(observer.getStatus().errors, []); assert.equal(observer.getStatus().truncated, false)
   const evidence = rows.at(-1).evidence
@@ -34,7 +34,7 @@ try {
   assert.equal(pipeline.witnessViaPadRepairSolver.getOutput(), input.traces)
   assert.equal(evidence[paths[1]!].lastReferenceErrors, -1)
   assert.deepEqual(evidence[paths[1]!], pipeline.witnessViaPadRepairSolver.qualification)
-  const fixture = { runtime: Bun.version, sourceTree, publishedSourceSha: "0df00ca0e6003dd679d3c1158b91c1ed2d66518b", observerSourceSha256, syntheticOnly: true, actualDatasetBoards: 0, trigger: "Explicit allowViaInPad:true is outside this experiment certificate scope", sourceSolved: pipeline.solved, sourceFailed: pipeline.failed, outputSameObject: true, observerErrors: observer.getStatus().errors, maxObserverRowBytes: Math.max(...rows.map((row) => Buffer.byteLength(JSON.stringify(row)) + 1)), events: rows.map((row) => row.event), evidence }
+  const fixture = { runtime: Bun.version, sourceTree, publishedSourceSha: "2109f9e96957c06f23aef2b079f6d59fba23ea52", observerSourceSha256, syntheticOnly: true, actualDatasetBoards: 0, trigger: "Explicit allowViaInPad:true is outside this experiment certificate scope", sourceSolved: pipeline.solved, sourceFailed: pipeline.failed, outputSameObject: true, observerErrors: observer.getStatus().errors, maxObserverRowBytes: Math.max(...rows.map((row) => Buffer.byteLength(JSON.stringify(row)) + 1)), events: rows.map((row) => row.event), evidence }
   writeFileSync(outputPath, JSON.stringify(fixture, null, 2) + "\n")
   console.log(JSON.stringify({ status: "PASS_ACTUAL_FROZEN_SOURCE_UNKNOWN_SENTINEL_THROUGH_FROZEN_OBSERVER", outputPath, sourceTree, runtime: Bun.version, realBoards: 0 }))
 } finally { rmSync(directory, { recursive: true, force: true }) }

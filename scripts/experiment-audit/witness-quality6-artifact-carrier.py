@@ -130,12 +130,12 @@ def validate_spec(spec):
 
 def plan(manifest, *, run_id, controller_sha, repository, manifest_sha256, api_get):
     require(manifest.get("repository") == repository == REPOSITORY, "Manifest repository mismatch")
-    require(manifest.get("campaign") == "witness-quality6-20261029", "Wrong targeted quality campaign")
+    require(manifest.get("campaign") == "witness-quality6-repeat-20261029", "Wrong targeted repeat quality campaign")
     require([(x.get("dataset"), x.get("sample"), x.get("order")) for x in manifest.get("cases", [])] == [("srj24", 8, "AB"), ("srj18", 3, "BA"), ("srj24", 14, "AB")], "Wrong predeclared case/order sequence")
     require([(item.get("dataset"), item.get("sample")) for item in manifest.get("cases", [])] == [("srj24", 8), ("srj18", 3), ("srj24", 14)], "Wrong selected case population")
     require(type(manifest.get("plannedJobs")) is int and manifest["plannedJobs"] == 3 and type(manifest.get("plannedAttempts")) is int and manifest["plannedAttempts"] == 6, "Wrong quality6 population")
     candidate = manifest.get("candidate", {})
-    require(candidate.get("id") == "witness-via-pad" and candidate.get("candidateSha") == "0df00ca0e6003dd679d3c1158b91c1ed2d66518b" and candidate.get("candidateTree") == "b9085c5e472f3275af96b091f384f7345d0a08b4", "Unsealed standalone witness source")
+    require(candidate.get("id") == "witness-via-pad" and candidate.get("candidateSha") == "2109f9e96957c06f23aef2b079f6d59fba23ea52" and candidate.get("candidateTree") == "83d39c038ba8bdbb01fc53728e5069fd594d2d23", "Unsealed standalone witness source")
     require(manifest.get("heldOut") is False and manifest.get("fullPopulationSweep") is False and manifest.get("speedClaim") is False, "Targeted quality scope changed")
     source = run_pin(api_get(f"/repos/{repository}/actions/runs/{run_id}"), run_id=run_id, controller_sha=controller_sha, repository=repository)
     artifacts, total = [], None

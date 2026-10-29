@@ -96,8 +96,44 @@ def mutation_mask(original, a, b, ca, cb, ra, rb, point_pairs=None):
     xy, nxy = next(iter(old_sites)), next(iter(new_sites))
     vias = lambda circuit, xy: [x for x in circuit if x.get('type') == 'pcb_via' and (x.get('x'), x.get('y')) == xy]
     va, vb = vias(ca, xy), vias(cb, nxy)
-    require(len(va) == len(vb) == 1 and exact({k: v for k, v in va[0].items() if k not in ['x', 'y']}, {k: v for k, v in vb[0].items() if k not in ['x', 'y']}), 'Manufactured via identity/material/drill/layers changed or ambiguous')
-    witnesses = [x for x in ra['allFindings'] if x.get('checkClass') == 'viaPad' and x.get('classification') == 'DECLARED_FOREIGN_COPPER' and any(o.get('type') == 'pcb_via' and o.get('id') == va[0]['pcb_via_id'] for o in x.get('owners', []))]
+    # The pinned converter emits one alias for each globally first-seen
+    # directed XY/from/to key, even when those aliases are one drill site.
+    def inventory(traces, circuit):
+        seen, sites, aliases = set(), {}, []
+        for trace in traces:
+            require(trace['pcb_trace_id'] in owners, 'Every raw trace requires a declared original owner')
+            for point in trace['route']:
+                if point.get('route_type') != 'via': continue
+                require(all(type(point.get(k)) in [int, float] and math.isfinite(point[k]) for k in ['x', 'y']), 'Unsupported raw via coordinate')
+                key = (point['x'], point['y'], point.get('from_layer'), point.get('to_layer'))
+                outer, hole, span = selected_via_material(original, point_pairs, point)
+                site = (owners[trace['pcb_trace_id']], outer, hole, span)
+                require(key[:2] not in sites or exact(sites[key[:2]][:3], site[:3]) and sites[key[:2]][3] == span, 'Coincident raw via contributors have ambiguous owner/material/span')
+                sites[key[:2]] = site
+                if key in seen: continue
+                identifier = 'via_' + str(len(seen)); seen.add(key)
+                aliases.append({'id': identifier, 'trace': trace['pcb_trace_id'], 'outer': outer, 'hole': hole, 'span': span, 'xy': key[:2]})
+        exported = [value for value in circuit if value.get('type') == 'pcb_via']
+        require(len(exported) == len(aliases), 'Global raw directed-transition and canonical via inventory differ')
+        for expected_alias, value in zip(aliases, exported):
+            layers = value.get('layers')
+            require(value.get('pcb_via_id') == expected_alias['id'] and value.get('pcb_trace_id') == expected_alias['trace'] and (value.get('x'), value.get('y')) == expected_alias['xy'], 'Global canonical via ID/order/first-trace/XY does not bind to its raw directed transition')
+            require(value.get('outer_diameter') == expected_alias['outer'] and value.get('hole_diameter') == expected_alias['hole'] and isinstance(layers, list) and len(layers) == len(set(layers)) and set(layers) == expected_alias['span'], 'Global canonical via material/full span differs from raw contributors')
+        return aliases
+    all_aliases_a, all_aliases_b = inventory(a, ca), inventory(b, cb)
+    expected_aliases = [value for value in all_aliases_a if value['xy'] == xy]
+    require([value['id'] for value in expected_aliases] == [value['id'] for value in all_aliases_b if value['xy'] == nxy], 'Moved canonical aliases do not have the same exact global raw identities')
+    require(expected_aliases and len(va) == len(vb) == len(expected_aliases), 'Selected raw directed transitions and canonical alias population differ')
+    selected_ids = [value['id'] for value in expected_aliases]
+    require([value.get('pcb_via_id') for value in va] == selected_ids == [value.get('pcb_via_id') for value in vb], 'Selected canonical aliases do not match exact native directed-transition IDs/order')
+    for circuit in [ca, cb]:
+        ids = [value.get('pcb_via_id') for value in circuit if value.get('type') == 'pcb_via']
+        require(all(isinstance(value, str) for value in ids) and len(set(ids)) == len(ids), 'Canonical via identity is not unique')
+    for expected_alias, old_alias, new_alias in zip(expected_aliases, va, vb):
+        require(exact({k: v for k, v in old_alias.items() if k not in ['x', 'y']}, {k: v for k, v in new_alias.items() if k not in ['x', 'y']}), 'Selected canonical alias identity/material/drill/layers changed')
+        require(old_alias.get('pcb_trace_id') == expected_alias['trace'] and owners.get(expected_alias['trace']) == owners[a[changes[0][0]]['pcb_trace_id']], 'Selected canonical alias does not prove its first raw trace and original owner')
+        require(old_alias.get('outer_diameter') == expected_alias['outer'] and old_alias.get('hole_diameter') == expected_alias['hole'] and isinstance(old_alias.get('layers'), list) and set(old_alias['layers']) == expected_alias['span'], 'Selected alias material/full manufactured span differs from its exact raw transition')
+    witnesses = [x for x in ra['allFindings'] if x.get('checkClass') == 'viaPad' and x.get('classification') == 'DECLARED_FOREIGN_COPPER' and any(o.get('type') == 'pcb_via' and o.get('id') in selected_ids for o in x.get('owners', []))]
     require(witnesses and len(witnesses) == len(ra['allFindings']), 'Moved raw via is not the exact isolated original-foreign witness site')
     layers = va[0]['layers']; require(isinstance(layers, list) and layers and all(isinstance(x, str) for x in layers) and len(set(layers)) == len(layers), 'Manufactured via span absent/ambiguous')
     moved_owner = owners[a[changes[0][0]]['pcb_trace_id']]
@@ -116,11 +152,27 @@ def mutation_mask(original, a, b, ca, cb, ra, rb, point_pairs=None):
                 for q in [trace['route'][pi - 1] if pi > 0 else {}, trace['route'][pi + 1] if pi + 1 < len(trace['route']) else {}]:
                     require(q.get('route_type') == 'wire' and (q.get('x'), q.get('y')) == xy and q.get('layer') in layers, 'Via adjacency not exact coupled copper')
     require({(ti, pi) for ti, pi, _, _ in changes} == expected and via_count > 0, 'Not every coupled same-site/span occurrence moved together')
-    # Every canonical manufactured via is matched by identity/material, changing
-    # only the selected XY; every original pad/board/hole/source stays identical.
-    strip = lambda x: {k: v for k, v in x.items() if k not in ['x', 'y']} if x.get('type') == 'pcb_via' and (x.get('x'), x.get('y')) in [xy, nxy] else x
-    require(exact([strip(x) for x in ca if x.get('type') != 'pcb_trace'], [strip(x) for x in cb if x.get('type') != 'pcb_trace']), 'Protected canonical pads/holes/board/source or unselected vias changed')
-    return {'status': 'PASS_ONE_RAW_COUPLED_SITE_COORDINATE_ONLY', 'oldXY': list(xy), 'newXY': list(nxy), 'changedRawPoints': [[ti, pi] for ti, pi, _, _ in changes], 'rawViaOccurrences': via_count, 'originalForeignViaPadWitnessCount': len(witnesses), 'canonicalViaId': va[0]['pcb_via_id'], 'manufacturedLayers': layers, 'originalOwner': moved_owner, 'selectedRawEffectiveMaterialAndFullSpanVerified': True, 'allOtherRawGeometryMaterialIdentityMetadataUnchanged': True, 'protectedCanonicalElementsUnchanged': True}
+    changed_indices = {(ti, pi) for ti, pi, _, _ in changes}
+    trace_indices = {trace['pcb_trace_id']: ti for ti, trace in enumerate(a)}
+    require(len(trace_indices) == len(a), 'Raw trace identities are not unique')
+    for circuit, traces in [(ca, a), (cb, b)]:
+        canonical_traces = [value for value in circuit if value.get('type') == 'pcb_trace']
+        require(len(canonical_traces) == len(traces) and {value.get('pcb_trace_id') for value in canonical_traces} == set(trace_indices), 'Canonical/raw trace inventory differs')
+        for trace in canonical_traces:
+            raw_trace = traces[trace_indices[trace['pcb_trace_id']]]
+            require(isinstance(trace.get('route'), list) and len(trace['route']) == len(raw_trace['route']), 'Canonical/raw route population differs')
+            for canonical_point, raw_point in zip(trace['route'], raw_trace['route']):
+                fields = ['route_type', 'x', 'y', 'width', 'layer'] if raw_point.get('route_type') == 'wire' else ['route_type', 'x', 'y', 'from_layer', 'to_layer']
+                require(raw_point.get('route_type') in ['wire', 'via'] and exact({key: canonical_point.get(key) for key in fields}, {key: raw_point.get(key) for key in fields}), 'Canonical route geometry differs from its exact raw point')
+    def strip(value):
+        if value.get('type') == 'pcb_via' and value.get('pcb_via_id') in selected_ids:
+            return {key: item for key, item in value.items() if key not in ['x', 'y']}
+        if value.get('type') == 'pcb_trace':
+            ti = trace_indices[value['pcb_trace_id']]
+            return {**value, 'route': [{key: item for key, item in point.items() if key not in ['x', 'y']} if (ti, pi) in changed_indices else point for pi, point in enumerate(value['route'])]}
+        return value
+    require(exact([strip(x) for x in ca], [strip(x) for x in cb]), 'Protected canonical geometry/metadata or unselected vias changed')
+    return {'status': 'PASS_ONE_RAW_COUPLED_SITE_COORDINATE_ONLY', 'oldXY': list(xy), 'newXY': list(nxy), 'changedRawPoints': [[ti, pi] for ti, pi, _, _ in changes], 'rawViaOccurrences': via_count, 'originalForeignViaPadWitnessCount': len(witnesses), 'canonicalViaId': va[0]['pcb_via_id'], 'canonicalViaIds': selected_ids, 'canonicalViaAliasCount': len(selected_ids), 'exactNativeDirectedTransitionAliasBijection': True, 'canonicalTraceGeometryAndProtectedMetadataBound': True, 'manufacturedLayers': layers, 'originalOwner': moved_owner, 'selectedRawEffectiveMaterialAndFullSpanVerified': True, 'allOtherRawGeometryMaterialIdentityMetadataUnchanged': True, 'protectedCanonicalElementsUnchanged': True}
 
 
 def bind_source_proposal(candidate, mask):
@@ -140,6 +192,39 @@ def common_work(rows):
         if row.get('event') in ['phase_setup_enter', 'constructor_params_enter', 'constructor_params_exit', 'active_subsolver_constructed', 'phase_run_enter', 'on_solved_enter', 'on_solved_exit']:
             values.append({k: row.get(k) for k in fields})
     return values
+
+
+def common_work_pair(rows):
+    """Compare all named native work; account for only terminal dispatch.
+
+    The enabled arm's common prefix ends before the new witness stage. The
+    baseline's prefix instead includes its final empty phase-setup dispatch.
+    Both full logs must prove that identical explicit terminal event before
+    only the successful solve exit. No named phase or iteration is filtered.
+    """
+    fields = ['event', 'phaseName', 'activeSolverName', 'activeIterations', 'activeMaxIterations']
+    terminal = dict(zip(fields, ['phase_setup_enter', None, None, None, None]))
+    original = {arm: common_work(rows[arm]) for arm in 'AB'}
+    adjusted = {arm: list(original[arm]) for arm in 'AB'}
+    details = {'applied': False, 'originalCommonWorkCounts': {arm: len(original[arm]) for arm in 'AB'}}
+    if not exact(original['A'], original['B']) and original['A'] and original['A'][-1] == terminal and (not original['B'] or original['B'][-1] != terminal):
+        ends = {}
+        for arm in 'AB':
+            values = rows[arm]
+            found = [(i, value) for i, value in enumerate(values) if value.get('event') == 'phase_setup_enter' and value.get('phaseName') is None]
+            require(len(found) == 1, 'Exactly one terminal empty phase setup is required')
+            index, value = found[0]
+            require(index == len(values) - 2 and all(key in value for key in fields) and {key: value[key] for key in fields} == terminal, 'Only the explicit penultimate empty orchestration row may be accounted separately')
+            final = values[-1]
+            require(final.get('event') == 'solve_exit' and final.get('phaseName') is None and final.get('solved') is True and final.get('failed') is False and final.get('error') is None, 'Terminal empty dispatch must precede a successful solve exit')
+            ends[arm] = {key: value[key] for key in fields}
+        require(exact(ends['A'], ends['B']), 'Both terminal empty orchestration events must match')
+        adjusted['A'] = adjusted['A'][:-1]
+        require(all(exact([value for value in original[arm] if value.get('phaseName') is not None], [value for value in adjusted[arm] if value.get('phaseName') is not None]) for arm in 'AB'), 'Every named native phase work event must remain unchanged')
+        details.update(applied=True, identicalTerminalNullRows=ends, droppedRows={'A': 1, 'B': 0}, allNamedNativePhaseWorkEventsUnchanged=True)
+    details['correctedCommonWorkCounts'] = {arm: len(adjusted[arm]) for arm in 'AB'}
+    details['commonNativePhaseWorkEqual'] = exact(adjusted['A'], adjusted['B'])
+    return details
 
 
 class ZipPath:
@@ -191,7 +276,8 @@ def qualify_zip(z, parsed, m, a):
         if record['official']['didSolve'] is True: outputs[arm] = bound_output(z, target, record, a)
         facts.append({'arm': arm, 'strictIntegrityQualified': record['strictIntegrityQualified'], 'sourceQualified': r.source_qualified(record), 'official': {k: record['official'][k] for k in ['didSolve', 'didTimeout', 'relaxedDrcPassed']}, 'feature': record['featureCoverage'], 'rawCompletedOutputBound': arm in outputs})
     require(set(record['arm'] for record in records) == set('AB') and len(records) == 2, 'Both attempts required')
-    work_equal = exact(common_work(checkpoints['A']), common_work(checkpoints['B']))
+    work_comparison = common_work_pair(checkpoints)
+    work_equal = work_comparison['commonNativePhaseWorkEqual']
     state = parsed['summary']['candidateState']; quality, mask, no_op, proposal_binding = False, None, None, None
     if set(outputs) == set('AB'):
         oa, ob = outputs['A'], outputs['B']; require(exact(oa['original'], ob['original']) and exact(oa['pairs'], ob['pairs']), 'Original intent or native point-pair work changed')
@@ -207,7 +293,7 @@ def qualify_zip(z, parsed, m, a):
             quality = all(r.source_qualified(x) for x in records) and r.common.physical_clean(candidate) and candidate['featureCoverage']['sourceFinalCertificatePassBranch'] is True and work_equal
     comparisons = {name: {arm: outputs[arm]['declared']['checks'][name] for arm in outputs} for name in sorted(r.declared.CHECKS)}
     ownership = {arm: {key: outputs[arm]['declared'].get(key) for key in ['ownershipCoverageStatus', 'unknownViaCount', 'unknownPadCount', 'unknownTraceCount', 'viaOwners', 'padOwners', 'traceOwners']} for arm in outputs}
-    return {'sevenPredicateComparisons': comparisons, 'originalOwnershipComparisons': ownership, 'status': 'PASS_ORIGINAL_SERVER_ZIP_ALL_ATTEMPTS_BYTE_BOUND', 'recordsAudit': facts, 'commonNativePhaseWorkEqual': work_equal, 'rawMutationMask': mask, 'sourceProposalBinding': proposal_binding, 'noProposalOutputAndReportParity': no_op, 'wholeOutputQualityCredit': quality, 'candidateState': state, 'sourceCertificateScope': 'Pinned source final certificate: published seven predicates, original reference/SRJ/via policy, conservative declared-terminal physical-contact graph; not universal manufacturing.', 'allSevenReportsCompared': set(outputs) == set('AB'), 'reports': {arm: r.reports(next(x for x in records if x['arm'] == arm)) for arm in outputs}, 'failedOrRejectedWitnessReductionIsFinalQualityCredit': False}
+    return {'sevenPredicateComparisons': comparisons, 'originalOwnershipComparisons': ownership, 'status': 'PASS_ORIGINAL_SERVER_ZIP_ALL_ATTEMPTS_BYTE_BOUND', 'recordsAudit': facts, 'commonNativePhaseWorkEqual': work_equal, 'terminalNullOrchestrationComparison': work_comparison, 'rawMutationMask': mask, 'sourceProposalBinding': proposal_binding, 'noProposalOutputAndReportParity': no_op, 'wholeOutputQualityCredit': quality, 'candidateState': state, 'sourceCertificateScope': 'Pinned source final certificate: published seven predicates, original reference/SRJ/via policy, conservative declared-terminal physical-contact graph; not universal manufacturing.', 'allSevenReportsCompared': set(outputs) == set('AB'), 'reports': {arm: r.reports(next(x for x in records if x['arm'] == arm)) for arm in outputs}, 'failedOrRejectedWitnessReductionIsFinalQualityCredit': False}
 
 
 def main():
