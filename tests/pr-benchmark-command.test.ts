@@ -12,8 +12,8 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   })
   expect(parsePrBenchmarkCommand("/benchmark")).toEqual({
     kind: "benchmark",
-    benchmarkArgs: [],
-    datasetName: "dataset01",
+    benchmarkArgs: ["--dataset", "srj18"],
+    datasetName: "srj18",
     profileSolvers: false,
     sameMachineCompare: true,
   })
@@ -55,8 +55,8 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     ),
   ).toEqual({
     kind: "benchmark",
-    benchmarkArgs: ["--solver", "Solver With Spaces"],
-    datasetName: "dataset01",
+    benchmarkArgs: ["--solver", "Solver With Spaces", "--dataset", "srj18"],
+    datasetName: "srj18",
     profileSolvers: true,
     sameMachineCompare: true,
   })
@@ -131,8 +131,8 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   })
   expect(parsePrBenchmarkCommand("/benchmark --same-machine")).toEqual({
     kind: "benchmark",
-    benchmarkArgs: [],
-    datasetName: "dataset01",
+    benchmarkArgs: ["--dataset", "srj18"],
+    datasetName: "srj18",
     profileSolvers: false,
     sameMachineCompare: true,
   })
