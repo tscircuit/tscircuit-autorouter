@@ -6,7 +6,6 @@ import {
   type HighDensityObstacle,
   type HighDensityRectObstacle,
   type HighDensityRouteObstacle,
-  type HighDensitySolverB01Props,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -60,7 +59,7 @@ export type Pipeline9HighDensitySolverParams = {
   enableRegionalFallback?: boolean
   maxB01Rips?: number
   b01RepairOptions?: Pick<
-    HighDensitySolverB01Props,
+    ConstructorParameters<typeof HighDensitySolverB01>[0],
     "lowResolutionCellSize" | "obstacleClearanceMargin"
   >
 }

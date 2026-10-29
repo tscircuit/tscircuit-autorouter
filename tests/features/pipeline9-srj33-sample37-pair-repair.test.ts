@@ -62,5 +62,7 @@ test("Pipeline9 jointly repairs SRJ33 sample37 with fixed terminals and preload 
     expect(repaired.viaDiameter).toBeGreaterThanOrEqual(original.viaDiameter)
   }
   expect(joint.stats.regionalB01RepairRemainingDrcIssueCount).toBe(0)
-  expect(joint.stats.regionalB01RepairCandidateSearchBudgetExhausted).toBeFalse()
+  expect(
+    joint.stats.regionalB01RepairCandidateSearchBudgetExhausted,
+  ).toBeFalse()
 })

@@ -65,7 +65,7 @@ test("whole trace-pair candidates preserve interior anchors and special copper c
   }
   expect(preparePipeline9TracePairRepair(params)).toBeDefined()
   const original = structuredClone(routes)
-  const internalPointChanges: Array<Partial<HighDensityRoute["route"][number]>> = [
+  const pointChanges: Array<Partial<HighDensityRoute["route"][number]>> = [
     { pcb_port_id: "interior_terminal" },
     { insideJumperPad: true },
     { toNextSegmentType: "through_obstacle" },
@@ -73,7 +73,7 @@ test("whole trace-pair candidates preserve interior anchors and special copper c
     { traceThickness: 0.3 },
     { x: 3 },
   ]
-  for (const change of internalPointChanges) {
+  for (const change of pointChanges) {
     const changedRoutes = structuredClone(routes)
     Object.assign(changedRoutes[0]!.route[1]!, change)
     expect(

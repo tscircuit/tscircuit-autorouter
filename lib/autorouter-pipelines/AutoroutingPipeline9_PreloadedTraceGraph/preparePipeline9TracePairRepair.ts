@@ -73,7 +73,10 @@ export const preparePipeline9TracePairRepair = ({
       for (const anchor of [other.route[0]!, other.route.at(-1)!]) {
         if (
           (anchor.z === routeStart.z &&
-            Math.hypot(anchor.x - routeStart.x, anchor.y - routeStart.y) < 1e-9) ||
+            Math.hypot(
+              anchor.x - routeStart.x,
+              anchor.y - routeStart.y,
+            ) < 1e-9) ||
           (anchor.z === routeEnd.z &&
             Math.hypot(anchor.x - routeEnd.x, anchor.y - routeEnd.y) < 1e-9)
         ) {
@@ -108,10 +111,22 @@ export const preparePipeline9TracePairRepair = ({
     srj.minTraceToHoleEdgeClearance ?? params.obstacleMargin,
   )
   const padding = viaDiameter + obstacleClearance
-  const minX = Math.max(srj.bounds.minX, Math.min(...points.map((p) => p.x)) - padding)
-  const maxX = Math.min(srj.bounds.maxX, Math.max(...points.map((p) => p.x)) + padding)
-  const minY = Math.max(srj.bounds.minY, Math.min(...points.map((p) => p.y)) - padding)
-  const maxY = Math.min(srj.bounds.maxY, Math.max(...points.map((p) => p.y)) + padding)
+  const minX = Math.max(
+    srj.bounds.minX,
+    Math.min(...points.map((p) => p.x)) - padding,
+  )
+  const maxX = Math.min(
+    srj.bounds.maxX,
+    Math.max(...points.map((p) => p.x)) + padding,
+  )
+  const minY = Math.max(
+    srj.bounds.minY,
+    Math.min(...points.map((p) => p.y)) - padding,
+  )
+  const maxY = Math.min(
+    srj.bounds.maxY,
+    Math.max(...points.map((p) => p.y)) + padding,
+  )
   // B01's existing routing-window limit bounds the fine-grid pair search.
   if (maxX - minX > 15 || maxY - minY > 15) return undefined
   const regionalRoutes = asRegionalRoutes(routes, connMap)
@@ -186,7 +201,8 @@ export const getPipeline9TracePairRepairOutput = ({
       (candidate) =>
         candidate.connectionName === section.sourceRoutes[0]!.connectionName,
     )
-    if (!replacement) throw new Error("Completed pair repair is missing a route")
+    if (!replacement)
+      throw new Error("Completed pair repair is missing a route")
     return {
       ...spliceFixedRouteSection(section, replacement),
       connectionName: route.connectionName,
