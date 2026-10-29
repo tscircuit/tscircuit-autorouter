@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async () => {
+test("Pipeline9 repairs the SRJ23 sample21 regional trace and via-pad conflicts", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 21)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -23,21 +23,5 @@ test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async 
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  // Trace errors are repaired; the complete reference check reports one via
-  // between two neighboring pads as the remaining bounded-repair residue.
-  expect(errors).toHaveLength(2)
-  expect(errors).toMatchObject([
-    {
-      type: "pcb_pad_pad_clearance_error",
-      pcb_pad_ids: [expect.any(String), "pcb_smtpad_41"],
-      pcb_trace_id: "source_net_4_mst0_0_routed",
-      minimum_clearance: 0.1,
-    },
-    {
-      type: "pcb_pad_pad_clearance_error",
-      pcb_pad_ids: [expect.any(String), "pcb_smtpad_42"],
-      pcb_trace_id: "source_net_4_mst0_0_routed",
-      minimum_clearance: 0.1,
-    },
-  ])
+  expect(errors).toEqual([])
 })

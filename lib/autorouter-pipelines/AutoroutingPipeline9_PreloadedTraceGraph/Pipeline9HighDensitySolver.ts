@@ -6,6 +6,7 @@ import {
   type HighDensityObstacle,
   type HighDensityRectObstacle,
   type HighDensityRouteObstacle,
+  type HighDensitySolverB01Props,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -58,6 +59,10 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  b01RepairOptions?: Pick<
+    HighDensitySolverB01Props,
+    "lowResolutionCellSize" | "obstacleClearanceMargin"
+  >
 }
 
 type NodeBounds = {
@@ -1192,7 +1197,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
+    if (fixedObstacles.length === 0 && !this.params.b01RepairOptions) {
       this.startRegularSolver(node)
       return
     }
@@ -1238,6 +1243,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
       obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      ...this.params.b01RepairOptions,
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {

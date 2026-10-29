@@ -124,7 +124,9 @@ const getErrorCenter = (error: Pipeline9DrcError) => {
 export const getRepairCenter = (
   error: Pipeline9DrcError,
   srj: SimpleRouteJson,
-) => {
+): { x: number; y: number } | undefined => {
+  const errorCenter = getErrorCenter(error)
+  if (errorCenter) return errorCenter
   const obstacleId =
     typeof error.pcb_pad_id === "string"
       ? error.pcb_pad_id
