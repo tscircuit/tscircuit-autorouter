@@ -34,6 +34,7 @@ import {
   isPipeline9DrcErrorOwnedByPreloadRepair,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
+import { restorePipeline9TerminalApproaches } from "./restorePipeline9TerminalApproaches"
 
 type RegionalB01RepairPhase =
   | "initialize"
@@ -418,14 +419,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private refineAcceptedRoutes(): void {
     if (this.acceptedCandidateCount > 0 && this.currentErrors.length > 0) {
-      const refinedRoutes = applyBroadRepulsionForces(
-        { ...this.params.srj, traces: undefined },
+      const refinedRoutes = restorePipeline9TerminalApproaches(
         this.currentRoutes,
-        this.params.effort,
-        1,
-        this.params.connMap,
+        applyBroadRepulsionForces(
+          { ...this.params.srj, traces: undefined },
+          this.currentRoutes,
+          this.params.effort,
+          1,
+          this.params.connMap,
+        ),
       )
-      if (refinedRoutes !== this.currentRoutes) {
+      if (refinedRoutes && refinedRoutes !== this.currentRoutes) {
         const errors = getPipeline9DrcErrors(
           this.params.drcEvaluator,
           refinedRoutes,

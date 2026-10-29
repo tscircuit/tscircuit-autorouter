@@ -101,6 +101,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         lockedPointIndices: canonicalRoutes.map((route) =>
           route.route.map(
             (point) =>
+              point.terminalApproach !== undefined ||
               params.lockedConnectionNames?.has(route.connectionName) ===
                 true ||
               (params.movableRegions !== undefined &&

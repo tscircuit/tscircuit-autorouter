@@ -526,13 +526,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : allowance.maxCandidateAttempts),
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
+    const localRoutes: HighDensityRoute[] = region.routes
     const solver = new NegotiateTraceClearanceSolver({
       srj: region.srj,
-      routes: region.routes,
+      routes: localRoutes,
       bounds: region.mutableBounds,
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
-        region.lockedPointIndices[routeIndex]![pointIndex]!,
+        region.lockedPointIndices[routeIndex]![pointIndex]! ||
+        localRoutes[routeIndex]!.route[pointIndex]!.terminalApproach !==
+          undefined,
       maxPathSearchCalls,
       maxPathSearchNodes:
         allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,

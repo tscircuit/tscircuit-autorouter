@@ -256,7 +256,8 @@ const createTerminalCandidate = ({
   }
   // A pad contact does not authorize moving its locked terminal. Change only
   // the approach to that terminal, preserving its position, layer and metadata.
-  const approach = { ...adjacentPoint, ...point }
+  const terminalApproach = endpointIndex === 0 ? "start" : "end"
+  const approach = { ...adjacentPoint, ...point, terminalApproach } as const
   if (collapseAdjacent) {
     const nextInteriorPointIndex =
       endpointIndex === 0 ? adjacentPointIndex + 1 : adjacentPointIndex - 1
@@ -278,6 +279,13 @@ const createTerminalCandidate = ({
   const candidateRoutes = [...routes]
   const candidateRoute = clonePipeline9HdRoutes([route])[0]!
   candidateRoutes[routeIndex] = candidateRoute
+  // A later accepted escape supersedes only this side's generated anchor.
+  // Its old copper stays in place until a validated reroute replaces it.
+  for (const candidatePoint of candidateRoute.route) {
+    if (candidatePoint.terminalApproach === terminalApproach) {
+      delete candidatePoint.terminalApproach
+    }
+  }
   if (collapseAdjacent) {
     candidateRoute.route[adjacentPointIndex] = approach
   } else {
@@ -286,6 +294,7 @@ const createTerminalCandidate = ({
       x: point.x,
       y: point.y,
       z: endpoint.z,
+      terminalApproach,
       ...(segmentStart.traceThickness !== undefined
         ? { traceThickness: segmentStart.traceThickness }
         : {}),
