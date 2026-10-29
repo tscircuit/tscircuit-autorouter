@@ -20,11 +20,11 @@ const ruleMethod = prototype.getItemCollisionRadius
   ? "getItemCollisionRadius"
   : "itemCollides"
 const originalRules = prototype[ruleMethod]!
-const counts = { spatialQueries: 0, candidates: 0, ruleSelections: 0 }
+const counts = { sourceIndexQueries: 0, sourceCandidateEntries: 0, ruleSelections: 0 }
 prototype.getCollisionCandidates = function (...args: unknown[]) {
   const result = originalCandidates.apply(this, args)
-  counts.spatialQueries++
-  counts.candidates += result.candidates.length
+  counts.sourceIndexQueries++
+  counts.sourceCandidateEntries += result.candidates.length
   return result
 }
 // Count equivalent rule-selection work in the original combined predicate
