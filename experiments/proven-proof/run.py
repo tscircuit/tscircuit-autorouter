@@ -475,6 +475,7 @@ if __name__ == '__main__':
         finally:
             guard_after = overlay.guard(cfg)
             save(OUT / 'dependency-overlay-guard-after.json', guard_after)
+            emit('PROOF_DEPENDENCY_OVERLAY_GUARD', {'before': overlay.guard_summary(guard_before), 'after': overlay.guard_summary(guard_after), 'equal': guard_after == guard_before})
             if guard_after != guard_before:
                 raise ValueError('Measured source/dependency/overlay changed during run')
         summary(cfg)

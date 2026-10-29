@@ -60,11 +60,56 @@ def validate_root_pair(cfg, target):
         raise ValueError('Root candidate diff does not match its frozen source/test whitelist')
 
 
+def tracked_source_manifest(path):
+    records = subprocess.check_output(['git', 'ls-files', '--stage', '-z'], cwd=path, text=True).split('\0')
+    files, gitlinks, symlinks, index = {}, {}, {}, {}
+    for record in records:
+        if not record:
+            continue
+        header, name = record.split('\t', 1)
+        mode, object_sha, stage = header.split()
+        if stage != '0':
+            raise ValueError('Unmerged tracked source entry: ' + name)
+        target = path / name
+        index[name] = {'mode': mode, 'objectSha': object_sha}
+        if mode in ['100644', '100755']:
+            if target.is_symlink() or not target.is_file():
+                raise ValueError('Missing or nonregular tracked source file: ' + name)
+            files[name] = hashlib.sha256(target.read_bytes()).hexdigest()
+        elif mode == '120000':
+            if not target.is_symlink():
+                raise ValueError('Tracked source symlink is not materialized as a symlink: ' + name)
+            link = os.readlink(target)
+            symlinks[name] = {'target': link, 'targetSha256': hashlib.sha256(os.fsencode(link)).hexdigest()}
+        elif mode == '160000':
+            if target.is_symlink():
+                raise ValueError('Tracked Gitlink is unexpectedly a symlink: ' + name)
+            if not target.exists():
+                materialization = {'state': 'absent'}
+            elif target.is_symlink() or not target.is_dir():
+                raise ValueError('Tracked Gitlink is not a directory: ' + name)
+            elif (target / '.git').exists():
+                actual_top = pathlib.Path(command(['git', 'rev-parse', '--show-toplevel'], target)).resolve()
+                if actual_top != target.resolve():
+                    raise ValueError('Initialized Gitlink resolves to a different Git working tree: ' + name)
+                actual_head = command(['git', 'rev-parse', 'HEAD'], target)
+                if actual_head != object_sha or command(['git', 'status', '--porcelain', '--untracked-files=no'], target):
+                    raise ValueError('Initialized Gitlink differs from its recorded object: ' + name)
+                materialization = {'state': 'initialized', 'checkedOutSha': actual_head}
+            elif not any(target.iterdir()):
+                materialization = {'state': 'uninitialized-empty-directory'}
+            else:
+                raise ValueError('Uninitialized Gitlink contains unauthenticated files: ' + name)
+            gitlinks[name] = {'mode': mode, 'objectSha': object_sha, **materialization}
+        else:
+            raise ValueError('Unsupported tracked source mode ' + mode + ': ' + name)
+    return {'files': files, 'gitlinks': gitlinks, 'symlinks': symlinks, 'index': index}
+
+
 def tracked_guard(path):
-    names = command(['git', 'ls-files'], path).splitlines()
     if command(['git', 'status', '--porcelain', '--untracked-files=no'], path):
         raise ValueError('Dirty pinned Git source: ' + str(path))
-    return {'sha': command(['git', 'rev-parse', 'HEAD'], path), 'tree': command(['git', 'rev-parse', 'HEAD^{tree}'], path), 'files': {name: sha(path / name) for name in names}}
+    return {'sha': command(['git', 'rev-parse', 'HEAD'], path), 'tree': command(['git', 'rev-parse', 'HEAD^{tree}'], path), **tracked_source_manifest(path)}
 
 
 def prepare_upstreams(cfg):
@@ -229,10 +274,22 @@ def install_overlays(cfg, installed):
             raise ValueError('Shared runtime importer would bypass the candidate dependency overlay: ' + row['importer'])
     save('dependency-resolution.json', {'baselineInstalled': baseline_resolution, 'armResolution': resolved, 'sharedPackageImporters': external_resolved, 'scanScope': 'Literal static from/require/import specifiers across all installed TS/JS runtime files, following directory symlinks; excludes .d.ts, .vite and .cache. Unknown shared top-package consumers fail shut.'})
     metadata = {'mode': mode['mode'], 'name': PACKAGE, 'shared': str(shared), 'installedBaselineMatchesOfficialGitFiles': len(official_files), 'upstreamCommit': {arm: tracked_guard(UPSTREAM / arm)['sha'] for arm in ['base', cfg['selected_candidate']]}, 'rootOverlay': {arm: str(SOURCES / arm / 'node_modules') for arm in ['base', cfg['selected_candidate']]}, 'resolutionReport': 'dependency-resolution.json'}
-    save('dependency-overlay.json', metadata)
     before = guard(cfg)
     save('dependency-overlay-guard-before.json', before)
+    metadata.update(stockInstalledGitFilesVerified=len(stock_git_files), loaderContextFiles=sorted(official_context), upstreamTransitiveResolutionCount=len(baseline_resolution), rootPackageResolvedPaths={row['arm']: row['resolved'] for row in resolved if 'expected' in row}, sharedPackageImporters=external_resolved, beforeGuard=guard_summary(before))
+    save('dependency-overlay.json', metadata)
     return shared, metadata
+
+
+def guard_summary(value):
+    return {
+        'guardSha256': hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest(),
+        'roots': {arm: {'sha': item['sha'], 'tree': item['tree'], 'regularFileCount': len(item['files']), 'gitlinks': item['gitlinks'], 'symlinkCount': len(item['symlinks'])} for arm, item in value['roots'].items()},
+        'upstream': {arm: {'sha': item['sha'], 'tree': item['tree'], 'regularFileCount': len(item['files']), 'gitlinks': item['gitlinks'], 'symlinkCount': len(item['symlinks'])} for arm, item in value['upstream'].items()},
+        'overlayLinkCount': len(value['overlayLinks']),
+        'sharedPhysicalFileCount': value['sharedFiles']['fileCount'],
+        'sharedPhysicalFilesSha256': value['sharedFiles']['sha256'],
+    }
 
 
 def guard(cfg):
