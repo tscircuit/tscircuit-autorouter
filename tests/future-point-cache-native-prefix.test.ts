@@ -32,12 +32,8 @@ test("changed placement preserves native search queues, budgets, costs and route
         if (step % 31 === 0 || native.solved || native.failed) expectNativeState(native, optimized)
       }
       expectNativeState(native, optimized)
-      expect(stats.lookups).toBeGreaterThan(0)
-      expect(stats.hits).toBeGreaterThan(0)
-      expect(stats.mixedHashLookups).toBeGreaterThan(0)
-      expect(stats.associativeLookups > 0).toBe(count >= 64)
-      expect(stats.distanceEvaluations).toBe(stats.misses * count)
-      expect(stats.lookups).toBe(stats.hits + stats.misses)
+      expect(stats.contextsUsed).toBe(1)
+      expect(Object.keys(stats)).toEqual(["instances", "contextsUsed"])
     }
   }
 })

@@ -40,6 +40,6 @@ test("multi-node promises merge completed execution once even when only a serial
   const expected = createFuturePointCacheStats()
   for (const key of Object.keys(expected) as (keyof typeof expected)[]) expected[key] = workerTotal[key] + serial.futurePointCacheStats![key]
   expect(threaded.futurePointCacheStats).toEqual(expected)
-  expect(workerTotal.lookups).toBeGreaterThan(0)
-  expect(threaded.futurePointCacheStats!.lookups).toBeGreaterThan(serial.futurePointCacheStats!.lookups)
+  expect(workerTotal.contextsUsed).toBeGreaterThan(0)
+  expect(threaded.futurePointCacheStats!.contextsUsed).toBeGreaterThan(serial.futurePointCacheStats!.contextsUsed)
 })

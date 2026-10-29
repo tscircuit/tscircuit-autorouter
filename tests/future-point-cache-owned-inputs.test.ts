@@ -26,7 +26,7 @@ test("owned futures survive original/precomputed input mutation while rich coord
   for (const point of single.futureConnectionPoints) Object.freeze(point)
   Object.freeze(single.futureConnectionPoints)
   for (let step = 0; step < 200 && !single.solved && !single.failed; step++) single.step()
-  expect(stats.lookups).toBeGreaterThan(0)
+  expect(stats.contextsUsed).toBeGreaterThan(0)
   expect(single.futureConnectionPoints).toEqual(expected.slice(0, -1).flatMap((connection) => connection.points))
   for (const bad of ["boxed", "callback"] as const) {
     const opts = makeFuturePointOptions(8)

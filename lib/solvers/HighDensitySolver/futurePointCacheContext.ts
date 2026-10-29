@@ -1,10 +1,7 @@
 import type { FutureConnection } from "./SingleHighDensityRouteSolver"
 
 const FUTURE_POINT_CACHE_COUNTER_KEYS = [
-  "instances", "lookups", "hits", "misses", "distanceEvaluations",
-  "entryProbes", "occupiedMissProbes", "stores", "evictions", "coldStores",
-  "invalidations", "identityInvalidations", "lengthInvalidations",
-  "uncacheableQueries", "mixedHashLookups", "associativeLookups",
+  "instances", "contextsUsed",
 ] as const
 
 export type FuturePointCacheStats = Record<

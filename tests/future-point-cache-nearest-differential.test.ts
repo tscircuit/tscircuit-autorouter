@@ -36,10 +36,9 @@ test("owned bounded layouts preserve native first-minimum references, floating q
     solver.futureConnectionPoints = []
     expect(solver.getClosestFutureConnectionPoint(center)).toBeNull()
     expect(solver.getClosestFutureConnectionPoint(center)).toBeNull()
-    expect(stats.lookups).toBe(stats.hits + stats.misses)
-    expect(stats.stores).toBe(stats.coldStores + stats.evictions)
-    expect(stats.misses).toBe(stats.stores + stats.uncacheableQueries)
-    expect(stats.associativeLookups).toBeLessThanOrEqual(stats.mixedHashLookups)
+    expect(stats.instances).toBe(1)
+    expect(stats.contextsUsed).toBe(1)
+    expect(Object.keys(stats)).toEqual(["instances", "contextsUsed"])
     expect((solver as any).closestFuturePointCacheIndices.length).toBe(256)
     expect((solver as any).closestFuturePointCacheCoordinates.length).toBe(256 * 4)
   }

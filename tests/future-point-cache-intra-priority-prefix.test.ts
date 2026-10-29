@@ -27,7 +27,7 @@ test("normal and PriorityDag owners preserve per-step search costs, witnesses, b
         if (priority) expect((b as PriorityDagIntraNodeSolver).priorityDiagnostics).toEqual((a as PriorityDagIntraNodeSolver).priorityDiagnostics)
       }
       expect(stats.instances).toBeGreaterThan(0)
-      expect(stats.lookups).toBeGreaterThan(0)
+      expect(stats.contextsUsed).toBeGreaterThan(0)
     }
   }
 })

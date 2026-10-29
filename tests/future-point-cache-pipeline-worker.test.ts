@@ -22,11 +22,11 @@ test("Pipeline9 actual factory and workers forward the experiment and merge actu
     expect(serial.solved).toBeTrue()
     outputs.push(serial.routes); iterations.push(serial.iterations)
     if (flag === true) {
-      expect(Object.keys(serial.futurePointCacheStats!)).toHaveLength(16)
+      expect(Object.keys(serial.futurePointCacheStats!)).toHaveLength(2)
       expect(Object.getOwnPropertyDescriptor(serial, "futurePointCacheStats")!.get).toBeUndefined()
       expect(serial.futurePointCacheStats!.instances).toBeGreaterThan(0)
-      expect(serial.futurePointCacheStats!.mixedHashLookups).toBeGreaterThan(0)
-      expect(serial.futurePointCacheStats!.lookups).toBe(serial.futurePointCacheStats!.hits + serial.futurePointCacheStats!.misses)
+      expect(serial.futurePointCacheStats!.contextsUsed).toBeGreaterThan(0)
+      expect(serial.futurePointCacheStats!.contextsUsed).toBeLessThanOrEqual(serial.futurePointCacheStats!.instances)
     } else expect(Object.hasOwn(serial, "futurePointCacheStats")).toBeFalse()
     const runtime = createPipeline9TestRuntime(2)
     try {

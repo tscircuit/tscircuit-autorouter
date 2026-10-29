@@ -46,7 +46,7 @@ test("copied, replayed, forged and overridden public options retain exact native
   const owner = new Overridden({ nodeWithPortPoints: makeFutureCacheNode(), experimentFuturePointCache: true, futurePointCacheStats: stats })
   expectPublicLegacyEviction(new Native(owner.createPublicOptions()))
   expect(stats.instances).toBe(1)
-  expect(stats.lookups).toBe(0)
+  expect(stats.contextsUsed).toBe(0)
   expect(authorized.futureConnectionPoints).toHaveLength(8)
   for (const count of [0, 2, 7]) {
     const smallStats = createFuturePointCacheStats()
@@ -56,6 +56,6 @@ test("copied, replayed, forged and overridden public options retain exact native
     const reference = new Native(opts)
     for (const node of [queryNode(0, 0, 0), queryNode(1, 1, 1), queryNode(-1, -1, 2)]) expect(small.getClosestFutureConnectionPoint(node)).toBe(reference.getClosestFutureConnectionPoint(node))
     expect(smallStats.instances).toBe(0)
-    expect(smallStats.lookups).toBe(0)
+    expect(smallStats.contextsUsed).toBe(0)
   }
 })
