@@ -16,6 +16,9 @@ import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
 
+// Finite relaxation sweeps can stop just below the requested via copper gap.
+const VIA_COPPER_PROJECTION_MARGIN = 1e-5
+
 export type Pipeline9ClearanceProjectionParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
@@ -28,6 +31,9 @@ export type Pipeline9ClearanceProjectionParams = {
   subdivideSegments?: boolean
   /** Keep the same small clearance margin when validating a final coupled pass. */
   usePrecisionMargin?: boolean
+  /** Keep preloaded copper fixed during a local clearance repair. */
+  lockedConnectionNames?: ReadonlySet<string>
+  movableRegions?: { center: { x: number; y: number }; radius: number }[]
 }
 
 type ProjectionContext = {
@@ -93,7 +99,17 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
         lockedPointIndices: canonicalRoutes.map((route) =>
-          route.route.map(() => false),
+          route.route.map(
+            (point) =>
+              params.lockedConnectionNames?.has(route.connectionName) ===
+                true ||
+              (params.movableRegions !== undefined &&
+                !params.movableRegions.some(
+                  ({ center, radius }) =>
+                    Math.hypot(point.x - center.x, point.y - center.y) <=
+                    radius,
+                )),
+          ),
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
@@ -105,6 +121,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         viaClearance:
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.viaClearance!) +
+          VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
