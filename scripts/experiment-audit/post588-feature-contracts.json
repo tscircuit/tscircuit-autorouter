@@ -1,0 +1,179 @@
+[
+  {
+    "id": "detailed-feedback",
+    "pr": 3198,
+    "option": "experimentDetailedFeedback",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentDetailedFeedback": true
+    },
+    "evidencePaths": [
+      "detailedFeedbackSolver.stats",
+      "detailedFeedbackSolver.workStats"
+    ],
+    "coverageContract": {
+      "statsPath": "detailedFeedbackSolver.stats",
+      "activationField": "active",
+      "activationValue": true,
+      "eligibleField": "probeNodeCount",
+      "executedField": "probeWork",
+      "changedFields": [
+        "changedAssignments"
+      ],
+      "positivePrerequisites": [
+        "replansCompleted"
+      ],
+      "greaterThanFields": [],
+      "eligibleDefinition": "Eligible actual detailed probe nodes",
+      "executedDefinition": "Actual charged probe work",
+      "changedDefinition": "Changed global assignments from a completed bounded replan; probe-only and identical plans receive no changed-work credit",
+      "truePrerequisites": [
+        "selectedReplan"
+      ]
+    }
+  },
+  {
+    "id": "path-packing",
+    "pr": 3199,
+    "option": "experimentPathPacking",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentPathPacking": true
+    },
+    "evidencePaths": [
+      "highDensityRouteSolver.pathPackingStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityRouteSolver.pathPackingStats",
+      "activationField": "activated",
+      "activationValue": true,
+      "eligibleField": "eligibleNodes",
+      "executedField": "selectionStates",
+      "changedFields": [
+        "distinctCandidates"
+      ],
+      "positivePrerequisites": [],
+      "greaterThanFields": [
+        [
+          "distinctCandidates",
+          "bankTasks"
+        ],
+        [
+          "nativeDistinctCandidates",
+          "bankTasks"
+        ]
+      ],
+      "eligibleDefinition": "Actual eligible upstream node problems",
+      "executedDefinition": "Actual full-path selector states",
+      "changedDefinition": "A genuinely alternative per-task geometric path bank consumed by the selector; this does not assert a solved-node or whole-board gain",
+      "truePrerequisites": []
+    }
+  },
+  {
+    "id": "sparse-force",
+    "pr": 3200,
+    "option": "experimentSparseForce",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentSparseForce": true
+    },
+    "evidencePaths": [
+      "highDensityForceImproveSolver.sparseForceStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityForceImproveSolver.sparseForceStats",
+      "activationField": "activated",
+      "activationValue": true,
+      "eligibleField": "sampleNodes",
+      "executedField": "kernelCalls",
+      "changedFields": [
+        "skippedForceSteps",
+        "noWritePairsSkipped",
+        "fixedClampVisitsSkipped",
+        "inactiveProjectionPassesSkipped"
+      ],
+      "positivePrerequisites": [],
+      "greaterThanFields": [],
+      "eligibleDefinition": "Assigned native force samples actually entered",
+      "executedDefinition": "Actual native kernel calls including crossing retries",
+      "changedDefinition": "Actual M1 skipped rounds, M2 no-write interactions/clamps, or M3 inactive projection passes; counters are not summed as identical units",
+      "truePrerequisites": []
+    }
+  },
+  {
+    "id": "boundary-edges",
+    "pr": 3201,
+    "option": "experimentBoundaryEdges",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentBoundaryEdges": true
+    },
+    "evidencePaths": [
+      "edgeSolver.stats.boundaryEdges"
+    ],
+    "coverageContract": {
+      "statsPath": "edgeSolver.stats.boundaryEdges",
+      "activationField": "activated",
+      "activationValue": true,
+      "eligibleField": "nodeCount",
+      "executedField": "boundaryQueries",
+      "changedFields": [
+        "boundaryQueries",
+        "targetQueries",
+        "incidentVisits"
+      ],
+      "positivePrerequisites": [],
+      "greaterThanFields": [],
+      "eligibleDefinition": "Actual mesh nodes in the boundary edge constructor",
+      "executedDefinition": "Actual boundary index queries",
+      "changedDefinition": "New boundary/target/incident operations executed; confirms mechanism use, not a saved-operation count or changed graph",
+      "truePrerequisites": []
+    }
+  },
+  {
+    "id": "incremental-path",
+    "pr": 3202,
+    "option": "experimentIncrementalPath",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentIncrementalPath": true
+    },
+    "evidencePaths": [
+      "portPointPathingSolver.incrementalPath"
+    ],
+    "coverageContract": {
+      "statsPath": "portPointPathingSolver.incrementalPath",
+      "activationField": "activated",
+      "activationValue": true,
+      "eligibleField": "eligibleQueries",
+      "executedField": "queryStarts",
+      "changedFields": [
+        "changedCostReuseQueries"
+      ],
+      "positivePrerequisites": [
+        "changedTransitions",
+        "reusedLabels"
+      ],
+      "greaterThanFields": [],
+      "eligibleDefinition": "Actual same-net/source/goal eligible prepared queries",
+      "executedDefinition": "Actual incremental-enabled query entries; native-first and cold-fresh policy entries are not credited as changed-state reuse",
+      "changedDefinition": "Existing labels reused while a nonempty complete changed-transition set is repaired; identical-query-only reuse receives no changed-state attribution",
+      "truePrerequisites": []
+    }
+  }
+]

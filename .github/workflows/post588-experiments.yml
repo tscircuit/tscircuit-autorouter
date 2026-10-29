@@ -1,0 +1,101 @@
+name: Five post-588 autorouter experiments
+
+on:
+  push:
+    branches: [codex/post588-experiments-controller-20261029]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify all reviewed immutable sources and plan fresh characterization
+        id: plan
+        run: python3 scripts/experiment-audit/run-post588-experiments.py --mode plan --manifest scripts/experiment-audit/post588-experiments-20261029.json
+  experiment:
+    needs: plan
+    name: ${{ matrix.experiment }} / ${{ matrix.dataset }} / ${{ matrix.order }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Select exact source pair
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode select --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: baseline
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify source trees and unchanged current-main validators
+        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode verify-checkouts --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}' --order '${{ matrix.order }}' --baseline baseline --candidate candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install fresh baseline dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Install fresh candidate dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Verify complete installed pinned dependency source bytes
+        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode verify-dependencies --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}' --order '${{ matrix.order }}' --baseline baseline --candidate candidate
+      - name: Build baseline
+        working-directory: baseline
+        run: bun run build
+      - name: Build candidate
+        working-directory: candidate
+        run: bun run build
+      - name: Prepare identical current-main harness and bounded observer
+        run: |
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-main --target baseline --expected-sha '${{ steps.refs.outputs.baseline_sha }}'
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-main --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Characterize all original cases with fresh same-host pairs and post-timing declared-intent checks
+        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode run --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}' --order '${{ matrix.order }}' --baseline baseline --candidate candidate --output 'results/${{ matrix.experiment }}-${{ matrix.dataset }}-${{ matrix.order }}'
+      - name: Retain compact all-record metrics, aggregates and qualification provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post588-experiments-metrics-${{ matrix.experiment }}-${{ matrix.dataset }}-${{ matrix.order }}
+          path: |
+            results/*/results.jsonl
+            results/*/summary.json
+            results/*/provenance.json
+            results/*/config-A.json
+            results/*/config-B.json
+            results/*/post588-controller-provenance.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Retain exact inputs, output copper, checks, stage evidence and failures separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post588-experiments-raw-${{ matrix.experiment }}-${{ matrix.dataset }}-${{ matrix.order }}
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
