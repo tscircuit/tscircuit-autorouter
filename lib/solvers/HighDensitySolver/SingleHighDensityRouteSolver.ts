@@ -33,6 +33,9 @@ const connectionLabel = (
     .join("\n")
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
+  private static readonly defaultGetNodeKey =
+    SingleHighDensityRouteSolver.prototype.getNodeKey
+
   override getSolverName(): string {
     return "SingleHighDensityRouteSolver"
   }
@@ -700,6 +703,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
+    const usesDefaultNodeKey =
+      this.getNodeKey === SingleHighDensityRouteSolver.defaultGetNodeKey
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
 
@@ -709,20 +714,42 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
+        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
+        let keyedNeighbor: Node | undefined
+        let neighborKey: number
+        if (usesDefaultNodeKey) {
+          const xIndex =
+            Math.round(neighborX / this.cellStep) - this.gridMinXIndex
+          const yIndex =
+            Math.round(neighborY / this.cellStep) - this.gridMinYIndex
+          neighborKey =
+            (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+        } else {
+          keyedNeighbor = {
+            x: neighborX,
+            y: neighborY,
+            z: node.z,
+            g: node.g,
+            h: node.h,
+            f: node.f,
+            parent: node,
+          }
+          neighborKey = this.getNodeKey(keyedNeighbor)
+        }
+
+        if (this.exploredNodes.has(neighborKey)) {
+          continue
+        }
+
+        const neighbor: Node = keyedNeighbor ?? {
+          x: neighborX,
+          y: neighborY,
           z: node.z,
           g: node.g,
           h: node.h,
           f: node.f,
           parent: node,
-        }
-
-        const neighborKey = this.getNodeKey(neighbor)
-
-        if (this.exploredNodes.has(neighborKey)) {
-          continue
         }
 
         if (!queriedPlanarNeighbors) {
@@ -774,7 +801,28 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
-      const viaNeighbor: Node = {
+      let keyedViaNeighbor: Node | undefined
+      let viaNeighborKey: number
+      if (usesDefaultNodeKey) {
+        const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+        const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+        viaNeighborKey =
+          (newZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
+      } else {
+        keyedViaNeighbor = {
+          x: node.x,
+          y: node.y,
+          z: newZ,
+          g: node.g,
+          h: node.h,
+          f: node.f,
+          parent: node,
+        }
+        viaNeighborKey = this.getNodeKey(keyedViaNeighbor)
+      }
+      if (this.exploredNodes.has(viaNeighborKey)) continue
+
+      const viaNeighbor: Node = keyedViaNeighbor ?? {
         x: node.x,
         y: node.y,
         z: newZ,
@@ -785,7 +833,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
