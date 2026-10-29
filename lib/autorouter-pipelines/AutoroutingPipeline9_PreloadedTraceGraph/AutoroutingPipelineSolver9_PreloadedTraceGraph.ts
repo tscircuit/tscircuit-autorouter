@@ -7,6 +7,8 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import { RELAXED_DRC_OPTIONS as NATIVE_RELAXED_DRC_OPTIONS } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/drcPresets"
+import { GlobalDeltaDrcEngine, type GlobalDeltaDrcStats } from "./GlobalDeltaDrcEngine"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -248,6 +250,7 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
+  globalDeltaDrcStats?: GlobalDeltaDrcStats
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
@@ -818,9 +821,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         const srjWithMaterializedPreloadedTraces =
           cms.getSrjWithMaterializedPreloadedTraces()
+        const deltaEngine = cms.opts.experimentDeltaDrc === true
+          ? new GlobalDeltaDrcEngine(srjWithMaterializedPreloadedTraces as any, {
+              connMap: cms.connMap,
+              traceClearance: srjWithMaterializedPreloadedTraces.minTraceToPadEdgeClearance ??
+                NATIVE_RELAXED_DRC_OPTIONS.traceClearance,
+              viaClearance: srjWithMaterializedPreloadedTraces.minTraceToPadEdgeClearance ??
+                NATIVE_RELAXED_DRC_OPTIONS.viaClearance,
+              includeTraceViaOwnerMetadata: false,
+            })
+          : undefined
+        if (deltaEngine) cms.globalDeltaDrcStats = deltaEngine.globalStats
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
+            ...(deltaEngine ? { autoroutingDrcEngine: deltaEngine } : {}),
             hdRoutes: lockHdRouteTerminals({
               hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
