@@ -1,0 +1,95 @@
+{
+  "id": "orangecrab",
+  "name": "OrangeCrab rev 0.2.1 ECP5 DDR3",
+  "repo": "orangecrab-fpga/orangecrab-hardware",
+  "commit": "c511d569fe2af39467041f888bc231020f40c6ac",
+  "path": "hardware/orangecrab_r0.2.1/OrangeCrab.kicad_pcb",
+  "sourceSha256": "4597f3ac08e21c09253b27ca1b9e26aaf3c3d3e2147b6c0d79c0dc6aa555e201",
+  "components": [
+    {
+      "ref": "U3",
+      "value": "LFE5U-25F-8MG285C",
+      "footprint": "gkl_housings_bga:csBGA285",
+      "pads": 285,
+      "at": [
+        "161.2",
+        "100.900001",
+        "270"
+      ]
+    },
+    {
+      "ref": "U4",
+      "value": "MT41K64M16TW-107_J-TR",
+      "footprint": "Package_BGA:BGA-96_9.0x13.0mm_Layout2x3x16_P0.8mm",
+      "pads": 96,
+      "at": [
+        "174.85",
+        "102.4",
+        "180"
+      ]
+    }
+  ],
+  "nativeLayers": [
+    [
+      "0",
+      "F.Cu",
+      "signal"
+    ],
+    [
+      "1",
+      "In1.Cu",
+      "signal"
+    ],
+    [
+      "2",
+      "In2.Cu",
+      "signal"
+    ],
+    [
+      "3",
+      "In3.Cu",
+      "signal"
+    ],
+    [
+      "4",
+      "In4.Cu",
+      "signal"
+    ],
+    [
+      "31",
+      "B.Cu",
+      "signal"
+    ]
+  ],
+  "signalLayers": [
+    "top",
+    "inner1",
+    "inner2",
+    "inner3",
+    "inner4",
+    "bottom"
+  ],
+  "nets": 50,
+  "terminals": 102,
+  "pads": 893,
+  "rules": {
+    "widths": [
+      0.0889,
+      0.089,
+      0.121
+    ],
+    "clearances": [
+      0.0889,
+      0.089
+    ],
+    "appliedGlobalClearance": 0.089,
+    "viaPad": 0.28,
+    "viaDrill": 0.15
+  },
+  "rectangularPadApproximations": {
+    "roundrect": 297,
+    "custom": 28,
+    "oval": 8
+  },
+  "scope": "All named DDR signal nets incident to CPU or RAM, including passive endpoints. Power, VREF, ZQ and unconnected nets excluded. Existing traces, vias and zones removed. Board uses edge bounding box. No timing or impedance constraints invented."
+}

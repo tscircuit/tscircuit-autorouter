@@ -1,0 +1,10 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`routes every original DDR terminal on the real six-layer OrangeCrab board 1`] = `
+{
+  "connectedEndpoints": 102,
+  "connectedNets": 50,
+  "drcErrors": 37,
+  "drillPadOverlaps": 3,
+}
+`;
