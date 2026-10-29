@@ -12,10 +12,12 @@ import { getEndpointConnectivity } from "tests/fixtures/real-ddr-orangecrab/getE
 test("routes every original DDR terminal on the real six-layer OrangeCrab board", async (): Promise<void> => {
   const inputSrj: SimpleRouteJson = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/real-ddr-orangecrab/input.srj.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/real-ddr-orangecrab/input.srj.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString(),
