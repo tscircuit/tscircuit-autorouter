@@ -8,7 +8,9 @@ import {
 } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test.failing(
+const regressionTest = test.failing
+
+regressionTest(
   "Pipeline9 spaces displaced H3 DDR ports on their physical two-layer shared edge",
   (): void => {
     const fixture: { traceWidth: number; nodes: NodeWithPortPoints[] } =

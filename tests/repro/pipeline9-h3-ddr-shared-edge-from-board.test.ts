@@ -4,7 +4,9 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 
-test.failing(
+const regressionTest = test.failing
+
+regressionTest(
   "original H3 DDR circuit reaches and repairs the displaced shared edge",
   async (): Promise<void> => {
     const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
