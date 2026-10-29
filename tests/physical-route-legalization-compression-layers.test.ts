@@ -4,7 +4,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 test("compression distinguishes crossings on separate layers from a through-via junction", () => {
   const route: HighDensityIntraNodeRoute = { connectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3,
-    route: [-1, 0, 1].map((x) => ({ x, y: 0, z: 2, connectionName: "shared" })), vias: [] }
+    route: [-1, 0, 1].map((x) => ({ x, y: 0, z: 2 })), vias: [] }
   const crossing: HighDensityIntraNodeRoute = { connectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3,
     route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }], vias: [] }
   const params = { mode: "compression-only" as const, layerCount: 4, clearance: 0.1,

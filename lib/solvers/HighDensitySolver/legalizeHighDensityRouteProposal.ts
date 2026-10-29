@@ -152,15 +152,7 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
         const scale = Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2)
         if (a.z !== b.z || b.z !== point.z || b.pcb_port_id || b.insideJumperPad || b.toNextSegmentType ||
           junctions.has(b) ||
-          // Repeated route ownership is not a point identity. Actual junctions
-          // were indexed across the proposal; unknown metadata remains inert.
-          Object.keys(b).some((key) => {
-            if (key === "x" || key === "y" || key === "z" || key === "traceThickness") return false
-            if (key !== "connectionName" && key !== "rootConnectionName") return true
-            const owner = route[key]
-            return [a, b, point].some((vertex) =>
-              (vertex as unknown as Record<string, unknown>)[key] !== owner)
-          }) ||
+          Object.keys(b).some((key) => key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness") ||
           node.portPoints.some((port) => port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9) ||
           a.toNextSegmentType || b.toNextSegmentCircuitJsonMetadata ||
           (a.traceThickness ?? route.traceThickness) !== (b.traceThickness ?? route.traceThickness) ||

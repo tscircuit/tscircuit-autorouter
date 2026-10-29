@@ -2,14 +2,14 @@ import { expect, test } from "bun:test"
 import { legalizeHighDensityRouteProposal } from "lib/solvers/HighDensitySolver/legalizeHighDensityRouteProposal"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
-test("compression removes repeated owner labels while preserving geometric junctions and unknown identities", () => {
+test("compression removes redundant geometry while preserving junctions and unknown identities on frozen inputs", () => {
   const routes: HighDensityIntraNodeRoute[] = [
     { connectionName: "shared", rootConnectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3,
-      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 0, z: 0, connectionName: "shared", rootConnectionName: "shared" })), vias: [] },
+      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 0, z: 0 })), vias: [] },
     { connectionName: "shared", rootConnectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3,
-      route: [0, 1].map((y) => ({ x: 0, y, z: 0, connectionName: "shared", rootConnectionName: "shared" })), vias: [] },
+      route: [0, 1].map((y) => ({ x: 0, y, z: 0 })), vias: [] },
     { connectionName: "shared", rootConnectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3,
-      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 2, z: 0, connectionName: "shared", rootConnectionName: "shared",
+      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 2, z: 0,
         ...(x === 1 ? { portPointId: "retained-identity" } : {}) })), vias: [] },
   ]
   const original = structuredClone(routes)

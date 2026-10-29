@@ -5,7 +5,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 test("compression retains a near-coincident proposal junction and a repeated self junction", () => {
   const routes: HighDensityIntraNodeRoute[] = [
     { connectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3, vias: [],
-      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 0, z: 0, connectionName: "shared" })) },
+      route: [-2, -1, 0, 1, 2].map((x) => ({ x, y: 0, z: 0 })) },
     { connectionName: "shared", traceThickness: 0.1, viaDiameter: 0.3, vias: [],
       route: [{ x: 5e-10, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }] },
     { connectionName: "self", traceThickness: 0.1, viaDiameter: 0.3, vias: [],
