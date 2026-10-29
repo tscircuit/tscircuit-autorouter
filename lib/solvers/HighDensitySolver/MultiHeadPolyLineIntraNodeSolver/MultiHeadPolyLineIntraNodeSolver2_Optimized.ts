@@ -24,7 +24,7 @@ type ForceSegment = {
 
 type ForceVia = {
   point: MHPoint2
-  layers: number[]
+  layers: [number, number]
   index: number
   force: NetForce | undefined
 }
@@ -267,6 +267,8 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       targetLine: number,
       targetForce: NetForce | undefined,
     ): void => {
+      if (!targetForce && !otherSeg.p1Force && !otherSeg.p2Force) return
+
       let fx: number
       let fy: number
       // Adjacent segments share an endpoint. Geometry stays fixed until all
@@ -355,8 +357,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // b) Via <-> Segment
         for (const via1 of vias1) {
+          const layer1Start = via1.layers[0]
+          const layer1End = via1.layers[1]
+          const layer1HasNaN =
+            layer1Start !== layer1Start || layer1End !== layer1End
           for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
+            const segmentLayer = seg2.layer
+            if (
+              segmentLayer === layer1Start ||
+              segmentLayer === layer1End ||
+              (segmentLayer !== segmentLayer && layer1HasNaN)
+            ) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via1.point,
                 seg2.p1,
@@ -413,8 +424,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           }
         }
         for (const via2 of vias2) {
+          const layer2Start = via2.layers[0]
+          const layer2End = via2.layers[1]
+          const layer2HasNaN =
+            layer2Start !== layer2Start || layer2End !== layer2End
           for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
+            const segmentLayer = seg1.layer
+            if (
+              segmentLayer === layer2Start ||
+              segmentLayer === layer2End ||
+              (segmentLayer !== segmentLayer && layer2HasNaN)
+            ) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via2.point,
                 seg1.p1,
@@ -473,11 +493,22 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // c) Via <-> Via
         for (const via1 of vias1) {
+          const layer1Start = via1.layers[0]
+          const layer1End = via1.layers[1]
+          // Match includes' SameValueZero semantics for the prepared pair.
+          const layer1HasNaN =
+            layer1Start !== layer1Start || layer1End !== layer1End
           for (const via2 of vias2) {
-            const commonLayers = via1.layers.filter((z) =>
-              via2.layers.includes(z),
-            )
-            if (commonLayers.length > 0) {
+            const layer2Start = via2.layers[0]
+            const layer2End = via2.layers[1]
+            if (
+              layer1Start === layer2Start ||
+              layer1Start === layer2End ||
+              layer1End === layer2Start ||
+              layer1End === layer2End ||
+              (layer1HasNaN &&
+                (layer2Start !== layer2Start || layer2End !== layer2End))
+            ) {
               const dx = via1.point.x - via2.point.x
               const dy = via1.point.y - via2.point.y
               const dSq = dx * dx + dy * dy
