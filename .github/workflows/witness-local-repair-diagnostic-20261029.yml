@@ -1,0 +1,42 @@
+name: Witness local repair component diagnostic
+on:
+  push:
+    branches: [codex/witness-local-repair-diagnostic-20261029]
+    paths: [scripts/experiment-audit/witness-local-repair-diagnostic-20261029.json]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  retained_certificate:
+    name: witness-local-repair-diagnostic / srj24 / 8 / retained-component-only
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Verify sealed diagnostic source and original input pins
+        run: python3 controller/scripts/experiment-audit/run-witness-local-repair-diagnostic.py --mode plan
+      - uses: actions/checkout@v4
+        with:
+          ref: 2109f9e96957c06f23aef2b079f6d59fba23ea52
+          path: source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact pinned source dependencies
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py source
+      - name: Evaluate bounded local proposals using the unchanged full certificate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 controller/scripts/experiment-audit/run-witness-local-repair-diagnostic.py --mode run --source source --output results
+      - name: Retain diagnostic evidence without board or speed credit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: witness-local-repair-diagnostic-only-srj24-8
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
