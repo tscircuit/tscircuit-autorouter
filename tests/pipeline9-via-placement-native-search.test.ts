@@ -10,7 +10,7 @@ test("native search moves a through via clear of a top pad without blocking an i
     connections: [{ name: "signal", pointsToConnect: [{ x: -2, y: 0, layer: "inner1", pcb_port_id: "a" }, { x: 2, y: 0, layer: "bottom", pcb_port_id: "b" }] }],
     obstacles: [{ type: "rect", center: { x: 0, y: 0 }, width: 1, height: 1, layers: ["top"], connectedTo: ["foreign-pad"] }],
   }
-  const validator = getPipeline9ViaPlacementValidator({ boardObstacles: srj.obstacles,
+  const validator = getPipeline9ViaPlacementValidator({ boardGeometry: srj, boardObstacles: srj.obstacles,
     physicalOwnership: getPipeline9PhysicalOwnership({ originalSrj: srj }), layerCount: 4, clearance: 0.1 })
   const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
     connectionName: "signal", A: { x: -2, y: 0, z: 1 }, B: { x: 2, y: 0, z: 3 },

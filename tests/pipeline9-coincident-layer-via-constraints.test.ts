@@ -28,7 +28,7 @@ test("coalesced inner-layer travel still forbids foreign through-vias beneath a 
     routingNetIds: ["routing-owner", "routing-foreign"], viaDiameter: 0.3 })).toBe(1)
   expect(graph.regions[0]!.d.availableZ).toEqual([1, 2])
   expect(graph.regions[0]!.d.layerChangeAllowedNetIds).toEqual(["routing-owner"])
-  const validate = getPipeline9ViaPlacementValidator({ boardObstacles: originalSrj.obstacles,
+  const validate = getPipeline9ViaPlacementValidator({ boardGeometry: originalSrj, boardObstacles: originalSrj.obstacles,
     physicalOwnership, layerCount: 4, clearance: 0.1 })
   const via = { x: 0, y: 0, zStart: 1, zEnd: 2, viaDiameter: 0.3 }
   expect(validate(via, "foreign")).toBe(false)

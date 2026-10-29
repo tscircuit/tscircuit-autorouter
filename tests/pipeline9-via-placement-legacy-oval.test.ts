@@ -12,7 +12,7 @@ test("legacy equal-diameter ovals use true circular copper and ambiguous ovals u
     bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
     connections: [{ name: "signal", pointsToConnect: [{ x: 4, y: 4, layer: "top" }] }],
     obstacles: [circle] }
-  const validate = getPipeline9ViaPlacementValidator({ boardObstacles: srj.obstacles,
+  const validate = getPipeline9ViaPlacementValidator({ boardGeometry: srj, boardObstacles: srj.obstacles,
     physicalOwnership: getPipeline9PhysicalOwnership({ originalSrj: srj }), layerCount: 4, clearance: 0.1 })
   expect(validate({ x: 0.6, y: 0.6, zStart: 0, zEnd: 3, viaDiameter: 0.3 }, "signal")).toBe(true)
   expect(validate({ x: 0.5, y: 0.5, zStart: 0, zEnd: 3, viaDiameter: 0.3 }, "signal")).toBe(false)
