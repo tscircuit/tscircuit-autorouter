@@ -19,14 +19,14 @@ function countSearchHistory(root: BaseSolver): number {
     const solver = stack.pop()!
     if (visited.has(solver)) continue
     visited.add(solver)
-    if (solver instanceof SingleHighDensityRouteSolver) {
-      count += solver.debug_exploredNodesOrdered.length
-    }
     if (solver.activeSubSolver) stack.push(solver.activeSubSolver)
     stack.push(...(solver.failedSubSolvers ?? []))
     stack.push(...(solver.failedSolvers ?? []))
     for (const candidate of solver.supervisedSolvers ?? []) {
       stack.push(candidate.solver)
+    }
+    if (solver instanceof SingleHighDensityRouteSolver) {
+      count += solver.debug_exploredNodesOrdered.length
     }
   }
   return count
