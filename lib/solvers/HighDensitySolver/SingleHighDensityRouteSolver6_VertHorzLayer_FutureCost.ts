@@ -14,12 +14,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
-  private readonly closestFuturePointCacheCoordinates = new Float64Array(
-    CLOSEST_FUTURE_POINT_CACHE_SLOTS * 4,
-  )
-  private readonly closestFuturePointCacheIndices = new Int32Array(
-    CLOSEST_FUTURE_POINT_CACHE_SLOTS,
-  ).fill(-2)
+  private closestFuturePointCacheCoordinates?: Float64Array
+  private closestFuturePointCacheIndices?: Int32Array
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
 
@@ -54,27 +50,41 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.cachedFutureConnectionPointCount !==
         this.futureConnectionPoints.length
     ) {
-      this.closestFuturePointCacheIndices.fill(-2)
+      if (
+        this.futureConnectionPoints.length > 0 &&
+        !this.closestFuturePointCacheIndices
+      ) {
+        this.closestFuturePointCacheCoordinates = new Float64Array(
+          CLOSEST_FUTURE_POINT_CACHE_SLOTS * 4,
+        )
+        this.closestFuturePointCacheIndices = new Int32Array(
+          CLOSEST_FUTURE_POINT_CACHE_SLOTS,
+        )
+      }
+      this.closestFuturePointCacheIndices?.fill(-2)
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
       this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
     }
+    // Observe empty transitions before returning: the same array may be refilled.
+    if (this.futureConnectionPoints.length === 0) return null
+    const cacheCoordinates = this.closestFuturePointCacheCoordinates!
+    const cacheIndices = this.closestFuturePointCacheIndices!
     const pointKey = this.getNodeKey(node)
     const cacheSlot = Number.isSafeInteger(pointKey)
       ? Math.abs(pointKey % CLOSEST_FUTURE_POINT_CACHE_SLOTS)
       : -1
     const coordinateIndex = cacheSlot * 4
     const viaPenaltyDistance = this.viaPenaltyDistance
-    const cachedPointIndex = this.closestFuturePointCacheIndices[cacheSlot]
+    const cachedPointIndex = cacheIndices[cacheSlot]
     // Rounded grid keys can alias coordinates or layers outside the grid.
     // Verify the exact query and layer penalty before reusing a selection.
     if (
       cacheSlot >= 0 &&
       cachedPointIndex >= -1 &&
-      this.closestFuturePointCacheCoordinates[coordinateIndex] === node.x &&
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 1] === node.y &&
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 2] === node.z &&
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 3] ===
-        viaPenaltyDistance
+      cacheCoordinates[coordinateIndex] === node.x &&
+      cacheCoordinates[coordinateIndex + 1] === node.y &&
+      cacheCoordinates[coordinateIndex + 2] === node.z &&
+      cacheCoordinates[coordinateIndex + 3] === viaPenaltyDistance
     ) {
       return cachedPointIndex === -1
         ? null
@@ -100,12 +110,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     // A fixed workspace avoids retaining every explored coordinate in large
     // portfolio searches. Colliding slots simply perform the original scan.
     if (cacheSlot >= 0) {
-      this.closestFuturePointCacheCoordinates[coordinateIndex] = node.x
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 1] = node.y
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 2] = node.z
-      this.closestFuturePointCacheCoordinates[coordinateIndex + 3] =
-        viaPenaltyDistance
-      this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
+      cacheCoordinates[coordinateIndex] = node.x
+      cacheCoordinates[coordinateIndex + 1] = node.y
+      cacheCoordinates[coordinateIndex + 2] = node.z
+      cacheCoordinates[coordinateIndex + 3] = viaPenaltyDistance
+      cacheIndices[cacheSlot] = closestPointIndex
     }
     return closestPoint
   }
@@ -195,11 +204,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return 1 - Math.exp((-goalDist / this.straightLineDistance) * 5)
   }
 
-  getFutureConnectionPenalty(node: Node, isVia: boolean) {
+  getFutureConnectionPenalty(
+    node: Node,
+    isVia: boolean,
+    goalDistance?: number,
+  ): number {
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
-    const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
+      const goalDist = goalDistance ?? distance(node, this.B)
       const distToFuturePoint = distance(node, closestFuturePoint)
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
@@ -274,11 +287,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    const goalDist = distance(node, this.B) ** 1.6
+    const goalDistance = distance(node, this.B)
+    const goalDist = goalDistance ** 1.6
     const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
     const futureConnectionPenalty = this.getFutureConnectionPenalty(
       node,
       node.z !== node.parent?.z,
+      goalDistance,
     )
 
     node.g = baseG + futureConnectionPenalty
