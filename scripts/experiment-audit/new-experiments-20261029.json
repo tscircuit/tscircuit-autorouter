@@ -351,7 +351,12 @@
         "lib/visualizeStaticReachabilityFailure.ts": "0e67ed6f7b148c195cde0d3ca10a6d3500ffc7bc138fcea06dc227b44d3510f5",
         "lib/visualizeTinyGraph.ts": "70550ecca2d88d70eab52e4e16dc7b01f1d38845df453f0eaaf9030b60f84e49",
         "package.json": "6dc61235a4ea4c794cfa435c46dfefd20373dbf76ca1870965dac2e3b7db70df"
-      }
+      },
+      "inventoryMode": "lib-and-package",
+      "inventoryScope": "COMPLETE_RUNTIME_LIB_TREE_AND_PACKAGE_JSON",
+      "runtimeInventoryAuthentication": "PASS_EXACT_REMOTE_COMMIT_TREE_ALL219_BLOBS_AND_COMPLETE52_RUNTIME_SUBSET",
+      "remoteCommitProofSha256": "642abf71ce9150e18399a416f349bf99aa1f74e9cbc28ccbcff4ea796fc1a48e",
+      "remoteGitTreeProofSha256": "fa5a7df334705862e7f4c607082a9386f20174907b026acf4fc34b21c6b5692e"
     },
     "@tscircuit/high-density-a01": {
       "remoteSha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
@@ -997,7 +1002,7 @@
     "phase-checkpoint-observer.ts": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
     "prepare-pinned-harness.py": "4158dc102509784f1f9fc5529cc19a30f251a8985f28af5aedf1e5a28b7d186c",
     "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
-    "run-new-experiments.py": "9dd5bcfd26bd94bbc9d32477fc4f0ab6ffb712d0fa1d9f5480af6901d5b8a3c9",
+    "run-new-experiments.py": "c8441bc052e1bfd35c91f9f9e57d7e0f3698d735b3e754f0b018d7cc30282124",
     "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
     "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3"
   },

@@ -20,7 +20,7 @@ SPEC.loader.exec_module(pinned)
 MAIN = "e703f0499188f858b2b5e571ac80091d4c10733a"
 MAIN_TREE = "c79d9f76c9eff681a0c4665b341fd8af7d750e28"
 DEPENDENCY_SECTIONS_SHA256 = "4a0db0b221c49b93cd31cdabc78ed9e9e9874408cbea119a066e47ef41601746"
-DEPENDENCY_INVENTORY_AUTHORITY_SHA256 = "cb4b8b359294eb3adb95cee4dac0fbccd20ccdfff07d2c56b644ad33c5f08338"
+DEPENDENCY_INVENTORY_AUTHORITY_SHA256 = "74a89db983a4b914698d64917fcf4ec2eb6d23b0299950e8e822a42157588aab"
 COUNTS = {"srj18": 16, "srj24": 26}
 SOLVER = "AutoroutingPipelineSolver9_PreloadedTraceGraph"
 MODULE = "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts"
@@ -119,10 +119,19 @@ def verify_dependencies(manifest, checkouts):
             record = provenance.get("directDependencies", {}).get(name, {})
             require(record.get("declaration") == expected["declaration"] and record.get("installedSource") == expected["installedSource"], "Dependency URL/pin differs: " + name)
             directory = checkout / "node_modules" / name
-            actual = {str(p.relative_to(directory)): sha(p) for p in directory.rglob("*") if p.is_file()}
+            actual = {str(p.relative_to(directory)): sha(p) for p in directory.rglob("*") if p.is_file() and not ({"node_modules", ".git"} & set(p.relative_to(directory).parts))}
             if expected.get("inventoryMode") == "src-and-package":
                 actual = {path: value for path, value in actual.items() if path == "package.json" or path.startswith("src/")}
-            require(exact(actual, expected["sourceFileSha256"]), "Complete installed source inventory differs: " + arm + ":" + name)
+            elif expected.get("inventoryMode") == "lib-and-package":
+                actual = {path: value for path, value in actual.items() if path == "package.json" or path.startswith("lib/")}
+            else:
+                require(expected.get("inventoryScope") == "ALL_INSTALLED_FILES_EXCLUDING_NESTED_NODE_MODULES_AND_DOTGIT", "Unknown authenticated inventory scope: " + name)
+            wanted = expected["sourceFileSha256"]
+            if not exact(actual, wanted):
+                missing, extra = sorted(set(wanted) - set(actual)), sorted(set(actual) - set(wanted))
+                changed = sorted(path for path in set(actual) & set(wanted) if actual[path] != wanted[path])
+                detail = {"arm": arm, "package": name, "expectedCount": len(wanted), "actualCount": len(actual), "missingCount": len(missing), "unexpectedCount": len(extra), "changedCount": len(changed), "boundedMissing": [{"path": p, "expectedSha256": wanted[p]} for p in missing[:8]], "boundedUnexpected": [{"path": p, "actualSha256": actual[p]} for p in extra[:8]], "boundedChanged": [{"path": p, "expectedSha256": wanted[p], "actualSha256": actual[p]} for p in changed[:8]], "contentsIncluded": False}
+                raise ValueError("Installed source inventory mismatch: " + json.dumps(detail, separators=(",", ":")))
 
 
 def checkpoint_audit(raw, metadata):
