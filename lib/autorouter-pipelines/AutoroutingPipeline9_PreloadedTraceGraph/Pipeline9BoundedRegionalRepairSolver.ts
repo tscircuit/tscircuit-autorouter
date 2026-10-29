@@ -27,6 +27,7 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
+import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
@@ -527,15 +528,37 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
     const localRoutes: HighDensityRoute[] = region.routes
+    // Share approach locks with merge validation, not only the path search.
+    // Interpolated collar and junction points already have their own locks.
+    for (const [routeIndex, route] of localRoutes.entries()) {
+      const sourceRouteIndex =
+        region.routeMappings[routeIndex]!.sourceRouteIndex
+      const sourceRoute = context.currentRoutes[sourceRouteIndex]!
+      const approaches = sourceRoute.route.filter(
+        (point) => point.terminalApproach !== undefined,
+      )
+      if (approaches.length === 0) continue
+      for (const [pointIndex, point] of route.route.entries()) {
+        if (
+          approaches.some(
+            (original) =>
+              original.terminalApproach === point.terminalApproach &&
+              original.x === point.x &&
+              original.y === point.y &&
+              original.z === point.z,
+          )
+        ) {
+          region.lockedPointIndices[routeIndex]![pointIndex] = true
+        }
+      }
+    }
     const solver = new NegotiateTraceClearanceSolver({
       srj: region.srj,
       routes: localRoutes,
       bounds: region.mutableBounds,
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
-        region.lockedPointIndices[routeIndex]![pointIndex]! ||
-        localRoutes[routeIndex]!.route[pointIndex]!.terminalApproach !==
-          undefined,
+        region.lockedPointIndices[routeIndex]![pointIndex]!,
       maxPathSearchCalls,
       maxPathSearchNodes:
         allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,
@@ -606,11 +629,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "splice-region" }>,
   ): void {
     const { context, region } = state.negotiation
-    const negotiatedRoutes = mergeRepairRegion({
-      routes: context.currentRoutes,
-      region,
-      repairedRoutes: state.repair.routes,
-    })
+    // Preserve repair04's fragment metadata and source validation during merge;
+    // only afterward discard approach tags copied onto interpolated cut points.
+    const negotiatedRoutes = removeCopiedPipeline9TerminalApproaches(
+      context.currentRoutes,
+      mergeRepairRegion({
+        routes: context.currentRoutes,
+        region,
+        repairedRoutes: state.repair.routes,
+      }),
+    )
     if (
       negotiatedRoutes.every(
         (route, index): boolean => route === context.currentRoutes[index],
