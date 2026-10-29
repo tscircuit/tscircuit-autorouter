@@ -1,5 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
   getDrcErrors,
@@ -89,6 +90,7 @@ export const evaluateRelaxedDrc = ({
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+      viaToPadClearance: getViaToPadClearance(inputSrj),
       ...drcOptions,
     }),
   }

@@ -2,6 +2,8 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { isViaPadClearanceError } from "./isViaPadClearanceError"
+import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
   createFixedRouteCopperSpatialIndex,
   getPipeline9RegionalB01CandidateOutput,
@@ -41,6 +43,8 @@ type RegionalB01RepairPhase =
   | "commit-error"
   | "finish-pass"
   | "refine"
+  | "prepare-via-pad-projection"
+  | "project-via-pad"
   | "prepare-safe-layer"
   | "route-safe-layer"
   | "validate-safe-layer"
@@ -77,6 +81,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private b01Candidate?: Pipeline9RegionalB01CandidateProblem
   private regularCandidate?: Pipeline9RegularRegionalCandidateProblem
   private safeTraceLayerSolver?: GlobalDrcForceImproveSolver
+  private viaPadProjectionSolver?: Pipeline9ClearanceProjectionSolver
 
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
@@ -375,6 +380,64 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         }
       }
     }
+    this.phase = "prepare-via-pad-projection"
+  }
+
+  private prepareViaPadProjection(): void {
+    const movableRegions = this.currentErrors
+      .filter(isViaPadClearanceError)
+      .flatMap((error) => {
+        const center = getRepairCenter(error, this.params.srj)
+        return center
+          ? [{ center, radius: PIPELINE9_REGIONAL_B01_REGION_SIZES[0] / 2 }]
+          : []
+      })
+    if (movableRegions.length === 0) {
+      this.phase = "prepare-safe-layer"
+      return
+    }
+    const routeCount = this.currentRoutes.length
+    // A physical via can belong to multiple same-net route pieces. Project
+    // those pieces together with nearby wires, keeping all preload copper fixed.
+    this.viaPadProjectionSolver = new Pipeline9ClearanceProjectionSolver({
+      originalSrj: this.params.srj,
+      routes: [...this.currentRoutes, ...this.params.fixedObstacleRoutes],
+      lockedConnectionNames: new Set([
+        ...this.params.syntheticConnectionNames,
+        ...this.params.fixedObstacleRoutes.map((route) => route.connectionName),
+      ]),
+      movableRegions,
+      usePrecisionMargin: true,
+      drcEvaluator: ({ hdRoutes }) => {
+        if (!hdRoutes) throw new Error("Via-pad projection requires HD routes")
+        return this.params.drcEvaluator({
+          traces: [],
+          hdRoutes: hdRoutes.slice(0, routeCount),
+        })
+      },
+    })
+    this.startChildSolver(this.viaPadProjectionSolver)
+    this.phase = "project-via-pad"
+  }
+
+  private stepViaPadProjection(): void {
+    const solver = this.viaPadProjectionSolver
+    if (!solver) throw new Error("Regional B01 has no via-pad projection")
+    solver.step()
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + solver.MAX_ITERATIONS - solver.iterations + 16,
+    )
+    if (solver.failed) {
+      throw new Error(`Regional via-pad projection failed: ${solver.error}`)
+    }
+    if (!solver.solved) return
+    this.currentRoutes = solver.getOutput().slice(0, this.currentRoutes.length)
+    this.currentErrors = getPipeline9DrcErrors(
+      this.params.drcEvaluator,
+      this.currentRoutes,
+    )
+    this.activeSubSolver = null
     this.phase = "prepare-safe-layer"
   }
 
@@ -482,6 +545,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         return this.finishPass()
       case "refine":
         return this.refineAcceptedRoutes()
+      case "prepare-via-pad-projection":
+        return this.prepareViaPadProjection()
+      case "project-via-pad":
+        return this.stepViaPadProjection()
       case "prepare-safe-layer":
         return this.prepareSafeLayerRepair()
       case "route-safe-layer":
