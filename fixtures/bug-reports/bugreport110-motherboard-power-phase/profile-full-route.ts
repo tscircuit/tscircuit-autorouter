@@ -95,6 +95,7 @@ if (validationInput) {
 const summary = {
   label,
   elapsedMs,
+  peakRss: process.resourceUsage().maxRSS,
   runtime: process.version,
   bunVersion: Bun.version,
   platform: process.platform,
