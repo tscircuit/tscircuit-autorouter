@@ -85,7 +85,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
 
     const margin = this.viaDiameter / 2 + this.obstacleMargin
 
-    const viaPosition = {
+    let viaPosition = {
       x: clampWithFallback({
         value: (route.A.x + route.B.x) / 2,
         min: this.bounds.minX + margin,
@@ -101,9 +101,44 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
       ...viaPosition, zStart: route.A.z, zEnd: route.B.z,
       viaDiameter: this.viaDiameter,
     }, route.connectionName)) {
-      this.failed = true
-      this.error = "Closed-form via placement violates original board constraints"
-      return
+      const centerX = (this.bounds.minX + this.bounds.maxX) / 2
+      const centerY = (this.bounds.minY + this.bounds.maxY) / 2
+      const anchors = [
+        { x: route.A.x, y: route.A.y },
+        { x: route.B.x, y: route.B.y },
+        { x: this.bounds.minX, y: this.bounds.minY },
+        { x: this.bounds.minX, y: this.bounds.maxY },
+        { x: this.bounds.maxX, y: this.bounds.minY },
+        { x: this.bounds.maxX, y: this.bounds.maxY },
+        { x: this.bounds.minX, y: centerY },
+        { x: this.bounds.maxX, y: centerY },
+        { x: centerX, y: this.bounds.minY },
+        { x: centerX, y: this.bounds.maxY },
+      ]
+      let shortestAnchor: { x: number; y: number } | undefined
+      let shortestWireLength = Infinity
+      // Mesh boundaries need not contain the full via pad. The original-board
+      // validator decides physical legality at these bounded node anchors.
+      for (const anchor of anchors) {
+        if (anchor.x < this.bounds.minX || anchor.x > this.bounds.maxX ||
+          anchor.y < this.bounds.minY || anchor.y > this.bounds.maxY) continue
+        if (!params.viaPlacementValidator({
+          ...anchor, zStart: route.A.z, zEnd: route.B.z,
+          viaDiameter: this.viaDiameter,
+        }, route.connectionName)) continue
+        const wireLength = Math.hypot(anchor.x - route.A.x, anchor.y - route.A.y) +
+          Math.hypot(anchor.x - route.B.x, anchor.y - route.B.y)
+        if (wireLength < shortestWireLength) {
+          shortestAnchor = anchor
+          shortestWireLength = wireLength
+        }
+      }
+      if (!shortestAnchor) {
+        this.failed = true
+        this.error = "Closed-form via placement violates original board constraints"
+        return
+      }
+      viaPosition = shortestAnchor
     }
     this.solvedRoutes.push(
       this.createTransitionRoute({
