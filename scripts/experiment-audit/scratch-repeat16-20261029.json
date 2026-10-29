@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "campaign": "scratch-repeat16-20261029",
+  "repository": "tscircuit/tscircuit-autorouter",
+  "candidate": {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "id": "repair-search-scratch",
+    "pr": 3198,
+    "option": "experimentRepairSearchScratch",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentRepairSearchScratch": true
+    },
+    "evidencePaths": [
+      "pipeline9JointDrcRepairSolver.repairSearchScratchStats"
+    ],
+    "coverageContract": {
+      "statsPath": "pipeline9JointDrcRepairSolver.repairSearchScratchStats",
+      "stageName": "pipeline9JointDrcRepairSolver",
+      "countFields": [
+        "searchInstances",
+        "neighborListsServed",
+        "neighborScratchBuffersCreated",
+        "kernelInstances",
+        "costQueriesServed",
+        "costScratchFramesCreated",
+        "costHitRecordsCreated",
+        "costHitRecordsReused",
+        "ownerAccumulatorsServed",
+        "publicHitArraysCreated"
+      ],
+      "timeFields": [],
+      "eligibleField": "searchInstances",
+      "executedField": "neighborListsServed",
+      "positiveSavedFields": [
+        "costHitRecordsReused"
+      ],
+      "savedComparisons": [
+        [
+          "neighborListsServed",
+          "neighborScratchBuffersCreated"
+        ],
+        [
+          "ownerAccumulatorsServed",
+          "costScratchFramesCreated"
+        ]
+      ],
+      "identityEquations": [],
+      "eligibleDefinition": "Actual main-stage searchInstances ledger count",
+      "executedDefinition": "Actual main-stage neighborListsServed ledger count",
+      "changedDefinition": "Actual native neighbor/all-owner-cost sites served exceed private scratch frames created, or pooled hit records actually reused. Different units stay separate.",
+      "minimumComparisons": [],
+      "maximumFields": {}
+    },
+    "candidateSha": "4670cce8f25203cab72155a6c4c9e8a9a33f44c9",
+    "candidateTree": "3b89af647470148fe97e2730c9d0cf1a7c51382d",
+    "publication": {
+      "publishedCommit": "4670cce8f25203cab72155a6c4c9e8a9a33f44c9",
+      "expectedTree": "3b89af647470148fe97e2730c9d0cf1a7c51382d",
+      "reviewedLocalCommit": "258a81a15dbdebd7d4748a262752bbec021c8d35"
+    },
+    "sourceQualification": {
+      "status": "PASS_ROOT_REVIEWED",
+      "sourceTree": "3b89af647470148fe97e2730c9d0cf1a7c51382d",
+      "fullTypesExitCode": 0,
+      "fullBuildExitCode": 0,
+      "focusedTestsExitCode": 0,
+      "evidenceText": "{\"agentQualificationSha256\":\"56c90cac6945403eb448aacc628f46ea4c0284ac27885926ef8aa6238fbe9427\",\"agentQualificationText\":\"{\\n  \\\"schemaVersion\\\": 1,\\n  \\\"status\\\": \\\"QUALIFIED_SOURCE_EXACT_NATIVE_WORK_PUBLIC_OUTPUT_AND_COMPILED_CONTROLS_NO_BOARD_PERFORMANCE_CLAIM\\\",\\n  \\\"createdAtUtc\\\": \\\"2026-10-29T18:09:22.929911+00:00\\\",\\n  \\\"baselineSha\\\": \\\"e703f0499188f858b2b5e571ac80091d4c10733a\\\",\\n  \\\"localCommit\\\": \\\"258a81a15dbdebd7d4748a262752bbec021c8d35\\\",\\n  \\\"tree\\\": \\\"3b89af647470148fe97e2730c9d0cf1a7c51382d\\\",\\n  \\\"worktree\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch\\\",\\n  \\\"cleanTrackedSource\\\": true,\\n  \\\"intendedPr\\\": 3198,\\n  \\\"flag\\\": \\\"experimentRepairSearchScratch\\\",\\n  \\\"defaultOffLiteralTrueOnly\\\": true,\\n  \\\"ledger\\\": {\\n    \\\"path\\\": \\\"pipeline9JointDrcRepairSolver.repairSearchScratchStats\\\",\\n    \\\"sharedAcrossInitialAndFinalRepair\\\": true,\\n    \\\"persistsAfterChildrenRetired\\\": true,\\n    \\\"ownKeysInInsertionOrder\\\": [\\n      \\\"searchInstances\\\",\\n      \\\"neighborListsServed\\\",\\n      \\\"neighborScratchBuffersCreated\\\",\\n      \\\"kernelInstances\\\",\\n      \\\"costQueriesServed\\\",\\n      \\\"costScratchFramesCreated\\\",\\n      \\\"costHitRecordsCreated\\\",\\n      \\\"costHitRecordsReused\\\",\\n      \\\"ownerAccumulatorsServed\\\",\\n      \\\"publicHitArraysCreated\\\"\\n    ],\\n    \\\"actualSavedNeighborArrays\\\": \\\"neighborListsServed - neighborScratchBuffersCreated\\\",\\n    \\\"actualSavedCostMapAndHitArrayObjects\\\": \\\"ownerAccumulatorsServed - costScratchFramesCreated\\\",\\n    \\\"actualSavedHitRecordObjects\\\": \\\"costHitRecordsReused\\\",\\n    \\\"noHeapBytesOrTimeInferredFromObjectCounts\\\": true\\n  },\\n  \\\"scope\\\": {\\n    \\\"neighborScratch\\\": \\\"native Find in both directional policies\\\",\\n    \\\"costScratch\\\": \\\"paired negotiated cost kernel, direction2 only; direction1 inline cost unchanged\\\",\\n    \\\"algorithmOrderingBudgetsAndValidationPolicyUnchanged\\\": true,\\n    \\\"installedDependencyMutation\\\": false,\\n    \\\"typeContractDerivesNestedRepair03\\\": true,\\n    \\\"mitLicensePreserved\\\": true\\n  },\\n  \\\"validation\\\": {\\n    \\\"focusedTests\\\": 11,\\n    \\\"assertions\\\": 13211,\\n    \\\"fullTypesExitCode\\\": 0,\\n    \\\"embeddedWorkersEsmDtsBuildExitCode\\\": 0,\\n    \\\"actualCompiledWorkerDispatches\\\": 15,\\n    \\\"actualCompiledOmittedFalseTrueControls\\\": true,\\n    \\\"compiledFullPublicStatePreservesUndefinedViaV8Serialization\\\": true,\\n    \\\"stateCompared\\\": [\\n      \\\"solved\\\",\\n      \\\"failed\\\",\\n      \\\"error\\\",\\n      \\\"iterations\\\",\\n      \\\"MAX_ITERATIONS\\\",\\n      \\\"progress\\\",\\n      \\\"currentPipelineStepIndex\\\",\\n      \\\"publishedSRJ\\\",\\n      \\\"publishedTraces\\\",\\n      \\\"updatedPreloads\\\",\\n      \\\"JointOutput\\\"\\n    ],\\n    \\\"jointEveryStepNonclockStateAndChildSchedulingParity\\\": true,\\n    \\\"syntheticKernelQueries\\\": 3200,\\n    \\\"kernelCostComparisons\\\": 6400,\\n    \\\"syntheticGridLayerAndErrorCases\\\": 24,\\n    \\\"pairedLaneCases\\\": 12,\\n    \\\"negotiationCases\\\": 6,\\n    \\\"reentrantFindAndCostCallbacksCovered\\\": true,\\n    \\\"throwCleanupCovered\\\": \\\"nested kernel weight getter throws, subsequent cost query exact\\\",\\n    \\\"dynamicUnknownOwnerKeysAndNaNInfinitySignedZeroCovered\\\": true,\\n    \\\"publicEscapingHitArrayAndRecordOwnershipCovered\\\": true,\\n    \\\"nativeInputRoutesUnchanged\\\": true,\\n    \\\"realBoardRoutingLocal\\\": 0,\\n    \\\"formatterOrLinterRun\\\": false\\n  },\\n  \\\"nativeProvenance\\\": {\\n    \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/PROVENANCE.json\\\",\\n    \\\"sha256\\\": \\\"14a37bf2e939858f96f31544c2f9a666ea9a3e16e8b63d561e3f33bb3bdeca10\\\",\\n    \\\"bytes\\\": 4693\\n  },\\n  \\\"unchangedRuntimeHelpersVerifiedAfterTypeImportRebinding\\\": [\\n    \\\"ClearancePathConnectivity.ts\\\",\\n    \\\"ClearancePathHeap.ts\\\",\\n    \\\"getRepairCopperLayerSpan.ts\\\",\\n    \\\"getSegmentToSegmentMinDistance.ts\\\",\\n    \\\"normalizeRepairTrace.ts\\\",\\n    \\\"getViaPadClearance.ts\\\",\\n    \\\"getConservativeRectBarrierBounds.ts\\\",\\n    \\\"getRepairRouteVias.ts\\\",\\n    \\\"repairRegionGeometry.ts\\\",\\n    \\\"repairRegionTypes.ts\\\"\\n  ],\\n  \\\"sourceFiles\\\": [\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/PROVENANCE.json\\\",\\n      \\\"sha256\\\": \\\"14a37bf2e939858f96f31544c2f9a666ea9a3e16e8b63d561e3f33bb3bdeca10\\\",\\n      \\\"bytes\\\": 4693\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/RepairSearchScratchStats.ts\\\",\\n      \\\"sha256\\\": \\\"6a952580f7bf4ddea341dcedfe777267e81785c6426dc0787a78e7c921d34e36\\\",\\n      \\\"bytes\\\": 748\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/ClearancePathConnectivity.ts\\\",\\n      \\\"sha256\\\": \\\"24c766c682d1478b8723cf785d9478c0621ceee4ae80d51767b32ee7e4847039\\\",\\n      \\\"bytes\\\": 1950\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/ClearancePathHeap.ts\\\",\\n      \\\"sha256\\\": \\\"a3b4fce0e53c7f7344a71f11af854d431f4b83fae057071ef33efdd7d3e5021c\\\",\\n      \\\"bytes\\\": 3923\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/FindClearancePathSolver.ts\\\",\\n      \\\"sha256\\\": \\\"1008fb50a206e01e958a9c6a058888fb39c6418ab4893093b949be387a1f92d2\\\",\\n      \\\"bytes\\\": 32703\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/LICENSE\\\",\\n      \\\"sha256\\\": \\\"1d8ddb1b6231d6cc4814945445d678dc1e135ca83a69d683711e6e25e7ac7496\\\",\\n      \\\"bytes\\\": 1071\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/NegotiateTraceClearanceSolver.ts\\\",\\n      \\\"sha256\\\": \\\"050b95c2c9f1e4024f675bde23dbde26cb25b51cadf429828ce5d2a1195b945c\\\",\\n      \\\"bytes\\\": 30619\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/PairedClearancePathSolver.ts\\\",\\n      \\\"sha256\\\": \\\"ec654e19a5304000afb6347d917df5148f9b104a3fd1643ae430180381485290\\\",\\n      \\\"bytes\\\": 7708\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getConservativeRectBarrierBounds.ts\\\",\\n      \\\"sha256\\\": \\\"78eeab042335b6e8a22cc36743307f2856beb461f47fa7e764b73ca24b597022\\\",\\n      \\\"bytes\\\": 1914\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getNetRepresentatives.ts\\\",\\n      \\\"sha256\\\": \\\"47626736bed7eb3dc3beb4c508952058a61b2f84506d69475641a87c090df66c\\\",\\n      \\\"bytes\\\": 1685\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getRepairCopperLayerSpan.ts\\\",\\n      \\\"sha256\\\": \\\"70b8407156f9b2abcfc12f665cbcca7ed04a04e899bfff0410f3b82efd895864\\\",\\n      \\\"bytes\\\": 556\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getRepairRouteVias.ts\\\",\\n      \\\"sha256\\\": \\\"8f02f2175ee2db9354f423b0089602a5b7b4612fee4a8669b097fdf5e694d260\\\",\\n      \\\"bytes\\\": 1281\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getSegmentToSegmentMinDistance.ts\\\",\\n      \\\"sha256\\\": \\\"af083b4e7497efa42b5d7cbcb0c5e965e438ad4e045664e1236ef3e851a8bee8\\\",\\n      \\\"bytes\\\": 1291\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/getViaPadClearance.ts\\\",\\n      \\\"sha256\\\": \\\"77a0647ab48f8808b59a9f3b888da52f6575431ec6dbd80592c307c726f890b2\\\",\\n      \\\"bytes\\\": 627\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/negotiatedClearanceSearchKernel.ts\\\",\\n      \\\"sha256\\\": \\\"05cb7e82d735cec869ac2480a21e4af59ae88668629a170b16d7518950a40731\\\",\\n      \\\"bytes\\\": 13538\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/normalizeRepairTrace.ts\\\",\\n      \\\"sha256\\\": \\\"d29496458ff0f0563c0f46dd41e1d968f58c87d8f60f9bf379fdd2f5a2cf0016\\\",\\n      \\\"bytes\\\": 1610\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/repairNativeTypes.ts\\\",\\n      \\\"sha256\\\": \\\"be7cca774c2b332da26ddb7987589ab6ad06c88ec1345c315aa289e1e9493c47\\\",\\n      \\\"bytes\\\": 351\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/repairRegionGeometry.ts\\\",\\n      \\\"sha256\\\": \\\"87f5ea0c637de733f25cc5152cc4099250b7241adaf6f7313ee6558108242070\\\",\\n      \\\"bytes\\\": 4257\\n    },\\n    {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-repair-scratch/lib/solvers/RepairSearchScratch/native/repairRegionTypes.ts\\\",\\n      \\\"sha256\\\": \\\"54d3287307911bcf434cef09df0725bb76448cc13f877488a85d038542dccd36\\\",\\n      \\\"bytes\\\": 1556\\n    }\\n  ],\\n  \\\"evidence\\\": {\\n    \\\"focusedTestsLog\\\": {\\n      \\\"path\\\": \\\"/tmp/repair-scratch-focused-tests.log\\\",\\n      \\\"sha256\\\": \\\"83f93329bbab1fca45b44e21fc2645d5f4bf1e8b0a31f183330db776ebf92b7a\\\",\\n      \\\"bytes\\\": 2108\\n    },\\n    \\\"fullTypesLog\\\": {\\n      \\\"path\\\": \\\"/tmp/repair-scratch-final-types.log\\\",\\n      \\\"sha256\\\": \\\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\\\",\\n      \\\"bytes\\\": 0\\n    },\\n    \\\"buildLog\\\": {\\n      \\\"path\\\": \\\"/tmp/repair-scratch-build.log\\\",\\n      \\\"sha256\\\": \\\"d2638d262e96158b64fb0f947b12387968320c77ff159925827ac9af9629c928\\\",\\n      \\\"bytes\\\": 1198\\n    },\\n    \\\"compiledControlsScript\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-compiled-controls.ts\\\",\\n      \\\"sha256\\\": \\\"016eff30ce8795d25e48c7f390f457af8357f4dfbc7679362322dcb765ac2ac1\\\",\\n      \\\"bytes\\\": 3093\\n    },\\n    \\\"compiledReferenceScript\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-native-reference.ts\\\",\\n      \\\"sha256\\\": \\\"c1622ca17c602b1c3a392fc955c4139ec359451988eb9c1b1a3e1ae038fe151a\\\",\\n      \\\"bytes\\\": 1278\\n    },\\n    \\\"compiledReferenceBinary\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-native-reference.bin\\\",\\n      \\\"sha256\\\": \\\"5247c4067023a11bd19621f1f98a4b88c144e0b58365b04ebe6b0c6dfc843fe9\\\",\\n      \\\"bytes\\\": 1359\\n    },\\n    \\\"compiledControlsResult\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-compiled-controls.json\\\",\\n      \\\"sha256\\\": \\\"35721cbf493a9e310a42a2c70752198173535fbe607a4742d2c643883bd0bf68\\\",\\n      \\\"bytes\\\": 1141\\n    },\\n    \\\"compiledControlsLog\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-compiled-controls.log\\\",\\n      \\\"sha256\\\": \\\"35721cbf493a9e310a42a2c70752198173535fbe607a4742d2c643883bd0bf68\\\",\\n      \\\"bytes\\\": 1141\\n    },\\n    \\\"minimalNativeDiffs\\\": {\\n      \\\"path\\\": \\\"/tmp/bottleneck-repair-scratch-native-diffs.json\\\",\\n      \\\"sha256\\\": \\\"615822ab6c2c47e310d5ba50e22e3648e4c0a3b7d0d700c42aa2a57a8f5a494c\\\",\\n      \\\"bytes\\\": 14626\\n    }\\n  },\\n  \\\"performanceStatus\\\": \\\"Unproven until actual paired Blacksmith datasets18 and24. No speed, new completion or quality improvement asserted.\\\"\\n}\\n\",\"localCommit\":\"258a81a15dbdebd7d4748a262752bbec021c8d35\",\"rootReview\":\"Root approved and published this exact source/tree after source QA and independent review 7d231d5e39df2b53c2b2f009e5041858c4aeae765ba9c822fc45acc21ffc0633. The source remains default off and has no real-board performance claim before this fresh full18/24 comparison. Protected validators and installed dependencies remain frozen.\",\"sourceTree\":\"3b89af647470148fe97e2730c9d0cf1a7c51382d\",\"status\":\"ROOT_REVIEWED_NEW_POST588_SOURCE\"}",
+      "evidenceSha256": "6bb2091ec373c380d06f119a88c946bd1feb75b33ab30c4b5e0ea6147082d695"
+    }
+  },
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 14,
+      "inputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e"
+    },
+    {
+      "dataset": "srj24",
+      "sample": 2,
+      "inputHash": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673"
+    }
+  ],
+  "pairOrders": [
+    "AB",
+    "BA",
+    "BA",
+    "AB"
+  ],
+  "plannedAttempts": 16,
+  "plannedJobs": 2,
+  "freshProcessPerAttempt": true,
+  "nativeWithinSampleCachesUnchanged": true,
+  "cpuProfiling": false,
+  "sampleTimeoutSeconds": 360,
+  "threads": 1,
+  "concurrency": 1,
+  "effort": 1,
+  "uniqueBoardDenominatorIncrease": false,
+  "additionalSolvedBoardClaim": false,
+  "overallOptimizationClaim": false,
+  "correctedClocks": false,
+  "estimators": {
+    "primaryTarget": "pipeline9JointDrcRepairSolver setup through next phase setup, with native constructor, setup+constructor and run intervals reported separately",
+    "unchangedControls": [
+      "official-start through Joint phase_setup_enter",
+      "initial highDensityRouteSolver setup through next phase_setup_enter"
+    ],
+    "wholeClock": "actual solver constructorTimeMs plus official elapsedTimeMs; own matched pair only",
+    "reports": [
+      "every individual paired ratio",
+      "ratio of paired clock sums",
+      "median paired ratio",
+      "AB and BA order strata"
+    ],
+    "wholeCohort": "Both strict, solved, physical/declared-supported clean, exact output/copper/inventory, all compact nonclock official+seven-report/ownership facts and native routing iteration facts equal",
+    "componentBeforeLaterFailure": "Retain every completed source-bound component interval separately; no whole timing/output credit",
+    "correction": "No clock normalization, prefix subtraction, historical timing pooling or discard of unfavorable repeats",
+    "interpretation": "Four repetitions are descriptive repeats of each of two selected boards, not four additional boards or a full-dataset/overall optimization claim"
+  },
+  "transport": "ORIGINAL_ACTIONS_API_SERVER_ZIP",
+  "priorControllersImmutable": true,
+  "authoritySha256": "67d852edd48186ce5cc97413c773c11f2bd793edef9a1407d0531e6266339058",
+  "workflowSha256": "edb86bc951f57e88c471e9f5802ce016cde98e7ba98abfa45d0ee5b27d992c45",
+  "runtimeSourceHashes": {
+    "bottleneck-artifact-carrier.py": "4fb63aa5ab8ffdab2b18342013eda457ffd329545bd63150fcd201657f6562d7",
+    "bottleneck-coverage.py": "35c41c383d699c8bf3c9c422cbed8b115a3f216c7310d35018393e2ca0bd2ca9",
+    "bottleneck-feature-contracts.json": "7375e4b9acf69b7eb7306d38156508a257272388acf1c940330879e827514da1",
+    "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "declared-intent-copper-v3.ts": "fee128fedcfd96c1d7e70e6597c027a4aa94fe2af69183fd1e38d77f65e8adf4",
+    "experiment-audit-adapter.ts": "ae6fb244421fc73593ba4765d5dbc9b06d2f18c279e96ebbe32f1118e8af40bf",
+    "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "parse-post588-experiments-log.py": "f9d59dc262f97d970eb7faf4df55a5f6a0a31c271de325c74fac427851518949",
+    "phase-checkpoint-observer.ts": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+    "post588-declared-qualification.py": "c4e23d4495b2b376a48c4e911d962f646ebd0cd8173eb903492e291796de2336",
+    "prepare-pinned-harness.py": "31f614b0e05b36eeb8a263838510cf7267eda8c5313b7671ea0f3d5c14565ce1",
+    "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
+    "run-scratch-repeat.py": "f186d039d3e6f3721fa1baf84ff9e257f654b8a8e739dab2fe811e6729eed7f3",
+    "scratch-repeat-artifact-carrier.py": "842ae41fb52a2a9efe4a4b935d5d55aa191a0e1dd692ddfbe9b8705f59084cae",
+    "seal-scratch-repeat-manifest.py": "d7681329e09867918496687e5b2e7368f9cff9b233a214482c3f2e536d3e7e03",
+    "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+    "tests/bottleneck-artifact-carrier-integrity.py": "40bef0b0b967f2e1971acbb2fda3c1ac42354dd4ec5e6d29addb07da978d2c63",
+    "tests/scratch-repeat-artifact-carrier-integrity.py": "ab0a361b0afc8d0958cd611c0a1e10ee1da8ffb9aa5f87c42367a2ed5ed686a6",
+    "tests/scratch-repeat-integrity.py": "d09ad78fad0e7f62e9689b0333bfd022332eddaebea6af5d970254682e229716"
+  },
+  "runSampleSourceSha256": "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396",
+  "externalControllerGuardSeconds": 480
+}
