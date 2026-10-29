@@ -113,6 +113,8 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
+  /** Retain low-level high-density search history for visualization. */
+  captureSearchDebug?: boolean
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
@@ -534,6 +536,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
