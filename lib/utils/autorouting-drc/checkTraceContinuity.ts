@@ -544,10 +544,7 @@ export const checkTraceContinuity = (
     for (const segment of segments) {
       if (
         segment.trace.route_thickness_mode === "interpolated" ||
-        Math.hypot(
-          segment.start.x - segment.end.x,
-          segment.start.y - segment.end.y,
-        ) <= 1e-9
+        (segment.start.x === segment.end.x && segment.start.y === segment.end.y)
       )
         continue
       addConductor(

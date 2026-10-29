@@ -251,4 +251,41 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
     expect(expected).toHaveLength(endX === 1.85 ? 0 : 1)
   }
+
+  const shortSegmentSrj = structuredClone(srj)
+  shortSegmentSrj.obstacles[1]!.center.x = 2.4
+  shortSegmentSrj.obstacles[1]!.layers = ["bottom"]
+  shortSegmentSrj.obstacles[1]!.connectedTo = ["pcb_smtpad_b", "pcb_port_b"]
+  shortSegmentSrj.connections[0]!.pointsToConnect[1]!.x = 2.4
+  shortSegmentSrj.connections[0]!.pointsToConnect[1]!.layer = "bottom"
+  for (const length of [0, 1e-10]) {
+    const shortTrace = createTrace("short_bottom_segment", [
+      { x: 2.4, y: 0 },
+      { x: 2.4 + length, y: 0 },
+    ])
+    for (const point of shortTrace.route) {
+      if (point.route_type !== "wire") continue
+      point.layer = "bottom"
+      point.width = 0.6
+    }
+    const circuit = convertToCircuitJson(shortSegmentSrj, [
+      createTrace("top_to_via", [
+        { x: 0, y: 0 },
+        { x: 2, y: 0 },
+      ]),
+      shortTrace,
+    ])
+    circuit.push({
+      type: "pcb_via",
+      pcb_via_id: "short_segment_bridge",
+      x: 2,
+      y: 0,
+      outer_diameter: 0.4,
+      hole_diameter: 0.2,
+      layers: ["top", "bottom"],
+    })
+    const expected = checkTracesAreContiguous(circuit)
+    expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
+    expect(expected).toHaveLength(length === 0 ? 1 : 0)
+  }
 })
