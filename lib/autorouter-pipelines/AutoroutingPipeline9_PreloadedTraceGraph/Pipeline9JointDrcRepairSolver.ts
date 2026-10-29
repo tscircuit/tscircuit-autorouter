@@ -1126,7 +1126,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
     this.traceContactInputHdRoutes = structuredClone([
       ...(params.originalNewHdRoutes ?? params.newHdRoutes),
-      ...this.movablePreloadedSections.map(section => section.hdRoute),
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
     ])
     this.traceContactGuard = new TraceContactGuard({
       srj: params.srjWithPointPairs as RepairSimpleRouteJson,
@@ -1135,10 +1135,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const initialCombinedRoutes = [
       ...params.newHdRoutes,
-      ...this.movablePreloadedSections.map(section => section.hdRoute),
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
     ]
-    if (currentDrc.errors.length === 0 &&
-      this.traceContactGuard.getNewContactPairs(initialCombinedRoutes).length === 0) {
+    if (
+      currentDrc.errors.length === 0 &&
+      this.traceContactGuard.getNewContactPairs(initialCombinedRoutes)
+        .length === 0
+    ) {
       this.solved = true
       return
     }
@@ -1654,10 +1657,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (this.traceContactRepairSolver) {
       const solver = this.traceContactRepairSolver
       solver.step()
-      if (solver.failed) throw new Error(`Pipeline9 trace contact repair failed: ${solver.error}`)
+      if (solver.failed)
+        throw new Error(
+          `Pipeline9 trace contact repair failed: ${solver.error}`,
+        )
       if (!solver.solved) return
       this.combinedOutput = solver.getOutput()
-      if (this.traceContactGuard.getNewContactPairs(this.combinedOutput).length > 0) {
+      if (
+        this.traceContactGuard.getNewContactPairs(this.combinedOutput).length >
+        0
+      ) {
         throw new Error("Pipeline9 trace contact repair published a new short")
       }
       this.stats = { ...this.stats, ...solver.stats }
@@ -2071,9 +2080,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   private finishWithTraceContactCheck(): void {
     if (!this.combinedOutput || !this.exactRepairParams) {
-      throw new Error("Pipeline9 final trace contact check is missing repair state")
+      throw new Error(
+        "Pipeline9 final trace contact check is missing repair state",
+      )
     }
-    const contacts = this.traceContactGuard.getNewContactPairs(this.combinedOutput)
+    const contacts = this.traceContactGuard.getNewContactPairs(
+      this.combinedOutput,
+    )
     if (contacts.length === 0) {
       this.solved = true
       return

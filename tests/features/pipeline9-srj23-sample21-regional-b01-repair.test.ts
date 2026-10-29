@@ -31,17 +31,22 @@ test("Pipeline9 finishes SRJ23 peer repair without increasing final DRC residue"
     "pcb_pad_pad_clearance_error",
   ])
   const jointRepair = solver.pipeline9JointDrcRepairSolver!
-  const signal = solver._getOutputHdRoutes().find(
-    (route) => route.connectionName === "source_net_6_mst0",
-  )!
+  const signal = solver
+    ._getOutputHdRoutes()
+    .find((route) => route.connectionName === "source_net_6_mst0")!
   const section = jointRepair.movablePreloadedSections.find(
-    (section) => section.syntheticConnectionName === "pipeline9_preloaded_drc_2",
+    (section) =>
+      section.syntheticConnectionName === "pipeline9_preloaded_drc_2",
   )!
-  const preloadedTrace = jointRepair.getUpdatedPreloadedTraces().find(
-    (trace) => trace.pcb_trace_id === section.originalTrace.pcb_trace_id,
-  )!
+  const preloadedTrace = jointRepair
+    .getUpdatedPreloadedTraces()
+    .find((trace) => trace.pcb_trace_id === section.originalTrace.pcb_trace_id)!
   const preloadedRoutes = convertPreloadedTraceToHdRoutes(
-    preloadedTrace, 0, scenario.layerCount, 0.3, jointRepair.params.connMap,
+    preloadedTrace,
+    0,
+    scenario.layerCount,
+    0.3,
+    jointRepair.params.connMap,
   )
   expect(signal).toBeDefined()
   expect(preloadedRoutes.length).toBeGreaterThan(0)
@@ -49,16 +54,17 @@ test("Pipeline9 finishes SRJ23 peer repair without increasing final DRC residue"
   for (let i = 1; i < signal.route.length; i++) {
     const a = signal.route[i - 1]!
     const b = signal.route[i]!
-    for (const preloaded of preloadedRoutes) for (let j = 1; j < preloaded.route.length; j++) {
-      const c = preloaded.route[j - 1]!
-      const d = preloaded.route[j]!
-      if (a.z !== b.z || c.z !== d.z || a.z !== c.z) continue
-      minimumCopperGap = Math.min(
-        minimumCopperGap,
-        segmentToSegmentMinDistance(a, b, c, d) -
-          (signal.traceThickness + preloaded.traceThickness) / 2,
-      )
-    }
+    for (const preloaded of preloadedRoutes)
+      for (let j = 1; j < preloaded.route.length; j++) {
+        const c = preloaded.route[j - 1]!
+        const d = preloaded.route[j]!
+        if (a.z !== b.z || c.z !== d.z || a.z !== c.z) continue
+        minimumCopperGap = Math.min(
+          minimumCopperGap,
+          segmentToSegmentMinDistance(a, b, c, d) -
+            (signal.traceThickness + preloaded.traceThickness) / 2,
+        )
+      }
   }
   expect(Number.isFinite(minimumCopperGap)).toBeTrue()
   expect(minimumCopperGap).toBeGreaterThanOrEqual(0)
