@@ -1,4 +1,4 @@
-"""Exact selected-feature srj18/BA synthetic populations; never executes routing."""
+"""Exact selected-dataset BA synthetic populations; never executes routing."""
 import contextlib
 import copy
 import importlib.util
@@ -22,25 +22,29 @@ def load(name, path):
 population = load("scoped_population_fixtures", ROOT / "tests/post588-parser-population.py")
 runtime = population.runtime
 sealer = load("scoped_manifest_sealer", ROOT / "seal-post588-manifest.py")
-manifest = copy.deepcopy(population.manifest)
+manifest = json.loads((ROOT / "post588-experiments-20261029.json").read_text())
 requested = copy.deepcopy(manifest["requestedExperiments"])
 assert set(requested) <= {"path-packing", "incremental-path", "sparse-force"}
+selected_dataset = manifest["dispatchRequest"]["dataset"]
+assert selected_dataset in runtime.COUNTS
+selected_count = runtime.COUNTS[selected_dataset]
+other_dataset = next(name for name in runtime.COUNTS if name != selected_dataset)
 manifest["requestedExperiments"] = requested
 manifest["experiments"] = [copy.deepcopy(next(item for item in population.manifest["experiments"] if item["id"] == name)) for name in requested]
-manifest["dispatchRequest"] = {"experiment": "all", "dataset": "srj18", "order": "BA"}
+manifest["dispatchRequest"] = {"experiment": "all", "dataset": selected_dataset, "order": "BA"}
 sealer.refresh(manifest, runtime)
 assert manifest["runSampleSourceSha256"] == "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396"
 assert manifest["expectedHarnessSourceHashes"]["adaptedHarnessHash"] == "27354d365585b69e85ba6aa8917ca4a28b4b9650faa2cc196e0cc9761461afc9"
-expected_scope = {"experiments": requested, "datasets": ["srj18"], "order": "BA",
-                  "plannedRecords": len(requested) * 32, "plannedMatrixJobs": len(requested),
+expected_scope = {"experiments": requested, "datasets": [selected_dataset], "order": "BA",
+                  "plannedRecords": len(requested) * selected_count * 2, "plannedMatrixJobs": len(requested),
                   "completeOriginalSelectedDatasetPopulations": True,
                   "fullyCharacterizesBothOriginalDatasets": False}
 assert runtime.execution_scope(manifest) == expected_scope
 assert manifest["executionScope"] == expected_scope
-assert manifest["plannedRecordsAllCandidates"] == len(requested) * 32 and manifest["plannedMatrixJobs"] == len(requested)
-assert manifest["plannedPairsPerCandidate"] == 16 and manifest["plannedRecordsPerCandidate"] == 32
+assert manifest["plannedRecordsAllCandidates"] == len(requested) * selected_count * 2 and manifest["plannedMatrixJobs"] == len(requested)
+assert manifest["plannedPairsPerCandidate"] == selected_count and manifest["plannedRecordsPerCandidate"] == selected_count * 2
 assert runtime.execution_matrix(manifest) == {"include": [
-    {"experiment": name, "dataset": "srj18", "count": 16, "order": "BA"} for name in requested]}
+    {"experiment": name, "dataset": selected_dataset, "count": selected_count, "order": "BA"} for name in requested]}
 rejected = 0
 with tempfile.TemporaryDirectory(prefix="post588-scoped-synthetic-") as directory:
     path = pathlib.Path(directory) / "manifest.json"
@@ -69,9 +73,9 @@ with tempfile.TemporaryDirectory(prefix="post588-scoped-synthetic-") as director
         else:
             raise AssertionError("Forged partial-scope authority accepted: " + key)
     path.write_text(json.dumps(manifest))
-    for feature, dataset, order in [("path-packing", "srj24", "BA"),
-                                    ("path-packing", "srj18", "AB"),
-                                    ("detailed-feedback", "srj18", "BA")]:
+    for feature, dataset, order in [(requested[0], other_dataset, "BA"),
+                                    (requested[0], selected_dataset, "AB"),
+                                    ("detailed-feedback", selected_dataset, "BA")]:
         result = subprocess.run(["python3", str(ROOT / "run-post588-experiments.py"),
             "--mode", "select", "--manifest", str(path), "--experiment", feature,
             "--dataset", dataset, "--order", order], capture_output=True, text=True)
@@ -81,7 +85,7 @@ with tempfile.TemporaryDirectory(prefix="post588-scoped-synthetic-") as director
         "--mode", "plan", "--manifest", str(path)], capture_output=True, text=True)
     assert plan.returncode == 0 and json.loads(json.loads(plan.stdout)["matrix"]) == runtime.execution_matrix(manifest)
     outside_plan = subprocess.run(["python3", str(ROOT / "run-post588-experiments.py"),
-        "--mode", "plan", "--manifest", str(path), "--dataset", "srj24"], capture_output=True, text=True)
+        "--mode", "plan", "--manifest", str(path), "--dataset", other_dataset], capture_output=True, text=True)
     assert outside_plan.returncode != 0 and "outside the sealed" in outside_plan.stderr
     rejected += 1
 
@@ -104,7 +108,7 @@ stats = {
         "changedTransitions": 3, "reusedLabels": 2, "repairedLabels": 1,
         "dependencyVisits": 4, "generatedTransitions": 6, "chargedWork": 12, "solvedQueries": 2}}
 base_record = copy.deepcopy(population.fixture.record)
-population.manifest, population.order, population.dataset = manifest, "BA", "srj18"
+population.manifest, population.order, population.dataset = manifest, "BA", selected_dataset
 for item in manifest["experiments"]:
     population.item = item
     population.fixture.record = copy.deepcopy(base_record)
@@ -117,15 +121,15 @@ for item in manifest["experiments"]:
         if selected_path not in item["evidencePaths"]:
             item["evidencePaths"].append(selected_path)
     population.fixture.record["official"]["routingMetrics"]["experimentAudit"]["evidence"] = evidence
-    records = [population.make_record(sample, arm) for sample in range(1, 17) for arm in "BA"]
+    records = [population.make_record(sample, arm) for sample in range(1, selected_count + 1) for arm in "BA"]
     parsed = population.parser.parse_log(population.make_log(records), runtime, manifest, item,
-        "srj18", "BA", population.run_id, population.controller_sha)
+        selected_dataset, "BA", population.run_id, population.controller_sha)
     assert parsed["analysisAuthority"] == "STRICT_ALL_RECORDS", parsed["integrityIssues"]
-    assert parsed["observedRecordCount"] == 32 and len(parsed["qualifiedTimingCohort"]) == 16
-    assert [(row["sampleNumber"], row["arm"]) for row in parsed["records"]] == [(n, arm) for n in range(1, 17) for arm in "BA"]
-    for changed_records in [records[:-2], [r for n in range(16) for r in records[2*n:2*n+2][::-1]]]:
+    assert parsed["observedRecordCount"] == selected_count * 2 and len(parsed["qualifiedTimingCohort"]) == selected_count
+    assert [(row["sampleNumber"], row["arm"]) for row in parsed["records"]] == [(n, arm) for n in range(1, selected_count + 1) for arm in "BA"]
+    for changed_records in [records[:-2], [r for n in range(selected_count) for r in records[2*n:2*n+2][::-1]]]:
         invalid = population.parser.parse_log(population.make_log(changed_records), runtime, manifest,
-            item, "srj18", "BA", population.run_id, population.controller_sha)
+            item, selected_dataset, "BA", population.run_id, population.controller_sha)
         assert invalid["analysisAuthority"] == "UNQUALIFIED_DIAGNOSTIC_ONLY"
         assert invalid["qualifiedTimingCohort"] == []
         rejected += 1
@@ -138,7 +142,7 @@ for item in manifest["experiments"]:
         assert type(parsed["records"][0]["featureCoverage"]["actualEvidence"][item["coverageContract"]["statsPath"]]["activated"]) is int
     else:
         assert parsed["records"][0]["featureCoverage"]["actualEvidence"][item["coverageContract"]["statsPath"]]["spatialIndexBuilds"] == 1
-    for outside_dataset, outside_order in [("srj18", "AB"), ("srj24", "BA")]:
+    for outside_dataset, outside_order in [(selected_dataset, "AB"), (other_dataset, "BA")]:
         population.dataset, population.order = outside_dataset, outside_order
         outside_records = [population.make_record(sample, arm) for sample in range(1, runtime.COUNTS[outside_dataset] + 1) for arm in outside_order]
         outside = population.parser.parse_log(population.make_log(outside_records), runtime, manifest,
@@ -149,7 +153,7 @@ for item in manifest["experiments"]:
         assert outside["qualifiedTimingCohort"] == [] and outside["qualifiedIdentitySets"] == {}
         assert outside["unrelatedIntegrityIssues"] == [{"kind": "requested_parse_outside_sealed_execution_scope"}]
         rejected += 1
-    population.dataset, population.order = "srj18", "BA"
+    population.dataset, population.order = selected_dataset, "BA"
 print(json.dumps({"status": "PASS", "syntheticOnly": True, "newSourceV2Scope": expected_scope,
-                  "sourceShapedBARecords": len(requested) * 32, "scopeAndPopulationForgeriesRejected": rejected,
+                  "sourceShapedBARecords": len(requested) * selected_count * 2, "scopeAndPopulationForgeriesRejected": rejected,
                   "proposalAndWorkerLocalSelectionAreNotFinalBoardProof": True}))
