@@ -9,14 +9,16 @@ import {
 test("does not move a via owned by an immutable preloaded trace", (): void => {
   const fixture = createPipeline9ViaCoalescenceFixture()
   const fixedRoute = fixture.routes.pop()!
-  fixture.srj.traces = [{
-    type: "pcb_trace",
-    pcb_trace_id: "preloaded_branch",
-    connection_name: fixedRoute.connectionName,
-    route: convertHdRouteToSimplifiedRoute(fixedRoute, 2, {
-      defaultViaHoleDiameter: 0.2,
-    }),
-  }]
+  fixture.srj.traces = [
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "preloaded_branch",
+      connection_name: fixedRoute.connectionName,
+      route: convertHdRouteToSimplifiedRoute(fixedRoute, 2, {
+        defaultViaHoleDiameter: 0.2,
+      }),
+    },
+  ]
   const originalRoutes = structuredClone(fixture.routes)
   const originalPreloads = structuredClone(fixture.srj.traces)
   const input = getPipeline9ViaCoalescenceInput(fixture, [fixedRoute])

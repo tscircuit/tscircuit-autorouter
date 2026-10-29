@@ -647,7 +647,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
             physicalLegalizationMode: cms.opts.physicalLegalizationMode,
-            physicalLegalizationIterations: cms.opts.physicalLegalizationIterations,
+            physicalLegalizationIterations:
+              cms.opts.physicalLegalizationIterations,
             minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           },

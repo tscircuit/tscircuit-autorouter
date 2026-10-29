@@ -1,19 +1,51 @@
 import { expect, test } from "bun:test"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  HighDensityIntraNodeRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 
 test("grown topology legalization runs after inverse scaling and reports through shared diagnostic counters", () => {
-  const node: NodeWithPortPoints = { capacityMeshNodeId: "test", center: { x: 0, y: 0 }, width: 3, height: 3, portPoints: [] }
+  const node: NodeWithPortPoints = {
+    capacityMeshNodeId: "test",
+    center: { x: 0, y: 0 },
+    width: 3,
+    height: 3,
+    portPoints: [],
+  }
   const diagnostics: Record<string, number> = {}
-  const solver = new GrowShrinkHighDensityIntraNodeSolver({ nodeWithPortPoints: node, physicalLegalization: true,
-    layerCount: 2, obstacleMargin: 0.1, priorityDiagnostics: diagnostics, fallbackToInvalidGeometryOnFailure: false })
+  const solver = new GrowShrinkHighDensityIntraNodeSolver({
+    nodeWithPortPoints: node,
+    physicalLegalization: true,
+    layerCount: 2,
+    obstacleMargin: 0.1,
+    priorityDiagnostics: diagnostics,
+    fallbackToInvalidGeometryOnFailure: false,
+  })
   const proposal: HighDensityIntraNodeRoute[] = [
-    { connectionName: "via-net", traceThickness: 0.1, viaDiameter: 0.3,
-      route: [{ x: -2, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }, { x: 2, y: 0, z: 1 }],
-      vias: [{ x: 0, y: 0 }] },
-    { connectionName: "wire-net", traceThickness: 0.1, viaDiameter: 0.3,
-      route: [{ x: -2, y: 0.44, z: 0 }, { x: 2, y: 0.44, z: 0 }], vias: [] },
+    {
+      connectionName: "via-net",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      route: [
+        { x: -2, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 1 },
+        { x: 2, y: 0, z: 1 },
+      ],
+      vias: [{ x: 0, y: 0 }],
+    },
+    {
+      connectionName: "wire-net",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      route: [
+        { x: -2, y: 0.44, z: 0 },
+        { x: 2, y: 0.44, z: 0 },
+      ],
+      vias: [],
+    },
   ]
   const portfolio = new PortfolioSingleIntraNodeSolver({ nodeWithPortPoints: node })
   // Supply a completed relaxed candidate at the public child-solver boundary.

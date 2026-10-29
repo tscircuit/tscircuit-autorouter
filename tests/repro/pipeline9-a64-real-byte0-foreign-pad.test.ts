@@ -71,7 +71,17 @@ test("Pipeline9 routes the exact real A64 byte-zero input without drilling forei
     ),
   )
 
-  // Both images are created before the intended correctness assertion.
+  expect(solver.failed, solver.error ?? "").toBeFalse()
+  expect(solver.solved).toBeTrue()
+  expect(inputSrj).toEqual(originalInput)
+  expect(connectedSignals).toBe(11)
+  expect(drillOverlaps).toHaveLength(0)
+  expect(
+    reference.errors,
+    JSON.stringify(reference.errors, null, 2),
+  ).toHaveLength(0)
+
+  // Validate physical correctness before comparing image goldens.
   // The focused image filters drawing primitives only, never solver input.
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
@@ -88,11 +98,4 @@ test("Pipeline9 routes the exact real A64 byte-zero input without drilling forei
     svgName: "ram-escape",
     tolerance: 0,
   })
-
-  expect(solver.failed, solver.error ?? "").toBeFalse()
-  expect(solver.solved).toBeTrue()
-  expect(inputSrj).toEqual(originalInput)
-  expect(connectedSignals).toBe(11)
-  expect(drillOverlaps).toHaveLength(0)
-  expect(reference.errors).toHaveLength(0)
 })

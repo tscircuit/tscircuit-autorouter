@@ -705,7 +705,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
       physicalLegalizationMode: this.params.physicalLegalizationMode,
-      physicalLegalizationIterations: this.params.physicalLegalizationIterations,
+      physicalLegalizationIterations:
+        this.params.physicalLegalizationIterations,
       minTraceToHoleEdgeClearance: this.params.minTraceToHoleEdgeClearance,
       minTraceToPadEdgeClearance: this.params.minTraceToPadEdgeClearance,
       viaToPadClearance: this.viaToPadClearance,

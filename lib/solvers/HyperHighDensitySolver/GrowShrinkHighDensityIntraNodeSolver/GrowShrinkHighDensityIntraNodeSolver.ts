@@ -6,7 +6,10 @@ import type {
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
-import { legalizeHighDensityRouteProposal, type PhysicalRouteLegalizationMode } from "../../HighDensitySolver/legalizeHighDensityRouteProposal"
+import {
+  legalizeHighDensityRouteProposal,
+  type PhysicalRouteLegalizationMode,
+} from "../../HighDensitySolver/legalizeHighDensityRouteProposal"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
@@ -239,7 +242,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
-    const legalizationMode = this.constructorParams.physicalLegalizationMode ??
+    const legalizationMode =
+      this.constructorParams.physicalLegalizationMode ??
       (this.constructorParams.physicalLegalization ? "full" : "off")
     if (this.scaleFactor > 1 && legalizationMode !== "off") {
       const result = legalizeHighDensityRouteProposal({
@@ -256,8 +260,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           this.constructorParams.minViaHoleEdgeToViaHoleEdgeClearance,
         maxIterations: this.constructorParams.physicalLegalizationIterations,
         mode: legalizationMode,
-        minTraceToHoleEdgeClearance: this.constructorParams.minTraceToHoleEdgeClearance,
-        minTraceToPadEdgeClearance: this.constructorParams.minTraceToPadEdgeClearance,
+        minTraceToHoleEdgeClearance:
+          this.constructorParams.minTraceToHoleEdgeClearance,
+        minTraceToPadEdgeClearance:
+          this.constructorParams.minTraceToPadEdgeClearance,
         viaToPadClearance: this.constructorParams.viaToPadClearance,
       })
       solvedRoutes = result.routes
@@ -267,11 +273,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         const counters = {
           physicalLegalizationProposalCount: 1,
           physicalLegalizationMeasuredProposalCount: Number(result.metricsRecorded),
-          physicalLegalizationEnergyMeasuredProposalCount: Number(result.energyMetricsRecorded),
-          physicalLegalizationDrillMeasuredProposalCount: Number(result.drillMetricsRecorded),
-          physicalLegalizationCopperOnlyCleanProposalCount: Number(result.independentCleanScope === "copper-only"),
-          physicalLegalizationCompressionOnlyProposalCount: Number(result.mode === "compression-only"),
-          physicalLegalizationSelectiveProposalCount: Number(result.mode === "selective"),
+          physicalLegalizationEnergyMeasuredProposalCount: Number(
+            result.energyMetricsRecorded,
+          ),
+          physicalLegalizationDrillMeasuredProposalCount: Number(
+            result.drillMetricsRecorded,
+          ),
+          physicalLegalizationCopperOnlyCleanProposalCount: Number(
+            result.independentCleanScope === "copper-only",
+          ),
+          physicalLegalizationCompressionOnlyProposalCount: Number(
+            result.mode === "compression-only",
+          ),
+          physicalLegalizationSelectiveProposalCount: Number(
+            result.mode === "selective",
+          ),
           physicalLegalizationEnergyEvaluationCount: result.energyEvaluationCount,
           physicalLegalizationGeometryWork: result.geometryWork,
           physicalLegalizationProjectionWork: result.projectionWork,
@@ -279,14 +295,31 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           physicalLegalizationImmutableConflictCount: result.immutableConflictCount,
           physicalLegalizationMovableLossBefore: result.movableLossBefore,
           physicalLegalizationMovableLossAfter: result.movableLossAfter,
-          physicalLegalizationNoMovableConflictsCount: Number(result.stopReason === "no-movable-conflicts"),
-          physicalLegalizationProgressPlateauCount: Number(result.stopReason === "progress-plateau"),
-          physicalLegalizationWorkLimitCount: Number(result.stopReason === "work-limit"),
-          physicalLegalizationCleanProposalCount: Number(result.status === "clean" && result.independentCleanScope === "copper-and-drill"),
-          physicalLegalizationImprovedProposalCount: Number(result.status === "improved-needs-repair"),
-          physicalLegalizationUnchangedProposalCount: Number(result.status === "unchanged-needs-repair"),
-          physicalLegalizationNotNeededProposalCount: Number(result.status === "not-needed"),
-          physicalLegalizationUnsupportedProposalCount: Number(result.status === "unsupported"),
+          physicalLegalizationNoMovableConflictsCount: Number(
+            result.stopReason === "no-movable-conflicts",
+          ),
+          physicalLegalizationProgressPlateauCount: Number(
+            result.stopReason === "progress-plateau",
+          ),
+          physicalLegalizationWorkLimitCount: Number(
+            result.stopReason === "work-limit",
+          ),
+          physicalLegalizationCleanProposalCount: Number(
+            result.status === "clean" &&
+              result.independentCleanScope === "copper-and-drill",
+          ),
+          physicalLegalizationImprovedProposalCount: Number(
+            result.status === "improved-needs-repair",
+          ),
+          physicalLegalizationUnchangedProposalCount: Number(
+            result.status === "unchanged-needs-repair",
+          ),
+          physicalLegalizationNotNeededProposalCount: Number(
+            result.status === "not-needed",
+          ),
+          physicalLegalizationUnsupportedProposalCount: Number(
+            result.status === "unsupported",
+          ),
           physicalLegalizationTimeMs: result.elapsedMs,
           physicalLegalizationIterations: result.iterations,
           physicalLegalizationPointsBefore: result.pointsBefore,
@@ -303,12 +336,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             result.candidateCopperPairs ?? result.copperPairsBefore,
           physicalLegalizationCandidateOverlapPairs:
             result.candidateOverlapPairs ?? result.overlapPairsBefore,
-          physicalLegalizationObstacleGuardRejectedCount:
-            Number(result.obstacleGuardRejected === true),
-          physicalLegalizationBoardGuardRejectedCount:
-            Number(result.boardGuardRejected === true),
-          physicalLegalizationIndependentCleanCheckPassedCount:
-            Number(result.independentCleanCheckPassed === true && result.independentCleanScope === "copper-and-drill"),
+          physicalLegalizationObstacleGuardRejectedCount: Number(
+            result.obstacleGuardRejected === true,
+          ),
+          physicalLegalizationBoardGuardRejectedCount: Number(
+            result.boardGuardRejected === true,
+          ),
+          physicalLegalizationIndependentCleanCheckPassedCount: Number(
+            result.independentCleanCheckPassed === true &&
+              result.independentCleanScope === "copper-and-drill",
+          ),
         }
         for (const [name, value] of Object.entries(counters)) {
           if (value !== null) diagnostics[name] = (diagnostics[name] ?? 0) + value

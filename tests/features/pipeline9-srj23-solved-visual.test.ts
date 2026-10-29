@@ -5,7 +5,13 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const SAMPLE_NUMBERS = [1, 3, 10]
 
-test("Pipeline9 visually solves representative SRJ23 samples", async () => {
+test("Pipeline9 visually solves representative SRJ23 samples", async (): Promise<void> => {
+  const snapshots: Array<{
+    svg: string
+    snapshotPath: string
+    scenarioName: string
+    tolerance: number
+  }> = []
   for (const sampleNumber of SAMPLE_NUMBERS) {
     const { scenario, scenarioName } = await loadScenarioBySampleNumber(
       "srj23",
@@ -31,12 +37,19 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
       sampleNumber === 10 && process.platform === "linux"
         ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
         : import.meta.path
-    await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    snapshots.push({
+      svg: getLastStepSvg(solver.visualize()),
       snapshotPath,
-      {
-        svgName: scenarioName,
-        tolerance: sampleNumber === 10 ? 0.035 : 0.01,
-      },
-    )
+      scenarioName,
+      tolerance: sampleNumber === 10 ? 0.035 : 0.01,
+    })
+  }
+
+  // Exercise every sample's correctness assertions before image comparisons.
+  for (const snapshot of snapshots) {
+    await expect(snapshot.svg).toMatchSvgSnapshot(snapshot.snapshotPath, {
+      svgName: snapshot.scenarioName,
+      tolerance: snapshot.tolerance,
+    })
   }
 })

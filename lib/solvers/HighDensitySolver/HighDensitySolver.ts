@@ -197,7 +197,8 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
-    this.physicalLegalizationMode = physicalLegalizationMode ?? (physicalLegalization ? "full" : "off")
+    this.physicalLegalizationMode =
+      physicalLegalizationMode ?? (physicalLegalization ? "full" : "off")
     this.physicalLegalization = this.physicalLegalizationMode !== "off"
     this.minTraceToHoleEdgeClearance = minTraceToHoleEdgeClearance
     this.minTraceToPadEdgeClearance = minTraceToPadEdgeClearance

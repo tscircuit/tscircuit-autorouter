@@ -789,8 +789,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     {
       solverName: "finalViaMergeSolver",
       createSolver: (): BaseSolver => {
-        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator || !this.prepareFinalViaMergeDrcInput) {
-          throw new Error("Pipeline9 final reported via merge is missing completed input")
+        if (
+          !this.combinedOutput ||
+          !this.cachedReferenceDrcEvaluator ||
+          !this.prepareFinalViaMergeDrcInput
+        ) {
+          throw new Error(
+            "Pipeline9 final reported via merge is missing completed input",
+          )
         }
         this.finalViaMergeSolver = new Pipeline9FinalViaMergeSolver({
           srj: this.params.srj,
@@ -857,10 +863,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
+    // Honor an explicit source routing margin without lowering the existing
+    // relaxed floor. Explicit pad-clearance settings keep their precedence.
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
+      Math.max(
+        RELAXED_DRC_OPTIONS.traceClearance ?? 0.1,
+        params.originalSrj.defaultObstacleMargin ?? 0,
+      )
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
@@ -1460,10 +1470,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.prepareFinalViaMergeDrcInput = (routes) => {
       let circuitJson: AnyCircuitElement[] | undefined
       this.referenceDrcValidationCount += 1
-      const evaluated = referenceDrcEvaluator({ traces: [], routes, hdRoutes: routes }, true,
-        (elements) => { circuitJson = elements })
-      if (!circuitJson) throw new Error("Pipeline9 via coalescence requires captured reference geometry")
-      return { errors: Array.isArray(evaluated) ? evaluated : evaluated.errors, circuitJson }
+      const evaluated = referenceDrcEvaluator(
+        { traces: [], routes, hdRoutes: routes },
+        true,
+        (elements) => {
+          circuitJson = elements
+        },
+      )
+      if (!circuitJson)
+        throw new Error(
+          "Pipeline9 via coalescence requires captured reference geometry",
+        )
+      return {
+        errors: Array.isArray(evaluated) ? evaluated : evaluated.errors,
+        circuitJson,
+      }
     }
     this.clearancePrecisionDrcEvaluator = ({
       routes,

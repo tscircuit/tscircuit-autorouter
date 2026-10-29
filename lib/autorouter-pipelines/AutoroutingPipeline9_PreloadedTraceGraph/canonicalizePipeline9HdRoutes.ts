@@ -20,8 +20,17 @@ export const canonicalizePipeline9HdRoutes = (
         }
         // Materialization accepts sub-micrometre coincidence; repair04 needs
         // exact XY equality. Preserve both endpoints with an explicit lead.
-        return [{ x: point.x, y: point.y, z: previous.z,
-          ...(point.traceThickness !== undefined ? { traceThickness: point.traceThickness } : {}) }, point]
+        return [
+          {
+            x: point.x,
+            y: point.y,
+            z: previous.z,
+            ...(point.traceThickness !== undefined
+              ? { traceThickness: point.traceThickness }
+              : {}),
+          },
+          point,
+        ]
       }),
     }),
   )

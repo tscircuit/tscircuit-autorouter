@@ -10,7 +10,9 @@ test("coalesces near-coincident same-net interior vias with full reference DRC",
   const original = structuredClone(fixture.routes)
   const input = getPipeline9ViaCoalescenceInput(fixture)
   expect(input.prepareReference(input.routes).errors).toHaveLength(1)
-  expect(input.prepareReference(input.routes).errors[0]!.type).toBe("pcb_via_clearance_error")
+  expect(input.prepareReference(input.routes).errors[0]!.type).toBe(
+    "pcb_via_clearance_error",
+  )
   const solver = new Pipeline9FinalViaMergeSolver(input)
   solver.solve()
   const result = solver.getResult()

@@ -77,18 +77,20 @@ export const createPipeline9ViaCoalescenceFixture = (
     })),
   )
   if (blockingPads) {
-    srj.obstacles.push(...[-1, 1].map((x) => ({
-      type: "rect" as const,
-      center: { x, y: 0.1 },
-      width: 0.05,
-      height: 0.14,
-      layers: [x < 0 ? "top" : "bottom"],
-      connectedTo: [`foreign_pad_${x}`],
-      circuitJsonMetadata: {
-        pcb_smtpad_id: `foreign_pad_${x}`,
-        pcb_port_id: `foreign_port_${x}`,
-      },
-    })))
+    srj.obstacles.push(
+      ...[-1, 1].map((x) => ({
+        type: "rect" as const,
+        center: { x, y: 0.1 },
+        width: 0.05,
+        height: 0.14,
+        layers: [x < 0 ? "top" : "bottom"],
+        connectedTo: [`foreign_pad_${x}`],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: `foreign_pad_${x}`,
+          pcb_port_id: `foreign_port_${x}`,
+        },
+      })),
+    )
   }
   const evaluate = (
     candidate: HighDensityRoute[],
@@ -145,7 +147,9 @@ export const getPipeline9ViaCoalescenceInput = (
         errors: addAutoroutingViaTraceIds({
           errors: reference.errors as unknown as Pipeline9DrcError[],
           circuitJson: reference.circuitJson,
-          evaluatedTraceIds: new Set(routes.map((route) => `${route.connectionName}_0`)),
+          evaluatedTraceIds: new Set(
+            routes.map((route) => `${route.connectionName}_0`),
+          ),
         }),
         circuitJson: reference.circuitJson,
       }
