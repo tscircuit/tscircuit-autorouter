@@ -112,7 +112,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
-    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/550e7644ef2c4dfda12559fdd4445e15ec0c2709",
+    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/22d82b4997331b7608847d311d77dfbf3f54e8d8",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
