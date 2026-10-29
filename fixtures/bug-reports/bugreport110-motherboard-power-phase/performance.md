@@ -1,5 +1,11 @@
 # Power-phase routing performance
 
+**Normal runtime: 174.84 seconds originally, 135.06 seconds with the preload fix,
+and 107.33 seconds with both fixes (39% less time overall).** These fresh-process
+runs have no CPU profiler enabled. The earlier profiler-on ratio of 3.88x is not
+representative of normal runtime: profiling disproportionately slowed the old
+power-expansion stage. The updated Cosmos deployment completed in 142.934 seconds.
+
 Follow-up to #3342 and the standalone reproduction in #3343.
 
 The captured motherboard phase has 638 preloaded traces and 21 new connections.
@@ -78,7 +84,36 @@ is also asserted. No baseline SVG or PNG changes appear in this fix's diff.
 See [the reproduction images](repro.md#visual-snapshots).
 
 
-## Complete end-to-end comparison
+## Complete end-to-end comparison without profiling
+
+All three runs use Bun 1.4.2 on the same M3 Pro, effort 1, no cache or workers,
+and fresh processes. The baseline uses the original preload source and the
+original expander at `01ce270`. Both dependency implementations were checked
+against their source revisions. Every complete output has the same 761 traces
+and full-output hash shown below.
+
+| Measurement | Original | Preload fix only | Both fixes |
+| --- | ---: | ---: | ---: |
+| Complete routing | 174.84 s | 135.06 s | 107.33 s |
+| Power expansion | 56.09 s | 55.95 s | 28.33 s |
+| Output traces | 761 | 761 | 761 |
+
+The total reduction is **38.6% (1.63x faster)**. The additional expander fix saves
+20.5% over the preload-only fix. These are individual runs, not statistical
+medians. Profiler-on measurements below are diagnostic observations and must not
+be substituted for these normal-runtime results.
+
+The actual updated Cosmos deployment reports **142.934 seconds** for Solve
+Completely at effort 1 with no cache. Its high-density stage took 77.27 seconds,
+power expansion 34.52 seconds and joint DRC repair 12.53 seconds. The old browser
+attempt crashed without completing, so no before/after browser speedup is claimed.
+
+The same-runtime regression also passes in Linux CI: both implementations produce
+`33f7a588cf23a06eb7a65220f516272bdf9af243896b55f64e3fc7fff72c9a59` there. This
+confirms that the Mac-versus-Linux golden-hash mismatch was platform/runtime
+variation, not a difference introduced by this optimization.
+
+## Complete CPU-profiled diagnostic comparison
 
 The complete 25-stage Pipeline 9 solve was profiled on an Apple M3 Pro with
 36 GiB RAM, Bun 1.4.2, effort 1, no cache and no worker runtime. These are full
@@ -94,7 +129,8 @@ the measured interval. See [the recorded results](end-to-end-results.json).
 | Power expansion, including stage setup | 295.16 s | 242.09 s | 28.41 s |
 | Output traces | 761 | 761 | 761 |
 
-The final run is 3.88 times faster than the original (74.2% less elapsed time).
+The profiler-on run shows a 3.88x ratio (74.2% less elapsed time), but this is
+not representative of normal runtime; use the unprofiled comparison above.
 These are individual profiling observations, not statistical benchmark medians.
 Unchanged stages vary with JIT, garbage collection and machine load: an additional
 preload-only run completed in 287.20 seconds. Do not attribute that variation to
@@ -143,12 +179,15 @@ address them; it must not be hidden by this performance optimization.
 
 ### Repeating the full solve
 
-Run from the repository root:
+Run from the repository root without profiling for normal-runtime measurements:
 
 ```sh
-ROUTE_LABEL=current bun --cpu-prof --cpu-prof-dir=/tmp/motherboard-e2e \
+ROUTE_LABEL=current bun \
   fixtures/bug-reports/bugreport110-motherboard-power-phase/profile-full-route.ts
 ```
+
+Add `--cpu-prof --cpu-prof-dir=/tmp/motherboard-e2e` after `bun` only when
+collecting a diagnostic profile; those timings include profiler overhead.
 
 The script writes the complete output, a DRC-annotated SVG and a summary under
 `/tmp/motherboard-e2e` (override with `ROUTE_OUTPUT_DIR`). To reproduce the original,
