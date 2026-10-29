@@ -109,6 +109,8 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Couple shared-edge port coordinates before detailed routing; default off. */
+  experimentJointPorts?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -581,8 +583,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          jointPortCoordinateOptimization: cms.opts.experimentJointPorts === true
+            ? { srj: cms.originalSrj } : undefined,
         },
       ],
+      {
+        onSolved: (cms) => {
+          if (cms.opts.experimentJointPorts === true) {
+            cms.stats.experimentJointPorts =
+              cms.uniformPortDistributionSolver!.stats.experimentJointPorts
+          }
+        },
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
