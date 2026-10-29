@@ -9,6 +9,7 @@ import {
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
@@ -295,9 +296,38 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.finish()
       return
     }
+    // Keep distant copper fixed while projecting a local clearance error.
+    // Nearby routes remain movable together even when the reference error
+    // identifies a via without identifying every route that owns it.
+    const movableRegions: {
+      center: { x: number; y: number }
+      radius: number
+    }[] = []
+    const centeredErrors = Array.isArray(reference)
+      ? reference
+      : (reference.errorsWithCenters ?? reference.errors)
+    for (const error of centeredErrors) {
+      const center = error.center ?? error.pcb_center
+      if (
+        center &&
+        typeof center === "object" &&
+        "x" in center &&
+        typeof center.x === "number" &&
+        Number.isFinite(center.x) &&
+        "y" in center &&
+        typeof center.y === "number" &&
+        Number.isFinite(center.y)
+      ) {
+        movableRegions.push({
+          center: { x: center.x, y: center.y },
+          radius: context.regionSizes[0]! / 2,
+        })
+      }
+    }
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: referenced.currentRoutes,
+      movableRegions,
       drcEvaluator: (input): DrcResult => {
         this.result.referenceValidationCount++
         return this.params.drcEvaluator(input)
@@ -375,7 +405,15 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const centeredErrors = Array.isArray(context.reference)
       ? context.reference
       : (context.reference.errorsWithCenters ?? context.reference.errors)
-    const centers = centeredErrors
+    // Match the portfolio's repair order. Via-pad centers can shift a trace's
+    // repair region into the fixed collar before its crossing is resolved.
+    // Candidate acceptance and publication still validate every error type.
+    const nonViaPadErrors = centeredErrors.filter(
+      (error) => !isViaPadDrcError(error),
+    )
+    const targetErrors =
+      nonViaPadErrors.length > 0 ? nonViaPadErrors : centeredErrors
+    const centers = targetErrors
       .map((error) => {
         // Crop around the physical pad when its display marker is far away.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
@@ -465,6 +503,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
+    // Center selection prioritizes trace crossings, but every violating route
+    // inside that region must enter negotiation, including via-pad contacts.
     const dirtyTraceIds = new Set(
       context.currentErrors.flatMap(getDrcErrorTraceIds),
     )
@@ -498,13 +538,18 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
+      // Keep the coarse grid for the first repair region, including after an
+      // improvement. Expanding an exhausted region also refines its grid so
+      // narrow detours can be found within the same remaining work budget.
       pathGridSizeScale:
-        context.currentErrors.length > 10
-          ? this.budget.pathGridSizeScale
-          : undefined,
+        this.budget.pathGridSizeScale === undefined
+          ? undefined
+          : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
-      viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
+      viaClearance:
+        context.srj.minPadEdgeToPadEdgeClearance ??
+        RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
     })
