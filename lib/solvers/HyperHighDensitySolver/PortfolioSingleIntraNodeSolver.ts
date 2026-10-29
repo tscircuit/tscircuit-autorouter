@@ -780,5 +780,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (solver.solver instanceof PathPackingIntraNodeSolver) {
+      const diagnostics = this.constructorParams.priorityDiagnostics
+      if (diagnostics) diagnostics.pathPackingPortfolioSelectedNodes =
+        (diagnostics.pathPackingPortfolioSelectedNodes ?? 0) + 1
+    }
   }
 }

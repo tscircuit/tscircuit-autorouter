@@ -40,6 +40,8 @@ test("actual Pipeline9 factory and workers propagate packing while omitted and f
       expect(solver.pathPackingStats!.instances).toBeGreaterThan(0)
       expect(solver.pathPackingStats!.workUnits).toBeGreaterThan(0)
       expect(Object.keys(solver.pathPackingStats!)).toHaveLength(16)
+      expect(Object.hasOwn(solver.benchmarkDiagnosticCounters, "pathPackingPortfolioSelectedNodes")).toBeTrue()
+      expect(solver.benchmarkDiagnosticCounters.pathPackingPortfolioSelectedNodes).toBeGreaterThanOrEqual(0)
       const runtime = createPipeline9TestRuntime(1)
       try {
         getGlobalInMemoryCache().clearCache()
@@ -49,9 +51,14 @@ test("actual Pipeline9 factory and workers propagate packing while omitted and f
         expect(worker.pathPackingStats!.requested).toBeTrue()
         expect(worker.pathPackingStats!.instances).toBeGreaterThan(0)
         expect(worker.pathPackingStats!.workUnits).toBeGreaterThan(0)
+        expect(worker.benchmarkDiagnosticCounters.pathPackingPortfolioSelectedNodes)
+          .toBe(solver.benchmarkDiagnosticCounters.pathPackingPortfolioSelectedNodes)
         expect(worker.routes).toEqual(solver.routes)
       } finally { await runtime.dispose() }
-    } else expect(solver.pathPackingStats).toBeUndefined()
+    } else {
+      expect(solver.pathPackingStats).toBeUndefined()
+      expect(Object.hasOwn(solver.benchmarkDiagnosticCounters, "pathPackingPortfolioSelectedNodes")).toBeFalse()
+    }
   }
   expect(outputs[1]).toEqual(outputs[0])
   expect(iterations[1]).toBe(iterations[0])

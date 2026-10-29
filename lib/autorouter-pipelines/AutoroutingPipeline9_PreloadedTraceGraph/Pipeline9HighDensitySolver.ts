@@ -445,7 +445,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
-    if (params.experimentPathPacking === true) this.pathPackingStats = createPathPackingAudit()
+    if (params.experimentPathPacking === true) {
+      this.pathPackingStats = createPathPackingAudit()
+      this.benchmarkDiagnosticCounters.pathPackingPortfolioSelectedNodes = 0
+    }
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}

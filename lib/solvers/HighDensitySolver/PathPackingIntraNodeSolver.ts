@@ -21,6 +21,15 @@ export class PathPackingIntraNodeSolver extends IntraNodeRouteSolver {
   readonly pathPackingStats: PathPackingAudit
   readonly params: Params
   private terminalRecorded = false
+  private completedBankProgress = 0
+
+  override computeProgress(): number {
+    // The inherited progress counts published routes. A simultaneous packer
+    // publishes no copper until every task is compatible, so expose only
+    // completed, unary-validated banks while the proposal remains unfinished.
+    if (this.solved) return 1
+    return this.completedBankProgress
+  }
 
   static hasSmallDomain(node: Params["nodeWithPortPoints"]): boolean {
     if (node.portPoints.length > 48 || node.portPoints.length < 4) return false
@@ -231,7 +240,7 @@ export class PathPackingIntraNodeSolver extends IntraNodeRouteSolver {
       }
       if (bank.length === 0) { this.finishUnknown("no validated candidate for a task"); return }
       banks.push(bank)
-      this.progress = Math.min(0.85, banks.length / tasks.length * 0.85)
+      this.completedBankProgress = Math.min(0.85, banks.length / tasks.length * 0.85)
     }
     const selected = yield* selectPackedPaths(banks, geometry)
     if (!selected) { this.finishUnknown("no compatible assignment in finite bank/state budget"); return }
