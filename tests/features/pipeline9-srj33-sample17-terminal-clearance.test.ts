@@ -14,6 +14,9 @@ test("Pipeline9 reports SRJ33 sample 17's unavoidable fixed-terminal clearance",
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  expect(
+    solver.pipeline9JointDrcRepairSolver!.stats.terminalEscapeCandidateCount,
+  ).toBe(0)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const { errors, circuitJson } = evaluateRelaxedDrc({
     inputSrj: scenario,

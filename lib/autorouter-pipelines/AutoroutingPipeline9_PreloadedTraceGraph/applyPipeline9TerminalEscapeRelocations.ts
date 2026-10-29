@@ -125,6 +125,58 @@ const rotatePoint = (point: Point, radians: number): Point => ({
   y: point.x * Math.sin(radians) + point.y * Math.cos(radians),
 })
 
+/** A fixed wire endcap bounds clearance regardless of its approach direction. */
+const hasReachedFixedTerminalClearance = (
+  route: HighDensityRoute,
+  obstacle: Obstacle,
+  error: Pipeline9DrcError,
+  layerCount: number,
+): boolean => {
+  if (
+    (error.type !== "pcb_pad_trace_clearance_error" &&
+      error.type !== "pcb_trace_error") ||
+    typeof error.actual_clearance !== "number" ||
+    error.actual_clearance < 0
+  ) {
+    return false
+  }
+  for (const endpointIndex of [0, route.route.length - 1]) {
+    const endpoint = route.route[endpointIndex]
+    const adjacent = route.route[endpointIndex === 0 ? 1 : endpointIndex - 1]
+    if (
+      !endpoint?.pcb_port_id ||
+      !adjacent ||
+      endpoint.z !== adjacent.z ||
+      endpoint.toNextSegmentType ||
+      adjacent.toNextSegmentType ||
+      !obstacle.layers.includes(mapZToLayerName(endpoint.z, layerCount))
+    ) {
+      continue
+    }
+    const segmentStart = endpointIndex === 0 ? endpoint : adjacent
+    const radius = (segmentStart.traceThickness ?? route.traceThickness) / 2
+    const localPoint = rotatePoint(
+      {
+        x: endpoint.x - obstacle.center.x,
+        y: endpoint.y - obstacle.center.y,
+      },
+      -((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180,
+    )
+    const distance =
+      obstacle.shape === "circle"
+        ? Math.max(
+            0,
+            Math.hypot(localPoint.x, localPoint.y) - obstacle.width / 2,
+          )
+        : Math.hypot(
+            Math.max(0, Math.abs(localPoint.x) - obstacle.width / 2),
+            Math.max(0, Math.abs(localPoint.y) - obstacle.height / 2),
+          )
+    if (distance - radius <= error.actual_clearance + 1e-9) return true
+  }
+  return false
+}
+
 const getTerminalCandidates = ({
   terminalObstacle,
   conflictingObstacle,
@@ -181,8 +233,7 @@ const createTerminalCandidate = ({
   bounds: SimpleRouteJson["bounds"]
   collapseAdjacent: boolean
 }): HighDensityRoute[] | undefined => {
-  const candidateRoutes = clonePipeline9HdRoutes(routes)
-  const route = candidateRoutes[routeIndex]
+  const route = routes[routeIndex]
   if (!route || route.route.length < 2) return undefined
   const pointIndex = endpointIndex === 0 ? 0 : route.route.length - 1
   const adjacentPointIndex = endpointIndex === 0 ? 1 : pointIndex - 1
@@ -221,10 +272,17 @@ const createTerminalCandidate = ({
     ) {
       return undefined
     }
-    route.route[adjacentPointIndex] = approach
+  }
+  // Only this route changes. Retain other routes instead of copying all of
+  // their vertices for every whole-board evaluation.
+  const candidateRoutes = [...routes]
+  const candidateRoute = clonePipeline9HdRoutes([route])[0]!
+  candidateRoutes[routeIndex] = candidateRoute
+  if (collapseAdjacent) {
+    candidateRoute.route[adjacentPointIndex] = approach
   } else {
     const segmentStart = endpointIndex === 0 ? endpoint : adjacentPoint
-    route.route.splice(endpointIndex === 0 ? 1 : pointIndex, 0, {
+    candidateRoute.route.splice(endpointIndex === 0 ? 1 : pointIndex, 0, {
       x: point.x,
       y: point.y,
       z: endpoint.z,
@@ -296,6 +354,25 @@ export const applyPipeline9TerminalEscapeRelocations = ({
       )
       if (routeIndex === undefined || !conflictingObstacle) continue
       const route = currentRoutes[routeIndex]!
+      const physicalObstacle = getObstacleById(
+        originalSrj,
+        getErrorObstacleId(error),
+      )
+      // With only this error left, an immutable endcap already attaining its
+      // clearance bound leaves no improvement for approach candidates to make.
+      if (
+        currentErrors.length === 1 &&
+        currentErrors[0] === error &&
+        physicalObstacle &&
+        hasReachedFixedTerminalClearance(
+          route,
+          physicalObstacle,
+          error,
+          originalSrj.layerCount,
+        )
+      ) {
+        continue
+      }
 
       let bestRoutes = currentRoutes
       let bestErrors = currentErrors
@@ -353,6 +430,14 @@ export const applyPipeline9TerminalEscapeRelocations = ({
             if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
               bestRoutes = candidateRoutes
               bestErrors = candidateErrors
+              if (bestErrors.length === 0) {
+                return {
+                  routes: bestRoutes,
+                  attemptedCandidateCount,
+                  acceptedCandidateCount: acceptedCandidateCount + 1,
+                  remainingErrors: bestErrors,
+                }
+              }
             }
           }
         }

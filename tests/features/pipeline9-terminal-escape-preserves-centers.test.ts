@@ -114,6 +114,7 @@ test("terminal escape repairs remove a pad collision without moving either endpo
     expect(
       errors.some((error) => JSON.stringify(error).includes("pcb_smtpad_10")),
     ).toBeTrue()
+    let foundCleanCandidate = false
     const result = applyPipeline9TerminalEscapeRelocations({
       srj,
       originalSrj: srj,
@@ -121,10 +122,16 @@ test("terminal escape repairs remove a pad collision without moving either endpo
       newConnections: srj.connections,
       syntheticConnectionNames: new Set(),
       drcEvaluator: ({ hdRoutes }) => {
+        // Once joint DRC is clean, more candidates cannot improve its score.
+        expect(foundCleanCandidate).toBeFalse()
         // Check every candidate, including candidates later rejected by DRC.
         expect(hdRoutes![0]!.route[0]).toEqual(originalRoute.route[0])
         expect(hdRoutes![0]!.route.at(-1)).toEqual(originalRoute.route.at(-1))
-        return evaluate(hdRoutes!).map((error) => ({ ...error }))
+        const candidateErrors = evaluate(hdRoutes!).map((error) => ({
+          ...error,
+        }))
+        foundCleanCandidate = candidateErrors.length === 0
+        return candidateErrors
       },
     })
     expect(result.acceptedCandidateCount).toBeGreaterThan(0)
