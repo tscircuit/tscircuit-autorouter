@@ -1,0 +1,76 @@
+name: Cache shadow three-case diagnostic
+on:
+  push:
+    branches: [codex/bottleneck-experiments-controller-20261029]
+    paths: [scripts/experiment-audit/cache-shadow-diagnostic-20261029.json]
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: plan
+        run: python3 scripts/experiment-audit/run-cache-shadow-diagnostic.py --mode plan
+  diagnostic:
+    needs: plan
+    name: cache-shadow / ${{ matrix.dataset }} / ${{ matrix.sample }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Select reviewed diagnostic source and unchanged native harness
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-cache-shadow-diagnostic.py --mode select
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify exact diagnostic tree and protected native validators
+        run: python3 controller/scripts/experiment-audit/run-cache-shadow-diagnostic.py --mode verify-checkout --checkout candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install fresh diagnostic dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Verify complete installed dependency source bytes
+        run: python3 controller/scripts/experiment-audit/run-cache-shadow-diagnostic.py --mode verify-dependencies --checkout candidate
+      - name: Build diagnostic source
+        working-directory: candidate
+        run: bun run build
+      - name: Prepare unchanged native harness and bounded observer
+        run: python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-main --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Run exactly one original candidate case without profiler or performance credit
+        run: python3 controller/scripts/experiment-audit/run-cache-shadow-diagnostic.py --mode run --checkout candidate --dataset '${{ matrix.dataset }}' --sample '${{ matrix.sample }}' --output 'results/${{ matrix.dataset }}-${{ matrix.sample }}'
+      - name: Frame exact retained inner raw ZIP in authenticated producer log
+        if: always()
+        run: python3 controller/scripts/experiment-audit/framed-artifact-log.py emit --directory 'results/${{ matrix.dataset }}-${{ matrix.sample }}' --archive 'transport/${{ matrix.dataset }}-${{ matrix.sample }}.zip' --case '${{ matrix.dataset }}:${{ matrix.sample }}'
+      - name: Retain identical framed inner ZIP and all raw diagnostic facts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-shadow-diagnostic-${{ matrix.dataset }}-${{ matrix.sample }}
+          path: |
+            results
+            transport
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,28 @@
+{
+  "candidatePath": "highDensityRouteSolver.futurePointCacheStats",
+  "shadowPath": "highDensityRouteSolver.futurePointCacheShadowStats",
+  "shadowFields": [
+    "instances",
+    "lookups",
+    "legacyHits",
+    "legacyMisses",
+    "legacyDistanceEvaluations",
+    "candidateHits",
+    "candidateMisses",
+    "candidateDistanceEvaluations",
+    "bothHits",
+    "legacyOnlyHits",
+    "candidateOnlyHits",
+    "bothMisses",
+    "assertedLegacyHits",
+    "invalidations",
+    "uncacheableQueries",
+    "indexMismatches"
+  ],
+  "stageName": "highDensityRouteSolver",
+  "semantics": "Legacy cache work is a counterfactual on the observed candidate-owned query prefix, not an actual baseline run or an independent correctness oracle on native misses.",
+  "optimizationTimingCredit": false,
+  "solvedBoardCredit": false,
+  "admittedContextsOnly": true,
+  "admissionScope": "Only internally admitted owned primitive-XYZ/native-key contexts with initial future count at least8. Not all nearest-function calls or all initial-HD work; no scaling by the whole-function profiler pool."
+}

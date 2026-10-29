@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "campaign": "cache-shadow-diagnostic-20261029",
+  "diagnosticType": "CACHE_SHADOW",
+  "diagnosticOnly": true,
+  "cpuProfiling": false,
+  "optimizationTimingCredit": false,
+  "solvedBoardCredit": false,
+  "actualBaselineExecution": false,
+  "candidateExecutions": 3,
+  "sampleTimeoutSeconds": 360,
+  "threads": 1,
+  "concurrency": 1,
+  "effort": 1,
+  "harnessSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "candidate": {
+    "id": "cache-shadow-diagnostic",
+    "pr": 3199,
+    "option": "experimentFuturePointCache",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentFuturePointCache": true
+    },
+    "evidencePaths": [
+      "highDensityRouteSolver.futurePointCacheStats",
+      "highDensityRouteSolver.futurePointCacheShadowStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityRouteSolver.futurePointCacheStats",
+      "stageName": "highDensityRouteSolver",
+      "countFields": [
+        "instances",
+        "lookups",
+        "hits",
+        "misses",
+        "distanceEvaluations",
+        "entryProbes",
+        "occupiedMissProbes",
+        "stores",
+        "evictions",
+        "coldStores",
+        "invalidations",
+        "identityInvalidations",
+        "lengthInvalidations",
+        "uncacheableQueries",
+        "mixedHashLookups",
+        "associativeLookups"
+      ],
+      "timeFields": [],
+      "eligibleField": "instances",
+      "executedField": "lookups",
+      "identityEquations": [
+        {
+          "left": "lookups",
+          "sum": [
+            "hits",
+            "misses"
+          ]
+        },
+        {
+          "left": "misses",
+          "sum": [
+            "stores",
+            "uncacheableQueries"
+          ]
+        },
+        {
+          "left": "stores",
+          "sum": [
+            "coldStores",
+            "evictions"
+          ]
+        }
+      ],
+      "minimumComparisons": [
+        [
+          "mixedHashLookups",
+          "associativeLookups"
+        ],
+        [
+          "lookups",
+          "mixedHashLookups"
+        ],
+        [
+          "lookups",
+          "uncacheableQueries"
+        ],
+        [
+          "invalidations",
+          "identityInvalidations"
+        ],
+        [
+          "invalidations",
+          "lengthInvalidations"
+        ],
+        [
+          "occupiedMissProbes",
+          "evictions"
+        ]
+      ],
+      "maximumFields": {},
+      "linearBounds": [
+        {
+          "left": {
+            "mixedHashLookups": 1
+          },
+          "relation": "<=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1
+          }
+        },
+        {
+          "left": {
+            "entryProbes": 1
+          },
+          "relation": ">=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1
+          }
+        },
+        {
+          "left": {
+            "entryProbes": 1
+          },
+          "relation": "<=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1,
+            "associativeLookups": 1
+          }
+        },
+        {
+          "left": {
+            "occupiedMissProbes": 1
+          },
+          "relation": "<=",
+          "right": {
+            "entryProbes": 1,
+            "hits": -1
+          }
+        },
+        {
+          "left": {
+            "invalidations": 1
+          },
+          "relation": "<=",
+          "right": {
+            "identityInvalidations": 1,
+            "lengthInvalidations": 1
+          }
+        }
+      ],
+      "workProofKind": "MODIFIED_CACHE_EXECUTION",
+      "eligibleDefinition": "Actual native solver instances admitted with at least8 futurepoints; constructors may legitimately never receive a query",
+      "executedDefinition": "Actual future-point distance lookups in the owned solver contexts, including real batch work beyond the accepted serial prefix",
+      "changedDefinition": "Actual mixed-hash lookup path executed. Hit counts are not additional avoided baseline scans: baseline already has a256-entry cache. Only fresh paired runtime and exact published outputs assess improvement.",
+      "positiveMechanismFields": [
+        "mixedHashLookups"
+      ],
+      "comparisonFields": []
+    },
+    "candidateSha": "cfd91d1555aa8b90d7c108880612b5b8c101c436",
+    "candidateTree": "fbff6160523fffef2ebc8ec44df75ee1802e2d3f",
+    "sourceBranch": "codex/experiment-future-cache-shadow-20261029",
+    "sourceIsCurrentPrHead": false,
+    "sourceQualification": {
+      "status": "PASS_ROOT_REVIEWED",
+      "sourceTree": "fbff6160523fffef2ebc8ec44df75ee1802e2d3f",
+      "fullTypesExitCode": 0,
+      "fullBuildExitCode": 0,
+      "focusedTestsExitCode": 0,
+      "evidenceText": "{\"agentQualificationSha256\":\"8d7c5103526f9f33a7ac68b127aae9c2044f3f3f7ee8bbc4618f9823f97786f8\",\"agentQualificationText\":\"{\\n  \\\"schemaVersion\\\": 1,\\n  \\\"status\\\": \\\"PASS_FROZEN_DIAGNOSTIC_SOURCE_SYNTHETIC_QUALIFICATION_NO_REAL_BOARD_OR_TIMING_CREDIT\\\",\\n  \\\"createdAtUtc\\\": \\\"2026-10-29T20:26:56.147461+00:00\\\",\\n  \\\"localCommit\\\": \\\"86a8ac1bd68f4f7dc16d9fd1fd55bf1eeccb2b28\\\",\\n  \\\"tree\\\": \\\"fbff6160523fffef2ebc8ec44df75ee1802e2d3f\\\",\\n  \\\"nativeBaseline\\\": \\\"e703f0499188f858b2b5e571ac80091d4c10733a\\\",\\n  \\\"measuredCandidateParent\\\": \\\"6c65d58dcfe238dab5da6d2ff8df93562d7997ed\\\",\\n  \\\"measuredCandidateTree\\\": \\\"88f002ba5bc650188dba93086b1a916dbcfdfb5b\\\",\\n  \\\"worktree\\\": \\\"/tmp/autorouter-bottleneck-future-shadow\\\",\\n  \\\"sourceClean\\\": true,\\n  \\\"sourceDeltaFromMeasured\\\": {\\n    \\\"files\\\": 9,\\n    \\\"insertions\\\": 219,\\n    \\\"deletions\\\": 5\\n  },\\n  \\\"defaultOffFlag\\\": \\\"experimentFuturePointCache\\\",\\n  \\\"measuredSourceQaDistPrUntouched\\\": true,\\n  \\\"mechanism\\\": {\\n    \\\"scope\\\": \\\"Diagnostic-only exact-current-policy counterfactual legacy-cache work on the observed admitted immutable owned query stream.\\\",\\n    \\\"currentOwnedPolicyAstExactAfterRemovingOnlyShadowSnapshotsAndTwoRecordCalls\\\": true,\\n    \\\"publicLegacyBodyExactAfterRemovingExistingDispatch\\\": true,\\n    \\\"shadowSlotCount\\\": 256,\\n    \\\"shadowTypedPayloadBytes\\\": 9216,\\n    \\\"extraJsBookkeepingAndRuntimeWork\\\": true,\\n    \\\"shadowHash\\\": \\\"Number.isSafeInteger(pointKey) ? Math.abs(pointKey % 256) : -1\\\",\\n    \\\"guard\\\": \\\"Exact XYZ and viaPenaltyDistance, native -2empty/-1null sentinel and future array identity/length invalidation.\\\",\\n    \\\"misses\\\": \\\"Use internal candidate accepted index and count full current array length; never indexOf or a repeated distance scan.\\\",\\n    \\\"hits\\\": \\\"Assert exact selected index including null(-1), increment mismatch and throw explicitly on divergence.\\\",\\n    \\\"querySnapshot\\\": \\\"Reuse candidate-captured native key and penalty; capture numeric native query XYZ once before candidate lookup. Normal internal generated query nodes are primitive-number records.\\\",\\n    \\\"noSecondDistanceScan\\\": true,\\n    \\\"noHeuristicBudgetSchedulingOrSelectionChanges\\\": true,\\n    \\\"indexAssertionsAreNotIndependentMissCorrectness\\\": \\\"On shadow misses the winner comes from the real candidate; selection correctness is separately covered by unchanged scan AST, pointwise actual Native and route/prefix parity.\\\"\\n  },\\n  \\\"telemetry\\\": {\\n    \\\"existingMainPath\\\": \\\"highDensityRouteSolver.futurePointCacheStats\\\",\\n    \\\"existing16KeyCounterLedgerUnchanged\\\": true,\\n    \\\"shadowMainPath\\\": \\\"highDensityRouteSolver.futurePointCacheShadowStats\\\",\\n    \\\"keys\\\": [\\n      \\\"instances\\\",\\n      \\\"lookups\\\",\\n      \\\"legacyHits\\\",\\n      \\\"legacyMisses\\\",\\n      \\\"legacyDistanceEvaluations\\\",\\n      \\\"candidateHits\\\",\\n      \\\"candidateMisses\\\",\\n      \\\"candidateDistanceEvaluations\\\",\\n      \\\"bothHits\\\",\\n      \\\"legacyOnlyHits\\\",\\n      \\\"candidateOnlyHits\\\",\\n      \\\"bothMisses\\\",\\n      \\\"assertedLegacyHits\\\",\\n      \\\"invalidations\\\",\\n      \\\"uncacheableQueries\\\",\\n      \\\"indexMismatches\\\"\\n    ],\\n    \\\"ownNumericDataObject\\\": true,\\n    \\\"offOwnPropertyAbsent\\\": true,\\n    \\\"worker\\\": \\\"Actual completed batch result sum exactly once before accepted-prefix filtering; completed out-of-prefix execution retained.\\\",\\n    \\\"invariants\\\": [\\n      \\\"lookups=legacyHits+legacyMisses=candidateHits+candidateMisses\\\",\\n      \\\"lookups=bothHits+legacyOnlyHits+candidateOnlyHits+bothMisses\\\",\\n      \\\"legacyHits=bothHits+legacyOnlyHits=assertedLegacyHits\\\",\\n      \\\"candidateHits=bothHits+candidateOnlyHits\\\",\\n      \\\"indexMismatches=0 for successful coherent queries\\\",\\n      \\\"shadow instances/lookups/candidateHits/candidateMisses/candidateDistanceEvaluations/invalidations/uncacheableQueries equal corresponding existing actual candidate counters\\\",\\n      \\\"all16 nonnegative safe integers at bounded actual checkpoints\\\"\\n    ],\\n    \\\"partialScope\\\": \\\"Unexpected throw inside a query can leave partial telemetry; treat that record as an error/partial, never infer a completed output.\\\",\\n    \\\"performanceScope\\\": \\\"Would-scan point counts compare placement work only. Every diagnostic clock is ineligible for optimization or clean timing credit; added shadow work/memory can shorten wall-time-bounded prefixes.\\\"\\n  },\\n  \\\"validation\\\": {\\n    \\\"focusedTests\\\": 11,\\n    \\\"assertions\\\": 228187,\\n    \\\"failures\\\": 0,\\n    \\\"independentActualUnmodifiedNativePointwiseScanWorkOracle\\\": true,\\n    \\\"nativeScanIteratorCountsWithoutInstrumentingCandidateScan\\\": true,\\n    \\\"nullTieSignedZeroNonfiniteAliasesLayersPenaltyAndIdentityLengthEpochControls\\\": true,\\n    \\\"explicitShadowMismatchThrowAndPoisonedIteratorNoSecondScan\\\": true,\\n    \\\"existingNativeSearchBudgetQueueCostsRoutesPrefixAndNormalPriorityParity\\\": true,\\n    \\\"existingOneUseCopiedReplayedReplacedForgedOverridePrimitiveRichPublicMutableLegacyControls\\\": true,\\n    \\\"priorityRejectedViaReadmission\\\": true,\\n    \\\"sourceWorkerMainAndMultiNodeMergeOnceOutsidePrefix\\\": true,\\n    \\\"fullTypes\\\": true,\\n    \\\"sparseFixtureTypescriptFiles\\\": 428,\\n    \\\"sparseFixtureBytes\\\": 539037,\\n    \\\"fixturesMaterializedExactTrackedMeasuredParentBlobs\\\": true,\\n    \\\"workerEsmDtsBuild\\\": true,\\n    \\\"compiledFullPrefixOmittedFalseTrueFlows\\\": 12,\\n    \\\"compiledNativeInvariantErrorFlows\\\": 3,\\n    \\\"compiledTwoWayBoundedFailureFlows\\\": 3,\\n    \\\"compiledTwoWayLookups\\\": 3852,\\n    \\\"compiledTwoWayLegacyHitIndexAssertions\\\": 2344,\\n    \\\"compiledTwoWayIndexMismatches\\\": 0,\\n    \\\"compiledLargeOutcome\\\": \\\"Same native MAX12 bounded failure at13 iterations for omitted/false/true, same accepted geometry/error/iteration state. Branch qualification only, not solved-board or performance evidence.\\\",\\n    \\\"compiledSymbolScope\\\": \\\"Inherited originalPortPoint Symbols do not cross worker structured clone; serial flags compare full native metadata; worker parity uses native public structured-clone geometry/IDs.\\\",\\n    \\\"oneTestPerFile\\\": true,\\n    \\\"initialBuildLauncherFailure\\\": \\\"First build invocation could not locate bun on PATH before worker/build execution. Preserved build-initial-launcher.log; fixed PATH and exact frozen source build succeeded. No candidate solver failure was hidden.\\\",\\n    \\\"formatterOrLinterRun\\\": false,\\n    \\\"realBoardsLocallyRouted\\\": 0,\\n    \\\"noBenchmarkExecuted\\\": true,\\n    \\\"noRemoteMutations\\\": true\\n  },\\n  \\\"sourceFiles\\\": {\\n    \\\"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\\\",\\n      \\\"sha256\\\": \\\"1f3ed350b7385d1fc22d0bdba145831202719384dab645f86e48d8fa390417d4\\\",\\n      \\\"bytes\\\": 64675\\n    },\\n    \\\"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts\\\",\\n      \\\"sha256\\\": \\\"0044d0faa08188cfc2ec25fbdf2df11b9b501b199c0764d7f31395798f741035\\\",\\n      \\\"bytes\\\": 3104\\n    },\\n    \\\"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\\\",\\n      \\\"sha256\\\": \\\"eb16ca31a01a9c4d8e3681d0d9379a51c797c90fb83c88df5b088f9b76ec1127\\\",\\n      \\\"bytes\\\": 47341\\n    },\\n    \\\"lib/solvers/HighDensitySolver/HighDensitySolver.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/HighDensitySolver.ts\\\",\\n      \\\"sha256\\\": \\\"b6f7d516d6dcd6c5b163c0d28780a8fe6b9a8990ddd7d85ad09233af32d5a3a9\\\",\\n      \\\"bytes\\\": 20648\\n    },\\n    \\\"lib/solvers/HighDensitySolver/IntraNodeSolver.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/IntraNodeSolver.ts\\\",\\n      \\\"sha256\\\": \\\"2ca97a40583e63cc78faa998f93052cc48f23887d3a2eb4fcf9c2333b23991f0\\\",\\n      \\\"bytes\\\": 20299\\n    },\\n    \\\"lib/solvers/HighDensitySolver/PriorityDagIntraNodeSolver.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/PriorityDagIntraNodeSolver.ts\\\",\\n      \\\"sha256\\\": \\\"c2af78e55cd808c9485ec8f999025fd9b4e051fa41fc5ea2f7992106f3c304d5\\\",\\n      \\\"bytes\\\": 23971\\n    },\\n    \\\"lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts\\\",\\n      \\\"sha256\\\": \\\"34d6c29c1a2d2971f07317fae2e421d1b4d472c5f26e5616d545ac8a04ae0b05\\\",\\n      \\\"bytes\\\": 15480\\n    },\\n    \\\"lib/solvers/HighDensitySolver/futurePointCacheContext.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/futurePointCacheContext.ts\\\",\\n      \\\"sha256\\\": \\\"b3cd63f13352f8c9708562ed18b5daf6903a48fa8b66ee2c15856ebda7cf28c9\\\",\\n      \\\"bytes\\\": 2509\\n    },\\n    \\\"lib/solvers/HighDensitySolver/futurePointCacheShadow.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/solvers/HighDensitySolver/futurePointCacheShadow.ts\\\",\\n      \\\"sha256\\\": \\\"d7ec6d6e2f0b9dce7daaa5fe24c9ef0e954ffca8111f7008f524d0512987815b\\\",\\n      \\\"bytes\\\": 3329\\n    },\\n    \\\"tests/fixtures/futurePointCacheSynthetic.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/fixtures/futurePointCacheSynthetic.ts\\\",\\n      \\\"sha256\\\": \\\"246fedbd100d912b272cb37d9430181b60237071b13dd1675ee5b72d3896ebf6\\\",\\n      \\\"bytes\\\": 2139\\n    },\\n    \\\"tests/future-point-cache-intra-priority-prefix.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-intra-priority-prefix.test.ts\\\",\\n      \\\"sha256\\\": \\\"c99723733079c3bae2ee28eff081e7bd60d7548f7af0c53410ac2f7571cf0e0e\\\",\\n      \\\"bytes\\\": 2245\\n    },\\n    \\\"tests/future-point-cache-native-prefix.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-native-prefix.test.ts\\\",\\n      \\\"sha256\\\": \\\"2fbad05d4f0a58d523c2270100963239ef61c74b01064351cb6568ec34322db8\\\",\\n      \\\"bytes\\\": 2154\\n    },\\n    \\\"tests/future-point-cache-nearest-differential.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-nearest-differential.test.ts\\\",\\n      \\\"sha256\\\": \\\"1cdb28cd38bf9aa0b1ff3507c325542ea470e6302b8bc55d04818e5f076b6d43\\\",\\n      \\\"bytes\\\": 2856\\n    },\\n    \\\"tests/future-point-cache-owned-inputs.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-owned-inputs.test.ts\\\",\\n      \\\"sha256\\\": \\\"9ef3e0b7fb3ebdde4d15b5c8c6973bd417f96c8becd1378e04d2071707fbe121\\\",\\n      \\\"bytes\\\": 2437\\n    },\\n    \\\"tests/future-point-cache-owner-admission.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-owner-admission.test.ts\\\",\\n      \\\"sha256\\\": \\\"13e9fedfa37e747e92f2fc28016e188525bc6aead7593ca288c5a50930df4db3\\\",\\n      \\\"bytes\\\": 3559\\n    },\\n    \\\"tests/future-point-cache-pipeline-worker.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-pipeline-worker.test.ts\\\",\\n      \\\"sha256\\\": \\\"02011fac62e13097a482c56e708476eab9b45b55fc2f918faf81aea4a0bce6d1\\\",\\n      \\\"bytes\\\": 4019\\n    },\\n    \\\"tests/future-point-cache-priority-via-readmission.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-priority-via-readmission.test.ts\\\",\\n      \\\"sha256\\\": \\\"7341afb5436f832f5b078af740b00750f0743625f7ff473ad16c8ab36315316b\\\",\\n      \\\"bytes\\\": 2061\\n    },\\n    \\\"tests/future-point-cache-shadow-divergence.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-shadow-divergence.test.ts\\\",\\n      \\\"sha256\\\": \\\"0f7ab292e73c79cc6d959ebf20c6d36ed7b35bc21f47ab7ac933fabfa755d9f5\\\",\\n      \\\"bytes\\\": 1035\\n    },\\n    \\\"tests/future-point-cache-shadow-native-work.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-shadow-native-work.test.ts\\\",\\n      \\\"sha256\\\": \\\"0167a38edc790b0f211327ac32d5f98ea1d74c0710526d78cd2575c648b7b0c4\\\",\\n      \\\"bytes\\\": 4130\\n    },\\n    \\\"tests/future-point-cache-worker-merge-once.test.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/tests/future-point-cache-worker-merge-once.test.ts\\\",\\n      \\\"sha256\\\": \\\"2a19dac5bbcd1de4db67cc490a6e8d552df9788354a64e35288ab9de0b0b43a6\\\",\\n      \\\"bytes\\\": 3794\\n    }\\n  },\\n  \\\"builtArtifacts\\\": {\\n    \\\"dist/chunk-G3PMV62Z.js\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/chunk-G3PMV62Z.js\\\",\\n      \\\"sha256\\\": \\\"f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4\\\",\\n      \\\"bytes\\\": 666\\n    },\\n    \\\"dist/chunk-G3PMV62Z.js.map\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/chunk-G3PMV62Z.js.map\\\",\\n      \\\"sha256\\\": \\\"cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3\\\",\\n      \\\"bytes\\\": 71\\n    },\\n    \\\"dist/index.d.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/index.d.ts\\\",\\n      \\\"sha256\\\": \\\"a1ce568279f3ca85cb730b24024e468d745c7c48f4985c04dc6638f689cbf59a\\\",\\n      \\\"bytes\\\": 318742\\n    },\\n    \\\"dist/index.js\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/index.js\\\",\\n      \\\"sha256\\\": \\\"c5a683053efab6d0091feee9dc2062a19be841b403b18b0c9af3d568da4ff10c\\\",\\n      \\\"bytes\\\": 3169062\\n    },\\n    \\\"dist/index.js.map\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/index.js.map\\\",\\n      \\\"sha256\\\": \\\"774bc4bf717c719cbcb9b32b315a8ec017525416453b4503d757c4612daa48a0\\\",\\n      \\\"bytes\\\": 16191281\\n    },\\n    \\\"dist/runtime/bun.d.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/bun.d.ts\\\",\\n      \\\"sha256\\\": \\\"c076a1bdf49b89a141fc255d4b0464b7b819a580d9b3fb3db8e059c5ca4433ee\\\",\\n      \\\"bytes\\\": 510\\n    },\\n    \\\"dist/runtime/bun.js\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/bun.js\\\",\\n      \\\"sha256\\\": \\\"6eab51aa07b413d06bca0852f62429078125df7bdb1de8d4d78d51fc1a31612f\\\",\\n      \\\"bytes\\\": 1048925\\n    },\\n    \\\"dist/runtime/bun.js.map\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/bun.js.map\\\",\\n      \\\"sha256\\\": \\\"c513de4ba4dca1fed0d5e5d0990cffabb228799705b182aa51bab78f66a625b9\\\",\\n      \\\"bytes\\\": 1084749\\n    },\\n    \\\"dist/runtime/node.d.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/node.d.ts\\\",\\n      \\\"sha256\\\": \\\"3a2ad69e62ea3900bfd09066a4c5644c5f8335efdf1aa783e294dd88c1bcf9cc\\\",\\n      \\\"bytes\\\": 511\\n    },\\n    \\\"dist/runtime/node.js\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/node.js\\\",\\n      \\\"sha256\\\": \\\"4b484a0a096fb677466f0081045fd0c96a6330f6c9c20a6c972cfe2915103283\\\",\\n      \\\"bytes\\\": 1100218\\n    },\\n    \\\"dist/runtime/node.js.map\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/dist/runtime/node.js.map\\\",\\n      \\\"sha256\\\": \\\"fac11f9b2a6f767f8139d335f037aed9cb5ddf0464298bceb4b56c0bc049ef34\\\",\\n      \\\"bytes\\\": 1140536\\n    },\\n    \\\"lib/runtime/generated/bunWorkerSource.d.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/runtime/generated/bunWorkerSource.d.ts\\\",\\n      \\\"sha256\\\": \\\"6550201561a85b4509b44d148f3e99b5f5f9880c6e3ccb22670496f407e66ae2\\\",\\n      \\\"bytes\\\": 51\\n    },\\n    \\\"lib/runtime/generated/bunWorkerSource.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/runtime/generated/bunWorkerSource.ts\\\",\\n      \\\"sha256\\\": \\\"6aafbe60a5179dfb0a89dc55129910fd1e8ae5b0f66440e27d08a84b31479fa5\\\",\\n      \\\"bytes\\\": 1060079\\n    },\\n    \\\"lib/runtime/generated/nodeWorkerSource.d.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/runtime/generated/nodeWorkerSource.d.ts\\\",\\n      \\\"sha256\\\": \\\"6550201561a85b4509b44d148f3e99b5f5f9880c6e3ccb22670496f407e66ae2\\\",\\n      \\\"bytes\\\": 51\\n    },\\n    \\\"lib/runtime/generated/nodeWorkerSource.ts\\\": {\\n      \\\"path\\\": \\\"/tmp/autorouter-bottleneck-future-shadow/lib/runtime/generated/nodeWorkerSource.ts\\\",\\n      \\\"sha256\\\": \\\"904f41e70cf4280ef85356289c8b6441feac4a722f899d4a1e1110074f0879a9\\\",\\n      \\\"bytes\\\": 1112757\\n    }\\n  },\\n  \\\"logsAndReproduction\\\": {\\n    \\\"focused-tests-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/focused-tests-final.log\\\",\\n      \\\"sha256\\\": \\\"22b5910dd2e1d0e3d4fa38d7eff5d10b51723a99df165b1ea88f509b86b06cd0\\\",\\n      \\\"bytes\\\": 2000\\n    },\\n    \\\"full-types-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/full-types-final.log\\\",\\n      \\\"sha256\\\": \\\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\\\",\\n      \\\"bytes\\\": 0\\n    },\\n    \\\"build-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/build-final.log\\\",\\n      \\\"sha256\\\": \\\"f53f7a5a108d77ded32005d3dbfd0562fdebf341df9ae0176b8c97bc38e31468\\\",\\n      \\\"bytes\\\": 1194\\n    },\\n    \\\"build-initial-launcher.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/build-initial-launcher.log\\\",\\n      \\\"sha256\\\": \\\"e8ebbbaa147d4a4f10986f11d269e28e5d6e1b9ce31cb06ec089862862cbe87e\\\",\\n      \\\"bytes\\\": 235\\n    },\\n    \\\"compiled-workers-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-workers-final.log\\\",\\n      \\\"sha256\\\": \\\"1161a3e4c7a74ba50ee48a026a902adbd30e72ebdf361f5cff2bc98845e3a2aa\\\",\\n      \\\"bytes\\\": 1506\\n    },\\n    \\\"compiled-error-controls-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-error-controls-final.log\\\",\\n      \\\"sha256\\\": \\\"4ed28c9f7890cdd8cc6f62d70d9cc6418695dc3bbfae2dd51652a8b871660a5a\\\",\\n      \\\"bytes\\\": 833\\n    },\\n    \\\"compiled-associative-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-associative-final.log\\\",\\n      \\\"sha256\\\": \\\"0429ab0b4f97dc28eeae0036b0bea3b0b6b91e402cc4debcc7d0800b35fa014a\\\",\\n      \\\"bytes\\\": 1849\\n    },\\n    \\\"source-proof-final.log\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/source-proof-final.log\\\",\\n      \\\"sha256\\\": \\\"0f0b441d1498f09deedef0ce8bedbc97060b59fde12a29ac68e50c73406dbbb7\\\",\\n      \\\"bytes\\\": 442\\n    },\\n    \\\"COMPILED-WORKERS.json\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/COMPILED-WORKERS.json\\\",\\n      \\\"sha256\\\": \\\"fd3cc6000bf2add27a46de5451154fa851684fffb2dc44422eb1279574fda1f4\\\",\\n      \\\"bytes\\\": 5799\\n    },\\n    \\\"COMPILED-ERROR-CONTROLS.json\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/COMPILED-ERROR-CONTROLS.json\\\",\\n      \\\"sha256\\\": \\\"07872a3f2d969acec3a7fe656919ce28853cac94e105997e54dec689053f5f58\\\",\\n      \\\"bytes\\\": 599\\n    },\\n    \\\"COMPILED-ASSOCIATIVE.json\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/COMPILED-ASSOCIATIVE.json\\\",\\n      \\\"sha256\\\": \\\"0429ab0b4f97dc28eeae0036b0bea3b0b6b91e402cc4debcc7d0800b35fa014a\\\",\\n      \\\"bytes\\\": 1849\\n    },\\n    \\\"SOURCE-POLICY-PROOF.json\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/SOURCE-POLICY-PROOF.json\\\",\\n      \\\"sha256\\\": \\\"0f0b441d1498f09deedef0ce8bedbc97060b59fde12a29ac68e50c73406dbbb7\\\",\\n      \\\"bytes\\\": 442\\n    },\\n    \\\"compiled-workers.ts\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-workers.ts\\\",\\n      \\\"sha256\\\": \\\"f8ba689a7e27d3f6929a49a5345e5047b24097b4b536f01eb86cfdc24e2dfa5f\\\",\\n      \\\"bytes\\\": 5539\\n    },\\n    \\\"compiled-error-controls.ts\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-error-controls.ts\\\",\\n      \\\"sha256\\\": \\\"9c6d4f5f1f81e36538f79f87c47a498666510ab568d9681101b867e194da9921\\\",\\n      \\\"bytes\\\": 1521\\n    },\\n    \\\"compiled-associative.ts\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/compiled-associative.ts\\\",\\n      \\\"sha256\\\": \\\"187981d079039f13df7163f9441544e57c8ba4e69077529be51a846f66746e42\\\",\\n      \\\"bytes\\\": 3215\\n    },\\n    \\\"prove-source.ts\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/prove-source.ts\\\",\\n      \\\"sha256\\\": \\\"08880215ebfb7d55c3bc844b183d714560d6954701efd3c9ae7cfc58bdd95bdd\\\",\\n      \\\"bytes\\\": 3305\\n    },\\n    \\\"run-qualified-source.sh\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/run-qualified-source.sh\\\",\\n      \\\"sha256\\\": \\\"808999bf6dea077192717bebe806644dca9038e8d790afa4f6eedb6f05c63b99\\\",\\n      \\\"bytes\\\": 878\\n    },\\n    \\\"sparse-fixtures.json\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/sparse-fixtures.json\\\",\\n      \\\"sha256\\\": \\\"01f0d3fa97b8b150b5311261cd4986d6b5cd9822eeba13dedcccbb7a7251fe98\\\",\\n      \\\"bytes\\\": 85677\\n    },\\n    \\\"source-from-e703.patch\\\": {\\n      \\\"path\\\": \\\"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-cache-shadow/source-from-e703.patch\\\",\\n      \\\"sha256\\\": \\\"7a526f403cffc112c34b121477b80546d75bc13aa3e79b80cf7482cefae7287d\\\",\\n      \\\"bytes\\\": 62514\\n    }\\n  },\\n  \\\"dependencies\\\": {\\n    \\\"newOrEditedDependencies\\\": false,\\n    \\\"nativeVendoring\\\": false,\\n    \\\"sharedReadOnlyNodeModules\\\": \\\"/tmp/autorouter-post588-dependencies/node_modules\\\",\\n    \\\"bunPath\\\": \\\"/tmp/autorouter-post588-bun/package/bin/bun\\\",\\n    \\\"bunVersion\\\": \\\"1.4.2\\\",\\n    \\\"frozenBunLock\\\": null\\n  },\\n  \\\"limits\\\": [\\n    \\\"The measured d639/tree88f source and its QA/dist are unchanged; these are separate source identities.\\\",\\n    \\\"Shadow counts are counterfactual cache-work on the actual observed query stream, not timing savings or an independent nearest-selection oracle on legacy misses.\\\",\\n    \\\"Source admits normal internally owned immutable futures only; arbitrary mutation through exposed internal fields during that lifetime remains outside the reviewed contract.\\\",\\n    \\\"A separate direct-only lean candidate removes hot telemetry and rare two-way/layout-loop behavior together; it is not an instrumentation-only ablation and old clean timings do not transfer.\\\",\\n    \\\"Fresh Blacksmith diagnostics and source-qualified native-baseline clean outcomes remain with root.\\\"\\n  ]\\n}\\n\",\"localCommit\":\"86a8ac1bd68f4f7dc16d9fd1fd55bf1eeccb2b28\",\"rootReview\":\"Root approved this exact standalone diagnostic source/tree after QA and independent review bd18cd897fb7685dc36cfa5006c3657af14cc25b529e2cfe6be65097d75c6ac9. Current measured PR3199 remains d63949cb. Same current candidate cache policy plus bounded legacy-cache shadow on admitted internally owned query prefixes only. No performance/solved-board credit or independent correctness oracle on native misses.\",\"sourceTree\":\"fbff6160523fffef2ebc8ec44df75ee1802e2d3f\",\"status\":\"ROOT_REVIEWED_NEW_POST588_SOURCE\"}",
+      "evidenceSha256": "f91fee38f094113f2ac9049e2030bc770d09315cabbad275d7e1cdad05555bfd"
+    },
+    "publication": {
+      "publishedCommit": "cfd91d1555aa8b90d7c108880612b5b8c101c436",
+      "expectedTree": "fbff6160523fffef2ebc8ec44df75ee1802e2d3f",
+      "reviewedLocalCommit": "86a8ac1bd68f4f7dc16d9fd1fd55bf1eeccb2b28"
+    }
+  },
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 14,
+      "inputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e"
+    },
+    {
+      "dataset": "srj24",
+      "sample": 2,
+      "inputHash": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673"
+    },
+    {
+      "dataset": "srj24",
+      "sample": 17,
+      "inputHash": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11"
+    }
+  ],
+  "transport": "Exact producer-framed retained inner ZIP/member bytes; not original Actions API server-ZIP identity. Authenticated producer/run/head/attempt/case and independent source/input/oracle raw qualification required.",
+  "queryEvidence": "Counterfactual native-cache work on the observed candidate-owned query prefix. No actual baseline run and no independent correctness oracle on native misses.",
+  "allClean336AndPrior568Immutable": true,
+  "noTimingPoolOrSolvedBoardCredit": true,
+  "authoritySha256": "646c6ee36a6855e3a4fe49cc8961ad5a28417f80b8abebcd58a22b9b85f93339",
+  "workflowSha256": "932279942c026622cd476fc1c7786ba9b5c1eefce36b46a5543a03c8f5d7c11a",
+  "runtimeSourceHashes": {
+    "cache-shadow-contract.json": "c17b20d17af5abf27383b7196b69e3b241b546346f0852159e639a5c7e3fe591",
+    "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "declared-intent-copper-v3.ts": "fee128fedcfd96c1d7e70e6597c027a4aa94fe2af69183fd1e38d77f65e8adf4",
+    "experiment-audit-adapter.ts": "ae6fb244421fc73593ba4765d5dbc9b06d2f18c279e96ebbe32f1118e8af40bf",
+    "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8",
+    "framed-artifact-log.py": "08e5656a44766dd5b5cf36ae87ac73ff597c91ef05295b33373e66ca1736268b",
+    "future-cache-artifact-carrier.py": "0f8af497567795dbec9f4bccc8c3741f8b474b7cc0353f7e64fa91a154022208",
+    "future-cache-coverage.py": "d0325ffe81a169324c389d654eae6e8aef861b37d0a183f76f148cacf8dcffce",
+    "future-cache-feature-contract.json": "992a48ee50904f4f9ad38ce38a35f88feb6d7171b7dc99a445e7c40ba2612247",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "parse-post588-experiments-log.py": "f9d59dc262f97d970eb7faf4df55a5f6a0a31c271de325c74fac427851518949",
+    "phase-checkpoint-observer.ts": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+    "post588-declared-qualification.py": "c4e23d4495b2b376a48c4e911d962f646ebd0cd8173eb903492e291796de2336",
+    "prepare-pinned-harness.py": "31f614b0e05b36eeb8a263838510cf7267eda8c5313b7671ea0f3d5c14565ce1",
+    "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
+    "run-cache-shadow-diagnostic.py": "8963ed084d1e29c93deab6ec4afc55495f7706e4e49f979103bb373d595c8d45",
+    "run-future-cache-experiment.py": "a494c28c543d5c30c9f641e703f048c6cf2b0dc37f20ca0dadb34d17ce35fac3",
+    "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
+    "seal-cache-shadow-manifest.py": "d701cd8ae70023872b329b12c7a2508e38214d3590b2a61907cfd32f8596dd08",
+    "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+    "tests/cache-shadow-diagnostic-integrity.py": "3111fd35efa9e80b7a42c29145d14df17bf1d160d24e1f641753fdebe88ba94f",
+    "tests/future-cache-artifact-carrier-integrity.py": "103c2253e8cf90111d791583b0ce7db2b7b252e4787536493c88135d74e2b39c"
+  },
+  "runSampleSourceSha256": "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396",
+  "admittedContextsOnly": true,
+  "wholeFunctionProfilerPoolScalingCredit": false,
+  "admissionScope": "Only internally admitted owned primitive-XYZ/native-key contexts with initial future count at least8. Not all nearest-function calls or all initial-HD work; no scaling by the whole-function profiler pool."
+}
