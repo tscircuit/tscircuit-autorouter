@@ -19,11 +19,10 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
       ...issue3130Input.obstacles,
       {
         type: "rect",
-        shape: "circle",
         isNonPlatedHole: true,
         obstacleId: "test_hole",
         center: { x: 1.5, y: 1.9 },
-        width: 0.5,
+        width: 0.7,
         height: 0.5,
         layers: ["top", "bottom"],
         connectedTo: [],
@@ -189,4 +188,103 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
   expect(
     observedMessages.some((message) => message.includes("non-plated hole")),
   ).toBeTrue()
+
+  const evaluateWidths = createPipeline9AutoroutingDrcEvaluator({
+    originalSrj: input,
+    srjWithPointPairs: input,
+    drcOptions: { includeTraceContinuity: false },
+  })
+  for (const kind of ["wire", "via"] as const) {
+    const candidate = structuredClone(traces)
+    const horizontal = candidate[2]!
+    horizontal.route = [
+      {
+        route_type: "wire",
+        x: -0.8,
+        y: 1.5,
+        layer: "top",
+        width: kind === "wire" ? 0.1 : 0.4,
+      },
+      kind === "wire"
+        ? { route_type: "wire", x: 2.5, y: 1.5, layer: "top", width: 0.4 }
+        : {
+            route_type: "via",
+            x: 2.5,
+            y: 1.5,
+            from_layer: "top",
+            to_layer: "bottom",
+          },
+    ]
+    const reference = evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: input,
+      routedTraces: candidate,
+      drcOptions: { includeTraceContinuity: false },
+    })
+    const pairTypes = reference.errors
+      .filter(
+        (error) =>
+          ("pcb_trace_error_id" in error &&
+            error.pcb_trace_error_id ===
+              "overlap_trace_horizontal_typed_clearance_pad") ||
+          ("pcb_pad_id" in error &&
+            error.pcb_pad_id === "typed_clearance_pad" &&
+            error.pcb_trace_id === horizontal.pcb_trace_id),
+      )
+      .map((error) => error.type)
+    expect(pairTypes).toEqual(
+      kind === "wire"
+        ? ["pcb_trace_error", "pcb_pad_trace_clearance_error"]
+        : ["pcb_trace_error"],
+    )
+    expect<unknown>(evaluateWidths(candidate)).toEqual(reference)
+  }
+
+  const original = structuredClone(input)
+  original.connections[2]!.pointsToConnect.push({
+    x: 0.5,
+    y: 1.1,
+    layer: "top",
+    pcb_port_id: "joined_port",
+  })
+  original.obstacles.push({
+    type: "rect",
+    center: { x: 0.5, y: 1.1 },
+    width: 0.04,
+    height: 0.04,
+    layers: ["top"],
+    connectedTo: ["joined_port"],
+    circuitJsonMetadata: {
+      pcb_smtpad_id: "joined_pad",
+      pcb_port_id: "joined_port",
+    },
+  })
+  const paired = structuredClone(original)
+  paired.connections[2]!.pointsToConnect.pop()
+  paired.connections[3]!.pointsToConnect = []
+  const evaluateConnectivity = createPipeline9AutoroutingDrcEvaluator({
+    originalSrj: original,
+    srjWithPointPairs: paired,
+  })
+  for (const connected of [false, true, false]) {
+    const candidate = structuredClone(traces.slice(2, 4))
+    const endpoint = candidate[1]!.route[0]!
+    if (endpoint.route_type !== "wire")
+      throw new Error("Expected a wire endpoint")
+    endpoint.y = connected ? 1.1 : 1.2
+    const reference = evaluateRelaxedDrc({
+      inputSrj: original,
+      srjWithPointPairs: paired,
+      routedTraces: candidate,
+    })
+    expect(
+      reference.errors.filter(
+        (error) =>
+          "pcb_trace_error_id" in error &&
+          error.pcb_trace_error_id ===
+            "overlap_trace_horizontal_trace_vertical",
+      ),
+    ).toHaveLength(connected ? 0 : 1)
+    expect<unknown>(evaluateConnectivity(candidate)).toEqual(reference)
+  }
 })
