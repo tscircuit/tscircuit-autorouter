@@ -78,5 +78,25 @@ test.failing(
       expect({ x: opposite.x, y: opposite.y }).toEqual({ x: port.x, y: port.y })
     }
     expect(fixture.nodes).toEqual(original)
+
+    // Physical bounds must preserve the two-layer obstacle policy. A blocker
+    // on the opposite layer still prevents this legacy family from moving.
+    const blocked = new UniformPortDistributionSolver({
+      ...(params as UniformPortDistributionSolverInput),
+      obstacles: [
+        {
+          type: "rect",
+          center: { x: edge!.center.x + 0.025, y: edge!.center.y },
+          width: 0.05,
+          height: 0.6,
+          layers: ["bottom"],
+          connectedTo: ["foreign-net"],
+        },
+      ],
+    })
+    blocked.solve()
+    for (const [index, node] of blocked.getOutput().entries()) {
+      expect(node.portPoints).toEqual(original[index]!.portPoints)
+    }
   },
 )

@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
+import { materializePipeline9HdRouteVias } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializePipeline9HdRouteVias"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { loadA64DdrResizedSearch } from "../fixtures/loadA64DdrResizedSearch"
 
 test.failing(
   "the real A64 DDR retry solves without allocating uniform enlarged grids",
-  (): void => {
+  async (): Promise<void> => {
     const params = loadA64DdrResizedSearch()
     const solver = new GrowShrinkHighDensityIntraNodeSolver(params)
     const inspected = new Set<object>()
@@ -28,6 +30,15 @@ test.failing(
           (Math.ceil(node.width / 0.1) + 1) *
           (Math.ceil(node.height / 0.1) + 1) *
           node.availableZ!.length
+        // Preserve the actual failure state in the repro branch's SVG. On the
+        // fix branch, the same test reaches the solved-route snapshot below.
+        if (states >= uniformStates / 2) {
+          await expect(
+            getSvgFromGraphicsObject(solver.visualize(), {
+              backgroundColor: "white",
+            }),
+          ).toMatchSvgSnapshot(import.meta.path)
+        }
         expect(states).toBeLessThan(uniformStates / 2)
       }
     }
@@ -35,6 +46,9 @@ test.failing(
     expect(solver.solved).toBeTrue()
     expect(solver.growthAttempts).toBeGreaterThan(0)
     expect(solver.solvedRoutes).toHaveLength(19)
+    expect(() =>
+      materializePipeline9HdRouteVias(solver.solvedRoutes),
+    ).not.toThrow()
     expect(
       new Set(solver.solvedRoutes.map((route) => route.connectionName)),
     ).toEqual(
@@ -56,5 +70,10 @@ test.failing(
         ).toBeTrue()
       }
     }
+    await expect(
+      getSvgFromGraphicsObject(solver.visualize(), {
+        backgroundColor: "white",
+      }),
+    ).toMatchSvgSnapshot(import.meta.path)
   },
 )
