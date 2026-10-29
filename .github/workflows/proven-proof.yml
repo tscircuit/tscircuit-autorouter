@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        candidate: [neighbor_alloc]
+        candidate: [force_work]
     env:
       PROOF_CANDIDATE: ${{ matrix.candidate }}
       PYTHONDONTWRITEBYTECODE: "1"

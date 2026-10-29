@@ -4,7 +4,8 @@
   "candidates": {
     "neighbor_alloc": "bfb3780ceddb5ca1f2cd757d90f4939b37546434",
     "scalar_via": "84f6a2a676dfabe4b16de1ad5827932b3a74940d",
-    "future_cost": "771f04e6bb479d9184f3738871e675ae3d1ac69d"
+    "future_cost": "771f04e6bb479d9184f3738871e675ae3d1ac69d",
+    "force_work": "5676d3ca5a87f9030e8fba103bbd3aeef6a43114"
   },
   "bun_version": "1.4.3",
   "cpu_lanes": 1,
