@@ -1,0 +1,77 @@
+[
+  {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "id": "native-map-only",
+    "pr": 3202,
+    "option": "experimentSharedRepairGeometry",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentSharedRepairGeometry": true
+    },
+    "evidencePaths": [
+      "pipeline9JointDrcRepairSolver.initialRepairConnectivityStats"
+    ],
+    "coverageContract": {
+      "statsPath": "pipeline9JointDrcRepairSolver.initialRepairConnectivityStats",
+      "stageName": "pipeline9JointDrcRepairSolver",
+      "censusCompletionEvent": "active_subsolver_constructed",
+      "countFields": [
+        "extraNormalizationCalls",
+        "sourceMapBuilds",
+        "routeMapBuilds",
+        "sourceMapReuses",
+        "routeMapReuses"
+      ],
+      "timeFields": [],
+      "eligibleField": "sourceMapBuilds",
+      "executedField": "sourceMapBuilds",
+      "positiveSavedFields": [
+        "sourceMapReuses",
+        "routeMapReuses"
+      ],
+      "savedComparisons": [],
+      "identityEquations": [],
+      "minimumComparisons": [
+        [
+          "sourceMapBuilds",
+          "sourceMapReuses"
+        ],
+        [
+          "routeMapBuilds",
+          "routeMapReuses"
+        ],
+        [
+          "extraNormalizationCalls",
+          "sourceMapBuilds"
+        ],
+        [
+          "extraNormalizationCalls",
+          "routeMapBuilds"
+        ]
+      ],
+      "maximumFields": {
+        "extraNormalizationCalls": 2,
+        "sourceMapBuilds": 1,
+        "routeMapBuilds": 1,
+        "sourceMapReuses": 1,
+        "routeMapReuses": 1
+      },
+      "eligibleDefinition": "Actual successful initial native source-map builds in the two constructor evaluations; later native maps excluded",
+      "executedDefinition": "Actual successful initial native source-map construction; source and route units remain distinct",
+      "changedDefinition": "Actual sourceMapReuses OR routeMapReuses after successful constructor; two extra normalizations remain inside the constructor clock. No V3.1 conversion/template/endpoint cache and no timing transfer.",
+      "completedConstructorExpectedCounts": {
+        "extraNormalizationCalls": 2,
+        "sourceMapBuilds": 1,
+        "routeMapBuilds": 1,
+        "sourceMapReuses": 1,
+        "routeMapReuses": 1
+      }
+    },
+    "sourceIsTrackingPrHead": false,
+    "sourceBranch": "codex/experiment-initial-native-maps-20261029",
+    "originPr": 3202,
+    "publicationRole": "STANDALONE_REFINEMENT_NOT_TRACKING_PR_HEAD"
+  }
+]
