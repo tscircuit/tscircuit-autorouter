@@ -5,7 +5,8 @@
     "neighbor_alloc": "bfb3780ceddb5ca1f2cd757d90f4939b37546434",
     "scalar_via": "84f6a2a676dfabe4b16de1ad5827932b3a74940d",
     "future_cost": "771f04e6bb479d9184f3738871e675ae3d1ac69d",
-    "force_work": "5676d3ca5a87f9030e8fba103bbd3aeef6a43114"
+    "force_work": "5676d3ca5a87f9030e8fba103bbd3aeef6a43114",
+    "reference_cache": "6e8b11eeab979ee2537234b00e87e0caf6e8fcb6"
   },
   "bun_version": "1.4.3",
   "cpu_lanes": 1,
@@ -52,5 +53,6 @@
   },
   "child_memory_limit_mib": 8192,
   "screening_only": true,
-  "screening_scope": "Independent same-core ABBA pilot with two fresh observations per arm on three prespecified boards;12 rows per candidate job. A paired win only screens a candidate for the full42-board benchmark gate; it is not full-dataset proof."
+  "screening_scope": "Independent same-core ABBA pilot with two fresh observations per arm on three prespecified boards;12 rows per candidate job. A paired win only screens a candidate for the full42-board benchmark gate; it is not full-dataset proof.",
+  "diagnostics": "This run emits exact reference-DRC validation counters only AFTER both frozen performance/memory boundaries and output hashing; counters are not output-parity fields."
 }

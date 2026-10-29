@@ -192,6 +192,16 @@ const result = {
   viaCount,
   wireCount,
   hashes,
+  jointDrcCacheDiagnostics: solver.pipeline9JointDrcRepairSolver
+    ? {
+        referenceValidationCount:
+          solver.pipeline9JointDrcRepairSolver.referenceDrcValidationCount,
+        referenceFalseNegativeCount:
+          solver.pipeline9JointDrcRepairSolver.referenceDrcFalseNegativeCount,
+        indexedCacheHitCount:
+          solver.pipeline9JointDrcRepairSolver.indexedDrcCacheHitCount,
+      }
+    : null,
 }
 writeFileSync(task.resultPath, JSON.stringify(result))
 progress("complete")
