@@ -79,6 +79,12 @@ type TinyHypergraphInput = Omit<
   connections: TinyRouteConnection[]
 }
 
+type GeometryFeedbackPreparedGraph = {
+  graph: SerializedHyperGraph
+  duplicateReport?: DuplicateCongestedPortSolverReport
+  duplicateError?: string
+}
+
 type PreloadedTraceSegmentBaseline = ReadonlyMap<
   PreloadedTraceConnectionId,
   ReadonlySet<string>
@@ -256,6 +262,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+export const PIPELINE9_DUPLICATE_PORT_PROXIMITY = 0.05
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -1056,8 +1063,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
+  private geometryFeedbackGraph?: GeometryFeedbackPreparedGraph
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams,
+    preparedGeometryGraph?: GeometryFeedbackPreparedGraph,
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1093,35 +1104,53 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-      serializedGraph,
-      {
-        duplicatePortProximity: 0.05,
-        useSerializedPortPenalties: false,
-        routeSolveOptions: {
-          ...getTinyViaSizeOptions(params.minViaPadDiameter),
-          USE_SPARSE_CANDIDATE_STORAGE: false,
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-          GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
-          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-          STATIC_REACHABILITY_PRECHECK: true,
-        },
-      },
-    )
-    duplicateCongestedPortSolver.solve()
-    if (duplicateCongestedPortSolver.failed) {
-      this.duplicateCongestedPortError =
-        duplicateCongestedPortSolver.error ?? "unknown error"
-    } else {
-      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-      graphForTiny = duplicateCongestedPortSolver.getOutput()
-      for (const port of graphForTiny.ports) {
-        const metadata = asTinyPortMetadata(port.d)
-        if (typeof metadata.duplicatedFromPortId !== "string") continue
-        delete metadata._preloadedFixedNetIds
-        delete metadata._preloadedTracePortAssignments
+    if (preparedGeometryGraph !== undefined) {
+      if (params.flags.CAPTURE_GEOMETRY_FEEDBACK_GRAPH !== true) {
+        throw new Error("Reusing a geometry-feedback graph requires explicit activation")
       }
+      graphForTiny = preparedGeometryGraph.graph
+      this.duplicateCongestedPortReport = preparedGeometryGraph.duplicateReport
+      this.duplicateCongestedPortError = preparedGeometryGraph.duplicateError
+    } else {
+      const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+        serializedGraph,
+        {
+          duplicatePortProximity: PIPELINE9_DUPLICATE_PORT_PROXIMITY,
+          useSerializedPortPenalties: false,
+          routeSolveOptions: {
+            ...getTinyViaSizeOptions(params.minViaPadDiameter),
+            USE_SPARSE_CANDIDATE_STORAGE: false,
+            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+            GREEDY_FINAL_ROUTE_ITERS: 4,
+            MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+            STATIC_REACHABILITY_PRECHECK: true,
+          },
+        },
+      )
+      duplicateCongestedPortSolver.solve()
+      if (duplicateCongestedPortSolver.failed) {
+        this.duplicateCongestedPortError =
+          duplicateCongestedPortSolver.error ?? "unknown error"
+      } else {
+        this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+        graphForTiny = duplicateCongestedPortSolver.getOutput()
+        for (const port of graphForTiny.ports) {
+          const metadata = asTinyPortMetadata(port.d)
+          if (typeof metadata.duplicatedFromPortId !== "string") continue
+          delete metadata._preloadedFixedNetIds
+          delete metadata._preloadedTracePortAssignments
+        }
+      }
+    }
+    if (params.flags.CAPTURE_GEOMETRY_FEEDBACK_GRAPH === true) {
+      // Capture before any primary search; only original preloaded assignments
+      // are present. Its solution must never become fixed copper in a replan.
+      this.geometryFeedbackGraph = structuredClone({
+        graph: graphForTiny,
+        duplicateReport: this.duplicateCongestedPortReport,
+        duplicateError: this.duplicateCongestedPortError,
+      })
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -1180,6 +1209,37 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.statsSnapshotDirty = false
       },
     })
+  }
+
+  createGeometryFeedbackRefinement(
+    params: HgPortPointPathingSolverParams,
+    sourcePortLayerKeys: ReadonlySet<string>,
+  ): TinyHypergraphPortPointPathingSolver {
+    if (!this.solved || this.failed || !this.geometryFeedbackGraph) {
+      throw new Error("Certified refinement requires the captured original graph and a completed primary plan")
+    }
+    const prepared = structuredClone(this.geometryFeedbackGraph)
+    const removedIds = new Set(prepared.graph.ports.filter((port) =>
+      sourcePortLayerKeys.has(port.portId) ||
+      (typeof port.d?.duplicatedFromPortId === "string" &&
+        sourcePortLayerKeys.has(port.d.duplicatedFromPortId)),
+    ).map((port) => port.portId))
+    prepared.graph.ports = prepared.graph.ports.filter((port) => !removedIds.has(port.portId))
+    prepared.graph.regions = prepared.graph.regions.map((region) => ({
+      ...region,
+      pointIds: region.pointIds?.filter((id) => !removedIds.has(id)),
+    }))
+    if (prepared.duplicateReport) {
+      prepared.duplicateReport = {
+        portUseCounts: Object.fromEntries(Object.entries(prepared.duplicateReport.portUseCounts)
+          .filter(([id]) => !removedIds.has(id))),
+        duplicatedPorts: prepared.duplicateReport.duplicatedPorts
+          .filter((entry) => !removedIds.has(entry.sourcePortId)),
+      }
+    }
+    // No new duplicate-port estimation search or artificial port geometry.
+    // The only model change is removal of certified source/duplicate families.
+    return new TinyHypergraphPortPointPathingSolver(params, prepared)
   }
 
   getSolverName(): string {
