@@ -1,4 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { checkViasOffBoard } from "@tscircuit/checks"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -109,6 +111,8 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Joint fixed-XY layer assignment after cleanup; experimental, default off. */
+  experimentJointLayers?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -892,6 +896,39 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             effort: cms.effort,
+            ...(cms.opts.experimentJointLayers === true ? {
+              jointLayerAssignment: {
+                layerCount: cms.originalSrj.layerCount,
+                allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+                connMap: cms.connMap,
+                obstacles: cms.originalSrj.obstacles,
+                viaToPadClearance: getViaToPadClearance(cms.originalSrj),
+                clearance: Math.max(cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+                  cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
+                fixedRoutes: preloadedTraces.flatMap((trace, index) =>
+                  convertPreloadedTraceToHdRoutes(trace, index, cms.originalSrj.layerCount,
+                    cms.viaDiameter, cms.connMap)),
+                evaluate: (routes: HighDensityRoute[]): { valid: boolean; manufacturedSites: number } => {
+                  const evaluated = evaluateRelaxedDrc({
+                    inputSrj, srjWithPointPairs: cms.srjWithPointPairs!, routedTraces: convert(routes),
+                    includeBoardClearance: true,
+                    drcOptions: {
+                      traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+                      viaClearance: cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+                    },
+                  })
+                  const sites = new Set(evaluated.circuitJson.flatMap((element) =>
+                    element.type === "pcb_via" ? [JSON.stringify([
+                      element.x, element.y, element.outer_diameter, element.hole_diameter,
+                      [...element.layers].sort(),
+                    ])] : []))
+                  return {
+                    valid: evaluated.errors.length === 0 && checkViasOffBoard(evaluated.circuitJson).length === 0,
+                    manufacturedSites: sites.size,
+                  }
+                },
+              },
+            } : {}),
             viaRemovalPasses:
               cms.pipeline9JointDrcRepairSolver!.stats
                 .initialBoundedRegionalRepairAddedViaCount > 0
