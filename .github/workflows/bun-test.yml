@@ -93,5 +93,6 @@ jobs:
           path: |
             **/*.diff.png
             **/*.received.svg
+            **/*.received.json.gz
             **/*-drc.received.json
             **/*.snap.svg

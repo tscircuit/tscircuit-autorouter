@@ -102,8 +102,14 @@ an algorithm change. The earlier 66-minute timestamp estimate is not used here.
 
 All complete runs produced the same SHA-256:
 `5c90f0d5e4bd73b4aed32d62e1f4350e5df0f36a70c53d47a2a79d714d7ab974`.
-The full-route regression test asserts this hash without a wall-clock threshold;
-CI gives this full-board test the existing full-board timeout budget.
+The recorded Mac runs have this exact hash. CI compares the complete fixed output
+against the original pinned expander on the same runner, without a wall-clock
+threshold, coordinate rounding or an accepted-hash list. This avoids assuming
+that a Mac/Bun 1.4.2 golden hash is portable to Linux/Bun 1.4.3. The baseline is a
+test-only dependency alias at `01ce270`; its replay uses the exact power-stage
+input produced by the complete pipeline. The preload graph separately retains
+its full-output golden test. CI gives the full-board comparison its existing
+full-board timeout budget and retains both outputs if the comparison fails.
 
 ### Why the remainder was slow
 
