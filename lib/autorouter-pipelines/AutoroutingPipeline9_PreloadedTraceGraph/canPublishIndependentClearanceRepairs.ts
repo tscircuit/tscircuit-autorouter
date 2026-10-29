@@ -1,3 +1,4 @@
+import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 // Subdividing an unchanged segment can round its measured gap differently.
@@ -16,6 +17,13 @@ export const canPublishIndependentClearanceRepairs = (
     }
     if (error.type === "pcb_pad_trace_clearance_error") {
       return JSON.stringify([error.type, error.pcb_trace_id, error.pcb_pad_id])
+    }
+    if (isViaPadClearanceError(error)) {
+      return JSON.stringify([
+        error.type,
+        error.pcb_trace_id,
+        [...error.pcb_pad_ids].sort(),
+      ])
     }
     if (
       error.type === "pcb_via_clearance_error" &&
