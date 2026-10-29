@@ -31,6 +31,8 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { HighDensitySolverA01Compact } from "./HighDensitySolverA01Compact"
+import type { CompactA01FrontierMetrics } from "./CompactA01Frontier"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -76,6 +78,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     BaseSolver,
     { iterations: number; maxIterations: number }
   >()
+  private compactMetricsBySolver = new WeakMap<HighDensitySolverA01Compact, CompactA01FrontierMetrics>()
+
+  private aggregateCompactMetrics(solver: HighDensitySolverA01Compact): void {
+    const diagnostics = this.constructorParams.priorityDiagnostics
+    const metrics = solver.compactFrontier?.metrics
+    if (!diagnostics || !metrics) return
+    const previous = this.compactMetricsBySolver.get(solver)
+    for (const key of Object.keys(metrics) as Array<keyof CompactA01FrontierMetrics>) {
+      const counter = `compactA01${key[0]!.toUpperCase()}${key.slice(1)}`
+      if (key === "peakLabels" || key === "peakOpen") {
+        diagnostics[counter] = Math.max(diagnostics[counter] ?? 0, metrics[key])
+      } else {
+        diagnostics[counter] = (diagnostics[counter] ?? 0) + metrics[key] - (previous?.[key] ?? 0)
+      }
+    }
+    this.compactMetricsBySolver.set(solver, { ...metrics })
+  }
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -533,6 +552,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
+    if ((solver as unknown) instanceof HighDensitySolverA01Compact) {
+      this.aggregateCompactMetrics(solver as unknown as HighDensitySolverA01Compact)
+    }
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
     }
@@ -646,7 +668,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const solver = new HighDensitySolverA01({
+      const props: ConstructorParameters<typeof HighDensitySolverA01>[0] = {
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -657,7 +679,29 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
-      })
+      }
+      // Select by the compact representation's explicit capacity, before any
+      // search runs. Unsupported scenes retain the existing A01 policy.
+      const solver = HighDensitySolverA01Compact.isSupported(props)
+        ? new HighDensitySolverA01Compact({
+            ...props,
+            // Preserve original A01 search/work policy in normal routing.
+            // Explicit class construction retains pruning as a research ablation.
+            compactFrontierPruning: false,
+          })
+        : new HighDensitySolverA01(props)
+      solver.stats.compactA01Supported = solver instanceof HighDensitySolverA01Compact
+      const diagnostics = this.constructorParams.priorityDiagnostics
+      if (diagnostics) {
+        const counter = solver instanceof HighDensitySolverA01Compact
+          ? "compactA01Candidates"
+          : "compactA01UnsupportedCandidates"
+        diagnostics[counter] = (diagnostics[counter] ?? 0) + 1
+        if (solver instanceof HighDensitySolverA01Compact && !solver.compactFrontierPruning) {
+          diagnostics.compactA01StorageOnlyCandidates =
+            (diagnostics.compactA01StorageOnlyCandidates ?? 0) + 1
+        }
+      }
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
