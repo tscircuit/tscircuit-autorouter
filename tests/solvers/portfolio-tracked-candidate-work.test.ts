@@ -1,13 +1,12 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
-import type { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 class WorkTrackingPortfolio extends PortfolioSingleIntraNodeSolver {
   override generateSolver(
     hyperParameters: Record<string, unknown>,
-  ): IntraNodeRouteSolver {
+  ): ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]> {
     const solver = super.generateSolver(hyperParameters)
     solver.step = (): void => {
       if (solver.solved || solver.failed) return

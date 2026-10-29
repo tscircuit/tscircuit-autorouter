@@ -113,6 +113,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  readonly normalMaxGrowthAttempts: number
   minimumGrowthAttempts: number
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
@@ -135,6 +136,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             ),
           )
         : 0
+    this.normalMaxGrowthAttempts =
+      DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia
     let minimumPortGap = Number.POSITIVE_INFINITY
     const ports = this.nodeWithPortPoints.portPoints
     for (let i = 0; i < ports.length; i++) {
@@ -207,6 +210,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ...portfolioParams,
       priorityCoordinateScale:
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
+      gridCoordinateScale:
+        this.growthAttempts > this.normalMaxGrowthAttempts
+          ? (portfolioParams.gridCoordinateScale ?? 1) * this.scaleFactor
+          : undefined,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
