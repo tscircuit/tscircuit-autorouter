@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { loadMotherboardPowerPhase } from "./repro"
+import { loadMotherboardPowerPhase } from "../../../fixtures/bug-reports/bugreport110-motherboard-power-phase/repro"
 
 test("preserves the live motherboard preload output and its visual snapshot", async (): Promise<void> => {
   const input = loadMotherboardPowerPhase()

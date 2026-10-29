@@ -6,8 +6,8 @@ The fixture is a complete phase input, including existing copper, with no need t
 ```sh
 bun install --frozen-lockfile
 bun scripts/build-solver-workers.ts
-bun tests/bugs/bugreport3342/repro.ts --inspect
-bun tests/bugs/bugreport3342/repro.ts
+bun fixtures/bug-reports/bugreport110-motherboard-power-phase/repro.ts --inspect
+bun fixtures/bug-reports/bugreport110-motherboard-power-phase/repro.ts
 ```
 
 Use Bun >= 1.4.2. The runner uses this checkout's source, two workers, effort 1 and no cache provider. A separate supervisor terminates the child after 120 seconds with exit 124, even if a synchronous stage blocks progress timers. This is a manually invoked reproduction, not a slow timed CI test.
@@ -46,10 +46,17 @@ the spatial-index fix; the board snapshots alone would not test that fix.
 Run the visual checks without updating snapshots:
 
 ```sh
-bun test tests/bugs/bugreport3342/motherboard-power-phase-visual.test.ts tests/bugs/bugreport3342/motherboard-power-preload-visual.test.ts --timeout 9999999
+bun test tests/bugs/bugreport110/motherboard-power-phase-visual.test.ts tests/bugs/bugreport110/motherboard-power-preload-visual.test.ts --timeout 9999999
 ```
 
-The SVG baselines are under `tests/bugs/bugreport3342/__snapshots__/motherboard-power-*`.
+The SVG baselines are under `tests/bugs/bugreport110/__snapshots__/motherboard-power-*`.
 The PNGs above are rendered from those SVGs with `@resvg/resvg-js` for GitHub
 preview. Baselines are generated on the reproduction branch and inherited
 unchanged by the fix branch.
+
+## Cosmos
+
+Search for `bugreport110-motherboard-power-phase` in Cosmos. The fixture provides
+Input, Captured output, and Route input views. The first two are read-only
+interactive graphics; Route input opens the Pipeline 9 debugger. GitHub issue
+#3342 is the issue reference, not the sequential fixture number.
