@@ -48,5 +48,17 @@
     "failed": false,
     "iterations": 7751939,
     "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a"
+  },
+  "layer-work-candidates": {
+    "endpointQueries": 94902,
+    "repeatedEndpointQueries": 85829,
+    "blockedEndpoints": 8568,
+    "blockedGridCells": 11252678,
+    "candidateCount": 52956323,
+    "foreignLayerCandidateCount": 5070774,
+    "solved": true,
+    "failed": false,
+    "iterations": 7751939,
+    "outputHash": "ee0a362ad54e04076ab2d019c44a18ce842c640f4b14065d67bd6b9bbf07054a"
   }
 }

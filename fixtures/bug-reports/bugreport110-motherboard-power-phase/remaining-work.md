@@ -25,6 +25,10 @@ index retains the original exact shapes and object metadata, and includes
 through-vias on every occupied layer. Collision-list queries keep their original
 global order; physical-contact and drill queries remain unchanged.
 
+The post-change probe returns 52,956,323 candidates, 59.3% fewer overall. Of those,
+5,070,774 foreign-layer candidates remain in unchanged global query APIs. Endpoint
+counts, solver iterations and output hashes are identical to the baseline.
+
 ## Unprofiled expansion comparison
 
 Same captured constructor input and options, Bun 1.4.2/macOS arm64, fresh processes,

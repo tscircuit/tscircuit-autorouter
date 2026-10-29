@@ -27,7 +27,10 @@ const counts = {
   blockedEndpoints: 0,
   blockedGridCells: 0,
 }
-prototype.endpointCollides = function (point: { x: number; y: number }): boolean {
+prototype.endpointCollides = function (point: {
+  x: number
+  y: number
+}): boolean {
   const p = this.problem
   let seen = seenByIndex.get(p.obstacleIndex)
   if (!seen) {
