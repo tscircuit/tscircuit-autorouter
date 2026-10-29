@@ -1,23 +1,24 @@
 {
   "schemaVersion": 1,
-  "sourceSha": "74de6cea4bd39c9aa41e9d492b003a892abd1596",
-  "sourceTree": "b0de925b8f718415f961f4f9dad146784bbf2b9e",
+  "sourceSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+  "sourceTree": "a336ba7ec687e7813d97284faafd294a94e329eb",
   "harnessSha": "637b6c581128238f6c61227a1c15be423d24baca",
   "dataset": "srj18",
   "sampleNumbers": [
-    14
+    16
   ],
   "sampleTimeoutSeconds": 360,
   "options": {
     "cacheProvider": null,
     "effort": 1,
-    "retainBestPartialRouting": true
+    "retainBestPartialRouting": false,
+    "constrainViaPadPlacement": true
   },
   "diagnosticOnly": true,
   "timingQualified": false,
-  "expectedPipelineSourceSha256": "8655e62c0f3eaf021bd54b113567af4a08835b77c1126ba485691b1852b7c405",
+  "expectedPipelineSourceSha256": "0f63459b76a8234a8f61eaa9a81866feac462c1a3d42cc70e7fb6e9886f9f009",
   "runtimeSourceHashes": {
-    "run-retention-stage-diagnostic.py": "f9b2e4f3bbb09c59d424e1e567e2823c52382ac88001e464417db28a44945ca2",
+    "run-retention-stage-diagnostic.py": "e369b4b880a7f7f35f999f1ff6f9272a764e1ecedbdd637ea9d6cbd82335acfa",
     "run-pinned-experiment.py": "6490b82018a553a224cdbb053947d817f4843bb98cf24151e33d1803f06fcea1",
     "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
     "prepare-pinned-harness.py": "3c0d8f4b3cae691bb6a242d26e90a4f4db3f3f3fbb744fe66f5d92b71e1c21ca",
@@ -28,7 +29,8 @@
     "phase-checkpoint-observer.ts": "91bc155dd3e53232892d57103fe126b2a901d3fd7276605af46575897f6a9444",
     "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
     "stage-geometry-capture.ts": "09d51d3230b5acaaa1739efcfe7804a68f288911e2de71274cfc935f859f098e",
-    "audit-retention-stage-geometry.ts": "97cf12c90d150ccc10624c5a43570fe66e55022b7f051fda47f8b216b93ae0aa"
+    "audit-retention-stage-geometry.ts": "1566abf684ea4c93fa5cad83ab553025ff70a99483648f72d06834c89c40ef41",
+    "audit-boundary16-stage-representations.ts": "cc34a735fdbb42ef257c30419bbb702e33247ca7a723b6f84f99ee6384e73056"
   },
   "runSampleSourceSha256": "c1d0e2572e06750a104c09e68df550873718945c707e76aacd1ecd8d2ad9a77e",
   "expectedInputHashes": {
@@ -73,21 +75,49 @@
   ],
   "observerParity": {
     "status": "PASS_LOCAL_TINY_ACTUAL_ADAPTER_FACTORY_CONTROL",
-    "sourceSha": "d361ecc002de7335e7ec1c82b9e5ac1f1967bd88",
-    "sourceTree": "b0de925b8f718415f961f4f9dad146784bbf2b9e",
+    "sourceSha": "e02bc349498411bcf7da48ae893043187aaf6fc2",
+    "sourceTree": "a336ba7ec687e7813d97284faafd294a94e329eb",
+    "remoteEquivalentSourceSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
     "runtimeSourceHashes": {
       "experiment-audit-adapter.ts": "bc48693369a961bab87e50205d3625fa19b473dedef76be76f0ea7b7329e6c61",
       "phase-checkpoint-observer.ts": "91bc155dd3e53232892d57103fe126b2a901d3fd7276605af46575897f6a9444",
       "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
       "stage-geometry-capture.ts": "09d51d3230b5acaaa1739efcfe7804a68f288911e2de71274cfc935f859f098e"
     },
-    "inputHash": "5c8133abb8340e14eb66e1f7977867360794d634bd78cb8c633f7bbaefa91136",
-    "outputHash": "540e130ea2df5ae73763ba0e48986519b59fa5bfae1f2cb6d1ab847f57a39c8a",
-    "iterations": 496,
-    "maxIterations": 100000478,
+    "inputHash": "443b1fe2779c8d87b6ae37e914c21d9d6e4656f793ce43816966469218fe7711",
+    "outputHash": "d91a74b2a3be7f3afac0992f26193be62e9a881250258983169584b9743136b2",
+    "iterations": 647,
+    "maxIterations": 100000628,
     "checkpointRows": 146
   },
-  "observerParityEvidenceSha256": "fc01da4802084fd0374c8ef5ccf5d326e965ef9eb90c7ff7ae65fccb56d8371b",
-  "qualificationScope": "DIAGNOSTIC_STAGE_PROVENANCE_ONLY_ON_ORIGINAL_SRJ18_14_SOURCE_74DE_RETENTION_ON",
-  "interpretation": "Synchronous immutable own-data snapshots record completed-stage outputs and actual constructor-return inputs. All validation runs after routing. Diagnostic elapsed times include capture overhead and cannot qualify or replace primary optimization timings. Missing captures, owner/frame ambiguity, original physical findings, or changed raw output remain explicit."
+  "observerParityEvidenceSha256": "baf2f42d32f7be507c9b687bf279e589edaeac3201e074893c548262e069c5f2",
+  "qualificationScope": "DIAGNOSTIC_STAGE_PROVENANCE_ONLY_ORIGINAL_SRJ18_16_BOUNDARY_BD21_GUARD_ON_RETENTION_OFF",
+  "interpretation": "Synchronous immutable own-data snapshots record completed-stage outputs and actual constructor-return inputs. All validation runs after routing. One diagnostic board only; elapsed times include capture overhead and cannot qualify or replace optimization timings. The inherited stage audit is via-pad-only, not a board-leak origin verdict. Final original-board via materialization and diameter/span provenance require a separate post-routing read-only analysis of these stage captures. Missing captures, unsupported stage contracts, unknown geometry or changed final output remain explicit.",
+  "expectedSourcePackageJsonSha256": "ab37249c68aada3052c833706424bbe1f59c2cddd7aac482bf9ca207f79417e7",
+  "expectedFinalOutputSha256": "e88f5894d031cc74b25f5c10af07dca8224179f04758455e10b1397f111c3a90",
+  "expectedFinalTracesSha256": "89e591711022d6751f78c5f0394ee0bed8cb913b5235d02baaaaa2f128145516",
+  "expectedFinalBindingSource": {
+    "runId": "40802754031",
+    "jobId": "123214537847",
+    "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+    "arm": "B",
+    "sample": 16
+  },
+  "expectedDirectDependencyPins": {
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#7175e6cbeaf1a0102c16730a1d3518910eb08ac7",
+    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
+  },
+  "postRoutingBoardRepresentationAudit": {
+    "asset": "audit-boundary16-stage-representations.ts",
+    "sourceSha256": "cc34a735fdbb42ef257c30419bbb702e33247ca7a723b6f84f99ee6384e73056",
+    "sourceBinding": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+    "scope": "Declared/source-guard/physical-transition/final-materialized channels; first producer only with complete earlier authoritative board-clear outputs and exact final/P7 conversion bindings; logs aggregate hashes and counts without coordinates.",
+    "authorValidationSha256": "d5856e97bc002e082244183a5228e2f6737ea8054b30acc9fd03229982fa1734",
+    "tests": 3,
+    "assertions": 27,
+    "strictTypes": "PASS",
+    "bunBuild": "PASS"
+  }
 }

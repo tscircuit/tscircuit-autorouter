@@ -10,11 +10,11 @@ import pathlib
 import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent
-SOURCE = "74de6cea4bd39c9aa41e9d492b003a892abd1596"
-TREE = "b0de925b8f718415f961f4f9dad146784bbf2b9e"
+SOURCE = "bd21dd642b4989b00e8279fae5c60cc7276ad642"
+TREE = "a336ba7ec687e7813d97284faafd294a94e329eb"
 MAIN = "637b6c581128238f6c61227a1c15be423d24baca"
 MODULE = "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts"
-ASSETS = {"run-retention-stage-diagnostic.py", "run-pinned-experiment.py", "select-pinned-experiment.py", "prepare-pinned-harness.py", "install-pinned-dependencies.py", "experiment-audit-adapter.ts", "qualify-pinned-output.ts", "experiment-dataset-identity.ts", "phase-checkpoint-observer.ts", "capture-terminal-failure-geometry.ts", "stage-geometry-capture.ts", "audit-retention-stage-geometry.ts"}
+ASSETS = {"run-retention-stage-diagnostic.py", "run-pinned-experiment.py", "select-pinned-experiment.py", "prepare-pinned-harness.py", "install-pinned-dependencies.py", "experiment-audit-adapter.ts", "qualify-pinned-output.ts", "experiment-dataset-identity.ts", "phase-checkpoint-observer.ts", "capture-terminal-failure-geometry.ts", "stage-geometry-capture.ts", "audit-retention-stage-geometry.ts", "audit-boundary16-stage-representations.ts"}
 spec = importlib.util.spec_from_file_location("pinned_runner", ROOT / "run-pinned-experiment.py")
 pinned = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pinned)
@@ -27,9 +27,9 @@ def sha(path):
 def validate(path):
     manifest = json.loads(path.read_text())
     if manifest.get("sourceSha") != SOURCE or manifest.get("sourceTree") != TREE or manifest.get("harnessSha") != MAIN:
-        raise ValueError("Only exact reviewed74de source and original637 harness are permitted")
-    if manifest.get("dataset") != "srj18" or manifest.get("sampleNumbers") != [14] or manifest.get("options") != {"cacheProvider": None, "effort": 1, "retainBestPartialRouting": True}:
-        raise ValueError("The fixed sample14 retention-on diagnostic changed")
+        raise ValueError("Only exact reviewedbd21 source and original637 harness are permitted")
+    if manifest.get("dataset") != "srj18" or manifest.get("sampleNumbers") != [16] or manifest.get("options") != {"cacheProvider": None, "effort": 1, "retainBestPartialRouting": False, "constrainViaPadPlacement": True}:
+        raise ValueError("The fixed sample16 guard-on retention-off diagnostic changed")
     if manifest.get("sampleTimeoutSeconds") != 360 or manifest.get("diagnosticOnly") is not True or manifest.get("timingQualified") is not False:
         raise ValueError("Original budget and diagnostic-only boundary are required")
     if set(manifest.get("runtimeSourceHashes", {})) != ASSETS:
@@ -70,12 +70,12 @@ def run(args, manifest):
         raise ValueError("Original complete SRJ18 identity population differs")
     config = {"solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph", "solverModule": MODULE, "options": manifest["options"], "evidencePaths": manifest["evidencePaths"],
         "stageGeometryDiagnostic": {"sourceSha256": manifest["runtimeSourceHashes"]["stage-geometry-capture.ts"]},
-        "phaseCheckpoint": {"observerSourceSha256": manifest["runtimeSourceHashes"]["phase-checkpoint-observer.ts"], "campaign": "retention-stage-provenance-diagnostic", "algorithmSha": SOURCE, "arm": "DIAGNOSTIC_RETENTION_ON", "executionOrder": "AB", "githubRunId": os.environ.get("GITHUB_RUN_ID"), "controllerSha": os.environ.get("GITHUB_SHA")}}
+        "phaseCheckpoint": {"observerSourceSha256": manifest["runtimeSourceHashes"]["phase-checkpoint-observer.ts"], "campaign": "boundary16-stage-provenance-diagnostic", "algorithmSha": SOURCE, "arm": "DIAGNOSTIC_BOUNDARY_GUARD_ON_RETENTION_OFF", "executionOrder": "AB", "githubRunId": os.environ.get("GITHUB_RUN_ID"), "controllerSha": os.environ.get("GITHUB_SHA")}}
     pinned.write_json(output / "config.json", config)
     pinned.write_json(output / "provenance.json", {"manifest": manifest, "harness": harness, "inputPopulation": identities, "githubRunId": os.environ.get("GITHUB_RUN_ID"), "controllerSha": os.environ.get("GITHUB_SHA"), "diagnosticOnly": True, "timingQualified": False})
-    record = pinned.run_sample(checkout, output / "config.json", output / "sample-014", "srj18", 14, 360)
+    record = pinned.run_sample(checkout, output / "config.json", output / "sample-016", "srj18", 16, 360)
     pinned.write_json(output / "record.json", record)
-    print("RETENTION_STAGE_DIAGNOSTIC_RECORD_JSON " + json.dumps({"diagnosticOnly": True, "timingQualified": False, "sampleNumber": 14, "sourceSha": SOURCE, "sourceTree": TREE, "controllerError": record.get("controllerError"), "official": {key: record.get("official", {}).get(key) for key in ["didSolve", "didTimeout", "relaxedDrcPassed", "error"]}}), flush=True)
+    print("BOUNDARY16_STAGE_DIAGNOSTIC_RECORD_JSON " + json.dumps({"diagnosticOnly": True, "timingQualified": False, "sampleNumber": 16, "sourceSha": SOURCE, "sourceTree": TREE, "controllerError": record.get("controllerError"), "official": {key: record.get("official", {}).get(key) for key in ["didSolve", "didTimeout", "relaxedDrcPassed", "error"]}}), flush=True)
     if record.get("controllerError"):
         raise ValueError("Diagnostic controller failed; retained outputs are not qualified")
 

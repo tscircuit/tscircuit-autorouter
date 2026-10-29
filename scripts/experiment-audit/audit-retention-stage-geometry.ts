@@ -8,10 +8,10 @@ type OwnerResult = { status: "resolved" | "ambiguous" | "unknown"; owners: strin
 type OriginalOwners = { resolveTokens: (tokens: { type?: string; value: Json }[]) => OwnerResult; trace: (trace: Json) => OwnerResult; obstacle: (obstacle: Json) => OwnerResult }
 type RouteBundle = { routes: Json[]; format: "hd" | "traces"; field: string; coordinateFrame: "world-mm" }
 type Via = { x: number; y: number; diameter: number; hole: number; owner: OwnerResult; routeId: string; siteSha256: string }
-const SOURCE = "74de6cea4bd39c9aa41e9d492b003a892abd1596"
-const INPUT = "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e"
-const FINAL_TRACES = "fc2ccedd14c9284ccee18f7b7b8377ebe0757927d6fc1ddc2025c8c0f93d59e6"
-const FINAL_OUTPUT = "fddfe5c3cd2d37dbac1f47b65a96d7527bee14c88d40132108b381ab8f38d863"
+const SOURCE = "bd21dd642b4989b00e8279fae5c60cc7276ad642"
+const INPUT = "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9"
+const FINAL_TRACES = "89e591711022d6751f78c5f0394ee0bed8cb913b5235d02baaaaa2f128145516"
+const FINAL_OUTPUT = "e88f5894d031cc74b25f5c10af07dca8224179f04758455e10b1397f111c3a90"
 const PHASES = ["highDensityRouteSolver", "highDensityForceImproveSolver", "highDensityRepairSolver", "highDensityStitchSolver", "traceSimplificationSolver", "mutatedPreloadedTraceSimplificationSolver", "traceWidthSolver", "globalDrcForceImproveSolver", "pipeline9JointDrcRepairSolver", "effortCleanupSolver", "lengthMatchingPostProcessingSolver", "powerTraceExpansionSolver"]
 const sha = (value: string): string => createHash("sha256").update(value).digest("hex")
 const strings = (values: Json[]): string[] => values.filter((x): x is string => typeof x === "string" && x.length > 0)
@@ -127,9 +127,9 @@ function overlayRoutes(value: Json, mapField: string): Json[] {
   return routes.map((route, index) => value[mapField].has(index) ? value[mapField].get(index) : route)
 }
 
-/** Only aggregate world outputs of the exact reviewed74de source are accepted.
+/** Only aggregate world outputs of the exact reviewedbd21 source are accepted.
  * Native node/worker-local output and guessed translations are never inspected.
- * The74de materializePipeline9HdRouteVias contract explicitly defines route XY
+ * Thebd21 materializePipeline9HdRouteVias contract explicitly defines route XY
  * as board-world millimeters and Z as the original board layer index.
  */
 export function extractRouteBundle(snapshot: Json, algorithmSha = SOURCE): RouteBundle | null {
@@ -322,7 +322,7 @@ export function auditRouteBundle(original: Json, bundle: RouteBundle, contexts: 
 export function auditStageCapture(directory: string, binding: Json = {}): Json {
   const root = resolve(directory), manifestText = readFileSync(resolve(root, "manifest.json"), "utf8"), manifest = JSON.parse(manifestText)
   assert.equal(manifest.schemaVersion, 1); assert.equal(manifest.algorithmSha, SOURCE)
-  assert.equal(manifest.dataset, "srj18"); assert.equal(manifest.originalSample, 14); assert.equal(manifest.inputSha256, INPUT)
+  assert.equal(manifest.dataset, "srj18"); assert.equal(manifest.originalSample, 16); assert.equal(manifest.inputSha256, INPUT)
   assert.equal(manifest.diagnosticOnly, true); assert.equal(manifest.timingQualified, false)
   for (const [key, expected] of Object.entries(binding)) assert.deepEqual(manifest[key], expected, `Unexpected capture binding: ${key}`)
   assert(Array.isArray(manifest.records) && manifest.records.length > 0, "Missing capture inventory")
@@ -363,7 +363,7 @@ export function auditStageCapture(directory: string, binding: Json = {}): Json {
   let finalBinding: Json = { status: "MISSING", timingQualified: false }
   if (finals.length === 1) {
     const tracesHash = sha(JSON.stringify(finals[0].value.traces)), outputHash = sha(JSON.stringify(finals[0].value.output))
-    finalBinding = { status: tracesHash === FINAL_TRACES && outputHash === FINAL_OUTPUT ? "MATCH_KNOWN_74DE_14B_RETAINED_OUTPUT" : "DIFFERENT_RAW_OUTPUT_DO_NOT_INHERIT_OLD_CAUSAL_CLAIMS", tracesSha256: tracesHash, outputSha256: outputHash, expectedTracesSha256: FINAL_TRACES, expectedOutputSha256: FINAL_OUTPUT }
+    finalBinding = { status: tracesHash === FINAL_TRACES && outputHash === FINAL_OUTPUT ? "MATCH_KNOWN_BD21_16_GUARD_ON_RETENTION_OFF_OUTPUT" : "DIFFERENT_RAW_OUTPUT_DO_NOT_INHERIT_OLD_CAUSAL_CLAIMS", tracesSha256: tracesHash, outputSha256: outputHash, expectedTracesSha256: FINAL_TRACES, expectedOutputSha256: FINAL_OUTPUT }
   }
   const missingCompletedPhases = PHASES.filter((phase) => !reports.some((report) => report.phase === phase && report.boundary === "completed_phase" && report.status === "COMPLETE"))
   const missingBoundaries = requiredBoundaries.filter((boundary) => !seen.has(boundary))
@@ -378,7 +378,7 @@ export function auditStageCapture(directory: string, binding: Json = {}): Json {
     const first = reports.find((report) => report.findings?.some((candidate: Json) => candidate.viaSiteSha256 === finding.viaSiteSha256 && candidate.originalObstacleIndex === finding.originalObstacleIndex))
     return { viaSiteSha256: finding.viaSiteSha256, viaOwner: finding.viaOwner, padId: finding.padId, firstObserved: first ? { phase: first.phase, boundary: first.boundary, sequence: first.sequence, rawSha256: first.rawSha256 } : null }
   })
-  return { status: capturesComplete ? "COMPLETE_OFFLINE_STAGE_AUDIT" : "INCOMPLETE_DO_NOT_CLAIM_FIRST_PRODUCING_STAGE", diagnosticOnly: true, timingQualified: false, metadata: { algorithmSha: manifest.algorithmSha, controllerSha: manifest.controllerSha, githubRunId: manifest.githubRunId, captureSourceSha256: manifest.sourceSha256, arm: manifest.arm, dataset: manifest.dataset, originalSample: manifest.originalSample, inputSha256: INPUT }, manifestSha256: sha(manifestText), recordCount: snapshots.length, captureErrors: manifest.errors, boundaryOrderQualified, missingBoundaries, unexpectedBoundaries, missingCompletedPhases, finalBinding, firstObservedViolation: firstBad ? { phase: firstBad.phase, boundary: firstBad.boundary, sequence: firstBad.sequence } : null, firstIntroducingStage: capturesComplete && priorClear && finalBinding.status === "MATCH_KNOWN_74DE_14B_RETAINED_OUTPUT" ? firstCompletedBad.phase : null, finalFindingOrigins, reports, limits: "Only exact frozen74de aggregate world-route contracts are adapted. No guessed native-node translation, new routing, solver/output-method invocation, performance claim, checker change, or omitted unknown context. A first captured violation is not automatically the cause of every later final violation." }
+  return { status: capturesComplete ? "COMPLETE_OFFLINE_STAGE_AUDIT" : "INCOMPLETE_DO_NOT_CLAIM_FIRST_PRODUCING_STAGE", diagnosticOnly: true, timingQualified: false, metadata: { algorithmSha: manifest.algorithmSha, controllerSha: manifest.controllerSha, githubRunId: manifest.githubRunId, captureSourceSha256: manifest.sourceSha256, arm: manifest.arm, dataset: manifest.dataset, originalSample: manifest.originalSample, inputSha256: INPUT }, manifestSha256: sha(manifestText), recordCount: snapshots.length, captureErrors: manifest.errors, boundaryOrderQualified, missingBoundaries, unexpectedBoundaries, missingCompletedPhases, finalBinding, firstObservedViolation: firstBad ? { phase: firstBad.phase, boundary: firstBad.boundary, sequence: firstBad.sequence } : null, firstIntroducingStage: capturesComplete && priorClear && finalBinding.status === "MATCH_KNOWN_BD21_16_GUARD_ON_RETENTION_OFF_OUTPUT" ? firstCompletedBad.phase : null, finalFindingOrigins, reports, limits: "Only exact frozenbd21 aggregate world-route contracts are adapted. No guessed native-node translation, new routing, solver/output-method invocation, performance claim, checker change, or omitted unknown context. A first captured violation is not automatically the cause of every later final violation." }
 }
 
 if (import.meta.main) {

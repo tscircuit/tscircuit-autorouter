@@ -1,8 +1,8 @@
-name: Retention fixed-source stage provenance diagnostic
+name: Boundary16 fixed-source stage provenance diagnostic
 
 on:
   push:
-    branches: [codex/retention-stage-provenance-20261028]
+    branches: [codex/boundary16-stage-provenance-20261029]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   diagnostic:
-    name: original SRJ18 sample14 / retention ON / diagnostic only
+    name: original SRJ18 sample16 / guard ON retention OFF / diagnostic only
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 30
     env:
@@ -46,17 +46,21 @@ jobs:
         run: bun run build
       - name: Install original harness with diagnostic-only completed-boundary snapshots
         run: python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-harness --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
-      - name: Original sample14 retention-on diagnostic with unchanged effort and caps
-        run: python3 controller/scripts/experiment-audit/run-retention-stage-diagnostic.py --mode run --manifest controller/scripts/experiment-audit/retention-stage-provenance-diagnostic.json --candidate candidate --output results/retention-stage-provenance
+      - name: Original sample16 guard-on retention-off diagnostic with unchanged effort and caps
+        run: python3 controller/scripts/experiment-audit/run-retention-stage-diagnostic.py --mode run --manifest controller/scripts/experiment-audit/retention-stage-provenance-diagnostic.json --candidate candidate --output results/boundary16-stage-provenance
       - name: Audit captured geometry after routing and official timing have stopped
         if: always()
         working-directory: candidate
-        run: bun ../controller/scripts/experiment-audit/audit-retention-stage-geometry.ts ../results/retention-stage-provenance/sample-014/raw/stage-geometry ../results/retention-stage-provenance/stage-audit.json
+        run: bun ../controller/scripts/experiment-audit/audit-retention-stage-geometry.ts ../results/boundary16-stage-provenance/sample-016/raw/stage-geometry ../results/boundary16-stage-provenance/stage-pad-audit.json
+      - name: Audit original-board clearances and via representations after routing
+        if: always()
+        working-directory: candidate
+        run: bun ../controller/scripts/experiment-audit/audit-boundary16-stage-representations.ts ../results/boundary16-stage-provenance/sample-016/raw/stage-geometry ../results/boundary16-stage-provenance/stage-board-representations.json .
       - name: Retain stage geometry, original output and provenance as artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: retention-stage-provenance-original-srj18-14-retention-on
+          name: boundary16-stage-provenance-original-srj18-16-guard-on-retention-off
           path: results
           if-no-files-found: warn
           retention-days: 30
