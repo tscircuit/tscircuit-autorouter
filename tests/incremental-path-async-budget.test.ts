@@ -28,7 +28,7 @@ test("incremental graph work resumes exactly at async slices and consumes the or
   const budgeted = make()
   budgeted.solve()
   budgeted.resetRoutingStateForRerip(); budgeted.solved = false; budgeted.failed = false; budgeted.error = null
-  const maximum = budgeted.iterations + 70
+  const maximum = budgeted.iterations + 110
   budgeted.MAX_ITERATIONS = maximum
   budgeted.solve()
   expect(budgeted.solved).toBe(false)

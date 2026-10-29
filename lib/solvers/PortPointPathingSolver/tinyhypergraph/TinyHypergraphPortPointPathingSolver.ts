@@ -1040,6 +1040,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   readonly incrementalPath?: IncrementalPathStats
   readonly incrementalPathScope?: IncrementalPathScope
   private readonly incrementalSolvers = new Set<IncrementalPreparedPortPointRoutingSolver>()
+  private incrementalStatsAtIteration = -512
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1453,8 +1454,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    this.updateIncrementalStats()
-    this.tinyPipelineSolver.step()
+    try {
+      this.tinyPipelineSolver.step()
+    } finally {
+      if (this.tinyPipelineSolver.failed) this.updateIncrementalStats(true)
+    }
+    // Preserve every actual instance and exact completed-portfolio counters
+    // before the selection below can discard a pipeline reference.
+    if (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed) this.updateIncrementalStats(true)
 
     if (
       this.candidatePortfolioPhase === "primary" &&
@@ -1532,12 +1539,20 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.updateIncrementalStats()
   }
 
-  private updateIncrementalStats(): void {
+  private updateIncrementalStats(force = false): void {
     if (!this.incrementalPath) return
+    let discoveredInstance = false
     for (const pipeline of [this.primaryTinyPipelineSolver, this.alternativeTinyPipelineSolver, this.tinyPipelineSolver]) {
       const solver = pipeline?.getSolver<TinyHyperGraphSolver>("solveGraph")
-      if (solver instanceof IncrementalPreparedPortPointRoutingSolver) this.incrementalSolvers.add(solver)
+      if (solver instanceof IncrementalPreparedPortPointRoutingSolver && !this.incrementalSolvers.has(solver)) {
+        this.incrementalSolvers.add(solver)
+        discoveredInstance = true
+      }
     }
+    // Literal cumulative snapshots can lag at most 511 wrapper steps. New
+    // instances, terminal state, portfolio boundaries and async stops are exact.
+    if (!force && !discoveredInstance && !this.solved && !this.failed && this.iterations - this.incrementalStatsAtIteration < 512) return
+    this.incrementalStatsAtIteration = this.iterations
     if (this.incrementalPathScope) {
       for (const key of Object.keys(this.incrementalPathScope) as Array<keyof IncrementalPathScope>) {
         if (key.startsWith("maximum")) continue
@@ -1573,7 +1588,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             runtime,
             previousIterations + Math.max(0, stopAtIteration - this.iterations),
           )
-          this.updateIncrementalStats()
+          this.updateIncrementalStats(true)
           const terminal = phase.solved || phase.failed
           const consumed = Math.max(
             0,
@@ -1591,6 +1606,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       throw error
     } finally {
       this.asyncRunning = false
+      this.updateIncrementalStats(true)
     }
   }
 
@@ -1871,7 +1887,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     )
   }
 
-  tryFinalAcceptance() {}
+  tryFinalAcceptance(): void {
+    this.updateIncrementalStats(true)
+  }
 
   getConstructorParams() {
     return [this.params] as const

@@ -80,6 +80,8 @@ export class IncrementalPreparedPortPointRoutingSolver extends PreparedPortPoint
   private readonly originalPortY: Float64Array
   private readonly topologyIncidenceKey: string
   private asyncStopAtIteration = Infinity
+  private pendingSetupDebit = 0
+  private activeAdmitted = false
 
   constructor(...params: ConstructorParameters<typeof PreparedPortPointRoutingSolver>) {
     super(...params)
@@ -105,8 +107,10 @@ export class IncrementalPreparedPortPointRoutingSolver extends PreparedPortPoint
       prefixDeclinedQueries: 0, arithmeticDeclinedQueries: 0, changedRepairQueries: 0, changedRepairReusedLabels: 0, unreachableQueries: 0,
     }
     this.incrementalPath.dependencyVisits += work
-    this.incrementalPath.chargedWork += work
-    this.iterations += work
+    // Census is observed setup work, not a native routing iteration. Debit it
+    // only if an incremental query is admitted, so unsupported graphs retain
+    // the native search/rerip/accept-best budget exactly. Wall time always pays.
+    this.pendingSetupDebit = work
     this.stats = { ...this.stats, incrementalPath: this.incrementalPath, incrementalPathScope: this.incrementalPathScope }
   }
 
@@ -178,27 +182,59 @@ export class IncrementalPreparedPortPointRoutingSolver extends PreparedPortPoint
       return
     }
     this.currentPolicy = "incremental"
+    this.activeAdmitted = false
     this.active = this.runQuery(key)
     this.advanceWork()
   }
 
   private advanceWork(): void {
     if (!this.active) throw new Error("Missing incremental work iterator")
-    let consumed = 0
-    const available = Math.max(1, Math.min(32, this.MAX_ITERATIONS - this.iterations + 1, this.asyncStopAtIteration - this.iterations + 1))
-    while (consumed < available) {
+    // The outer BaseSolver.step charged one iteration before entering _step.
+    // Own the accounting here: preflight setup is pending until admission;
+    // admitted generation/debit/label work consumes the existing native cap.
+    this.iterations--
+    let consumed = 0, charged = 0
+    while (consumed < 32) {
+      if (this.activeAdmitted && this.iterations >= Math.min(this.MAX_ITERATIONS, this.asyncStopAtIteration)) break
       const next = this.active.next()
       if (next.done) {
         this.active = undefined
+        // Committing or exhausting an admitted native witness is itself work.
+        if (this.activeAdmitted && charged === 0) {
+          this.iterations++
+          this.incrementalPath.chargedWork++
+        }
         break
       }
       consumed++
+      if (this.activeAdmitted) {
+        this.iterations++
+        this.incrementalPath.chargedWork++
+        charged++
+      } else {
+        this.pendingSetupDebit++
+      }
     }
-    // BaseSolver.step already charged one iteration. Every yielded generation,
-    // dependency, edge update, label scan and relaxation consumes the same budget.
-    this.iterations += Math.max(0, consumed - 1)
-    this.incrementalPath.chargedWork += consumed
     this.stats = { ...this.stats, incrementalPath: this.incrementalPath, incrementalPathScope: this.incrementalPathScope }
+  }
+
+  private *admitQuery(): Generator<void, boolean> {
+    if (this.MAX_ITERATIONS - this.iterations <= this.pendingSetupDebit) {
+      this.incrementalPath.budgetDeclinedQueries++
+      this.currentPolicy = "native"
+      return false
+    }
+    this.activeAdmitted = true
+    // Pay actual previously observed setup units before mutating LPA labels.
+    // Yielding the debit preserves async slice limits without adding a cap or
+    // inventing extra native route attempts. Unadmitted queries pay wall time.
+    while (this.pendingSetupDebit > 0) {
+      this.pendingSetupDebit--
+      yield
+    }
+    this.incrementalPath.activated = 1
+    this.incrementalPath.eligibleQueries++
+    return true
   }
 
   override async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
@@ -354,8 +390,7 @@ export class IncrementalPreparedPortPointRoutingSolver extends PreparedPortPoint
         costs.set(parts, edge * 4)
         yield
       }
-      this.incrementalPath.activated = 1
-      this.incrementalPath.eligibleQueries++
+      if (!(yield* this.admitQuery())) return
       cached = { search: new IncrementalHopSearch(graph, source, this.hops.length), signatures }
       yield* cached.search.initialize(costs)
       this.incrementalPath.freshSearches++
@@ -379,9 +414,8 @@ export class IncrementalPreparedPortPointRoutingSolver extends PreparedPortPoint
         }
         yield
       }
+      if (!(yield* this.admitQuery())) return
       yield* cached.search.changeCosts(changes)
-      this.incrementalPath.activated = 1
-      this.incrementalPath.eligibleQueries++
       cached.signatures = signatures
       this.incrementalPath.repairs++
     }
