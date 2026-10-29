@@ -104,10 +104,10 @@ export interface HgPortPointPathingSolverParams {
     USE_SELECTIVE_RERIP_ROUTING?: boolean
     /** Preserve native routing with dense cost tables and SolverRuntime geometry preparation. */
     USE_PREPARED_PORT_POINT_ROUTING?: boolean
+    /** Default-off persistent LPA* repair for bounded full-route hop queries. */
+    EXPERIMENT_INCREMENTAL_PATH?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
-    /** Keep the original duplicate graph for one certified planning refinement. */
-    CAPTURE_GEOMETRY_FEEDBACK_GRAPH?: boolean
   }
   weights: {
     /** Seed used for deterministic shuffling in rip-selection ordering. */

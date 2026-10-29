@@ -92,8 +92,6 @@ import {
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
-import { Pipeline9GeometryFeedbackSolver } from "./Pipeline9GeometryFeedbackSolver"
-import { createPipeline9GeometryFeedbackStats } from "./auditPipeline9GeometryFeedback"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -116,8 +114,7 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
-  /** Experimental proof-driven global planning refinement, before HD routing. */
-  experimentGeometryFeedback?: boolean
+  experimentIncrementalPath?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -266,9 +263,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
-  geometryFeedbackSolver?: Pipeline9GeometryFeedbackSolver
-  geometryFeedbackStats = createPipeline9GeometryFeedbackStats()
-  private geometryFeedbackExcludedPortLayers = new Set<string>()
   highDensityForceImproveSolver?: Pipeline9HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
@@ -315,7 +309,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
+  pipelineDef = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -528,7 +522,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
-          segmentPortPoints: cms.getGeometryFeedbackSegments(sharedEdgeSegments).flatMap(
+          segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
@@ -548,8 +542,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               USE_SELECTIVE_RERIP_ROUTING: true,
               USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
-              ...(cms.opts.experimentGeometryFeedback === true
-                ? { CAPTURE_GEOMETRY_FEEDBACK_GRAPH: true }
+              ...(cms.opts.experimentIncrementalPath === true
+                ? { EXPERIMENT_INCREMENTAL_PATH: true }
                 : {}),
             },
             weights: {
@@ -1099,40 +1093,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
-    if (mutableOpts.experimentGeometryFeedback === true) {
-      const pathingStep = this.pipelineDef.find((step) => step.solverName === "portPointPathingSolver")!
-      const uniformStep = this.pipelineDef.find((step) => step.solverName === "uniformPortDistributionSolver")!
-      const insertAt = this.pipelineDef.findIndex((step) => step.solverName === "highDensityRouteSolver")
-      this.pipelineDef.splice(insertAt, 0, definePipelineStep(
-        "geometryFeedbackSolver", Pipeline9GeometryFeedbackSolver,
-        (cms) => [{
-          srj: cms.originalSrj,
-          nodes: cms.capacityNodes!,
-          primaryPathingSolver: cms.portPointPathingSolver!,
-          primaryUniformSolver: cms.uniformPortDistributionSolver!,
-          primaryEffort: Math.min(1, cms.effort),
-          getSegments: () => cms.getGeometryFeedbackSegments(
-            cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!),
-          createPathingSolver: (keys: ReadonlySet<string>, remainingEffortRatio: number) => {
-            cms.geometryFeedbackExcludedPortLayers = new Set(keys)
-            const [params] = pathingStep.getConstructorParams(cms) as ConstructorParameters<typeof TinyHypergraphPortPointPathingSolver>
-            return cms.portPointPathingSolver!.createGeometryFeedbackRefinement({
-              ...params, effort: params.effort * remainingEffortRatio,
-            }, keys)
-          },
-          createUniformSolver: (pathing: TinyHypergraphPortPointPathingSolver) => {
-            cms.portPointPathingSolver = pathing
-            const [params] = uniformStep.getConstructorParams(cms) as ConstructorParameters<typeof UniformPortDistributionSolver>
-            return new UniformPortDistributionSolver(params)
-          },
-          stats: cms.geometryFeedbackStats,
-        }],
-        { onSolved: (cms) => {
-          cms.portPointPathingSolver = cms.geometryFeedbackSolver!.pathingSolver
-          cms.uniformPortDistributionSolver = cms.geometryFeedbackSolver!.uniformSolver
-        } },
-      ))
-    }
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
@@ -1173,18 +1133,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minTraceWidth = this.srj.minTraceWidth
     this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
-  }
-
-  private getGeometryFeedbackSegments(segments: SharedEdgeSegment[]): SharedEdgeSegment[] {
-    if (this.geometryFeedbackExcludedPortLayers.size === 0) return segments
-    return segments.map((segment) => ({
-      ...segment,
-      portPoints: segment.portPoints.flatMap((port) => {
-        const availableZ = port.availableZ.filter((z) =>
-          !this.geometryFeedbackExcludedPortLayers.has(`${port.segmentPortPointId}::${z}`))
-        return availableZ.length === 0 ? [] : [{ ...port, availableZ }]
-      }),
-    }))
   }
 
   getConstructorParams() {

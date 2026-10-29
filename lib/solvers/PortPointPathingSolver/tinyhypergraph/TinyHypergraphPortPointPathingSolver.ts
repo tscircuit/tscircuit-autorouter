@@ -2,6 +2,7 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
+import { IncrementalPreparedPortPointRoutingSolver, type IncrementalPathStats, type IncrementalPathScope } from "./IncrementalPreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
@@ -77,12 +78,6 @@ type TinyHypergraphInput = Omit<
   "connections"
 > & {
   connections: TinyRouteConnection[]
-}
-
-type GeometryFeedbackPreparedGraph = {
-  graph: SerializedHyperGraph
-  duplicateReport?: DuplicateCongestedPortSolverReport
-  duplicateError?: string
 }
 
 type PreloadedTraceSegmentBaseline = ReadonlyMap<
@@ -262,7 +257,6 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-export const PIPELINE9_DUPLICATE_PORT_PROXIMITY = 0.05
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -929,6 +923,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
+    experimentIncrementalPath = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -948,7 +943,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? PreparedPortPointRoutingSolver
+        ? experimentIncrementalPath
+          ? IncrementalPreparedPortPointRoutingSolver
+          : PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1040,6 +1037,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  readonly incrementalPath?: IncrementalPathStats
+  readonly incrementalPathScope?: IncrementalPathScope
+  private readonly incrementalSolvers = new Set<IncrementalPreparedPortPointRoutingSolver>()
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1063,13 +1063,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
-  private geometryFeedbackGraph?: GeometryFeedbackPreparedGraph
 
-  constructor(
-    private params: HgPortPointPathingSolverParams,
-    preparedGeometryGraph?: GeometryFeedbackPreparedGraph,
-  ) {
+  constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    if (params.flags.EXPERIMENT_INCREMENTAL_PATH === true) {
+      this.incrementalPathScope = {
+        solverInstances: 0, portCount: 0, regionCount: 0, estimatedTransitions: 0, hopVertices: 0,
+        topologyEligible: 0, maximumVertices: 32768, maximumTransitions: 65536, maximumQueries: 32,
+        prefixDeclinedQueries: 0, arithmeticDeclinedQueries: 0, changedRepairQueries: 0, changedRepairReusedLabels: 0, unreachableQueries: 0,
+      }
+      this.incrementalPath = {
+        activated: 0, queryStarts: 0, repeatedQueries: 0, eligibleQueries: 0,
+        unsupportedQueries: 0, budgetDeclinedQueries: 0, freshSearches: 0,
+        repairs: 0, changedCostReuseQueries: 0, changedTransitions: 0, reusedLabels: 0, repairedLabels: 0,
+        dependencyVisits: 0, generatedTransitions: 0, chargedWork: 0,
+        solvedQueries: 0,
+      }
+    }
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1104,53 +1114,35 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    if (preparedGeometryGraph !== undefined) {
-      if (params.flags.CAPTURE_GEOMETRY_FEEDBACK_GRAPH !== true) {
-        throw new Error("Reusing a geometry-feedback graph requires explicit activation")
-      }
-      graphForTiny = preparedGeometryGraph.graph
-      this.duplicateCongestedPortReport = preparedGeometryGraph.duplicateReport
-      this.duplicateCongestedPortError = preparedGeometryGraph.duplicateError
-    } else {
-      const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-        serializedGraph,
-        {
-          duplicatePortProximity: PIPELINE9_DUPLICATE_PORT_PROXIMITY,
-          useSerializedPortPenalties: false,
-          routeSolveOptions: {
-            ...getTinyViaSizeOptions(params.minViaPadDiameter),
-            USE_SPARSE_CANDIDATE_STORAGE: false,
-            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-            GREEDY_FINAL_ROUTE_ITERS: 4,
-            MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
-            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-            STATIC_REACHABILITY_PRECHECK: true,
-          },
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+      serializedGraph,
+      {
+        duplicatePortProximity: 0.05,
+        useSerializedPortPenalties: false,
+        routeSolveOptions: {
+          ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          USE_SPARSE_CANDIDATE_STORAGE: false,
+          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+          GREEDY_FINAL_ROUTE_ITERS: 4,
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+          STATIC_REACHABILITY_PRECHECK: true,
         },
-      )
-      duplicateCongestedPortSolver.solve()
-      if (duplicateCongestedPortSolver.failed) {
-        this.duplicateCongestedPortError =
-          duplicateCongestedPortSolver.error ?? "unknown error"
-      } else {
-        this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-        graphForTiny = duplicateCongestedPortSolver.getOutput()
-        for (const port of graphForTiny.ports) {
-          const metadata = asTinyPortMetadata(port.d)
-          if (typeof metadata.duplicatedFromPortId !== "string") continue
-          delete metadata._preloadedFixedNetIds
-          delete metadata._preloadedTracePortAssignments
-        }
+      },
+    )
+    duplicateCongestedPortSolver.solve()
+    if (duplicateCongestedPortSolver.failed) {
+      this.duplicateCongestedPortError =
+        duplicateCongestedPortSolver.error ?? "unknown error"
+    } else {
+      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+      graphForTiny = duplicateCongestedPortSolver.getOutput()
+      for (const port of graphForTiny.ports) {
+        const metadata = asTinyPortMetadata(port.d)
+        if (typeof metadata.duplicatedFromPortId !== "string") continue
+        delete metadata._preloadedFixedNetIds
+        delete metadata._preloadedTracePortAssignments
       }
-    }
-    if (params.flags.CAPTURE_GEOMETRY_FEEDBACK_GRAPH === true) {
-      // Capture before any primary search; only original preloaded assignments
-      // are present. Its solution must never become fixed copper in a replan.
-      this.geometryFeedbackGraph = structuredClone({
-        graph: graphForTiny,
-        duplicateReport: this.duplicateCongestedPortReport,
-        duplicateError: this.duplicateCongestedPortError,
-      })
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -1172,6 +1164,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
         params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        params.flags.EXPERIMENT_INCREMENTAL_PATH === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1209,37 +1202,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.statsSnapshotDirty = false
       },
     })
-  }
-
-  createGeometryFeedbackRefinement(
-    params: HgPortPointPathingSolverParams,
-    sourcePortLayerKeys: ReadonlySet<string>,
-  ): TinyHypergraphPortPointPathingSolver {
-    if (!this.solved || this.failed || !this.geometryFeedbackGraph) {
-      throw new Error("Certified refinement requires the captured original graph and a completed primary plan")
-    }
-    const prepared = structuredClone(this.geometryFeedbackGraph)
-    const removedIds = new Set(prepared.graph.ports.filter((port) =>
-      sourcePortLayerKeys.has(port.portId) ||
-      (typeof port.d?.duplicatedFromPortId === "string" &&
-        sourcePortLayerKeys.has(port.d.duplicatedFromPortId)),
-    ).map((port) => port.portId))
-    prepared.graph.ports = prepared.graph.ports.filter((port) => !removedIds.has(port.portId))
-    prepared.graph.regions = prepared.graph.regions.map((region) => ({
-      ...region,
-      pointIds: region.pointIds?.filter((id) => !removedIds.has(id)),
-    }))
-    if (prepared.duplicateReport) {
-      prepared.duplicateReport = {
-        portUseCounts: Object.fromEntries(Object.entries(prepared.duplicateReport.portUseCounts)
-          .filter(([id]) => !removedIds.has(id))),
-        duplicatedPorts: prepared.duplicateReport.duplicatedPorts
-          .filter((entry) => !removedIds.has(entry.sourcePortId)),
-      }
-    }
-    // No new duplicate-port estimation search or artificial port geometry.
-    // The only model change is removal of certified source/duplicate families.
-    return new TinyHypergraphPortPointPathingSolver(params, prepared)
   }
 
   getSolverName(): string {
@@ -1491,6 +1453,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
+    this.updateIncrementalStats()
     this.tinyPipelineSolver.step()
 
     if (
@@ -1513,6 +1476,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
             this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+            this.params.flags.EXPERIMENT_INCREMENTAL_PATH === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1565,6 +1529,28 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             : this.tinyPipelineSolver.progress
     this.statsSnapshotDirty = true
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+    this.updateIncrementalStats()
+  }
+
+  private updateIncrementalStats(): void {
+    if (!this.incrementalPath) return
+    for (const pipeline of [this.primaryTinyPipelineSolver, this.alternativeTinyPipelineSolver, this.tinyPipelineSolver]) {
+      const solver = pipeline?.getSolver<TinyHyperGraphSolver>("solveGraph")
+      if (solver instanceof IncrementalPreparedPortPointRoutingSolver) this.incrementalSolvers.add(solver)
+    }
+    if (this.incrementalPathScope) {
+      for (const key of Object.keys(this.incrementalPathScope) as Array<keyof IncrementalPathScope>) {
+        if (key.startsWith("maximum")) continue
+        this.incrementalPathScope[key] = 0
+        for (const solver of this.incrementalSolvers) this.incrementalPathScope[key] += solver.incrementalPathScope[key]
+      }
+    }
+    for (const key of Object.keys(this.incrementalPath) as Array<keyof IncrementalPathStats>) {
+      this.incrementalPath[key] = 0
+      for (const solver of this.incrementalSolvers) {
+        this.incrementalPath[key] = key === "activated" ? Math.max(this.incrementalPath[key], solver.incrementalPath[key]) : this.incrementalPath[key] + solver.incrementalPath[key]
+      }
+    }
   }
 
   async solveAsync(
@@ -1587,6 +1573,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             runtime,
             previousIterations + Math.max(0, stopAtIteration - this.iterations),
           )
+          this.updateIncrementalStats()
           const terminal = phase.solved || phase.failed
           const consumed = Math.max(
             0,
@@ -1615,6 +1602,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
+      ...(this.incrementalPath ? { incrementalPath: this.incrementalPath, incrementalPathScope: this.incrementalPathScope } : {}),
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
