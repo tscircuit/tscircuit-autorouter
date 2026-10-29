@@ -40,7 +40,7 @@ test("sparse kernel preserves the frozen native numerical result and vectors", (
   expect(clean.executedForceSteps).toBe(20)
   expect(clean.inactiveProjectionExits).toBe(21)
   expect(clean.projectionPassesSkipped).toBe(47)
-  expect(clean.spatialIndexBuilds).toBe(41)
+  expect(clean.spatialIndexBuilds).toBe(21)
   const overlap = createSparseForceStats()
   runSparseForceDirectedImprovement(bounds, cases[7]!.routes, 0, { stats: overlap })
   expect(overlap.inactiveProjectionExits).toBe(0)

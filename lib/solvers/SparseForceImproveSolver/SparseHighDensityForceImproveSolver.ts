@@ -95,6 +95,13 @@ type SegmentSpatialIndex = {
   byLayer: Map<number, SegmentSpatialLayerIndex>
 }
 
+type SegmentSpatialIndexCache = {
+  segments: SegmentObstacle[]
+  index: SegmentSpatialIndex | null
+  stats?: SparseForceStats
+  reuseStats?: SparseForceIndexReuseStats
+}
+
 type ForceImproveSampleEntry = {
   node: NodeWithPortPoints
   routeIndexes: number[]
@@ -167,7 +174,26 @@ export const createSparseForceStats = (): SparseForceStats => ({
 export type ForceImproveOptions = {
   includeForceVectors?: boolean
   stats?: SparseForceStats
+  indexReuseStats?: SparseForceIndexReuseStats
 }
+
+export type SparseForceIndexReuseStats = {
+  kernelCachesCreated: number
+  indexRequests: number
+  indexReuses: number
+  indexInvalidations: number
+  nodeCoordinateChanges: number
+  clampCoordinateChanges: number
+}
+
+export const createSparseForceIndexReuseStats = (): SparseForceIndexReuseStats => ({
+  kernelCachesCreated: 0,
+  indexRequests: 0,
+  indexReuses: 0,
+  indexInvalidations: 0,
+  nodeCoordinateChanges: 0,
+  clampCoordinateChanges: 0,
+})
 
 // The first and last trace segments encode pad escape/arrival geometry.
 const isPointOnProtectedEndpointSegment = (
@@ -456,6 +482,7 @@ const clampMutableRoutesToBounds = (
   bounds: Bounds,
   skipFixed = false,
   stats?: SparseForceStats,
+  segmentIndexCache?: SegmentSpatialIndexCache,
 ) => {
   for (const mutableRoute of mutableRoutes) {
     for (const node of mutableRoute.nodes) {
@@ -464,7 +491,14 @@ const clampMutableRoutesToBounds = (
         if (stats) stats.fixedClampVisitsSkipped += 1
         continue
       }
+      const previousX = node.x
+      const previousY = node.y
       clampNodeToBounds(node, bounds)
+      if (segmentIndexCache) {
+        invalidateSegmentIndexAfterNodeChange(
+          segmentIndexCache, node, previousX, previousY, true,
+        )
+      }
     }
   }
 }
@@ -841,6 +875,39 @@ const buildSegmentSpatialIndex = (
   }
 
   return { byLayer }
+}
+
+const getCachedSegmentSpatialIndex = (
+  cache: SegmentSpatialIndexCache,
+): SegmentSpatialIndex => {
+  if (cache.reuseStats) cache.reuseStats.indexRequests += 1
+  if (cache.index !== null) {
+    if (cache.reuseStats) cache.reuseStats.indexReuses += 1
+    return cache.index
+  }
+  if (cache.stats) cache.stats.spatialIndexBuilds += 1
+  cache.index = buildSegmentSpatialIndex(cache.segments)
+  return cache.index
+}
+
+const invalidateSegmentIndexAfterNodeChange = (
+  cache: SegmentSpatialIndexCache,
+  node: MutableNode,
+  previousX: number,
+  previousY: number,
+  isClamp = false,
+): void => {
+  // Once dirty, later writes cannot invalidate this tree again.
+  if (cache.index === null && !cache.reuseStats) return
+  if (Object.is(node.x, previousX) && Object.is(node.y, previousY)) return
+  if (cache.reuseStats) {
+    cache.reuseStats.nodeCoordinateChanges += 1
+    if (isClamp) cache.reuseStats.clampCoordinateChanges += 1
+  }
+  if (cache.index !== null) {
+    cache.index = null
+    if (cache.reuseStats) cache.reuseStats.indexInvalidations += 1
+  }
 }
 
 const getSegmentSpatialSearches = (
@@ -1357,6 +1424,7 @@ const resolveClearanceConstraints = (
   forceElements: ForceElement[],
   segments: SegmentObstacle[],
   nodeCorrections: Float64Array,
+  segmentIndexCache: SegmentSpatialIndexCache,
   passCount = CLEARANCE_PROJECTION_PASSES,
   maxCorrection = MAX_CLEARANCE_CORRECTION,
   stats?: SparseForceStats,
@@ -1366,10 +1434,9 @@ const resolveClearanceConstraints = (
     let hasActivePenetration = false
     if (stats) {
       stats.projectionPassesExecuted += 1
-      stats.spatialIndexBuilds += 1
     }
     nodeCorrections.fill(0)
-    const segmentSpatialIndex = buildSegmentSpatialIndex(segments)
+    const segmentSpatialIndex = getCachedSegmentSpatialIndex(segmentIndexCache)
 
     for (let leftIndex = 0; leftIndex < forceElements.length; leftIndex += 1) {
       const leftElement = forceElements[leftIndex]
@@ -1573,12 +1640,17 @@ const resolveClearanceConstraints = (
           correctionY *= correctionScale
         }
 
+        const previousX = node.x
+        const previousY = node.y
         node.x += correctionX
         node.y += correctionY
+        invalidateSegmentIndexAfterNodeChange(
+          segmentIndexCache, node, previousX, previousY,
+        )
       }
     }
 
-    clampMutableRoutesToBounds(mutableRoutes, bounds, true, stats)
+    clampMutableRoutesToBounds(mutableRoutes, bounds, true, stats, segmentIndexCache)
     // With no writable positive constraint, later passes see identical geometry.
     // Keep the first update/clamp, including the native signed-zero behavior.
     if (!hasActivePenetration) {
@@ -1647,6 +1719,17 @@ export const runSparseForceDirectedImprovement = (
     }
     return { routes: materializeRoutes(mutableRoutes), forceVectors,
       stepsCompleted: totalSteps }
+  }
+
+  // This cache never escapes one synchronous kernel call. Segment membership,
+  // order, layer, owner, and fixed flags are finalized above and never change
+  // inside the kernel. Every coordinate write below invalidates on bitwise change.
+  // Reuse the original full tree only; no query/candidate order is reconstructed.
+  const segmentIndexCache: SegmentSpatialIndexCache = {
+    segments, index: null, stats, reuseStats: options?.indexReuseStats,
+  }
+  if (segmentIndexCache.reuseStats) {
+    segmentIndexCache.reuseStats.kernelCachesCreated += 1
   }
 
   for (let stepIndex = 0; stepIndex < totalSteps; stepIndex += 1) {
@@ -1739,8 +1822,7 @@ export const runSparseForceDirectedImprovement = (
       }
     }
 
-    if (stats) stats.spatialIndexBuilds += 1
-    const segmentSpatialIndex = buildSegmentSpatialIndex(segments)
+    const segmentSpatialIndex = getCachedSegmentSpatialIndex(segmentIndexCache)
     for (
       let elementIndex = 0;
       elementIndex < forceElements.length;
@@ -2013,18 +2095,24 @@ export const runSparseForceDirectedImprovement = (
           movementY *= movementScale
         }
 
+        const previousX = node.x
+        const previousY = node.y
         node.x += movementX + tighteningMoveX + orthogonalMoveX
         node.y += movementY + tighteningMoveY + orthogonalMoveY
+        invalidateSegmentIndexAfterNodeChange(
+          segmentIndexCache, node, previousX, previousY,
+        )
       }
     }
 
-    clampMutableRoutesToBounds(mutableRoutes, bounds, true, stats)
+    clampMutableRoutesToBounds(mutableRoutes, bounds, true, stats, segmentIndexCache)
     resolveClearanceConstraints(
       bounds,
       mutableRoutes,
       forceElements,
       segments,
       nodeCorrections,
+      segmentIndexCache,
       CLEARANCE_PROJECTION_PASSES,
       MAX_CLEARANCE_CORRECTION,
       stats,
@@ -2037,6 +2125,7 @@ export const runSparseForceDirectedImprovement = (
     forceElements,
     segments,
     nodeCorrections,
+    segmentIndexCache,
     FINAL_CLEARANCE_PROJECTION_PASSES,
     FINAL_MAX_CLEARANCE_CORRECTION,
     stats,
