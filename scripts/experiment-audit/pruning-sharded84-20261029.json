@@ -1,0 +1,478 @@
+{
+  "schemaVersion": 1,
+  "campaign": "pruning-sharded84-20261029",
+  "repository": "tscircuit/tscircuit-autorouter",
+  "candidate": {
+    "id": "future-distance-pruning",
+    "pr": 3199,
+    "originPrLineageOnly": 3199,
+    "sourceIsCurrentPrHead": false,
+    "sourceBranch": "codex/experiment-future-distance-pruning-20261029",
+    "publicationRole": "standalone-refinement-not-current-pr-head",
+    "candidateSha": "952204726757f7ea423c0ca658d7a400903414a2",
+    "candidateTree": "44ab181739c32eda88df89f0a19b305bb6f3229d",
+    "option": "experimentFuturePointDistancePruning",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentFuturePointDistancePruning": true
+    },
+    "evidencePaths": [
+      "highDensityRouteSolver.futurePointDistancePruningStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityRouteSolver.futurePointDistancePruningStats",
+      "stageName": "highDensityRouteSolver",
+      "countFields": [
+        "instances",
+        "contextsPruned"
+      ],
+      "timeFields": [],
+      "eligibleField": "instances",
+      "executedField": "contextsPruned",
+      "positiveSavedFields": [
+        "contextsPruned"
+      ]
+    },
+    "sourceQualification": {
+      "status": "PASS_ROOT_REVIEWED",
+      "sourceTree": "44ab181739c32eda88df89f0a19b305bb6f3229d",
+      "evidenceText": "{\n  \"schemaVersion\": 2,\n  \"status\": \"PASS_FROZEN_V2_EXACT_READ_PRESERVING_DISTANCE_PRUNING_REENTRANT_COLD_CENSUS_NO_PERFORMANCE_RESULT\",\n  \"createdAtUtc\": \"2026-10-29T21:21:34.407237+00:00\",\n  \"localCommit\": \"97a96dd226b1ccaf55ea63cbab0e821489244c4f\",\n  \"tree\": \"44ab181739c32eda88df89f0a19b305bb6f3229d\",\n  \"nativeBaseline\": \"e703f0499188f858b2b5e571ac80091d4c10733a\",\n  \"worktree\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2\",\n  \"sourceClean\": true,\n  \"sourceDiff\": {\n    \"files\": 19,\n    \"insertions\": 606,\n    \"deletions\": 2\n  },\n  \"flag\": \"experimentFuturePointDistancePruning\",\n  \"activation\": \"===true only; metadata outsidehyperParameters, exactone-use internaloptions +expectedfuturearray identity, nativegetNodeKey andinitialfuturecount>=8\",\n  \"defaultOff\": true,\n  \"mechanism\": {\n    \"cache\": \"Originalnative256slot modulo hash/workspace/exactXYZandpenaltyguards/arrayidentity-length invalidation/cachehit-return andcachemiss-store semantics unchanged. No newhash,associativity,shadow orgrids.\",\n    \"nativePublicBodyExactAfterPrivateDispatch\": true,\n    \"ownedCacheOutsideMissLoopNativeAstExact\": true,\n    \"distanceOperators\": \"Native math-utils0.0.36 dx=node.x-point.x;dy=node.y-point.y;sq=dx*dx+dy*dy;Math.sqrt(sq)+actualconditionalpenalty; originalstrictfirstminimum< unchanged.\",\n    \"groupBound\": \"Separate local same-Z anddifferent-Z rawminima perquery; dynamic actual numericforeignpenalty change resetsforeignbound. Orderedmin updateevenroundedcostties.\",\n    \"readPreservation\": \"Allnativecoordinate/coercion/Z/conditionalpenalty reads retained even whenpure sqrt,numericaddition/globalcompare skipped; nativeforof andpointIndex retained.\",\n    \"nonNumericPenalty\": \"Firstnonnumericpenalty disablesALLpruningthroughqueryremainder, preservingnativestringglobalmin/lexicalcomparisons/coercions/exceptions. No swallowederror oralternate solver fallback.\",\n    \"nan\": \"NaNpenalties neverestablishorderedbound; NaNrawsquaredvalues useoriginalarithmetic andneverpoisonraw minima.\",\n    \"bigInt\": \"If sq nonnumber, nativeMath.sqrt executesBEFOREZ/penaltyreads soBigInt failureorderremainsnative.\",\n    \"mathAssumption\": \"UnmodifieddeterministicpuremonotonebuiltinMath.sqrt; arbitraryglobalMathmonkeypatchbehavior isnotclaimed.\",\n    \"eligibility\": \"Copied/replayed/forged/replaced/public-optiongetter-overrides remainlegacy; registrationconsumedafteroriginalsuper/HPcopy/flatMap. No admissioncoordinategetterreads. Priorityfailed-via checkerre-admittedforactualNative search.\",\n    \"extraMemory\": \"Uses originalnativecache arrays. AdditionalrealJSregistration/privatecontextreference+prunedboolean andpermisslocalnumbers exist; no identicaltotalmemoryclaim.\",\n    \"threshold\": \"Initialfuturecount>=8 isanexperimentalshort-loop eligibilitygate, notmeasuredoptimal.\",\n    \"allNearestPoolCovered\": false\n  },\n  \"telemetry\": {\n    \"path\": \"highDensityRouteSolver.futurePointDistancePruningStats\",\n    \"keys\": [\n      \"instances\",\n      \"contextsPruned\"\n    ],\n    \"ownNumericDataObject\": true,\n    \"offOwnPropertyAbsent\": true,\n    \"instances\": \"AdmittedNativeconstructioncount, canexecutezeroqueries.\",\n    \"contextsPruned\": \"Firstactual skippedMath.sqrt+numericaddition percontext;atmostonecounterwritepercontext, retained eveniflaterqueryarithmeticthrows.\",\n    \"invariant\": \"nonnegativeinteger0<=contextsPruned<=instances\",\n    \"worker\": \"Actualcompletedbatchsumonce beforeaccepted-prefix filtering, includingcompletedoutside-prefix execution.\",\n    \"noHotCounterWritesAfterFirstUse\": true,\n    \"notQueryOrWorkVolume\": \"Contextmarkersdonotmeasuretotalqueries,points,sqrts,savingsorallHDcoverage.\",\n    \"zeroInactiveDoesNotInvalidatePhysicalOutput\": true,\n    \"hotReadRefinement\": \"Oneprivatecontext/prunedflagreadperMISSandonefirsteligible-skiprecheck, notperpoint. Subsequent skips onlychecklocalrecordUse. Innerrecheckpreservesreentrantatmostonecount; actualfirstskipretainedbeforelaterthrow.\"\n  },\n  \"validation\": {\n    \"focusedSuites\": 11,\n    \"focusedAssertions\": 143935,\n    \"failures\": 0,\n    \"fullNativeCacheTypedArraysAndPublicSearchStatePerPrefixEqual\": true,\n    \"nearestReferenceNullTiesIEEEAndIdentityLengthPenaltyEpochs\": true,\n    \"originalPrecomputedInputCloneIsolation\": true,\n    \"constructorFutureCoordinateGetterReads\": 0,\n    \"copiedReplayedForgedReplacedOverriddenAndPublicMutableLegacyControls\": true,\n    \"normalPriorityQueueCostsBudgetsRoutesAndWitnessParity\": true,\n    \"priorityRejectedViaReadmission\": true,\n    \"firstActualSkipAndFrozenLedgerNoLaterWrites\": true,\n    \"sourceWorkersAnd17Nodes16BatchesMergeOnceOutsidePrefix\": true,\n    \"fullTypes\": true,\n    \"workerEsmDtsBuild\": true,\n    \"initialSparseTypeFailure\": null,\n    \"materializedSparseBaselineTypeFiles\": 1330,\n    \"compiledFullPrefixFlows\": 12,\n    \"compiledNativeInvariantErrorFlows\": 3,\n    \"compiledLargeBoundedFailureFlows\": 3,\n    \"compiledLargeTrueCensus\": {\n      \"instances\": 8,\n      \"contextsPruned\": 8\n    },\n    \"compiledLargeScope\": \"SameboundednativeMAX12 failureat13steps withsameacceptedroute/error/state;branchqualificationonly, not solved-board gain.\",\n    \"pureNumericBeforeEdits\": {\n      \"cases\": 164000,\n      \"pointEvaluations\": 1320000,\n      \"absoluteBun142Replay\": true\n    },\n    \"pureReadPreservingBeforeEdits\": {\n      \"cases\": 1409,\n      \"errorCases\": 812,\n      \"absoluteBun142Replay\": true\n    },\n    \"actualSourceReadPreserving\": {\n      \"cases\": 1409,\n      \"errorCases\": 760,\n      \"selectedOriginalIdentityErrorAndFullGetterCoercionLogsExact\": true,\n      \"dynamicNumericAndNonNumericPenaltyCounterexamples\": true,\n      \"bigIntBeforeZThrow\": true,\n      \"getterArrayAppendSpliceReverseAndNativeForOf\": true,\n      \"differentErrorCountExplanation\": \"Whole nativecachemethod prereadsonevia penalty forqueryguard; bothreferenceandactualcandidate comparefullmatchingobservablelogs. Purelooporaclehasnoquerycachepreread.\",\n      \"script\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/actual-source-read-preserving.mjs\",\n      \"proposalAdmissionAssertedEveryFixture\": true,\n      \"actualPrunedContextsObserved\": 499\n    },\n    \"sourceAstProof\": true,\n    \"sourceSerialSymbolMetadataFlagParity\": true,\n    \"compiledWorkerSymbols\": \"InheritedoriginalPortPointSymbols do notcrossnative structuredclone; workercomparisonsusepublicclonedgeometry/IDs, serialflagsretainfullmetadata.\",\n    \"oneTestPerFile\": true,\n    \"formatOrLintRun\": false,\n    \"localPerformanceBenchmarkExecuted\": false,\n    \"localRealBoardsRouted\": 0,\n    \"remoteMutations\": false,\n    \"reentrantCensusAndBeforeLaterThrow\": true\n  },\n  \"proofsBeforeSource\": {\n    \"results/distance-pruning-independent-check-v1.mjs\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/results/distance-pruning-independent-check-v1.mjs\",\n      \"sha256\": \"b5fada7b4a1213da6d83509d78ef21de85dca7e2871cc91e2b3e0e7bd95bf813\",\n      \"bytes\": 3715\n    },\n    \"results/DISTANCE-PRUNING-INDEPENDENT-CRITIQUE-v1.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/results/DISTANCE-PRUNING-INDEPENDENT-CRITIQUE-v1.json\",\n      \"sha256\": \"41510bc3bcb0dbd170d87882e82a4284c4ca4689bec3f5d2a5cdba67cd1f4203\",\n      \"bytes\": 4253\n    },\n    \"results/distance-pruning-read-preserving-check-v1.mjs\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/results/distance-pruning-read-preserving-check-v1.mjs\",\n      \"sha256\": \"2c07b17dd660cbb15a4afc8aa164a991ca23461c36cfe21f5c149ebe6bc307bc\",\n      \"bytes\": 6985\n    },\n    \"results/DISTANCE-PRUNING-READ-PRESERVING-REVIEW-v1.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/results/DISTANCE-PRUNING-READ-PRESERVING-REVIEW-v1.json\",\n      \"sha256\": \"658cb97a70ed46ce740ff95d3ae637ec396a7c337ff384673f2b3b4a0c1efff0\",\n      \"bytes\": 3583\n    },\n    \"future-point-distance-pruning/SOURCE-PLAN-v1.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning/SOURCE-PLAN-v1.json\",\n      \"sha256\": \"2042a54fe486825379174e197de6a44a1c1d55e673c871379e77288d46f161a8\",\n      \"bytes\": 5351\n    }\n  },\n  \"sourceFiles\": {\n    \"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts\",\n      \"sha256\": \"66ae47b4a7ea5cda2dd2559f2a8b6e95cb7ded5d246cc3a6e46f67b059d3a003\",\n      \"bytes\": 64705\n    },\n    \"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts\",\n      \"sha256\": \"6739fec0756544eed79893b4754a40e556a8cea4b9aa913dfb6cffb3ff60bbd3\",\n      \"bytes\": 2886\n    },\n    \"lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts\",\n      \"sha256\": \"4b6856ef7e9dfd784095629e4baf5f2d9e78c94678b497362bc49e177a757479\",\n      \"bytes\": 46865\n    },\n    \"lib/solvers/HighDensitySolver/HighDensitySolver.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/solvers/HighDensitySolver/HighDensitySolver.ts\",\n      \"sha256\": \"3ce81deb6c87cf74bfeab3191368ffbbe697b256c8d86ab1fe457ca730df5011\",\n      \"bytes\": 20808\n    },\n    \"lib/solvers/HighDensitySolver/IntraNodeSolver.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/solvers/HighDensitySolver/IntraNodeSolver.ts\",\n      \"sha256\": \"39c7ec3013306f70fd4f5556404ab68670a176e5d10e882fe0bc59ec462af68c\",\n      \"bytes\": 20459\n    },\n    \"lib/solvers/HighDensitySolver/PriorityDagIntraNodeSolver.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/solvers/HighDensitySolver/PriorityDagIntraNodeSolver.ts\",\n      \"sha256\": \"d3629a2a04b4b64415acebd59a083777a822d4750cf36947d3809629189d7e9c\",\n      \"bytes\": 24051\n    },\n    \"lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts\",\n      \"sha256\": \"5ef44c75f0072e913a2edb26a9559312a373f0e4f8372ca11a1c274db4793185\",\n      \"bytes\": 14590\n    },\n    \"lib/solvers/HighDensitySolver/futurePointDistancePruningContext.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/solvers/HighDensitySolver/futurePointDistancePruningContext.ts\",\n      \"sha256\": \"03de5ac37a221e3ea9330f03e961c83b34c890424b464f10ff8171ff480509b0\",\n      \"bytes\": 1473\n    },\n    \"tests/fixtures/futurePointDistancePruningSynthetic.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/fixtures/futurePointDistancePruningSynthetic.ts\",\n      \"sha256\": \"c6f1e805807d1ea819c5d5d7bffa0f90e68c871778b35d18f214bd7b2519ece7\",\n      \"bytes\": 2209\n    },\n    \"tests/future-point-distance-pruning-first-use-census.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-first-use-census.test.ts\",\n      \"sha256\": \"281bfb1007c7d32adc881033b2dfd8303f1b5ffa2aec3cb64d1f2dd0d9c36dec\",\n      \"bytes\": 1048\n    },\n    \"tests/future-point-distance-pruning-intra-priority-prefix.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-intra-priority-prefix.test.ts\",\n      \"sha256\": \"629bbfd118069e01e7587c54ec3e483763df3ed763a6e0f632ba66e1cae377c9\",\n      \"bytes\": 2352\n    },\n    \"tests/future-point-distance-pruning-native-prefix.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-native-prefix.test.ts\",\n      \"sha256\": \"1866aad0ad8a85b0370e82746112850ea055869e8047060b1dfae25be8d1206f\",\n      \"bytes\": 1927\n    },\n    \"tests/future-point-distance-pruning-nearest-differential.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-nearest-differential.test.ts\",\n      \"sha256\": \"442b3076b3a185fe6cf85d4e85eca0cca8da8ea95221011feefbdeaa63a29634\",\n      \"bytes\": 2757\n    },\n    \"tests/future-point-distance-pruning-owned-inputs.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-owned-inputs.test.ts\",\n      \"sha256\": \"aaecb401fbf421c8ace0f28471484e538eb4469a2189e4eb302de35712f14267\",\n      \"bytes\": 2068\n    },\n    \"tests/future-point-distance-pruning-owner-admission.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-owner-admission.test.ts\",\n      \"sha256\": \"c2ddd876113832f8d08e236823d082a0eefa6030decf4e02bfdedc7e9e924d3a\",\n      \"bytes\": 3648\n    },\n    \"tests/future-point-distance-pruning-pipeline-worker.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-pipeline-worker.test.ts\",\n      \"sha256\": \"7648729ac6974306916f15ecea6f080fdbbcd8e052a66f316714e8a83186c5ff\",\n      \"bytes\": 3461\n    },\n    \"tests/future-point-distance-pruning-priority-via-readmission.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-priority-via-readmission.test.ts\",\n      \"sha256\": \"6159c60447321bcd242d9ef39b489f885efceecbb26ceda93b19ebe524cb55c0\",\n      \"bytes\": 2141\n    },\n    \"tests/future-point-distance-pruning-reentrant-census.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-reentrant-census.test.ts\",\n      \"sha256\": \"59f0cbe5781eff6c8500854aca759432b1ce18e08a99afe5885c2a76c3d0be57\",\n      \"bytes\": 1825\n    },\n    \"tests/future-point-distance-pruning-worker-merge-once.test.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/tests/future-point-distance-pruning-worker-merge-once.test.ts\",\n      \"sha256\": \"97831eca02ed9c5379b9b9815eb3842d99e10038df30064b07d6317d368b1ea7\",\n      \"bytes\": 3263\n    }\n  },\n  \"builtArtifacts\": {\n    \"dist/chunk-G3PMV62Z.js\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/chunk-G3PMV62Z.js\",\n      \"sha256\": \"f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4\",\n      \"bytes\": 666\n    },\n    \"dist/chunk-G3PMV62Z.js.map\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/chunk-G3PMV62Z.js.map\",\n      \"sha256\": \"cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3\",\n      \"bytes\": 71\n    },\n    \"dist/index.d.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/index.d.ts\",\n      \"sha256\": \"4fcacfe38c616563085b9f19968a8cdb77a1157c8150852e36ecf9ec5ecb2c15\",\n      \"bytes\": 318203\n    },\n    \"dist/index.js\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/index.js\",\n      \"sha256\": \"92541eec059f1f79b157627a31398d3cebd221193f18be29605b2852bce7af21\",\n      \"bytes\": 3166506\n    },\n    \"dist/index.js.map\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/index.js.map\",\n      \"sha256\": \"540d4eb3df3b97d8d18e16045a8469d4bad6d3a516ff7e74430f064c47f372f4\",\n      \"bytes\": 16182415\n    },\n    \"dist/runtime/bun.d.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/bun.d.ts\",\n      \"sha256\": \"c076a1bdf49b89a141fc255d4b0464b7b819a580d9b3fb3db8e059c5ca4433ee\",\n      \"bytes\": 510\n    },\n    \"dist/runtime/bun.js\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/bun.js\",\n      \"sha256\": \"3ea06e2b24d098537e0ed6de385b3f7b37cd0ebd564b1290070440d71b7a0f73\",\n      \"bytes\": 1046277\n    },\n    \"dist/runtime/bun.js.map\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/bun.js.map\",\n      \"sha256\": \"0231900d6f11feebc48b4b62952f9bc4f642c16b8797e41415c7e6b181cd84db\",\n      \"bytes\": 1081915\n    },\n    \"dist/runtime/node.d.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/node.d.ts\",\n      \"sha256\": \"3a2ad69e62ea3900bfd09066a4c5644c5f8335efdf1aa783e294dd88c1bcf9cc\",\n      \"bytes\": 511\n    },\n    \"dist/runtime/node.js\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/node.js\",\n      \"sha256\": \"ee180b2164e0ea385fb03a1b528edaf7fb450a51e779f4881655ae9eeae751c1\",\n      \"bytes\": 1097590\n    },\n    \"dist/runtime/node.js.map\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/dist/runtime/node.js.map\",\n      \"sha256\": \"1395b25286473653582e74141a2392bda631030712247471117b8b34cd374fcb\",\n      \"bytes\": 1137722\n    },\n    \"lib/runtime/generated/bunWorkerSource.d.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/runtime/generated/bunWorkerSource.d.ts\",\n      \"sha256\": \"6550201561a85b4509b44d148f3e99b5f5f9880c6e3ccb22670496f407e66ae2\",\n      \"bytes\": 51\n    },\n    \"lib/runtime/generated/bunWorkerSource.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/runtime/generated/bunWorkerSource.ts\",\n      \"sha256\": \"180be35cf0536ed3a411f1bec71724438d3fa1e14e5df8e4bb24a9a263db1ac2\",\n      \"bytes\": 1057369\n    },\n    \"lib/runtime/generated/nodeWorkerSource.d.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/runtime/generated/nodeWorkerSource.d.ts\",\n      \"sha256\": \"6550201561a85b4509b44d148f3e99b5f5f9880c6e3ccb22670496f407e66ae2\",\n      \"bytes\": 51\n    },\n    \"lib/runtime/generated/nodeWorkerSource.ts\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning-v2/lib/runtime/generated/nodeWorkerSource.ts\",\n      \"sha256\": \"39ca316841889e731298fc80cb67fbe82c5fd6be6a50b616c0892cc913b77c8b\",\n      \"bytes\": 1110067\n    }\n  },\n  \"logsAndReproduction\": {\n    \"focused-tests-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/focused-tests-final.log\",\n      \"sha256\": \"44325fb18213b2f2701048b39a448f243af3aa53d2dfc417aa460660f667162a\",\n      \"bytes\": 2057\n    },\n    \"full-types-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/full-types-final.log\",\n      \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n      \"bytes\": 0\n    },\n    \"build-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/build-final.log\",\n      \"sha256\": \"b4676f3c4d04fd66032f835792690b49ce9c9b7be6e19499ca4c5d0e4eee731f\",\n      \"bytes\": 1210\n    },\n    \"compiled-workers-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-workers-final.log\",\n      \"sha256\": \"80a176d5eafe77a9c0b25e5c0e91566d4ede735ff91282f1a4cdef5d451c41fb\",\n      \"bytes\": 1511\n    },\n    \"compiled-error-controls-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-error-controls-final.log\",\n      \"sha256\": \"a6c8e9f809dbe8bc0e293b50a8f8d67b3ea1f4fbba158d75c3809777def18f59\",\n      \"bytes\": 833\n    },\n    \"compiled-large-pruning-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-large-pruning-final.log\",\n      \"sha256\": \"da971adf0fe64fe908662d41c8f349e80c876592f7d2c8b7aa449607c06f3f71\",\n      \"bytes\": 897\n    },\n    \"source-proof-final.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/source-proof-final.log\",\n      \"sha256\": \"0dd6f5f12c040a003a510f57ada47c2373fee53e87339479b4d651ab4ab694d2\",\n      \"bytes\": 456\n    },\n    \"ACTUAL-SOURCE-READ-PRESERVING-FINAL.log\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/ACTUAL-SOURCE-READ-PRESERVING-FINAL.log\",\n      \"sha256\": \"877513cc0752ad4b4660ee3fca73cc8addaf9707c8ae0f8da61b0f49df8823f8\",\n      \"bytes\": 506\n    },\n    \"COMPILED-WORKERS.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/COMPILED-WORKERS.json\",\n      \"sha256\": \"de1cbee67bd4c3e6636082f743d7aba55e60d105f0bbe1065ebcc6ea6c144cb6\",\n      \"bytes\": 2068\n    },\n    \"COMPILED-ERROR-CONTROLS.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/COMPILED-ERROR-CONTROLS.json\",\n      \"sha256\": \"07872a3f2d969acec3a7fe656919ce28853cac94e105997e54dec689053f5f58\",\n      \"bytes\": 599\n    },\n    \"COMPILED-LARGE-PRUNING.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/COMPILED-LARGE-PRUNING.json\",\n      \"sha256\": \"da971adf0fe64fe908662d41c8f349e80c876592f7d2c8b7aa449607c06f3f71\",\n      \"bytes\": 897\n    },\n    \"SOURCE-POLICY-PROOF.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/SOURCE-POLICY-PROOF.json\",\n      \"sha256\": \"0dd6f5f12c040a003a510f57ada47c2373fee53e87339479b4d651ab4ab694d2\",\n      \"bytes\": 456\n    },\n    \"compiled-workers.ts\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-workers.ts\",\n      \"sha256\": \"0ffc0e753a4543ce8dc4353510ae32c9666e77219ab9f90aee7286924a9db822\",\n      \"bytes\": 4780\n    },\n    \"compiled-error-controls.ts\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-error-controls.ts\",\n      \"sha256\": \"b3af9f9bb49f285de34f41c4391b2fdf4dcee9be2f506404cc24f1f70512f5ff\",\n      \"bytes\": 1367\n    },\n    \"compiled-large-pruning.ts\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/compiled-large-pruning.ts\",\n      \"sha256\": \"58199e93924c2f4d556ec47316e445a0d15229a12296173a90da2a7266dfe953\",\n      \"bytes\": 2977\n    },\n    \"prove-source.ts\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/prove-source.ts\",\n      \"sha256\": \"74cf44b98ba5e2b7fcec483ac9d4cd38ee75909c4e620510ea0f694369609fe5\",\n      \"bytes\": 3504\n    },\n    \"actual-source-read-preserving.mjs\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/actual-source-read-preserving.mjs\",\n      \"sha256\": \"9c9fc034270ae6d47608c6f065d1ed5573883a2da6ff39223623c88da38232fe\",\n      \"bytes\": 6916\n    },\n    \"run-qualified-source.sh\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/run-qualified-source.sh\",\n      \"sha256\": \"6874d5e46a7b36de7d2e2108755cee6fc03f3e95cfa91497626db4b3bd72b708\",\n      \"bytes\": 1052\n    },\n    \"sparse-typescript.json\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/sparse-typescript.json\",\n      \"sha256\": \"24f6ebb841966106f4e4c9094f5a0f63717812520994557299c756dcc9252d57\",\n      \"bytes\": 258262\n    },\n    \"source-from-e703.patch\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/source-from-e703.patch\",\n      \"sha256\": \"18d1dcfae24e39584879272d7a9551c2d28f4b1935df6c1389b621bb6c4baa4f\",\n      \"bytes\": 53189\n    },\n    \"source-from-v1.patch\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/source-from-v1.patch\",\n      \"sha256\": \"aedab2ce564fcb4f375ee6d490a2b8ee590fe2586622a00b71cefeef2c3a544e\",\n      \"bytes\": 3726\n    }\n  },\n  \"dependencies\": {\n    \"newOrEdited\": false,\n    \"nativeVendoring\": false,\n    \"sharedReadonlyNodeModules\": \"/tmp/autorouter-post588-dependencies/node_modules\",\n    \"bunPath\": \"/tmp/autorouter-post588-bun/package/bin/bun\",\n    \"bunVersion\": \"1.4.2\",\n    \"mathUtilsVersion\": \"0.0.36\",\n    \"nativeDistanceChunk\": {\n      \"path\": \"/tmp/autorouter-bottleneck-future-distance-pruning/node_modules/@tscircuit/math-utils/dist/chunk-EFLPMB4J.js\",\n      \"sha256\": \"56f0361e0c7f16b077e7584a5c62fb4c2f88980bd0e9043a049a46fabaffb100\",\n      \"bytes\": 3594\n    }\n  },\n  \"limits\": [\n    \"No performancebenefitclaimed; allthroughput/timingmicrocasesandrealboardcomparisonsmustbeBlacksmith. Noneexecutedlocally.\",\n    \"ExactnearestselectionunderreviewednativeMath assumptiondoesnotimplynetCPUgain: addednumericguards/groupcomparisons/coldmarkerbranchhaveactualcost.\",\n    \"Onlyownsource-qualifiednativee703comparisonscanestablishvalue; priorhash/lean/shadowtimingsandCPU11%poolnevertransfer orscale.\",\n    \"Contextactivationmarkersproverealpruningexecutiononly, notsavedworkvolume orwhole nearestfunctioncoverage.\",\n    \"Originalmeasured/lean/shadow sources,theirQA/dist andallactualcampaignauthoritiesremainunchanged.\",\n    \"V2reducesrepeatedsource-levelsharedreadswithalocalboolean;noJSC-specificthroughputbenefitisclaimedwithoutBlacksmithmeasurements.\"\n  ],\n  \"frozenParent\": {\n    \"localCommit\": \"04c3f24dd13910638cdb24bdd6af6c0692335e77\",\n    \"tree\": \"b455429e0f5413babc38ba5e8f7b9ac865c98505\",\n    \"qa\": {\n      \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning/QA.json\",\n      \"sha256\": \"58d276a021254876da57fff4157daf0f540ef5b05b869c18ea56e2f1416824d1\",\n      \"bytes\": 25118\n    },\n    \"sourceQaDistUnchanged\": true\n  },\n  \"narrowV2Delta\": {\n    \"files\": 2,\n    \"insertions\": 44,\n    \"deletions\": 4,\n    \"production\": \"Hoistprivatecontextref+localrecordUse onlyaftercachehitguard. Eachskippointcheckslocalbool;firsteligibleouter skipsetsfalseandthenrechecksprivateprunedflagforgetter-reentrancybeforeonecounterwrite. Noarithmetic/selection/cache/scopechange.\",\n    \"tests\": \"Nestedqueryrecordsbeforeouterfirstskip;firstouteractualskipbeforelaternativeRangeError;frozenledgerafterfirstuse.\"\n  },\n  \"unpublishedBindingDraftPreserved\": {\n    \"path\": \"/workspace/experiment-audit/bottleneck-experiments-20261029/future-point-distance-pruning-v2/QA-BINDINGS-DRAFT-v1.json\",\n    \"sha256\": \"31b326adc57d3dd0ce7d09b0cf7c98185de4038bdd4a23796a22bcd7b0e9bec0\",\n    \"bytes\": 26184\n  }\n}\n",
+      "evidenceSha256": "38e401f3fd12498eea15295f14ea15df59a623cd52b37bbd3d7b28b9cfdbec8f",
+      "reviewSha256": "07d12ab1cf21b59bfda61eb4759b8d2e5934140dbf702e535945d680174f4986"
+    },
+    "publication": {
+      "localCommit": "97a96dd226b1ccaf55ea63cbab0e821489244c4f",
+      "remoteSha": "952204726757f7ea423c0ca658d7a400903414a2",
+      "tree": "44ab181739c32eda88df89f0a19b305bb6f3229d",
+      "remoteParent": "e703f0499188f858b2b5e571ac80091d4c10733a",
+      "branch": "codex/experiment-future-distance-pruning-20261029",
+      "sourceIsCurrentPrHead": false,
+      "qaPath": "future-point-distance-pruning-v2/QA.json",
+      "qaSha256": "38e401f3fd12498eea15295f14ea15df59a623cd52b37bbd3d7b28b9cfdbec8f",
+      "reviewPath": "future-point-distance-pruning-v2/INDEPENDENT-REVIEW-v1.json",
+      "reviewSha256": "07d12ab1cf21b59bfda61eb4759b8d2e5934140dbf702e535945d680174f4986",
+      "status": "QUALIFIED_PUBLISHED_STANDALONE_NOT_BENCHMARKED",
+      "flag": "experimentFuturePointDistancePruning",
+      "evidencePath": "highDensityRouteSolver.futurePointDistancePruningStats",
+      "fields": [
+        "instances",
+        "contextsPruned"
+      ],
+      "oldPr3199d639Unchanged": true,
+      "noLocalPerformanceBenchmarksOrBoards": true,
+      "atUtc": "2026-10-29T21:28:01.088649+00:00"
+    }
+  },
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "shards": [
+    {
+      "dataset": "srj18",
+      "shardIndex": 0,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 1,
+          "inputHash": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+          "order": "AB"
+        },
+        {
+          "sample": 5,
+          "inputHash": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+          "order": "BA"
+        },
+        {
+          "sample": 9,
+          "inputHash": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+          "order": "AB"
+        },
+        {
+          "sample": 13,
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 1,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 2,
+          "inputHash": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+          "order": "BA"
+        },
+        {
+          "sample": 6,
+          "inputHash": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+          "order": "AB"
+        },
+        {
+          "sample": 10,
+          "inputHash": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+          "order": "BA"
+        },
+        {
+          "sample": 14,
+          "inputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "order": "AB"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 2,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 3,
+          "inputHash": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+          "order": "AB"
+        },
+        {
+          "sample": 7,
+          "inputHash": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+          "order": "BA"
+        },
+        {
+          "sample": 11,
+          "inputHash": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+          "order": "AB"
+        },
+        {
+          "sample": 15,
+          "inputHash": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 3,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 4,
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "order": "BA"
+        },
+        {
+          "sample": 8,
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "order": "AB"
+        },
+        {
+          "sample": 12,
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "order": "BA"
+        },
+        {
+          "sample": 16,
+          "inputHash": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+          "order": "AB"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 0,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 1,
+          "inputHash": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+          "order": "AB"
+        },
+        {
+          "sample": 8,
+          "inputHash": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "order": "BA"
+        },
+        {
+          "sample": 15,
+          "inputHash": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+          "order": "AB"
+        },
+        {
+          "sample": 22,
+          "inputHash": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 1,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 2,
+          "inputHash": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+          "order": "BA"
+        },
+        {
+          "sample": 9,
+          "inputHash": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+          "order": "AB"
+        },
+        {
+          "sample": 16,
+          "inputHash": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+          "order": "BA"
+        },
+        {
+          "sample": 23,
+          "inputHash": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+          "order": "AB"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 2,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 3,
+          "inputHash": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+          "order": "AB"
+        },
+        {
+          "sample": 10,
+          "inputHash": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+          "order": "BA"
+        },
+        {
+          "sample": 17,
+          "inputHash": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+          "order": "AB"
+        },
+        {
+          "sample": 24,
+          "inputHash": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 3,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 4,
+          "inputHash": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+          "order": "BA"
+        },
+        {
+          "sample": 11,
+          "inputHash": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+          "order": "AB"
+        },
+        {
+          "sample": 18,
+          "inputHash": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+          "order": "BA"
+        },
+        {
+          "sample": 25,
+          "inputHash": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+          "order": "AB"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 4,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 5,
+          "inputHash": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+          "order": "AB"
+        },
+        {
+          "sample": 12,
+          "inputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "order": "BA"
+        },
+        {
+          "sample": 19,
+          "inputHash": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+          "order": "AB"
+        },
+        {
+          "sample": 26,
+          "inputHash": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 5,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 6,
+          "inputHash": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+          "order": "BA"
+        },
+        {
+          "sample": 13,
+          "inputHash": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+          "order": "AB"
+        },
+        {
+          "sample": 20,
+          "inputHash": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+          "order": "BA"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 6,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 7,
+          "inputHash": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+          "order": "AB"
+        },
+        {
+          "sample": 14,
+          "inputHash": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+          "order": "BA"
+        },
+        {
+          "sample": 21,
+          "inputHash": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+          "order": "AB"
+        }
+      ]
+    }
+  ],
+  "plannedAttempts": 84,
+  "plannedJobs": 11,
+  "caseCounts": {
+    "srj18": 16,
+    "srj24": 26
+  },
+  "orderCounts": {
+    "AB": 21,
+    "BA": 21
+  },
+  "orderRule": "AB when (shardIndex + zero-based ordinalWithinShard) is even; BA otherwise",
+  "freshProcessPerAttempt": true,
+  "nativeWithinSampleCachesUnchanged": true,
+  "cpuProfiling": false,
+  "correctedClocks": false,
+  "timingsPooledWithPriorCampaigns": false,
+  "sampleTimeoutSeconds": 360,
+  "externalControllerGuardSeconds": 480,
+  "threads": 1,
+  "concurrency": 1,
+  "effort": 1,
+  "estimators": {
+    "primaryTarget": "Initial highDensityRouteSolver setup through next phase setup, with native constructor and run reported separately",
+    "wholeClock": "Actual solver constructorTimeMs plus official elapsedTimeMs; own matched same-host native/candidate pair only",
+    "qualityCohort": "Both strict solved physical/declared-supported clean, exact outputs/copper/finding inventory plus all compact nonclock official/seven-report/ownership and native routing iteration facts equal",
+    "reports": [
+      "every original case paired ratio",
+      "ratio of own matched clock sums",
+      "median paired ratio",
+      "prospectively assigned AB/BA strata"
+    ],
+    "completedComponentBeforeLaterFailure": "Retain completed source-bound HD intervals and context census separately; no whole output/timing credit",
+    "counterSemantics": "instances and contextsPruned count admitted contexts and contexts with a first actual sqrt+numeric-add skip; not queries, points, sqrt totals, saved work volume, all-HD coverage or a baseline comparator",
+    "clocks": "No profile, clock normalization, historical baseline reuse, prefix correction, outcome-dependent pruning or pooling with prior336/repeat16",
+    "fullUnion": "All16srj18 plus26srj24 original IDs occur exactly once perarm in this84, retaining duplicate inputs and every native failure/timeout",
+    "zeroActivation": "Coherent zero eligible/pruned contexts are valid UNEXERCISED cases, retained in full quality and matched whole clocks; their flag/dispatch/setup costs count. Positive markers only prove actual context pruning, not performance."
+  },
+  "fullOriginalInputPopulationHashes": {
+    "srj18": {
+      "1": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+      "2": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+      "3": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+      "4": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+      "5": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+      "6": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+      "7": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+      "8": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+      "9": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+      "10": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+      "11": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "12": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+      "13": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+      "14": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+      "15": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+      "16": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9"
+    },
+    "srj24": {
+      "1": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+      "2": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+      "3": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+      "4": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+      "5": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+      "6": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+      "7": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+      "8": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+      "9": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+      "10": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+      "11": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+      "12": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+      "13": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+      "14": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+      "15": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+      "16": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+      "17": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+      "18": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+      "19": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+      "20": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+      "21": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+      "22": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+      "23": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+      "24": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+      "25": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+      "26": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113"
+    }
+  },
+  "priorClean336Immutable": true,
+  "priorScratchRepeat16Immutable": true,
+  "originalServerZipRawProofRequired": true,
+  "zeroContextCasesRetainedInQualityAndWhole": true,
+  "authoritySha256": "67d852edd48186ce5cc97413c773c11f2bd793edef9a1407d0531e6266339058",
+  "workflowSha256": "f32079a1ce6d2115bcb98e2f6df2e8d0d2cad3bf77c58ee591424c36ab983903",
+  "runtimeSourceHashes": {
+    "bottleneck-artifact-carrier.py": "4fb63aa5ab8ffdab2b18342013eda457ffd329545bd63150fcd201657f6562d7",
+    "bottleneck-coverage.py": "35c41c383d699c8bf3c9c422cbed8b115a3f216c7310d35018393e2ca0bd2ca9",
+    "bottleneck-feature-contracts.json": "7375e4b9acf69b7eb7306d38156508a257272388acf1c940330879e827514da1",
+    "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "declared-intent-copper-v3.ts": "fee128fedcfd96c1d7e70e6597c027a4aa94fe2af69183fd1e38d77f65e8adf4",
+    "experiment-audit-adapter.ts": "ae6fb244421fc73593ba4765d5dbc9b06d2f18c279e96ebbe32f1118e8af40bf",
+    "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "parse-post588-experiments-log.py": "f9d59dc262f97d970eb7faf4df55a5f6a0a31c271de325c74fac427851518949",
+    "phase-checkpoint-observer.ts": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+    "post588-declared-qualification.py": "c4e23d4495b2b376a48c4e911d962f646ebd0cd8173eb903492e291796de2336",
+    "prepare-pinned-harness.py": "31f614b0e05b36eeb8a263838510cf7267eda8c5313b7671ea0f3d5c14565ce1",
+    "pruning-context-coverage.py": "5805294bc92e05937511d34efbe40f3827dc39e5d1b5402ca95cf4b576a56285",
+    "pruning-shard-artifact-carrier.py": "bea2651894857f3112a81f470098cfac7d5804aba76c9ff3f12d6c05ab267113",
+    "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
+    "run-pruning-sharded.py": "f3b6d4b1448cb07d30eab20dacdcb85c385b584959d9f6275fff06ae2f5a0b17",
+    "run-scratch-repeat.py": "f186d039d3e6f3721fa1baf84ff9e257f654b8a8e739dab2fe811e6729eed7f3",
+    "seal-pruning-sharded-manifest.py": "d60a696908f227edb92ad60684e315458a5d24baa56a7ade463b4fb3f2b0d091",
+    "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+    "tests/bottleneck-artifact-carrier-integrity.py": "40bef0b0b967f2e1971acbb2fda3c1ac42354dd4ec5e6d29addb07da978d2c63",
+    "tests/pruning-context-coverage-integrity.py": "de4f13e1fc9ddf3129bda32b8aea8629d3947a19fe022399700d03ec17f37b11",
+    "tests/pruning-shard-artifact-carrier-integrity.py": "8ce0a6a460c70161a8168af9bb144469a01e6bdb7b9c9a5377102d25a44085a5",
+    "tests/pruning-sharded-integrity.py": "439b6b3b4f361347d583f3955eaf6cd5d37f7d2f1f95028df6eab8fc659ea3fd"
+  },
+  "runSampleSourceSha256": "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396"
+}
