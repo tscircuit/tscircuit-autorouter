@@ -1,4 +1,4 @@
-import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
+import { distance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
@@ -155,10 +155,29 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
 
     for (const segment of this.getFutureConnectionSegments()) {
-      if (
-        pointToSegmentDistance(node, segment.start, segment.end) <
-        minCenterlineDistance
-      ) {
+      const deltaX = segment.end.x - segment.start.x
+      const deltaY = segment.end.y - segment.start.y
+      const lengthSquared = deltaX ** 2 + deltaY ** 2
+      let segmentDistance: number
+      if (lengthSquared === 0) {
+        segmentDistance = distance(node, segment.start)
+      } else {
+        const projectionRatio = Math.max(
+          0,
+          Math.min(
+            1,
+            ((node.x - segment.start.x) * deltaX +
+              (node.y - segment.start.y) * deltaY) /
+              lengthSquared,
+          ),
+        )
+        const dx = node.x - (segment.start.x + projectionRatio * deltaX)
+        const dy = node.y - (segment.start.y + projectionRatio * deltaY)
+        // Preserve the original arithmetic and square-root boundary without
+        // creating a projection point for every candidate/segment check.
+        segmentDistance = Math.sqrt(dx * dx + dy * dy)
+      }
+      if (segmentDistance < minCenterlineDistance) {
         return true
       }
     }
