@@ -1,4 +1,3 @@
-import stringify from "fast-json-stable-stringify"
 import type { Obstacle } from "lib/types"
 
 type Bounds = { minX: number; maxX: number; minY: number; maxY: number }
@@ -58,12 +57,14 @@ function getCoordinates(values: number[]): number[] {
 
 function mergeRectUnion(obstacles: Obstacle[]): Obstacle[] {
   if (obstacles.length < 2) return obstacles
-  const bounds: Bounds[] = obstacles.map((obstacle): Bounds => ({
-    minX: obstacle.center.x - obstacle.width / 2,
-    maxX: obstacle.center.x + obstacle.width / 2,
-    minY: obstacle.center.y - obstacle.height / 2,
-    maxY: obstacle.center.y + obstacle.height / 2,
-  }))
+  const bounds: Bounds[] = obstacles.map(
+    (obstacle): Bounds => ({
+      minX: obstacle.center.x - obstacle.width / 2,
+      maxX: obstacle.center.x + obstacle.width / 2,
+      minY: obstacle.center.y - obstacle.height / 2,
+      maxY: obstacle.center.y + obstacle.height / 2,
+    }),
+  )
   const xs = getCoordinates(bounds.flatMap((b): number[] => [b.minX, b.maxX]))
   const ys = getCoordinates(bounds.flatMap((b): number[] => [b.minY, b.maxY]))
   const columns = xs.length - 1
@@ -143,7 +144,9 @@ export function mergeAnonymousObstacleRects(obstacles: Obstacle[]): Obstacle[] {
       continue
     }
     const { center, width, height, ...attributes } = obstacle
-    const key = stringify(attributes)
+    const key = JSON.stringify(
+      Object.entries(attributes).sort(([a], [b]): number => a.localeCompare(b)),
+    )
     const group = groups.get(key)
     if (group) group.push(obstacle)
     else groups.set(key, [obstacle])
