@@ -52,7 +52,7 @@ The package build, including worker bundles and TypeScript declarations, passes.
 
 ## Repeatable inspection
 
-Run `bun tests/bugs/bugreport3342/inspect-preload.ts` from this checkout. It disables
+Run `bun fixtures/bug-reports/bugreport110-motherboard-power-phase/inspect-preload.ts` from this checkout. It disables
 cache, stops after preload, and reports stage time, input/output SHA-256 hashes,
 and assignment counts. To compare the reproduction revision, copy this script
 to that revision and run it there with the same Bun version and lockfile.

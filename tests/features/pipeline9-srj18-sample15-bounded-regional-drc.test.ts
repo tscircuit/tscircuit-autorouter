@@ -9,8 +9,9 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import fixture from "../fixtures/pipeline9-stalled-regional-context.json"
 
 // Cropped from SRJ18 sample 15. Fixed points at the smaller region's collar
-// block coupled routes; retrying that context spends the remaining search work.
-test("regional repair expands a stalled context before exhausting its shared budget", (): void => {
+// block coupled routes. Complete reference DRC also reports the unchanged
+// via-pad residue after the safe regional improvements are published.
+test("regional repair publishes bounded improvements without hiding via-pad residue", (): void => {
   const originalSrj = fixture.originalSrj as SimpleRouteJson
   const routes = structuredClone(fixture.routes) as HighDensityRoute[]
   const originalRoutes = structuredClone(routes)
@@ -59,10 +60,13 @@ test("regional repair expands a stalled context before exhausting its shared bud
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   const result = solver.getResult()
-  // checks 0.0.233 also catches the 0.095 mm different-net via copper gap.
-  expect(result.initialDrcIssueCount).toBe(118)
-  expect(result.repaired).toBeTrue()
-  expect(result.finalDrcIssueCount).toBe(0)
+  // Reference DRC now also detects the fixture's 39 via-pad violations.
+  expect(result.initialDrcIssueCount).toBe(157)
+  expect(result.acceptedRegionCount).toBeGreaterThan(0)
+  expect(result.repaired).toBeFalse()
+  expect(result.finalDrcIssueCount).toBe(6)
+  expect(result.publishedDrcIssueCount).toBe(6)
+  expect(result.routes).not.toEqual(originalRoutes)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(budget.maxRegions)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(
     budget.maxCandidateAttempts,
@@ -72,7 +76,13 @@ test("regional repair expands a stalled context before exhausting its shared bud
   )
   expect(routes).toEqual(originalRoutes)
   const validation = drcEvaluator({ traces: [], routes: result.routes })
+  const remainingErrors = Array.isArray(validation)
+    ? validation
+    : validation.errors
+  expect(result.publishedDrcIssueCount).toBe(remainingErrors.length)
   expect(
-    Array.isArray(validation) ? validation : validation.errors,
-  ).toHaveLength(0)
+    remainingErrors.every(
+      (error) => error.type === "pcb_pad_pad_clearance_error",
+    ),
+  ).toBeTrue()
 })

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { loadMotherboardPowerPhase } from "./repro"
+import { loadMotherboardPowerPhase } from "../../../fixtures/bug-reports/bugreport110-motherboard-power-phase/repro"
 
 test("shows the captured motherboard power-phase input and output", async (): Promise<void> => {
   for (const name of ["input", "captured-output"] as const) {

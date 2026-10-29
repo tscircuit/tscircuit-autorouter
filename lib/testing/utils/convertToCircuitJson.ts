@@ -673,7 +673,9 @@ function getPadFragmentId(
   return id
 }
 
-function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
+export function createPcbPadElements(
+  srj: SimpleRouteJson,
+): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Map<string, Set<string>>()
   const addedPlatedHoleIds = new Map<string, Set<string>>()

@@ -25,6 +25,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
@@ -838,6 +839,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const viaToPadClearance = getViaToPadClearance(params.originalSrj)
     const viaHoleClearance =
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
@@ -1159,6 +1161,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connMap: params.connMap,
         traceClearance,
         viaClearance,
+        viaToPadClearance,
         includeTraceViaOwnerMetadata: true,
         spatialCellSize:
           Math.max(
@@ -1186,12 +1189,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    let referenceDrcCandidateCache:
-      | {
-          candidateKey: string
-          result: ReturnType<DrcEvaluator>
-        }
-      | undefined
+    // Projection can reject B and return to A. Retain both exact evaluations
+    // without keeping a portfolio's worth of full-board keys and errors.
+    const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1405,8 +1405,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
-        return referenceDrcCandidateCache.result
+      const cachedResult = referenceDrcCache.get(candidateKey)
+      if (cachedResult !== undefined) {
+        return cachedResult
       }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
@@ -1414,7 +1415,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      referenceDrcCandidateCache = { candidateKey, result }
+      if (referenceDrcCache.size >= 2) {
+        const oldestKey = referenceDrcCache.keys().next().value
+        if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
+      }
+      referenceDrcCache.set(candidateKey, result)
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"

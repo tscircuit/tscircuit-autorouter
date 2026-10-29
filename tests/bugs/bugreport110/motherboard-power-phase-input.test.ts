@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { loadMotherboardPowerPhase } from "./repro"
+import { loadMotherboardPowerPhase } from "../../../fixtures/bug-reports/bugreport110-motherboard-power-phase/repro"
 
 test("loads the exact power phase repro without dropping preloaded copper or constraints", () => {
   const input = loadMotherboardPowerPhase()
