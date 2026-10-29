@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { loadMotherboardPowerPhase } from "../../scripts/repro-motherboard-power-phase"
+import { loadMotherboardPowerPhase } from "./repro"
 
 test("loads the exact power phase repro without dropping preloaded copper or constraints", () => {
   const input = loadMotherboardPowerPhase()
@@ -13,5 +13,7 @@ test("loads the exact power phase repro without dropping preloaded copper or con
   expect(input.allowViaInPad).toBe(false)
   expect(input.obstacles.filter((o) => o.isCopperPour)).toHaveLength(2)
   expect(new Set(input.traces?.map((t) => t.pcb_trace_id)).size).toBe(638)
-  expect(input.connections.every((c) => c.pointsToConnect.length >= 2)).toBe(true)
+  expect(input.connections.every((c) => c.pointsToConnect.length >= 2)).toBe(
+    true,
+  )
 })
