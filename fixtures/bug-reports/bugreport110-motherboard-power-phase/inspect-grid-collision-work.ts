@@ -41,15 +41,17 @@ try {
   const [input, options] = JSON.parse(readFileSync(process.argv[2], "utf8"))
   const solver = new PowerTraceExpanderSolver(input, options)
   solver.solve()
-  console.log(JSON.stringify({
-    ...counts,
-    solved: solver.solved,
-    failed: solver.failed,
-    iterations: solver.iterations,
-    outputHash: createHash("sha256")
-      .update(JSON.stringify(solver.getOutput()))
-      .digest("hex"),
-  }))
+  console.log(
+    JSON.stringify({
+      ...counts,
+      solved: solver.solved,
+      failed: solver.failed,
+      iterations: solver.iterations,
+      outputHash: createHash("sha256")
+        .update(JSON.stringify(solver.getOutput()))
+        .digest("hex"),
+    }),
+  )
   if (!solver.solved || solver.failed) process.exitCode = 1
 } finally {
   prototype.getCollisionCandidates = originalCandidates
