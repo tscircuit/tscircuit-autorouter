@@ -1,0 +1,279 @@
+[
+  {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "id": "lazy-hd",
+    "pr": 3199,
+    "option": "experimentLazyHdCandidates",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentLazyHdCandidates": true
+    },
+    "evidencePaths": [
+      "highDensityRouteSolver.lazyHdStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityRouteSolver.lazyHdStats",
+      "stageName": "highDensityRouteSolver",
+      "countFields": [
+        "lazyHdCandidates",
+        "lazyHdA01Candidates",
+        "lazyHdA03Candidates",
+        "lazyHdEagerCandidates",
+        "lazyHdDeferredCandidates",
+        "lazyHdMaterializedCandidates",
+        "lazyHdDeferredA01Candidates",
+        "lazyHdDeferredA03Candidates",
+        "lazyHdMaterializedA01Candidates",
+        "lazyHdMaterializedA03Candidates",
+        "lazyHdDeferredGridCells",
+        "lazyHdDeferredGridStates",
+        "lazyHdMaterializedGridCells",
+        "lazyHdMaterializedGridStates",
+        "lazyHdBudgetWitnesses"
+      ],
+      "timeFields": [
+        "lazyHdMaterializationMs"
+      ],
+      "eligibleField": "lazyHdCandidates",
+      "executedField": "lazyHdDeferredCandidates",
+      "positiveSavedFields": [],
+      "savedComparisons": [
+        [
+          "lazyHdDeferredCandidates",
+          "lazyHdMaterializedCandidates"
+        ]
+      ],
+      "identityEquations": [
+        {
+          "left": "lazyHdCandidates",
+          "sum": [
+            "lazyHdA01Candidates",
+            "lazyHdA03Candidates"
+          ]
+        },
+        {
+          "left": "lazyHdCandidates",
+          "sum": [
+            "lazyHdEagerCandidates",
+            "lazyHdDeferredCandidates"
+          ]
+        },
+        {
+          "left": "lazyHdDeferredCandidates",
+          "sum": [
+            "lazyHdDeferredA01Candidates",
+            "lazyHdDeferredA03Candidates"
+          ]
+        },
+        {
+          "left": "lazyHdMaterializedCandidates",
+          "sum": [
+            "lazyHdMaterializedA01Candidates",
+            "lazyHdMaterializedA03Candidates"
+          ]
+        },
+        {
+          "left": "lazyHdBudgetWitnesses",
+          "sum": [
+            "lazyHdDeferredCandidates"
+          ]
+        }
+      ],
+      "eligibleDefinition": "Actual main-stage lazyHdCandidates ledger count",
+      "executedDefinition": "Actual main-stage lazyHdDeferredCandidates ledger count",
+      "changedDefinition": "Deferred candidates not materialized at the completed HD census; initialized or partial pending allocations alone are not final saved-work proof.",
+      "minimumComparisons": [
+        [
+          "lazyHdDeferredCandidates",
+          "lazyHdMaterializedCandidates"
+        ],
+        [
+          "lazyHdDeferredA01Candidates",
+          "lazyHdMaterializedA01Candidates"
+        ],
+        [
+          "lazyHdDeferredA03Candidates",
+          "lazyHdMaterializedA03Candidates"
+        ],
+        [
+          "lazyHdDeferredGridCells",
+          "lazyHdMaterializedGridCells"
+        ],
+        [
+          "lazyHdDeferredGridStates",
+          "lazyHdMaterializedGridStates"
+        ]
+      ],
+      "maximumFields": {}
+    }
+  },
+  {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "id": "repair-preparation",
+    "pr": 3202,
+    "option": "experimentSharedRepairGeometry",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentSharedRepairGeometry": true
+    },
+    "evidencePaths": [
+      "pipeline9JointDrcRepairSolver.sharedRepairGeometryStats",
+      "pipeline9JointDrcRepairSolver.sharedRepairCircuitStats"
+    ],
+    "coverageContract": {
+      "statsPath": "pipeline9JointDrcRepairSolver.sharedRepairGeometryStats",
+      "stageName": "pipeline9JointDrcRepairSolver",
+      "countFields": [
+        "preparationCalls",
+        "preparedInputsBuilt",
+        "preparedHandoffUses",
+        "convertedNewRoutes",
+        "convertedPreloadedSections",
+        "preparedRoutedTraces",
+        "preparedRoutePoints",
+        "indexedEvaluations",
+        "referenceEvaluations",
+        "referenceCacheHits",
+        "rankingEvaluations",
+        "marginEvaluations"
+      ],
+      "timeFields": [
+        "preparationTimeMs",
+        "indexedTimeMs",
+        "referenceTimeMs",
+        "rankingTimeMs"
+      ],
+      "eligibleField": "preparationCalls",
+      "executedField": "preparedInputsBuilt",
+      "positiveSavedFields": [
+        "preparedHandoffUses"
+      ],
+      "savedComparisons": [],
+      "identityEquations": [
+        {
+          "left": "preparationCalls",
+          "sum": [
+            "preparedInputsBuilt",
+            "preparedHandoffUses"
+          ]
+        }
+      ],
+      "eligibleDefinition": "Actual main-stage preparationCalls ledger count",
+      "executedDefinition": "Actual main-stage preparedInputsBuilt ledger count",
+      "changedDefinition": "Actual synchronous indexed-zero to reference-cache-miss handoffs reuse one prepared candidate geometry, keeping distinct DRC evaluations.",
+      "minimumComparisons": [],
+      "maximumFields": {}
+    },
+    "additionalCoverageContracts": [
+      {
+        "statsPath": "pipeline9JointDrcRepairSolver.sharedRepairCircuitStats",
+        "stageName": "pipeline9JointDrcRepairSolver",
+        "countFields": [
+          "contextBuilds",
+          "conversions",
+          "sourceConnectivityBuilds",
+          "routeConnectivityBuilds",
+          "sourceConnectivityReuses",
+          "sourceResolverBuilds",
+          "routeResolverBuilds",
+          "staticPortBuilds",
+          "staticPadBuilds",
+          "sourceTraceBuilds",
+          "endpointQueries",
+          "endpointCacheHits",
+          "endpointCacheMisses",
+          "endpointObstacleTests",
+          "endpointCacheEntries",
+          "endpointCacheDeclines"
+        ],
+        "timeFields": [],
+        "eligibleField": "conversions",
+        "executedField": "conversions",
+        "positiveSavedFields": [
+          "sourceConnectivityReuses",
+          "endpointCacheHits"
+        ],
+        "savedComparisons": [],
+        "identityEquations": [],
+        "minimumComparisons": [
+          [
+            "conversions",
+            "sourceConnectivityReuses"
+          ],
+          [
+            "endpointQueries",
+            "endpointCacheHits"
+          ],
+          [
+            "endpointQueries",
+            "endpointCacheMisses"
+          ]
+        ],
+        "maximumFields": {
+          "contextBuilds": 2,
+          "endpointCacheEntries": 8192
+        },
+        "eligibleDefinition": "Actual converter calls on early NO-supplied-map or late provided-map private contexts",
+        "executedDefinition": "Actual conversions through either private immutable context, counted separately from prepared-input handoffs",
+        "changedDefinition": "Actual completed repeated early NO-supplied-map sourceConnectivityReuses or endpointCacheHits. Late provided-map conversions never count as avoided graph builds. Reuse units are never summed."
+      }
+    ]
+  },
+  {
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "id": "repair-search-scratch",
+    "pr": 3198,
+    "option": "experimentRepairSearchScratch",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentRepairSearchScratch": true
+    },
+    "evidencePaths": [
+      "pipeline9JointDrcRepairSolver.repairSearchScratchStats"
+    ],
+    "coverageContract": {
+      "statsPath": "pipeline9JointDrcRepairSolver.repairSearchScratchStats",
+      "stageName": "pipeline9JointDrcRepairSolver",
+      "countFields": [
+        "searchInstances",
+        "neighborListsServed",
+        "neighborScratchBuffersCreated",
+        "kernelInstances",
+        "costQueriesServed",
+        "costScratchFramesCreated",
+        "costHitRecordsCreated",
+        "costHitRecordsReused",
+        "ownerAccumulatorsServed",
+        "publicHitArraysCreated"
+      ],
+      "timeFields": [],
+      "eligibleField": "searchInstances",
+      "executedField": "neighborListsServed",
+      "positiveSavedFields": [
+        "costHitRecordsReused"
+      ],
+      "savedComparisons": [
+        [
+          "neighborListsServed",
+          "neighborScratchBuffersCreated"
+        ],
+        [
+          "ownerAccumulatorsServed",
+          "costScratchFramesCreated"
+        ]
+      ],
+      "identityEquations": [],
+      "eligibleDefinition": "Actual main-stage searchInstances ledger count",
+      "executedDefinition": "Actual main-stage neighborListsServed ledger count",
+      "changedDefinition": "Actual native neighbor/all-owner-cost sites served exceed private scratch frames created, or pooled hit records actually reused. Different units stay separate.",
+      "minimumComparisons": [],
+      "maximumFields": {}
+    }
+  }
+]
