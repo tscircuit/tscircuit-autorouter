@@ -1,0 +1,71 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "0da00f5bef6d9945b3fa63e1aa72c138e68e1c7f",
+  "candidates": {
+    "paged_occupancy": "87529e893888fec3831a18444ccfdd085a2bdd4c"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 3,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "8e89038924235f3553d51e73c8b97fd1ad7ece3b",
+    "root_changed_files": [
+      "package.json"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA01/OwnerStorage.ts",
+      "tests/a01/paged-occupancy.test.ts"
+    ]
+  },
+  "caseOrdering": "Three prespecified boards18/1,18/15,24/20 in fixedorder, oneboardperdedicatedCPUlane. Sameboard ABthenBA remains sequential on onecore; no candidate results used forordering.",
+  "selectionScope": "NEW standalone A01 paged occupancy experiment based directly on official10cd. Large occupancy arrays at least1MiB use a plain directory of4096-cell pages; small arrays retain original negative-one-filled Int32Arrays. Root differs only by the legitimate Git pin. Starts directly from official10cd, without the standalone zero-initialized dense-array change or other candidate compounds. Inside allocated pages the internal owner encoding is implementation-defined and logical reads/writes must exactly preserve official semantics. No lazy setup, A03, search policy, future cost or cache compounds. Benefits unmeasured; exact all5output/error/input hashes, iterations, fullDRC/lint gates retained.",
+  "confirmation_scope": "PRIVATE prespecified3board ABBA12freshprocess screen,3CPUlanes on16ARM with26GiBpreflight. Full42confirmation required for a substantial improvement claim. Frozen baseline0da00f5 including its actual dependencies; allotherstockdependencies physically shared. Both candidate refs INVALID until full functional/source QA and root publication.",
+  "screening_scope": "Twofreshobservations perarm/board, ABthenBA, production-defaultcacheeffort1. No cross-VMabsolute timingpooling; a favorable screen only selects forfull42confirmation underoriginal5time/15primaryRSS gates/all>5RSSflaginvestigation."
+}
