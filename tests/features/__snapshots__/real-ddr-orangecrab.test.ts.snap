@@ -4,7 +4,7 @@ exports[`routes every original DDR terminal on the real six-layer OrangeCrab boa
 {
   "connectedEndpoints": 102,
   "connectedNets": 50,
-  "drcErrors": 37,
-  "drillPadOverlaps": 3,
+  "drcErrors": 0,
+  "drillPadOverlaps": 0,
 }
 `;

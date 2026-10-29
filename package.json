@@ -66,7 +66,7 @@
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ca02ef2c5a4e71a4096744000f459ad10f4dcacb",
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/88504e8908a3f2e35ad9805162757ef94357d717",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/63071340ea5a0e7196a1964758066a44051e39fb",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#054d77a1a9a200478736062e1abe4fdb8dc163df",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
