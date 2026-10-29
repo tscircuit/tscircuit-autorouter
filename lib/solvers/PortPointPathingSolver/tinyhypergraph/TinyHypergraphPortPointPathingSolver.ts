@@ -2,7 +2,6 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
-import { IncrementalPreparedPortPointRoutingSolver, type IncrementalPathStats, type IncrementalPathScope } from "./IncrementalPreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
@@ -923,7 +922,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
-    experimentIncrementalPath = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -943,9 +941,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? experimentIncrementalPath
-          ? IncrementalPreparedPortPointRoutingSolver
-          : PreparedPortPointRoutingSolver
+        ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1037,10 +1033,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  readonly incrementalPath?: IncrementalPathStats
-  readonly incrementalPathScope?: IncrementalPathScope
-  private readonly incrementalSolvers = new Set<IncrementalPreparedPortPointRoutingSolver>()
-  private incrementalStatsAtIteration = -512
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1067,20 +1059,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    if (params.flags.EXPERIMENT_INCREMENTAL_PATH === true) {
-      this.incrementalPathScope = {
-        solverInstances: 0, portCount: 0, regionCount: 0, estimatedTransitions: 0, hopVertices: 0,
-        topologyEligible: 0, maximumVertices: 32768, maximumTransitions: 65536, maximumQueries: 32,
-        prefixDeclinedQueries: 0, arithmeticDeclinedQueries: 0, changedRepairQueries: 0, changedRepairReusedLabels: 0, unreachableQueries: 0,
-      }
-      this.incrementalPath = {
-        activated: 0, queryStarts: 0, repeatedQueries: 0, eligibleQueries: 0,
-        unsupportedQueries: 0, budgetDeclinedQueries: 0, freshSearches: 0,
-        repairs: 0, changedCostReuseQueries: 0, changedTransitions: 0, reusedLabels: 0, repairedLabels: 0,
-        dependencyVisits: 0, generatedTransitions: 0, chargedWork: 0,
-        solvedQueries: 0,
-      }
-    }
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1165,7 +1143,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
         params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-        params.flags.EXPERIMENT_INCREMENTAL_PATH === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1454,14 +1431,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    try {
-      this.tinyPipelineSolver.step()
-    } finally {
-      if (this.tinyPipelineSolver.failed) this.updateIncrementalStats(true)
-    }
-    // Preserve every actual instance and exact completed-portfolio counters
-    // before the selection below can discard a pipeline reference.
-    if (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed) this.updateIncrementalStats(true)
+    this.tinyPipelineSolver.step()
 
     if (
       this.candidatePortfolioPhase === "primary" &&
@@ -1483,7 +1453,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
             this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-            this.params.flags.EXPERIMENT_INCREMENTAL_PATH === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1536,36 +1505,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             : this.tinyPipelineSolver.progress
     this.statsSnapshotDirty = true
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
-    this.updateIncrementalStats()
-  }
-
-  private updateIncrementalStats(force = false): void {
-    if (!this.incrementalPath) return
-    let discoveredInstance = false
-    for (const pipeline of [this.primaryTinyPipelineSolver, this.alternativeTinyPipelineSolver, this.tinyPipelineSolver]) {
-      const solver = pipeline?.getSolver<TinyHyperGraphSolver>("solveGraph")
-      if (solver instanceof IncrementalPreparedPortPointRoutingSolver && !this.incrementalSolvers.has(solver)) {
-        this.incrementalSolvers.add(solver)
-        discoveredInstance = true
-      }
-    }
-    // Literal cumulative snapshots can lag at most 511 wrapper steps. New
-    // instances, terminal state, portfolio boundaries and async stops are exact.
-    if (!force && !discoveredInstance && !this.solved && !this.failed && this.iterations - this.incrementalStatsAtIteration < 512) return
-    this.incrementalStatsAtIteration = this.iterations
-    if (this.incrementalPathScope) {
-      for (const key of Object.keys(this.incrementalPathScope) as Array<keyof IncrementalPathScope>) {
-        if (key.startsWith("maximum")) continue
-        this.incrementalPathScope[key] = 0
-        for (const solver of this.incrementalSolvers) this.incrementalPathScope[key] += solver.incrementalPathScope[key]
-      }
-    }
-    for (const key of Object.keys(this.incrementalPath) as Array<keyof IncrementalPathStats>) {
-      this.incrementalPath[key] = 0
-      for (const solver of this.incrementalSolvers) {
-        this.incrementalPath[key] = key === "activated" ? Math.max(this.incrementalPath[key], solver.incrementalPath[key]) : this.incrementalPath[key] + solver.incrementalPath[key]
-      }
-    }
   }
 
   async solveAsync(
@@ -1588,7 +1527,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             runtime,
             previousIterations + Math.max(0, stopAtIteration - this.iterations),
           )
-          this.updateIncrementalStats(true)
           const terminal = phase.solved || phase.failed
           const consumed = Math.max(
             0,
@@ -1606,7 +1544,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       throw error
     } finally {
       this.asyncRunning = false
-      this.updateIncrementalStats(true)
     }
   }
 
@@ -1618,7 +1555,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
-      ...(this.incrementalPath ? { incrementalPath: this.incrementalPath, incrementalPathScope: this.incrementalPathScope } : {}),
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
@@ -1887,9 +1823,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     )
   }
 
-  tryFinalAcceptance(): void {
-    this.updateIncrementalStats(true)
-  }
+  tryFinalAcceptance() {}
 
   getConstructorParams() {
     return [this.params] as const

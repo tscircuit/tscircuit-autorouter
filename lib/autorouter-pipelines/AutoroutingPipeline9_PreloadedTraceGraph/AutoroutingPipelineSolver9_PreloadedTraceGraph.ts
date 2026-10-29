@@ -105,6 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  experimentSharedRepairGeometry?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -114,7 +115,6 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
-  experimentIncrementalPath?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -542,9 +542,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               USE_SELECTIVE_RERIP_ROUTING: true,
               USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
-              ...(cms.opts.experimentIncrementalPath === true
-                ? { EXPERIMENT_INCREMENTAL_PATH: true }
-                : {}),
             },
             weights: {
               SHUFFLE_SEED: 0,
@@ -867,6 +864,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
+            ...(cms.opts.experimentSharedRepairGeometry === true
+              ? { experimentSharedRepairGeometry: true }
+              : {}),
           },
         ]
       },
