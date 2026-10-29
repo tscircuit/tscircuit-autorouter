@@ -6,6 +6,7 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import Flatbush from "flatbush"
 import { getViaLayers } from "high-density-repair03/lib"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
@@ -387,6 +388,7 @@ function createSourceTraces(
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
+  let obstacleIndex: Flatbush | undefined
   const circuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       connections,
@@ -447,8 +449,41 @@ function createSourceTraces(
         getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
       ]
 
-      for (const endpoint of endpoints) {
+      if (!obstacleIndex && obstacles.length > 0) {
+        obstacleIndex = new Flatbush(obstacles.length)
         for (const obstacle of obstacles) {
+          const halfWidth = Math.abs(obstacle.width) / 2
+          const halfHeight = Math.abs(obstacle.height) / 2
+          obstacleIndex.add(
+            obstacle.center.x - halfWidth,
+            obstacle.center.y - halfHeight,
+            obstacle.center.x + halfWidth,
+            obstacle.center.y + halfHeight,
+          )
+        }
+        obstacleIndex.finish()
+      }
+
+      for (const endpoint of endpoints) {
+        // Preserve source obstacle order and the exact distance predicate. The
+        // broad phase only avoids visiting pads remote from this endpoint.
+        const margin = Math.max(
+          Number.EPSILON,
+          Math.abs(endpoint.x) * Number.EPSILON,
+          Math.abs(endpoint.y) * Number.EPSILON,
+        )
+        const candidateIndexes = obstacleIndex
+          ? obstacleIndex
+              .search(
+                endpoint.x - margin,
+                endpoint.y - margin,
+                endpoint.x + margin,
+                endpoint.y + margin,
+              )
+              .sort((left, right) => left - right)
+          : []
+        for (const obstacleId of candidateIndexes) {
+          const obstacle = obstacles[obstacleId]!
           if (pointToBoxDistance(endpoint, obstacle) <= 0) {
             obstaclesContainingEndpoints.push(obstacle)
           }
