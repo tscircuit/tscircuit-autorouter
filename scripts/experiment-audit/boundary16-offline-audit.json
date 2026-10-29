@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 1,
+  "scope": "Read-only original15/16 retained boundary screen. Bind actual4 records; inspect final16 representation and frozen bd21 original-board predicate. No routing, new instrumentation, source/helper edits or public XY/rawPCB exports. Existing scalar checkpoints cannot prove first-producing stage.",
+  "sourceSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+  "sourceTree": "a336ba7ec687e7813d97284faafd294a94e329eb",
+  "sourceByArm": {
+    "A": {
+      "sha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+      "tree": "c96942d07e4887d61759177e552c3d6733021c53"
+    },
+    "B": {
+      "sha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+      "tree": "a336ba7ec687e7813d97284faafd294a94e329eb"
+    }
+  },
+  "parsedEvidenceSha256": "0fe9ef3e7d1f190401a484840771c4415b553848b5651c20af08a420414b817e",
+  "validatorHashes": {
+    "lib/testing/evaluate-relaxed-drc.ts": "d774e4d05931e0e24b2462e9436c9b0aba604aafddc88c99e67e588a4c2fcd59",
+    "lib/testing/getDrcErrors.ts": "8f3aba2532e216d530db5efe3d514ec114f33b4ac0e32d68170522660257a994",
+    "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+    "lib/testing/utils/convertToCircuitJson.ts": "ed6f4c1e7506c7aea52679dc52a0af80af8cacdfc638bb74c852208ba7e32212",
+    "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata.ts": "6ce2359e7c76d888cf9a8c91aee28750ea8b083ed09e6913b8446266bb779f13"
+  },
+  "checksEntrySha256": "4d568a55512ee599df1422eda189b7c7bbbd1ed20bace1e9922033e12b938a6b",
+  "predicateSourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ViaBoardPlacementValidator.ts": "2081d3d334ba0722599a3990792687f334f90dcf73f7f2e8c79997de3eea51fe",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ViaPlacementValidator.ts": "c0ea514b8424f83659331bbe4433cc3cf0b1bb3cf80a2e9f19810b11aeca9654",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts": "0f63459b76a8234a8f61eaa9a81866feac462c1a3d42cc70e7fb6e9886f9f009"
+  },
+  "originalSourceCircuitJson": {
+    "packageName": "dataset-srj18",
+    "relativePath": "circuit-json/sample016-usb-c-power-adapter.json",
+    "sha256": "e013e30c0292fb02d3693ef520d02d43c54ca4f04e3d309c54a67f719fac5a0b"
+  },
+  "artifact": {
+    "repository": "tscircuit/tscircuit-autorouter",
+    "runId": "40802754031",
+    "jobId": "123214537847",
+    "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+    "artifactId": 12867101645,
+    "artifactName": "strongest-refinement-ee0-vs-boundary-only-screen-AB-srj18",
+    "zipBytes": 1572620,
+    "zipSha256": "d896b94f2ec7c9b9e80152d713b3a1a970570820588eac5919f245c301591b1c",
+    "campaign": "ee0-vs-boundary-only",
+    "dataset": "srj18",
+    "executionOrder": "AB",
+    "qualificationMode": "screen",
+    "population": [
+      15,
+      16
+    ],
+    "selectedPlacementSamples": [
+      16
+    ],
+    "lifecycleDiagnosticSamples": [
+      15,
+      16
+    ],
+    "observerSourceSha256": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+    "records": [
+      {
+        "sample": 15,
+        "arm": "A",
+        "runId": "40802754031",
+        "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+        "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+        "options": {
+          "cacheProvider": null,
+          "effort": 1,
+          "retainBestPartialRouting": false,
+          "constrainViaPadPlacement": true
+        },
+        "expectedInputHash": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+        "output": "7964e7546d46ef2ad234cfde2124a5a7a3dd7cd55e7d9d13b01d7e7d73661bc0",
+        "traces": "abac626766eb05ce82f19d02bff1881d79c7ad68d2c7fa1aea438dd2fc4ec0ba",
+        "canonicalRecordSha256": "d29e3e12c7f17e2f42e05c7949f337910374701d0641c3ff70913bc43e6381d3",
+        "officialState": {
+          "didSolve": true,
+          "didTimeout": false,
+          "relaxedDrcPassed": true
+        },
+        "nativeState": {
+          "solverSolved": true,
+          "solverFailed": false,
+          "solverError": null,
+          "inputMutated": false,
+          "actualCacheProviderState": "disabled"
+        },
+        "checkpointRowCount": 146,
+        "checkpointTerminal": {
+          "schemaVersion": 1,
+          "sequence": 145,
+          "campaign": "ee0-vs-boundary-only",
+          "arm": "A",
+          "algorithmSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "githubRunId": "40802754031",
+          "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+          "dataset": "srj18",
+          "originalSample": 15,
+          "inputSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+          "executionOrder": "AB",
+          "observedObjectPath": "solver",
+          "observedConstructorName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+          "observerSourceSha256": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+          "event": "solve_exit",
+          "monotonicMs": 100633.730838,
+          "officialStartOffsetMs": 99985.73220700001,
+          "phaseIndex": 25,
+          "phaseName": null,
+          "activeSolverName": null,
+          "iterations": 2307204,
+          "maxIterations": 102305965,
+          "activeIterations": null,
+          "activeMaxIterations": null,
+          "solved": true,
+          "failed": false,
+          "error": null,
+          "evidence": {
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.RETAIN_BEST_PARTIAL_ROUTING": false,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialRouteCount": null,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.problem.regionLayerChangeAllowedNetIds.length": 5800,
+            "highDensityRouteSolver.viaPlacementContext.layerCount": 4
+          }
+        },
+        "layerCount": 4,
+        "supplementalCounts": {
+          "referenceFullCopperChecks": 0,
+          "boardCopperChecks": 0,
+          "viaBoardChecks": 0
+        }
+      },
+      {
+        "sample": 15,
+        "arm": "B",
+        "runId": "40802754031",
+        "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+        "sourceSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+        "options": {
+          "cacheProvider": null,
+          "effort": 1,
+          "retainBestPartialRouting": false,
+          "constrainViaPadPlacement": true
+        },
+        "expectedInputHash": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+        "output": "7964e7546d46ef2ad234cfde2124a5a7a3dd7cd55e7d9d13b01d7e7d73661bc0",
+        "traces": "abac626766eb05ce82f19d02bff1881d79c7ad68d2c7fa1aea438dd2fc4ec0ba",
+        "canonicalRecordSha256": "478d8643db07e8d885ef96a97cf1fd4d29251365aec5da0924095b604c398a7e",
+        "officialState": {
+          "didSolve": true,
+          "didTimeout": false,
+          "relaxedDrcPassed": true
+        },
+        "nativeState": {
+          "solverSolved": true,
+          "solverFailed": false,
+          "solverError": null,
+          "inputMutated": false,
+          "actualCacheProviderState": "disabled"
+        },
+        "checkpointRowCount": 146,
+        "checkpointTerminal": {
+          "schemaVersion": 1,
+          "sequence": 145,
+          "campaign": "ee0-vs-boundary-only",
+          "arm": "B",
+          "algorithmSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+          "githubRunId": "40802754031",
+          "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+          "dataset": "srj18",
+          "originalSample": 15,
+          "inputSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+          "executionOrder": "AB",
+          "observedObjectPath": "solver",
+          "observedConstructorName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+          "observerSourceSha256": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+          "event": "solve_exit",
+          "monotonicMs": 101322.537454,
+          "officialStartOffsetMs": 100688.953554,
+          "phaseIndex": 25,
+          "phaseName": null,
+          "activeSolverName": null,
+          "iterations": 2307204,
+          "maxIterations": 102305965,
+          "activeIterations": null,
+          "activeMaxIterations": null,
+          "solved": true,
+          "failed": false,
+          "error": null,
+          "evidence": {
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.RETAIN_BEST_PARTIAL_ROUTING": false,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialRouteCount": null,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.problem.regionLayerChangeAllowedNetIds.length": 5800,
+            "highDensityRouteSolver.viaPlacementContext.layerCount": 4
+          }
+        },
+        "layerCount": 4,
+        "supplementalCounts": {
+          "referenceFullCopperChecks": 0,
+          "boardCopperChecks": 0,
+          "viaBoardChecks": 0
+        }
+      },
+      {
+        "sample": 16,
+        "arm": "A",
+        "runId": "40802754031",
+        "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+        "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+        "options": {
+          "cacheProvider": null,
+          "effort": 1,
+          "retainBestPartialRouting": false,
+          "constrainViaPadPlacement": true
+        },
+        "expectedInputHash": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+        "output": "031450107526a808e545a9a158253743f1cc806d5f198e92633c2b52801ab412",
+        "traces": "b94258b60a8ddda6b4264a5294cbb1e5ab17fdbb2a813fd395d4af0f0ff6117a",
+        "canonicalRecordSha256": "00c83f3bcd792eff14dbac52a28e140033cad2249c9ebbebba6d980ab2eafc81",
+        "officialState": {
+          "didSolve": true,
+          "didTimeout": false,
+          "relaxedDrcPassed": true
+        },
+        "nativeState": {
+          "solverSolved": true,
+          "solverFailed": false,
+          "solverError": null,
+          "inputMutated": false,
+          "actualCacheProviderState": "disabled"
+        },
+        "checkpointRowCount": 146,
+        "checkpointTerminal": {
+          "schemaVersion": 1,
+          "sequence": 145,
+          "campaign": "ee0-vs-boundary-only",
+          "arm": "A",
+          "algorithmSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "githubRunId": "40802754031",
+          "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+          "dataset": "srj18",
+          "originalSample": 16,
+          "inputSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+          "executionOrder": "AB",
+          "observedObjectPath": "solver",
+          "observedConstructorName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+          "observerSourceSha256": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+          "event": "solve_exit",
+          "monotonicMs": 22905.407895,
+          "officialStartOffsetMs": 22375.177077,
+          "phaseIndex": 25,
+          "phaseName": null,
+          "activeSolverName": null,
+          "iterations": 522929,
+          "maxIterations": 100522264,
+          "activeIterations": null,
+          "activeMaxIterations": null,
+          "solved": true,
+          "failed": false,
+          "error": null,
+          "evidence": {
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.RETAIN_BEST_PARTIAL_ROUTING": false,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialRouteCount": null,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.problem.regionLayerChangeAllowedNetIds.length": 4695,
+            "highDensityRouteSolver.viaPlacementContext.layerCount": 4
+          }
+        },
+        "layerCount": 4,
+        "supplementalCounts": {
+          "referenceFullCopperChecks": 0,
+          "boardCopperChecks": 1,
+          "viaBoardChecks": 1
+        }
+      },
+      {
+        "sample": 16,
+        "arm": "B",
+        "runId": "40802754031",
+        "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+        "sourceSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+        "options": {
+          "cacheProvider": null,
+          "effort": 1,
+          "retainBestPartialRouting": false,
+          "constrainViaPadPlacement": true
+        },
+        "expectedInputHash": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+        "output": "e88f5894d031cc74b25f5c10af07dca8224179f04758455e10b1397f111c3a90",
+        "traces": "89e591711022d6751f78c5f0394ee0bed8cb913b5235d02baaaaa2f128145516",
+        "canonicalRecordSha256": "ea00ed0ff84e730f9fff69997db28c59718b9c16fa5c3ec67ceeb58c099e6355",
+        "officialState": {
+          "didSolve": true,
+          "didTimeout": false,
+          "relaxedDrcPassed": true
+        },
+        "nativeState": {
+          "solverSolved": true,
+          "solverFailed": false,
+          "solverError": null,
+          "inputMutated": false,
+          "actualCacheProviderState": "disabled"
+        },
+        "checkpointRowCount": 146,
+        "checkpointTerminal": {
+          "schemaVersion": 1,
+          "sequence": 145,
+          "campaign": "ee0-vs-boundary-only",
+          "arm": "B",
+          "algorithmSha": "bd21dd642b4989b00e8279fae5c60cc7276ad642",
+          "githubRunId": "40802754031",
+          "controllerSha": "4110851045d0d51846fecf435e3e6089a3fdf283",
+          "dataset": "srj18",
+          "originalSample": 16,
+          "inputSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+          "executionOrder": "AB",
+          "observedObjectPath": "solver",
+          "observedConstructorName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+          "observerSourceSha256": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+          "event": "solve_exit",
+          "monotonicMs": 23107.872062,
+          "officialStartOffsetMs": 22561.664093,
+          "phaseIndex": 25,
+          "phaseName": null,
+          "activeSolverName": null,
+          "iterations": 522947,
+          "maxIterations": 100522282,
+          "activeIterations": null,
+          "activeMaxIterations": null,
+          "solved": true,
+          "failed": false,
+          "error": null,
+          "evidence": {
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.RETAIN_BEST_PARTIAL_ROUTING": false,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.stats.retainedPartialRouteCount": null,
+            "portPointPathingSolver.tinyPipelineSolver.solveGraph.problem.regionLayerChangeAllowedNetIds.length": 4695,
+            "highDensityRouteSolver.viaPlacementContext.layerCount": 4
+          }
+        },
+        "layerCount": 4,
+        "supplementalCounts": {
+          "referenceFullCopperChecks": 0,
+          "boardCopperChecks": 1,
+          "viaBoardChecks": 1
+        }
+      }
+    ]
+  }
+}

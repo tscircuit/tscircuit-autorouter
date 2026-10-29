@@ -1,0 +1,61 @@
+name: Boundary16 final retained representation audit
+
+on:
+  push:
+    branches: [codex/boundary16-final-artifact-audit-20261029]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: bd21dd642b4989b00e8279fae5c60cc7276ad642
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Verify exact retained boundary18 ZIP and all4 actual final-capture identities
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! python3 controller/scripts/experiment-audit/read-boundary16-artifact.py --source candidate --output retained-artifacts --manifest controller/scripts/experiment-audit/boundary16-offline-audit.json > private-identity-audit.log 2>&1; then
+            echo "Retained-artifact identity audit failed; detailed data remains on the ephemeral runner."
+            exit 1
+          fi
+      - name: Install unchanged declared dependencies without routing
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Read retained sample16 materialized copper using unchanged original evaluators
+        run: |
+          mkdir -p candidate/scripts/experiment-audit
+          cp controller/scripts/experiment-audit/audit-boundary16-final-representations.ts candidate/scripts/experiment-audit/
+          cd candidate
+          if ! bun scripts/experiment-audit/audit-boundary16-final-representations.ts ../retained-artifacts/boundary16-placement-bindings.json ../boundary16-final-representations-aggregate.json > ../private-placement-audit.log 2>&1; then
+            echo "Retained placement audit failed; detailed data remains on the ephemeral runner."
+            exit 1
+          fi
+      - name: Export aggregates and provenance only
+        run: |
+          python3 - <<'PY'
+          import json
+          identity = json.load(open('retained-artifacts/boundary16-identity-receipt.json'))
+          placement = json.load(open('boundary16-final-representations-aggregate.json'))
+          aggregate = {'scope': 'Read-only immutable boundary18 retained final outputs and all4 identities; original checker and frozen source predicate replay; no routing, new stage instrumentation, source/helper edits, rawXY or PCB exports; first-producing stage undetermined', 'identity': identity, 'placement': placement}
+          json.dump(aggregate, open('boundary16-final-artifact-audit-aggregate.json', 'w'), indent=2)
+          print('BOUNDARY16_FINAL_ARTIFACT_AUDIT_JSON ' + json.dumps(aggregate, separators=(',', ':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boundary16-final-artifact-audit-aggregate
+          path: boundary16-final-artifact-audit-aggregate.json
