@@ -18,6 +18,7 @@ type ProofTask = {
   scenarioName: string
   totalSamples: number
   hashAfterPerformance: boolean
+  cacheMode: "production-default" | "disabled"
 }
 
 const task = JSON.parse(readFileSync(process.argv[2]!, "utf8")) as ProofTask
@@ -28,6 +29,7 @@ const sha = (value: unknown): string =>
 const rss = (): number => process.resourceUsage().maxRSS * 1024
 let phase = "loading"
 let solver: any
+let measurements: Record<string, unknown> = {}
 const progress = (nextPhase: string): void => {
   phase = nextPhase
   writeFileSync(task.progressPath, JSON.stringify({
@@ -36,6 +38,7 @@ const progress = (nextPhase: string): void => {
     peakRssBytes: rss(),
     activeStage: solver?.pipelineDef[solver.currentPipelineStepIndex]?.solverName,
     iterations: solver?.iterations,
+    measurements,
   }))
 }
 
@@ -51,7 +54,10 @@ const inputSha256 = task.inputSha256
 const peakRssBeforeConstructorBytes = rss()
 progress("constructor")
 const constructionStart = performance.now()
-solver = new Pipeline(input, { effort: task.effort, cacheProvider: null })
+const options = task.cacheMode === "production-default"
+  ? { effort: task.effort }
+  : { effort: task.effort, cacheProvider: null }
+solver = new Pipeline(input, options)
 const constructorMs = performance.now() - constructionStart
 progress("solve")
 const timer = setInterval(() => progress(phase), 5000)
@@ -66,8 +72,18 @@ const solveMs = performance.now() - start
 clearInterval(timer)
 const peakRssAfterSolveBytes = rss()
 const solved = solver.solved === true && solver.failed !== true && thrownError === null
+measurements = {
+  constructorMs,
+  solveMs,
+  routingMs: constructorMs + solveMs,
+  peakRssBeforeConstructorBytes,
+  peakRssAfterSolveBytes,
+  routingCompleted: solved,
+  sourceSolveError: thrownError ?? solver.error ?? null,
+}
 const stageTiming = extractBenchmarkStageTiming(solver, solved ? "complete" : "partial")
 progress("validation")
+const validationStart = performance.now()
 let traces: any[] | null = null
 let output: unknown = null
 let drcErrorCount: number | null = null
@@ -121,6 +137,17 @@ if (solved) {
   }
 }
 const peakRssAfterValidationBytes = rss()
+const validationMs = performance.now() - validationStart
+measurements = {
+  ...measurements,
+  validationMs,
+  peakRssAfterValidationBytes,
+  drcErrorCount,
+  boardAwareDrcErrorCount,
+  traceCount: traces?.length ?? null,
+  viaCount,
+  wireCount,
+}
 // Freeze both memory boundaries before any full-output serialization. The
 // correctness processes are separate and their timings/RSS are never pooled.
 progress("hash")
@@ -138,6 +165,8 @@ const result = {
   arm: task.arm,
   sourceSha: task.sourceSha,
   mode: task.mode,
+  cacheMode: task.cacheMode,
+  bunVersion: Bun.version,
   dataset: task.dataset,
   sample: task.sample,
   scenarioName: task.scenarioName,
@@ -148,6 +177,8 @@ const result = {
   error: thrownError ?? solver.error ?? null,
   constructorMs,
   solveMs,
+  routingMs: constructorMs + solveMs,
+  validationMs,
   peakRssBeforeConstructorBytes,
   peakRssAfterSolveBytes,
   peakRssAfterValidationBytes,

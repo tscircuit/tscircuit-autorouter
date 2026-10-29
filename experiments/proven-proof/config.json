@@ -1,15 +1,14 @@
 {
-  "phase": "probe",
+  "phase": "full-gate",
   "base_sha": "e703f0499188f858b2b5e571ac80091d4c10733a",
   "candidates": {
-    "retention": "2b71e6da78810ab6634cea6a331ad853949586b2",
-    "hd_cache": "2930ac148c7e2cdc1c43dac3bad97dc18fc1a9c6",
-    "endpoint_broadphase": "a9c98a85b2ecc87b2e048d7da60034cba0a88c75"
+    "retention": "813014312536b54ead20a0cf3e4cfc30e6381a29"
   },
   "bun_version": "1.4.3",
   "cpu_lanes": 2,
   "orders": [
-    "AB"
+    "AB",
+    "BA"
   ],
   "cycles": 1,
   "run_correctness": false,
@@ -19,14 +18,20 @@
   "solve_timeout_s": 360,
   "validation_timeout_s": 120,
   "hash_timeout_s": 120,
-  "cases": [
-    {
-      "dataset": "srj18",
-      "sample": 15
-    },
-    {
-      "dataset": "srj24",
-      "sample": 20
-    }
-  ]
+  "cases": "all",
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  }
 }

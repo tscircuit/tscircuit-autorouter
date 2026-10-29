@@ -32,6 +32,10 @@ def command(args, cwd=ROOT):
 
 def config():
     value = json.loads((HERE / 'config.json').read_text())
+    if value.get('cache_mode', 'disabled') not in ['production-default', 'disabled']:
+        raise ValueError('Invalid explicit cache mode')
+    if value['phase'] == 'full-gate' and value.get('cache_mode') != 'production-default':
+        raise ValueError('Full gate must exercise production default within-board caching')
     for sha in [value['base_sha'], *value['candidates'].values()]:
         if not re.fullmatch(r'[a-f0-9]{40}', sha) or sha == '0' * 40:
             raise ValueError('Every source ref must be a literal nonzero full SHA')
@@ -164,6 +168,7 @@ async def one(cfg, case, arm, cpu, mode, comparison, cycle, order, position):
         'resultPath': str(folder / 'result.json'),
         'progressPath': str(folder / 'progress.json'),
         'hashAfterPerformance': cfg.get('hash_after_performance', False),
+        'cacheMode': cfg.get('cache_mode', 'disabled'),
     }
     inputs = json.loads((OUT / 'inputs' / 'manifest.json').read_text())
     source_input = next(item for item in inputs if item['dataset'] == case['dataset'] and item['sample'] == case['sample'])
@@ -218,7 +223,9 @@ async def one(cfg, case, arm, cpu, mode, comparison, cycle, order, position):
             await asyncio.sleep(0.2)
         await process.wait()
     if killed:
-        row = {'status': killed, 'hashes': None, 'lastProgress': read_progress(folder / 'progress.json')}
+        last_progress = read_progress(folder / 'progress.json')
+        checkpoint = last_progress.get('measurements', {}) if last_progress else {}
+        row = {**checkpoint, 'status': killed, 'hashes': None, 'lastProgress': last_progress}
     elif process.returncode != 0 or not (folder / 'result.json').is_file():
         row = {'status': 'harness_error', 'hashes': None, 'stderrTail': (folder / 'stderr.log').read_text()[-4000:]}
     else:
@@ -245,7 +252,11 @@ async def run(cfg):
         'laneCpus': cpus, 'platform': sys.platform,
         'runnerName': os.environ.get('RUNNER_NAME'),
         'controllerSha': os.environ.get('GITHUB_SHA'),
-        'pipelineCacheProvider': None,
+        'cacheMode': cfg.get('cache_mode', 'disabled'),
+        'pipelineCacheProvider': 'global-in-memory-default' if cfg.get('cache_mode') == 'production-default' else None,
+        'architecture': os.uname().machine,
+        'cgroupCpuMax': pathlib.Path('/sys/fs/cgroup/cpu.max').read_text().strip() if pathlib.Path('/sys/fs/cgroup/cpu.max').is_file() else None,
+        'cgroupMemoryMax': pathlib.Path('/sys/fs/cgroup/memory.max').read_text().strip() if pathlib.Path('/sys/fs/cgroup/memory.max').is_file() else None,
         'memoryMetric': 'Fresh child maxRSS at end of solve and after trace lint + relaxed and board-aware DRC, excluding SVG generation and output hashing. Parent whole-process peak is separate diagnostic only.',
     }
     save(OUT / 'runtime.json', runtime)
@@ -268,9 +279,10 @@ async def run(cfg):
 
 def summary(cfg):
     rows = [json.loads(line) for line in (OUT / 'results.jsonl').read_text().splitlines()] if (OUT / 'results.jsonl').is_file() else []
-    result = {'phase': cfg['phase'], 'records': len(rows), 'arms': {}, 'harnessErrors': [row['taskId'] for row in rows if row['status'] == 'harness_error']}
+    expected_records = len(cfg['cases']) * (2 * len(cfg['candidates']) * cfg['cycles'] * len(cfg['orders']) + (1 + len(cfg['candidates']) if cfg['run_correctness'] else 0))
+    result = {'phase': cfg['phase'], 'records': len(rows), 'expectedRecords': expected_records, 'runComplete': len(rows) == expected_records, 'arms': {}, 'harnessErrors': [row['taskId'] for row in rows if row['status'] == 'harness_error']}
     for arm in cfg['candidates']:
-        item = {'matchedCases': [], 'parityMismatches': [], 'parityCensoredCases': [], 'completedOutputParityCases': 0, 'censoredCases': [], 'datasetTotals': {}}
+        item = {'matchedCases': [], 'parityMismatches': [], 'parityCensoredCases': [], 'failedSignatureComparisons': [], 'completedOutputParityCases': 0, 'censoredCases': [], 'censoredMemoryComparisons': [], 'datasetTotals': {}}
         for case in cfg['cases']:
             key = (case['dataset'], case['sample'])
             cohort = [row for row in rows if (row['dataset'], row['sample']) == key]
@@ -284,40 +296,125 @@ def summary(cfg):
                 if left and compared and all(row['status'] != 'solved' for row in [left, *compared]):
                     fields = ['status', 'inputSha256']
                     item['parityCensoredCases'].append({**case, 'statuses': sorted({row['status'] for row in [left, *compared]})})
+                    if all(row['status'] in ['failed', 'exception'] for row in [left, *compared]):
+                        left = {**left, 'failureSignature': failure_signature(left)}
+                        compared = [{**row, 'failureSignature': failure_signature(row)} for row in compared]
+                        fields.append('failureSignature')
+                        item['failedSignatureComparisons'].append({**case, 'base': left['failureSignature'], 'observations': [{'arm': row['arm'], 'signature': row['failureSignature']} for row in compared], 'allSignaturesAgree': all(row['failureSignature'] == left['failureSignature'] for row in compared)})
                 elif left and left.get('hashes') and compared and all(row.get('hashes') for row in compared):
                     item['completedOutputParityCases'] += 1
                 differences = sorted({field for right in compared or [None] for field in fields if not left or not right or left.get(field) != right.get(field)})
+                if not left or not right_rows:
+                    differences = sorted(set(differences) | {'missing-result'})
                 if differences:
                     item['parityMismatches'].append({**case, 'fields': differences})
             pair = {name: [row for row in cohort if row['mode'] == 'performance' and row['comparisonCandidate'] == arm and row['arm'] == name] for name in ['base', arm]}
             expected = cfg['cycles'] * len(cfg['orders'])
             if any(len(pair[name]) != expected or any(row['status'] != 'solved' for row in pair[name]) for name in pair):
                 item['censoredCases'].append({**case, 'statuses': {name: [row['status'] for row in group] for name, group in pair.items()}})
+                item['censoredMemoryComparisons'].append(censored_memory(case, pair, arm, cfg))
                 continue
-            medians = {name: {metric: statistics.median(row[metric] for row in group) for metric in ['solveMs', 'peakRssAfterSolveBytes', 'peakRssAfterValidationBytes']} for name, group in pair.items()}
+            medians = {name: {metric: statistics.median(row[metric] for row in group) for metric in ['constructorMs', 'solveMs', 'routingMs', 'validationMs', 'peakRssAfterSolveBytes', 'peakRssAfterValidationBytes']} for name, group in pair.items()}
             metrics = {**case, 'observationsPerArm': expected, 'base': medians['base'], 'candidate': medians[arm], 'relaxedDrcErrors': {name: sorted({row['drcErrorCount'] for row in group}) for name, group in pair.items()}}
             for metric in medians['base']:
-                metrics[metric + 'Ratio'] = medians[arm][metric] / medians['base'][metric]
+                metrics[metric + 'Ratio'] = medians[arm][metric] / medians['base'][metric] if medians['base'][metric] > 0 else None
             item['matchedCases'].append(metrics)
         for dataset in ['srj18', 'srj24']:
             group = [case for case in item['matchedCases'] if case['dataset'] == dataset]
             base_ms = sum(case['base']['solveMs'] for case in group)
             candidate_ms = sum(case['candidate']['solveMs'] for case in group)
-            item['datasetTotals'][dataset] = {'matchedCases': len(group), 'baseSolveMs': base_ms, 'candidateSolveMs': candidate_ms, 'ratio': candidate_ms / base_ms if base_ms else None}
+            base_routing = sum(case['base']['routingMs'] for case in group)
+            candidate_routing = sum(case['candidate']['routingMs'] for case in group)
+            item['datasetTotals'][dataset] = {'matchedCases': len(group), 'baseSolveMs': base_ms, 'candidateSolveMs': candidate_ms, 'solveRatio': candidate_ms / base_ms if base_ms else None, 'baseRoutingMs': base_routing, 'candidateRoutingMs': candidate_routing, 'ratio': candidate_routing / base_routing if base_routing else None}
             clean = [case for case in group if all(counts == [0] for counts in case['relaxedDrcErrors'].values())]
             clean_base = sum(case['base']['solveMs'] for case in clean)
             clean_candidate = sum(case['candidate']['solveMs'] for case in clean)
-            item['datasetTotals'][dataset]['matchedClean'] = {'cases': len(clean), 'baseSolveMs': clean_base, 'candidateSolveMs': clean_candidate, 'ratio': clean_candidate / clean_base if clean_base else None}
+            clean_base_routing = sum(case['base']['routingMs'] for case in clean)
+            clean_candidate_routing = sum(case['candidate']['routingMs'] for case in clean)
+            item['datasetTotals'][dataset]['matchedClean'] = {'cases': len(clean), 'baseSolveMs': clean_base, 'candidateSolveMs': clean_candidate, 'solveRatio': clean_candidate / clean_base if clean_base else None, 'baseRoutingMs': clean_base_routing, 'candidateRoutingMs': clean_candidate_routing, 'ratio': clean_candidate_routing / clean_base_routing if clean_base_routing else None}
         item['maxCaseMedianSolveRssRatio'] = max((case['peakRssAfterSolveBytesRatio'] for case in item['matchedCases']), default=None)
         item['maxCaseMedianValidatedRssRatio'] = max((case['peakRssAfterValidationBytesRatio'] for case in item['matchedCases']), default=None)
-        item['parityPass'] = (cfg['run_correctness'] or cfg.get('hash_after_performance', False)) and not item['parityMismatches']
-        item['parityPassScope'] = 'Exact raw trace/output/error hashes on completed cases; censored cases establish status/input agreement only, never route parity.'
+        for metric in ['peakRssAfterSolveBytes', 'peakRssAfterValidationBytes']:
+            ratios = [case['exactBoundaryMedians'][metric]['ratio'] for case in item['censoredMemoryComparisons'] if case['exactBoundaryMedians'][metric]['ratio'] is not None]
+            item['maxCensoredExact' + metric[0].upper() + metric[1:] + 'Ratio'] = max(ratios, default=None)
+        item['censoredMemoryScope'] = 'Every failed/timeout/missing case is listed. Native child boundary peaks are exact high-water observations to that boundary; /proc or progress peaks on killed processes are separate partial lower bounds. Partial ratios never establish absence of a memory regression. Error strings are retained.'
+        item['parityPass'] = result['runComplete'] and not result['harnessErrors'] and (cfg['run_correctness'] or cfg.get('hash_after_performance', False)) and not item['parityMismatches']
+        item['parityPassScope'] = 'Exact raw trace/output/error hashes on completed cases. Finished failures/exceptions also require identical normalized error first line, algorithm iterations and stable stage-name sequence. Timeouts establish only phase/type/input agreement, never algorithm-iteration or route parity.'
         item['protocolIsRepeatedAndBalanced'] = set(cfg['orders']) == {'AB', 'BA'}
         item['matchedSolveTimeUsesAllSolvedBoardsIncludingDirty'] = True
+        item['primaryTimingMetric'] = 'routingMs: constructor plus solve, excluding input/module loading, validation and hashing; solveMs retained separately for stock benchmark comparison.'
         result['arms'][arm] = item
     save(OUT / 'summary.json', result)
     emit('PROOF_SUMMARY', result)
     return result
+
+
+def censored_memory(case, pair, arm, cfg):
+    metrics = ['peakRssAfterSolveBytes', 'peakRssAfterValidationBytes']
+    detail = {**case, 'pairs': [], 'exactBoundaryMedians': {}, 'partialObservedMedians': {}}
+    exact_values = {metric: {'base': [], arm: []} for metric in metrics}
+    partial_values = {'base': [], arm: []}
+    for cycle in range(cfg['cycles']):
+        for order in cfg['orders']:
+            selected = {name: [row for row in group if row['cycle'] == cycle and row['order'] == order] for name, group in pair.items()}
+            records = {name: group[0] if len(group) == 1 else None for name, group in selected.items()}
+            left, right = records['base'], records[arm]
+            same_status = left is not None and right is not None and left['status'] == right['status']
+            record = {'cycle': cycle, 'order': order, 'sameStatus': same_status, 'observations': {}}
+            for name, row in records.items():
+                if row is None:
+                    record['observations'][name] = {'status': 'missing'}
+                    continue
+                progress = row.get('lastProgress') or {}
+                observation = {'status': row['status'], 'error': row.get('error'), 'sourceSolveError': row.get('sourceSolveError'), 'lastPhase': progress.get('phase'), 'exactBoundaryPeaks': {metric: row.get(metric) for metric in metrics}}
+                partial = max(row.get('parentObservedWholeProcessPeakRssBytes', 0), progress.get('peakRssBytes', 0))
+                observation['partialObservedPeakLowerBoundBytes'] = partial or None
+                record['observations'][name] = observation
+            record['boundaryComparisons'] = {}
+            for metric in metrics:
+                a = left.get(metric) if left else None
+                b = right.get(metric) if right else None
+                both_exact = isinstance(a, (int, float)) and a > 0 and isinstance(b, (int, float)) and b > 0
+                record['boundaryComparisons'][metric] = {'bothExact': both_exact, 'sameStatus': same_status, 'ratio': b / a if both_exact and same_status else None}
+                if both_exact and same_status:
+                    exact_values[metric]['base'].append(a)
+                    exact_values[metric][arm].append(b)
+            partial_pair = {name: record['observations'][name].get('partialObservedPeakLowerBoundBytes') for name in records}
+            if same_status and all(isinstance(value, (int, float)) and value > 0 for value in partial_pair.values()):
+                for name, value in partial_pair.items():
+                    partial_values[name].append(value)
+            detail['pairs'].append(record)
+    for metric in metrics:
+        values = exact_values[metric]
+        a = statistics.median(values['base']) if values['base'] else None
+        b = statistics.median(values[arm]) if values[arm] else None
+        detail['exactBoundaryMedians'][metric] = {'pairedObservations': len(values['base']), 'baseBytes': a, 'candidateBytes': b, 'ratio': b / a if a and b else None, 'scope': 'Native high-water peaks only; same-status pairs only.'}
+    a = statistics.median(partial_values['base']) if partial_values['base'] else None
+    b = statistics.median(partial_values[arm]) if partial_values[arm] else None
+    detail['partialObservedMedians'] = {'pairedObservations': len(partial_values['base']), 'baseLowerBoundBytes': a, 'candidateLowerBoundBytes': b, 'approximateRatio': b / a if a and b else None, 'scope': 'Diagnostic lower-bound RSS samples only; not pooled with exact boundary metrics and not proof of non-regression.'}
+    return detail
+
+
+def failure_signature(row):
+    error = row.get('error')
+    if error is None:
+        error = row.get('sourceSolveError')
+    if error is not None and not isinstance(error, str):
+        error = json.dumps(error, sort_keys=True)
+    first_line = error.splitlines()[0] if error else None
+    if first_line:
+        first_line = first_line.replace(str(SOURCES / row['arm']), '<SOURCE>')
+    stage_timing = row.get('stageTiming')
+    stage_names = [stage.get('stageName') for stage in stage_timing.get('stages', [])] if isinstance(stage_timing, dict) else None
+    signature = {
+        'status': row['status'],
+        'errorFirstLine': first_line,
+        'iterations': row.get('iterations'),
+        'stageNames': stage_names,
+        'lastStageName': stage_names[-1] if stage_names else None,
+    }
+    signature['normalizedSha256'] = hashlib.sha256(json.dumps(signature, sort_keys=True).encode()).hexdigest()
+    return signature
 
 
 if __name__ == '__main__':
