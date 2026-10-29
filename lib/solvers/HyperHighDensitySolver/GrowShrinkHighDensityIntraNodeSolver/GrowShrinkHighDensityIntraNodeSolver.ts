@@ -210,10 +210,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ...portfolioParams,
       priorityCoordinateScale:
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
-      gridCoordinateScale:
-        this.growthAttempts > this.normalMaxGrowthAttempts
-          ? (portfolioParams.gridCoordinateScale ?? 1) * this.scaleFactor
-          : undefined,
+      useMultiResolutionGrid:
+        this.growthAttempts > this.normalMaxGrowthAttempts,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
