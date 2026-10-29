@@ -1,0 +1,139 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "5a89743d958837a2775e5af6539c31745938b84b",
+  "candidates": {
+    "connectivity_upgrade": "0fb2b48b3e775f9564bfdf756976191c1d09be28"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 1,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "screening_scope": "One legitimate published npm dependency upgrade from0.0.34to0.0.35; all other dependency file bytes/inodes shared via private loader contexts. Same performance child and primary run scheduling. ABBA12 on three prespecified boards only; not a full42 proof.",
+  "dependency_overlay": {
+    "mode": "one-frozen-published-npm-dependency",
+    "name": "circuit-json-to-connectivity-map",
+    "repository": "tscircuit/circuit-json-to-connectivity-map",
+    "base_version": "0.0.34",
+    "candidate_version": "0.0.35",
+    "base_range": "^0.0.34",
+    "candidate_range": "^0.0.35",
+    "root_changed_files": [
+      "package.json",
+      "tests/features/reference-connectivity-merged-net-identities.test.ts"
+    ],
+    "published_packages": {
+      "0.0.34": {
+        "version": "0.0.34",
+        "gitHead": "58772d94e246e56559ef3a6ab7a0dee7b39b201f",
+        "integrity": "sha512-0DzuHLEdYdnpvP17+VzC9GnywunxgySS4tbiHZnb7vk3EwjKv10m4kP9PQ1vZxrwUbjahbPDhxJl9BEa/3phdA==",
+        "tarball": "https://registry.npmjs.org/circuit-json-to-connectivity-map/-/circuit-json-to-connectivity-map-0.0.34.tgz",
+        "tarballBytes": 9277,
+        "files": {
+          "LICENSE": {
+            "bytes": 1071,
+            "sha256": "a5f5fb24026081322e48c6de970de4300dbc516fcddf02468d74b3978909f156"
+          },
+          "dist/index.js": {
+            "bytes": 12295,
+            "sha256": "f884c62c893ad801919539fa220b6a41ec301a141c335ba42b5d4620f64e3078"
+          },
+          "package.json": {
+            "bytes": 695,
+            "sha256": "86ef57de50e534332ffdf214d773fc69ccef1ce9097475ec2bbb026a990c5791"
+          },
+          "dist/index.js.map": {
+            "bytes": 23387,
+            "sha256": "7d6a2a627d4acf134ef7b9977548f321cf9c1adc5029530a51b02b909ea6a8f4"
+          },
+          "README.md": {
+            "bytes": 3421,
+            "sha256": "88ca332184dc2ceb20cb0d07d0cfc4bbf270135b2c63e6b7f89875b26961a67d"
+          },
+          "dist/index.d.ts": {
+            "bytes": 1946,
+            "sha256": "5cde7c2c0d8630d9a4b2a815f0c67e497556c23c7ba7165ac66fbd9ea5a71ee4"
+          }
+        }
+      },
+      "0.0.35": {
+        "version": "0.0.35",
+        "gitHead": "e2dca4ff4c2f1d9ab9ff74e0ecc4bedd96595d16",
+        "integrity": "sha512-+9qsZDxsKuzukIzg3gfUxusZWaZs+A4CZfgaULbIfjiIxaTrNY9MdLPBofFxVcNX37j6Hcymoc4oMJr4Uelqog==",
+        "tarball": "https://registry.npmjs.org/circuit-json-to-connectivity-map/-/circuit-json-to-connectivity-map-0.0.35.tgz",
+        "tarballBytes": 10029,
+        "files": {
+          "LICENSE": {
+            "bytes": 1071,
+            "sha256": "a5f5fb24026081322e48c6de970de4300dbc516fcddf02468d74b3978909f156"
+          },
+          "dist/index.js": {
+            "bytes": 13237,
+            "sha256": "04f94b8446539c1be9e3ed8174df20fdad507c4fde46f246d60a0755be715ed9"
+          },
+          "package.json": {
+            "bytes": 730,
+            "sha256": "11b155383ec695090bcaf38f43994670724efe46064be17aa1dc44ec2747f61f"
+          },
+          "dist/index.js.map": {
+            "bytes": 25664,
+            "sha256": "f9b9d457fc12259cd0b3ac1b31c783fa46242d9e6c928028da174f32b0c65f4d"
+          },
+          "README.md": {
+            "bytes": 3421,
+            "sha256": "88ca332184dc2ceb20cb0d07d0cfc4bbf270135b2c63e6b7f89875b26961a67d"
+          },
+          "dist/index.d.ts": {
+            "bytes": 1946,
+            "sha256": "5cde7c2c0d8630d9a4b2a815f0c67e497556c23c7ba7165ac66fbd9ea5a71ee4"
+          }
+        }
+      }
+    },
+    "context_method": "Complete arm-private hardlink node_modules contexts from one upper-layer Blacksmith baseline installation. All unchanged physical file inodes shared; internal directory aliases remapped, exact declared-root node_modules backlinks recorded, other cycles/external/broken paths rejected. Root replacement unlinks allowed package files before exclusive copy; original nested node_modules retained byte/inode exact.",
+    "invariant_dependency_pins": {
+      "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/4983cfcd7ef78d573586d12533165fdb596dddd2"
+    }
+  },
+  "source_scope": "First connectivity-upgrade pilot is rebased to newly frozen main5a897, preserving its ordinary high-density-repair03@4983pin in both arms; previous3c42functional checks are historical only. Candidate public ref remains invalid until latest-main QA/freeze."
+}
