@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        candidate: [scalar_via]
+        candidate: [future_cost]
     env:
       PROOF_CANDIDATE: ${{ matrix.candidate }}
       PYTHONDONTWRITEBYTECODE: "1"
