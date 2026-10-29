@@ -88,11 +88,12 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
   )
   expect(evaluate(cleanProposal)).toHaveLength(0)
   expect(reference.referenceDrcValidationCount).toBe(
-    validationsBeforeReturn + 1,
+    validationsBeforeReturn + 2,
   )
-  // Three distinct geometries evict the oldest, bounding retained board data.
+  // Returning to the clean proposal evicts the least recently used original,
+  // keeping the two-entry bound even when a geometry is revisited.
   expect(evaluate(routes)).toEqual(original)
   expect(reference.referenceDrcValidationCount).toBe(
-    validationsBeforeReturn + 2,
+    validationsBeforeReturn + 3,
   )
 })

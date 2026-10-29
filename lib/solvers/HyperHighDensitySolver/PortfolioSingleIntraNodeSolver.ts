@@ -393,24 +393,26 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   /**
-   * Some external solvers expose an idempotent setup phase that calculates
-   * their natural iteration budget from the problem. Running setup here does
-   * not advance the solver or give it preference in the portfolio.
+   * Derive natural iteration budgets before scheduling each candidate. Grid
+   * solvers prepare metadata here and allocate search state on their first
+   * step. Neither budget preparation nor setup advances the search.
    */
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
     if (solver instanceof HighDensitySolverA13) return
-    const setup = (solver as any).setup
-    if (typeof setup === "function") setup.call(solver)
     if (
       solver instanceof HighDensitySolverA01 ||
       solver instanceof HighDensityA03Solver
     ) {
+      solver.prepareSearchBudget()
       solver.MAX_ITERATIONS = Math.min(
         solver.MAX_ITERATIONS,
         this.getGridSearchIterationBudget(),
       )
+      return
     }
+    const setup = (solver as any).setup
+    if (typeof setup === "function") setup.call(solver)
   }
 
   private refreshDynamicIterationLimit() {
