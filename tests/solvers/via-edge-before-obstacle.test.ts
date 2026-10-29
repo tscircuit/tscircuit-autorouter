@@ -41,9 +41,9 @@ test("rejects edge-invalid vias before obstacle queries while retaining valid an
         solver.exploredNodes.clear()
         const node: Node = { x, y, z, g: 0, h: 0, f: 0, parent: null }
         const neighbors = solver.getNeighbors(node)
-        expect(checks.mock.calls.filter((args) => args[2] === true).length).toBe(
-          expectedChecks,
-        )
+        expect(
+          checks.mock.calls.filter((args) => args[2] === true).length,
+        ).toBe(expectedChecks)
         expect(neighbors.filter((neighbor) => neighbor.z !== z).length).toBe(
           expectedVias,
         )
