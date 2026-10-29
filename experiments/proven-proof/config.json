@@ -1,0 +1,31 @@
+{
+  "phase": "profile",
+  "base_sha": "8f78190013a9105abf2c52ebe705e07f3895ca66",
+  "candidates": {},
+  "bun_version": "1.4.3",
+  "cpu_lanes": 2,
+  "orders": [
+    "AB"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "cpu_profile_interval_us": 1000,
+  "diagnosticScope": "Baseline CPU sampling only. Profiling overhead makes elapsed time and RSS diagnostic; no candidate or optimization acceptance claim."
+}
