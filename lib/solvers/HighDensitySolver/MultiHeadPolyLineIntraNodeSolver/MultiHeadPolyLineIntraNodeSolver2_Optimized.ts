@@ -267,6 +267,8 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       targetLine: number,
       targetForce: NetForce | undefined,
     ): void => {
+      if (!targetForce && !otherSeg.p1Force && !otherSeg.p2Force) return
+
       let fx: number
       let fy: number
       // Adjacent segments share an endpoint. Geometry stays fixed until all
@@ -474,10 +476,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         // c) Via <-> Via
         for (const via1 of vias1) {
           for (const via2 of vias2) {
-            const commonLayers = via1.layers.filter((z) =>
-              via2.layers.includes(z),
-            )
-            if (commonLayers.length > 0) {
+            if (via1.layers.some((z) => via2.layers.includes(z))) {
               const dx = via1.point.x - via2.point.x
               const dy = via1.point.y - via2.point.y
               const dSq = dx * dx + dy * dy
