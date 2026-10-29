@@ -566,6 +566,7 @@ export const preparePipeline9RegularRegionalCandidate = ({
   })
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
+    captureSearchDebug: false,
     colorMap,
     connMap,
     viaDiameter,

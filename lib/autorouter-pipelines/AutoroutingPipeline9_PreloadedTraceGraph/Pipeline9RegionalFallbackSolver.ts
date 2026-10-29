@@ -23,6 +23,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   traceWidth: number
   obstacleMargin: number
   effort: number
+  captureSearchDebug?: boolean
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
@@ -162,6 +163,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
+      captureSearchDebug: params.captureSearchDebug,
       growShrinkSolutionValidator:
         params.boardObstacles &&
         params.movablePreloadedConnectionNames &&

@@ -747,6 +747,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
+      captureSearchDebug: false,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
