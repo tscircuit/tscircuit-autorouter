@@ -12,7 +12,16 @@ import {
 
 type Section = { points: HighDensityRoute["route"]; z: number; locked: boolean }
 type Variant = { route: HighDensityRoute; sites: number }
+type CachedVariant = Variant & { staticConflict: boolean }
 type Entry = { index: number; sections: Section[]; layers: number[] }
+type StaticBounds = { minX: number; minY: number; maxX: number; maxY: number }
+type StaticObstacle = {
+  obstacle: Obstacle; cosine: number; sine: number
+  bounds: StaticBounds; layers: Set<string>
+}
+const MAX_CACHED_VARIANTS = 1024
+const MAX_CACHED_PAIRS = 32768
+const MAX_CACHED_STATIC_OWNERS = 1024
 export type JointLayerAssignmentParams = {
   routes: HighDensityRoute[]
   fixedRoutes: HighDensityRoute[]
@@ -39,10 +48,30 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
   private readonly maxSearchStates: number
   private bestSites = 0
   private readonly routeBounds = new WeakMap<HighDensityRoute, number[]>()
+  private readonly routeIdentities = new WeakMap<HighDensityRoute, number>()
+  private nextRouteIdentity = 0
+  private readonly variantCache = new Map<string, CachedVariant>()
+  private readonly pairConflictCache = new Map<string, boolean>()
+  private readonly staticObstacles: StaticObstacle[]
+  private readonly staticObstaclesByOwner = new Map<string, StaticObstacle[]>()
 
   constructor(params: JointLayerAssignmentParams) {
     super()
     this.params = params
+    this.staticObstacles = (params.obstacles ?? []).map((obstacle) => {
+      const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
+      const cosine = Math.cos(angle), sine = Math.sin(angle)
+      const radius = Math.max(obstacle.width, obstacle.height) / 2
+      const dx = obstacle.shape === "circle" ? Math.abs(radius) :
+        Math.abs(cosine * obstacle.width / 2) + Math.abs(sine * obstacle.height / 2)
+      const dy = obstacle.shape === "circle" ? Math.abs(radius) :
+        Math.abs(sine * obstacle.width / 2) + Math.abs(cosine * obstacle.height / 2)
+      const guard = 1e-9 + 16 * Number.EPSILON * Math.max(1,
+        Math.abs(obstacle.center.x), Math.abs(obstacle.center.y), dx, dy)
+      return { obstacle, cosine, sine, layers: new Set(obstacle.layers),
+        bounds: { minX: obstacle.center.x - dx - guard, minY: obstacle.center.y - dy - guard,
+          maxX: obstacle.center.x + dx + guard, maxY: obstacle.center.y + dy + guard } }
+    })
     this.bestRoutes = params.routes
     this.maxSearchStates = params.maxSearchStates ?? 20000
     if (!Number.isSafeInteger(this.maxSearchStates) || this.maxSearchStates < 1)
@@ -55,6 +84,11 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
       copperRejected: 0, referenceRejected: 0, fullValidations: 0,
       accepted: 0, sitesBefore: 0, sitesAfter: 0,
       workLimitReached: 0, unsupportedRoutes: 0, sharedNetRoutes: 0,
+      variantCacheHits: 0, variantCacheMisses: 0,
+      pairCacheHits: 0, pairCacheMisses: 0,
+      cachedVariantCount: 0, cachedPairCount: 0,
+      staticGeometryEvaluations: 0, staticObstacleBroadphaseRejected: 0,
+      staticPrimitiveBroadphaseRejected: 0, staticDistanceEvaluations: 0,
     }
     const baseline = params.evaluate(params.routes)
     this.stats.fullValidations++
@@ -134,17 +168,66 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
     }
   }
 
+  private staticBoundsSeparated(left: StaticBounds, right: StaticBounds): boolean {
+    return (
+      left.maxX < right.minX ||
+      left.maxY < right.minY ||
+      left.minX > right.maxX ||
+      left.minY > right.maxY
+    )
+  }
+
   private hasStaticConflict(route: HighDensityRoute): boolean {
+    this.stats.staticGeometryEvaluations++
     const geometry = getPipeline9RouteCopperGeometry(route, this.params)
-    for (const obstacle of this.params.obstacles ?? []) {
-      const ids = [route.connectionName, route.rootConnectionName].filter((id): id is string => !!id)
-      if (ids.some((id) => obstacle.connectedTo.some((other) =>
-        id === other || this.params.connMap.areIdsConnected(id, other)))) continue
-      const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
+    const ids = [route.connectionName, route.rootConnectionName].filter((id): id is string => !!id)
+    const ownerKey = JSON.stringify(ids)
+    let obstacles = this.staticObstaclesByOwner.get(ownerKey)
+    if (!obstacles) {
+      obstacles = this.staticObstacles.filter(({ obstacle }) =>
+        !ids.some((id) => obstacle.connectedTo.some((other) =>
+          id === other || this.params.connMap.areIdsConnected(id, other))))
+      this.staticObstaclesByOwner.set(ownerKey, obstacles)
+      if (this.staticObstaclesByOwner.size > MAX_CACHED_STATIC_OWNERS)
+        this.staticObstaclesByOwner.delete(this.staticObstaclesByOwner.keys().next().value!)
+    }
+    if (obstacles.length === 0) return false
+    // These bounds use actual primitive widths, including per-point overrides.
+    // Only provably separated boxes skip the unchanged narrow predicates.
+    const wires = geometry.wireSegments.map((wire) => {
+      const margin = wire.width / 2 + this.params.clearance
+      const guard = 1e-9 + 16 * Number.EPSILON * Math.max(1, Math.abs(wire.start.x),
+        Math.abs(wire.start.y), Math.abs(wire.end.x), Math.abs(wire.end.y), Math.abs(margin))
+      return { wire, layer: mapZToLayerName(wire.z, this.params.layerCount), bounds: {
+        minX: Math.min(wire.start.x, wire.end.x) - margin - guard,
+        minY: Math.min(wire.start.y, wire.end.y) - margin - guard,
+        maxX: Math.max(wire.start.x, wire.end.x) + margin + guard,
+        maxY: Math.max(wire.start.y, wire.end.y) + margin + guard,
+      } }
+    })
+    const vias = geometry.viaSpans.map((via) => {
+      const margin = via.diameter / 2 + (this.params.viaToPadClearance ?? this.params.clearance)
+      const guard = 1e-9 + 16 * Number.EPSILON * Math.max(1,
+        Math.abs(via.center.x), Math.abs(via.center.y), Math.abs(margin))
+      return { via, layers: Array.from({ length: via.maxZ - via.minZ + 1 }, (_, i) =>
+        mapZToLayerName(via.minZ + i, this.params.layerCount)), bounds: {
+        minX: via.center.x - margin - guard, minY: via.center.y - margin - guard,
+        maxX: via.center.x + margin + guard, maxY: via.center.y + margin + guard,
+      } }
+    })
+    const bounds = [...wires, ...vias].reduce<StaticBounds>((total, primitive) => ({
+      minX: Math.min(total.minX, primitive.bounds.minX), minY: Math.min(total.minY, primitive.bounds.minY),
+      maxX: Math.max(total.maxX, primitive.bounds.maxX), maxY: Math.max(total.maxY, primitive.bounds.maxY),
+    }), { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
+    for (const compiled of obstacles) {
+      const { obstacle, cosine, sine } = compiled
+      if (this.staticBoundsSeparated(bounds, compiled.bounds)) {
+        this.stats.staticObstacleBroadphaseRejected++
+        continue
+      }
       const local = (point: { x: number; y: number }): { x: number; y: number } => {
         const x = point.x - obstacle.center.x, y = point.y - obstacle.center.y
-        return { x: x * Math.cos(angle) - y * Math.sin(angle),
-          y: x * Math.sin(angle) + y * Math.cos(angle) }
+        return { x: x * cosine - y * sine, y: x * sine + y * cosine }
       }
       const distance = (start: { x: number; y: number }, end: { x: number; y: number }): number => {
         return obstacle.shape === "circle"
@@ -154,14 +237,23 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
               minX: -obstacle.width / 2, maxX: obstacle.width / 2,
               minY: -obstacle.height / 2, maxY: obstacle.height / 2 })
       }
-      for (const wire of geometry.wireSegments) {
-        if (obstacle.layers.includes(mapZToLayerName(wire.z, this.params.layerCount)) &&
-          distance(wire.start, wire.end) + 1e-9 < wire.width / 2 + this.params.clearance) return true
+      for (const { wire, layer, bounds } of wires) {
+        if (!compiled.layers.has(layer)) continue
+        if (this.staticBoundsSeparated(bounds, compiled.bounds)) {
+          this.stats.staticPrimitiveBroadphaseRejected++
+          continue
+        }
+        this.stats.staticDistanceEvaluations++
+        if (distance(wire.start, wire.end) + 1e-9 < wire.width / 2 + this.params.clearance) return true
       }
-      for (const via of geometry.viaSpans) {
-        const touchesLayer = Array.from({ length: via.maxZ - via.minZ + 1 }, (_, i) =>
-          mapZToLayerName(via.minZ + i, this.params.layerCount)).some((layer) => obstacle.layers.includes(layer))
-        if (touchesLayer && distance(via.center, via.center) + 1e-9 <
+      for (const { via, layers, bounds } of vias) {
+        if (!layers.some((layer) => compiled.layers.has(layer))) continue
+        if (this.staticBoundsSeparated(bounds, compiled.bounds)) {
+          this.stats.staticPrimitiveBroadphaseRejected++
+          continue
+        }
+        this.stats.staticDistanceEvaluations++
+        if (distance(via.center, via.center) + 1e-9 <
           via.diameter / 2 + (this.params.viaToPadClearance ?? this.params.clearance)) return true
       }
     }
@@ -219,14 +311,37 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
     return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1]
   }
 
+  private routeIdentity(route: HighDensityRoute): number {
+    const cached = this.routeIdentities.get(route)
+    if (cached !== undefined) return cached
+    const identity = this.nextRouteIdentity++
+    this.routeIdentities.set(route, identity)
+    return identity
+  }
+
   private hasConflict(left: HighDensityRoute, right: HighDensityRoute): boolean {
-    if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) return false
-    if (!this.projectedBoundsOverlap(left, right)) return false
-    return doPipeline9RoutesHaveCopperConflict({
-      left, right, clearance: this.params.clearance,
-      layerCount: this.params.layerCount,
-      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
-    })
+    // Route copper is immutable during this search. An accepted replacement is
+    // a different object, so comparisons against older outside copper cannot
+    // be reused. Keep the ordered predicate rather than assuming symmetry.
+    const key = `${this.routeIdentity(left)}:${this.routeIdentity(right)}`
+    const cached = this.pairConflictCache.get(key)
+    if (cached !== undefined) {
+      this.stats.pairCacheHits++
+      return cached
+    }
+    this.stats.pairCacheMisses++
+    const conflict = !arePipeline9RoutesOnSameNet(left, right, this.params.connMap) &&
+      this.projectedBoundsOverlap(left, right) &&
+      doPipeline9RoutesHaveCopperConflict({
+        left, right, clearance: this.params.clearance,
+        layerCount: this.params.layerCount,
+        allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+      })
+    this.pairConflictCache.set(key, conflict)
+    if (this.pairConflictCache.size > MAX_CACHED_PAIRS)
+      this.pairConflictCache.delete(this.pairConflictCache.keys().next().value!)
+    this.stats.cachedPairCount = this.pairConflictCache.size
+    return conflict
   }
 
   private makeVariants(entry: Entry, fixed: HighDensityRoute[], allowance: number): Variant[] {
@@ -249,25 +364,38 @@ export class Pipeline9JointLayerAssignmentSolver extends BaseSolver {
         }
         return
       }
-      const points: HighDensityRoute["route"] = []
-      const vias = new Map<string, { x: number; y: number }>()
-      for (const [i, section] of entry.sections.entries()) {
-        for (const point of section.points) {
-          const next = { ...point, z: layers[i] }
-          const previous = points.at(-1)
-          if (previous && previous.x === next.x && previous.y === next.y) {
-            if (previous.z !== next.z) vias.set(JSON.stringify([next.x, next.y]), { x: next.x, y: next.y })
-            else if (!next.pcb_port_id) continue
+      const key = `${entry.index}:${this.routeIdentity(original)}:${layers.join(",")}`
+      let variant = this.variantCache.get(key)
+      if (variant) {
+        this.stats.variantCacheHits++
+      } else {
+        this.stats.variantCacheMisses++
+        const points: HighDensityRoute["route"] = []
+        const vias = new Map<string, { x: number; y: number }>()
+        for (const [i, section] of entry.sections.entries()) {
+          for (const point of section.points) {
+            const next = { ...point, z: layers[i] }
+            const previous = points.at(-1)
+            if (previous && previous.x === next.x && previous.y === next.y) {
+              if (previous.z !== next.z) vias.set(JSON.stringify([next.x, next.y]), { x: next.x, y: next.y })
+              else if (!next.pcb_port_id) continue
+            }
+            points.push(next)
           }
-          points.push(next)
         }
+        const candidate: HighDensityRoute = { ...original, route: points, vias: [...vias.values()] }
+        variant = { route: candidate, sites: vias.size,
+          staticConflict: this.hasStaticConflict(candidate) }
+        this.variantCache.set(key, variant)
+        if (this.variantCache.size > MAX_CACHED_VARIANTS)
+          this.variantCache.delete(this.variantCache.keys().next().value!)
+        this.stats.cachedVariantCount = this.variantCache.size
       }
-      const candidate: HighDensityRoute = { ...original, route: points, vias: [...vias.values()] }
-      if (this.hasStaticConflict(candidate) || fixed.some((other) => this.hasConflict(candidate, other))) {
+      if (variant.staticConflict || fixed.some((other) => this.hasConflict(variant.route, other))) {
         this.stats.copperRejected++
         return
       }
-      variants.push({ route: candidate, sites: vias.size })
+      variants.push(variant)
     }
     visit(0)
     return variants.sort((a, b) => a.sites - b.sites)
