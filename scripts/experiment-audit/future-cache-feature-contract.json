@@ -1,0 +1,153 @@
+[
+  {
+    "id": "future-point-cache",
+    "pr": 3199,
+    "option": "experimentFuturePointCache",
+    "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "options": {
+      "cacheProvider": null,
+      "effort": 1,
+      "experimentFuturePointCache": true
+    },
+    "evidencePaths": [
+      "highDensityRouteSolver.futurePointCacheStats"
+    ],
+    "coverageContract": {
+      "statsPath": "highDensityRouteSolver.futurePointCacheStats",
+      "stageName": "highDensityRouteSolver",
+      "countFields": [
+        "instances",
+        "lookups",
+        "hits",
+        "misses",
+        "distanceEvaluations",
+        "entryProbes",
+        "occupiedMissProbes",
+        "stores",
+        "evictions",
+        "coldStores",
+        "invalidations",
+        "identityInvalidations",
+        "lengthInvalidations",
+        "uncacheableQueries",
+        "mixedHashLookups",
+        "associativeLookups"
+      ],
+      "timeFields": [],
+      "eligibleField": "instances",
+      "executedField": "lookups",
+      "identityEquations": [
+        {
+          "left": "lookups",
+          "sum": [
+            "hits",
+            "misses"
+          ]
+        },
+        {
+          "left": "misses",
+          "sum": [
+            "stores",
+            "uncacheableQueries"
+          ]
+        },
+        {
+          "left": "stores",
+          "sum": [
+            "coldStores",
+            "evictions"
+          ]
+        }
+      ],
+      "minimumComparisons": [
+        [
+          "mixedHashLookups",
+          "associativeLookups"
+        ],
+        [
+          "lookups",
+          "mixedHashLookups"
+        ],
+        [
+          "lookups",
+          "uncacheableQueries"
+        ],
+        [
+          "invalidations",
+          "identityInvalidations"
+        ],
+        [
+          "invalidations",
+          "lengthInvalidations"
+        ],
+        [
+          "occupiedMissProbes",
+          "evictions"
+        ]
+      ],
+      "maximumFields": {},
+      "linearBounds": [
+        {
+          "left": {
+            "mixedHashLookups": 1
+          },
+          "relation": "<=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1
+          }
+        },
+        {
+          "left": {
+            "entryProbes": 1
+          },
+          "relation": ">=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1
+          }
+        },
+        {
+          "left": {
+            "entryProbes": 1
+          },
+          "relation": "<=",
+          "right": {
+            "lookups": 1,
+            "uncacheableQueries": -1,
+            "associativeLookups": 1
+          }
+        },
+        {
+          "left": {
+            "occupiedMissProbes": 1
+          },
+          "relation": "<=",
+          "right": {
+            "entryProbes": 1,
+            "hits": -1
+          }
+        },
+        {
+          "left": {
+            "invalidations": 1
+          },
+          "relation": "<=",
+          "right": {
+            "identityInvalidations": 1,
+            "lengthInvalidations": 1
+          }
+        }
+      ],
+      "workProofKind": "MODIFIED_CACHE_EXECUTION",
+      "eligibleDefinition": "Actual native solver instances admitted with at least8 futurepoints; constructors may legitimately never receive a query",
+      "executedDefinition": "Actual future-point distance lookups in the owned solver contexts, including real batch work beyond the accepted serial prefix",
+      "changedDefinition": "Actual mixed-hash lookup path executed. Hit counts are not additional avoided baseline scans: baseline already has a256-entry cache. Only fresh paired runtime and exact published outputs assess improvement.",
+      "positiveMechanismFields": [
+        "mixedHashLookups"
+      ],
+      "comparisonFields": []
+    }
+  }
+]
