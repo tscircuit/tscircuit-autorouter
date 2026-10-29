@@ -1,4 +1,4 @@
-"""Exact two-feature srj18/BA synthetic populations; never executes routing."""
+"""Exact selected-feature srj18/BA synthetic populations; never executes routing."""
 import contextlib
 import copy
 import importlib.util
@@ -23,7 +23,8 @@ population = load("scoped_population_fixtures", ROOT / "tests/post588-parser-pop
 runtime = population.runtime
 sealer = load("scoped_manifest_sealer", ROOT / "seal-post588-manifest.py")
 manifest = copy.deepcopy(population.manifest)
-requested = ["path-packing", "incremental-path"]
+requested = copy.deepcopy(manifest["requestedExperiments"])
+assert set(requested) <= {"path-packing", "incremental-path", "sparse-force"}
 manifest["requestedExperiments"] = requested
 manifest["experiments"] = [copy.deepcopy(next(item for item in population.manifest["experiments"] if item["id"] == name)) for name in requested]
 manifest["dispatchRequest"] = {"experiment": "all", "dataset": "srj18", "order": "BA"}
@@ -31,12 +32,12 @@ sealer.refresh(manifest, runtime)
 assert manifest["runSampleSourceSha256"] == "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396"
 assert manifest["expectedHarnessSourceHashes"]["adaptedHarnessHash"] == "27354d365585b69e85ba6aa8917ca4a28b4b9650faa2cc196e0cc9761461afc9"
 expected_scope = {"experiments": requested, "datasets": ["srj18"], "order": "BA",
-                  "plannedRecords": 64, "plannedMatrixJobs": 2,
+                  "plannedRecords": len(requested) * 32, "plannedMatrixJobs": len(requested),
                   "completeOriginalSelectedDatasetPopulations": True,
                   "fullyCharacterizesBothOriginalDatasets": False}
 assert runtime.execution_scope(manifest) == expected_scope
 assert manifest["executionScope"] == expected_scope
-assert manifest["plannedRecordsAllCandidates"] == 64 and manifest["plannedMatrixJobs"] == 2
+assert manifest["plannedRecordsAllCandidates"] == len(requested) * 32 and manifest["plannedMatrixJobs"] == len(requested)
 assert manifest["plannedPairsPerCandidate"] == 16 and manifest["plannedRecordsPerCandidate"] == 32
 assert runtime.execution_matrix(manifest) == {"include": [
     {"experiment": name, "dataset": "srj18", "count": 16, "order": "BA"} for name in requested]}
@@ -90,6 +91,13 @@ stats = {
         "generatedCandidates": 16, "distinctCandidates": 16, "distinctViaPatterns": 4,
         "generationSearchNodes": 3874, "unaryChecks": 16, "pairChecks": 8,
         "selectionStates": 3, "solvedNodes": 1, "workUnits": 4000, "exhaustedNodes": 0},
+    "sparse-force": {"activated": True, "sampleNodes": 1, "kernelCalls": 2,
+        "allFixedCalls": 0, "fixedNodeCount": 3, "mutableNodeCount": 2,
+        "requestedForceSteps": 8, "executedForceSteps": 8, "skippedForceSteps": 0,
+        "noWritePairsSkipped": 4, "fixedClampVisitsSkipped": 3,
+        "projectionPassesExecuted": 2, "projectionPassesSkipped": 1,
+        "inactiveProjectionExits": 1, "spatialIndexBuilds": 1,
+        "inactiveProjectionPassesSkipped": 1},
     "incremental-path": {"activated": 1, "queryStarts": 3, "repeatedQueries": 2,
         "eligibleQueries": 2, "unsupportedQueries": 0, "budgetDeclinedQueries": 0,
         "freshSearches": 1, "repairs": 1, "changedCostReuseQueries": 1,
@@ -126,8 +134,10 @@ for item in manifest["experiments"]:
         assert candidate["featureCoverage"]["actualEvidence"][selected_path] == 0
         assert candidate["featureCoverage"]["actualWorkExercised"] is True
         assert candidate["featureCoverage"]["mechanismWorkIsNotAnOutputOrPerformanceGain"] is True
-    else:
+    elif item["id"] == "incremental-path":
         assert type(parsed["records"][0]["featureCoverage"]["actualEvidence"][item["coverageContract"]["statsPath"]]["activated"]) is int
+    else:
+        assert parsed["records"][0]["featureCoverage"]["actualEvidence"][item["coverageContract"]["statsPath"]]["spatialIndexBuilds"] == 1
     for outside_dataset, outside_order in [("srj18", "AB"), ("srj24", "BA")]:
         population.dataset, population.order = outside_dataset, outside_order
         outside_records = [population.make_record(sample, arm) for sample in range(1, runtime.COUNTS[outside_dataset] + 1) for arm in outside_order]
@@ -141,5 +151,5 @@ for item in manifest["experiments"]:
         rejected += 1
     population.dataset, population.order = "srj18", "BA"
 print(json.dumps({"status": "PASS", "syntheticOnly": True, "newSourceV2Scope": expected_scope,
-                  "sourceShapedBARecords": 64, "scopeAndPopulationForgeriesRejected": rejected,
+                  "sourceShapedBARecords": len(requested) * 32, "scopeAndPopulationForgeriesRejected": rejected,
                   "proposalAndWorkerLocalSelectionAreNotFinalBoardProof": True}))
