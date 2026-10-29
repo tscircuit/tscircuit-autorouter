@@ -19,6 +19,10 @@ type ProjectionHalfSpace = {
   a: number; b: number; nx: number; ny: number; wa: number; wb: number
   denominator: number; minimumMotion: number; kind: "obstacle" | "hole"
 }
+type CompressionAnchor = { routeIndex: number } & (
+  { kind: "point"; point: HighDensityIntraNodeRoute["route"][number]; pointIndex: number } |
+  { kind: "via"; point: Point }
+)
 type Contact = { t: number; u: number; dx: number; dy: number; distance: number }
 type Energy = { loss: number; maxPenetration: number; pairs: number; movableLoss: number; movableContacts: number; gx: Float64Array; gy: Float64Array; weight: Float64Array }
 export type PhysicalRouteLegalizationMode = "off" | "compression-only" | "full" | "selective"
@@ -109,8 +113,36 @@ const closestSegments = (a: Point, b: Point, c: Point, d: Point): Contact => {
   return { t, u, dx, dy, distance: Math.hypot(dx, dy) }
 }
 
+/** Preserve proposal junctions before reducing an individual route's vertices. */
+const getRouteCompressionJunctions = (routes: HighDensityIntraNodeRoute[]): Set<HighDensityIntraNodeRoute["route"][number]> => {
+  const entries: CompressionAnchor[] = []
+  for (const [routeIndex, route] of routes.entries()) {
+    for (const [pointIndex, point] of route.route.entries()) entries.push({ kind: "point", point, routeIndex, pointIndex })
+    for (const point of route.vias) entries.push({ kind: "via", point, routeIndex })
+  }
+  const junctions = new Set<HighDensityIntraNodeRoute["route"][number]>()
+  if (entries.length < 2) return junctions
+  const index = new Flatbush(entries.length)
+  for (const { point } of entries) index.add(point.x, point.y, point.x, point.y)
+  index.finish()
+  for (const entry of entries) {
+    if (entry.kind === "via") continue
+    const { point } = entry
+    const nearby = index.search(point.x - 1e-9, point.y - 1e-9, point.x + 1e-9, point.y + 1e-9)
+    if (nearby.some((otherIndex) => {
+      const other = entries[otherIndex]!
+      // A via center anchors every layer; ordinary point contacts share a layer.
+      return (other.kind === "via" || other.point.z === point.z) &&
+        (other.routeIndex !== entry.routeIndex || other.kind === "via" || Math.abs(other.pointIndex - entry.pointIndex) > 1) &&
+        Math.hypot(other.point.x - point.x, other.point.y - point.y) < 1e-9
+    })) junctions.add(point)
+  }
+  return junctions
+}
+
 /** Remove collinear points without distinct physical or identity metadata. */
 const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortPoints): HighDensityIntraNodeRoute[] => {
+  const junctions = getRouteCompressionJunctions(routes)
   return routes.map((route) => {
     const points: HighDensityIntraNodeRoute["route"] = []
     for (const point of route.route) {
@@ -119,9 +151,16 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
         const dx1 = b.x - a.x, dy1 = b.y - a.y, dx2 = point.x - b.x, dy2 = point.y - b.y
         const scale = Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2)
         if (a.z !== b.z || b.z !== point.z || b.pcb_port_id || b.insideJumperPad || b.toNextSegmentType ||
-          // Owner annotations can anchor a shared branch endpoint on this
-          // segment. Equality with adjacent owners does not make them removable.
-          Object.keys(b).some((key) => key !== "x" && key !== "y" && key !== "z" && key !== "traceThickness") ||
+          junctions.has(b) ||
+          // Repeated route ownership is not a point identity. Actual junctions
+          // were indexed across the proposal; unknown metadata remains inert.
+          Object.keys(b).some((key) => {
+            if (key === "x" || key === "y" || key === "z" || key === "traceThickness") return false
+            if (key !== "connectionName" && key !== "rootConnectionName") return true
+            const owner = route[key]
+            return [a, b, point].some((vertex) =>
+              (vertex as unknown as Record<string, unknown>)[key] !== owner)
+          }) ||
           node.portPoints.some((port) => port.z === b.z && Math.hypot(port.x - b.x, port.y - b.y) < 1e-9) ||
           a.toNextSegmentType || b.toNextSegmentCircuitJsonMetadata ||
           (a.traceThickness ?? route.traceThickness) !== (b.traceThickness ?? route.traceThickness) ||
@@ -130,9 +169,9 @@ const compressRoutes = (routes: HighDensityIntraNodeRoute[], node: NodeWithPortP
           dx1 * dx2 + dy1 * dy2 < 0 || route.vias.some((via) => Math.hypot(via.x - b.x, via.y - b.y) < 1e-9)) break
         points.pop()
       }
-      points.push({ ...point })
+      points.push(point)
     }
-    return { ...route, route: points, vias: route.vias.map((via) => ({ ...via })) }
+    return { ...route, route: points.map((point) => ({ ...point })), vias: route.vias.map((via) => ({ ...via })) }
   })
 }
 
