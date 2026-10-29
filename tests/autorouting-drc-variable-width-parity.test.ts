@@ -42,6 +42,7 @@ test("native generic DRC includes wire-via segments and wider endpoints while ty
           source_trace_id: "source",
           display_name: "POWER",
           connected_source_port_ids: [],
+          connected_source_net_ids: [],
         },
       ]
       const expected = getDrcErrors(structuredClone(circuitJson), {
