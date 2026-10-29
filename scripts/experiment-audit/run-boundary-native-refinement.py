@@ -26,20 +26,22 @@ COALESCED_TREE = "c96942d07e4887d61759177e552c3d6733021c53"
 ROLE_SOURCE_PINS = {
     "coalesced-model": (COALESCED_SOURCE, COALESCED_TREE),
     "boundary-only": ("bd21dd642b4989b00e8279fae5c60cc7276ad642", "a336ba7ec687e7813d97284faafd294a94e329eb"),
-    "boundary-plus-native": None,
+    "boundary-plus-native": ("5f8aa035b8aa997d72627b9bede72524bb182e5b", "b06dded7651ee2b988937228cad09b656652ff2b"),
 }
 VALIDATION_RECEIPTS = {
     COALESCED_SOURCE: "7d6cf76d89a7a491883d153aada1afa298aeacb9e8505264d3db16620697433a",
     "bd21dd642b4989b00e8279fae5c60cc7276ad642": "c09890cf0a9dbc35178c85608f30153db41efe5b428426411247e23c60569edd",
+    "5f8aa035b8aa997d72627b9bede72524bb182e5b": "3261620dc2be66c453d8484fd457d8f57d94be91db7ab43130664c44a9ba47eb",
 }
 AUTHENTICATED_NATIVE_INVENTORIES = {
     "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a": ("2787d665688f00ddd47eaf01cd60d9242ce254cf", "e5ec49d79b9f105f32b79f043eca6ddbbe6ae6c1032243679d94370f78549f94"),
     "c6812cebd44b09f29f2fee929837b313b822f2ae": ("f4bbcefaa56635738561480b6eb949e67916a089", "330fac7c55f52c4edd89508d26deb33f61a814166946c8d9f4fd9daf44b8cc96"),
     "0acce21dc32a279788f88d884618630c82405590": ("862dc4a61b8ef3a0466614dbcd89a6b5d8d58833", "99b33e9228b5c91ce823c825e10bc6c19469b8c7e47fd2e74994cbabba49c40a"),
+    "246176c5bc39bdb97c834f6bb4277ec4d101765d": ("ff1e7f654c06bd100411a67a0f442e0431ba2995", "1c42fdb4bc1700f107df8fb6ccadd0113e2f1a473eb07735949c47932681aebd"),
 }
 CAMPAIGNS = {
     "ee0-vs-boundary-only": {"targets": {"srj18": [15, 16], "srj24": [12]}, "roles": {"A": "coalesced-model", "B": "boundary-only"}, "records": 6, "pr": 3346},
-    "boundary-vs-boundary-native": {"targets": {"srj18": [6, 13, 15, 16], "srj24": [12]}, "roles": {"A": "boundary-only", "B": "boundary-plus-native"}, "records": 10, "pr": 3346},
+    "boundary-vs-boundary-native": {"targets": {"srj18": [6, 13, 15, 16], "srj24": [12]}, "roles": {"A": "boundary-only", "B": "boundary-plus-native"}, "records": 10, "pr": 3347},
 }
 TARGETS = None
 evidence_paths, sha = core.evidence_paths, core.sha
@@ -115,6 +117,17 @@ def validate_source_qualification(manifest, arm):
         require(validation.get("focusedTests") == 37 and validation.get("assertions") == 418 and validation.get("status") == "PASS" and validation.get("fullProjectTypes") == "PASS" and validation.get("workerEsmDtsBuild") == "PASS", "Actual boundary37/418/fulltypes/fullbuild receipt failed")
         require(data.get("independentReview", {}).get("status") == "PASS_NO_BLOCKERS" and data["independentReview"].get("syntheticCheckerDisagreements") == 0, "Actual boundary independent review failed")
         require("highDensityRouteSolver constructor with 0 HD iterations" in data.get("boundedPipelineFunctionalTest", "") and data.get("wholeBoardRoutingPerformed") is False, "Synthetic original/mutable-board HD0 wiring proof missing or mislabeled as wholeboard")
+    elif pins["sourceRemote"] == "5f8aa035b8aa997d72627b9bede72524bb182e5b":
+        require(data.get("status") == "PASS_LOCAL_VALIDATION_AND_INDEPENDENT_ROOT_REVIEW" and data.get("localCommit") == pins["sourceLocal"] and data.get("tree") == pins["sourceTree"], "Combined caller validation source differs")
+        validation = data.get("validation", {})
+        require(validation.get("callerFocusedTests") == 39 and validation.get("callerAssertions") == 468 and validation.get("upstreamFocusedTests") == 5 and validation.get("upstreamAssertions") == 144, "Actual native focused test receipt differs")
+        require(type(validation.get("fullCallerProjectTypesExitCode")) is int and validation["fullCallerProjectTypesExitCode"] == 0 and type(validation.get("workerEsmDtsBuildExitCode")) is int and validation["workerEsmDtsBuildExitCode"] == 0, "Actual native full types/build failed")
+        require(validation.get("defaultOffParity", "").startswith("PASS;") and validation.get("actualBoardNativeComposition", "").startswith("PASS;"), "Actual default-off/generation/composition proof missing")
+        upstream = data.get("upstream", {})
+        require(upstream.get("remote") == "246176c5bc39bdb97c834f6bb4277ec4d101765d" and upstream.get("exactPrivateTree") == "ff1e7f654c06bd100411a67a0f442e0431ba2995" and upstream.get("a13Unchanged") == "c6812cebd44b09f29f2fee929837b313b822f2ae", "Actual native API dependency source differs")
+        rows = validation.get("compositionCounts", [])
+        require(len(rows) == 2 and {row.get("family") for row in rows} == {"HIGH_DENSITY_A01", "HIGH_DENSITY_A03"} and all(row.get("finalEndpointAcceptance") is True and type(row.get("queryCount")) is int and row["queryCount"] > 0 and type(row.get("rejectedCount")) is int and row["rejectedCount"] > 0 for row in rows), "Actual synthetic native generation/endpoints composition failed")
+        require(data.get("independentReview", {}).get("status") == "PASS_NO_SOURCE_BLOCKERS" and data.get("noWholeBoardRouting") is True and data.get("noLocalBenchmark") is True, "Actual native source review or scope differs")
     else:
         raise ValueError("HELD: new source actual build/test/types/wiring receipt schema and authoritative pins require materialization")
 
@@ -167,10 +180,7 @@ def validate_manifest(path):
     validate_native_dependency_policy(manifest)
     require(hashlib.sha256(inspect.getsource(pinned.run_sample).encode()).hexdigest() == manifest.get("runSampleSourceSha256"), "Original fresh run_sample changed")
     if manifest["campaign"] == "boundary-vs-boundary-native":
-        native = receipt(manifest.get("nativeIsolatedFunctionalControls"), "PASS_SOURCE_PINNED_NATIVE_6_13_FUNCTIONAL_CONTROLS")
-        require(all(exact(native.get(k), v) for k, v in source_pins(manifest, "B").items()), "Native6/13 functional source pins changed")
-        rows = native.get("records", [])
-        require(len(rows) == 2 and {(r.get("dataset"), r.get("sampleNumber")) for r in rows} == {("srj18", 6), ("srj18", 13)} and all(r.get("functionalControlPassed") is True for r in rows), "Actual source-native6/13 functional controls missing")
+        require(manifest.get("nativeFunctionalQualificationPolicy") == "REVIEWED_SOURCE_SYNTHETIC_API_GENERATION_DEFAULT_OFF_AND_COMPOSITION_CONTROLS;ACTUAL_6_13_WHOLEBOARD_SUCCESS_IS_MEASURED_NOT_ASSUMED", "Native scientific control scope changed")
     return manifest, experiment
 
 
