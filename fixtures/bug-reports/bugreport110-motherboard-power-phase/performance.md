@@ -198,3 +198,26 @@ and provide its path as `BASELINE_PRELOAD_PATH`; also restore expander `01ce270`
 when comparing the original full pipeline. Remove that temporary extracted file
 afterwards. No generated baseline source or top-level profiling script is needed
 in the PR.
+
+## General rectangle indexing follow-up
+
+The expander now constructs one bounding-box index entry with the exact rotated
+polygon for every rectangular obstacle, independent of `isCopperPour`. It no
+longer passes Infinity to a cell-size parameter. The existing approximation for
+oval obstacles and exact circular-hole geometry remain unchanged. Exact
+collision and physical-contact predicates, layers, aliases, and object identity
+remain in use after the broad-phase bounds search.
+
+The full motherboard output remains byte-identical to the original expander on
+macOS (the same `5c90f0...` hash above). The dependency suite passes 92 tests,
+including rotated pad/via/hole clearance-boundary comparisons against the tiled
+implementation. Three dependency debug snapshots change only the spatial-index
+overlay and resulting framing; their routed trace coordinates remain identical.
+The motherboard input/output and preload snapshots are unchanged.
+
+There are 21 requested connections, 638 preloaded traces, and 761 output trace
+records (123 additional records). These are multi-terminal connections, not 21
+simple line segments. The earlier measured 38.6% total-time reduction is proven
+avoidable processing; it does not establish that most remaining high-density
+routing or repair work is unnecessary. A dataset 18 paired benchmark is requested
+on the updated PR head to check broader routing and performance regressions.
