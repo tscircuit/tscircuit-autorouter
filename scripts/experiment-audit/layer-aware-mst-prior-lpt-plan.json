@@ -1,0 +1,1373 @@
+{
+  "schemaVersion": 1,
+  "status": "PROSPECTIVE_CONDITIONAL_QUALITY84_LPT_SCHEDULING_PLAN_NOT_DISPATCHED",
+  "createdAtUtc": "2026-10-29T22:27:30.008413+00:00",
+  "condition": "Onlyafter newQUALITYV2repeat6 showsactualsourceactivation AND independentlyqualified physicalrecovery; source/controllerQA must separatelysealexactcandidate beforefull84. No automaticlaunchauthorizationfromthisfile.",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "candidateSha": null,
+  "plannedFreshAttempts": 84,
+  "originalCases": 42,
+  "plannedHosts": 11,
+  "shardsByDataset": {
+    "srj18": 4,
+    "srj24": 7
+  },
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "originalNativeSolveCapMs": 360000,
+  "originalOuterProcessGuardMs": 480000,
+  "newOwnFreshBaselineCandidatePairsRequired": true,
+  "allOriginalCasesRetained": true,
+  "allOutcomesRetained": true,
+  "orderCountsByDataset": {
+    "srj18": {
+      "AB": 8,
+      "BA": 8
+    },
+    "srj24": {
+      "AB": 13,
+      "BA": 13
+    }
+  },
+  "orderCounts": {
+    "AB": 21,
+    "BA": 21
+  },
+  "algorithm": {
+    "partition": "Independentlyperdataset: LPTdescending exactDecimal pairweight; equalweight loweroriginalsamplefirst; assignlowestexactDecimalload thenlowershardindex.",
+    "withinHost": "Sortoriginalsampleascending. AlternateAB/BAeverypair. Forodd-sizedshards, ascendingfirsthalfofoddshardindicesstartAB, restBA; even-sizedshardsstartABonevenindex,BAonoddindex. Ordersdeterminedbeforetrial, no candidate timing inputs.",
+    "weights": "2*(priornativebaselineAactualconstructor+actualofficialsolve); trueproventimeout2*360000 plusactualconstructoronlyifretained. Missingconstructornotinvented. Nativefailureactualconstructor+actualelapsedretained.",
+    "tieArithmetic": "ExactDecimalofretainedJSONnumericstrings; numericJSONforecasts aredisplayonly."
+  },
+  "priorAuthority": {
+    "independentRawReviewPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/THIRD84-ACTUAL-RAW-INDEPENDENT-REVIEW-v1.json",
+    "independentRawReviewSha256": "74517e170e9a35148f6151b44e1eff49dc721437b3234e923f43ddce137ad8fb",
+    "receipts": [
+      {
+        "dataset": "srj18",
+        "priorRunId": "40945818816",
+        "priorControllerSha": "557b0fb8876f41374b4c0d81b83b7071591371dd",
+        "receiptPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/ACTUAL-RAW-native-map-only-srj18-v1.json",
+        "receiptSha256": "99022f95961a1d54b5cc084dc2d7618bd9ba2bfbd99ef1d4107f6f033bf321a9",
+        "originalServerZipPath": "/tmp/clean336-original-server-zips/40945818816-native-map-only-srj18.zip",
+        "originalServerZipSha256": "ee73420c75f01adaf52d391c98c79518fae1455e4c790a0b391f12d55dd700b0",
+        "producerJobId": 123700924830,
+        "rawResultsMember": "native-map-only-srj18-BA/results.jsonl",
+        "rawResultsSha256": "9ce69ae4c1ea7b97c8294311c6e448c897eddd4d7fc5837e56b34f8900e1eb15"
+      },
+      {
+        "dataset": "srj24",
+        "priorRunId": "40945818816",
+        "priorControllerSha": "557b0fb8876f41374b4c0d81b83b7071591371dd",
+        "receiptPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/ACTUAL-RAW-native-map-only-srj24-v1.json",
+        "receiptSha256": "7f1121a1c7278cdf2ea462c792f93ae9dc86459cd33c3ed94139f37a049c5c5d",
+        "originalServerZipPath": "/tmp/clean336-original-server-zips/40945818816-native-map-only-srj24.zip",
+        "originalServerZipSha256": "c1d5d40fb35373d4c2d55ee2cc610e4dd57254b59d0b5b7fcd4ba45d24f4d395",
+        "producerJobId": 123700924641,
+        "rawResultsMember": "native-map-only-srj24-BA/results.jsonl",
+        "rawResultsSha256": "90d896a87616d54be73b4d072757e2ddd28252e31db4f1ef93527f655d444ff4"
+      }
+    ]
+  },
+  "shards": [
+    {
+      "dataset": "srj18",
+      "shardIndex": 0,
+      "shardCount": 4,
+      "cases": [
+        {
+          "dataset": "srj18",
+          "sample": 1,
+          "id": "srj18:1",
+          "inputHash": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+          "schedulingWeightMs": 24939.95641,
+          "schedulingWeightDecimalMs": "24939.956409999999918",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 14.874610999999959,
+          "priorBaselineOfficialSolveMs": 12455.103594,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 15.513013999999998,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "c6c30ada49ca5e5791d85978382db6084f0ec7d234b8d368b826a55b5dfccc42",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 11,
+          "id": "srj18:11",
+          "inputHash": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+          "schedulingWeightMs": 35120.869436,
+          "schedulingWeightDecimalMs": "35120.869436000000048",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 60.439832000000024,
+          "priorBaselineOfficialSolveMs": 17499.994886,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 61.33860900000002,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "fdb0abfda8118e1691e89f160417fcc3f7eb668dc98df6ff0bbb3ccff8b8a1bd",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 13,
+          "id": "srj18:13",
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "schedulingWeightMs": 76881.97098,
+          "schedulingWeightDecimalMs": "76881.970979999999952",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 56.107605999999976,
+          "priorBaselineOfficialSolveMs": 38384.877884,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 56.87016199999999,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "e18147f990e8594cc6ab141dab0904a52c91f319777673eb1abf68664f14a7f5",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 14,
+          "id": "srj18:14",
+          "inputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "schedulingWeightMs": 239082.240722,
+          "schedulingWeightDecimalMs": "239082.240722",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 45.741917,
+          "priorBaselineOfficialSolveMs": 119495.378444,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 46.65423299999998,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "80e7f8a39e39c2a630e4d4653840c2909f64516a9e9e4eb925267b99946afb05",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 0,
+          "id": "srj18:14",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 7,
+          "id": "srj18:13",
+          "loadBeforeDecimalMs": "239082.240722"
+        },
+        {
+          "lptRankWithinDataset": 10,
+          "id": "srj18:11",
+          "loadBeforeDecimalMs": "315964.211701999999952"
+        },
+        {
+          "lptRankWithinDataset": 13,
+          "id": "srj18:1",
+          "loadBeforeDecimalMs": "351085.081138000000000"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 376025.037548,
+      "projectedSequentialPairWorkDecimalMs": "376025.037547999999918",
+      "projectedRoutingMinutes": 6.267083959133333
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 1,
+      "shardCount": 4,
+      "cases": [
+        {
+          "dataset": "srj18",
+          "sample": 3,
+          "id": "srj18:3",
+          "inputHash": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+          "schedulingWeightMs": 21728.360226,
+          "schedulingWeightDecimalMs": "21728.360226000000026",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 15.542975000000013,
+          "priorBaselineOfficialSolveMs": 10848.637138,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 16.391632000000016,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "b55eef10175c6a508efd6467d8e3eda7863a997b1bc36a60634729ee83e50b09",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 4,
+          "id": "srj18:4",
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "schedulingWeightMs": 87409.342722,
+          "schedulingWeightDecimalMs": "87409.342721999999930",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 11.218853999999965,
+          "priorBaselineOfficialSolveMs": 43693.452507,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 11.920570999999995,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "bc9eda163523f4c1b7bc6213ea65ac899b5eefc1c769f70b73166f07a9b867ca",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 9,
+          "id": "srj18:9",
+          "inputHash": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+          "schedulingWeightMs": 32156.123336,
+          "schedulingWeightDecimalMs": "32156.123336000000048",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 43.753075000000024,
+          "priorBaselineOfficialSolveMs": 16034.308593,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 44.774410999999986,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "6ba3296214c9300a79e32378261e675153464fd5dd05853bd486771409ef68c6",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 15,
+          "id": "srj18:15",
+          "inputHash": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+          "schedulingWeightMs": 234318.138864,
+          "schedulingWeightDecimalMs": "234318.13886399999992",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 112.68418399999996,
+          "priorBaselineOfficialSolveMs": 117046.385248,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 113.58794,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "66452d73185264873b8390d30d2594f511c2e83398949a0b586342dedecfab6c",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "AB"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 1,
+          "id": "srj18:15",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 6,
+          "id": "srj18:4",
+          "loadBeforeDecimalMs": "234318.13886399999992"
+        },
+        {
+          "lptRankWithinDataset": 11,
+          "id": "srj18:9",
+          "loadBeforeDecimalMs": "321727.481585999999850"
+        },
+        {
+          "lptRankWithinDataset": 14,
+          "id": "srj18:3",
+          "loadBeforeDecimalMs": "353883.604921999999898"
+        }
+      ],
+      "startingOrder": "BA",
+      "projectedSequentialPairWorkMs": 375611.965148,
+      "projectedSequentialPairWorkDecimalMs": "375611.965147999999924",
+      "projectedRoutingMinutes": 6.260199419133333
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 2,
+      "shardCount": 4,
+      "cases": [
+        {
+          "dataset": "srj18",
+          "sample": 2,
+          "id": "srj18:2",
+          "inputHash": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+          "schedulingWeightMs": 204635.934832,
+          "schedulingWeightDecimalMs": "204635.93483200000006",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 33.25964700000003,
+          "priorBaselineOfficialSolveMs": 102284.707769,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 34.131010999999944,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "c3ec7f86f204637f12d3dc22bdbe936f4176d692b9a9d8954586e1a82e2cc0fd",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 7,
+          "id": "srj18:7",
+          "inputHash": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+          "schedulingWeightMs": 31426.844864,
+          "schedulingWeightDecimalMs": "31426.84486399999998",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 42.45774499999999,
+          "priorBaselineOfficialSolveMs": 15670.964687,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 43.19706200000002,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "c5c1144a6ed3657f7a717b4ec56d0452b2d355d1c10a290e86294b662d53144c",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 8,
+          "id": "srj18:8",
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "schedulingWeightMs": 96967.352456,
+          "schedulingWeightDecimalMs": "96967.35245600000002",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 54.46451400000001,
+          "priorBaselineOfficialSolveMs": 48429.211714,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 55.32275199999998,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "60140035f5b94a55be395fb36c33195de4c1fc6fd4a07cb4104c861893841b98",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 10,
+          "id": "srj18:10",
+          "inputHash": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+          "schedulingWeightMs": 42351.633422000006,
+          "schedulingWeightDecimalMs": "42351.63342200000394",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 54.62861399999997,
+          "priorBaselineOfficialSolveMs": 21121.188097000002,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 55.73160999999999,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "453aa6d273c779485a91d2d14130cc7e4331395f0a19c7a5a68d141aa6e72f06",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 2,
+          "id": "srj18:2",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 5,
+          "id": "srj18:8",
+          "loadBeforeDecimalMs": "204635.93483200000006"
+        },
+        {
+          "lptRankWithinDataset": 9,
+          "id": "srj18:10",
+          "loadBeforeDecimalMs": "301603.28728800000008"
+        },
+        {
+          "lptRankWithinDataset": 12,
+          "id": "srj18:7",
+          "loadBeforeDecimalMs": "343954.92071000000402"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 375381.765574,
+      "projectedSequentialPairWorkDecimalMs": "375381.76557400000400",
+      "projectedRoutingMinutes": 6.256362759566667
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 3,
+      "shardCount": 4,
+      "cases": [
+        {
+          "dataset": "srj18",
+          "sample": 5,
+          "id": "srj18:5",
+          "inputHash": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+          "schedulingWeightMs": 18604.814866,
+          "schedulingWeightDecimalMs": "18604.814866000000032",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 14.089421000000016,
+          "priorBaselineOfficialSolveMs": 9288.318012,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 14.834077999999977,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "09129d5baceec184f6d75aad37f3f21444cd169df014b53d3496542e85e97e32",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 6,
+          "id": "srj18:6",
+          "inputHash": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+          "schedulingWeightMs": 156563.53665799997,
+          "schedulingWeightDecimalMs": "156563.53665799998008",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 59.66924700000004,
+          "priorBaselineOfficialSolveMs": 78222.09908199999,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 60.661383,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "e1ce22025c5903f0a9a3c1f0bd22e2f985dfa778343e41ad9ede2a32e706f237",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 12,
+          "id": "srj18:12",
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "schedulingWeightMs": 142507.540528,
+          "schedulingWeightDecimalMs": "142507.54052800002",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 335.455177,
+          "priorBaselineOfficialSolveMs": 70918.31508700001,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 336.45787400000006,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "666899e8e633c5d72aacaabd1d18d3dea38def35becfc0f38ed8c2101dd346fe",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj18",
+          "sample": 16,
+          "id": "srj18:16",
+          "inputHash": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+          "schedulingWeightMs": 60207.259424,
+          "schedulingWeightDecimalMs": "60207.25942400000396",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 66.33313199999998,
+          "priorBaselineOfficialSolveMs": 30037.296580000002,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 67.27994799999999,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "2b68ff68b761f4d07ac952392151bbb7476eec961813b6ec9a6546a0214f9ea5",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "AB"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 3,
+          "id": "srj18:6",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 4,
+          "id": "srj18:12",
+          "loadBeforeDecimalMs": "156563.53665799998008"
+        },
+        {
+          "lptRankWithinDataset": 8,
+          "id": "srj18:16",
+          "loadBeforeDecimalMs": "299071.07718600000008"
+        },
+        {
+          "lptRankWithinDataset": 15,
+          "id": "srj18:5",
+          "loadBeforeDecimalMs": "359278.33661000000404"
+        }
+      ],
+      "startingOrder": "BA",
+      "projectedSequentialPairWorkMs": 377883.151476,
+      "projectedSequentialPairWorkDecimalMs": "377883.151476000004072",
+      "projectedRoutingMinutes": 6.2980525246
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 0,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 1,
+          "id": "srj24:1",
+          "inputHash": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 865.284019,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "6473fb41c98817e790cee7d5f6eb3f06acb434b14a035b704ce7544cb2560508",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 12,
+          "id": "srj24:12",
+          "inputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "schedulingWeightMs": 250843.62041799998,
+          "schedulingWeightDecimalMs": "250843.62041799997994",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 58.80823399999997,
+          "priorBaselineOfficialSolveMs": 125363.00197499999,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 59.820358,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "cc88994abc1ba024439c3b89f35a8e647f4505b16c91f57ee2e8eca3933a3dd9",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 0,
+          "id": "srj24:1",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 8,
+          "id": "srj24:12",
+          "loadBeforeDecimalMs": "720000"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 970843.620418,
+      "projectedSequentialPairWorkDecimalMs": "970843.62041799997994",
+      "projectedRoutingMinutes": 16.180727006966666
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 1,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 3,
+          "id": "srj24:3",
+          "inputHash": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 46.11313000000001,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "a1f64d41b0b6081307c5453dfed255e1c44516a110f067db911e9267c7f39f1b",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 13,
+          "id": "srj24:13",
+          "inputHash": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+          "schedulingWeightMs": 213216.287796,
+          "schedulingWeightDecimalMs": "213216.2877959999998",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 977.4120839999999,
+          "priorBaselineOfficialSolveMs": 105630.731814,
+          "priorDidTimeout": false,
+          "priorDidSolve": false,
+          "priorNativeFailure": true,
+          "priorConstructorCheckpointObservedIntervalMs": 978.286709,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "dc068ea5d31f35764529e22388910fa15d35bbed97c8fc8feb436c91e7083def",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "AB"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 1,
+          "id": "srj24:3",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 9,
+          "id": "srj24:13",
+          "loadBeforeDecimalMs": "720000"
+        }
+      ],
+      "startingOrder": "BA",
+      "projectedSequentialPairWorkMs": 933216.287796,
+      "projectedSequentialPairWorkDecimalMs": "933216.2877959999998",
+      "projectedRoutingMinutes": 15.5536047966
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 2,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 4,
+          "id": "srj24:4",
+          "inputHash": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 1711.8099819999998,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "45dca7670a76296af7a2fe2f9c878d41225090defe42cb56ffa09916235e6ec0",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 21,
+          "id": "srj24:21",
+          "inputHash": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+          "schedulingWeightMs": 209403.084524,
+          "schedulingWeightDecimalMs": "209403.08452400000012",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 220.23878800000006,
+          "priorBaselineOfficialSolveMs": 104481.303474,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 221.39821299999994,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "c067133e839486268380c0492e8a471e70227563c590c09203893e2610673302",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 2,
+          "id": "srj24:4",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 10,
+          "id": "srj24:21",
+          "loadBeforeDecimalMs": "720000"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 929403.084524,
+      "projectedSequentialPairWorkDecimalMs": "929403.08452400000012",
+      "projectedRoutingMinutes": 15.490051408733333
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 3,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 7,
+          "id": "srj24:7",
+          "inputHash": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+          "schedulingWeightMs": 24003.577072,
+          "schedulingWeightDecimalMs": "24003.577071999999966",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 14.252122999999983,
+          "priorBaselineOfficialSolveMs": 11987.536413,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 15.09666599999997,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "6ac9fbd120ebcb9424202c900ce33e4b0ecf60f509b5e6a68fbbc5be0114d891",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 11,
+          "id": "srj24:11",
+          "inputHash": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 238.47313499999996,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "81b81e97757495a3d3366ef4af1c5ecba967f03f08fbc045931730c2d397d3d6",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 17,
+          "id": "srj24:17",
+          "inputHash": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+          "schedulingWeightMs": 141159.493202,
+          "schedulingWeightDecimalMs": "141159.49320200001994",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 339.21257099999997,
+          "priorBaselineOfficialSolveMs": 70240.53403000001,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 340.205755,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "c3b5eae638f1d601b5040219525f8d06a84d2f72561532fb4e121d8ec966365a",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 23,
+          "id": "srj24:23",
+          "inputHash": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+          "schedulingWeightMs": 2737.108872,
+          "schedulingWeightDecimalMs": "2737.108871999999998",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 4.693961999999999,
+          "priorBaselineOfficialSolveMs": 1363.860474,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 5.393325000000004,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "8c2e2805a03c16bec39e41d4ed1167641ee5dcd21db91244e94d45b2a211d4a8",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 25,
+          "id": "srj24:25",
+          "inputHash": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+          "schedulingWeightMs": 6421.6523,
+          "schedulingWeightDecimalMs": "6421.652299999999972",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 5.637545999999986,
+          "priorBaselineOfficialSolveMs": 3205.188604,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 6.254968000000019,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "860f912b1dbd34b09a6043b041122bda2254fd6388dd9baab086603631217327",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 4,
+          "order": "AB"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 3,
+          "id": "srj24:11",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 11,
+          "id": "srj24:17",
+          "loadBeforeDecimalMs": "720000"
+        },
+        {
+          "lptRankWithinDataset": 19,
+          "id": "srj24:7",
+          "loadBeforeDecimalMs": "861159.49320200001994"
+        },
+        {
+          "lptRankWithinDataset": 23,
+          "id": "srj24:25",
+          "loadBeforeDecimalMs": "885163.070274000019906"
+        },
+        {
+          "lptRankWithinDataset": 25,
+          "id": "srj24:23",
+          "loadBeforeDecimalMs": "891584.722574000019878"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 894321.831446,
+      "projectedSequentialPairWorkDecimalMs": "894321.831446000019876",
+      "projectedRoutingMinutes": 14.905363857433334
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 4,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 5,
+          "id": "srj24:5",
+          "inputHash": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+          "schedulingWeightMs": 37210.522978,
+          "schedulingWeightDecimalMs": "37210.522977999999966",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 13.426699999999983,
+          "priorBaselineOfficialSolveMs": 18591.834789,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 14.211242999999968,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "7e464c15aaf998b24e4c4628507fbb5e584e13672f6bf1654756aed7d601997e",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 15,
+          "id": "srj24:15",
+          "inputHash": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+          "schedulingWeightMs": 116411.312134,
+          "schedulingWeightDecimalMs": "116411.31213400000006",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 211.51441800000003,
+          "priorBaselineOfficialSolveMs": 57994.141649,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 212.369842,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "7f2728881d2a8680d1d7335eb1c2c47b8e48ce41dc10386a35ba21d332ce529f",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 18,
+          "id": "srj24:18",
+          "inputHash": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 417.19882000000007,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "d6ad2f1a527585c0279cae0a1dd99109dccea5927fdbb49b53db678b47cb0935",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 22,
+          "id": "srj24:22",
+          "inputHash": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+          "schedulingWeightMs": 19648.105084,
+          "schedulingWeightDecimalMs": "19648.10508399999994",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 36.47666399999997,
+          "priorBaselineOfficialSolveMs": 9787.575878,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 37.437148000000036,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "10df1f0931f07aa68e4fd087a6bf432f418470d2f3c60b0700694a6b78e1a5d5",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 4,
+          "id": "srj24:18",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 12,
+          "id": "srj24:15",
+          "loadBeforeDecimalMs": "720000"
+        },
+        {
+          "lptRankWithinDataset": 17,
+          "id": "srj24:5",
+          "loadBeforeDecimalMs": "836411.31213400000006"
+        },
+        {
+          "lptRankWithinDataset": 20,
+          "id": "srj24:22",
+          "loadBeforeDecimalMs": "873621.835112000000026"
+        }
+      ],
+      "startingOrder": "AB",
+      "projectedSequentialPairWorkMs": 893269.940196,
+      "projectedSequentialPairWorkDecimalMs": "893269.940195999999966",
+      "projectedRoutingMinutes": 14.8878323366
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 5,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 8,
+          "id": "srj24:8",
+          "inputHash": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "schedulingWeightMs": 85821.651952,
+          "schedulingWeightDecimalMs": "85821.65195200000004",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 74.59486800000002,
+          "priorBaselineOfficialSolveMs": 42836.231108,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 75.68697300000002,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "24f5a9bd945237f0bd3bcafec1a34119748af8100737360796654b7517cdf06c",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 9,
+          "id": "srj24:9",
+          "inputHash": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+          "schedulingWeightMs": 27769.479248,
+          "schedulingWeightDecimalMs": "27769.479248000000010",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 12.565335000000005,
+          "priorBaselineOfficialSolveMs": 13872.174289,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 13.330918999999994,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "533169c1c905430563f0d7efac6c5c4cc4ba7b84b9534f14f6ff55167eb2dcae",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 14,
+          "id": "srj24:14",
+          "inputHash": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+          "schedulingWeightMs": 48690.867772,
+          "schedulingWeightDecimalMs": "48690.867772",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 48.096993,
+          "priorBaselineOfficialSolveMs": 24297.336893,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 49.24953899999997,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "460e62a78595a7071d6da8c9ecea51d970cffc21d9edbbb5607a5741836a10c0",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 16,
+          "id": "srj24:16",
+          "inputHash": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+          "schedulingWeightMs": 3865.665266,
+          "schedulingWeightDecimalMs": "3865.6652659999999488",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 3.6864969999999744,
+          "priorBaselineOfficialSolveMs": 1929.146136,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 4.315298999999982,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "50f04e8be6932a7790a5721d380b28122536d622b6ab7d51524c0558b8fa6610",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 24,
+          "id": "srj24:24",
+          "inputHash": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+          "schedulingWeightMs": 720000.0,
+          "schedulingWeightDecimalMs": "720000",
+          "weightMethod": "2*proven360000msNativeSolveCap;exactConstructorUnavailableNotInvented",
+          "priorBaselineConstructorMs": null,
+          "priorBaselineOfficialSolveMs": 360000,
+          "priorDidTimeout": true,
+          "priorDidSolve": false,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 2278.8536969999996,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "260b0f17ffa1f8e1b28d139c750e0f67d00307014c6b43284c5a98bb0ef6528b",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 4,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 26,
+          "id": "srj24:26",
+          "inputHash": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+          "schedulingWeightMs": 6882.636292000001,
+          "schedulingWeightDecimalMs": "6882.6362920000007030",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 6.5435900000000515,
+          "priorBaselineOfficialSolveMs": 3434.7745560000003,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 7.242751999999996,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "43cdf1d9a543ffc3d812634e5901d0825cb46c75399f3fd1a5e3ec6617f15146",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 5,
+          "order": "AB"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 5,
+          "id": "srj24:24",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 13,
+          "id": "srj24:8",
+          "loadBeforeDecimalMs": "720000"
+        },
+        {
+          "lptRankWithinDataset": 15,
+          "id": "srj24:14",
+          "loadBeforeDecimalMs": "805821.65195200000004"
+        },
+        {
+          "lptRankWithinDataset": 18,
+          "id": "srj24:9",
+          "loadBeforeDecimalMs": "854512.51972400000004"
+        },
+        {
+          "lptRankWithinDataset": 22,
+          "id": "srj24:26",
+          "loadBeforeDecimalMs": "882281.998972000000050"
+        },
+        {
+          "lptRankWithinDataset": 24,
+          "id": "srj24:16",
+          "loadBeforeDecimalMs": "889164.6352640000007530"
+        }
+      ],
+      "startingOrder": "BA",
+      "projectedSequentialPairWorkMs": 893030.30053,
+      "projectedSequentialPairWorkDecimalMs": "893030.3005300000007018",
+      "projectedRoutingMinutes": 14.883838342166667
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 6,
+      "shardCount": 7,
+      "cases": [
+        {
+          "dataset": "srj24",
+          "sample": 2,
+          "id": "srj24:2",
+          "inputHash": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+          "schedulingWeightMs": 398147.355674,
+          "schedulingWeightDecimalMs": "398147.35567400000002",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 72.45974000000001,
+          "priorBaselineOfficialSolveMs": 199001.218097,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 73.34166500000003,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "301c56ab53d07d14e689b32e8845f25c84dda7503240b771fc18749f82bac2bd",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 0,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 6,
+          "id": "srj24:6",
+          "inputHash": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+          "schedulingWeightMs": 65769.621918,
+          "schedulingWeightDecimalMs": "65769.62191800000006",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 93.10997000000003,
+          "priorBaselineOfficialSolveMs": 32791.700989,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 93.98361399999999,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "3c8223a214ed572c21e31715b313571302db3385cbb4b44c065efd5449d8a868",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 1,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 10,
+          "id": "srj24:10",
+          "inputHash": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+          "schedulingWeightMs": 17087.674172,
+          "schedulingWeightDecimalMs": "17087.674171999999954",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 8.859518999999977,
+          "priorBaselineOfficialSolveMs": 8534.977567,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 9.572160999999994,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "1c629cd0839a7d73d3f8f6bbd095e33667445f11c1cc4aa178702c0666d9b337",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 2,
+          "order": "BA"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 19,
+          "id": "srj24:19",
+          "inputHash": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+          "schedulingWeightMs": 40959.648822,
+          "schedulingWeightDecimalMs": "40959.648821999999912",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 53.203817999999956,
+          "priorBaselineOfficialSolveMs": 20426.620593,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 54.25980300000003,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "5d3cf6eabc3871685d4f422ea5940b8f27e5a7d3e07942565213764552789886",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 3,
+          "order": "AB"
+        },
+        {
+          "dataset": "srj24",
+          "sample": 20,
+          "id": "srj24:20",
+          "inputHash": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+          "schedulingWeightMs": 370581.193216,
+          "schedulingWeightDecimalMs": "370581.19321599999990",
+          "weightMethod": "2*(actualBaselineConstructorMs+actualOfficialSolveMs)",
+          "priorBaselineConstructorMs": 116.43844099999995,
+          "priorBaselineOfficialSolveMs": 185174.158167,
+          "priorDidTimeout": false,
+          "priorDidSolve": true,
+          "priorNativeFailure": false,
+          "priorConstructorCheckpointObservedIntervalMs": 117.32888500000001,
+          "constructorCheckpointIntervalNotSubstitutedForActualBenchmarkConstructor": true,
+          "priorCheckpointBytesSha256": "758a19e8b00eb84ffc9c6e03905f375230232cc4534c47ddd25eac4b71fb11f7",
+          "sourceArm": "A",
+          "sourceSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+          "ordinalWithinShard": 4,
+          "order": "BA"
+        }
+      ],
+      "assignmentSequence": [
+        {
+          "lptRankWithinDataset": 6,
+          "id": "srj24:2",
+          "loadBeforeDecimalMs": "0"
+        },
+        {
+          "lptRankWithinDataset": 7,
+          "id": "srj24:20",
+          "loadBeforeDecimalMs": "398147.35567400000002"
+        },
+        {
+          "lptRankWithinDataset": 14,
+          "id": "srj24:6",
+          "loadBeforeDecimalMs": "768728.54888999999992"
+        },
+        {
+          "lptRankWithinDataset": 16,
+          "id": "srj24:19",
+          "loadBeforeDecimalMs": "834498.17080799999998"
+        },
+        {
+          "lptRankWithinDataset": 21,
+          "id": "srj24:10",
+          "loadBeforeDecimalMs": "875457.819629999999892"
+        }
+      ],
+      "startingOrder": "BA",
+      "projectedSequentialPairWorkMs": 892545.493802,
+      "projectedSequentialPairWorkDecimalMs": "892545.493801999999846",
+      "projectedRoutingMinutes": 14.875758230033332
+    }
+  ],
+  "priorSchedulingComparison": {
+    "srj18": {
+      "priorModuloProjectedLoadsMs": [
+        152582.865592,
+        642633.345634,
+        322594.21339,
+        387091.49513
+      ],
+      "priorModuloWorstRoutingMinutes": 10.710555760566667,
+      "newLptProjectedLoadsMs": [
+        376025.037548,
+        375611.965148,
+        375381.765574,
+        377883.151476
+      ],
+      "newLptWorstRoutingMinutes": 6.2980525246,
+      "lptForecastIsSchedulingEstimateNotNewRuntimeEvidence": true
+    },
+    "srj24": {
+      "priorModuloProjectedLoadsMs": [
+        941881.06917,
+        432519.60906,
+        1598247.167374,
+        2166421.6523,
+        335896.42851,
+        649567.10293,
+        282097.529368
+      ],
+      "priorModuloWorstRoutingMinutes": 36.107027538333334,
+      "newLptProjectedLoadsMs": [
+        970843.620418,
+        933216.287796,
+        929403.084524,
+        894321.831446,
+        893269.940196,
+        893030.30053,
+        892545.493802
+      ],
+      "newLptWorstRoutingMinutes": 16.180727006966666,
+      "lptForecastIsSchedulingEstimateNotNewRuntimeEvidence": true
+    }
+  },
+  "planSource": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/results/prepare-quality84-lpt-plan-v1.py",
+    "sha256": "9bb01364563b11bbbadd0f686a365223dd02f4cab18ed634d03e5718de5f85b0"
+  },
+  "selfChecks": {
+    "exact42CaseUnion": true,
+    "exact84FreshPlannedAttempts": true,
+    "noDuplicateOrExcludedCases": true,
+    "21AB21BA": true,
+    "perDatasetHalfOrders": true,
+    "withinHostAlternation": true,
+    "inputPermutationInvariant": true,
+    "equalWeightAndLoadTiesDeterministic": true,
+    "allWeightsPriorBaselineAOnly": true
+  },
+  "limits": [
+    "Priornativefailure/timeoutclocksareusedONLYforhostloadplanning; nonearetreatedasnewcandidateperformanceorphysicalevidence.",
+    "Noqualityorwalltimesignificanceclaim; all42entrydenominatorretained.",
+    "No newsource/input/checker/proposals/benchmarkexecution.",
+    "CurrentFOURTHpruning84 anditsmoduloscheduleareimmutableandunchanged.",
+    "Build/install/checker/transport overheadsandhostvariancearenotintherouting-onlyforecast.",
+    "Candidate recovery timing can differ; estimates do notchange360000nativeor480000outerguard."
+  ]
+}

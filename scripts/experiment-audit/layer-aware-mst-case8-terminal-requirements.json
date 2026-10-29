@@ -1,0 +1,558 @@
+{
+  "schemaVersion": 1,
+  "status": "READ_ONLY_CAUSE_PROVED_SIX_DECLARED_LAYER_TERMINALS_DROPPED_BEFORE_ROUTING",
+  "atUtc": "2026-10-29T23:04:44.931015+00:00",
+  "sourceSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+  "sourceLocal": "818e615678a1fd3d8ddf2ca27b7939b0a9606b78",
+  "sourceTree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
+  "case": "srj24:8",
+  "rawIdentityV1V2ReceiptSha256": "4d67c4d30f85b2d1cc66e34c7eab59560811ef3fa7ef6c87f511cb920338dd6d",
+  "archive": {
+    "path": "/tmp/clean336-original-server-zips/40964225540-witness-quality6-srj24-8.zip",
+    "sha256": "6383d958509ebe285f6dd658d7fe0bdafa8496c66a8201b557e5bc26c1d19e5c",
+    "members": {
+      "original-input.json": {
+        "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/original-input.json",
+        "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed"
+      },
+      "point-pair-context.json": {
+        "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/point-pair-context.json",
+        "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64"
+      },
+      "raw-new-traces.json": {
+        "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-new-traces.json",
+        "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96"
+      }
+    }
+  },
+  "sixDroppedDemands": [
+    {
+      "missingPointId": "pcb_port_282",
+      "requiredLayer": "bottom",
+      "xy": [
+        -6.832,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": -6.832,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_279",
+            "pcb_port_id": "pcb_port_279"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": -6.832,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_282",
+            "pcb_port_id": "pcb_port_282"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_2__source_net_2_mst66",
+          "point": {
+            "x": -6.832,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_279",
+            "pcb_port_id": "pcb_port_279"
+          }
+        },
+        {
+          "connection": "source_trace_2__source_net_2_mst72",
+          "point": {
+            "x": -6.832,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_279",
+            "pcb_port_id": "pcb_port_279"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_2__source_net_2_mst66_0",
+          "connection": "source_trace_2",
+          "pointIndex": 1,
+          "point": {
+            "route_type": "wire",
+            "x": -6.832,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        },
+        {
+          "traceId": "source_trace_2__source_net_2_mst72_0",
+          "connection": "source_trace_2",
+          "pointIndex": 1,
+          "point": {
+            "route_type": "wire",
+            "x": -6.832,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    },
+    {
+      "missingPointId": "pcb_port_283",
+      "requiredLayer": "bottom",
+      "xy": [
+        -1.866,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": -1.866,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_278",
+            "pcb_port_id": "pcb_port_278"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": -1.866,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_283",
+            "pcb_port_id": "pcb_port_283"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_2__source_net_2_mst66",
+          "point": {
+            "x": -1.866,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_278",
+            "pcb_port_id": "pcb_port_278"
+          }
+        },
+        {
+          "connection": "source_trace_2__source_net_2_mst73",
+          "point": {
+            "x": -1.866,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_278",
+            "pcb_port_id": "pcb_port_278"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_2__source_net_2_mst66_0",
+          "connection": "source_trace_2",
+          "pointIndex": 0,
+          "point": {
+            "route_type": "wire",
+            "x": -1.866,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        },
+        {
+          "traceId": "source_trace_2__source_net_2_mst73_0",
+          "connection": "source_trace_2",
+          "pointIndex": 0,
+          "point": {
+            "route_type": "wire",
+            "x": -1.866,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    },
+    {
+      "missingPointId": "pcb_port_284",
+      "requiredLayer": "bottom",
+      "xy": [
+        3.326,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": 3.326,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_277",
+            "pcb_port_id": "pcb_port_277"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_2",
+          "point": {
+            "x": 3.326,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_284",
+            "pcb_port_id": "pcb_port_284"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_2__source_net_2_mst67",
+          "point": {
+            "x": 3.326,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_277",
+            "pcb_port_id": "pcb_port_277"
+          }
+        },
+        {
+          "connection": "source_trace_2__source_net_2_mst73",
+          "point": {
+            "x": 3.326,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_277",
+            "pcb_port_id": "pcb_port_277"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_2__source_net_2_mst67_0",
+          "connection": "source_trace_2",
+          "pointIndex": 0,
+          "point": {
+            "route_type": "wire",
+            "x": 3.326,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        },
+        {
+          "traceId": "source_trace_2__source_net_2_mst73_0",
+          "connection": "source_trace_2",
+          "pointIndex": 1,
+          "point": {
+            "route_type": "wire",
+            "x": 3.326,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    },
+    {
+      "missingPointId": "pcb_port_272",
+      "requiredLayer": "top",
+      "xy": [
+        28.611,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 28.611,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_272",
+            "pcb_port_id": "pcb_port_272"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 28.611,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_289",
+            "pcb_port_id": "pcb_port_289"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_4__source_net_4_mst38",
+          "point": {
+            "x": 28.611,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_289",
+            "pcb_port_id": "pcb_port_289"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_4__source_net_4_mst38_0",
+          "connection": "source_trace_4",
+          "pointIndex": 8,
+          "point": {
+            "route_type": "wire",
+            "x": 28.611,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "bottom"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    },
+    {
+      "missingPointId": "pcb_port_286",
+      "requiredLayer": "bottom",
+      "xy": [
+        13.487,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 13.487,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_275",
+            "pcb_port_id": "pcb_port_275"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 13.487,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_286",
+            "pcb_port_id": "pcb_port_286"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_4__source_net_4_mst37",
+          "point": {
+            "x": 13.487,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_275",
+            "pcb_port_id": "pcb_port_275"
+          }
+        },
+        {
+          "connection": "source_trace_4__source_net_4_mst55",
+          "point": {
+            "x": 13.487,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_275",
+            "pcb_port_id": "pcb_port_275"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_4__source_net_4_mst37_0",
+          "connection": "source_trace_4",
+          "pointIndex": 0,
+          "point": {
+            "route_type": "wire",
+            "x": 13.487,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        },
+        {
+          "traceId": "source_trace_4__source_net_4_mst55_0",
+          "connection": "source_trace_4",
+          "pointIndex": 4,
+          "point": {
+            "route_type": "wire",
+            "x": 13.487,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    },
+    {
+      "missingPointId": "pcb_port_288",
+      "requiredLayer": "bottom",
+      "xy": [
+        23.646,
+        -40.919
+      ],
+      "original": [
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 23.646,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_273",
+            "pcb_port_id": "pcb_port_273"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        },
+        {
+          "connection": "source_net_4",
+          "point": {
+            "x": 23.646,
+            "y": -40.919,
+            "layer": "bottom",
+            "pointId": "pcb_port_288",
+            "pcb_port_id": "pcb_port_288"
+          },
+          "offBoard": null,
+          "externallyConnectedPointIds": null
+        }
+      ],
+      "pointPairsAtXY": [
+        {
+          "connection": "source_trace_4__source_net_4_mst38",
+          "point": {
+            "x": 23.646,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_273",
+            "pcb_port_id": "pcb_port_273"
+          }
+        },
+        {
+          "connection": "source_trace_4__source_net_4_mst39",
+          "point": {
+            "x": 23.646,
+            "y": -40.919,
+            "layer": "top",
+            "pointId": "pcb_port_273",
+            "pcb_port_id": "pcb_port_273"
+          }
+        }
+      ],
+      "pointPairsAnywhereWithMissingId": [],
+      "rawCopperAtXY": [
+        {
+          "traceId": "source_trace_4__source_net_4_mst38_0",
+          "connection": "source_trace_4",
+          "pointIndex": 0,
+          "point": {
+            "route_type": "wire",
+            "x": 23.646,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        },
+        {
+          "traceId": "source_trace_4__source_net_4_mst39_0",
+          "connection": "source_trace_4",
+          "pointIndex": 1,
+          "point": {
+            "route_type": "wire",
+            "x": 23.646,
+            "y": -40.919,
+            "width": 0.1,
+            "layer": "top"
+          }
+        }
+      ],
+      "demandLossFirstObserved": "ORIGINAL_TO_POINT_PAIR_CONTEXT_BEFORE_HIGH_DENSITY_ROUTING"
+    }
+  ],
+  "sourceFilesSha256": {
+    "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts": "118975a53d82af09ad47977119d5f0e9d5298d489c829f1d660146018f0cd10a",
+    "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts": "ecec8ba023af11abc90be20a951fb4fb186ae199a58d1a3087c4d2b4647e1f49",
+    "lib/utils/getPointKey.ts": "34c9e3de14727a0b74caef98625f4a38452f26db535d5fd618908ba23412fbbe",
+    "lib/utils/get-initially-connected-map-from-simple-route-json.ts": "9c93e5cbb388dbbc54df431ebdc495481e969a5aceb2e925ab6d20f3ae1fdbc4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts": "1fb72a65774b9df8baa91147a741f085ed7ab30d2d570f26aa75fd0d5b5afea4"
+  },
+  "activeCallChain": [
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "line": 354,
+      "fact": "Pipeline9 uses NetToPointPairsSolver2_OffBoardConnection with inputSRJ and explicit initial-connectivity map."
+    },
+    {
+      "file": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "line": 156,
+      "fact": "For multi-terminal connections, calls buildMinimumSpanningTree on original point objects."
+    },
+    {
+      "file": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "line": 196,
+      "fact": "DisjointSet pointToKey uses only x,y; co-located top/bottom terminals merge before Kruskal."
+    },
+    {
+      "file": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "line": 285,
+      "fact": "Neighbor loop calls every same-XY candidate self and skips it, so no zero-XY cross-layer edge can enter the tree."
+    }
+  ],
+  "notTheCause": [
+    {
+      "file": "lib/utils/getPointKey.ts",
+      "fact": "getPointKey already uses pointId or sorted layer-aware coordinates."
+    },
+    {
+      "file": "lib/utils/get-initially-connected-map-from-simple-route-json.ts",
+      "fact": "Explicit initial connectivity derives only from externallyConnectedPointIds and actual preloaded trace connectsTo; source_net_2/source_net_4 have no such groups and original has no preloaded traces."
+    }
+  ],
+  "minimalExperimentPlan": "Keep legacy bare-XY coincident merge semantics; introduce a vertex key that includes actual sorted declared layer/layers when present, and skip same-XY candidates only for the same vertex key. Retain the zero-distance cross-layer edge as a real demand. Default-off experiment scope is root decision. Do not rewrite originals, infer barrel connections or change validators.",
+  "compatibilityLimit": "Existing mst-expansion-preserves-preconnections.test.ts expects bare-XY coincident distinct IDs merged. Blanket object-identity dedup would break that legacy expectation; pointId-only is not a sufficient compatible policy.",
+  "remainingIntegrationConcern": "A zero-XY cross-layer demand must survive downstream capacity/port-point routing and produce a legal outside-pad via path under existing no-via-in-pad rule; no solved-board gain can be claimed from point-pair retention alone.",
+  "geometryCheckerExecutions": 0,
+  "routingExecutions": 0,
+  "performanceExecutions": 0,
+  "sourceMutations": 0
+}

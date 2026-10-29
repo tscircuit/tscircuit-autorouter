@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "status": "READY_FOR_OPT_IN_EXPERIMENT_PUBLICATION",
+  "atUtc": "2026-10-29T23:33:31.726224+00:00",
+  "reviewer": "/root/quality_review",
+  "authorRole": "Independent peer; no production or test source authored or modified for this experiment.",
+  "worktree": "/tmp/autorouter-layer-aware-mst",
+  "localCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "tree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "baselineTree": "c79d9f76c9eff681a0c4665b341fd8af7d750e28",
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/QA-FINAL.json",
+    "bytes": 13515,
+    "sha256": "eae8e113b395884e559c97ccb5a4b8729a4e25f0fdf6e9ebadf7574e9252f7ca"
+  },
+  "compiledIndexSha256": "78487004481f349a1bfb9ac502a26ce7cf5cc991017337760cb96f718b5d0a7a",
+  "frozenBinding": {
+    "headAndTreeExact": true,
+    "trackedAndUntrackedClean": true,
+    "sourceInventoryEntriesVerified": 17,
+    "exactDiffMatchesInventory": true,
+    "proofEntriesIndependentlyRehashed": 15,
+    "validatorsAndBenchmarkHarnessIdenticalToBaseline": 6,
+    "dependenciesUnchanged": true,
+    "nativeBudgetsAndAcceptanceUnchanged": true
+  },
+  "sourceFindings": [
+    "Optional layer-aware key is used consistently for MST disjoint-set identity and equal-neighbor skipping. Default bare-XY behavior remains available unchanged. Layer sets are sorted and deduplicated; explicit preconnections remain honored.",
+    "Only Pipeline9 true opt-in supplies the key, native-via-landing restoration and same-layer terminal stitching identity. The final stitching adaptation is restricted further to coincident global XY and distinct terminal Z.",
+    "Native A03 and B01 two-state same-cell layer transitions carry a single existing planned via; native exporter endpoint substitution loses its two landing coordinates. The exact two-point/single-via/coincident-endpoint/distinct-Z adapter restores those existing landing coordinates before native improvement and stitching, without choosing a new via.",
+    "Cold ledger has exactly nine fields. It describes intermediate conceptual MST requirement coverage before preconnection filtering, not final copper continuity or literal preservation of every same-layer alias point identifier."
+  ],
+  "independentVerification": {
+    "focusedTests": {
+      "passed": 11,
+      "failed": 0,
+      "assertions": 1518,
+      "scope": "Pure and synthetic only; independently rerun on exact frozen source."
+    },
+    "freshWholePipelineControls": {
+      "processes": 8,
+      "fixtures": [
+        "three terminals with top/bottom coincident XY and no pads",
+        "same terminals with real separate original top/bottom SMT obstacles, allowViaInPad=false"
+      ],
+      "variantsPerFixture": [
+        "baseline e703",
+        "candidate omitted option",
+        "candidate false",
+        "candidate true"
+      ],
+      "allSolved": true,
+      "legacyPointPairAndOutputExactParity": true,
+      "enabledRestoresSecondLayerRequirement": true,
+      "plainExplicitVia": [
+        0.186,
+        0.205
+      ],
+      "smtExplicitVia": [
+        0,
+        -0.45
+      ],
+      "smtNativeDrcErrors": 0,
+      "smtPublishedViaInPadErrors": 0,
+      "originalInputUnchanged": true
+    },
+    "authorControlsReviewed": {
+      "freshSourceAndCompiledProcesses": 14,
+      "sourceCompiledGeometryParity": true,
+      "fullProjectTypesPass": true,
+      "bunVersion": "1.4.2",
+      "workersEsmDtsBuildPass": true,
+      "actualWorkerDispatchMeasured": false
+    }
+  },
+  "independentProofArtifacts": [
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-controls-summary.json",
+      "bytes": 838,
+      "sha256": "1aa6e56d1fd63ef3f59004464bcf0da8f7668122d3215890b4809e8562c7e53c"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-independent-final-focused.log",
+      "bytes": 1892,
+      "sha256": "ad373d7bca8cf5b8dc0e7cf9a596ac36eba3227b5c3a9a07151ec147dcc8e3bd"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-independent-pipeline-probe.ts",
+      "bytes": 3475,
+      "sha256": "7347b876a5093071db0b6c0a1883e76d49bb005fb05df5da48bf872714422f5c"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-baseline-plain.json",
+      "bytes": 2180,
+      "sha256": "1e46d081eb488498eb318304fcea02458add1a6cd18bc52c605010e89518054f"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-absent-plain.json",
+      "bytes": 2175,
+      "sha256": "a2dbc93e138f729e6389a6a197f48ad0d517d2a06fd030b59e35206c0e938e2e"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-false-plain.json",
+      "bytes": 2174,
+      "sha256": "58a1a606a3bad4be199c1cbad6aedc50e7d481257ffbb2a742957ae9268a5cfc"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-true-plain.json",
+      "bytes": 7803,
+      "sha256": "674d91545aaef851d0931b33448ae959232e42bd0bd3e35afd85634d49a2f403"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-baseline-pads.json",
+      "bytes": 3736,
+      "sha256": "b80d2630d8104500c1b4ca955b37714be40fed317baa94a49464049859d9c971"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-absent-pads.json",
+      "bytes": 3731,
+      "sha256": "9993fe6d4296263d37de88312ccc64dade8d3f9672d52b00092c9b13d3ede330"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-false-pads.json",
+      "bytes": 3730,
+      "sha256": "a18e69a08f1de02f7df276688b8b0d3f4477ae6338e9d81cbd41636fe710599b"
+    },
+    {
+      "path": "/tmp/layer-aware-mst-final-independent-true-pads.json",
+      "bytes": 7880,
+      "sha256": "e5f06407982a1d9da69692aedba15f95ff8685fb74bd9f047e686d306e97d97a"
+    }
+  ],
+  "reviewedAuthorSourceInventory": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "bytes": 65108,
+      "sha256": "15f9cbf1f105e2181395ef34d51a38791f2f9fa93ea9783964236b13b1775007"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "bytes": 45731,
+      "sha256": "4fb8a9900c90ffa7ea048cdcad67c0e6fddc6386fbe64b2e188181442164e068"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/restoreCoincidentNativeViaLandings.ts",
+      "bytes": 1076,
+      "sha256": "ec96381fae0dce9b43e9de63e435f6e7a46284c6a5be368f75d6dddf102549b3"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 9138,
+      "sha256": "8714a8358f1cb3dda4cf1a6d7069606c68ea23f7abccca742355e3a9bdf6e28e"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "bytes": 8659,
+      "sha256": "8dfec6e3334b4d062fa2fd9f0cbbdca7554b576213fc0a4f6f22045e10c3053a"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey.ts",
+      "bytes": 675,
+      "sha256": "1c1f84d0a5585fef866b65a5aae88b40177d9d199b09f4e6e944542ba121dafd"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6945,
+      "sha256": "6eb427591c534f5c25538f731a605ade1c92da2594155f4b66955b322f43eae3"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "bytes": 17521,
+      "sha256": "1c76c79b3048785f17eaeb665cc82df0ac0e9c231dc7ae7b40c09cc756f64925"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "bytes": 12117,
+      "sha256": "29bca62693df32f2a66e7cafef1005cffcdcac79a41a06337abc37cf16d8e4b0"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-differential-coverage.test.ts",
+      "bytes": 1447,
+      "sha256": "efa5b3bef83d4f31f375fa590f695f7f51c8f98ca8da23f1c77ee10bcb2e4c30"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-explicit-preconnection.test.ts",
+      "bytes": 1668,
+      "sha256": "821ba7cd1e373e4c9c37eb59dcffbdd246596c7e8ca91589d7358eb459b68d2c"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-identity.test.ts",
+      "bytes": 1430,
+      "sha256": "7f6f733aebd3e3286e93550c90f02a777585509019ed448a94c2dc508d437dc1"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-key-compatibility.test.ts",
+      "bytes": 1356,
+      "sha256": "d488010fe61e1308088ce6255b1ee28775e43507f29ef639d1af4d356fdf41e0"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-native-via-landings.test.ts",
+      "bytes": 1534,
+      "sha256": "0c380551c20fbdc06b84365f8fabcc3193cf0d325ec4a6412aeaba0648d9b2a1"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-point-pair-coverage.test.ts",
+      "bytes": 2201,
+      "sha256": "50e246d0f4ecd9275ed20cb87f93fd8bc97a0c487a699240bdaf1153716f53f3"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-terminal-snapping.test.ts",
+      "bytes": 1174,
+      "sha256": "3fda2c6da584da6f1f024b2737a5dc3500b3f00c57a3db96f8472f1fc5825ca9"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-whole-pipeline.test.ts",
+      "bytes": 2757,
+      "sha256": "40d58d8239ed2594958c2388d5ceccd96c7fbf8b2f1d3a8679a6a2930f4fe468"
+    }
+  ],
+  "scopeAndLimits": [
+    "No local actual dataset routing or checker execution and no actual dataset improvement or performance claim.",
+    "Ready for a fresh full paired dataset18/24 experiment. Every original case and failure must remain included.",
+    "Restored MST coverage is necessary but insufficient for board recovery; raw final outputs must prove required layer contacts and explicit manufactured layer bridges and reject unmaterialized wire-to-wire layer jumps.",
+    "Unchanged native seven-predicate counts alone cannot certify the explicit bridge distinction.",
+    "Default remains off; no merge or default enable recommendation before full physical and regression evidence."
+  ],
+  "actualDatasetRoutingRuns": 0,
+  "actualDatasetCheckerReplays": 0,
+  "remoteMutations": 0,
+  "blockers": []
+}

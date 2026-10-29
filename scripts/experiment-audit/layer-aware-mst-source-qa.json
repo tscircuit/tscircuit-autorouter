@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "status": "LAYER_AWARE_MST_SOURCE_QA_PASS_PENDING_FINAL_PEER_BINDING",
+  "atUtc": "2026-10-29T23:25:10.871508+00:00",
+  "worktree": "/tmp/autorouter-layer-aware-mst",
+  "localCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "tree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "baselineTree": "c79d9f76c9eff681a0c4665b341fd8af7d750e28",
+  "option": "experimentLayerAwareMstIdentity",
+  "defaultOff": true,
+  "defaultAndOtherPipelineBehavior": "Legacy bareXY MST identity and native terminal/route handling remain default. Only true Pipeline9 option supplies private sorted-declared-layer key callback, gated coincident cross-layer terminal identity and native planned via landing restoration.",
+  "sourceChange": {
+    "productionFiles": 9,
+    "productionInsertions": 120,
+    "productionDeletions": 18,
+    "newTestFiles": 8,
+    "allFiles": 17
+  },
+  "mechanism": "Keep coincident XY terminals on distinct declared layer sets as separate MST vertices; retain zero-distance cross-layer MST edges; preserve explicit initial preconnections; carry original endpoint layer/IDs through stitching; restore lost native two-state grid via landings before normal force/repair.",
+  "coldEvidencePath": "netToPointPairsSolver.layerAwareMstStats",
+  "coldEvidenceExactFields": {
+    "completed": "boolean",
+    "connectionsProcessed": "nonnegative integer",
+    "inputPointOccurrences": "nonnegative integer",
+    "inputDistinctLayerKeys": "nonnegative integer",
+    "mstCoveredLayerKeys": "nonnegative integer",
+    "missingLayerKeys": "nonnegative integer",
+    "coincidentCrossLayerGroups": "nonnegative integer",
+    "zeroDistanceLayerEdges": "nonnegative integer",
+    "mstSelectedEdges": "nonnegative integer"
+  },
+  "coldEvidenceFieldCount": 9,
+  "coldEvidenceSemantics": "Totals per merged ON-BOARD connection processed by the point-pair solver. Coverage describes MST-selected physical layer keys, including explicit preconnection edges and benign coincident same-layer aliases. It does not prove final copper or literal retention of every aliased pointId. completed is final only after the stage queue drains; preserve that mechanism evidence if a later solver fails.",
+  "tests": {
+    "command": "/tmp/autorouter-post588-bun/package/bin/bun test --timeout 9999999 tests/features/layer-aware-mst-*.test.ts tests/solvers/mst-expansion-preserves-preconnections.test.ts tests/solvers/net-to-point-pairs-explicit-initial-connectivity.test.ts tests/stitch-solver/disconnected-island-after-terminal-route.test.ts",
+    "passed": 11,
+    "failed": 0,
+    "assertions": 1518,
+    "oneTestPerFile": true,
+    "seededCoverageCases": 400,
+    "scope": "Eight new pure/synthetic tests plus three existing synthetic legacy controls. Whole Pipeline9 three-terminal opposite-SMT case has a real outside-pad via, native DRC0 and published checkViasInPads0."
+  },
+  "types": {
+    "command": "flock /workspace/experiment-audit/build.lock /tmp/autorouter-post588-bun/package/bin/bun node_modules/typescript/bin/tsc --noEmit",
+    "exit": 0,
+    "runtimeBun": "1.4.2",
+    "fullProject": true,
+    "finalGuardedSource": true
+  },
+  "build": {
+    "command": "flock /workspace/experiment-audit/build.lock env PATH=/tmp/autorouter-post588-bun/package/bin:$PATH /tmp/autorouter-post588-bun/package/bin/bun run build",
+    "exit": 0,
+    "compilerBun": "1.4.2",
+    "embeddedWorkers": true,
+    "esm": true,
+    "dts": true,
+    "compiledIndexSha256": "78487004481f349a1bfb9ac502a26ce7cf5cc991017337760cb96f718b5d0a7a"
+  },
+  "freshRuntimeControls": {
+    "count": 14,
+    "bunVersion": "1.4.2",
+    "mode": "Fourteen fresh serial full Pipeline9 processes on two tiny synthetic fixtures. Worker bundles built; these controls are not asynchronous worker-dispatch measurements.",
+    "baselineOmittedCandidateOmittedFalseParity": true,
+    "sameLayerTrueCommonWorkAndOutputsParity": true,
+    "sameLayerOutputSha256": "53fd8863333d939804a5e8d8c96d7e0b7937013a5a6c36e7febb776c29dbaddf",
+    "oppositeLayerTrueSourceCompiledGeometryParity": true,
+    "oppositeLayerTrueOutputSha256": "20b6ad086f3de987ecf3467353c6af75785428fc4284bb93b560f62b836fc526",
+    "oppositeLayerTruePhysical": {
+      "nativeDrcErrors": 0,
+      "viaInPadErrors": 0,
+      "explicitBridgeVias": 1,
+      "plannedViaOutsidePads": true,
+      "unmaterializedWireLayerJumps": 0
+    },
+    "oppositeLayerTrueOriginalIds": [
+      "top",
+      "bottom",
+      "far"
+    ],
+    "oppositeLayerTrueMstPairCount": 2,
+    "actualDatasetRuns": 0,
+    "speedCredit": false
+  },
+  "sourceFrozenAndClean": true,
+  "originalValidatorsAndHarnessUnchanged": [
+    {
+      "path": "lib/testing/evaluate-relaxed-drc.ts",
+      "sha256": "87238d33bc0ed1316ccdbfb85958139dcfa4dc4bf315e2200d85fb78194243a2"
+    },
+    {
+      "path": "lib/testing/getDrcErrors.ts",
+      "sha256": "74bb779d0014d0b655015fdbfb1031b3fcd10893a227158abe5f4e6aba76bd66"
+    },
+    {
+      "path": "lib/testing/utils/convertToCircuitJson.ts",
+      "sha256": "5ff83973fcaa3b9f9eceff7d674752548bfec3e6a24eeddc617b6f82b4c1adb1"
+    },
+    {
+      "path": "lib/testing/drcPresets.ts",
+      "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+    },
+    {
+      "path": "scripts/benchmark/benchmark-run-task.ts",
+      "sha256": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66"
+    },
+    {
+      "path": "scripts/benchmark/benchmark.child.ts",
+      "sha256": "ab77e556ff9b7ba07bae46fe4092e1700d09881c6aaa17240a3e7edd141d35e9"
+    }
+  ],
+  "dependenciesChanged": false,
+  "nativeBudgetsOrAcceptanceChanged": false,
+  "originalKnownCause": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/results/CASE24-8-TERMINAL-LAYER-DEMAND-LOSS-CAUSE-v1.json",
+    "sha256": "22b2e5976f1dddfaaa82063e4d6f6ab5c051f69b7bd1d0c2f41d1f79d568bb7f",
+    "scope": "Prior retained evidence and static requirement loss, not new candidate routing evidence."
+  },
+  "sourceInventory": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "bytes": 65108,
+      "sha256": "15f9cbf1f105e2181395ef34d51a38791f2f9fa93ea9783964236b13b1775007"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "bytes": 45731,
+      "sha256": "4fb8a9900c90ffa7ea048cdcad67c0e6fddc6386fbe64b2e188181442164e068"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/restoreCoincidentNativeViaLandings.ts",
+      "bytes": 1076,
+      "sha256": "ec96381fae0dce9b43e9de63e435f6e7a46284c6a5be368f75d6dddf102549b3"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 9138,
+      "sha256": "8714a8358f1cb3dda4cf1a6d7069606c68ea23f7abccca742355e3a9bdf6e28e"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "bytes": 8659,
+      "sha256": "8dfec6e3334b4d062fa2fd9f0cbbdca7554b576213fc0a4f6f22045e10c3053a"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey.ts",
+      "bytes": 675,
+      "sha256": "1c1f84d0a5585fef866b65a5aae88b40177d9d199b09f4e6e944542ba121dafd"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6945,
+      "sha256": "6eb427591c534f5c25538f731a605ade1c92da2594155f4b66955b322f43eae3"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "bytes": 17521,
+      "sha256": "1c76c79b3048785f17eaeb665cc82df0ac0e9c231dc7ae7b40c09cc756f64925"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "bytes": 12117,
+      "sha256": "29bca62693df32f2a66e7cafef1005cffcdcac79a41a06337abc37cf16d8e4b0"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-differential-coverage.test.ts",
+      "bytes": 1447,
+      "sha256": "efa5b3bef83d4f31f375fa590f695f7f51c8f98ca8da23f1c77ee10bcb2e4c30"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-explicit-preconnection.test.ts",
+      "bytes": 1668,
+      "sha256": "821ba7cd1e373e4c9c37eb59dcffbdd246596c7e8ca91589d7358eb459b68d2c"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-identity.test.ts",
+      "bytes": 1430,
+      "sha256": "7f6f733aebd3e3286e93550c90f02a777585509019ed448a94c2dc508d437dc1"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-key-compatibility.test.ts",
+      "bytes": 1356,
+      "sha256": "d488010fe61e1308088ce6255b1ee28775e43507f29ef639d1af4d356fdf41e0"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-native-via-landings.test.ts",
+      "bytes": 1534,
+      "sha256": "0c380551c20fbdc06b84365f8fabcc3193cf0d325ec4a6412aeaba0648d9b2a1"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-point-pair-coverage.test.ts",
+      "bytes": 2201,
+      "sha256": "50e246d0f4ecd9275ed20cb87f93fd8bc97a0c487a699240bdaf1153716f53f3"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-terminal-snapping.test.ts",
+      "bytes": 1174,
+      "sha256": "3fda2c6da584da6f1f024b2737a5dc3500b3f00c57a3db96f8472f1fc5825ca9"
+    },
+    {
+      "path": "tests/features/layer-aware-mst-whole-pipeline.test.ts",
+      "bytes": 2757,
+      "sha256": "40d58d8239ed2594958c2388d5ceccd96c7fbf8b2f1d3a8679a6a2930f4fe468"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/NATIVE-VIA-LANDING-PROVENANCE-v1.json",
+      "bytes": 1534,
+      "sha256": "a4bd29b2d5fcc2d209200f2da981ef6d99bbcf8915db8c115e721647c354cd3f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/RUNTIME-CONTROLS.json",
+      "bytes": 77834,
+      "sha256": "34d7e391b79f22892ecc0295f5ddba1c8aa9eb25d52d901e876a83bc35e173f9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/build-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/build-final.log",
+      "bytes": 1188,
+      "sha256": "80cfe3c074668eb15591748d2e092a6cb66e8cc7ba0e0dc2e99a3db2292842f5"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/build.log",
+      "bytes": 1188,
+      "sha256": "52f9fedb80f20764a13a3bdeda0d7d458eb89488ce7f934c7ec2a771dcb82d60"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/run-runtime-controls.py",
+      "bytes": 3359,
+      "sha256": "522cb2c0da1f705f8f41fa9aec9da983e85d33b137c41df820afcbc01377b556"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/runtime-child.ts",
+      "bytes": 4423,
+      "sha256": "98913bb40841733cab288c3e62d6a4163078535a410d41dd6f7e59066b3c171b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/runtime-controls.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/runtime-controls.log",
+      "bytes": 474,
+      "sha256": "a3e040fe8e9c596c72a593d2b7b7afbff3fce79eaa83e61d379095537e1bd2dc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/tests-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/tests-final.log",
+      "bytes": 1892,
+      "sha256": "57d3e1aa00c19654fc56fe504ec9b9ebd2f7b4b911e3041932c33dc33788bb75"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/types-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/types-guarded-final.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/types-guarded-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/types-initial.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "realDatasetRoutingRuns": 0,
+  "realDatasetCheckerReplays": 0,
+  "realDatasetPhysicalOrPerformanceGainClaim": false,
+  "remoteMutations": 0,
+  "prior336AndAllQualitySourcesAndEvidenceUnchanged": true,
+  "knownValidationLimit": "Retained MST requirements alone are not final electrical recovery. Fresh raw proof must distinguish explicit manufactured layer bridges from unsupported wire-to-wire layer jumps; unchanged seven-predicate counts alone cannot certify that distinction. Every original case/failure remains in the actual full paired experiment."
+}

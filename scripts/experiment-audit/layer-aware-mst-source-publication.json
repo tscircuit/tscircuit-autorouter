@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "status": "PUBLISHED_SOURCE_EXACT_QA_AND_PEER_TREE",
+  "atUtc": "2026-10-29T23:34:14.794066+00:00",
+  "repository": "tscircuit/tscircuit-autorouter",
+  "branch": "codex/experiment-layer-aware-mst-20261029",
+  "remoteCommit": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "localCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "tree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "singleRemoteParent": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "baselineTree": "c79d9f76c9eff681a0c4665b341fd8af7d750e28",
+  "flag": "experimentLayerAwareMstIdentity",
+  "defaultOff": true,
+  "remoteCommitTreeSingleParentAndBranchGetVerified": true,
+  "cleanSourceWorktreeAndTreeIndependentlyVerified": true,
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/QA-FINAL.json",
+    "bytes": 13515,
+    "sha256": "eae8e113b395884e559c97ccb5a4b8729a4e25f0fdf6e9ebadf7574e9252f7ca"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/INDEPENDENT-REVIEW-v1.json",
+    "bytes": 10044,
+    "sha256": "3f4654b7b2125df993747ada66a852fc39b387347aed637b910ff5d53628509f"
+  },
+  "export": {
+    "path": "/tmp/bottleneck-layer-aware-mst-source-export.json",
+    "bytes": 193232,
+    "sha256": "fea775a1b582762ece1228bd0aa19f363c08baeab55a88c1f2e0b9b96765fcc0"
+  },
+  "recoveryRef": "refs/codex/bottleneck-20261029/layer-aware-mst-source",
+  "readyForFreshFull84SemanticExperiment": true,
+  "actualDatasetCandidateRuns": 0,
+  "boardRecoveryOrSpeedClaim": false,
+  "unchangedValidatorsHarnessDependenciesBudgets": true,
+  "newPullRequestCreated": false,
+  "noMergeCloseDefaultEnablement": true,
+  "notes": [
+    "Restore original layer-specific terminal requirements; same-layer aliases remain benign; zero-distance different-layer requirements retained.",
+    "Retained native planned via landings and narrowly scoped terminal metadata preserve true layer distinctions downstream.",
+    "Full geometry/native iterations may legitimately differ in actual experiment.",
+    "MST counters are intermediate mechanism evidence, not manufactured final connectivity. All final original-owner physical and explicit bridge witnesses must remain separately reported."
+  ]
+}

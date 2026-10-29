@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_PROSPECTIVE_CONDITIONAL_QUALITY84_PRIOR_BASELINE_ONLY_LPT_PLAN_NOT_DISPATCHED",
+  "reviewer": "/root/analysis_closeout/final336_review",
+  "createdAtUtc": "2026-10-29T22:28:32.039787+00:00",
+  "script": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/results/prepare-quality84-lpt-plan-v1.py",
+    "sha256": "9bb01364563b11bbbadd0f686a365223dd02f4cab18ed634d03e5718de5f85b0"
+  },
+  "plan": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/results/QUALITY84-CONDITIONAL-PRIOR-NATIVE-LPT-PLAN-v1.json",
+    "sha256": "2c49b68072c1fe87c63918910d934769f4a8868db55466f554b305b5b3324a50"
+  },
+  "priorRawReview": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/THIRD84-ACTUAL-RAW-INDEPENDENT-REVIEW-v1.json",
+    "sha256": "74517e170e9a35148f6151b44e1eff49dc721437b3234e923f43ddce137ad8fb"
+  },
+  "independentSourceEvidence": [
+    {
+      "dataset": "srj18",
+      "receiptSha256": "99022f95961a1d54b5cc084dc2d7618bd9ba2bfbd99ef1d4107f6f033bf321a9",
+      "originalServerZipSha256": "ee73420c75f01adaf52d391c98c79518fae1455e4c790a0b391f12d55dd700b0",
+      "baselineRowsUsed": 16
+    },
+    {
+      "dataset": "srj24",
+      "receiptSha256": "7f1121a1c7278cdf2ea462c792f93ae9dc86459cd33c3ed94139f37a049c5c5d",
+      "originalServerZipSha256": "c1d5d40fb35373d4c2d55ee2cc610e4dd57254b59d0b5b7fcd4ba45d24f4d395",
+      "baselineRowsUsed": 26
+    }
+  ],
+  "independentChecks": {
+    "wholeCurrentScriptRead": true,
+    "actualPriorBaselineAFieldsOnlyUsedForWeights": true,
+    "priorCandidateBFieldsNeverUsedForWeightsOrAssignment": true,
+    "all42OriginalInputsExactlyOnceAnd84FreshAttemptsPlanned": true,
+    "elevenShardsFour18Seven24": true,
+    "all42WeightsIndependentlyRecomputedFromApprovedOriginalRawResults": true,
+    "timeoutCapOnlyWeights": [
+      "srj24:1",
+      "srj24:3",
+      "srj24:4",
+      "srj24:11",
+      "srj24:18",
+      "srj24:24"
+    ],
+    "nativeFailureActualConstructorAndElapsedWeightRetained": [
+      "srj24:13"
+    ],
+    "missingTimeoutConstructorsNotInventedOrSubstitutedByCheckpointInterval": true,
+    "independentDecimalLptAndLowestSampleLowestLoadLowestIndexTiesMatch": true,
+    "caseAndOrderVectorsIndependentlyMatch": true,
+    "eachHostSampleAscendingAndOrderAlternating": true,
+    "datasetOrderCounts": {
+      "srj18": {
+        "AB": 8,
+        "BA": 8
+      },
+      "srj24": {
+        "AB": 13,
+        "BA": 13
+      }
+    },
+    "all21AB21BA": true,
+    "inputPermutationAndEqualWeightTieControls": "PASS",
+    "reproductionPath": "/tmp/QUALITY84-PRIOR-LPT-INDEPENDENT-REPRODUCTION-v1.json",
+    "reproductionSha256": "6109e1adf5538ab3b9d915c29ddd6a5798da1610aa9ffd9cdcd50e906766d726",
+    "reproductionMatchesPlanAfterOnlyCreatedAtUtcRemoved": true,
+    "sourceCandidateStillNullAndNoDispatch": true,
+    "currentFourth84ScheduleUnchanged": true,
+    "localBoardSolverCheckerPerformanceRuns": 0
+  },
+  "routingOnlyForecast": {
+    "srj18": {
+      "priorModuloProjectedLoadsMs": [
+        152582.865592,
+        642633.345634,
+        322594.21339,
+        387091.49513
+      ],
+      "priorModuloWorstRoutingMinutes": 10.710555760566667,
+      "newLptProjectedLoadsMs": [
+        376025.037548,
+        375611.965148,
+        375381.765574,
+        377883.151476
+      ],
+      "newLptWorstRoutingMinutes": 6.2980525246,
+      "lptForecastIsSchedulingEstimateNotNewRuntimeEvidence": true
+    },
+    "srj24": {
+      "priorModuloProjectedLoadsMs": [
+        941881.06917,
+        432519.60906,
+        1598247.167374,
+        2166421.6523,
+        335896.42851,
+        649567.10293,
+        282097.529368
+      ],
+      "priorModuloWorstRoutingMinutes": 36.107027538333334,
+      "newLptProjectedLoadsMs": [
+        970843.620418,
+        933216.287796,
+        929403.084524,
+        894321.831446,
+        893269.940196,
+        893030.30053,
+        892545.493802
+      ],
+      "newLptWorstRoutingMinutes": 16.180727006966666,
+      "lptForecastIsSchedulingEstimateNotNewRuntimeEvidence": true
+    }
+  },
+  "limits": [
+    "Conditional scheduling proposal only, requires independently valid recovery plus source/controller qualification before future full84.",
+    "All weights come from already approved prior native-map trial BASELINE A records, with no candidate timing used in scheduling.",
+    "Prior failures and solve caps are only scheduling estimates, never new completed output, physical, or runtime evidence.",
+    "Projected worst routing time excludes build, install, checker, transport overhead and host variance; future candidate timing can differ.",
+    "No source, checker, timeout, native budget, actual running shard schedule, or prior336/repeat16 evidence changed.",
+    "No actual future candidate SHA, new board attempts, dispatch, speed claim, quality gain, or significance credit from this plan."
+  ]
+}
