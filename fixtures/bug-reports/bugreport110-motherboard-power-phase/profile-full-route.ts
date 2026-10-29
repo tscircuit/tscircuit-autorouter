@@ -25,6 +25,24 @@ if (process.env.BASELINE_PRELOAD_PATH) {
   if (!stage) throw new Error("Missing preload pipeline stage")
   stage.solverClass = baseline.PreloadedTraceGraphSolver
 }
+// Capture the repair stage for isolated, fresh-process performance comparisons.
+if (process.env.JOINT_REPAIR_INPUT_PATH) {
+  const stage = solver.pipelineDef.find(
+    (entry) => entry.solverName === "pipeline9JointDrcRepairSolver",
+  )
+  if (!stage) throw new Error("Missing joint repair pipeline stage")
+  stage.solverClass = new Proxy(stage.solverClass, {
+    construct(Target, args) {
+      writeFileSync(
+        process.env.JOINT_REPAIR_INPUT_PATH!,
+        JSON.stringify(args, (_key, value) =>
+          value instanceof Set ? [...value] : value,
+        ),
+      )
+      return Reflect.construct(Target, args)
+    },
+  })
+}
 const start: number = performance.now()
 let previous: string = ""
 let phaseStart: number = start

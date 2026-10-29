@@ -221,3 +221,39 @@ simple line segments. The earlier measured 38.6% total-time reduction is proven
 avoidable processing; it does not establish that most remaining high-density
 routing or repair work is unnecessary. A dataset 18 paired benchmark is requested
 on the updated PR head to check broader routing and performance regressions.
+
+
+## DRC cache eviction follow-up
+
+[Repair PR #185](https://github.com/tscircuit/high-density-repair03/pull/185)
+keeps an advancing FIFO iterator for each bounded DRC cache. Previously each
+insertion that evicted entries restarted a Map iterator at the beginning,
+revisiting deleted slots in a heavily churned cache. The cursor preserves the
+same eviction order, keys, retained entries, budgets, and geometry checks.
+Connectivity invalidation also resets the query-cache cursor.
+
+Fresh Bun 1.4.2 processes on the same macOS arm64 machine ran in
+baseline–PR–PR–baseline order, without CPU profiling or concurrent benchmark
+processes. The base repair dependency is `550e764`; the optimized implementation
+is `22d82b4` (the pinned `4983cfc` changes only test layout).
+
+| Measurement | Base mean | PR mean | Reduction |
+| --- | ---: | ---: | ---: |
+| Captured joint repair, including construction | 17.439 s | 11.507 s | 34.0% |
+| Indexed DRC evaluation within joint repair | 9.931 s | 3.927 s | 60.5% |
+| Complete motherboard power-phase routing | 103.034 s | 95.745 s | 7.1% |
+
+Individual full-route times were 104.592 / 95.056 / 96.433 / 101.477 seconds.
+All four full outputs have the same `5c90f0d5...` SHA-256 recorded above, 761
+traces, 10,652,531 solver iterations, and the same 1,300 existing relaxed DRC
+findings. The isolated repair runs also match new-route hashes and every
+non-timing repair statistic. The isolated result attributes about six seconds
+to the cache change; variation in unchanged stages also affects total time.
+See [raw measurements](drc-cache-results.json).
+
+To capture the repair input, set `JOINT_REPAIR_INPUT_PATH=/tmp/joint-input.json`
+when running this directory's `profile-full-route.ts`. Then replay it with
+`bun scripts/benchmarkPipeline9JointDrcInput.ts /tmp/joint-input.json` from the
+repository root. Input capture and CPU profiling must be disabled when measuring
+normal complete routing time. Compare the two pinned dependency revisions in
+fresh processes while keeping every other dependency and option fixed.
