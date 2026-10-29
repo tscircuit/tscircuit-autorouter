@@ -657,12 +657,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
+        const boardGeometry = {
+          bounds: cms.originalSrj.bounds,
+          outline: cms.originalSrj.outline,
+          minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
+        }
 
         return [
           {
             nodePortPoints: nodePortPointsSource,
             ...(cms.opts.constrainViaPadPlacement ? {
               viaPlacementContext: {
+                boardGeometry,
                 boardObstacles: cms.originalSrj.obstacles,
                 physicalOwnership: getPipeline9PhysicalOwnership({
                   originalSrj: cms.originalSrj,
@@ -674,11 +680,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 clearance: cms.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
               },
             } : {}),
-            boardGeometry: {
-              bounds: cms.originalSrj.bounds,
-              outline: cms.originalSrj.outline,
-              minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
-            },
+            boardGeometry,
             fixedHdRoutes,
             connMap: cms.connMap,
             colorMap: cms.colorMap,

@@ -14,7 +14,7 @@ test("via footprints respect original circles and rotated rectangles", () => {
         ccwRotationDegrees: 90, layers: ["bottom"], connectedTo: ["rectangle-owner"] },
     ],
   }
-  const validator = getPipeline9ViaPlacementValidator({ boardObstacles: srj.obstacles,
+  const validator = getPipeline9ViaPlacementValidator({ boardGeometry: srj, boardObstacles: srj.obstacles,
     physicalOwnership: getPipeline9PhysicalOwnership({ originalSrj: srj }), layerCount: 4, clearance: 0.1 })
   const placement = { x: 0.749, y: 0, zStart: 1, zEnd: 2, viaDiameter: 0.3 }
   expect(validator(placement, "signal")).toBe(false)

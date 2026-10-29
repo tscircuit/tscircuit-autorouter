@@ -1,4 +1,5 @@
 import type { Obstacle } from "lib/types/srj-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { ViaPlacementValidator } from "lib/types/high-density-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
@@ -8,8 +9,10 @@ import {
 } from "./getPipeline9PhysicalOwnership"
 import { getPipeline9PadPointDistance } from "./getPipeline9PadPointDistance"
 import { getPipeline9PhysicalBoardObstaclesInBounds } from "./getPipeline9PhysicalBoardObstaclesInBounds"
+import { getPipeline9ViaBoardPlacementValidator } from "./getPipeline9ViaBoardPlacementValidator"
 
 export type Pipeline9ViaPlacementContext = {
+  boardGeometry: HighDensityBoardGeometry
   boardObstacles: Obstacle[]
   physicalOwnership: Pipeline9PhysicalOwnership
   layerCount: number
@@ -17,7 +20,7 @@ export type Pipeline9ViaPlacementContext = {
   clearance: number
 }
 
-/** Guide via generation with original pad ownership and manufactured layer spans. */
+/** Guide via generation with the original board, pad owners, and drilled span. */
 export const getPipeline9ViaPlacementValidator = (
   context: Pipeline9ViaPlacementContext,
 ): ViaPlacementValidator => {
@@ -25,6 +28,7 @@ export const getPipeline9ViaPlacementValidator = (
     !Number.isFinite(context.clearance) || context.clearance < 0) {
     throw new Error("Invalid original via-placement constraints")
   }
+  const isInsideBoard = getPipeline9ViaBoardPlacementValidator(context.boardGeometry)
   const obstacleOwners = new WeakMap<Obstacle, string | undefined>()
   const ownerByConnection = new Map<string, string | undefined>()
   return (placement, connectionName): boolean => {
@@ -34,6 +38,7 @@ export const getPipeline9ViaPlacementValidator = (
       placement.zStart >= context.layerCount || placement.zEnd >= context.layerCount) {
       throw new Error("Invalid manufactured via candidate")
     }
+    if (!isInsideBoard(placement)) return false
     if (!ownerByConnection.has(connectionName)) {
       ownerByConnection.set(connectionName,
         getPipeline9PhysicalRouteOwner(context.physicalOwnership, { connectionName }))

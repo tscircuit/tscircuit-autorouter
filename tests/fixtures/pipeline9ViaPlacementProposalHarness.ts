@@ -29,7 +29,7 @@ export const createPipeline9ViaPlacementProposalHarness = (): {
     node: { capacityMeshNodeId: "node", center: { x: 0, y: 0 }, width: 6, height: 4,
       availableZ: [1, 3], portPoints: [{ x: -2, y: 0, z: 1, connectionName: "signal" },
         { x: 2, y: 0, z: 3, connectionName: "signal" }] },
-    context: { boardObstacles: srj.obstacles, physicalOwnership: getPipeline9PhysicalOwnership({ originalSrj: srj }),
+    context: { boardGeometry: srj, boardObstacles: srj.obstacles, physicalOwnership: getPipeline9PhysicalOwnership({ originalSrj: srj }),
       layerCount: 4, clearance: 0.1 },
   }
 }

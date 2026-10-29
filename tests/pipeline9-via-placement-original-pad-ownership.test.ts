@@ -17,7 +17,7 @@ test("through vias honor original surface pads while blind vias retain their act
   const original = structuredClone(srj)
   const physicalOwnership = getPipeline9PhysicalOwnership({ originalSrj: srj,
     derivedConnections: [{ name: "signal-branch", __netConnectionName: "signal", pointsToConnect: [] }] })
-  const context = { boardObstacles: srj.obstacles, physicalOwnership, layerCount: 4, clearance: 0.1 }
+  const context = { boardGeometry: srj, boardObstacles: srj.obstacles, physicalOwnership, layerCount: 4, clearance: 0.1 }
   const through = getPipeline9ViaPlacementValidator(context)
   const placement = { x: 0, y: 0, zStart: 1, zEnd: 3, viaDiameter: 0.3 }
   expect(through(placement, "signal-branch")).toBe(false)
