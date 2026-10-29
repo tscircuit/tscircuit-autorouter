@@ -696,11 +696,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return this.getNodeKeyFromCoordinates(node.x, node.y, node.z)
   }
 
-  private getNodeKeyFromCoordinates(
-    x: number,
-    y: number,
-    z: number,
-  ): number {
+  private getNodeKeyFromCoordinates(x: number, y: number, z: number): number {
+    // Quantize clamped coordinates exactly as queued nodes are keyed, so the
+    // explored lookup also works at grid boundaries without allocating a Node.
     const xIndex = Math.round(x / this.cellStep) - this.gridMinXIndex
     const yIndex = Math.round(y / this.cellStep) - this.gridMinYIndex
     return (z * this.gridHeight + yIndex) * this.gridWidth + xIndex
