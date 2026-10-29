@@ -57,6 +57,7 @@ export type Pipeline9HighDensitySolverParams = {
   preserveTerminalPcbPortIds?: boolean
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
+  preserveNodeLayerConstraints?: boolean
   maxB01Rips?: number
 }
 
@@ -707,7 +708,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // Once B01 has proved that assignment unroutable, the regional repair
       // must be able to add a legal layer transition; board obstacles still
       // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      availableZ: this.params.preserveNodeLayerConstraints
+        ? normalizedNode.availableZ
+        : Array.from({ length: this.layerCount }, (_, z) => z),
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
@@ -989,7 +992,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ),
         portPoints: [],
         portPointsInPairs: [],
-        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+        availableZ: this.params.preserveNodeLayerConstraints
+          ? this.activeNode.availableZ
+          : Array.from({ length: this.layerCount }, (_, z) => z),
       },
       this.getUpdatedFixedHdRoutes(),
     )
