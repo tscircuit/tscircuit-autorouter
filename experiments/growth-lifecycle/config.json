@@ -1,0 +1,28 @@
+{
+  "phase": "base-only-instrumented-lifecycle-diagnostic",
+  "base_sha": "3c42bb98f062c00cce2a5cd617553b7968c3f201",
+  "bun_version": "1.4.3",
+  "effort": 1,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "cpu_lanes": 3,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 600,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "child_memory_limit_mib": 8192,
+  "scope": "Instrumentation diagnostic only. No candidate, timing comparison, performance or RSS claim. Counts and buffer byte lengths describe setup work, not peak memory. Each board gets a fresh process; Observer records retain scalar metadata only; a WeakMap maps solver identities to record indices. No post-setup public step calls are counted separately from already-solved/failed-at-setup cases; no solver liveness inference. Each board first gets a fresh uninstrumented correctness reference on the same CPU; instrumentation must preserve all five hashes and routing work/counts."
+}

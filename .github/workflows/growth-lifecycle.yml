@@ -1,0 +1,50 @@
+name: Official A01 A03 setup lifecycle diagnostic
+
+on:
+  push:
+    branches: [codex/proven-growth-lifecycle-20261029]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: growth-lifecycle-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  lifecycle:
+    name: Base-only setup work counts and output parity
+    runs-on: blacksmith-16vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate frozen baseline
+        id: refs
+        run: python3 experiments/growth-lifecycle/run.py refs
+      - name: Checkout baseline source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: proof-source/base
+          persist-credentials: false
+      - name: Setup frozen Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install baseline once and authenticate official package
+        run: python3 experiments/growth-lifecycle/run.py install
+      - name: Compare fresh uninstrumented and instrumented baseline processes
+        run: python3 experiments/growth-lifecycle/run.py run
+      - name: Preserve diagnostic details and parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-growth-lifecycle-${{ github.run_id }}-${{ github.run_attempt }}
+          path: proof-results
+          if-no-files-found: error
+          retention-days: 30

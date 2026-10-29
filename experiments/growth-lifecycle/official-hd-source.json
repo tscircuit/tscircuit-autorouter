@@ -1,0 +1,146 @@
+{
+  "commit": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+  "allLibFilesExact": true,
+  "files": [
+    {
+      "path": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "gitBlobSha": "aa94d24f8d0e3428bc59345d0ffd2f2b4cf64ce2",
+      "sha256": "2e535b60cc8af2c8b7a8db1994436dab7f21ec811d2483b2ad4d0a7c79f49df9"
+    },
+    {
+      "path": "lib/HighDensitySolverA01WasmEngine/HighDensitySolverA01WasmEngine.ts",
+      "gitBlobSha": "cb45f9e5eb830284778d44812022471ce4f7f8f7",
+      "sha256": "a3abca908330bd6657707a930201e9076f28d631e19af9e8ce3158413486a490"
+    },
+    {
+      "path": "lib/HighDensitySolverA02/HighDensitySolverA02.ts",
+      "gitBlobSha": "7ede29d15c2c543a73cf871be7eb666103f45ee0",
+      "sha256": "5af921f22e65f5fa3e7afb032cba408ed3e7eab9c2a80f09ca40f43338f768ea"
+    },
+    {
+      "path": "lib/HighDensitySolverA03/HighDensitySolverA03.ts",
+      "gitBlobSha": "389e4c0bd7b3f2f0578ab132d91293d10707e55e",
+      "sha256": "a18d30c53480a940cc3fd71b4335627bcf6085aa4595c82e906b006c64fd3bbb"
+    },
+    {
+      "path": "lib/HighDensitySolverA05/HighDensitySolverA05.ts",
+      "gitBlobSha": "f4613660d638f6fa9be1932b17f7a0adf4d981e9",
+      "sha256": "28490fa7c341b12919673e27117827c534072ffbb0b0eca3820f3e27f5e75e47"
+    },
+    {
+      "path": "lib/HighDensitySolverA08/A08_BreakoutSolver.ts",
+      "gitBlobSha": "65af927f187f5c1a89a14daf7f0a9d730e7d73d3",
+      "sha256": "f8bf09de9104a16bdab0c75a4f002eefe74bda257e2952744f521df031e6ec8c"
+    },
+    {
+      "path": "lib/HighDensitySolverA08/HighDensitySolverA08.ts",
+      "gitBlobSha": "150af81f41fe58e66992bec3c930ea4f1286e17a",
+      "sha256": "198d397650ad51d05b91f40191497187986a8765b27a3b577783f15e06b74b4f"
+    },
+    {
+      "path": "lib/HighDensitySolverA08/shared.ts",
+      "gitBlobSha": "f3bec97982476732e6bb11d7ac8af78952a36882",
+      "sha256": "21cd90acb693ca3c509619ad64911aa7a7582084132ac09cda44a6a28573aba7"
+    },
+    {
+      "path": "lib/HighDensitySolverA09/HighDensitySolverA09.ts",
+      "gitBlobSha": "c28c6a351e03786f1301434562725bc6f0e3e7ce",
+      "sha256": "1cc33f62da5c020ad0c440b5d13c9619a9a49731ab5e37b9d453f5d96955c86a"
+    },
+    {
+      "path": "lib/HighDensitySolverA11/HighDensitySolverA11.ts",
+      "gitBlobSha": "dc37ce38773f4c345c8276c93c2a1e828fb77f94",
+      "sha256": "aee3fab80e817824d63df114b086a3be3dbe8d06def5428bad733ca906dfa4c7"
+    },
+    {
+      "path": "lib/HighDensitySolverA12/HighDensitySolverA12.ts",
+      "gitBlobSha": "21e11a94005067efce8bba6c49fdb805d2a73197",
+      "sha256": "9161ae88640afcd9d1b1fae1f9c26ccfcb195a26dfb102bb635b91e21a63671a"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/HighDensitySolverA13.ts",
+      "gitBlobSha": "33c90d7286601b3a0d1bb4da7f8ce3d2dbbe0739",
+      "sha256": "98e1a6fbf662e1fb97372afb2be842bd812a58da32b1b422152cb584bc5ec98a"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/search/JavascriptSearchKernel.ts",
+      "gitBlobSha": "3f43d72e10153d7b261dbe2dcf132893246e9dde",
+      "sha256": "5e835ec5e1a6d5079479e40980c32de3df7ba0a223757b3bb389e37ed17809ed"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/search/SearchInputs.ts",
+      "gitBlobSha": "661d1b9e564313a7425a2aa3889c751ffeaeda94",
+      "sha256": "b2a974c9b5df4d22f4361aff943c330687de1f2977d093bfd715fde6541cd223"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/search/WasmSearchKernel.ts",
+      "gitBlobSha": "dad4f8b1fa70fd4c7bc580aca0328608f40c99bf",
+      "sha256": "a17b2aaa04acff0f3bf3d8f15bb7a9da528211e671500fd487f7a18a11229c84"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/search/kernel.c",
+      "gitBlobSha": "957bd4399f39f0a9eaeae8a87f294f2d9158f536",
+      "sha256": "29d9795af19b90ccdd898a10173f865c47a8a7c452c9004afcbb2e4f5d1a41b7"
+    },
+    {
+      "path": "lib/HighDensitySolverA13/search/kernel.generated.ts",
+      "gitBlobSha": "ffd3d0e475d12333e3bc9c3732b78a60b200ee5a",
+      "sha256": "02993c059a508aafe9c806787c2860208255afdffc63b3afddbaea560d7bc0bd"
+    },
+    {
+      "path": "lib/dataset02/convertDataset02SampleToNodeWithPortPoints.ts",
+      "gitBlobSha": "8c970cf2b06e01418cba12b2e78b99541ee1116e",
+      "sha256": "071a7ddd07b7804627c420107c612ad31dc7ceaaa804a7bb4e561995522355a2"
+    },
+    {
+      "path": "lib/default-params.ts",
+      "gitBlobSha": "7a4658255ef7bd138f5f0c268683bc79d3d1864f",
+      "sha256": "29f81b3ce37601189479475424cec0ca63ce82b7ff0bc1759a3ba3b6c990daa0"
+    },
+    {
+      "path": "lib/getConnectionPortPointPairs.ts",
+      "gitBlobSha": "7bab7c4f5099cae728d37ac3173590dc7d173b61",
+      "sha256": "9fc2ddd883a2af03968b1a4a3373d0d74b5d801123914bd841d38558d3644469"
+    },
+    {
+      "path": "lib/gridToAffineTransform.ts",
+      "gitBlobSha": "5641147f8cad917e841037159885ed250ae0562e",
+      "sha256": "d2e71d2b990b1669793ab18040a0675e3007bbfba8a12618b23aa6a891df849b"
+    },
+    {
+      "path": "lib/index.ts",
+      "gitBlobSha": "b86044614bc0ca064a60155e6cecbc72a64a450e",
+      "sha256": "733bc4b2f060b92abbce5e90480f09778ab51414f9c1463fbc1f48c6af1eea5e"
+    },
+    {
+      "path": "lib/maxIterationsByNodeSizeAndConnectionCount.ts",
+      "gitBlobSha": "b1762a8c5c685fe4dc9e3646f45702a51dedbdb8",
+      "sha256": "ac844eb990507de6d07e6b34fbc2115f3bb98fa6f8282e153a8f1ebc95e5b0a8"
+    },
+    {
+      "path": "lib/routeGeometryValidation.ts",
+      "gitBlobSha": "985a2d6826f73c6cf4f4d6d4fe769f05ba9fb4ac",
+      "sha256": "0802bc4e569d78a349daf4bd1bc5286a97e3f2a89016dbb02c3c1ff9ca2c24be"
+    },
+    {
+      "path": "lib/routeReflow.ts",
+      "gitBlobSha": "80392dd3c506dcd8c406706e9bf21f0ca0ad5ede",
+      "sha256": "90bd8e4130cd7de4a325d98acc29914c8c6213a465d9fa5b601e8229023a0794"
+    },
+    {
+      "path": "lib/types.ts",
+      "gitBlobSha": "e4fbb881875c250e183c92c608d6aac737e13f47",
+      "sha256": "880f391d02a85420367e3aa122d6b631f1b98c20d331ddfd376eadd1ea8c8d21"
+    },
+    {
+      "path": "lib/wasm.ts",
+      "gitBlobSha": "dc295a45d810fa0747a76274942d3877f9c3891e",
+      "sha256": "e62d1e42d54c65bd335cabc6b55beaa503e3a116c5ffe810e0853a2d0750de0c"
+    },
+    {
+      "path": "package.json",
+      "gitBlobSha": "5032acc0958e400e7ffdc6759388341f4c5b8639",
+      "sha256": "13b732057f0447ab265c5e0ebb57dd02796e94330bbd190d588f8dc7f450e1ea"
+    }
+  ]
+}
