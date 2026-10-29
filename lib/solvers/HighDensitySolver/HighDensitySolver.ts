@@ -1,4 +1,4 @@
-import { initializeLazyHdCandidateCounters, type LazyHdCandidateCounters } from "../HyperHighDensitySolver/lazyHdGridCandidates"
+import { createFuturePointCacheStats, type FuturePointCacheStats } from "./futurePointCacheContext"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -73,8 +73,8 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
-    experimentLazyHdCandidates?: boolean
-    lazyHdStats?: LazyHdCandidateCounters
+    experimentFuturePointCache?: boolean
+    futurePointCacheStats?: FuturePointCacheStats
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -120,8 +120,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
-    experimentLazyHdCandidates,
-    lazyHdStats,
+    experimentFuturePointCache,
+    futurePointCacheStats,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -150,8 +150,8 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
-    experimentLazyHdCandidates?: boolean
-    lazyHdStats?: LazyHdCandidateCounters
+    experimentFuturePointCache?: boolean
+    futurePointCacheStats?: FuturePointCacheStats
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -189,7 +189,7 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
-      ...(experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats: lazyHdStats ?? initializeLazyHdCandidateCounters({}) } : {}),
+      ...(experimentFuturePointCache === true ? { experimentFuturePointCache: true, futurePointCacheStats: futurePointCacheStats ?? createFuturePointCacheStats() } : {}),
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,

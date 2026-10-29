@@ -2,6 +2,8 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
+import { consumeOwnedFuturePointCacheOptions, mixFuturePointCacheKey, type FuturePointCacheStats } from "./futurePointCacheContext"
+
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
@@ -22,6 +24,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  #futurePointCache?: { stats: FuturePointCacheStats; replacement: Uint8Array | null }
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -46,9 +49,19 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    // Admission happens after super and native hyperparameter assignment. A
+    // copied/replayed public opts object cannot inherit an internal owner.
+    const cacheStats = consumeOwnedFuturePointCacheOptions(opts, this.futureConnections)
+    if (cacheStats && this.futureConnectionPoints.length >= 8 &&
+      this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey &&
+      this.futureConnectionPoints.every((point) => typeof point.x === "number" && typeof point.y === "number" && typeof point.z === "number")) {
+      this.#futurePointCache = { stats: cacheStats, replacement: null }
+      cacheStats.instances++
+    }
   }
 
   getClosestFutureConnectionPoint(node: Node) {
+    if (this.#futurePointCache) return this.#getClosestOwnedFutureConnectionPoint(node)
     if (
       this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
       this.cachedFutureConnectionPointCount !==
@@ -106,6 +119,102 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheCoordinates[coordinateIndex + 3] =
         viaPenaltyDistance
       this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
+    }
+    return closestPoint
+  }
+
+  #getClosestOwnedFutureConnectionPoint(node: Node) {
+    const experiment = this.#futurePointCache
+    const stats = experiment?.stats
+    if (stats) stats.lookups++
+    const identityChanged = this.cachedFutureConnectionPoints !== this.futureConnectionPoints
+    const lengthChanged = this.cachedFutureConnectionPointCount !== this.futureConnectionPoints.length
+    if (identityChanged || lengthChanged) {
+      this.closestFuturePointCacheIndices.fill(-2)
+      this.cachedFutureConnectionPoints = this.futureConnectionPoints
+      this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
+      if (experiment) {
+        experiment.replacement?.fill(0)
+        stats!.invalidations++
+        if (identityChanged) stats!.identityInvalidations++
+        if (lengthChanged) stats!.lengthInvalidations++
+      }
+    }
+    const pointKey = this.getNodeKey(node)
+    const cacheable = Number.isSafeInteger(pointKey)
+    const useMixedHash = experiment !== undefined && this.futureConnectionPoints.length >= 8
+    const ways = useMixedHash && this.futureConnectionPoints.length >= 64 ? 2 : 1
+    const cacheBase = cacheable
+      ? useMixedHash
+        ? (mixFuturePointCacheKey(pointKey) & (CLOSEST_FUTURE_POINT_CACHE_SLOTS / ways - 1)) * ways
+        : Math.abs(pointKey % CLOSEST_FUTURE_POINT_CACHE_SLOTS)
+      : -1
+    if (stats) {
+      if (!cacheable) stats.uncacheableQueries++
+      else if (useMixedHash) {
+        stats.mixedHashLookups++
+        if (ways === 2) stats.associativeLookups++
+      }
+    }
+    const viaPenaltyDistance = this.viaPenaltyDistance
+    let writeSlot = -1
+    // Original exact query/penalty guards and native first-minimum semantics
+    // remain authoritative. Only owned immutable contexts change placement.
+    if (cacheBase >= 0) {
+      for (let way = 0; way < ways; way++) {
+        const slot = cacheBase + way
+        const coordinateIndex = slot * 4
+        const cachedPointIndex = this.closestFuturePointCacheIndices[slot]
+        if (stats) stats.entryProbes++
+        if (cachedPointIndex >= -1 &&
+          this.closestFuturePointCacheCoordinates[coordinateIndex] === node.x &&
+          this.closestFuturePointCacheCoordinates[coordinateIndex + 1] === node.y &&
+          this.closestFuturePointCacheCoordinates[coordinateIndex + 2] === node.z &&
+          this.closestFuturePointCacheCoordinates[coordinateIndex + 3] === viaPenaltyDistance) {
+          if (stats) stats.hits++
+          return cachedPointIndex === -1 ? null : this.futureConnectionPoints[cachedPointIndex]
+        }
+        if (cachedPointIndex === -2) {
+          if (writeSlot < 0) writeSlot = slot
+        } else if (stats) stats.occupiedMissProbes++
+      }
+    }
+    if (stats) stats.misses++
+    let minDist = Infinity
+    let closestPoint = null
+    let closestPointIndex = -1
+    let pointIndex = 0
+    for (const point of this.futureConnectionPoints) {
+      const dist =
+        distance(node, point) +
+        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      if (dist < minDist) {
+        minDist = dist
+        closestPoint = point
+        closestPointIndex = pointIndex
+      }
+      pointIndex++
+    }
+    if (stats) stats.distanceEvaluations += pointIndex
+    if (cacheBase >= 0) {
+      if (writeSlot < 0) {
+        writeSlot = cacheBase
+        if (ways === 2) {
+          experiment!.replacement ??= new Uint8Array(CLOSEST_FUTURE_POINT_CACHE_SLOTS / 2)
+          const set = cacheBase / 2
+          const next = experiment!.replacement[set]
+          writeSlot += next
+          experiment!.replacement[set] = next ^ 1
+        }
+        if (stats) stats.evictions++
+      } else if (stats) stats.coldStores++
+      const coordinateIndex = writeSlot * 4
+      this.closestFuturePointCacheCoordinates[coordinateIndex] = node.x
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 1] = node.y
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 2] = node.z
+      this.closestFuturePointCacheCoordinates[coordinateIndex + 3] = viaPenaltyDistance
+      this.closestFuturePointCacheIndices[writeSlot] = closestPointIndex
+      if (stats) stats.stores++
     }
     return closestPoint
   }

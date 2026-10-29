@@ -1,6 +1,6 @@
+import { createFuturePointCacheStats, type FuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
-import { initializeLazyHdCandidateCounters, type LazyHdCandidateCounters } from "lib/solvers/HyperHighDensitySolver/lazyHdGridCandidates"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -37,7 +37,7 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
-  experimentLazyHdCandidates?: boolean
+  experimentFuturePointCache?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -333,8 +333,8 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
-  experimentLazyHdCandidates?: boolean
-  lazyHdStats?: LazyHdCandidateCounters
+  experimentFuturePointCache?: boolean
+  futurePointCacheStats?: FuturePointCacheStats
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -354,8 +354,8 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  experimentLazyHdCandidates,
-  lazyHdStats,
+  experimentFuturePointCache,
+  futurePointCacheStats,
   traceWidth,
   obstacleMargin,
   effort,
@@ -387,7 +387,7 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
-    ...(experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats } : {}),
+    ...(experimentFuturePointCache === true ? { experimentFuturePointCache: true, futurePointCacheStats } : {}),
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -438,7 +438,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
-    if (params.experimentLazyHdCandidates === true) this.lazyHdStats = initializeLazyHdCandidateCounters({})
+    if (params.experimentFuturePointCache === true) this.futurePointCacheStats = createFuturePointCacheStats()
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -479,7 +479,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
-  declare readonly lazyHdStats?: LazyHdCandidateCounters
+  declare readonly futurePointCacheStats?: FuturePointCacheStats
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
 
   override getSolverName(): string {
@@ -558,11 +558,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               // Each batch promise owns execution telemetry exactly once,
               // including completed nodes outside the accepted serial prefix.
               for (const result of results) {
-                if (result.lazyHdStats) {
-                  if (!this.lazyHdStats) throw new Error("Unexpected lazy HD worker evidence on default-OFF host")
-                  for (const key of Object.keys(result.lazyHdStats) as (keyof LazyHdCandidateCounters)[]) {
-                    this.lazyHdStats[key] += result.lazyHdStats[key]
-                  }
+                if (result.futurePointCacheStats) {
+                  if (!this.futurePointCacheStats) throw new Error("Unexpected future-point worker evidence on default-OFF host")
+                  for (const key of Object.keys(result.futurePointCacheStats) as (keyof FuturePointCacheStats)[]) this.futurePointCacheStats[key] += result.futurePointCacheStats[key]
                 }
                 for (const [key, value] of Object.entries(
                   result.benchmarkDiagnosticCounters,
@@ -699,7 +697,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      ...(this.params.experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true, lazyHdStats: this.lazyHdStats } : {}),
+      ...(this.params.experimentFuturePointCache === true ? { experimentFuturePointCache: true, futurePointCacheStats: this.futurePointCacheStats } : {}),
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

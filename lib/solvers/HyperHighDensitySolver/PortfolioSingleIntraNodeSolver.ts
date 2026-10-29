@@ -31,7 +31,6 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
-import { getLazyHdGridPlan, initializeLazyHdCandidateCounters, isUnmaterializedLazyHdCandidate, LazyHighDensitySolverA01, LazyHighDensitySolverA03, type LazyHdCandidateCounters } from "./lazyHdGridCandidates"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -69,7 +68,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
-  declare private readonly lazyHdCounters?: LazyHdCandidateCounters
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -80,7 +78,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   >()
 
   private getSolvedSegmentCount(solver: unknown): number | null {
-    if (isUnmaterializedLazyHdCandidate(solver)) return 0
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
     if (!(solvedConnectionsMap instanceof Map)) return null
 
@@ -127,8 +124,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      experimentLazyHdCandidates?: boolean
-      lazyHdStats?: LazyHdCandidateCounters
       enableNegotiatedSearch?: boolean
       gridSearchSegmentWork?: number
       gridSearchWorkScale?: number
@@ -140,9 +135,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
-    if (opts.experimentLazyHdCandidates === true) {
-      this.lazyHdCounters = opts.lazyHdStats ?? initializeLazyHdCandidateCounters({})
-    }
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -407,7 +399,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    */
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
-    if (solver instanceof HighDensitySolverA13 || isUnmaterializedLazyHdCandidate(solver)) return
+    if (solver instanceof HighDensitySolverA13) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
     if (
@@ -654,7 +646,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const props = {
+      const solver = new HighDensitySolverA01({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -665,20 +657,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
-      }
-      const counters = this.lazyHdCounters
-      if (counters) {
-        counters.lazyHdCandidates++
-        counters.lazyHdA01Candidates++
-        const parametersAreFinite = [this.effort, props.viaDiameter, props.traceThickness, props.traceMargin, props.viaMinDistFromBorder].every(Number.isFinite) && this.effort > 0 && props.viaDiameter > 0 && props.traceThickness > 0 && props.traceMargin >= 0 && props.viaMinDistFromBorder >= 0
-        const plan = parametersAreFinite ? getLazyHdGridPlan(this.nodeWithPortPoints, "A01", () => this.getGridSearchIterationBudget()) : null
-        if (plan) return new LazyHighDensitySolverA01(props, plan, counters) as any
-        counters.lazyHdEagerCandidates++
-      }
-      return new HighDensitySolverA01(props) as any
+      })
+      return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
-      const props = {
+      const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
@@ -693,17 +676,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters,
-      }
-      const counters = this.lazyHdCounters
-      if (counters) {
-        counters.lazyHdCandidates++
-        counters.lazyHdA03Candidates++
-        const parametersAreFinite = [this.effort, props.viaDiameter, props.traceThickness, props.traceMargin, props.viaMinDistFromBorder].every(Number.isFinite) && this.effort > 0 && props.viaDiameter > 0 && props.traceThickness > 0 && props.traceMargin >= 0 && props.viaMinDistFromBorder >= 0
-        const plan = parametersAreFinite ? getLazyHdGridPlan(this.nodeWithPortPoints, "A03", () => this.getGridSearchIterationBudget()) : null
-        if (plan) return new LazyHighDensitySolverA03(props, plan, counters) as any
-        counters.lazyHdEagerCandidates++
-      }
-      return new HighDensityA03Solver(props) as any
+      })
+      return solver as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({

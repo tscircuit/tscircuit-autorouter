@@ -105,7 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
-  experimentLazyHdCandidates?: boolean
+  experimentFuturePointCache?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -644,7 +644,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
-            ...(cms.opts.experimentLazyHdCandidates === true ? { experimentLazyHdCandidates: true } : {}),
+            ...(cms.opts.experimentFuturePointCache === true ? { experimentFuturePointCache: true } : {}),
           },
         ]
       },
