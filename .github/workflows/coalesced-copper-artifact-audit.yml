@@ -1,8 +1,8 @@
-name: Coalesced routing private captured-copper audit
+name: Coalesced routing private captured-copper audit v2
 
 on:
   push:
-    branches: [codex/coalesced-copper-artifact-audit-20261028]
+    branches: [codex/coalesced-copper-artifact-audit-v2-20261028]
   workflow_dispatch:
 
 permissions:
@@ -29,12 +29,12 @@ jobs:
       - name: Verify immutable private captured artifacts without routing
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 controller/scripts/experiment-audit/fetch-coalesced-audit-artifacts.py --source candidate --output retained-artifacts
+        run: python3 controller/scripts/experiment-audit/fetch-qualified-copper-audit-artifacts.py --source candidate --output retained-artifacts --manifest controller/scripts/experiment-audit/coalesced-copper-audit-qualified-cases.json
       - name: Install the unchanged source dependency declarations in isolation
         run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
       - name: Bind original source CJSON and read retained copper only
         run: |
-          python3 controller/scripts/experiment-audit/fetch-coalesced-audit-artifacts.py --source candidate --output retained-artifacts --finalize-bindings
+          python3 controller/scripts/experiment-audit/fetch-qualified-copper-audit-artifacts.py --source candidate --output retained-artifacts --manifest controller/scripts/experiment-audit/coalesced-copper-audit-qualified-cases.json --finalize-bindings
           mkdir -p candidate/scripts/experiment-audit
           cp controller/scripts/experiment-audit/audit-retention-fixed-artifact.ts candidate/scripts/experiment-audit/
           cp controller/scripts/experiment-audit/audit-retention-stage-geometry.ts candidate/scripts/experiment-audit/

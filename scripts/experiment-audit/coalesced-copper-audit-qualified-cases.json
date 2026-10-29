@@ -1,0 +1,276 @@
+{
+  "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+  "sourceTree": "c96942d07e4887d61759177e552c3d6733021c53",
+  "strictIdentitySourceFileSha256": "878b2ae0432f8e7f9ae1d2fd217c03d763b4edac2179c4805ca8f2fa6b13795a",
+  "enrichedQualifiedRecordsFileSha256": "fc975825158807301f88fba3463a1ae4301ae2579deb317dd223f3a4a04a3942",
+  "artifacts": [
+    {
+      "runId": 40787080806,
+      "artifactId": 12860675747,
+      "artifactName": "strongest-refinement-main-vs-coalesced-layer-retention-screen-AB-srj18",
+      "zipSha256": "f62b616c13c00884b53da0cf9f757e8eee17fd018dec3cae1cc4aabc1acc6107",
+      "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+      "dataset": "srj18",
+      "executionOrder": "AB",
+      "qualificationMode": "screen",
+      "population": [
+        14
+      ],
+      "selectedSamples": [
+        14
+      ],
+      "records": [
+        {
+          "runId": 40787080806,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj18",
+          "sample": 14,
+          "arm": "A",
+          "sourceSha": "637b6c581128238f6c61227a1c15be423d24baca",
+          "expectedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "observedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "outputHash": "f806cf2415bc50e62360917de6d629775d6f1cfa7047d6a5a4ba673206c16d57",
+          "tracesHash": "e3bb5f4784ee6d6fdc538fc39f09ef4f5a9e2c36705a3ae97b225735b76597e6",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1
+          },
+          "strictParsedEvidenceFile": "main-vs-new-srj18-parsed.json",
+          "strictParsedEvidenceSha256": "19bbf89812d4493e3b5d2a64c9002bc43df73ec9c56fe19571fc37dd5e5e2d77",
+          "originalSourceCircuitJson": {
+            "packageName": "dataset-srj18",
+            "relativePath": "circuit-json/sample014-ov9281-camera-board.json",
+            "sha256": "5adabdf3facb4a3052b2460880af091d4e4d854019100e0ed64306a84a0c263f"
+          }
+        },
+        {
+          "runId": 40787080806,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj18",
+          "sample": 14,
+          "arm": "B",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "observedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "outputHash": "a746c3e181a4ab8a3e1c5bc4aad3d10bf6f3d70e8b13f25b191cf3206e2f7325",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": true,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "main-vs-new-srj18-parsed.json",
+          "strictParsedEvidenceSha256": "19bbf89812d4493e3b5d2a64c9002bc43df73ec9c56fe19571fc37dd5e5e2d77",
+          "originalSourceCircuitJson": {
+            "packageName": "dataset-srj18",
+            "relativePath": "circuit-json/sample014-ov9281-camera-board.json",
+            "sha256": "5adabdf3facb4a3052b2460880af091d4e4d854019100e0ed64306a84a0c263f"
+          }
+        }
+      ]
+    },
+    {
+      "runId": 40787080806,
+      "artifactId": 12859847927,
+      "artifactName": "strongest-refinement-main-vs-coalesced-layer-retention-screen-AB-srj24",
+      "zipSha256": "559c98a3df88827fc9a507ce1f7a9f054962b7437a26e5e34b50d64cb80736b2",
+      "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+      "dataset": "srj24",
+      "executionOrder": "AB",
+      "qualificationMode": "screen",
+      "population": [
+        12
+      ],
+      "selectedSamples": [
+        12
+      ],
+      "records": [
+        {
+          "runId": 40787080806,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj24",
+          "sample": 12,
+          "arm": "A",
+          "sourceSha": "637b6c581128238f6c61227a1c15be423d24baca",
+          "expectedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "observedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "outputHash": "20d57427e548743f1ad7200e718bb05bbd2ddcdba593e2d66f7abbc28e9bc678",
+          "tracesHash": "e3bb5f4784ee6d6fdc538fc39f09ef4f5a9e2c36705a3ae97b225735b76597e6",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1
+          },
+          "strictParsedEvidenceFile": "main-vs-new-srj24-parsed.json",
+          "strictParsedEvidenceSha256": "5f8e411a188688f823100cfc56e20c6b9430738035dff5e522ec57d586690247",
+          "originalSourceCircuitJson": {
+            "packageName": "@tscircuit/dataset-srj24",
+            "relativePath": "circuit-json/sample012-ov9281-dual-camera-board.json",
+            "sha256": "0c050aebcfbae3a401e000b3a4aa0911161ffe65131e773b8b2120b9e2c1ab0d"
+          }
+        },
+        {
+          "runId": 40787080806,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj24",
+          "sample": 12,
+          "arm": "B",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "observedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "outputHash": "86fea1ecd0f5b42e88219f1abc97ebfe15a3957eb6bd5acbecd3f73c89666ed9",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": true,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "main-vs-new-srj24-parsed.json",
+          "strictParsedEvidenceSha256": "5f8e411a188688f823100cfc56e20c6b9430738035dff5e522ec57d586690247",
+          "originalSourceCircuitJson": {
+            "packageName": "@tscircuit/dataset-srj24",
+            "relativePath": "circuit-json/sample012-ov9281-dual-camera-board.json",
+            "sha256": "0c050aebcfbae3a401e000b3a4aa0911161ffe65131e773b8b2120b9e2c1ab0d"
+          }
+        }
+      ]
+    },
+    {
+      "runId": 40787092770,
+      "artifactId": 12858549821,
+      "artifactName": "strongest-refinement-coalesced-layer-retention-off-vs-on-screen-AB-srj18",
+      "zipSha256": "620c7333cbe8f3d5ac6a4a437541c95a6937b996eb90c91d07d1bc60dc8ec238",
+      "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+      "dataset": "srj18",
+      "executionOrder": "AB",
+      "qualificationMode": "screen",
+      "population": [
+        14
+      ],
+      "selectedSamples": [
+        14
+      ],
+      "records": [
+        {
+          "runId": 40787092770,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj18",
+          "sample": 14,
+          "arm": "A",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "observedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "outputHash": "a746c3e181a4ab8a3e1c5bc4aad3d10bf6f3d70e8b13f25b191cf3206e2f7325",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": false,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "same-new-srj18-parsed.json",
+          "strictParsedEvidenceSha256": "b839e64b22c34162c3c3a2c53069307b5668dc54f40b46e4d584eb7869808f5b",
+          "originalSourceCircuitJson": {
+            "packageName": "dataset-srj18",
+            "relativePath": "circuit-json/sample014-ov9281-camera-board.json",
+            "sha256": "5adabdf3facb4a3052b2460880af091d4e4d854019100e0ed64306a84a0c263f"
+          }
+        },
+        {
+          "runId": 40787092770,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj18",
+          "sample": 14,
+          "arm": "B",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "observedInputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "outputHash": "a746c3e181a4ab8a3e1c5bc4aad3d10bf6f3d70e8b13f25b191cf3206e2f7325",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": true,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "same-new-srj18-parsed.json",
+          "strictParsedEvidenceSha256": "b839e64b22c34162c3c3a2c53069307b5668dc54f40b46e4d584eb7869808f5b",
+          "originalSourceCircuitJson": {
+            "packageName": "dataset-srj18",
+            "relativePath": "circuit-json/sample014-ov9281-camera-board.json",
+            "sha256": "5adabdf3facb4a3052b2460880af091d4e4d854019100e0ed64306a84a0c263f"
+          }
+        }
+      ]
+    },
+    {
+      "runId": 40787092770,
+      "artifactId": 12860242080,
+      "artifactName": "strongest-refinement-coalesced-layer-retention-off-vs-on-screen-AB-srj24",
+      "zipSha256": "1a1cd3011e1b2529ae33db77072ce8569d258930a6bdb8b98630f40da7e4fa65",
+      "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+      "dataset": "srj24",
+      "executionOrder": "AB",
+      "qualificationMode": "screen",
+      "population": [
+        12
+      ],
+      "selectedSamples": [
+        12
+      ],
+      "records": [
+        {
+          "runId": 40787092770,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj24",
+          "sample": 12,
+          "arm": "A",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "observedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "outputHash": "86fea1ecd0f5b42e88219f1abc97ebfe15a3957eb6bd5acbecd3f73c89666ed9",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": false,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "same-new-srj24-parsed.json",
+          "strictParsedEvidenceSha256": "78863adb4a4e37ff13f3a09b4e794a88689f9d1e8635dd04f6ac118ffb0e6c5c",
+          "originalSourceCircuitJson": {
+            "packageName": "@tscircuit/dataset-srj24",
+            "relativePath": "circuit-json/sample012-ov9281-dual-camera-board.json",
+            "sha256": "0c050aebcfbae3a401e000b3a4aa0911161ffe65131e773b8b2120b9e2c1ab0d"
+          }
+        },
+        {
+          "runId": 40787092770,
+          "controllerSha": "b866c51c779ac23e3c0581ce9744e2e965c9b5e6",
+          "dataset": "srj24",
+          "sample": 12,
+          "arm": "B",
+          "sourceSha": "ee0dac23c8ff76fde81a0124bf444790a8394f25",
+          "expectedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "observedInputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "outputHash": "86fea1ecd0f5b42e88219f1abc97ebfe15a3957eb6bd5acbecd3f73c89666ed9",
+          "tracesHash": "c7827df983f33c0d50550fac278c25d6966a33761f34c59184eddb76df3b8a5b",
+          "options": {
+            "cacheProvider": null,
+            "effort": 1,
+            "retainBestPartialRouting": true,
+            "constrainViaPadPlacement": true
+          },
+          "strictParsedEvidenceFile": "same-new-srj24-parsed.json",
+          "strictParsedEvidenceSha256": "78863adb4a4e37ff13f3a09b4e794a88689f9d1e8635dd04f6ac118ffb0e6c5c",
+          "originalSourceCircuitJson": {
+            "packageName": "@tscircuit/dataset-srj24",
+            "relativePath": "circuit-json/sample012-ov9281-dual-camera-board.json",
+            "sha256": "0c050aebcfbae3a401e000b3a4aa0911161ffe65131e773b8b2120b9e2c1ab0d"
+          }
+        }
+      ]
+    }
+  ]
+}
