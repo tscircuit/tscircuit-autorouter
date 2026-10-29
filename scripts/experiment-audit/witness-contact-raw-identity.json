@@ -1,0 +1,181 @@
+{
+  "status": "PASS_ALL_SIX_RETAINED_INPUT_OUTPUT_REPORT_BYTES_IDENTICAL_ACROSS_V1_V2_AND_BOTH_ARMS",
+  "atUtc": "2026-10-29T22:43:16.040246+00:00",
+  "case": "srj24:8",
+  "zipPaths": {
+    "V1": "/tmp/clean336-original-server-zips/40964225540-witness-quality6-srj24-8.zip",
+    "V2": "/tmp/clean336-original-server-zips/40967023102-witness-quality6-repeat-srj24-8.zip"
+  },
+  "artifacts": {
+    "V1": {
+      "id": 12938275121,
+      "name": "witness-quality6-raw-witness-via-pad-sample-008-srj24-AB",
+      "digest": "sha256:6383d958509ebe285f6dd658d7fe0bdafa8496c66a8201b557e5bc26c1d19e5c",
+      "size_in_bytes": 1412595,
+      "workflow_run": {
+        "id": 40964225540,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "codex/witness-quality6-controller-20261029",
+        "head_sha": "d8e7dc203691d037aedcf3e2ed23050554563f9f"
+      }
+    },
+    "V2": {
+      "id": 12938358894,
+      "name": "witness-quality6-raw-witness-via-pad-sample-008-srj24-AB",
+      "digest": "sha256:c141443f7bc8b5e2fe0f70d93d16aa8c674afd9f6f824b36b10598781e8ad272",
+      "size_in_bytes": 1413373,
+      "workflow_run": {
+        "id": 40967023102,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "codex/witness-quality6-controller-20261029",
+        "head_sha": "201eb90e7e60062c5cdca8b3bd6eff71a8002403"
+      }
+    }
+  },
+  "hashes": {
+    "V1": {
+      "A": {
+        "original-input.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/original-input.json",
+          "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "bytes": 1954213
+        },
+        "point-pair-context.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/point-pair-context.json",
+          "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64",
+          "bytes": 2058628
+        },
+        "raw-new-traces.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-new-traces.json",
+          "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96",
+          "bytes": 381855
+        },
+        "canonical-circuit-json.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/canonical-circuit-json.json",
+          "sha256": "3ea0190b503152c219cfba664b9e694933633e150c423b264dca3af06a9b2b7d",
+          "bytes": 810293
+        },
+        "raw-solver-output.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-solver-output.json",
+          "sha256": "fd9def8e942d691c2020f1fb2680203d63d993c3d197fa5a3b293d50b0e3023a",
+          "bytes": 2366612
+        },
+        "declared-intent-via-pad.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/declared-intent-via-pad.json",
+          "sha256": "1d482cbaa28d8f291fc10e102b99792efb02fc83e351628d034fd405a940980e",
+          "bytes": 869143
+        }
+      },
+      "B": {
+        "original-input.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/original-input.json",
+          "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "bytes": 1954213
+        },
+        "point-pair-context.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/point-pair-context.json",
+          "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64",
+          "bytes": 2058628
+        },
+        "raw-new-traces.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/raw-new-traces.json",
+          "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96",
+          "bytes": 381855
+        },
+        "canonical-circuit-json.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/canonical-circuit-json.json",
+          "sha256": "3ea0190b503152c219cfba664b9e694933633e150c423b264dca3af06a9b2b7d",
+          "bytes": 810293
+        },
+        "raw-solver-output.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/raw-solver-output.json",
+          "sha256": "fd9def8e942d691c2020f1fb2680203d63d993c3d197fa5a3b293d50b0e3023a",
+          "bytes": 2366612
+        },
+        "declared-intent-via-pad.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/declared-intent-via-pad.json",
+          "sha256": "1d482cbaa28d8f291fc10e102b99792efb02fc83e351628d034fd405a940980e",
+          "bytes": 869143
+        }
+      }
+    },
+    "V2": {
+      "A": {
+        "original-input.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/original-input.json",
+          "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "bytes": 1954213
+        },
+        "point-pair-context.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/point-pair-context.json",
+          "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64",
+          "bytes": 2058628
+        },
+        "raw-new-traces.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-new-traces.json",
+          "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96",
+          "bytes": 381855
+        },
+        "canonical-circuit-json.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/canonical-circuit-json.json",
+          "sha256": "3ea0190b503152c219cfba664b9e694933633e150c423b264dca3af06a9b2b7d",
+          "bytes": 810293
+        },
+        "raw-solver-output.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-solver-output.json",
+          "sha256": "fd9def8e942d691c2020f1fb2680203d63d993c3d197fa5a3b293d50b0e3023a",
+          "bytes": 2366612
+        },
+        "declared-intent-via-pad.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/declared-intent-via-pad.json",
+          "sha256": "1d482cbaa28d8f291fc10e102b99792efb02fc83e351628d034fd405a940980e",
+          "bytes": 869143
+        }
+      },
+      "B": {
+        "original-input.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/original-input.json",
+          "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "bytes": 1954213
+        },
+        "point-pair-context.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/point-pair-context.json",
+          "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64",
+          "bytes": 2058628
+        },
+        "raw-new-traces.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/raw-new-traces.json",
+          "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96",
+          "bytes": 381855
+        },
+        "canonical-circuit-json.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/canonical-circuit-json.json",
+          "sha256": "3ea0190b503152c219cfba664b9e694933633e150c423b264dca3af06a9b2b7d",
+          "bytes": 810293
+        },
+        "raw-solver-output.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/raw-solver-output.json",
+          "sha256": "fd9def8e942d691c2020f1fb2680203d63d993c3d197fa5a3b293d50b0e3023a",
+          "bytes": 2366612
+        },
+        "declared-intent-via-pad.json": {
+          "member": "witness-via-pad-sample-008-srj24-AB/pair-1/B/raw/declared-intent-via-pad.json",
+          "sha256": "1d482cbaa28d8f291fc10e102b99792efb02fc83e351628d034fd405a940980e",
+          "bytes": 869143
+        }
+      }
+    }
+  },
+  "allFourCopiesExactByFile": {
+    "original-input.json": true,
+    "point-pair-context.json": true,
+    "raw-new-traces.json": true,
+    "canonical-circuit-json.json": true,
+    "raw-solver-output.json": true,
+    "declared-intent-via-pad.json": true
+  },
+  "actualCheckerOrRoutingExecutions": 0,
+  "diagnosticInputSelection": "Either prior V1 native A or fresh V2 native A is byte-identical original/pairs/rawtraces/canonical/rawoutput/declaredreport; use externally pinned original serverZIP and member hashes only."
+}
