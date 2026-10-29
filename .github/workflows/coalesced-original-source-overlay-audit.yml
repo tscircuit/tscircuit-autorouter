@@ -1,0 +1,71 @@
+name: Additive original-source via-pad geometry audit
+
+on:
+  push:
+    branches: [codex/coalesced-original-source-overlay-audit-20261028]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ee0dac23c8ff76fde81a0124bf444790a8394f25
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Verify exact retained captures without routing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! python3 controller/scripts/experiment-audit/fetch-qualified-copper-audit-artifacts.py --source candidate --output retained-artifacts --manifest controller/scripts/experiment-audit/source-overlay-qualified-cases.json > private-fetch.log 2>&1; then
+            echo "::error::Immutable retained-case identity validation failed; private diagnostic remains ephemeral"
+            exit 1
+          fi
+      - name: Install unchanged declarations in isolation
+        run: |
+          if ! python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate > private-install.log 2>&1; then
+            echo "::error::Isolated dependency installation failed; private diagnostic remains ephemeral"
+            exit 1
+          fi
+      - name: Audit the original-authored source geometry additively
+        run: |
+          if ! python3 controller/scripts/experiment-audit/fetch-qualified-copper-audit-artifacts.py --source candidate --output retained-artifacts --manifest controller/scripts/experiment-audit/source-overlay-qualified-cases.json --finalize-bindings > private-finalize.log 2>&1; then
+            echo "::error::Original source binding failed; private diagnostic remains ephemeral"
+            exit 1
+          fi
+          mkdir -p candidate/scripts/experiment-audit
+          cp controller/scripts/experiment-audit/audit-retention-fixed-artifact.ts candidate/scripts/experiment-audit/
+          cp controller/scripts/experiment-audit/audit-retention-stage-geometry.ts candidate/scripts/experiment-audit/
+          cp controller/scripts/experiment-audit/audit-original-source-via-pads.ts candidate/scripts/experiment-audit/
+          cp controller/scripts/experiment-audit/audit-coalesced-captured-success.ts candidate/scripts/experiment-audit/
+          cp controller/scripts/experiment-audit/auditOriginalSourceViaPadOverlay.ts candidate/scripts/experiment-audit/
+          cp controller/scripts/experiment-audit/audit-captured-source-overlay.ts candidate/scripts/experiment-audit/
+          cd candidate
+          if ! bun scripts/experiment-audit/audit-captured-source-overlay.ts ../retained-artifacts/binding-manifest.json ../controller/scripts/experiment-audit/source-overlay-qualified-cases.json ../original-source-overlay-aggregate.json > ../private-source-overlay.log 2>&1; then
+            echo "::error::Supplemental source-geometry validation failed; private diagnostic remains ephemeral"
+            exit 1
+          fi
+      - name: Publish aggregate-only additive findings
+        run: |
+          python3 - <<'PY'
+          import json
+          report = json.load(open('original-source-overlay-aggregate.json'))
+          print('ORIGINAL_SOURCE_OVERLAY_AUDIT_JSON ' + json.dumps(report, separators=(',', ':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-source-overlay-aggregate
+          path: original-source-overlay-aggregate.json
