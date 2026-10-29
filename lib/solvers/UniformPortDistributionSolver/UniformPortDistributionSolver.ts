@@ -29,6 +29,13 @@ export interface UniformPortDistributionSolverInput {
   layerCount?: number
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
+  /**
+   * Use node rectangles for adjacency independently of layer-aware obstacles.
+   * When layer-aware geometry is off, omitting this retains the port-expanded
+   * bounds used by older pipelines for endpoint leaps outside a node.
+   * Pipeline9 opts in so displaced duplicates cannot hide physical shared edges.
+   */
+  usePhysicalNodeBounds?: boolean
   preserveSolitaryPorts?: boolean
 }
 
@@ -60,7 +67,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       // adjacency, or the shared edge disappears before we can space them.
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
-        !input.useLayerAwareGeometry
+        !input.useLayerAwareGeometry && !input.usePhysicalNodeBounds
           ? getBoundsFromNodeWithPortPoints(node)
           : {
               minX: node.center.x - node.width / 2,

@@ -4,7 +4,7 @@ import { materializePipeline9HdRouteVias } from "lib/autorouter-pipelines/Autoro
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { loadA64DdrResizedSearch } from "../fixtures/loadA64DdrResizedSearch"
 
-const regressionTest = test.failing
+const regressionTest = test
 
 regressionTest(
   "the real A64 DDR retry solves without allocating uniform enlarged grids",
