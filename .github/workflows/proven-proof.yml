@@ -1,0 +1,60 @@
+name: Full Pipeline9 combined work reduction experiment
+
+on:
+  push:
+    branches: [codex/proven-combined-work-fullgate-20261029]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proven-combined-work-fullgate-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  proof:
+    name: Full dataset ABBA experiment - ${{ matrix.candidate }}
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [combined_work]
+    env:
+      PROOF_CANDIDATE: ${{ matrix.candidate }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 480
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate literal source refs
+        id: refs
+        run: python3 experiments/proven-proof/run.py refs
+      - name: Checkout frozen baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: proof-source/base
+          persist-credentials: false
+      - name: Setup frozen Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare frozen candidate worktrees
+        run: python3 experiments/proven-proof/run.py prepare
+      - name: Install baseline once and verify frozen dependency overlays
+        run: python3 experiments/proven-proof/run.py install
+      - name: Compare fresh per-board processes
+        run: python3 experiments/proven-proof/run.py run
+      - name: Preserve every result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-work-fullgate-${{ matrix.candidate }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: proof-results
+          if-no-files-found: error
+          retention-days: 30
+      - name: Print result manifest
+        if: always()
+        run: python3 experiments/proven-proof/run.py summary

@@ -1,0 +1,234 @@
+{
+  "phase": "full-gate",
+  "base_sha": "3c42bb98f062c00cce2a5cd617553b7968c3f201",
+  "candidates": {
+    "combined_work": "1e8fdebc29848c1b61c576889659790adf654019"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 8,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj24",
+      "sample": 24
+    },
+    {
+      "dataset": "srj24",
+      "sample": 4
+    },
+    {
+      "dataset": "srj24",
+      "sample": 1
+    },
+    {
+      "dataset": "srj24",
+      "sample": 18
+    },
+    {
+      "dataset": "srj24",
+      "sample": 11
+    },
+    {
+      "dataset": "srj24",
+      "sample": 3
+    },
+    {
+      "dataset": "srj24",
+      "sample": 2
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    },
+    {
+      "dataset": "srj24",
+      "sample": 17
+    },
+    {
+      "dataset": "srj18",
+      "sample": 6
+    },
+    {
+      "dataset": "srj24",
+      "sample": 13
+    },
+    {
+      "dataset": "srj24",
+      "sample": 21
+    },
+    {
+      "dataset": "srj18",
+      "sample": 2
+    },
+    {
+      "dataset": "srj24",
+      "sample": 12
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj18",
+      "sample": 14
+    },
+    {
+      "dataset": "srj18",
+      "sample": 8
+    },
+    {
+      "dataset": "srj24",
+      "sample": 8
+    },
+    {
+      "dataset": "srj24",
+      "sample": 6
+    },
+    {
+      "dataset": "srj18",
+      "sample": 16
+    },
+    {
+      "dataset": "srj24",
+      "sample": 14
+    },
+    {
+      "dataset": "srj18",
+      "sample": 10
+    },
+    {
+      "dataset": "srj24",
+      "sample": 15
+    },
+    {
+      "dataset": "srj18",
+      "sample": 12
+    },
+    {
+      "dataset": "srj18",
+      "sample": 11
+    },
+    {
+      "dataset": "srj24",
+      "sample": 19
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 7
+    },
+    {
+      "dataset": "srj18",
+      "sample": 9
+    },
+    {
+      "dataset": "srj24",
+      "sample": 9
+    },
+    {
+      "dataset": "srj18",
+      "sample": 13
+    },
+    {
+      "dataset": "srj18",
+      "sample": 4
+    },
+    {
+      "dataset": "srj18",
+      "sample": 5
+    },
+    {
+      "dataset": "srj18",
+      "sample": 3
+    },
+    {
+      "dataset": "srj24",
+      "sample": 10
+    },
+    {
+      "dataset": "srj24",
+      "sample": 22
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25
+    },
+    {
+      "dataset": "srj24",
+      "sample": 26
+    },
+    {
+      "dataset": "srj24",
+      "sample": 7
+    },
+    {
+      "dataset": "srj24",
+      "sample": 5
+    },
+    {
+      "dataset": "srj24",
+      "sample": 16
+    },
+    {
+      "dataset": "srj24",
+      "sample": 23
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": false,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "8426e3ab3183a385d35144bc1c2dee9eadf56f62",
+    "root_changed_files": [
+      "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts",
+      "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+      "package.json",
+      "tests/features/pipeline9-reference-drc-rejected-candidate-cache.test.ts",
+      "tests/features/pipeline9-reference-drc-two-entry-lru.test.ts",
+      "tests/features/portfolio-lazy-grid-budget.test.ts",
+      "tests/solvers/future-cost-work-reuse.test.ts"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA03/HighDensitySolverA03.ts",
+      "tests/search-budget-a01.test.ts",
+      "tests/search-budget-a03.test.ts"
+    ]
+  },
+  "caseOrdering": "Frozen baseline-only LPT capacity bins [6,6,5,5,5,5,5,5], interleaved for eight CPU lanes. Full42 inventory unchanged; no candidate results used.",
+  "selectionScope": "NEW combined full42 experiment: deferred A01/A03 grid setup plus two-entry LRU reference reuse and exact future-cost work reuse. Components did not individually prove a 5% global improvement; this fresh combination is unmeasured and no benefit is assumed. The original full-gate criteria remain unchanged.",
+  "confirmation_scope": "All 42 boards, 168 fresh ABBA attempts with production-default caching on eight isolated CPU lanes. Exactly one legitimate upstream TypeScript package differs; every other physical dependency is shared and guarded. Three private DRC work counters are captured only after both frozen RSS boundaries and all five hashes; these counters describe work and are not quality metrics."
+}
