@@ -1971,9 +1971,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
-    // Regional search can resolve an isolated crossing. Batch multiple new
-    // contacts together before spending more search on their unsafe geometry.
+    // Only an explicit early handoff replaces the remaining regional stages.
+    // Contacts left by a completed portfolio still need that regional search.
     if (
+      this.exactRepairSolver.stats.drcBranchPortfolioStoppedForTraceContacts ===
+        true &&
       this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
         .length > 1
     ) {
