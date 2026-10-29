@@ -47,14 +47,19 @@ if (previous) phaseWallTimes[previous] = performance.now() - phaseStart
 const output = solver.solved ? solver.getOutputSimpleRouteJson() : null
 const serializedOutput: string = JSON.stringify(output)
 if (output) {
-  writeFileSync(resolve(outputDirectory, `${label}.output.json`), serializedOutput)
+  writeFileSync(
+    resolve(outputDirectory, `${label}.output.json`),
+    serializedOutput,
+  )
 }
 // Rendering, DRC, serialization and hashing are outside routing time.
-const validationInput = solver.solved ? {
-  inputSrj: loadMotherboardPowerPhase(),
-  srjWithPointPairs: solver.srjWithPointPairs!,
-  routedTraces: solver.getOutputSimplifiedPcbTraces(),
-} : null
+const validationInput = solver.solved
+  ? {
+      inputSrj: loadMotherboardPowerPhase(),
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }
+  : null
 const drc = validationInput ? evaluateRelaxedDrc(validationInput) : null
 if (validationInput) {
   writeFileSync(
