@@ -862,11 +862,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             defaultViaDiameter: cms.viaDiameter,
             defaultViaHoleDiameter: cms.viaHoleDiameter,
-            effort: Math.min(1, cms.effort),
-            colorMap: cms.colorMap,
             ...(cms.opts.experimentSharedRepairGeometry === true
               ? { experimentSharedRepairGeometry: true }
               : {}),
+            effort: Math.min(1, cms.effort),
+            colorMap: cms.colorMap,
           },
         ]
       },

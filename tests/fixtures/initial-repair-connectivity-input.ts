@@ -1,25 +1,5 @@
-import type { PreparedCircuitJsonStats } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreparedRepairCircuitJsonConverter"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-
-export const createPreparedRepairCircuitStats = (): PreparedCircuitJsonStats => ({
-  contextBuilds: 0,
-  conversions: 0,
-  sourceResolverBuilds: 0,
-  routeResolverBuilds: 0,
-  staticPortBuilds: 0,
-  staticPadBuilds: 0,
-  sourceConnectivityReuses: 0,
-  sourceTraceBuilds: 0,
-  sourceConnectivityBuilds: 0,
-  routeConnectivityBuilds: 0,
-  endpointQueries: 0,
-  endpointCacheHits: 0,
-  endpointCacheMisses: 0,
-  endpointObstacleTests: 0,
-  endpointCacheEntries: 0,
-  endpointCacheDeclines: 0,
-})
 
 export const createPreparedRepairCircuitInput = (seed: number): {
   srj: SimpleRouteJson

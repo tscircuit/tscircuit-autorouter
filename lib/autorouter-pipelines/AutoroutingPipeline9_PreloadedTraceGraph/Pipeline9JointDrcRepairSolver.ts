@@ -42,6 +42,10 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
+import {
+  createInitialRepairConnectivityMaps,
+  type InitialRepairConnectivityStats,
+} from "./createInitialRepairConnectivityMaps"
 import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
@@ -54,11 +58,6 @@ import {
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
-import {
-  createPreparedRepairCircuitJsonConverter,
-  type PreparedCircuitJsonStats,
-} from "./createPreparedRepairCircuitJsonConverter"
-import { evaluatePreparedRepairDrc } from "./evaluatePreparedRepairDrc"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
@@ -105,25 +104,6 @@ type PreparedCandidateDrcInput = {
   originalTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
   routedTraces: SimplifiedPcbTrace[]
   solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
-}
-
-type SharedRepairGeometryStats = {
-  preparationCalls: number
-  preparedInputsBuilt: number
-  preparedHandoffUses: number
-  convertedNewRoutes: number
-  convertedPreloadedSections: number
-  preparedRoutedTraces: number
-  preparedRoutePoints: number
-  preparationTimeMs: number
-  indexedEvaluations: number
-  referenceEvaluations: number
-  referenceCacheHits: number
-  rankingEvaluations: number
-  marginEvaluations: number
-  indexedTimeMs: number
-  referenceTimeMs: number
-  rankingTimeMs: number
 }
 
 type NormalizedCandidateDrcResult = {
@@ -674,8 +654,7 @@ export const getPipeline9PreloadRepairTraceIds = ({
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9JointDrcRepairSolverParams
-  declare readonly sharedRepairGeometryStats?: SharedRepairGeometryStats
-  declare readonly sharedRepairCircuitStats?: PreparedCircuitJsonStats
+  declare readonly initialRepairConnectivityStats?: InitialRepairConnectivityStats
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
   readonly movablePreloadedSections: MovablePreloadedSection[]
@@ -832,44 +811,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     this.params = params
-    if (params.experimentSharedRepairGeometry === true) {
-      this.sharedRepairCircuitStats = {
-        contextBuilds: 0,
-        conversions: 0,
-        sourceResolverBuilds: 0,
-        routeResolverBuilds: 0,
-        staticPortBuilds: 0,
-        staticPadBuilds: 0,
-        sourceConnectivityReuses: 0,
-        sourceTraceBuilds: 0,
-        sourceConnectivityBuilds: 0,
-        routeConnectivityBuilds: 0,
-        endpointQueries: 0,
-        endpointCacheHits: 0,
-        endpointCacheMisses: 0,
-        endpointObstacleTests: 0,
-        endpointCacheEntries: 0,
-        endpointCacheDeclines: 0,
-      }
-      this.sharedRepairGeometryStats = {
-        preparationCalls: 0,
-        preparedInputsBuilt: 0,
-        preparedHandoffUses: 0,
-        convertedNewRoutes: 0,
-        convertedPreloadedSections: 0,
-        preparedRoutedTraces: 0,
-        preparedRoutePoints: 0,
-        preparationTimeMs: 0,
-        indexedEvaluations: 0,
-        referenceEvaluations: 0,
-        referenceCacheHits: 0,
-        rankingEvaluations: 0,
-        marginEvaluations: 0,
-        indexedTimeMs: 0,
-        referenceTimeMs: 0,
-        rankingTimeMs: 0,
-      }
-    }
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
 
@@ -909,32 +850,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
-    // Initial validation has always derived connectivity from normalized SRJs
-    // without the later reference evaluator's supplied maps. Keep this context
-    // distinct, but share its identical static preparation across both checks.
-    let initialCircuitConverter: ReturnType<typeof createPreparedRepairCircuitJsonConverter> | undefined
-    const evaluateInitialDrc = (
-      input: Parameters<typeof evaluateRelaxedDrc>[0],
-    ): ReturnType<typeof evaluateRelaxedDrc> => {
-      if (this.sharedRepairCircuitStats === undefined) {
-        return evaluateRelaxedDrc(input)
+    let initialConnectivityMaps: ReturnType<typeof createInitialRepairConnectivityMaps> | undefined
+    if (params.experimentSharedRepairGeometry === true) {
+      this.initialRepairConnectivityStats = {
+        extraNormalizationCalls: 0,
+        sourceMapBuilds: 0,
+        routeMapBuilds: 0,
+        sourceMapReuses: 0,
+        routeMapReuses: 0,
       }
-      initialCircuitConverter ??= createPreparedRepairCircuitJsonConverter(
+      initialConnectivityMaps = createInitialRepairConnectivityMaps(
         params.srjWithPointPairs,
-        {
-          minTraceWidth: params.originalSrj.minTraceWidth,
-          minViaDiameter: params.originalSrj.minViaDiameter,
-          originalSrj: params.originalSrj,
-          includeOriginalConnections: true,
-        },
-        this.sharedRepairCircuitStats,
+        params.originalSrj,
+        this.initialRepairConnectivityStats,
       )
-      return evaluatePreparedRepairDrc({
-        ...input,
-        circuitJsonConverter: initialCircuitConverter,
-      })
     }
-    const baselineDrc = evaluateInitialDrc({
+    const baselineDrc = evaluateRelaxedDrc({
+      ...(initialConnectivityMaps ? { connectivityMaps: initialConnectivityMaps } : {}),
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -956,13 +888,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateInitialDrc({
+    const currentDrcResult = evaluateRelaxedDrc({
+      ...(initialConnectivityMaps ? { connectivityMaps: initialConnectivityMaps } : {}),
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
+    // Later candidate evaluators retain their original, raw-SRJ native maps.
+    initialConnectivityMaps = undefined
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
@@ -1286,9 +1221,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
     ): PreparedCandidateDrcInput => {
-      const preparationStartedAt = this.sharedRepairGeometryStats
-        ? performance.now()
-        : 0
       const evaluatedNewRoutes = evaluatedRoutes.filter(
         (route) => !this.syntheticConnectionNames.has(route.connectionName),
       )
@@ -1363,20 +1295,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         params.originalSrj.traces ?? [],
         routedTraces,
       )
-      if (this.sharedRepairGeometryStats) {
-        this.sharedRepairGeometryStats.preparationCalls += 1
-        this.sharedRepairGeometryStats.preparedInputsBuilt += 1
-        this.sharedRepairGeometryStats.convertedNewRoutes +=
-          evaluatedNewRoutes.length
-        this.sharedRepairGeometryStats.convertedPreloadedSections +=
-          this.movablePreloadedSections.length
-        this.sharedRepairGeometryStats.preparedRoutedTraces += routedTraces.length
-        for (const trace of routedTraces) {
-          this.sharedRepairGeometryStats.preparedRoutePoints += trace.route.length
-        }
-        this.sharedRepairGeometryStats.preparationTimeMs +=
-          performance.now() - preparationStartedAt
-      }
       return {
         evaluatedTraces,
         movableTraceIds,
@@ -1443,47 +1361,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ),
       route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
     }
-    let preparedCircuitConverter: ReturnType<typeof createPreparedRepairCircuitJsonConverter> | undefined
-    const sharedCircuitJsonConverter = this.sharedRepairCircuitStats
-      ? (routes: SimplifiedPcbTrace[]): AnyCircuitElement[] => {
-          preparedCircuitConverter ??= createPreparedRepairCircuitJsonConverter(
-            params.srjWithPointPairs,
-            {
-              minTraceWidth: params.originalSrj.minTraceWidth,
-              minViaDiameter: params.originalSrj.minViaDiameter,
-              originalSrj: params.originalSrj,
-              includeOriginalConnections: true,
-              connectivityMaps,
-            },
-            this.sharedRepairCircuitStats!,
-          )
-          return preparedCircuitConverter(routes)
-        }
-      : undefined
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
-      preparedInput?: PreparedCandidateDrcInput,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
-      // The indexed zero-result handoff is synchronous and uses these exact
-      // routes. Reuse its input, while still running the complete reference
-      // checker. No candidate geometry is retained across evaluator calls.
-      const candidateDrcInput =
-        this.sharedRepairGeometryStats && preparedInput !== undefined
-          ? preparedInput
-          : prepareCandidateDrcInput(evaluatedRoutes)
-      if (this.sharedRepairGeometryStats && preparedInput !== undefined) {
-        this.sharedRepairGeometryStats.preparationCalls += 1
-        this.sharedRepairGeometryStats.preparedHandoffUses += 1
-      }
-      const referenceStartedAt = this.sharedRepairGeometryStats
-        ? performance.now()
-        : 0
-      const evaluationInput = {
+      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
+      const evaluatedDrc = evaluateRelaxedDrc({
         includeBoardClearance: true,
         connectivityMaps,
         inputSrj: params.originalSrj,
@@ -1494,15 +1381,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
         },
-      }
-      const evaluatedDrc = sharedCircuitJsonConverter
-        ? evaluatePreparedRepairDrc({ ...evaluationInput, circuitJsonConverter: sharedCircuitJsonConverter })
-        : evaluateRelaxedDrc(evaluationInput)
-      if (this.sharedRepairGeometryStats) {
-        this.sharedRepairGeometryStats.referenceEvaluations += 1
-        this.sharedRepairGeometryStats.referenceTimeMs +=
-          performance.now() - referenceStartedAt
-      }
+      })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )
@@ -1542,10 +1421,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
-    const evaluateCachedReferenceDrc = (
-      { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
-      preparedInput?: PreparedCandidateDrcInput,
-    ): ReturnType<DrcEvaluator> => {
+    const cachedReferenceDrcEvaluator: DrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
@@ -1553,21 +1432,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateKey = JSON.stringify(evaluatedRoutes)
       const cachedResult = referenceDrcCache.get(candidateKey)
       if (cachedResult !== undefined) {
-        if (this.sharedRepairGeometryStats) {
-          this.sharedRepairGeometryStats.referenceCacheHits += 1
-        }
         return cachedResult
       }
       this.referenceDrcValidationCount += 1
-      const result = referenceDrcEvaluator(
-        {
-          traces: [],
-          routes: evaluatedRoutes,
-          hdRoutes: evaluatedRoutes,
-        },
-        true,
-        preparedInput,
-      )
+      const result = referenceDrcEvaluator({
+        traces: [],
+        routes: evaluatedRoutes,
+        hdRoutes: evaluatedRoutes,
+      })
       if (referenceDrcCache.size >= 2) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
@@ -1575,7 +1447,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       referenceDrcCache.set(candidateKey, result)
       return result
     }
-    const cachedReferenceDrcEvaluator: DrcEvaluator = evaluateCachedReferenceDrc
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
     this.clearancePrecisionDrcEvaluator = ({
@@ -1586,13 +1457,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const createMarginCircuitJson = (
       routes: HighDensityRoute[],
     ): AnyCircuitElement[] => {
-      if (this.sharedRepairGeometryStats) {
-        this.sharedRepairGeometryStats.marginEvaluations += 1
-      }
       const candidateDrcInput = prepareCandidateDrcInput(routes)
-      if (sharedCircuitJsonConverter) {
-        return sharedCircuitJsonConverter(candidateDrcInput.routedTraces)
-      }
       return convertToCircuitJson(
         params.srjWithPointPairs,
         candidateDrcInput.routedTraces,
@@ -1636,18 +1501,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       // Ranking is private and must not populate the exact evaluator's cache
       // with results that have not undergone its reference-zero validation.
-      const rankingStartedAt = this.sharedRepairGeometryStats
-        ? performance.now()
-        : 0
-      const result = autoroutingDrcEngine.evaluate(
+      return autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
-      if (this.sharedRepairGeometryStats) {
-        this.sharedRepairGeometryStats.rankingEvaluations += 1
-        this.sharedRepairGeometryStats.rankingTimeMs +=
-          performance.now() - rankingStartedAt
-      }
-      return result
     }
 
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
@@ -1664,17 +1520,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const indexedStartedAt = this.sharedRepairGeometryStats
-        ? performance.now()
-        : 0
       const evaluatedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
-      if (this.sharedRepairGeometryStats) {
-        this.sharedRepairGeometryStats.indexedEvaluations += 1
-        this.sharedRepairGeometryStats.indexedTimeMs +=
-          performance.now() - indexedStartedAt
-      }
       const viaCircuitJson = getAutoroutingViaElements(
         candidateDrcInput.evaluatedTraces,
       )
@@ -1715,14 +1563,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
       if (evaluatedNewErrors.length === 0) {
         const validationCountBefore = this.referenceDrcValidationCount
-        const referenceResult = evaluateCachedReferenceDrc(
-          {
-            traces: [],
-            routes: evaluatedRoutes,
-            hdRoutes: evaluatedRoutes,
-          },
-          this.sharedRepairGeometryStats ? candidateDrcInput : undefined,
-        )
+        const referenceResult = cachedReferenceDrcEvaluator({
+          traces: [],
+          routes: evaluatedRoutes,
+          hdRoutes: evaluatedRoutes,
+        })
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors
