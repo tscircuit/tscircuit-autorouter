@@ -1,3 +1,4 @@
+import { NegotiateTraceClearanceSolver as ScratchNegotiateTraceClearanceSolver } from "lib/solvers/RepairSearchScratch/native/NegotiateTraceClearanceSolver"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -90,7 +91,7 @@ type BoundedRepairState =
   | {
       phase: "negotiate"
       negotiation: NegotiationContext
-      solver: NegotiateTraceClearanceSolver
+      solver: NegotiateTraceClearanceSolver | ScratchNegotiateTraceClearanceSolver
     }
   | {
       phase: "splice-region"
@@ -526,7 +527,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : allowance.maxCandidateAttempts),
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
-    const solver = new NegotiateTraceClearanceSolver({
+    const NegotiationSolver = this.params.repairSearchScratchStats
+      ? ScratchNegotiateTraceClearanceSolver
+      : NegotiateTraceClearanceSolver
+    const solver = new NegotiationSolver({
       srj: region.srj,
       routes: region.routes,
       bounds: region.mutableBounds,
@@ -552,7 +556,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
-    })
+    }, this.params.repairSearchScratchStats)
     this.state = {
       phase: "negotiate",
       negotiation: { context, allowance, maxPathSearchCalls, region },

@@ -1056,12 +1056,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
-  private readonly detailedFeedbackPreparedGraph: SerializedHyperGraph
 
-  constructor(private params: HgPortPointPathingSolverParams, preparedReplan?: {
-    graph: SerializedHyperGraph
-    report: DuplicateCongestedPortSolverReport | undefined
-  }) {
+  constructor(private params: HgPortPointPathingSolverParams) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1096,8 +1092,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           preloadedTraceStats.preloadedAssignmentCount,
         )
       : undefined
-    let graphForTiny = preparedReplan?.graph ?? serializedGraph
-    const duplicateCongestedPortSolver = preparedReplan ? undefined : new DuplicateCongestedPortSolver(
+    let graphForTiny = serializedGraph
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
       serializedGraph,
       {
         duplicatePortProximity: 0.05,
@@ -1113,11 +1109,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         },
       },
     )
-    duplicateCongestedPortSolver?.solve()
-    if (duplicateCongestedPortSolver?.failed) {
+    duplicateCongestedPortSolver.solve()
+    if (duplicateCongestedPortSolver.failed) {
       this.duplicateCongestedPortError =
         duplicateCongestedPortSolver.error ?? "unknown error"
-    } else if (duplicateCongestedPortSolver) {
+    } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
       for (const port of graphForTiny.ports) {
@@ -1127,13 +1123,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         delete metadata._preloadedTracePortAssignments
       }
     }
-    if (preparedReplan) this.duplicateCongestedPortReport = preparedReplan.report
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
-    this.detailedFeedbackPreparedGraph = graphForTiny
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -1190,37 +1184,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   getSolverName(): string {
     return "TinyHypergraphPortPointPathingSolver"
-  }
-
-  getDetailedFeedbackSetupWork(): { slots: number } {
-    const slots = this.params.graph.regions.reduce(
-      (sum, region) => sum + 1 + region.ports.length, 0,
-    ) + this.params.graph.ports.length + this.params.connections.length
-    return { slots: slots + this.detailedFeedbackPreparedGraph.ports.length +
-      this.detailedFeedbackPreparedGraph.regions.reduce((sum, region) => sum + 1 + region.pointIds.length, 0) }
-  }
-
-  createDetailedFeedbackReplan(regionPenalties: ReadonlyMap<string, number>): TinyHypergraphPortPointPathingSolver {
-    // Preserve cyclic port/region references and keep the completed master
-    // immutable. These prices never remove a port or certify infeasibility.
-    if (this.duplicateCongestedPortError)
-      throw new Error(`Detailed-feedback preparation requires an intact original topology: ${this.duplicateCongestedPortError}`)
-    for (const penalty of regionPenalties.values()) {
-      if (!Number.isFinite(penalty) || penalty < 0) throw new Error("Invalid detailed-feedback price")
-    }
-    const graph = structuredClone(this.detailedFeedbackPreparedGraph)
-    for (const port of graph.ports) {
-      const penalty = Math.max(regionPenalties.get(port.region1Id) ?? 0,
-        regionPenalties.get(port.region2Id) ?? 0)
-      if (penalty > 0) port.d = { ...port.d,
-        tinyHypergraphPortPenalty: (port.d?.tinyHypergraphPortPenalty ?? 0) + penalty }
-    }
-    // The original constructor already solved every net independently to
-    // duplicate shared ports. Reuse that topology; do not repeat hidden native
-    // solves inside this bounded planning stage.
-    return new TinyHypergraphPortPointPathingSolver(structuredClone(this.params), {
-      graph, report: structuredClone(this.duplicateCongestedPortReport),
-    })
   }
 
   private getChangedPreloadedRouteIds(

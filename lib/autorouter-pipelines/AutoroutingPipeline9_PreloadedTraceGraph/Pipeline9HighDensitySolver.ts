@@ -58,8 +58,6 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
-  /** Explicit planner setup/native work already spent from this HD allocation. */
-  detailedFeedbackWorkDebit?: number
 }
 
 type NodeBounds = {
@@ -454,12 +452,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
-    if (params.detailedFeedbackWorkDebit !== undefined) {
-      const debit = params.detailedFeedbackWorkDebit
-      if (!Number.isSafeInteger(debit) || debit < 0 || debit >= this.MAX_ITERATIONS)
-        throw new Error("Detailed-feedback work debit exhausts the HD allocation")
-      this.MAX_ITERATIONS -= debit
-    }
     this.stats = {
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,

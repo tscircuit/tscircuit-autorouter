@@ -1,3 +1,4 @@
+import type { RepairSearchScratchStats } from "lib/solvers/RepairSearchScratch/RepairSearchScratchStats"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
@@ -77,6 +78,7 @@ export const getPipeline9BoundedRepairBudget = (
 }
 
 export type Pipeline9BoundedRegionalRepairParams = {
+  repairSearchScratchStats?: RepairSearchScratchStats
   originalSrj: SimpleRouteJson
   connMap?: ConnectivityMap
   routes: HighDensityRoute[]
