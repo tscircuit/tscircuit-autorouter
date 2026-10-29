@@ -15,7 +15,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { createPipeline9AutoroutingDrcEvaluator } from "./create-pipeline9-autorouting-drc-evaluator"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
 import {
@@ -335,11 +335,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const currentDrc = evaluateRelaxedDrc({
-      inputSrj: params.originalSrj,
+    const evaluateAutoroutingDrc = createPipeline9AutoroutingDrcEvaluator({
+      originalSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: preparedCurrentOutput.routedTraces,
     })
+    const currentDrc = evaluateAutoroutingDrc(preparedCurrentOutput.routedTraces)
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
       errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
@@ -553,15 +553,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         )
       }
       const movableTraceIds = new Set(solverTraceIdByEvaluationTraceId.values())
-      const evaluatedDrc = evaluateRelaxedDrc({
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: [
-          ...nonMovableMutatedPreloadedTraces,
-          ...evaluatedMovablePreloadedTraces,
-          ...uniquelyNamedNewTraces,
-        ],
-      })
+      const evaluatedDrc = evaluateAutoroutingDrc([
+        ...nonMovableMutatedPreloadedTraces,
+        ...evaluatedMovablePreloadedTraces,
+        ...uniquelyNamedNewTraces,
+      ])
       const remappedCircuitJson = evaluatedDrc.circuitJson.map((element) => {
         if (
           !("pcb_trace_id" in element) ||
