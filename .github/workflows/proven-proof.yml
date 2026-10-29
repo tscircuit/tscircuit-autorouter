@@ -1,0 +1,60 @@
+name: Reference-validated cache bridge pilot
+
+on:
+  push:
+    branches: [codex/proven-reference-bridge-probe-20261029]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proven-reference-bridge-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  proof:
+    name: Same-core ABBA pilot - ${{ matrix.candidate }}
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [reference_bridge]
+    env:
+      PROOF_CANDIDATE: ${{ matrix.candidate }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 480
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate literal source refs
+        id: refs
+        run: python3 experiments/proven-proof/run.py refs
+      - name: Checkout frozen baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: proof-source/base
+          persist-credentials: false
+      - name: Setup frozen Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare frozen candidate worktrees
+        run: python3 experiments/proven-proof/run.py prepare
+      - name: Install dependencies once and share them
+        run: python3 experiments/proven-proof/run.py install
+      - name: Compare fresh per-board processes
+        run: python3 experiments/proven-proof/run.py run
+      - name: Preserve every result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-reduction-pilot-${{ matrix.candidate }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: proof-results
+          if-no-files-found: error
+          retention-days: 30
+      - name: Print result manifest
+        if: always()
+        run: python3 experiments/proven-proof/run.py summary

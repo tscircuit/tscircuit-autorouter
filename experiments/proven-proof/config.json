@@ -1,0 +1,55 @@
+{
+  "phase": "reference-bridge-pilot",
+  "base_sha": "3c42bb98f062c00cce2a5cd617553b7968c3f201",
+  "candidates": {
+    "reference_bridge": "a1c04d49c44ff3f5b7856085ef4af9bbc93fd022"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 1,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "screening_scope": "Independent same-core ABBA pilot with two fresh observations per arm on three prespecified boards;12 rows per candidate job. A paired win only screens a candidate for the full42-board benchmark gate; it is not full-dataset proof.",
+  "diagnostics": "This run emits exact reference-DRC validation counters only AFTER both frozen performance/memory boundaries and output hashing; counters are not output-parity fields.",
+  "selectionScope": "Independent complete-reference result reuse through bounded64indexed cache; original2referenceFIFOtransitions preserved. Purecomputational screen, full42proofrequired."
+}
