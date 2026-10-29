@@ -61,6 +61,11 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
+type CachedIndexedDrcResult = {
+  result: ReturnType<DrcEvaluator>
+  referenceValidated: boolean
+}
+
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
@@ -671,7 +676,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private indexedDrcEvaluationTimeMs = 0
   private readonly indexedDrcCandidateCache = new Map<
     DrcCandidateKey,
-    ReturnType<DrcEvaluator>
+    CachedIndexedDrcResult
   >()
   private combinedOutput?: HighDensityRoute[]
   currentPipelineStepIndex = 0
@@ -788,6 +793,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
     result: ReturnType<DrcEvaluator>,
+    referenceValidated: boolean,
   ): void {
     if (
       this.indexedDrcCandidateCache.size >= INDEXED_DRC_CANDIDATE_CACHE_SIZE
@@ -799,7 +805,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.indexedDrcCandidateCache.delete(oldestCandidateKey)
       }
     }
-    this.indexedDrcCandidateCache.set(candidateKey, result)
+    this.indexedDrcCandidateCache.set(candidateKey, {
+      result,
+      referenceValidated,
+    })
   }
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
@@ -1409,12 +1418,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (cachedResult !== undefined) {
         return cachedResult
       }
-      this.referenceDrcValidationCount += 1
-      const result = referenceDrcEvaluator({
-        traces: [],
-        routes: evaluatedRoutes,
-        hdRoutes: evaluatedRoutes,
-      })
+      // The indexed cache already owns some complete reference evaluations.
+      // Reuse them within the existing reference cache's capacity and FIFO
+      // order; indexed-only results still require the complete checker.
+      const indexedResult = this.indexedDrcCandidateCache.get(
+        candidateKey as DrcCandidateKey,
+      )
+      let result: ReturnType<DrcEvaluator>
+      if (indexedResult?.referenceValidated) {
+        result = indexedResult.result
+      } else {
+        this.referenceDrcValidationCount += 1
+        result = referenceDrcEvaluator({
+          traces: [],
+          routes: evaluatedRoutes,
+          hdRoutes: evaluatedRoutes,
+        })
+      }
       if (referenceDrcCache.size >= 2) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
@@ -1490,7 +1510,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const cachedResult = this.indexedDrcCandidateCache.get(candidateKey)
       if (cachedResult !== undefined) {
         this.indexedDrcCacheHitCount += 1
-        return cachedResult
+        return cachedResult.result
       }
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
@@ -1554,7 +1574,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         }
         this.indexedDrcEvaluationTimeMs +=
           performance.now() - evaluationStartedAtMs
-        this.cacheIndexedDrcResult(candidateKey, referenceResult)
+        this.cacheIndexedDrcResult(candidateKey, referenceResult, true)
         return referenceResult
       }
       const candidateDrcResult = normalizeCandidateDrcResult({
@@ -1567,7 +1587,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       this.indexedDrcEvaluationTimeMs +=
         performance.now() - evaluationStartedAtMs
-      this.cacheIndexedDrcResult(candidateKey, candidateDrcResult)
+      this.cacheIndexedDrcResult(candidateKey, candidateDrcResult, false)
       return candidateDrcResult
     }
     // Candidate preparation above supplies the exact SRJ and trace context.
