@@ -38,7 +38,7 @@ jobs:
           persist-credentials: false
       - name: Select exact source pair
         id: refs
-        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode select --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}'
+        run: python3 controller/scripts/experiment-audit/run-post588-experiments.py --mode select --manifest controller/scripts/experiment-audit/post588-experiments-20261029.json --experiment '${{ matrix.experiment }}' --dataset '${{ matrix.dataset }}' --order '${{ matrix.order }}'
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.refs.outputs.harness_sha }}

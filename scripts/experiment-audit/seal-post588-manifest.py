@@ -70,6 +70,11 @@ def apply_sources(manifest, sources, runtime):
 
 
 def refresh(manifest, runtime):
+    manifest["executionScope"] = runtime.execution_scope(manifest)
+    manifest["plannedRecordsAllCandidates"] = manifest["executionScope"]["plannedRecords"]
+    manifest["plannedMatrixJobs"] = manifest["executionScope"]["plannedMatrixJobs"]
+    manifest["plannedPairsPerCandidate"] = sum(runtime.COUNTS[name] for name in manifest["executionScope"]["datasets"])
+    manifest["plannedRecordsPerCandidate"] = manifest["plannedPairsPerCandidate"] * 2
     manifest["runtimeSourceHashes"] = {name: runtime.sha(ROOT / name) for name in sorted(runtime.ASSETS)}
     manifest["runSampleSourceSha256"] = hashlib.sha256(inspect.getsource(runtime.pinned.run_sample).encode()).hexdigest()
     manifest["workflowSha256"] = runtime.sha(runtime.WORKFLOW)
@@ -98,8 +103,6 @@ def main():
         by_name = {item["id"]: item for item in definitions}
         manifest["requestedExperiments"] = requested
         manifest["experiments"] = [dict(by_name[name], candidateSha=None, candidateTree=None, publication=None, sourceQualification={"status": "PENDING_PUBLICATION_AND_ROOT_REVIEW"}) for name in requested]
-        manifest["plannedRecordsAllCandidates"] = len(requested) * sum(runtime.COUNTS.values()) * 2
-        manifest["plannedMatrixJobs"] = len(requested) * len(runtime.COUNTS)
     if args.sources:
         apply_sources(manifest, json.loads(args.sources.read_text()), runtime)
     for key in ["order", "experiment", "dataset"]:

@@ -11,12 +11,14 @@ spec = importlib.util.spec_from_file_location("integrity_fixtures", ROOT / "test
 fixture = importlib.util.module_from_spec(spec)
 with contextlib.redirect_stdout(io.StringIO()):
     spec.loader.exec_module(fixture)
-runtime, manifest = fixture.m, fixture.manifest
+runtime, manifest = fixture.m, copy.deepcopy(fixture.manifest)
 item = manifest["experiments"][0]
 spec = importlib.util.spec_from_file_location("population_parser", ROOT / "parse-post588-experiments-log.py")
 parser = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(parser)
 run_id, controller_sha, dataset, order = "99", "b" * 40, "srj18", "AB"
+manifest["dispatchRequest"] = {"experiment": "all", "dataset": dataset, "order": order}
+manifest["executionScope"] = runtime.execution_scope(manifest)
 
 
 def make_record(sample, arm, timeout=False):

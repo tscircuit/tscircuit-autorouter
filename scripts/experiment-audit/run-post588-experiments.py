@@ -65,6 +65,23 @@ def finite(value):
     return type(value) in [int, float] and math.isfinite(value) and value >= 0
 
 
+def execution_scope(manifest):
+    request = manifest["dispatchRequest"]
+    experiments = [name for name in manifest["requestedExperiments"] if request["experiment"] in ["all", name]]
+    datasets = [name for name in COUNTS if request["dataset"] in ["both", name]]
+    return {"experiments": experiments, "datasets": datasets, "order": request["order"],
+            "plannedRecords": len(experiments) * sum(COUNTS[name] for name in datasets) * 2,
+            "plannedMatrixJobs": len(experiments) * len(datasets),
+            "completeOriginalSelectedDatasetPopulations": True,
+            "fullyCharacterizesBothOriginalDatasets": datasets == list(COUNTS)}
+
+
+def execution_matrix(manifest):
+    scope = execution_scope(manifest)
+    return {"include": [{"experiment": name, "dataset": dataset, "count": COUNTS[dataset], "order": scope["order"]}
+                        for name in scope["experiments"] for dataset in scope["datasets"]]}
+
+
 def validate_manifest(path):
     manifest = json.loads(path.read_text())
     require(type(manifest.get("schemaVersion")) is int and manifest["schemaVersion"] == 3 and manifest.get("campaign") == CAMPAIGN, "Wrong campaign/schema")
@@ -88,7 +105,11 @@ def validate_manifest(path):
     require(isinstance(requested, list) and 1 <= len(requested) <= 5 and len(set(requested)) == len(requested) and set(requested) <= set(FEATURES), "An explicit nonempty qualified source subset is required")
     require(len(experiments) == len(requested) and [x.get("id") for x in experiments] == requested, "Manifest must contain exactly its requested qualified subset, without silent skips/placeholders")
     require(request["experiment"] == "all" or request["experiment"] in requested, "Requested feature is not in the source-qualified subset")
-    require(manifest.get("plannedRecordsAllCandidates") == len(requested) * sum(COUNTS.values()) * 2 and manifest.get("plannedMatrixJobs") == len(requested) * len(COUNTS), "Explicit subset population/job counts differ")
+    scope = execution_scope(manifest)
+    require(exact(manifest.get("executionScope"), scope), "Explicit dispatched dataset/order/population scope differs")
+    require(type(manifest.get("plannedRecordsAllCandidates")) is int and manifest["plannedRecordsAllCandidates"] == scope["plannedRecords"] and type(manifest.get("plannedMatrixJobs")) is int and manifest["plannedMatrixJobs"] == scope["plannedMatrixJobs"], "Explicit dispatched population/job counts differ")
+    selected_pairs = sum(COUNTS[name] for name in scope["datasets"])
+    require(type(manifest.get("plannedPairsPerCandidate")) is int and manifest["plannedPairsPerCandidate"] == selected_pairs and type(manifest.get("plannedRecordsPerCandidate")) is int and manifest["plannedRecordsPerCandidate"] == selected_pairs * 2, "Per-candidate selected dataset population differs")
     for dataset, count in COUNTS.items():
         require(set(manifest["expectedInputHashesByDataset"][dataset]) == {str(n) for n in range(1, count + 1)} and all(digest(h, 64) for h in manifest["expectedInputHashesByDataset"][dataset].values()), "Missing original input identity")
     for item in [manifest["baseline"], *experiments]:
@@ -317,6 +338,7 @@ def run(args, manifest, item):
         "campaign": CAMPAIGN, "manifestSha256": sha(args.manifest),
         "controllerSha": os.environ.get("GITHUB_SHA"), "githubRunId": os.environ.get("GITHUB_RUN_ID"),
         "baselineSha": MAIN, "candidateSha": item["candidateSha"], "candidateTree": item["candidateTree"],
+        "executionScope": manifest["executionScope"],
         "executionOrder": args.order, "completeOriginalDatasetRequested": {"dataset": args.dataset, "count": COUNTS[args.dataset]},
         "prior588CampaignImmutable": True, "timingsPooledAcrossCampaigns": False,
         "strictTimeoutPolicy": manifest["strictTimeoutPolicy"],
@@ -365,24 +387,26 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["plan", "select", "verify-checkouts", "verify-dependencies", "run"], required=True)
     parser.add_argument("--manifest", type=pathlib.Path, required=True)
-    parser.add_argument("--experiment", choices=["all", *FEATURES], default="all")
-    parser.add_argument("--dataset", choices=["both", *COUNTS], default="both")
-    parser.add_argument("--order", choices=["AB", "BA"], default="AB")
+    parser.add_argument("--experiment", choices=["all", *FEATURES])
+    parser.add_argument("--dataset", choices=["both", *COUNTS])
+    parser.add_argument("--order", choices=["AB", "BA"])
     parser.add_argument("--baseline", type=pathlib.Path)
     parser.add_argument("--candidate", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
     manifest = validate_manifest(args.manifest)
+    for key, value in manifest["dispatchRequest"].items():
+        if getattr(args, key) is None:
+            setattr(args, key, value)
     if os.environ.get("GITHUB_ACTIONS") == "true":
         require(os.environ.get("GITHUB_EVENT_NAME") == "push" and os.environ.get("GITHUB_REF_NAME") == BRANCH, "Only the dedicated reviewed push branch may run this controller")
     if args.mode == "plan":
-        if os.environ.get("GITHUB_EVENT_NAME") == "push":
-            request = manifest["dispatchRequest"]
-            args.experiment, args.dataset, args.order = request["experiment"], request["dataset"], request["order"]
-        matrix = {"include": [{"experiment": name, "dataset": dataset, "count": count, "order": args.order} for name in manifest["requestedExperiments"] if args.experiment in ["all", name] for dataset, count in COUNTS.items() if args.dataset in ["both", dataset]]}
-        outputs({"matrix": json.dumps(matrix, separators=(",", ":"))})
+        require(exact({key: getattr(args, key) for key in ["experiment", "dataset", "order"]}, manifest["dispatchRequest"]), "Plan lies outside the sealed experiment/dataset/order scope")
+        outputs({"matrix": json.dumps(execution_matrix(manifest), separators=(",", ":"))})
         return
     require(args.experiment != "all" and args.dataset != "both", "One exact experiment/dataset required outside plan")
+    scope = manifest["executionScope"]
+    require(args.experiment in scope["experiments"] and args.dataset in scope["datasets"] and args.order == scope["order"], "Attempt lies outside the sealed experiment/dataset/order scope")
     item = select(manifest, args.experiment)
     if args.mode == "select":
         outputs({"baseline_sha": MAIN, "candidate_sha": item["candidateSha"], "harness_sha": MAIN})

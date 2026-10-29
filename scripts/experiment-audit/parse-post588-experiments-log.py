@@ -9,6 +9,9 @@ import re
 
 def parse_log(text, runtime, manifest, item, dataset, order, run_id, controller_sha):
     records, active, summaries, issues = [], [], [], []
+    scope = manifest.get("executionScope") or {}
+    if item["id"] not in scope.get("experiments", []) or dataset not in scope.get("datasets", []) or order != scope.get("order"):
+        issues.append({"kind": "requested_parse_outside_sealed_execution_scope"})
     expected = [(sample, arm) for sample in range(1, runtime.COUNTS[dataset] + 1) for arm in order]
     campaign = manifest["campaign"] + ":" + item["id"]
     for line_number, line in enumerate(text.splitlines(), 1):
