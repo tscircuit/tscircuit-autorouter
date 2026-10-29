@@ -91,6 +91,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9DetailedFeedbackSolver } from "./Pipeline9DetailedFeedbackSolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -109,13 +110,12 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
-  /** Keep rejected incoming edges from closing otherwise legal cells; default off. */
-  experimentSearchState?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  experimentDetailedFeedback?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -248,6 +248,7 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
+  detailedFeedbackSolver?: Pipeline9DetailedFeedbackSolver
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
@@ -310,7 +311,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -643,9 +644,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
-            experimentSearchState: cms.opts.experimentSearchState === true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            ...(cms.detailedFeedbackSolver ? {
+              detailedFeedbackWorkDebit: cms.detailedFeedbackSolver.stats.chargedWork,
+            } : {}),
           },
         ]
       },
@@ -1122,6 +1125,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+    if (mutableOpts.experimentDetailedFeedback === true) {
+      const hdIndex = this.pipelineDef.findIndex((step) => step.solverName === "highDensityRouteSolver")
+      if (hdIndex < 0) throw new Error("Missing HD stage for detailed feedback")
+      const hdStep = this.pipelineDef[hdIndex]!
+      this.pipelineDef.splice(hdIndex, 0, definePipelineStep(
+        "detailedFeedbackSolver", Pipeline9DetailedFeedbackSolver,
+        (cms) => {
+          const [physical] = hdStep.getConstructorParams(cms) as ConstructorParameters<typeof Pipeline9HighDensitySolver>
+          if (!cms.portPointPathingSolver || !cms.uniformPortDistributionSolver)
+            throw new Error("Missing completed detailed-feedback upstream stages")
+          return [{ initialPathingSolver: cms.portPointPathingSolver,
+            initialDistributionSolver: cms.uniformPortDistributionSolver,
+            highDensityParams: physical,
+            hasPreloadedCopper: (cms.originalSrj.traces?.length ?? 0) > 0,
+            distributionParams: { minTraceWidth: cms.minTraceWidth,
+              obstacles: cms.srj.obstacles, layerCount: cms.srj.layerCount,
+              useLayerAwareGeometry: cms.srj.layerCount > 2,
+              preserveSolitaryPorts: Boolean(cms.srj.traces?.length) } }]
+        },
+        { onSolved: (cms) => {
+          const feedback = cms.detailedFeedbackSolver!
+          cms.portPointPathingSolver = feedback.selectedPathingSolver
+          cms.uniformPortDistributionSolver = feedback.selectedDistributionSolver
+        } },
+      ))
+    }
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {

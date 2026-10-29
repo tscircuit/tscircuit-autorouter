@@ -100,8 +100,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   debug_nodePathToParentIntersectsObstacle: Set<number>
 
   debugEnabled: boolean
-  readonly experimentSearchState: boolean
-  readonly searchStateDiagnostics?: Record<string, number>
 
   initialNodeGridOffset: { x: number; y: number }
 
@@ -124,8 +122,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
-    experimentSearchState?: boolean
-    searchStateDiagnostics?: Record<string, number>
   }) {
     super()
     this.bounds = opts.bounds
@@ -159,15 +155,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.debugEnabled = opts.captureSearchDebug ?? true
-    this.experimentSearchState = opts.experimentSearchState === true
-    this.searchStateDiagnostics = opts.searchStateDiagnostics
-    if (this.experimentSearchState) {
-      this.stats.searchStateEnabled = 1
-      if (this.searchStateDiagnostics) {
-        this.searchStateDiagnostics.searchStateLowLevelInstances =
-          (this.searchStateDiagnostics.searchStateLowLevelInstances ?? 0) + 1
-      }
-    }
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -773,18 +760,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          // A blocked incoming segment does not make its destination blocked.
-          // Keep the cell available to a different, legal incoming segment.
-          if (this.experimentSearchState) {
-            this.stats.searchStateDirectedEdgeRejections =
-              Number(this.stats.searchStateDirectedEdgeRejections ?? 0) + 1
-            if (this.searchStateDiagnostics) {
-              this.searchStateDiagnostics.searchStateDirectedEdgeRejections =
-                (this.searchStateDiagnostics.searchStateDirectedEdgeRejections ?? 0) + 1
-            }
-          } else {
-            this.exploredNodes.add(neighborKey)
-          }
+          this.exploredNodes.add(neighborKey)
           continue
         }
 

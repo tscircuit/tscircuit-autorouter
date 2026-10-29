@@ -69,7 +69,6 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
-  readonly experimentSearchState: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
@@ -117,7 +116,6 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    experimentSearchState = false,
     priorityDagSearch = false,
     priorityDiagnostics,
     viaHoleDiameter,
@@ -146,7 +144,6 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
-    experimentSearchState?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
@@ -182,7 +179,6 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.experimentSearchState = experimentSearchState
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
@@ -427,8 +423,6 @@ export class HighDensitySolver extends BaseSolver {
       nodeWithPortPoints: node,
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
-      experimentSearchState: this.experimentSearchState,
-      searchStateDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,

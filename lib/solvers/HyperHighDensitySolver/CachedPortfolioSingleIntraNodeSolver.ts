@@ -135,9 +135,6 @@ export class CachedPortfolioSingleIntraNodeSolver
 
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
-      ...(this.constructorParams.experimentSearchState
-        ? { experimentSearchState: true }
-        : {}),
       cacheSchemaVersion: PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
       normalizedHyperParameters,
