@@ -144,6 +144,7 @@ export const selectIslandEndpoints = (params: {
   possibleEndpoints: Point3[]
   globalStart: Point3
   globalEnd: Point3
+  preferSameLayerTerminalIdentity?: boolean
 }) => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
   const start = sortedEndpoints.reduce((bestPoint, point) => {
@@ -151,7 +152,7 @@ export const selectIslandEndpoints = (params: {
     const bestDistance = distance(bestPoint, params.globalStart)
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
+        (params.preferSameLayerTerminalIdentity && (point.z === params.globalStart.z) !== (bestPoint.z === params.globalStart.z) ? point.z === params.globalStart.z : comparePoints(point, bestPoint) < 0))
       ? point
       : bestPoint
   })
@@ -168,7 +169,7 @@ export const selectIslandEndpoints = (params: {
     const bestDistance = distance(bestPoint, params.globalEnd)
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
+        (params.preferSameLayerTerminalIdentity && (point.z === params.globalEnd.z) !== (bestPoint.z === params.globalEnd.z) ? point.z === params.globalEnd.z : comparePoints(point, bestPoint) < 0))
       ? point
       : bestPoint
   })
@@ -183,8 +184,11 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
+  requireSameLayerTerminalIdentity?: boolean
 }) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const eligibleTerminals = params.requireSameLayerTerminalIdentity ? params.terminals.filter((point) => point.z === params.islandEndpoint.z) : params.terminals
+  if (params.requireSameLayerTerminalIdentity && eligibleTerminals.length === 0) return params.islandEndpoint
+  const sortedTerminals = [...eligibleTerminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 

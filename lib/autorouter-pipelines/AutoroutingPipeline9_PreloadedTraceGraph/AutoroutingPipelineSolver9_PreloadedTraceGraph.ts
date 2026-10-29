@@ -1,3 +1,4 @@
+import { getLayerAwareMstPointKey } from "lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -105,6 +106,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  experimentLayerAwareMstIdentity?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -352,11 +354,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
         const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-        return [
-          inputSrj,
-          cms.colorMap,
-          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-        ]
+        const initiallyConnected = getInitiallyConnectedMapFromSimpleRouteJson(inputSrj)
+        if (cms.opts.experimentLayerAwareMstIdentity === true) {
+          return [inputSrj, cms.colorMap, initiallyConnected, { pointKey: getLayerAwareMstPointKey }]
+        }
+        return [inputSrj, cms.colorMap, initiallyConnected]
       },
       {
         onSolved: (cms) => {
@@ -643,6 +645,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            ...(cms.opts.experimentLayerAwareMstIdentity === true ? { preserveCoincidentLayerTransitionLandings: true } : {}),
           },
         ]
       },
@@ -702,6 +705,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          ...(cms.opts.experimentLayerAwareMstIdentity === true ? { requireSameLayerTerminalIdentity: true } : {}),
         },
       ],
     ),
