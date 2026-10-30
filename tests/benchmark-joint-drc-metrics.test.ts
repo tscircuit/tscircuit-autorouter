@@ -10,8 +10,6 @@ test("benchmark records observed initial joint DRC repair metrics", (): void => 
     pipeline9JointDrcRepairSolver: {
       stats: {
         initialJointDrcIssueCount: 12,
-        initialDrcWorkerCount: 2,
-        initialDrcWorkerTimeMs: 3.5,
         initialBoundedRegionalRepairTimeMs: 42.5,
         initialBoundedRegionalRepairPhaseTimeMs: {
           negotiate: 21.5,

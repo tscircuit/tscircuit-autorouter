@@ -388,8 +388,6 @@ export const getRoutingBenchmarkMetrics = (
   const jointDrcRepair: RoutingBenchmarkMetrics["jointDrcRepair"] = {}
   for (const key of [
     "initialJointDrcIssueCount",
-    "initialDrcWorkerCount",
-    "initialDrcWorkerTimeMs",
     "initialBoundedRegionalRepairTimeMs",
     "initialBoundedRegionalRepairAttemptedRegionCount",
     "initialBoundedRegionalRepairAcceptedRegionCount",

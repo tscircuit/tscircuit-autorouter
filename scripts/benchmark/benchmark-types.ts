@@ -109,8 +109,6 @@ export type RoutingBenchmarkMetrics = {
   phaseTimeMs?: Record<string, number>
   jointDrcRepair?: {
     initialJointDrcIssueCount?: number
-    initialDrcWorkerCount?: number
-    initialDrcWorkerTimeMs?: number
     initialBoundedRegionalRepairTimeMs?: number
     initialBoundedRegionalRepairPhaseTimeMs?: Record<string, number>
     initialBoundedRegionalRepairAttemptedRegionCount?: number
