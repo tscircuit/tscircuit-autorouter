@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [2, 4, 8, 32]
+        variant: [0, 1]
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 25
     steps:
