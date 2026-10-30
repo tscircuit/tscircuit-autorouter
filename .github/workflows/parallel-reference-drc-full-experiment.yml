@@ -36,3 +36,5 @@ jobs:
           path: |
             benchmark-result.json
             benchmark-result.txt
+
+# Validate endpoint annotation ordering.
