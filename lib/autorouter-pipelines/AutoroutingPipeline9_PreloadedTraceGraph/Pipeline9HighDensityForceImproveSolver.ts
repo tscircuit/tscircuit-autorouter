@@ -1,7 +1,7 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import {
-  Pipeline9HighDensityForceImproveSampleSolver,
+  Pipeline9HighDensityForceImproveBatchSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
 
@@ -32,32 +32,45 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
           Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations,
         ),
       )
-      const pending = this.sampleEntries
-        .slice(
-          this.activeSampleIndex,
-          this.activeSampleIndex + parallelSampleCount,
-        )
-        .map((entry) =>
-          runtime
-            .executeAsync(Pipeline9HighDensityForceImproveSampleSolver, {
-              nodeWithPortPoints: [entry.node],
-              hdRoutes: entry.routeIndexes.map(
-                (routeIndex) => this.originalHdRoutes[routeIndex],
-              ),
-              totalStepsPerNode: this.totalStepsPerNode,
-              nodeAssignmentMargin: this.nodeAssignmentMargin,
-              colorMap: Object.fromEntries(
-                entry.routeIndexes.map((routeIndex) => {
-                  const name = this.originalHdRoutes[routeIndex].connectionName
-                  return [name, this.colorMap[name]]
-                }),
-              ),
-            })
-            .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
-        )
+      const samples = this.sampleEntries
+        .slice(this.activeSampleIndex, this.activeSampleIndex + parallelSampleCount)
+        .map((entry, index) => ({
+          index,
+          work: entry.routeIndexes.reduce((sum, routeIndex) =>
+            sum + this.originalHdRoutes[routeIndex]!.route.length, 0),
+          input: {
+            nodeWithPortPoints: [entry.node],
+            hdRoutes: entry.routeIndexes.map((routeIndex) => this.originalHdRoutes[routeIndex]!),
+            totalStepsPerNode: this.totalStepsPerNode,
+            nodeAssignmentMargin: this.nodeAssignmentMargin,
+            colorMap: Object.fromEntries(entry.routeIndexes.map((routeIndex) => {
+              const name = this.originalHdRoutes[routeIndex]!.connectionName
+              return [name, this.colorMap[name]]
+            })),
+          },
+        }))
+        .sort((left, right) => right.work - left.work)
+      const cursor = new Int32Array(new SharedArrayBuffer(4))
+      const results = await Promise.all(
+        Array.from({ length: Math.min(4, samples.length) }, () =>
+          runtime.executeAsync(Pipeline9HighDensityForceImproveBatchSolver, {
+            samples: samples.map((sample) => sample.input),
+            cursor,
+          }),
+        ),
+      )
+      const pending: Array<Pipeline9HighDensityForceImproveSampleOutput | undefined> =
+        Array(samples.length).fill(undefined)
+      for (const batch of results) {
+        for (const output of batch) {
+          const sample = samples[output.index]
+          if (!sample || pending[sample.index])
+            throw new Error("Force-improve batch returned an invalid or duplicate node")
+          pending[sample.index] = output.result
+        }
+      }
+      if (pending.some((output) => output === undefined))
+        throw new Error("Force-improve batches did not complete every node")
       for (const promise of pending) {
         if (
           this.solved ||
@@ -66,9 +79,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
         ) {
           break
         }
-        const outcome = await promise
-        if (outcome.type === "error") throw outcome.error
-        this.completedSample = outcome.result
+        this.completedSample = promise!
         this.step()
       }
       this.solveUntilIteration(stopAtIteration)
