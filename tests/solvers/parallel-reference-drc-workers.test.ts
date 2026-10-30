@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/node"
+import { withDrcCheckExecutor } from "../../lib/testing/getDrcErrors"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import { ParallelDrcChecksSession } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/ParallelDrcChecksSession"
 
@@ -40,7 +41,7 @@ test("parallel reference checks preserve errors and centers across changing cand
       const input = { inputSrj: srj, srjWithPointPairs: srj, routedTraces: traces }
       const expected = evaluateRelaxedDrc(input)
       expect(expected.errors.length).toBeGreaterThan(0)
-      expect(evaluateRelaxedDrc({ ...input, drcExecutor: session.evaluate })).toEqual(expected)
+      expect(withDrcCheckExecutor(session.evaluate, () => evaluateRelaxedDrc(input))).toEqual(expected)
     }
   } finally {
     await session.close()
