@@ -107,12 +107,6 @@ export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
-  jointDrcRepair?: {
-    initialDrcWorkerCount?: number
-    speculativeExactRepairDispatched?: number
-    speculativeExactRepairAccepted?: boolean
-    initialBoundedRegionalRepairAccepted?: boolean
-  }
   networkedHighDensity?: {
     remoteRequestsStarted: number
     remoteRequestsCompleted: number
