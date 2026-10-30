@@ -1,11 +1,6 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { TinyHypergraphPortfolioSolver } from "./TinyHypergraphPortfolioSolver"
-import { TinyHypergraphSpatialWarmStartSolver } from "./TinyHypergraphSpatialWarmStartSolver"
-import { partitionTinyHypergraph } from "./partitionTinyHypergraph"
-import { mergeSpatialWarmStart } from "./mergeSpatialWarmStart"
-import { WarmStartedPreparedPortPointRoutingSolver } from "./WarmStartedPreparedPortPointRoutingSolver"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -913,7 +908,7 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
-export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
@@ -927,7 +922,6 @@ export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGr
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
-    useMutableWarmStart = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -947,9 +941,7 @@ export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGr
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? useMutableWarmStart
-          ? WarmStartedPreparedPortPointRoutingSolver
-          : PreparedPortPointRoutingSolver
+        ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1001,28 +993,6 @@ export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGr
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
     return solver
-  }
-
-  adoptPortfolioGraph(graph: SerializedHyperGraph, graphIterations: number, graphStats: Record<string, unknown>, graphTimeMs: number): void {
-    const { topology, problem } = this.loadHyperGraph(graph)
-    const solver = new WarmStartedPreparedPortPointRoutingSolver(topology, problem, {
-      ...this.getSolveGraphOptions(),
-      RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-      PARTIAL_RIP_ENABLED: false,
-      GREEDY_FINAL_ROUTE_ITERS: 0,
-    })
-    if (solver.state.unroutedRoutes.length !== 0) {
-      throw new Error(`Portfolio candidate is missing ${solver.state.unroutedRoutes.length} routes`)
-    }
-    solver.step()
-    if (!solver.solved || solver.failed) throw new Error(`Portfolio candidate validation failed: ${solver.error}`)
-    solver.iterations = graphIterations
-    solver.stats = graphStats
-    this.timeSpentOnStage.solveGraph = graphTimeMs
-    Object.assign(this, { solveGraph: solver })
-    this.pipelineOutputs.solveGraph = graph
-    this.currentPipelineStageIndex = this.pipelineDef.length
-    this.solved = true
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
@@ -1086,15 +1056,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
-  portfolioCandidatesDispatched = 0
-  portfolioCandidatesSolved = 0
-  portfolioSelectedFactor: number | undefined
-  spatialWarmStartPartitions = 0
-  spatialWarmStartCompletedRoutes = 0
-  spatialWarmStartRejectedRoutes = 0
-  spatialWarmStartAttemptedRoutes = 0
-  spatialWarmStartExhaustedPartitions = 0
-  spatialWarmStartErrors: (string | null)[] = []
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1421,14 +1382,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
-      portfolioCandidatesDispatched: this.portfolioCandidatesDispatched,
-      portfolioCandidatesSolved: this.portfolioCandidatesSolved,
-      portfolioSelectedFactor: this.portfolioSelectedFactor,
-      spatialWarmStartPartitions: this.spatialWarmStartPartitions,
-      spatialWarmStartCompletedRoutes: this.spatialWarmStartCompletedRoutes,
-      spatialWarmStartRejectedRoutes: this.spatialWarmStartRejectedRoutes,
-      spatialWarmStartAttemptedRoutes: this.spatialWarmStartAttemptedRoutes,
-      spatialWarmStartExhaustedPartitions: this.spatialWarmStartExhaustedPartitions,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
       downstreamNodePfSum: selectedCandidateSummary?.nodePfSum,
@@ -1562,62 +1515,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       throw new Error("Port-point solveAsync is already running")
     this.asyncRunning = true
     try {
-      if (
-        runtime &&
-        stopAtIteration - this.iterations >= this.MAX_ITERATIONS &&
-        this.iterations === 0 &&
-        !this.alternativeTinyPipelineInput &&
-        this.params.flags.USE_SELECTIVE_RERIP_ROUTING &&
-        this.params.flags.USE_PREPARED_PORT_POINT_ROUTING
-      ) {
-        const input = this.tinyPipelineSolver.inputProblem
-        const graph = input.serializedHyperGraph
-        const hasExistingAssignments = graph.regions.some(
-          (region) => (region.assignments?.length ?? 0) > 0,
-        )
-        const preloadedStats = getSerializedPreloadedTraceStats(graph)
-        if (!hasExistingAssignments && preloadedStats.preloadedPortCount === 0 && preloadedStats.preloadedTraceCount === 0) {
-          const factors = [undefined, 0.1, 0.3, 1]
-          const candidates = await Promise.all(factors.map((factor) =>
-            runtime.executeAsync(TinyHypergraphPortfolioSolver, {
-              graph,
-              solveGraphOptions: input.solveGraphOptions,
-              sectionSolverOptions: input.sectionSolverOptions,
-              traceDensityCostFactor: factor,
-            }),
-          ))
-          this.portfolioCandidatesDispatched = candidates.length
-          this.portfolioCandidatesSolved = candidates.filter((candidate) => candidate.status === "solved").length
-          let selected: { pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds; summary: DownstreamCandidateSummary; iterations: number; factor: number | undefined } | undefined
-          for (const [index, candidate] of candidates.entries()) {
-            if (candidate.status === "exhausted") continue
-            const assignments = new Map(candidate.graph.regions.map((region) => [region.regionId, region.assignments] as const))
-            const candidateGraph: SerializedHyperGraph = {
-              ...graph,
-              regions: graph.regions.map((region) => ({ ...region, assignments: assignments.get(region.regionId) })),
-            }
-            const pipeline = new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-              { ...input, serializedHyperGraph: candidateGraph }, true, true, true,
-            )
-            pipeline.adoptPortfolioGraph(candidateGraph, candidate.graphIterations, candidate.graphStats, candidate.graphTimeMs)
-            const summary = this.summarizePipelineCandidate(pipeline)
-            if (!selected || summary.nodePfSquaredSum < selected.summary.nodePfSquaredSum ||
-                (summary.nodePfSquaredSum === selected.summary.nodePfSquaredSum && summary.nodePfMax < selected.summary.nodePfMax)) {
-              selected = { pipeline, summary, iterations: candidate.iterations, factor: factors[index] }
-            }
-          }
-          if (!selected) throw new Error(`All parallel route portfolio candidates exhausted their iteration budgets: ${candidates.map((candidate) => candidate.status === "exhausted" ? candidate.error : "solved").join(", ")}`)
-          this.portfolioSelectedFactor = selected.factor
-          this.tinyPipelineSolver = selected.pipeline
-          this.primaryTinyPipelineSolver = selected.pipeline
-          this.primaryCandidateSummary = selected.summary
-          this.iterations += selected.iterations
-          this.finishCandidatePortfolio()
-          this.progress = 1
-          this.statsSnapshotDirty = true
-          this.activeSubSolver = null
-        }
-      }
       while (
         !this.solved &&
         !this.failed &&
