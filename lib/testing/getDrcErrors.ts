@@ -172,10 +172,26 @@ export type DrcCheckExecutor = (
   connMap: ConnectivityMap,
 ) => DrcError[]
 
+let activeDrcCheckExecutor: DrcCheckExecutor | undefined
+
+/** The callback is synchronous: no executor survives an event-loop yield. */
+export const withDrcCheckExecutor = <T>(
+  executor: DrcCheckExecutor,
+  run: () => T,
+): T => {
+  const previous = activeDrcCheckExecutor
+  activeDrcCheckExecutor = executor
+  try {
+    return run()
+  } finally {
+    activeDrcCheckExecutor = previous
+  }
+}
+
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
-  executor?: DrcCheckExecutor,
+  executor: DrcCheckExecutor | undefined = activeDrcCheckExecutor,
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
   const vias = circuitJson.filter(
