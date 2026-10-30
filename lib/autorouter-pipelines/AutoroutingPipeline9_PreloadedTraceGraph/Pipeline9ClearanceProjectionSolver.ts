@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
@@ -5,7 +6,6 @@ import {
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -115,13 +115,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
           (params.originalSrj.minTraceToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.traceClearance!) +
+            RELAXED_DRC_OPTIONS.traceClearance) +
           (params.allowPartialRepair || params.usePrecisionMargin
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
         viaClearance:
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.viaClearance!) +
+            RELAXED_DRC_OPTIONS.viaClearance) +
           VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })

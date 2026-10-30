@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -11,7 +12,6 @@ import {
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -572,10 +572,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           ? undefined
           : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
       allowLayerChanges: true,
-      traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
+      traceClearance: RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance:
         context.srj.minPadEdgeToPadEdgeClearance ??
-        RELAXED_DRC_OPTIONS.viaClearance!,
+        RELAXED_DRC_OPTIONS.viaClearance,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
     })

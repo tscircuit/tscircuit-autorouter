@@ -17,19 +17,13 @@ import type {
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
 } from "circuit-json"
-import {
-  type ConnectivityMap,
-  getFullConnectivityMapFromCircuitJson,
-} from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import type { GetDrcErrorsOptions } from "lib/types/drc-types"
+import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
+import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
-type PcbViaWithTraceId = CircuitJsonElement & {
-  type: "pcb_via"
-  pcb_via_id: string
-  pcb_trace_id: string
-}
 
 type ViaPadDrcError = PcbPadPadClearanceError & {
   pcb_via_ids: string[]
@@ -47,38 +41,16 @@ type DrcErrorWithCenter = DrcError & { center?: Point }
 
 type LocationAwareDrcError = DrcError & { center: Point }
 
-export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
-export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
+export {
+  MIN_VIA_TO_VIA_CLEARANCE,
+  PREFERRED_VIA_TO_VIA_CLEARANCE,
+} from "lib/utils/drcPresets"
+export type { GetDrcErrorsOptions } from "lib/types/drc-types"
 
 export interface GetDrcErrorsResult {
   errors: DrcError[]
   errorsWithCenters: DrcErrorWithCenter[]
   locationAwareErrors: LocationAwareDrcError[]
-}
-
-export interface GetDrcErrorsOptions {
-  holeClearance?: number
-  viaClearance?: number
-  /** Via copper edge to unrelated pad copper edge; independent of drill spacing. */
-  viaToPadClearance?: number
-  traceClearance?: number
-  includeTraceContinuity?: boolean
-  includeTypedTraceClearance?: boolean
-}
-
-const createDrcConnectivityMap = (
-  circuitJson: CircuitJson,
-): ConnectivityMap => {
-  const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-  const viaTraceConnections = circuitJson
-    .filter(
-      (element): element is PcbViaWithTraceId =>
-        element.type === "pcb_via" && typeof element.pcb_trace_id === "string",
-    )
-    .map((via) => [via.pcb_via_id, via.pcb_trace_id])
-
-  connMap.addConnections(viaTraceConnections)
-  return connMap
 }
 
 export const getDrcErrors = (

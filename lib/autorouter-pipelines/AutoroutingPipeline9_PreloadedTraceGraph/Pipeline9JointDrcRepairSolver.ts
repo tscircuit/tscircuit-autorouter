@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -12,12 +13,9 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import {
-  combinePreloadedAndRoutedTraces,
-  evaluateRelaxedDrc,
-} from "lib/testing/evaluate-relaxed-drc"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
+import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -840,24 +838,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
+      RELAXED_DRC_OPTIONS.traceClearance
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
-    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance
     const viaToPadClearance = getViaToPadClearance(params.originalSrj)
     const viaHoleClearance =
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
-      RELAXED_DRC_OPTIONS.viaClearance ??
-      0.1
-    const baselineDrc = evaluateRelaxedDrc({
+      RELAXED_DRC_OPTIONS.viaClearance
+    const evaluateInitialDrc = createPipeline9AutoroutingDrcEvaluator({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: [],
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
+    const baselineDrc = evaluateInitialDrc([])
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
     )
@@ -873,13 +869,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
-      includeBoardClearance: true,
-      inputSrj: params.originalSrj,
-      srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
-    })
+    const currentDrcResult = evaluateInitialDrc(
+      preparedCurrentOutput.routedTraces,
+    )
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
@@ -1360,6 +1352,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ),
       route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
     }
+    const evaluateCandidateDrc = createPipeline9AutoroutingDrcEvaluator({
+      includeBoardClearance: true,
+      connectivityMaps,
+      inputSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
+    })
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
@@ -1369,18 +1368,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
-        includeBoardClearance: true,
-        connectivityMaps,
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: {
-          traceClearance,
-          viaClearance: viaHoleClearance,
-          includeTraceContinuity,
-        },
-      })
+      const evaluatedDrc = evaluateCandidateDrc(
+        candidateDrcInput.routedTraces,
+        { includeTraceContinuity },
+      )
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )

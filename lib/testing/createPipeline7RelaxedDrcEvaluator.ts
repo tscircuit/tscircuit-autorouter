@@ -4,7 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import {
   convertPipeline7HdRoutesToSimplifiedPcbTraces,
   type ConvertPipeline7HdRoutesOptions,
-} from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
 /** Scores Pipeline7 repair candidates with the benchmark relaxed DRC. */
 export const createPipeline7RelaxedDrcEvaluator = (

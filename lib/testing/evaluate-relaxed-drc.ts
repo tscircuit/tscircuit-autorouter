@@ -1,5 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
@@ -11,7 +12,7 @@ import {
   type CircuitJsonConnectivityMaps,
   convertToCircuitJson,
   createPcbBoardElement,
-} from "./utils/convertToCircuitJson"
+} from "lib/utils/convertToCircuitJson"
 
 /** Inputs used by the benchmark's relaxed DRC evaluation. */
 export interface EvaluateRelaxedDrcInput {
@@ -31,26 +32,7 @@ export interface EvaluateRelaxedDrcResult extends GetDrcErrorsResult {
   circuitJson: AnyCircuitElement[]
 }
 
-/**
- * Combines existing and newly routed copper. Only traces with explicit
- * replacement metadata remove preloaded copper; ids may otherwise collide.
- */
-export const combinePreloadedAndRoutedTraces = (
-  preloadedTraces: SimplifiedPcbTrace[],
-  routedTraces: SimplifiedPcbTrace[],
-): SimplifiedPcbTrace[] => {
-  const replacedTraceIds = new Set(
-    routedTraces.flatMap((trace) =>
-      trace.__replaces_pcb_trace_id ? [trace.__replaces_pcb_trace_id] : [],
-    ),
-  )
-  return [
-    ...preloadedTraces.filter(
-      (trace) => !replacedTraceIds.has(trace.pcb_trace_id),
-    ),
-    ...routedTraces,
-  ]
-}
+export { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 
 /** Converts routed traces and evaluates them using the benchmark relaxed DRC. */
 export const evaluateRelaxedDrc = ({

@@ -1,7 +1,5 @@
-import {
-  checkPadTraceClearance,
-  checkViaTraceClearance,
-} from "@tscircuit/checks"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   CLEARANCE_PRECISION_MARGIN,
@@ -160,10 +158,11 @@ export const getPipeline9ClearanceMarginErrors = ({
     // those two objects; unrelated nearby copper keeps its original rules.
     // A wider reporting radius exposes actual_clearance even when the normal
     // checker accepts the pair using its floating-point tolerance.
-    const options = { minClearance: target.minimum_clearance + 1 }
-    const measuredErrors = isVia
-      ? checkViaTraceClearance([trace, obstacle], options)
-      : checkPadTraceClearance([trace, obstacle], options)
+    const pair = [trace, obstacle]
+    const result = createTraceObstacleClearanceEvaluator([obstacle], {
+      traceClearance: target.minimum_clearance + 1,
+    })(pair, getFullConnectivityMapFromCircuitJson(pair))
+    const measuredErrors = isVia ? result.viaErrors : result.padErrors
     const minimumClearance =
       target.minimum_clearance + CLEARANCE_PRECISION_MARGIN
     for (const measured of measuredErrors) {
