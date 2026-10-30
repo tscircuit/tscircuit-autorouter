@@ -4,4 +4,6 @@ import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipelin
 import "../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSampleSolver"
 import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"
 
+import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/ParallelAutoroutingDrcEngine"
+
 SolverRuntime.listen()
