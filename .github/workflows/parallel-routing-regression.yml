@@ -1,0 +1,48 @@
+name: Parallel routing other datasets
+on:
+  push:
+    branches: [codex/overlap-worker-startup]
+    paths: [.github/workflows/parallel-routing-regression.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        dataset: [19, 24]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5f65e9a8bb43223266883f8d65c50408c1c5e8a1
+          path: baseline
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+        working-directory: baseline
+      - run: bun install
+        working-directory: candidate
+      - name: Compare routing quality
+        env:
+          DATASET: ${{ matrix.dataset }}
+        run: |
+          mkdir results
+          for variant in baseline candidate; do
+            (
+              cd "$variant"
+              bash benchmark.sh --dataset "$DATASET" --threads 4 --limit 4
+            )
+            cp "$variant/benchmark-result.json" "results/$variant.json"
+            cp "$variant/benchmark-result.txt" "results/$variant.txt"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-dataset-${{ matrix.dataset }}
+          path: results
