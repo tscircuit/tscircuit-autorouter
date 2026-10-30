@@ -400,6 +400,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            // Fixed copper is indexed against the original region boundaries.
+            mergeFreeLayerVolumes: !cms.originalSrj.traces?.length,
             nodeGroups: [
               {
                 groupId: "global",
@@ -517,13 +519,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
+        const portPoints = sharedEdgeSegments.flatMap(
+          (segment) => segment.portPoints,
+        )
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
+          segmentPortPoints: portPoints,
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 

@@ -199,6 +199,7 @@ export class TopologyMergingSolver extends BaseSolver {
         coveringNodes,
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
+        mergeFreeLayerVolumes: this.inputProblem.mergeFreeLayerVolumes,
       })
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
