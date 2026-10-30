@@ -23,6 +23,9 @@ jobs:
           p=Path("scripts/benchmark/index.ts")
           s=p.read_text().replace('"scripts/benchmark/benchmark.child.ts"', '"--cpu-prof", "--cpu-prof-dir=cpu-profiles", "scripts/benchmark/benchmark.child.ts"')
           p.write_text(s)
+          p=Path("scripts/benchmark/benchmark.child.ts")
+          s=p.read_text().replace('const rl =', 'process.on("SIGTERM", () => process.exit(0))\nconst rl =')
+          p.write_text(s)
           PY
       - run: bash benchmark.sh --dataset 18 --threads 4 --sample-numbers 13,16
       - name: Summarize CPU samples
