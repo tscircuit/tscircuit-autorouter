@@ -17,15 +17,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-a01
-          ref: bench/a01-bucket-queue
-          path: a01-bucket
+          ref: bench/a01-fourary
+          path: a01-fourary
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
       - run: bun install
         working-directory: a01-basic
       - run: bun install
-        working-directory: a01-bucket
+        working-directory: a01-fourary
       - name: Compare alternating fresh processes
         run: |
           mkdir results
@@ -33,20 +33,20 @@ jobs:
           import { createHash } from "node:crypto"
           import workload from "./fixtures/bug-reports/bugreport110-motherboard-power-phase/a01-search-workload.json"
           const label = process.env.MODE!
-          const { HighDensitySolverA01 } = await import(`./a01-${label === "bucket" ? "bucket" : "basic"}/lib/index.ts`)
+          const { HighDensitySolverA01 } = await import(`./a01-${label === "fourary" ? "fourary" : "basic"}/lib/index.ts`)
           const outputs = []
           const start = performance.now()
           for (const {props,stepLimit} of workload) {
             const solver = new HighDensitySolverA01(props)
             solver.setup()
             solver.MAX_ITERATIONS = stepLimit
-            if (label === "serial") solver.solve()
+            if (label === "serial" || label === "fourary") solver.solve()
             else while (!solver.solved && !solver.failed) solver.stepBatch(100)
             outputs.push({solved:solver.solved,failed:solver.failed,iterations:solver.iterations,routes:solver.getOutput()})
           }
           console.log(JSON.stringify({label,ms:performance.now()-start,hash:createHash("sha256").update(JSON.stringify(outputs)).digest("hex")}))
           SCRIPT
-          for mode in serial basic bucket bucket basic serial serial bucket basic basic bucket serial; do
+          for mode in serial basic fourary fourary basic serial serial fourary basic basic fourary serial; do
             MODE="$mode" bun run-batch.ts >> results/timings.jsonl
           done
           cat results/timings.jsonl
