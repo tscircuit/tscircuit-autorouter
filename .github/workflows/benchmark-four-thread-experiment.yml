@@ -2,7 +2,7 @@ name: Four-thread paired benchmark experiment
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, edited]
     paths:
       - .github/workflows/benchmark-four-thread-experiment.yml
 
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   benchmark:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.title, '[PERF-RUN]')
     runs-on: blacksmith-16vcpu-ubuntu-2404-arm
     timeout-minutes: 120
     env:
