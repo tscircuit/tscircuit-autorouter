@@ -214,7 +214,6 @@ type LoadedTinyGraph = {
     metadataPortPenaltiesApplied?: boolean
   }
 }
-
 const asTinyRegionMetadata = (metadata: unknown): TinyRegionMetadata =>
   typeof metadata === "object" && metadata !== null
     ? (metadata as TinyRegionMetadata)
@@ -1101,6 +1100,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         useSerializedPortPenalties: false,
         routeSolveOptions: {
           ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          throughHoleLayerCount: params.requireThroughHoleVias
+            ? params.layerCount
+            : undefined,
+          throughHoleViaClearance: 0.1,
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
@@ -1139,6 +1142,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
+    if (params.requireThroughHoleVias) {
+      tinyPipelineInput.solveGraphOptions = {
+        ...tinyPipelineInput.solveGraphOptions,
+        throughHoleLayerCount: params.layerCount,
+        throughHoleViaClearance: 0.1,
+      }
+      tinyPipelineInput.sectionSolverOptions = {
+        ...tinyPipelineInput.sectionSolverOptions,
+        throughHoleLayerCount: params.layerCount,
+        throughHoleViaClearance: 0.1,
+      }
+    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
@@ -1834,3 +1849,4 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return this.tinyPipelineSolver.visualize()
   }
 }
+

@@ -538,6 +538,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            requireThroughHoleVias: !cms.srj.allowBlindAndBuriedVias,
             duplicateCrampedPorts: Boolean(cms.originalSrj.traces?.length),
             flags: {
               FORCE_CENTER_FIRST: true,
