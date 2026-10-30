@@ -4,7 +4,7 @@ import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/Aut
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("parallel clearance projection validates merged geometry before publishing", async (): Promise<void> => {
-  const fixture = createBoundedRegionalRepairFixture(12)
+  const fixture = createBoundedRegionalRepairFixture(40)
   const before = structuredClone(fixture.routes)
   const initial = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
   const initialErrors = Array.isArray(initial) ? initial : initial.errors

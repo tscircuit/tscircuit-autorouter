@@ -4,7 +4,7 @@ import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/Aut
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("parallel projection respects a partial iteration budget", async (): Promise<void> => {
-  const fixture = createBoundedRegionalRepairFixture(12)
+  const fixture = createBoundedRegionalRepairFixture(40)
   const params = {
     originalSrj: fixture.originalSrj,
     routes: fixture.routes,

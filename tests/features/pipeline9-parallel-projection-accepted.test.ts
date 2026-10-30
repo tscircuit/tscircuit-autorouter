@@ -5,10 +5,16 @@ import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/Aut
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("parallel projection publishes a validated improvement", async (): Promise<void> => {
-  const fixture = createBoundedRegionalRepairFixture(12)
+  const fixture = createBoundedRegionalRepairFixture(40)
   fixture.originalSrj.obstacles = []
+  fixture.originalSrj.bounds.minX = -24
+  fixture.originalSrj.bounds.maxX = 24
   for (const [index, route] of fixture.routes.entries()) {
-    for (const point of route.route) point.y = index * 0.15
+    for (const point of route.route) {
+      point.y = index * 0.15
+      if (point.x === -4) point.x = -20
+      if (point.x === 4) point.x = 20
+    }
   }
   const original = JSON.stringify(fixture.routes)
   const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => ({
@@ -34,6 +40,11 @@ test("parallel projection publishes a validated improvement", async (): Promise<
     expect(solver.stats.parallelProjectionWorkers).toBe(4)
     expect(solver.stats.parallelProjectionAccepted).toBe(true)
     expect(JSON.stringify(solver.getOutput())).not.toBe(original)
+    for (const [index, route] of solver.getOutput().entries()) {
+      expect(route.route).toHaveLength(fixture.routes[index]!.route.length)
+      expect(route.route[0]).toEqual(fixture.routes[index]!.route[0])
+      expect(route.route.at(-1)).toEqual(fixture.routes[index]!.route.at(-1))
+    }
     expect(JSON.stringify(fixture.routes)).toBe(original)
   } finally {
     await runtime.dispose()

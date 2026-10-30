@@ -11,7 +11,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { Pipeline9ClearanceProjectionWorker } from "./Pipeline9ClearanceProjectionWorker"
-import { cropPipeline9ProjectionInput } from "./cropPipeline9ProjectionInput"
+import { createPipeline9ProjectionRegions } from "./createPipeline9ProjectionRegions"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
@@ -96,7 +96,14 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         const points = new Map<string, { x: number; y: number; count: number }>()
         for (const [routeIndex, route] of input.routes.entries()) {
           for (const [pointIndex, point] of route.route.entries()) {
-            if (input.lockedPointIndices[routeIndex]![pointIndex]) continue
+            if (
+              input.lockedPointIndices[routeIndex]![pointIndex] ||
+              pointIndex === 0 ||
+              pointIndex === route.route.length - 1 ||
+              point.pcb_port_id ||
+              point.insideJumperPad ||
+              point.toNextSegmentType
+            ) continue
             const key = `${point.x},${point.y}`
             const existing = points.get(key)
             if (existing) existing.count++
@@ -107,7 +114,18 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         const entries = [...points.entries()].sort(
           ([, a], [, b]) => a.x - b.x || a.y - b.y,
         )
-        if (entries.length >= 32) {
+        // Region extraction requires colocated layer transitions; otherwise
+        // retain the ordinary projection, which accepts those route inputs.
+        const canExtract = input.routes.every((route) =>
+          route.route.every((point, index) => {
+            const previous = route.route[index - 1]
+            return !previous || previous.z === point.z ||
+              previous.toNextSegmentType === "through_obstacle" ||
+              (Math.abs(previous.x - point.x) <= 1e-8 &&
+                Math.abs(previous.y - point.y) <= 1e-8)
+          }),
+        )
+        if (entries.length >= 32 && canExtract) {
           const assignments = new Map<string, number>()
           const total = entries.reduce((sum, [, point]) => sum + point.count, 0)
           let assigned = 0
@@ -115,27 +133,43 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
             assignments.set(key, Math.min(3, Math.floor((assigned * 4) / total)))
             assigned += point.count
           }
-          const crops = Array.from({ length: 4 }, (_, partition) =>
-            cropPipeline9ProjectionInput(input, assignments, partition),
-          )
+          const crops = createPipeline9ProjectionRegions(input, assignments)
           const results = await Promise.all(
             crops.map((crop) =>
               runtime.executeAsync(Pipeline9ClearanceProjectionWorker, crop.input),
             ),
           )
           this.stats.parallelProjectionWorkers = results.length
-          this.stats.parallelProjectionRouteCounts = crops.map((crop) => crop.routeIndexes.length)
+          this.stats.parallelProjectionRouteCounts = crops.map((crop) => crop.sourceRouteIndexes.length)
           const childIterations = Math.max(...results.map((result) => result.iterations))
           if (this.iterations + childIterations <= stopAtIteration) {
             const candidate = structuredClone(input.routes)
+            const sourcePointIndexes = input.routes.map((route) => {
+              const indexes = new Map<string, number[]>()
+              for (const [index, point] of route.route.entries()) {
+                const key = `${point.x},${point.y},${point.z}`
+                const existing = indexes.get(key) ?? []
+                existing.push(index)
+                indexes.set(key, existing)
+              }
+              return indexes
+            })
             for (const [partition, crop] of crops.entries()) {
-              for (const [localIndex, routeIndex] of crop.routeIndexes.entries()) {
-                const route = input.routes[routeIndex]!
+              for (const [localIndex, routeIndex] of crop.sourceRouteIndexes.entries()) {
+                const route = crop.input.routes[localIndex]!
                 const projected = results[partition]!.routes[localIndex]!
                 for (const [pointIndex, point] of route.route.entries()) {
-                  if (assignments.get(`${point.x},${point.y}`) !== partition) continue
-                  candidate[routeIndex]!.route[pointIndex]!.x = projected.route[pointIndex]!.x
-                  candidate[routeIndex]!.route[pointIndex]!.y = projected.route[pointIndex]!.y
+                  if (
+                    crop.input.lockedPointIndices[localIndex]![pointIndex] ||
+                    assignments.get(`${point.x},${point.y}`) !== partition
+                  ) continue
+                  const indexes = sourcePointIndexes[routeIndex]!.get(`${point.x},${point.y},${point.z}`) ?? []
+                  const span = crop.sourceSpans[localIndex]!
+                  for (const sourceIndex of indexes) {
+                    if (sourceIndex < span.firstSegment || sourceIndex > span.lastSegment + 1) continue
+                    candidate[routeIndex]!.route[sourceIndex]!.x = projected.route[pointIndex]!.x
+                    candidate[routeIndex]!.route[sourceIndex]!.y = projected.route[pointIndex]!.y
+                  }
                 }
               }
             }
