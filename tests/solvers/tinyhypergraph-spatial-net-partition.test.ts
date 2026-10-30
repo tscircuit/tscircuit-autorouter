@@ -17,8 +17,9 @@ test("spatial partitions retain explicitly unrestricted regions", (): void => {
     })),
   } as SerializedHyperGraph
   const partitions = partitionTinyHypergraph(graph)
-  const left = partitions.flatMap((partition) => partition.regions).find((region) => region.regionId === "left")
-  const right = partitions.flatMap((partition) => partition.regions).find((region) => region.regionId === "right")
-  expect(left?.d?.netId).toBe(-1)
-  expect(right?.d?.netId).toBe(15)
+  for (const partition of partitions) {
+    expect(partition.regions.find((region) => region.regionId === "left")?.d?.netId).toBe(-1)
+  }
+  const last = partitions.find((partition) => partition.connections?.some((connection) => connection.connectionId === "route31"))
+  expect(last?.regions.find((region) => region.regionId === "right")?.d?.netId).toBe(7)
 })

@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { TinyHypergraphSpatialWarmStartSolver } from "./TinyHypergraphSpatialWarmStartSolver"
 import { partitionTinyHypergraph } from "./partitionTinyHypergraph"
+import { mergeSpatialWarmStart } from "./mergeSpatialWarmStart"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -1060,6 +1061,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private asyncRunning = false
   spatialWarmStartPartitions = 0
   spatialWarmStartCompletedRoutes = 0
+  spatialWarmStartRejectedRoutes = 0
   spatialWarmStartAttemptedRoutes = 0
   spatialWarmStartExhaustedPartitions = 0
   spatialWarmStartErrors: (string | null)[] = []
@@ -1391,6 +1393,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       routeCount: solveGraphSolver.problem.routeCount,
       spatialWarmStartPartitions: this.spatialWarmStartPartitions,
       spatialWarmStartCompletedRoutes: this.spatialWarmStartCompletedRoutes,
+      spatialWarmStartRejectedRoutes: this.spatialWarmStartRejectedRoutes,
       spatialWarmStartAttemptedRoutes: this.spatialWarmStartAttemptedRoutes,
       spatialWarmStartExhaustedPartitions: this.spatialWarmStartExhaustedPartitions,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
@@ -1551,13 +1554,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           ))
           this.spatialWarmStartErrors = proposals.map((proposal) => proposal.error)
           this.spatialWarmStartPartitions = proposals.length
-          this.spatialWarmStartCompletedRoutes = proposals.reduce((total, proposal) => total + proposal.completedRoutes, 0)
           this.spatialWarmStartAttemptedRoutes = proposals.reduce((total, proposal) => total + proposal.attemptedRoutes, 0)
           this.spatialWarmStartExhaustedPartitions = proposals.filter((proposal) => proposal.exhausted).length
-          const byRegion = new Map(
-            proposals.flatMap((proposal) => proposal.assignmentsByRegion)
-              .map(({ regionId, assignments }) => [regionId, assignments] as const),
-          )
+          const merged = mergeSpatialWarmStart(graph, proposals)
+          const byRegion = merged.assignmentsByRegion
+          this.spatialWarmStartCompletedRoutes = merged.acceptedRoutes
+          this.spatialWarmStartRejectedRoutes = merged.rejectedRoutes
           if (byRegion.size > 0) {
             const warmGraph: SerializedHyperGraph = {
               ...graph,
