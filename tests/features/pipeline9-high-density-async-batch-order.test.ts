@@ -61,7 +61,7 @@ test("workers claim crowded nodes first from a shared queue while results retain
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
   const pending = solver.solveAsync(runtime)
-  expect(tasks).toHaveLength(4)
+  expect(tasks).toHaveLength(16)
   expect(tasks[0]!.input.nodePortPoints[0]!.capacityMeshNodeId).toBe("node-2")
   for (const { input, resolve } of tasks.toReversed()) {
     expect(input.sharedNodeCursor).toBe(tasks[0]!.input.sharedNodeCursor)
