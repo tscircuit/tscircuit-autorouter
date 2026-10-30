@@ -4,6 +4,7 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { Pipeline9IntentOwners, type OriginalIntentJson } from "./checkPipeline9OriginalIntentCopper"
 import { checkBoardEnvelope, getPipeline9WitnessViaCertificate, type WitnessViaCertificate } from "./getPipeline9WitnessViaCertificate"
+import { getRelativeViaTraceTargets } from "./getRelativeViaTraceTargets"
 import { provePipeline9RelativeContacts, type RelativeWitnessMove } from "./provePipeline9RelativeContacts"
 import { isCopperPointWithinRadius, type CopperPoint } from "./relativeCopperSweepGeometry"
 
@@ -95,10 +96,12 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     this.qualification.initialFullCertificateStatus = this.qualification.finalFullCertificateStatus = certificate.status
     if (certificate.referenceErrorCount >= 0 && certificate.copper.allPublishedCopperChecksRun === true) this.qualification.beforeGeometryFindings = this.qualification.afterGeometryFindings = this.geometryCount(certificate)
     this.assertInputsUnchanged()
-    if (certificate.copper.allPublishedCopperChecksRun !== true || certificate.copper.ownershipCoverageStatus !== "COMPLETE" || certificate.referenceErrorCount !== 0) { this.noProposal("Complete baseline original-owner geometry and reference checks are required"); return }
     const findings = certificate.copper.allFindings as OriginalIntentJson[]
-    if (findings.length !== 1 || findings[0]!.checkClass !== "viaPad" || findings[0]!.classification !== "DECLARED_FOREIGN_COPPER") { this.noProposal("One isolated original-foreign via-pad finding is required"); return }
+    const isolatedViaTrace = findings.length === 1 && findings[0]!.checkClass === "viaTrace" && findings[0]!.classification === "DECLARED_FOREIGN_COPPER"
+    if (certificate.copper.allPublishedCopperChecksRun !== true || certificate.copper.ownershipCoverageStatus !== "COMPLETE" || certificate.referenceErrorCount < 0 || certificate.referenceErrorCount !== 0 && !isolatedViaTrace) { this.noProposal("Complete baseline original-owner geometry and reference checks are required"); return }
+    if (findings.length !== 1 || !["viaPad", "viaTrace"].includes(findings[0]!.checkClass) || findings[0]!.classification !== "DECLARED_FOREIGN_COPPER") { this.noProposal("One isolated original-foreign via-pad finding is required"); return }
     const finding = findings[0]!
+    const viaTraceWitness = finding.checkClass === "viaTrace"
     const viaMember = finding.owners.find((value: OriginalIntentJson) => value.type === "pcb_via")
     const padMember = finding.owners.find((value: OriginalIntentJson) => value.type === "pcb_smtpad")
     const viaRecord = certificate.copper.viaOwners.find((value: OriginalIntentJson) => value.originalId === viaMember?.id)
@@ -106,7 +109,8 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     const via = viaRecord ? certificate.circuitJson[viaRecord.canonicalIndex] : undefined
     const pad = padRecord ? certificate.circuitJson[padRecord.canonicalIndex] : undefined
     const site = via ? certificate.sites.find((value) => value.x === via.x && value.y === via.y) : undefined
-    if (!site || !pad || pad.type !== "pcb_smtpad" || pad.shape !== "rect" || (pad.ccw_rotation ?? 0) !== 0 || !Number.isFinite(finding.error.minimum_clearance)) { this.noProposal("The via-pad witness requires one supported raw site and solid axis-aligned SMT pad"); return }
+    if (!viaTraceWitness && (!site || !pad || pad.type !== "pcb_smtpad" || pad.shape !== "rect" || (pad.ccw_rotation ?? 0) !== 0 || !Number.isFinite(finding.error.minimum_clearance))) { this.noProposal("The via-pad witness requires one supported raw site and solid axis-aligned SMT pad"); return }
+    if (!site || !Number.isFinite(finding.error.minimum_clearance)) { this.noProposal("The via-trace witness requires one supported raw site and finite clearance"); return }
     const owners = new Pipeline9IntentOwners(this.params.originalSrj, this.params.pointPairs)
     const siteOccurrences: { traceIndex: number; pointIndex: number }[] = []
     for (const [ti, trace] of this.params.traces.entries()) for (const [pi, point] of trace.route.entries()) {
@@ -114,6 +118,7 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     }
     const wireWitnesses = this.getWireWitnesses(owners)
     if (wireWitnesses.length > 1) { this.noProposal("Only one optional original-obstacle wire defect is in the planned search"); return }
+    if (viaTraceWitness && wireWitnesses.length !== 0) { this.noProposal("Via-trace repair requires no additional original-obstacle wire defect"); return }
     const offsets: (CopperPoint | undefined)[] = [undefined]
     const wire = wireWitnesses[0]
     if (wire) {
@@ -135,11 +140,32 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
         if (!offsets.some((value) => value?.x === offset.x && value.y === offset.y)) offsets.push(offset)
       }
     }
-    const clearance = Math.max(finding.error.minimum_clearance, this.params.originalSrj.defaultObstacleMargin ?? 0, this.params.originalSrj.minViaEdgeToPadEdgeClearance ?? 0)
-    const edge = site.diameter / 2 + clearance + PROPOSAL_MARGIN
-    const targets = [{ x: pad.x - pad.width / 2 - edge, y: site.y }, { x: pad.x + pad.width / 2 + edge, y: site.y }, { x: site.x, y: pad.y - pad.height / 2 - edge }, { x: site.x, y: pad.y + pad.height / 2 + edge }]
-      .filter((target) => isCopperPointWithinRadius(site, target, 0.25))
-      .sort((a, b) => Math.hypot(a.x - site.x, a.y - site.y) - Math.hypot(b.x - site.x, b.y - site.y))
+    let targets: CopperPoint[]
+    if (viaTraceWitness) {
+      const traceMember = finding.owners.find((value: OriginalIntentJson) => value.type === "pcb_trace")
+      const traceRecord = certificate.copper.traceOwners.find((value: OriginalIntentJson) => value.originalId === traceMember?.id)
+      const raw = this.params.traces.filter((trace) => trace.pcb_trace_id === traceRecord?.originalId)
+      if (viaRecord?.status !== "RESOLVED" || traceRecord?.status !== "RESOLVED" || viaRecord.owner === traceRecord.owner || raw.length !== 1 || !Number.isFinite(finding.error.actual_clearance) || finding.error.actual_clearance <= 0) { this.noProposal("Via-trace participants need distinct original owners and one exact foreign raw trace"); return }
+      let best: { start: CopperPoint; end: CopperPoint; wireWidth: number; wireLayer: string; gap: number } | undefined
+      for (let pi = 0; pi + 1 < raw[0]!.route.length; pi++) {
+        const a = raw[0]!.route[pi]!, b = raw[0]!.route[pi + 1]!
+        if (a.route_type !== "wire" || b.route_type !== "wire" || a.layer !== b.layer || !site.layers.includes(a.layer)) continue
+        const dx = b.x - a.x, dy = b.y - a.y, squaredLength = dx * dx + dy * dy
+        if (!Number.isFinite(squaredLength) || squaredLength <= 0) continue
+        const ratio = Math.max(0, Math.min(1, ((site.x - a.x) * dx + (site.y - a.y) * dy) / squaredLength))
+        const width = Math.max(a.width, b.width)
+        const gap = Math.hypot(site.x - a.x - ratio * dx, site.y - a.y - ratio * dy) - site.diameter / 2 - width / 2
+        if (Number.isFinite(gap) && (!best || gap < best.gap)) best = { start: a, end: b, wireWidth: width, wireLayer: a.layer, gap }
+      }
+      if (!best || best.gap <= 0 || best.gap >= finding.error.minimum_clearance) { this.noProposal("The strict via-trace finding lacks a nonoverlapping finite raw segment witness"); return }
+      targets = getRelativeViaTraceTargets({ site, ...best, minimumClearance: finding.error.minimum_clearance })
+    } else {
+      const clearance = Math.max(finding.error.minimum_clearance, this.params.originalSrj.defaultObstacleMargin ?? 0, this.params.originalSrj.minViaEdgeToPadEdgeClearance ?? 0)
+      const edge = site.diameter / 2 + clearance + PROPOSAL_MARGIN
+      targets = [{ x: pad!.x - pad!.width / 2 - edge, y: site.y }, { x: pad!.x + pad!.width / 2 + edge, y: site.y }, { x: site.x, y: pad!.y - pad!.height / 2 - edge }, { x: site.x, y: pad!.y + pad!.height / 2 + edge }]
+        .filter((target) => isCopperPointWithinRadius(site, target, 0.25))
+        .sort((a, b) => Math.hypot(a.x - site.x, a.y - site.y) - Math.hypot(b.x - site.x, b.y - site.y))
+    }
     for (const target of targets) for (const offset of offsets) {
       const moves: RelativeWitnessMove[] = [{ kind: "via", occurrences: siteOccurrences.map((value) => ({ ...value, oldXY: { x: site.x, y: site.y }, newXY: target })) }]
       if (wire && offset) moves.push({ kind: "wire", occurrences: [wire.pointIndex, wire.pointIndex + 1].map((pointIndex) => {
