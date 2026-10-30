@@ -1,0 +1,41 @@
+name: Parallel congestion refinement probe
+on:
+  push:
+    branches: [codex/parallel-congestion-refinement]
+    paths: [.github/workflows/parallel-congestion-refinement.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [0.06, 0.075, 0.09, 0.125]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Measure full-budget congestion tradeoffs
+        env:
+          DISTANCE_COST: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts")
+          s=p.read_text()
+          assert s.count("DISTANCE_TO_COST: 0.05,")==2
+          p.write_text(s.replace("DISTANCE_TO_COST: 0.05,", "DISTANCE_TO_COST: "+os.environ["DISTANCE_COST"]+","))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: congestion-probe-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
