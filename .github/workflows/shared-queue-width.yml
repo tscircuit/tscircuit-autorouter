@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        warmups: [8, 16]
+        warmups: [4, 8, 16]
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 25
     steps:
@@ -39,3 +39,4 @@ jobs:
           path: |
             benchmark-result.json
             benchmark-result.txt
+# Scope child priority maps to the claimed node.
