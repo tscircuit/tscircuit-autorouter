@@ -4,6 +4,7 @@ import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { TinyHypergraphSpatialWarmStartSolver } from "./TinyHypergraphSpatialWarmStartSolver"
 import { partitionTinyHypergraph } from "./partitionTinyHypergraph"
 import { mergeSpatialWarmStart } from "./mergeSpatialWarmStart"
+import { WarmStartedPreparedPortPointRoutingSolver } from "./WarmStartedPreparedPortPointRoutingSolver"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -925,6 +926,7 @@ export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGr
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
+    useMutableWarmStart = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -944,7 +946,9 @@ export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGr
         )
       }
       solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? PreparedPortPointRoutingSolver
+        ? useMutableWarmStart
+          ? WarmStartedPreparedPortPointRoutingSolver
+          : PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1570,6 +1574,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             }
             this.tinyPipelineSolver = new TinyHyperGraphSectionPipelineWithTerminalNetIds(
               { ...input, serializedHyperGraph: warmGraph },
+              true,
               true,
               true,
             )
