@@ -1,5 +1,8 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
+import {
+  Pipeline9HighDensityBatchSolver,
+  type Pipeline9HighDensityNodeOutput,
+} from "./Pipeline9HighDensityBatchSolver"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -515,7 +518,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
       const sharedNodeCursor = new Int32Array(new SharedArrayBuffer(4))
       const workerCount = Math.min(4, nodes.length)
-      const outcomes = await Promise.all(Array.from({ length: workerCount }, () =>
+      const settled = await Promise.allSettled(Array.from({ length: workerCount }, () =>
         runtime.executeAsync(Pipeline9HighDensityBatchSolver, {
           ...params,
           nodePortPoints: plannedNodes.map(({ node }) => node),
@@ -525,8 +528,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           sharedNodeCursor,
         }),
       ))
-      const pending = new Array(nodes.length)
-      for (const results of outcomes) {
+      const pending = new Array<Pipeline9HighDensityNodeOutput | undefined>(nodes.length).fill(undefined)
+      for (const outcome of settled) {
+        if (outcome.status === "rejected") throw outcome.reason
+        const results = outcome.value
         for (const result of results) {
           const sourceIndex = result.sourceNodeIndex
           if (sourceIndex === undefined || !plannedNodes[sourceIndex])
@@ -534,23 +539,25 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           const index = plannedNodes[sourceIndex]!.index
           if (pending[index])
             throw new Error("High-density workers returned a duplicate node")
-          pending[index] = { type: "result" as const, result }
+          pending[index] = result
           for (const [key, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
             this.benchmarkDiagnosticCounters[key] =
               (this.benchmarkDiagnosticCounters[key] ?? 0) + value
           }
         }
       }
-      if (pending.some((outcome) => outcome === undefined) || outcomes.reduce((count, results) => count + results.length, 0) !== nodes.length)
+      if (pending.some((outcome) => outcome === undefined))
         throw new Error("High-density workers did not complete every node")
-      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched = workerCount
-      this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted = workerCount
-      this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched = nodes.length
-      this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted = nodes.length
-      for (const promise of pending) {
-        const outcome = await promise
-        if (outcome.type === "error") throw outcome.error
-        const result = outcome.result
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched =
+        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ?? 0) + workerCount
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted =
+        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted ?? 0) + workerCount
+      this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched =
+        (this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched ?? 0) + nodes.length
+      this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted =
+        (this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted ?? 0) + nodes.length
+      for (const result of pending) {
+        if (!result) throw new Error("High-density node result is missing")
         const logicalIterations = result.iterations - (result.solved ? 1 : 0)
         if (
           this.iterations + logicalIterations >
