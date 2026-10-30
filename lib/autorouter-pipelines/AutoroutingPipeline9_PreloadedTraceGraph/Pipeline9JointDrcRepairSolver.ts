@@ -1,3 +1,5 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { ParallelDrcChecksSession } from "./ParallelDrcChecksSession"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -660,6 +662,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly syntheticConnectionNames: ReadonlySet<string>
   exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   traceContactRepairSolver?: TraceContactRepairSolver
+  private parallelDrc?: ParallelDrcChecksSession
+
   private readonly traceContactGuard: TraceContactGuard
   private readonly traceContactInputHdRoutes: HighDensityRoute[]
   private exactRepairParams?: ConstructorParameters<
@@ -852,6 +856,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
     const baselineDrc = evaluateRelaxedDrc({
+      drcExecutor: this.parallelDrc?.evaluate,
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -874,6 +879,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
     const currentDrcResult = evaluateRelaxedDrc({
+      drcExecutor: this.parallelDrc?.evaluate,
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -1370,6 +1376,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
+      drcExecutor: this.parallelDrc?.evaluate,
         includeBoardClearance: true,
         connectivityMaps,
         inputSrj: params.originalSrj,
@@ -1648,6 +1655,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.activeSubSolver =
       this.pipelineDef[this.currentPipelineStepIndex]!.createSolver()
     this.MAX_ITERATIONS = this.activeSubSolver.MAX_ITERATIONS + 1
+  }
+
+  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    const canParallelize = runtime &&
+      (runtime as SolverRuntimeExecutor & { persistentWorkerCount?: number }).persistentWorkerCount === 4
+    try {
+      if (canParallelize) {
+        this.parallelDrc = new ParallelDrcChecksSession()
+        await this.parallelDrc.enable(runtime)
+      }
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
+    } finally {
+      await this.parallelDrc?.close()
+      this.parallelDrc = undefined
+    }
   }
 
   override getSolverName(): string {
