@@ -36,3 +36,5 @@ jobs:
           path: |
             benchmark-result.json
             benchmark-result.txt
+
+# Validate owned serialization buffers.
