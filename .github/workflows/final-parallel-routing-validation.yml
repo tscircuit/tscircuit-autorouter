@@ -24,3 +24,4 @@ jobs:
       - run: bun run build
 # Check drained workers and preserved preloaded warm-up.
 # Validate per-node priority maps.
+# Validate advertised runtime capacity and terminal solve behavior.
