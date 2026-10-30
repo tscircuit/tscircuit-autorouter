@@ -1,3 +1,5 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { ParallelAutoroutingDrcEngine } from "./ParallelAutoroutingDrcEngine"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -660,6 +662,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly syntheticConnectionNames: ReadonlySet<string>
   exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   traceContactRepairSolver?: TraceContactRepairSolver
+  private parallelDrcEngine?: ParallelAutoroutingDrcEngine
+
   private readonly traceContactGuard: TraceContactGuard
   private readonly traceContactInputHdRoutes: HighDensityRoute[]
   private exactRepairParams?: ConstructorParameters<
@@ -1173,7 +1177,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const autoroutingDrcEngine = new AutoroutingDrcEngine(
+    const autoroutingDrcEngine = new ParallelAutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
         obstacles: params.originalSrj.obstacles,
@@ -1194,6 +1198,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ) + Math.max(traceClearance, viaClearance),
       },
     )
+    this.parallelDrcEngine = autoroutingDrcEngine
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
@@ -1648,6 +1653,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.activeSubSolver =
       this.pipelineDef[this.currentPipelineStepIndex]!.createSolver()
     this.MAX_ITERATIONS = this.activeSubSolver.MAX_ITERATIONS + 1
+  }
+
+  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    const canParallelize = runtime &&
+      (runtime as SolverRuntimeExecutor & { persistentWorkerCount?: number }).persistentWorkerCount === 4
+    try {
+      if (canParallelize && this.parallelDrcEngine) await this.parallelDrcEngine.enable(runtime)
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
+    } finally {
+      await this.parallelDrcEngine?.close()
+    }
   }
 
   override getSolverName(): string {
