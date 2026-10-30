@@ -1,0 +1,47 @@
+{
+  "originalMstSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "originalMstTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "excludedStableSourceSha": "087075c2dbb9a96e1d1a1a5a2eb43b5f8b2326d2",
+  "files": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "bytes": 45731,
+      "sha256": "4fb8a9900c90ffa7ea048cdcad67c0e6fddc6386fbe64b2e188181442164e068"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/restoreCoincidentNativeViaLandings.ts",
+      "bytes": 1076,
+      "sha256": "ec96381fae0dce9b43e9de63e435f6e7a46284c6a5be368f75d6dddf102549b3"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 9138,
+      "sha256": "8714a8358f1cb3dda4cf1a6d7069606c68ea23f7abccca742355e3a9bdf6e28e"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "bytes": 8659,
+      "sha256": "8dfec6e3334b4d062fa2fd9f0cbbdca7554b576213fc0a4f6f22045e10c3053a"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey.ts",
+      "bytes": 675,
+      "sha256": "1c1f84d0a5585fef866b65a5aae88b40177d9d199b09f4e6e944542ba121dafd"
+    },
+    {
+      "path": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6945,
+      "sha256": "6eb427591c534f5c25538f731a605ade1c92da2594155f4b66955b322f43eae3"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "bytes": 17521,
+      "sha256": "1c76c79b3048785f17eaeb665cc82df0ac0e9c231dc7ae7b40c09cc756f64925"
+    },
+    {
+      "path": "lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "bytes": 12117,
+      "sha256": "29bca62693df32f2a66e7cafef1005cffcdcac79a41a06337abc37cf16d8e4b0"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_NEW_RETAINED18_RELATIVE_V4_LOCAL_REPAIR_PREREQUISITE",
+  "case": "srj18:11",
+  "originalMstSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "excludedStableSourceSha": "087075c2dbb9a96e1d1a1a5a2eb43b5f8b2326d2",
+  "rawQualificationSha256": "abe194aa21d0454b9da2b763e0a85c8e7cb8d77b7ccc10a1fe0fbb653aa7dc9a",
+  "independentReviewSha256": "a0cde55d85a718e8c4b94f0bf0926fa1ec92dde5e2475f26dbd11ed5bdb18d18",
+  "relativeV4SourceSha": "f5d60ecabaf3850758f392f26c86dc450b986fc6",
+  "relativeV4SourceTree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "relativeImplementationHashes": {
+    "targetClearance": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155",
+    "detailGetter": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf",
+    "preservation": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e",
+    "stage": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "fullGlobalCertificateStatus": "UNKNOWN",
+  "newFull84Ready": true,
+  "priorBaselineOrTimingReuse": false
+}

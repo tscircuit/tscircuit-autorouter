@@ -1,0 +1,815 @@
+{
+  "status": "PASS_AUTHENTICATED_ACTUAL_V4_PRODUCTION_STAGE_EXACT_TARGET_AND_UNTARGETED_PRESERVATION_WITH_INDEPENDENT_BLACKSMITH_PROOFS",
+  "runId": "40989069179",
+  "jobId": 123846826010,
+  "controllerSha": "3d9af6c8e416665bdc38371de6f2e5214c13795e",
+  "controllerTree": "a532f466843f2ba6f4dc2097064d845546e71435",
+  "manifestSha256": "491332199a8ea374b61f49bf5b8fde67dbf1dbd678610820df705910abd8071d",
+  "sourceSha": "f5d60ecabaf3850758f392f26c86dc450b986fc6",
+  "sourceTree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "sourceBaseSha": "78c9f2fd45bdb53953d4d9bd61100a8f5f52b1f9",
+  "sourceFileHashes": {
+    "targetClearance": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155",
+    "detailGetter": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf",
+    "preservation": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e",
+    "stage": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67",
+    "independentReviewSha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3",
+    "publicationReceiptSha256": "7004701447f832bc8e3ba2d00d9448870934ced03385f68bf399afcc8602f399"
+  },
+  "controllerQaSha256": "440bf7c91c3c97ae1cae4a56b2f0e50b8baa46367cd6da52c80eb268c72282e6",
+  "controllerPeerSha256": "ac969fe1a06c124d064f3f22d2e180f407420cda051a5339258294aa50fc2856",
+  "qualifierSha256": "6c8643570e650bb1da16884901f07f9dd84a9d991fcf58a8ebbea592d6d330d9",
+  "reusedPureJsonHelpers": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/qualify-witness-relative-v2-srj18-stage-trial-v1.py",
+      "sha256": "8093e90ca750d3a8926094816738a85922302da00e09964f0a76a88c7f65cb5c"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/qualify-relative-v2-main18-component-diagnostic-v1.py",
+      "sha256": "649dc9e4b109af89daaef11d470f3aa0ac012813b01d997e984d3eb54fce495c"
+    }
+  ],
+  "payloadPath": "/tmp/witness-relative-v4-main18-trial-40989069179-payload.json",
+  "payloadSha256": "d4ca4d20b329657d4954850c8f27a9dc24d28ea704098b762a46bbf8ee30fcfd",
+  "payloadBytes": 13106772,
+  "authenticatedLogPath": "/tmp/witness-relative-v4-main18-trial-123846826010.log",
+  "authenticatedLogSha256": "b3997f42c5e2564c576010bc36dba1ec5149a17e62bc32e00c450f68c72f975c",
+  "capturePath": "/tmp/witness-relative-v4-main18-trial-123846826010.capture.json",
+  "captureSha256": "7411febb4ab2c6e80a3a5c40ae218113db06e07f3a1dac08aa193f60de2e0309",
+  "authenticatedApiMetadata": {
+    "metadata": {
+      "path": "/tmp/run-40989069179-metadata-final-wrapper.json",
+      "sha256": "26db790ce51ee8a7399a56d944a1695eaae5052b53df4a483b929273e4b6ebbc"
+    },
+    "jobs": {
+      "path": "/tmp/run-40989069179-jobs-final-wrapper.json",
+      "sha256": "8bd078548f58f30e36a6719d1413b21381974713244d7278fe28ec4afd445a4e"
+    },
+    "artifacts": {
+      "path": "/tmp/run-40989069179-artifacts-final-wrapper.json",
+      "sha256": "93c825cc794d2aff599d72674c39634954ef1b9abdced69fcca1b2e0431b7562"
+    }
+  },
+  "orderedFrames": 152,
+  "outputArtifact": {
+    "id": 12948845471,
+    "name": "witness-relative-v4-main18-production-stage-only-srj18-11",
+    "size_in_bytes": 4231692,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12948845471",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12948845471/zip",
+    "expired": false,
+    "created_at": "2026-10-30T02:01:14Z",
+    "expires_at": "2026-11-29T02:01:12Z",
+    "updated_at": "2026-10-30T02:01:14Z",
+    "digest": "sha256:c8d2e1b8b9d4682b61d5b6d4b1c313eba3bd8b236dc183b382eb15fced6293db",
+    "workflow_run": {
+      "id": 40989069179,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/witness-relative-v4-main18-trial-20261030",
+      "head_sha": "3d9af6c8e416665bdc38371de6f2e5214c13795e"
+    }
+  },
+  "outputArtifactBytesLocallyDownloaded": false,
+  "outputArtifactTransportScope": "Complete source stage/certificate/detail/contact/literal result recovered through authenticated job log. Artifact API metadata bound; no local output ZIP download claimed.",
+  "originalInputZipSha256": "f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+  "exactInputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "inputRoutedSourceTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "actualProductionStageClass": "Pipeline9RelativeWitnessRepairSolver",
+  "actualProductionStageSolveCalls": 1,
+  "actualProductionStageIterations": 2,
+  "actualProductionStageAttemptedCandidates": 1,
+  "actualProductionStageStatus": "LOCAL_REPAIRED",
+  "acceptanceMode": "EXACT_UNTARGETED_FINDINGS",
+  "before": {
+    "summary": {
+      "status": "UNKNOWN",
+      "demandsChecked": 139,
+      "reasonCount": 66,
+      "referenceErrorCount": 0,
+      "srjObstacleViolationCount": 6,
+      "viaPadPolicyViolationCount": 1,
+      "viaInPadViolationCount": 0,
+      "foreignViaPadFindings": 0,
+      "foreignViaTraceFindings": 1,
+      "ownershipCoverageStatus": "COMPLETE"
+    },
+    "fullCertificateSha256": "e7bbb4acf7c5d7ca21fe86c4937319cc6f9bc5768af27e38a0be852f80e0c2a1",
+    "publishedCounts": {
+      "viaPad": 0,
+      "padTrace": 0,
+      "viaTrace": 1,
+      "traceOverlap": 0,
+      "differentNetViaSpacing": 0,
+      "sameNetViaSpacing": 0,
+      "padPad": 0
+    }
+  },
+  "after": {
+    "summary": {
+      "status": "UNKNOWN",
+      "demandsChecked": 139,
+      "reasonCount": 66,
+      "referenceErrorCount": 0,
+      "srjObstacleViolationCount": 6,
+      "viaPadPolicyViolationCount": 1,
+      "viaInPadViolationCount": 0,
+      "foreignViaPadFindings": 0,
+      "foreignViaTraceFindings": 0,
+      "ownershipCoverageStatus": "COMPLETE"
+    },
+    "fullCertificateSha256": "0b6b80160da17b3ea8e2f40e7b129e38d16613fcd80eed26608be40c578e4704",
+    "publishedCounts": {
+      "viaPad": 0,
+      "padTrace": 0,
+      "viaTrace": 0,
+      "traceOverlap": 0,
+      "differentNetViaSpacing": 0,
+      "sameNetViaSpacing": 0,
+      "padPad": 0
+    }
+  },
+  "geometryFindingsBefore": 8,
+  "geometryFindingsAfter": 7,
+  "measuredMove": {
+    "kind": "via",
+    "occurrences": [
+      {
+        "traceIndex": 48,
+        "pointIndex": 4
+      },
+      {
+        "traceIndex": 48,
+        "pointIndex": 5
+      },
+      {
+        "traceIndex": 48,
+        "pointIndex": 6
+      }
+    ],
+    "oldXY": {
+      "x": 14.374,
+      "y": -20.289
+    },
+    "newXY": {
+      "x": 14.408121668779659,
+      "y": -20.269122903474052
+    },
+    "movementMmApprox": 0.039489077560897756,
+    "hardMaximumMm": 0.25,
+    "canonicalAliases": [
+      "via_45"
+    ]
+  },
+  "rawPointDifferences": [
+    {
+      "traceIndex": 48,
+      "pointIndex": 4,
+      "kind": "via",
+      "oldXY": {
+        "x": 14.374,
+        "y": -20.289
+      },
+      "newXY": {
+        "x": 14.408121668779659,
+        "y": -20.269122903474052
+      }
+    },
+    {
+      "traceIndex": 48,
+      "pointIndex": 5,
+      "kind": "via",
+      "oldXY": {
+        "x": 14.374,
+        "y": -20.289
+      },
+      "newXY": {
+        "x": 14.408121668779659,
+        "y": -20.269122903474052
+      }
+    },
+    {
+      "traceIndex": 48,
+      "pointIndex": 6,
+      "kind": "via",
+      "oldXY": {
+        "x": 14.374,
+        "y": -20.289
+      },
+      "newXY": {
+        "x": 14.408121668779659,
+        "y": -20.269122903474052
+      }
+    }
+  ],
+  "outputRawSha256": "f4dedc2a041e285813bf4c05a3a417a2f97eeedbbeb14ded6de15feda9885265",
+  "rawOutputHashIndependentlyReconstructed": true,
+  "protectedCanonicalMetadataMaterialLayerWidthCountAndUnselectedCoordinatesCompared": true,
+  "original2109CertificateBodyByteExactAfterTwoVisibilityPrefixesRemoved": true,
+  "completeOriginalInstrumentedFullReturnsEqual": true,
+  "stageBeforeAndAfterFullReturnsEqualIndependentOldBodyReturns": true,
+  "sourceGeometryDetailsMatchIndependentOldBodyRecords": true,
+  "sourceRelativeProof": {
+    "status": "PASS",
+    "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+    "bundleCount": 1,
+    "boundaryCount": 2,
+    "primitivePairs": 9718
+  },
+  "sourceFindingPreservation": {
+    "status": "PASS",
+    "reason": "One strict target removed; every other complete geometry finding and global certificate scope is exact unchanged"
+  },
+  "independentBlacksmithRelativeReplay": {
+    "status": "PASS_INDEPENDENT_RELATIVE_SAME_OWNER_ORIGINAL_TERMINAL_PARTITION_REPLAY",
+    "productionStageSolveCalls": 1,
+    "proposalOrRoutingCodeReimplemented": false,
+    "arithmetic": "Exact rational binary64 source numbers; convex whole-motion stroke envelopes; strict axis or squared-distance separation.",
+    "actualMovedRawPointCount": 3,
+    "actualMoves": [
+      {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4,
+            "oldXY": {
+              "x": 14.374,
+              "y": -20.289
+            },
+            "newXY": {
+              "x": 14.408121668779659,
+              "y": -20.269122903474052
+            }
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5,
+            "oldXY": {
+              "x": 14.374,
+              "y": -20.289
+            },
+            "newXY": {
+              "x": 14.408121668779659,
+              "y": -20.269122903474052
+            }
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6,
+            "oldXY": {
+              "x": 14.374,
+              "y": -20.289
+            },
+            "newXY": {
+              "x": 14.408121668779659,
+              "y": -20.269122903474052
+            }
+          }
+        ]
+      }
+    ],
+    "viaMaximumMove": 0.25,
+    "wireMaximumMove": 0.02,
+    "fullRawAndCanonicalProtectedMasksVerified": true,
+    "coupledViaAliasesVerified": true,
+    "mutableBundles": [
+      {
+        "id": "via",
+        "owner": "intent-owner:[\"123:source_net_49\",\"40:source_trace_49\"]",
+        "rawSegments": [
+          [
+            48,
+            1
+          ],
+          [
+            48,
+            2
+          ],
+          [
+            48,
+            3
+          ],
+          [
+            48,
+            6
+          ]
+        ],
+        "viaAliases": [
+          "via_45"
+        ],
+        "fixedBoundaries": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 1,
+            "direction": -1,
+            "layer": "top",
+            "radius": "3602879701896397/72057594037927936",
+            "adjacentSegment": [
+              48,
+              1
+            ]
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 7,
+            "direction": 1,
+            "layer": "inner1",
+            "radius": "3602879701896397/72057594037927936",
+            "adjacentSegment": [
+              48,
+              6
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "kind": "raw-segment",
+            "id": [
+              48,
+              1,
+              2
+            ],
+            "layers": [
+              "top"
+            ]
+          },
+          {
+            "kind": "raw-segment",
+            "id": [
+              48,
+              2,
+              3
+            ],
+            "layers": [
+              "top"
+            ]
+          },
+          {
+            "kind": "raw-segment",
+            "id": [
+              48,
+              3,
+              4
+            ],
+            "layers": [
+              "top"
+            ]
+          },
+          {
+            "kind": "raw-segment",
+            "id": [
+              48,
+              6,
+              7
+            ],
+            "layers": [
+              "inner1"
+            ]
+          },
+          {
+            "kind": "generated-via",
+            "id": "via_45",
+            "layers": [
+              "top",
+              "inner1",
+              "inner2",
+              "bottom"
+            ]
+          }
+        ]
+      }
+    ],
+    "fixedPrimitiveCount": 3125,
+    "fixedKinds": {
+      "generated-via": 174,
+      "original-obstacle-outer-envelope": 434,
+      "original-required-terminal": 578,
+      "raw-segment": 1939
+    },
+    "originalPTHOuterEnvelopeCount": 2,
+    "originalRequiredTerminalCount": 578,
+    "sharedLayerFixedPairs": 9763,
+    "strictAxisSeparatedPairs": 9759,
+    "exactSeparatedBroadPhaseOverlaps": [
+      {
+        "bundle": "via",
+        "mutable": {
+          "kind": "raw-segment",
+          "id": [
+            48,
+            6,
+            7
+          ],
+          "layers": [
+            "inner1"
+          ]
+        },
+        "fixed": {
+          "kind": "generated-via",
+          "id": "via_39",
+          "layers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        "witness": {
+          "method": "EXACT_SQUARED_DISTANCE_SLACK",
+          "slack": "6204768968263284572212228543035061371794085515011600643553771/62616422241297908099699000874353978106481725868233438923849728"
+        }
+      },
+      {
+        "bundle": "via",
+        "mutable": {
+          "kind": "generated-via",
+          "id": "via_45",
+          "layers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        "fixed": {
+          "kind": "raw-segment",
+          "id": [
+            41,
+            3,
+            4
+          ],
+          "layers": [
+            "bottom"
+          ],
+          "traceIndex": 41,
+          "owner": "intent-owner:[\"128:source_net_54\",\"45:source_trace_54\"]"
+        },
+        "witness": {
+          "method": "EXACT_SQUARED_DISTANCE_SLACK",
+          "slack": "766317775490390242961392050350042733011820199112106997272775/26994461966301332119395114596987186558730440368337190844891136"
+        }
+      }
+    ],
+    "admittedFixedInterfaces": [
+      {
+        "kind": "IMMEDIATE_UNCUT_SAME_OWNER_BOUNDARY_TAIL",
+        "bundle": "via",
+        "mutable": {
+          "kind": "raw-segment",
+          "id": [
+            48,
+            1,
+            2
+          ],
+          "layers": [
+            "top"
+          ]
+        },
+        "fixed": {
+          "kind": "raw-segment",
+          "id": [
+            48,
+            0,
+            1
+          ],
+          "layers": [
+            "top"
+          ],
+          "traceIndex": 48,
+          "owner": "intent-owner:[\"123:source_net_49\",\"40:source_trace_49\"]"
+        },
+        "boundaryPoint": 1
+      },
+      {
+        "kind": "IMMEDIATE_UNCUT_SAME_OWNER_BOUNDARY_TAIL",
+        "bundle": "via",
+        "mutable": {
+          "kind": "raw-segment",
+          "id": [
+            48,
+            6,
+            7
+          ],
+          "layers": [
+            "inner1"
+          ]
+        },
+        "fixed": {
+          "kind": "raw-segment",
+          "id": [
+            48,
+            7,
+            8
+          ],
+          "layers": [
+            "inner1"
+          ],
+          "traceIndex": 48,
+          "owner": "intent-owner:[\"123:source_net_49\",\"40:source_trace_49\"]"
+        },
+        "boundaryPoint": 7
+      }
+    ],
+    "uncutImmediateFixedTailCapsules": [
+      {
+        "id": [
+          48,
+          0,
+          1
+        ],
+        "bundle": "via",
+        "fixedBoundaryPoint": 1,
+        "selectedViaSweptOuterDiskSeparated": true
+      },
+      {
+        "id": [
+          48,
+          7,
+          8
+        ],
+        "bundle": "via",
+        "fixedBoundaryPoint": 7,
+        "selectedViaSweptOuterDiskSeparated": true
+      }
+    ],
+    "crossBundleSeparationPairs": [],
+    "annulus": {
+      "outerRadiusExact": "5404319552844595/36028797018963968",
+      "innerDrillRadiusExact": "5404319552844595/72057594037927936",
+      "incidentLayers": [
+        "inner1",
+        "top"
+      ],
+      "drillSubtractionAccountedForAllAbsorbedStrokes": true,
+      "proof": "For any point of an incident-layer connected stroke K outside drill D, a path in K toward its center first meets annular land before D. All retained pieces attach to land; the generated plated barrel joins incident lands. Only fixed exterior boundary disks attach to unchanged components."
+    },
+    "relativePartitionStatement": "For every same fixed unknown material completion within authoritative original outer envelopes, the replacement bundles have the same anchored fixed-interface relation; same-owner original-terminal partitions are preserved. Fixed unknown original PTH barrels/drills are not inferred. This does not certify the existing global partition.",
+    "sameOwnerOriginalTerminalPartitionsPreservedConditionally": true,
+    "fullCertificateBeforeStatus": "UNKNOWN",
+    "fullCertificateAfterStatus": "UNKNOWN",
+    "accepted": false,
+    "fullBoardRecovery": false,
+    "qualityOrSpeedCredit": false,
+    "localDatasetCheckerExecutions": 0,
+    "routingExecutions": 0
+  },
+  "independentUntargetedPreservation": {
+    "status": "PASS_EXACT_UNTARGETED_FINDING_PRESERVATION",
+    "completeUntargetedCollections": [
+      {
+        "predicate": "boardReasons",
+        "records": 0,
+        "multisetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "predicate": "nativeErrors",
+        "records": 0,
+        "multisetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "predicate": "nativeErrorsWithCenters",
+        "records": 0,
+        "multisetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "predicate": "nativeLocationAwareErrors",
+        "records": 0,
+        "multisetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "predicate": "srjObstacles",
+        "records": 6,
+        "multisetSha256": "861cd289ad24bc09ab3c04532f109ee8d9985c28974f69c2e6a33743d58eecf4"
+      },
+      {
+        "predicate": "viaInPad",
+        "records": 0,
+        "multisetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "predicate": "viaPadPolicy",
+        "records": 1,
+        "multisetSha256": "5847b7c56e12046270765d25878001376da8663e7f3ee3d765fcbea6ab3236b8"
+      }
+    ],
+    "anonymousUnknownHardObstacleRecordsPreserved": 2,
+    "strictViaTraceBefore": 1,
+    "strictViaTraceAfter": 0,
+    "beforeGeometryFindingCount": 8,
+    "afterGeometryFindingCount": 7,
+    "globalCertificateStatus": "UNKNOWN",
+    "globalDemandCount": 139,
+    "globalReasonCount": 66,
+    "sourceDetailsMatchIndependentOldBodyRecords": true,
+    "relativeContactAndLiteralTargetClearanceNeedCompanionReplay": true,
+    "globalAcceptance": false,
+    "qualityOrSpeedCredit": false
+  },
+  "independentLiteralTargetClearance": {
+    "status": "PASS_LITERAL_TARGET_CLEARANCE_ALL_MANUFACTURED_LAYERS",
+    "literalMinimumClearanceMm": 0.1,
+    "arithmetic": "Exact rational source binary64 values; point-to-finite-segment projection; maximum endpoint wire width; full manufactured via outer radius. No native checker tolerance used.",
+    "targetViaId": "via_45",
+    "foreignTraceId": "source_trace_54__source_net_54_mst0_0",
+    "targetOriginalOwner": "intent-owner:[\"123:source_net_49\",\"40:source_trace_49\"]",
+    "foreignOriginalOwner": "intent-owner:[\"128:source_net_54\",\"45:source_trace_54\"]",
+    "manufacturedLayers": [
+      "top",
+      "inner1",
+      "inner2",
+      "bottom"
+    ],
+    "segmentsChecked": 7,
+    "segmentWitnesses": [
+      {
+        "traceIndex": 41,
+        "pointIndex": 0,
+        "layer": "bottom",
+        "distanceSquaredExact": {
+          "numerator": "91245670346565962373639789205",
+          "denominator": "79228162514264337593543950336"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "5512569534564412414904201271157719",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 1,
+        "layer": "bottom",
+        "distanceSquaredExact": {
+          "numerator": "38642080012846637508485245633",
+          "denominator": "316912650057057350374175801344"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "165805121662344813724366310269911",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 2,
+        "layer": "bottom",
+        "distanceSquaredExact": {
+          "numerator": "29029518282124146207219400381",
+          "denominator": "316912650057057350374175801344"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "8312910266187516244426701661143",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 3,
+        "layer": "bottom",
+        "distanceSquaredExact": {
+          "numerator": "37318805673353108583144677449676006650844247858289224025",
+          "denominator": "411902800999471010122606118728442177715003057378191998976"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "16223671641749388404599449079396532216089186636167247974599",
+          "denominator": "26994461966301332119395114596987186558730440368337190844891136"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 4,
+        "layer": "bottom",
+        "distanceSquaredExact": {
+          "numerator": "3987638973506968469458161545",
+          "denominator": "19807040628566084398385987584"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "578028913802876247242984345871319",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 7,
+        "layer": "top",
+        "distanceSquaredExact": {
+          "numerator": "3987638973506968469458161545",
+          "denominator": "19807040628566084398385987584"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "578028913802876247242984345871319",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      },
+      {
+        "traceIndex": 41,
+        "pointIndex": 8,
+        "layer": "top",
+        "distanceSquaredExact": {
+          "numerator": "82247152232009097361981012261",
+          "denominator": "316912650057057350374175801344"
+        },
+        "requiredCenterDistanceExact": {
+          "numerator": "21617278211378381",
+          "denominator": "72057594037927936"
+        },
+        "squaredMarginSlackExact": {
+          "numerator": "880230624901102555964040950703063",
+          "denominator": "5192296858534827628530496329220096"
+        },
+        "literalMinimumClearancePassed": true
+      }
+    ],
+    "sourcePredicatesChanged": false,
+    "sourceContactProofOrGlobalPassInferred": false,
+    "accepted": false,
+    "qualityOrSpeedCredit": false
+  },
+  "literalRationalWitnessArithmeticVerifiedLocallyWithoutGeometryReplay": true,
+  "anonymousUnknownHardObstacleRecordsPreserved": 2,
+  "relativeSameOwnerOriginalTerminalPartitionsPreservedConditionally": true,
+  "fullGlobalCertificateStatus": "UNKNOWN",
+  "fullGlobalReasonCountBefore": 66,
+  "fullGlobalReasonCountAfter": 66,
+  "fullGlobalDemandCount": 139,
+  "fullGlobalReasonsAndDemandsExactlyUnchanged": true,
+  "absoluteExistingGlobalConnectivityCertified": false,
+  "actualV4ProductionStagePositiveGatePassed": true,
+  "nativeSourceCheckerExecutionsLocally": 0,
+  "actualStageExecutionsLocally": 0,
+  "actualRetainedContactOrLiteralGeometryReplayExecutionsLocally": 0,
+  "routingExecutions": 0,
+  "pipelineRoutingExecuted": false,
+  "accepted": false,
+  "fullBoardRecovery": false,
+  "qualityOrSpeedCredit": false,
+  "scope": "One exact original MAIN MST18 sample11 B retained V4 production-stage trial. The actual source stage solves once and changes only three coupled via/landing XY occurrences by .039489mm. The strict target is removed, all seven original-owner copper checks are zero, every unrelated full native/SRJ/policy/viaInPad/board finding and metric remains exact, and complete old-body before/after certificate returns match the source stage and transparent observations. Independent Blacksmith Fraction proofs establish conditional same-owner terminal partition preservation and literal0.1mm target clearance against all seven shared manufactured-layer foreign segments without native tolerance. Full certificate remains UNKNOWN139/66 with sixSRJ plus onepolicy defect preserved. This is the retained actual V4-stage gate only, not complete-board recovery, paired84 no-regression, generalization, pipeline rerouting or speed credit. Independent peer binding remains a separate prerequisite for promotion."
+}

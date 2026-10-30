@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "PUBLISHED_TWO_PARENT_ORIGINAL_MST_AND_INDEPENDENTLY_QUALIFIED_RELATIVE_V4_SOURCE_READY_FOR_FRESH_FULL84",
+  "atUtc": "2026-10-30T02:19:17.608517+00:00",
+  "branch": "codex/experiment-mst-relative-v4-20261030",
+  "remoteCommit": "2d4ab738b6c3d50bc5d3073d8523cabedef8ae54",
+  "localCommit": "cb6e176c7bb2a00605bd09c0b67629d1ec4e4dc3",
+  "tree": "1c8c555d2fccef02ef02d454efe6fbac9fb399bb",
+  "remoteParents": [
+    "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+    "f5d60ecabaf3850758f392f26c86dc450b986fc6"
+  ],
+  "localParents": [
+    "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+    "f102982aabd4fe78121412fa3cf399046908cc95"
+  ],
+  "remoteCommitTreeParentsAndBranchGetVerified": true,
+  "readyForFreshCombinedSemantic84Source": true,
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/QA-FINAL.json",
+    "sha256": "ef5801be5ed731cf656616d8bb361fb9af37cbab6f8399c3b5060cc6ba9ba4e5"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/INDEPENDENT-REVIEW-v1.json",
+    "sha256": "9d5854c4e602337c63deb29e88678b2bfa4ce9c2b81fd7fa52e5a91d1c3441ac"
+  },
+  "positiveActualV4RootBinding": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/V4-MAIN18-POSITIVE-ROOT-BINDING-v1.json",
+    "sha256": "dc0c9d81fe32c24c947ef05c072d2e7d4db36dba2b9c135a3b026d04cbcd9176"
+  },
+  "retainedActualV4Qualification": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-V4-MAIN18-TRIAL-ACTUAL-QUALIFICATION-v1.json",
+    "sha256": "abe194aa21d0454b9da2b763e0a85c8e7cb8d77b7ccc10a1fe0fbb653aa7dc9a"
+  },
+  "retainedActualV4IndependentReview": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-V4-MAIN18-TRIAL-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+    "sha256": "a0cde55d85a718e8c4b94f0bf0926fa1ec92dde5e2475f26dbd11ed5bdb18d18"
+  },
+  "originalMstPublication": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST-SOURCE-PUBLICATION-v1.json",
+    "sha256": "6e224943459c503c21a90c2c9509485cdb1d8d1130ddbb262f2934e9b9ece73d"
+  },
+  "relativeV4Publication": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-WITNESS-V4-SOURCE-PUBLICATION-v1.json",
+    "sha256": "7004701447f832bc8e3ba2d00d9448870934ced03385f68bf399afcc8602f399"
+  },
+  "rootExport": {
+    "path": "/tmp/bottleneck-mst-relative-v4-combined-source-export-root.json",
+    "sha256": "96226e25a7d27ac6be2e859c6a4d235d7ca882873bad0d11c272a9a418c773c7"
+  },
+  "sourceDeltaFromOriginalMstFiles": 76,
+  "all8OriginalMstNonPipelineProductionFilesExact": true,
+  "all10V4CoreFilesExact": true,
+  "onlyPipelineIntegrationConflictMechanicalImportsUnion": true,
+  "pipelineBodyExactPreviouslyReviewedCombinedIntegration": true,
+  "defaultOffFlags": [
+    "experimentLayerAwareMstIdentity",
+    "experimentRelativeWitnessRepair"
+  ],
+  "tests": 70,
+  "assertions": 1973,
+  "fullTypesWorkersEsmDtsPass": true,
+  "freshParentSourceCompiledControls": 71,
+  "independentFreshCombinedRuntimeControls": 57,
+  "actualCombinedFullPipelineAttempts": 0,
+  "retainedProofMeaning": "Actual published V4 stage on original MAIN-MST18 B copper improved exactly one strict target with exact untargeted records and independently proven literal target clearance/conditional contact preservation; not an actual combined whole-pipeline cohort result.",
+  "newFull42FreshBaselineAttemptsRequired": true,
+  "fullGlobalUnknownNeverPromoted": true,
+  "qualityGeneralNoRegressionOrSpeedClaim": false,
+  "noMergeCloseDefaultEnablement": true
+}

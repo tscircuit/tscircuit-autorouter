@@ -1,0 +1,2114 @@
+{
+  "schemaVersion": 1,
+  "status": "COMBINED_V4_LOCAL_SOURCE_QA_COMPLETE_AWAITING_PEER_AND_INDEPENDENT_POSITIVE_RETAINED18_V4_GATE",
+  "sourceWorktree": "/tmp/autorouter-mst-relative-v4-combined",
+  "localCommit": "cb6e176c7bb2a00605bd09c0b67629d1ec4e4dc3",
+  "tree": "1c8c555d2fccef02ef02d454efe6fbac9fb399bb",
+  "localMergeParents": [
+    "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+    "f102982aabd4fe78121412fa3cf399046908cc95"
+  ],
+  "commonBaseline": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "commonBaselineTree": "c79d9f76c9eff681a0c4665b341fd8af7d750e28",
+  "components": {
+    "originalMst": {
+      "localCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "remoteCommit": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+      "tree": "7a5f248d5772307119c7856f732849dd4e03f120",
+      "flag": "experimentLayerAwareMstIdentity",
+      "default": false,
+      "all8NonP9ProductionFilesExact": true
+    },
+    "relativeV4": {
+      "localCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "remoteCommit": null,
+      "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+      "flag": "experimentRelativeWitnessRepair",
+      "default": false,
+      "all10CoreProductionFilesExact": true
+    }
+  },
+  "integration": {
+    "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "mechanicalThreeWayMergeOnly": true,
+    "onlyConflictResolved": "Keep all three independent imports: layer-aware MST key plus relative and legacy witness stage classes",
+    "allOtherParentFilesExact": true,
+    "stableMst087ExplicitlyExcluded": true,
+    "newProductionAlgorithmChanges": 0,
+    "newTest": "tests/features/mst-relative-combined-whole-pipeline.test.ts"
+  },
+  "invariants": {
+    "independentDefaultOffFlags": true,
+    "legacyWitnessFlagUnchanged": true,
+    "allRelativeCertificatePredicatesAndProofBytesExactV4": true,
+    "allOriginalMstRequirementsAndNativeLandingAdaptersExactOriginalMst": true,
+    "fullCertificate2109RecoveredByOnlyTwoExportPrefixRemovals": true,
+    "noCheckerOrManufacturedViaContractChanges": true,
+    "noBudgetChanges": true,
+    "globalUnknownNeverPromotedToPass": true,
+    "localRepairSeparateFromBoardAcceptance": true
+  },
+  "validation": {
+    "bunVersion": "1.4.2",
+    "focusedTests": 70,
+    "assertions": 1973,
+    "newCompositionTests": 1,
+    "fullTypesExit": 0,
+    "workersEsmDtsBuildExit": 0,
+    "freshRuntimeControls": 71,
+    "freshWholeP9Controls": 44,
+    "freshRelativeParentSourceCompiledStageControls": 27,
+    "defaultAbsentFalseExactE703": true,
+    "mstOnlyExactOriginalMst": true,
+    "relativeOnlyExactRelativeV4": true,
+    "legacyOldOnlyExactParent": true,
+    "bothFlagsTrueSameXYMultilayerSmtFixture": {
+      "allOriginalLayerRequirementsCovered": true,
+      "explicitManufacturedOffPadLayerBridge": true,
+      "nativeDrcAndViaInPadFindings": 0,
+      "unmaterializedWireLayerJumps": 0,
+      "cleanOutputUnchangedByRelativeStage": true,
+      "fullCertificateBeforeAfter": "PASS",
+      "globalAccepted": false
+    },
+    "bothPositiveRelativeSyntheticClasses": {
+      "viaPadAndWireJoint": true,
+      "isolatedForeignViaTraceHiddenAndVisible": true,
+      "anonymousHardObstacleExactPreservation": true,
+      "literalTargetClearanceAndSwitchedClosestSegmentRejection": true,
+      "exactParentMovesOutputsStatsAndCertificates": true,
+      "fullStatusBeforeAfter": "UNKNOWN",
+      "relativeProof": "PASS",
+      "globalAccepted": false
+    },
+    "compiledAsyncWorkerDispatchExecuted": false,
+    "compiledIndexSha256": "c6c98e42b232bd88d2b7bfe6e1d7b437b82a4692d75392fb969316823c63dc04"
+  },
+  "unchangedColdObserverSchemas": {
+    "mstLedger9": "netToPointPairsSolver.layerAwareMstStats",
+    "relativeQualification10": "relativeWitnessRepairSolver.qualification",
+    "relativeStats": "relativeWitnessRepairSolver.stats",
+    "relativeProof5": "relativeWitnessRepairSolver.relativeProof"
+  },
+  "files": [
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "bytes": 67973,
+      "sha256": "081da492c0f8b39794b2e4b5fc7c5fb22d5ef1334da0f5c6a85944aefc302638"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "bytes": 45731,
+      "sha256": "4fb8a9900c90ffa7ea048cdcad67c0e6fddc6386fbe64b2e188181442164e068"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RelativeWitnessRepairSolver.ts",
+      "bytes": 21539,
+      "sha256": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9WitnessViaPadRepairSolver.ts",
+      "bytes": 17557,
+      "sha256": "4cff98d94bea9ef15d41ae150b285fa89887ac9f8dc6420f56af18b108ddc852"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts",
+      "bytes": 27442,
+      "sha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9RelativeViaTraceClearance.ts",
+      "bytes": 2287,
+      "sha256": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9RelativeGeometryDetails.ts",
+      "bytes": 6593,
+      "sha256": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+      "bytes": 30677,
+      "sha256": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getRelativeViaTraceTargets.ts",
+      "bytes": 1963,
+      "sha256": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preservePipeline9RelativeFindings.ts",
+      "bytes": 8937,
+      "sha256": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/provePipeline9RelativeContacts.ts",
+      "bytes": 20647,
+      "sha256": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/relativeCopperSweepGeometry.ts",
+      "bytes": 5271,
+      "sha256": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/restoreCoincidentNativeViaLandings.ts",
+      "bytes": 1076,
+      "sha256": "ec96381fae0dce9b43e9de63e435f6e7a46284c6a5be368f75d6dddf102549b3"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 9138,
+      "sha256": "8714a8358f1cb3dda4cf1a6d7069606c68ea23f7abccca742355e3a9bdf6e28e"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "bytes": 8659,
+      "sha256": "8dfec6e3334b4d062fa2fd9f0cbbdca7554b576213fc0a4f6f22045e10c3053a"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey.ts",
+      "bytes": 675,
+      "sha256": "1c1f84d0a5585fef866b65a5aae88b40177d9d199b09f4e6e944542ba121dafd"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6945,
+      "sha256": "6eb427591c534f5c25538f731a605ade1c92da2594155f4b66955b322f43eae3"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "bytes": 17521,
+      "sha256": "1c76c79b3048785f17eaeb665cc82df0ac0e9c231dc7ae7b40c09cc756f64925"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "bytes": 12117,
+      "sha256": "29bca62693df32f2a66e7cafef1005cffcdcac79a41a06337abc37cf16d8e4b0"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-differential-coverage.test.ts",
+      "bytes": 1447,
+      "sha256": "efa5b3bef83d4f31f375fa590f695f7f51c8f98ca8da23f1c77ee10bcb2e4c30"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-explicit-preconnection.test.ts",
+      "bytes": 1668,
+      "sha256": "821ba7cd1e373e4c9c37eb59dcffbdd246596c7e8ca91589d7358eb459b68d2c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-identity.test.ts",
+      "bytes": 1430,
+      "sha256": "7f6f733aebd3e3286e93550c90f02a777585509019ed448a94c2dc508d437dc1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-key-compatibility.test.ts",
+      "bytes": 1356,
+      "sha256": "d488010fe61e1308088ce6255b1ee28775e43507f29ef639d1af4d356fdf41e0"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-native-via-landings.test.ts",
+      "bytes": 1534,
+      "sha256": "0c380551c20fbdc06b84365f8fabcc3193cf0d325ec4a6412aeaba0648d9b2a1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-point-pair-coverage.test.ts",
+      "bytes": 2201,
+      "sha256": "50e246d0f4ecd9275ed20cb87f93fd8bc97a0c487a699240bdaf1153716f53f3"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-terminal-snapping.test.ts",
+      "bytes": 1174,
+      "sha256": "3fda2c6da584da6f1f024b2737a5dc3500b3f00c57a3db96f8472f1fc5825ca9"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-whole-pipeline.test.ts",
+      "bytes": 2757,
+      "sha256": "40d58d8239ed2594958c2388d5ceccd96c7fbf8b2f1d3a8679a6a2930f4fe468"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/mst-relative-combined-whole-pipeline.test.ts",
+      "bytes": 3312,
+      "sha256": "ecf0b417723d6cc06dea82fc3e266d983caa905e1ef7ef68c34ce6e390a44887"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-anonymous-hard-forgeries.test.ts",
+      "bytes": 2407,
+      "sha256": "2ea271fe138d62ac93590455a81903167dbf1f3cf278e6cdbabcc3ce1bd03fe2"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-anonymous-hard-preservation.test.ts",
+      "bytes": 1966,
+      "sha256": "4da52cd54dadf5218fc89b5622363e62300dc72ca1da648d6a025d8d82cdcb0d"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-contact-partition.test.ts",
+      "bytes": 579,
+      "sha256": "5e709b264bb6dc32639f76ca36a16f38dbb9638474009ee5bea27a372841e637"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-detailed-predicate-binding.test.ts",
+      "bytes": 1745,
+      "sha256": "c46c23cb6d0dc7e32fd449e7794e3c241f62ba8309e7d9ecb53018deafbfd7af"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-drill-turnback-tail.test.ts",
+      "bytes": 563,
+      "sha256": "b420a266079b0f9ebdf5f16a3f7bc1a5838497097699b624ca1dc594d6bb7f0c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-geometry.test.ts",
+      "bytes": 1262,
+      "sha256": "809fc3f37be34c31c12fb5c4a11c8cc3f58570f033ebae1cb57ef1cb6390cd59"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-all-segments.test.ts",
+      "bytes": 1496,
+      "sha256": "8f8ef7484ffb5df27da98fb8e2a8f7c59e0ca1ae23c55ea34fcd16a7a3c861cf"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-deadband.test.ts",
+      "bytes": 1569,
+      "sha256": "9e0ad8c645f0d6d52a6501123355604f500dbd16d2ad8b108ec4680b13e47fa1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-stage-switch.test.ts",
+      "bytes": 1152,
+      "sha256": "370a3915824d7ba7007e8bb2188af79b4b8fed8db81f55677fcf98b1b49d2e3c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-existing-defects-contact-rejection.test.ts",
+      "bytes": 1425,
+      "sha256": "edf4b35f21cdbc3714fc41aecfeb277500ae76b70563f06ee2dcb6d3f583d4b2"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-existing-defects-repair.test.ts",
+      "bytes": 1882,
+      "sha256": "0167ab251b15c7368714153fb5e7c2525b91924ee67bfbdbdc62e4f241056f3d"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-global-scope.test.ts",
+      "bytes": 1998,
+      "sha256": "0d55448b54d9c3c4c135b694ac5aa0d41a878d84f08cacff74f1f769cd47fa94"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-identity-severity.test.ts",
+      "bytes": 1281,
+      "sha256": "2a25f652f2c25ff453be82680c74ba12c26b5d6c0a3ed8d0497ea65f873d1782"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-multiset.test.ts",
+      "bytes": 919,
+      "sha256": "b9a38b2c912699ec386cfb8cfff8809edad32e987d48fac24c515ae3669eaf37"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-unsupported-data.test.ts",
+      "bytes": 2008,
+      "sha256": "c8fa3a915f529caa5bcfcfd852b601b347e61ce4e357624bdee6c569b42b8777"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-flag-gating.test.ts",
+      "bytes": 1236,
+      "sha256": "d946838f4d7b592e8a3f133c48851189453b67ffabbc3de57cb8dac5648ee3ea"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-oval-admission.test.ts",
+      "bytes": 737,
+      "sha256": "592e81f70f6d4ebfcdb7112ea478cee9a9718dfbab96d39241d7d3426d3bc6b3"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-physical-overlap-unchanged.test.ts",
+      "bytes": 1153,
+      "sha256": "47044d5afb3c919c6dad3f11031978220faf0078aa27c598a955dcb129b448a1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-protected-mask.test.ts",
+      "bytes": 1996,
+      "sha256": "0450b40c4883acf50eb23db00c97f3bed110f4d73635f34269538858315f1fa2"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-rotated-oval-envelope.test.ts",
+      "bytes": 757,
+      "sha256": "d1d6d20476c5d767660648bfedf539e52a04a3877160a7b454a25982e76f0833"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-stage-exhaustion.test.ts",
+      "bytes": 1432,
+      "sha256": "e14235a54c2db05d813b939aef6c1ee09852b2b4c3d2f9bde57a070cb6348403"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-stage-joint-repair.test.ts",
+      "bytes": 1797,
+      "sha256": "0cf6342ee1e16fa034e75542794ef3bb199b6f05308a62a3e0c6d6e9773cead3"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unaccounted-contact.test.ts",
+      "bytes": 716,
+      "sha256": "94a527c1646b98545604972b737fe9a41febe3fc00d3b352dfda1b3fc422a1a0"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unexpected-fault.test.ts",
+      "bytes": 773,
+      "sha256": "29e217e2554f174c4ec1e00b37a8f031ee9b2c8746967a4617d7e1ef4adc767a"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unknown-original-hole.test.ts",
+      "bytes": 651,
+      "sha256": "2f484bc8e81234f5dd31ca8dc055e1b42fd56adce6499dad27cf6eb7a1ffdafa"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unsupported-noop.test.ts",
+      "bytes": 1031,
+      "sha256": "6cff779279dba976ecd56f3c6c99c87f44b32874e7691bed6fdea52554dc6b86"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-variable-interface-width.test.ts",
+      "bytes": 415,
+      "sha256": "4b1ca980d19b8435618801e4d31f106b373734f16c4803ea331248daaa27a820"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-endpoint-normal.test.ts",
+      "bytes": 795,
+      "sha256": "393f56bd2386b388603d21683183856970b4524431732139083d56bdc99fc984"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-foreign-owner.test.ts",
+      "bytes": 892,
+      "sha256": "daaa314a48b9e1caeb5df6a182a40a1d147f72c2d9d179dd2b4051495f3d6a41"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-native-visible.test.ts",
+      "bytes": 1120,
+      "sha256": "9a25d0b61898a2c2ee8a9059cbadfd8f9ba76ab2d0c5270c681d3b8010db3a85"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-repair.test.ts",
+      "bytes": 1742,
+      "sha256": "1f3b8f40b2ddac358b30196815edcded09941cc7431f439118604855b09d1fbc"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-strongest-segment.test.ts",
+      "bytes": 1440,
+      "sha256": "76da62f708171f59dbc9ef32defcb1f366510e9d1113fc5590fca783a3419692"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-target-domain.test.ts",
+      "bytes": 1028,
+      "sha256": "2b66671f721b9621a0789c440b6f409808d5ec13258ca4f3fe75d56f7b1d607e"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-targets.test.ts",
+      "bytes": 1023,
+      "sha256": "6afc5674e88c4f3afa16099f1f38b0237f937abcb2eb1306986036a1a651e9c4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeFindingPreservationFixture.ts",
+      "bytes": 1202,
+      "sha256": "5035b4380204e556bebbb9605a58aecd9d0692c7c1bc5222d765b342800e6e4b"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceAnonymousHardFixture.ts",
+      "bytes": 1185,
+      "sha256": "4770692efaecfd7be2903082ac64d2d396369614f65bffbe95a74fe8c1c49781"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceExistingDefectsFixture.ts",
+      "bytes": 745,
+      "sha256": "a57b9aeebd5e9de01eb555d31a0142b20b5c0bb93c04ca259dd7b18f314d47f4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceRepairFixture.ts",
+      "bytes": 623,
+      "sha256": "82f06d1144663474637336c16ebd03b9c47fb88c76bd1ee2a79a9b5f8b98d7cc"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeWitnessRepairFixture.ts",
+      "bytes": 4149,
+      "sha256": "bcbf020e213bf06d9ab5281486cd8a081843f48ee1b3a6f7d3c06eff97d9b556"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-bounded-qualification.test.ts",
+      "bytes": 1116,
+      "sha256": "7310945502286730c5b3d851e667737e98e91785e0be275b062086f5f96cb6ff"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-certified-repair.test.ts",
+      "bytes": 1929,
+      "sha256": "fb1892661d461136c8c90084b6267762936865498caedecee31d4c3af6f35518"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-connected-generic-wire.test.ts",
+      "bytes": 1010,
+      "sha256": "04d95507a5452ca7e10ad205a151eb019d6aeaa1fb362e220e44dafc3a49fcde"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-exhaustion.test.ts",
+      "bytes": 1807,
+      "sha256": "ca4f957e6817c89711bc44ba05b89099862cc0bb5adace94d49657d68fbba0b1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-explicit-obstacle-margin.test.ts",
+      "bytes": 1177,
+      "sha256": "151dcc31924ff544dde0a851348ebbace24b9ee93da1c020c291d9451917b19d"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-export-alias-inventory-tamper.test.ts",
+      "bytes": 2760,
+      "sha256": "1eaa8be4e3806e8dd745d37ff145a6b1653fe1dad2abf8cd684a101eb00ac114"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-global-inventory.test.ts",
+      "bytes": 819,
+      "sha256": "841cc8a4aecca37428996133a217e4b408e9139aa9d7ea6858dcf0158d090096"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-invalid-board-rule.test.ts",
+      "bytes": 945,
+      "sha256": "753931d79d257e56e6df746db9ad78553bd0e66ba4a4ebf3112f6019f8b419f9"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-invalid-outline.test.ts",
+      "bytes": 816,
+      "sha256": "8f7313f2b2bfdde7aa0e5bc25ccb5be2b72792a0aff2452159550bb83d2eef2f"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-manufactured-layer-order.test.ts",
+      "bytes": 1242,
+      "sha256": "dd3cd4228e948ed6af2c1a162dc57b59cf189f256bc70f026032cccaecfe5e21"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-missing-demand.test.ts",
+      "bytes": 697,
+      "sha256": "7ab5f8aebe8c6a976f0663104fcad2db70f272f864fe7598ce8e6274e9a79257"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-native-error.test.ts",
+      "bytes": 973,
+      "sha256": "b85ad63a1a8bfd45aa9169146c917a9ce2a7c8314c817a75e6f698ce342b209a"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-numeric-layer-provenance.test.ts",
+      "bytes": 858,
+      "sha256": "ec31923499d8f6f4e5c0157a77c44427a9819047ae9a6347f9293b99fb0d570b"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-original-snapshot.test.ts",
+      "bytes": 1260,
+      "sha256": "91ff22e8a4518e6a4bb18ce662b1cdb285d6da5f30f859af8950f11aa8ca4562"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-owner-wide-demand.test.ts",
+      "bytes": 1137,
+      "sha256": "79cedc025b3f1444311e2c8a2c9ffa469be371beddf314f2fe7efee47e20a51c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-preserves-via-in-pad-policy.test.ts",
+      "bytes": 1365,
+      "sha256": "49216d921a14ec2a9411eb36b54b6340f934f691bb6a9206d1dc9977107c6aad"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-reversed-transition-aliases.test.ts",
+      "bytes": 2263,
+      "sha256": "92f80473cc848ccef006e2679fc1c7f3acde340d7fa6be79c66697b2603ba449"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-shared-occurrences.test.ts",
+      "bytes": 1183,
+      "sha256": "3a590ffd035ff680acf8d32f2cd291ac51a9a74f9b717f4be852fcc49c5f84bd"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-terminal-component-intersection.test.ts",
+      "bytes": 1308,
+      "sha256": "eae542334981199be0b03348edd77b129367bae96364cfeac85c3c6f28f47f21"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-terminal-stage-budget.test.ts",
+      "bytes": 1538,
+      "sha256": "c9ffc98fd0f142122dcef6353ac07b8cdd87dd1e55a3faaea023b6defabb07e4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-through-subspan-aliases.test.ts",
+      "bytes": 2260,
+      "sha256": "01d6de860799b1836538aa01c0dffcd995d704bfc07a883e47d97d2492f014ff"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-unsupported-drill-policy.test.ts",
+      "bytes": 968,
+      "sha256": "7faa0babeafa00e28b551cca95531bda8da5a87e8092244fd9a68de09b377273"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-unsupported-noop.test.ts",
+      "bytes": 1024,
+      "sha256": "bf4f2402fd01f13765e72856856f36dbad0f2a9f55399953bdfd65225001fd62"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-valid-noop.test.ts",
+      "bytes": 856,
+      "sha256": "6aa9e10ba0e7f9af1fa773ecfed472e5b2b1b416afadb716ff6e5bc4b9749afd"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witnessViaPadRepairFixture.ts",
+      "bytes": 2814,
+      "sha256": "3d4840f451a809a2b6876d6597eb9b6660df4e715adc82e874e476ef5e2d80c9"
+    }
+  ],
+  "exactParentComponentFiles": [
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "bytes": 45731,
+      "sha256": "4fb8a9900c90ffa7ea048cdcad67c0e6fddc6386fbe64b2e188181442164e068",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/restoreCoincidentNativeViaLandings.ts",
+      "bytes": 1076,
+      "sha256": "ec96381fae0dce9b43e9de63e435f6e7a46284c6a5be368f75d6dddf102549b3",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 9138,
+      "sha256": "8714a8358f1cb3dda4cf1a6d7069606c68ea23f7abccca742355e3a9bdf6e28e",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+      "bytes": 8659,
+      "sha256": "8dfec6e3334b4d062fa2fd9f0cbbdca7554b576213fc0a4f6f22045e10c3053a",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey.ts",
+      "bytes": 675,
+      "sha256": "1c1f84d0a5585fef866b65a5aae88b40177d9d199b09f4e6e944542ba121dafd",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6945,
+      "sha256": "6eb427591c534f5c25538f731a605ade1c92da2594155f4b66955b322f43eae3",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "bytes": 17521,
+      "sha256": "1c76c79b3048785f17eaeb665cc82df0ac0e9c231dc7ae7b40c09cc756f64925",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "bytes": 12117,
+      "sha256": "29bca62693df32f2a66e7cafef1005cffcdcac79a41a06337abc37cf16d8e4b0",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-differential-coverage.test.ts",
+      "bytes": 1447,
+      "sha256": "efa5b3bef83d4f31f375fa590f695f7f51c8f98ca8da23f1c77ee10bcb2e4c30",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-explicit-preconnection.test.ts",
+      "bytes": 1668,
+      "sha256": "821ba7cd1e373e4c9c37eb59dcffbdd246596c7e8ca91589d7358eb459b68d2c",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-identity.test.ts",
+      "bytes": 1430,
+      "sha256": "7f6f733aebd3e3286e93550c90f02a777585509019ed448a94c2dc508d437dc1",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-key-compatibility.test.ts",
+      "bytes": 1356,
+      "sha256": "d488010fe61e1308088ce6255b1ee28775e43507f29ef639d1af4d356fdf41e0",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-native-via-landings.test.ts",
+      "bytes": 1534,
+      "sha256": "0c380551c20fbdc06b84365f8fabcc3193cf0d325ec4a6412aeaba0648d9b2a1",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-point-pair-coverage.test.ts",
+      "bytes": 2201,
+      "sha256": "50e246d0f4ecd9275ed20cb87f93fd8bc97a0c487a699240bdaf1153716f53f3",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-terminal-snapping.test.ts",
+      "bytes": 1174,
+      "sha256": "3fda2c6da584da6f1f024b2737a5dc3500b3f00c57a3db96f8472f1fc5825ca9",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/layer-aware-mst-whole-pipeline.test.ts",
+      "bytes": 2757,
+      "sha256": "40d58d8239ed2594958c2388d5ceccd96c7fbf8b2f1d3a8679a6a2930f4fe468",
+      "exactParentLocalCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "component": "originalMst"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RelativeWitnessRepairSolver.ts",
+      "bytes": 21539,
+      "sha256": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9WitnessViaPadRepairSolver.ts",
+      "bytes": 17557,
+      "sha256": "4cff98d94bea9ef15d41ae150b285fa89887ac9f8dc6420f56af18b108ddc852",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts",
+      "bytes": 27442,
+      "sha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9RelativeViaTraceClearance.ts",
+      "bytes": 2287,
+      "sha256": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9RelativeGeometryDetails.ts",
+      "bytes": 6593,
+      "sha256": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+      "bytes": 30677,
+      "sha256": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getRelativeViaTraceTargets.ts",
+      "bytes": 1963,
+      "sha256": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preservePipeline9RelativeFindings.ts",
+      "bytes": 8937,
+      "sha256": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/provePipeline9RelativeContacts.ts",
+      "bytes": 20647,
+      "sha256": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/relativeCopperSweepGeometry.ts",
+      "bytes": 5271,
+      "sha256": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-anonymous-hard-forgeries.test.ts",
+      "bytes": 2407,
+      "sha256": "2ea271fe138d62ac93590455a81903167dbf1f3cf278e6cdbabcc3ce1bd03fe2",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-anonymous-hard-preservation.test.ts",
+      "bytes": 1966,
+      "sha256": "4da52cd54dadf5218fc89b5622363e62300dc72ca1da648d6a025d8d82cdcb0d",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-contact-partition.test.ts",
+      "bytes": 579,
+      "sha256": "5e709b264bb6dc32639f76ca36a16f38dbb9638474009ee5bea27a372841e637",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-detailed-predicate-binding.test.ts",
+      "bytes": 1745,
+      "sha256": "c46c23cb6d0dc7e32fd449e7794e3c241f62ba8309e7d9ecb53018deafbfd7af",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-drill-turnback-tail.test.ts",
+      "bytes": 563,
+      "sha256": "b420a266079b0f9ebdf5f16a3f7bc1a5838497097699b624ca1dc594d6bb7f0c",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-geometry.test.ts",
+      "bytes": 1262,
+      "sha256": "809fc3f37be34c31c12fb5c4a11c8cc3f58570f033ebae1cb57ef1cb6390cd59",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-all-segments.test.ts",
+      "bytes": 1496,
+      "sha256": "8f8ef7484ffb5df27da98fb8e2a8f7c59e0ca1ae23c55ea34fcd16a7a3c861cf",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-deadband.test.ts",
+      "bytes": 1569,
+      "sha256": "9e0ad8c645f0d6d52a6501123355604f500dbd16d2ad8b108ec4680b13e47fa1",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-exact-target-stage-switch.test.ts",
+      "bytes": 1152,
+      "sha256": "370a3915824d7ba7007e8bb2188af79b4b8fed8db81f55677fcf98b1b49d2e3c",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-existing-defects-contact-rejection.test.ts",
+      "bytes": 1425,
+      "sha256": "edf4b35f21cdbc3714fc41aecfeb277500ae76b70563f06ee2dcb6d3f583d4b2",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-existing-defects-repair.test.ts",
+      "bytes": 1882,
+      "sha256": "0167ab251b15c7368714153fb5e7c2525b91924ee67bfbdbdc62e4f241056f3d",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-global-scope.test.ts",
+      "bytes": 1998,
+      "sha256": "0d55448b54d9c3c4c135b694ac5aa0d41a878d84f08cacff74f1f769cd47fa94",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-identity-severity.test.ts",
+      "bytes": 1281,
+      "sha256": "2a25f652f2c25ff453be82680c74ba12c26b5d6c0a3ed8d0497ea65f873d1782",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-multiset.test.ts",
+      "bytes": 919,
+      "sha256": "b9a38b2c912699ec386cfb8cfff8809edad32e987d48fac24c515ae3669eaf37",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-findings-unsupported-data.test.ts",
+      "bytes": 2008,
+      "sha256": "c8fa3a915f529caa5bcfcfd852b601b347e61ce4e357624bdee6c569b42b8777",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-flag-gating.test.ts",
+      "bytes": 1236,
+      "sha256": "d946838f4d7b592e8a3f133c48851189453b67ffabbc3de57cb8dac5648ee3ea",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-oval-admission.test.ts",
+      "bytes": 737,
+      "sha256": "592e81f70f6d4ebfcdb7112ea478cee9a9718dfbab96d39241d7d3426d3bc6b3",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-physical-overlap-unchanged.test.ts",
+      "bytes": 1153,
+      "sha256": "47044d5afb3c919c6dad3f11031978220faf0078aa27c598a955dcb129b448a1",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-protected-mask.test.ts",
+      "bytes": 1996,
+      "sha256": "0450b40c4883acf50eb23db00c97f3bed110f4d73635f34269538858315f1fa2",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-rotated-oval-envelope.test.ts",
+      "bytes": 757,
+      "sha256": "d1d6d20476c5d767660648bfedf539e52a04a3877160a7b454a25982e76f0833",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-stage-exhaustion.test.ts",
+      "bytes": 1432,
+      "sha256": "e14235a54c2db05d813b939aef6c1ee09852b2b4c3d2f9bde57a070cb6348403",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-stage-joint-repair.test.ts",
+      "bytes": 1797,
+      "sha256": "0cf6342ee1e16fa034e75542794ef3bb199b6f05308a62a3e0c6d6e9773cead3",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unaccounted-contact.test.ts",
+      "bytes": 716,
+      "sha256": "94a527c1646b98545604972b737fe9a41febe3fc00d3b352dfda1b3fc422a1a0",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unexpected-fault.test.ts",
+      "bytes": 773,
+      "sha256": "29e217e2554f174c4ec1e00b37a8f031ee9b2c8746967a4617d7e1ef4adc767a",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unknown-original-hole.test.ts",
+      "bytes": 651,
+      "sha256": "2f484bc8e81234f5dd31ca8dc055e1b42fd56adce6499dad27cf6eb7a1ffdafa",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-unsupported-noop.test.ts",
+      "bytes": 1031,
+      "sha256": "6cff779279dba976ecd56f3c6c99c87f44b32874e7691bed6fdea52554dc6b86",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-variable-interface-width.test.ts",
+      "bytes": 415,
+      "sha256": "4b1ca980d19b8435618801e4d31f106b373734f16c4803ea331248daaa27a820",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-endpoint-normal.test.ts",
+      "bytes": 795,
+      "sha256": "393f56bd2386b388603d21683183856970b4524431732139083d56bdc99fc984",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-foreign-owner.test.ts",
+      "bytes": 892,
+      "sha256": "daaa314a48b9e1caeb5df6a182a40a1d147f72c2d9d179dd2b4051495f3d6a41",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-native-visible.test.ts",
+      "bytes": 1120,
+      "sha256": "9a25d0b61898a2c2ee8a9059cbadfd8f9ba76ab2d0c5270c681d3b8010db3a85",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-repair.test.ts",
+      "bytes": 1742,
+      "sha256": "1f3b8f40b2ddac358b30196815edcded09941cc7431f439118604855b09d1fbc",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-strongest-segment.test.ts",
+      "bytes": 1440,
+      "sha256": "76da62f708171f59dbc9ef32defcb1f366510e9d1113fc5590fca783a3419692",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-target-domain.test.ts",
+      "bytes": 1028,
+      "sha256": "2b66671f721b9621a0789c440b6f409808d5ec13258ca4f3fe75d56f7b1d607e",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relative-witness-via-trace-targets.test.ts",
+      "bytes": 1023,
+      "sha256": "6afc5674e88c4f3afa16099f1f38b0237f937abcb2eb1306986036a1a651e9c4",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeFindingPreservationFixture.ts",
+      "bytes": 1202,
+      "sha256": "5035b4380204e556bebbb9605a58aecd9d0692c7c1bc5222d765b342800e6e4b",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceAnonymousHardFixture.ts",
+      "bytes": 1185,
+      "sha256": "4770692efaecfd7be2903082ac64d2d396369614f65bffbe95a74fe8c1c49781",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceExistingDefectsFixture.ts",
+      "bytes": 745,
+      "sha256": "a57b9aeebd5e9de01eb555d31a0142b20b5c0bb93c04ca259dd7b18f314d47f4",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeViaTraceRepairFixture.ts",
+      "bytes": 623,
+      "sha256": "82f06d1144663474637336c16ebd03b9c47fb88c76bd1ee2a79a9b5f8b98d7cc",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/relativeWitnessRepairFixture.ts",
+      "bytes": 4149,
+      "sha256": "bcbf020e213bf06d9ab5281486cd8a081843f48ee1b3a6f7d3c06eff97d9b556",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-bounded-qualification.test.ts",
+      "bytes": 1116,
+      "sha256": "7310945502286730c5b3d851e667737e98e91785e0be275b062086f5f96cb6ff",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-certified-repair.test.ts",
+      "bytes": 1929,
+      "sha256": "fb1892661d461136c8c90084b6267762936865498caedecee31d4c3af6f35518",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-connected-generic-wire.test.ts",
+      "bytes": 1010,
+      "sha256": "04d95507a5452ca7e10ad205a151eb019d6aeaa1fb362e220e44dafc3a49fcde",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-exhaustion.test.ts",
+      "bytes": 1807,
+      "sha256": "ca4f957e6817c89711bc44ba05b89099862cc0bb5adace94d49657d68fbba0b1",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-explicit-obstacle-margin.test.ts",
+      "bytes": 1177,
+      "sha256": "151dcc31924ff544dde0a851348ebbace24b9ee93da1c020c291d9451917b19d",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-export-alias-inventory-tamper.test.ts",
+      "bytes": 2760,
+      "sha256": "1eaa8be4e3806e8dd745d37ff145a6b1653fe1dad2abf8cd684a101eb00ac114",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-global-inventory.test.ts",
+      "bytes": 819,
+      "sha256": "841cc8a4aecca37428996133a217e4b408e9139aa9d7ea6858dcf0158d090096",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-invalid-board-rule.test.ts",
+      "bytes": 945,
+      "sha256": "753931d79d257e56e6df746db9ad78553bd0e66ba4a4ebf3112f6019f8b419f9",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-invalid-outline.test.ts",
+      "bytes": 816,
+      "sha256": "8f7313f2b2bfdde7aa0e5bc25ccb5be2b72792a0aff2452159550bb83d2eef2f",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-manufactured-layer-order.test.ts",
+      "bytes": 1242,
+      "sha256": "dd3cd4228e948ed6af2c1a162dc57b59cf189f256bc70f026032cccaecfe5e21",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-missing-demand.test.ts",
+      "bytes": 697,
+      "sha256": "7ab5f8aebe8c6a976f0663104fcad2db70f272f864fe7598ce8e6274e9a79257",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-native-error.test.ts",
+      "bytes": 973,
+      "sha256": "b85ad63a1a8bfd45aa9169146c917a9ce2a7c8314c817a75e6f698ce342b209a",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-numeric-layer-provenance.test.ts",
+      "bytes": 858,
+      "sha256": "ec31923499d8f6f4e5c0157a77c44427a9819047ae9a6347f9293b99fb0d570b",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-original-snapshot.test.ts",
+      "bytes": 1260,
+      "sha256": "91ff22e8a4518e6a4bb18ce662b1cdb285d6da5f30f859af8950f11aa8ca4562",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-owner-wide-demand.test.ts",
+      "bytes": 1137,
+      "sha256": "79cedc025b3f1444311e2c8a2c9ffa469be371beddf314f2fe7efee47e20a51c",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-preserves-via-in-pad-policy.test.ts",
+      "bytes": 1365,
+      "sha256": "49216d921a14ec2a9411eb36b54b6340f934f691bb6a9206d1dc9977107c6aad",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-reversed-transition-aliases.test.ts",
+      "bytes": 2263,
+      "sha256": "92f80473cc848ccef006e2679fc1c7f3acde340d7fa6be79c66697b2603ba449",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-shared-occurrences.test.ts",
+      "bytes": 1183,
+      "sha256": "3a590ffd035ff680acf8d32f2cd291ac51a9a74f9b717f4be852fcc49c5f84bd",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-terminal-component-intersection.test.ts",
+      "bytes": 1308,
+      "sha256": "eae542334981199be0b03348edd77b129367bae96364cfeac85c3c6f28f47f21",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-terminal-stage-budget.test.ts",
+      "bytes": 1538,
+      "sha256": "c9ffc98fd0f142122dcef6353ac07b8cdd87dd1e55a3faaea023b6defabb07e4",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-through-subspan-aliases.test.ts",
+      "bytes": 2260,
+      "sha256": "01d6de860799b1836538aa01c0dffcd995d704bfc07a883e47d97d2492f014ff",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-unsupported-drill-policy.test.ts",
+      "bytes": 968,
+      "sha256": "7faa0babeafa00e28b551cca95531bda8da5a87e8092244fd9a68de09b377273",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-unsupported-noop.test.ts",
+      "bytes": 1024,
+      "sha256": "bf4f2402fd01f13765e72856856f36dbad0f2a9f55399953bdfd65225001fd62",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witness-via-pad-valid-noop.test.ts",
+      "bytes": 856,
+      "sha256": "6aa9e10ba0e7f9af1fa773ecfed472e5b2b1b416afadb716ff6e5bc4b9749afd",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/tests/features/witnessViaPadRepairFixture.ts",
+      "bytes": 2814,
+      "sha256": "3d4840f451a809a2b6876d6597eb9b6660df4e715adc82e874e476ef5e2d80c9",
+      "exactParentLocalCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "component": "relativeV4"
+    }
+  ],
+  "protectedBaselineFiles": [
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/testing/evaluate-relaxed-drc.ts",
+      "bytes": 3137,
+      "sha256": "87238d33bc0ed1316ccdbfb85958139dcfa4dc4bf315e2200d85fb78194243a2"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/testing/getDrcErrors.ts",
+      "bytes": 6646,
+      "sha256": "74bb779d0014d0b655015fdbfb1031b3fcd10893a227158abe5f4e6aba76bd66"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/testing/utils/convertToCircuitJson.ts",
+      "bytes": 38996,
+      "sha256": "5ff83973fcaa3b9f9eceff7d674752548bfec3e6a24eeddc617b6f82b4c1adb1"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/lib/testing/drcPresets.ts",
+      "bytes": 242,
+      "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/scripts/benchmark/benchmark-run-task.ts",
+      "bytes": 22856,
+      "sha256": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/scripts/benchmark/benchmark.child.ts",
+      "bytes": 1944,
+      "sha256": "ab77e556ff9b7ba07bae46fe4092e1700d09881c6aaa17240a3e7edd141d35e9"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/package.json",
+      "bytes": 7930,
+      "sha256": "aadcb9588ad08f890a9dddde643278547a1721196c0b3ea79874d611903a430c"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/scripts/build-solver-workers.ts",
+      "bytes": 949,
+      "sha256": "e9062471b4e1043244364dc037ed6cd9f296b4aa6bd93ee22d40082bfd9e0c6c"
+    }
+  ],
+  "compiledFiles": [
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/chunk-G3PMV62Z.js",
+      "bytes": 666,
+      "sha256": "f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/index.d.ts",
+      "bytes": 322256,
+      "sha256": "e014c1a8ee32ad835b5d9ff17d8597bae3ac0b43bada4a1289cd627b0e8f2b67"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/index.js",
+      "bytes": 3247912,
+      "sha256": "c6c98e42b232bd88d2b7bfe6e1d7b437b82a4692d75392fb969316823c63dc04"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/runtime/bun.d.ts",
+      "bytes": 510,
+      "sha256": "c076a1bdf49b89a141fc255d4b0464b7b819a580d9b3fb3db8e059c5ca4433ee"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/runtime/bun.js",
+      "bytes": 1043212,
+      "sha256": "6966a280d20893df361ae6cdd9d7d12831350ec5e6d8254a8239b9c86d117b4f"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/runtime/node.d.ts",
+      "bytes": 511,
+      "sha256": "3a2ad69e62ea3900bfd09066a4c5644c5f8335efdf1aa783e294dd88c1bcf9cc"
+    },
+    {
+      "path": "/tmp/autorouter-mst-relative-v4-combined/dist/runtime/node.js",
+      "bytes": 1094505,
+      "sha256": "3e59efa0cff7d4ed9e615e01ebb641781ef7f6de218b4c56556bde24c475a550"
+    }
+  ],
+  "qaEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/RUNTIME-CONTROLS.json",
+      "bytes": 356046,
+      "sha256": "29c109ea5c43b84594af50dd6378dfaf5e0bb65f11f1d92206137e67484acc12"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/build.log",
+      "bytes": 1197,
+      "sha256": "a8b0604acc95102bb0e4019d442d1a49fd72a255256726ad4f517515120a1c85"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/focused-tests.log",
+      "bytes": 12117,
+      "sha256": "959b87063defae83ce0215b08ff47aaef47a8dedfd76428a9115b7074655c47d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-baseline-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-baseline-source.stdout",
+      "bytes": 3446,
+      "sha256": "00fe876a99fce1b1c62ab81533b216691d8812e8fc00a8a24aee78d37121d91a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-allfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-allfalse.stdout",
+      "bytes": 3345,
+      "sha256": "d080546f7fc2d5be9e11a7892856c2c1948d89c3857281e692abd4469a20da5c"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-both-oldabsent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-both-oldabsent.stdout",
+      "bytes": 4357,
+      "sha256": "aa222f7715c906721e405b3dc8674022db2d0c6a1eb1d92a968fc615b9765cc6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-both-oldtrue.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-both-oldtrue.stdout",
+      "bytes": 4355,
+      "sha256": "a4f2f434b89178f9d53d512476c4a95559a7c25b8c126e60683fe4a94258edad"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-default.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-default.stdout",
+      "bytes": 3348,
+      "sha256": "7ed16607bd0c3cdcd5b98e64faa73317ef74e48549066b9c5ec08ff55d8e9c66"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-mst-relativefalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-mst-relativefalse.stdout",
+      "bytes": 3687,
+      "sha256": "d6f20744799f38868053c9a35ba4306f2d30b7f5caef2d4f4d27762fc140a118"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-mst.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-mst.stdout",
+      "bytes": 3688,
+      "sha256": "2e4205f0c16cfa4ba5e73f3c0f4cace64b03a11f8a9c63b7a9b78f6cede7359b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-old.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-old.stdout",
+      "bytes": 3444,
+      "sha256": "819ddfe1c8d95001abe0998e233dfc8266bd885086400edcea9f542818cb8500"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-relative-mstfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-relative-mstfalse.stdout",
+      "bytes": 4040,
+      "sha256": "52cbc2708796bee47f0550e422b01fe6ad3477d43ed05b5cf9b23241a1ec64c6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-relative.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-compiled-relative.stdout",
+      "bytes": 4041,
+      "sha256": "e94b20b2390364f5bac653d946567d531a1b649bba5adc26fca2456ca3efa8a9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-allfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-allfalse.stdout",
+      "bytes": 3447,
+      "sha256": "7ab14779f5a951debbdf263156bbdcca2619abfa4ec3ff726f0f7e72af940aa1"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-both-oldabsent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-both-oldabsent.stdout",
+      "bytes": 4459,
+      "sha256": "681768c9ad9eb204ceccfefbc5e133b5162d1d234ea4645f322f5c08e0b214d6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-both-oldtrue.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-both-oldtrue.stdout",
+      "bytes": 4457,
+      "sha256": "a1681a2f6dff9f0cd9e0747253891c76095a8f283b26845754a9a07e66595211"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-default.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-default.stdout",
+      "bytes": 3450,
+      "sha256": "b214ee6d718e85991dc2c65a00f787e86fac61df5754196826fc770befaca5fa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-mst-relativefalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-mst-relativefalse.stdout",
+      "bytes": 3789,
+      "sha256": "5944efc815d38dcd533ffe9b185f9c6545c11f0b320b956cb4b08c511dd13ee2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-mst.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-mst.stdout",
+      "bytes": 3790,
+      "sha256": "8cd8b842c2f5295f04f22513fb1d4fe64c100d1fffc9f1e7c8eb4f638a2c798e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-old.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-old.stdout",
+      "bytes": 3546,
+      "sha256": "4b240e016d7b618fb0a9bc6cc8553e3ee9a3c16dbfe0a183fe8a615f62d017d2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-relative-mstfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-relative-mstfalse.stdout",
+      "bytes": 4142,
+      "sha256": "d9b614405fb955f08dff7b926c317edecfdeb7139e119a2f1964b842b0f26691"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-relative.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-combined-source-relative.stdout",
+      "bytes": 4143,
+      "sha256": "03a86fb5106f8a8d69c4fe9ac9973161db816c2953e8968f01818a006b82f335"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-mst-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-mst-parent-source.stdout",
+      "bytes": 3781,
+      "sha256": "eb29ed8aebe2554b478e380e060174d2cd449f027aba7463b763511b997aa990"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-old-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-old-parent-source.stdout",
+      "bytes": 3543,
+      "sha256": "7377c379c01ab68e8d76eaccdc59c5efd3f4ef07af6a440cf6868f9b1e421fdf"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/layered-relative-parent-source.stdout",
+      "bytes": 4138,
+      "sha256": "2e03fd0d69086c32543628a9aa3bcaca9e32c28bb7de5df1c6ba1810e2fb1035"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/p9-base.txt",
+      "bytes": 64529,
+      "sha256": "c4b0a2f8a5545fa74bcb0c0995fb848973f49b3c3b41c859a37567158c9f5383"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/p9-mst.txt",
+      "bytes": 65108,
+      "sha256": "15f9cbf1f105e2181395ef34d51a38791f2f9fa93ea9783964236b13b1775007"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/p9-relative.txt",
+      "bytes": 67394,
+      "sha256": "9f2eebf1e42341cfc3fb979a65fae786995004493ae5269202ef9e61dd30de05"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-baseline-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-baseline-source.stdout",
+      "bytes": 3444,
+      "sha256": "9d66952b529a8f7942e07f1e5bff85d7607294e1a14fa1b3b57d653ce81e953f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-allfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-allfalse.stdout",
+      "bytes": 3343,
+      "sha256": "a368752ed2d73ec6cd6f47c86aea19ae5d3fee9d0894548f971258fe2977bfaf"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-both-oldabsent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-both-oldabsent.stdout",
+      "bytes": 4228,
+      "sha256": "77d8603dcde50bd1f10c5c3f035c11373b771ae7881e464b426a66174b8021b4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-both-oldtrue.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-both-oldtrue.stdout",
+      "bytes": 4226,
+      "sha256": "37d59331c518d848b398bf9bb6c92fcae8f27a43207e70ecb7b1cf0459ce3316"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-default.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-default.stdout",
+      "bytes": 3346,
+      "sha256": "38f53096123e1e41b72b55306b485af7eb362b848f840e12db058b224e9c8738"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-mst-relativefalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-mst-relativefalse.stdout",
+      "bytes": 3558,
+      "sha256": "ec301ff5eb950d5b2f4e33458085b936b8f99a0e6c8ee16487b0855b5b5728e8"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-mst.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-mst.stdout",
+      "bytes": 3559,
+      "sha256": "888bdbdc78420027732bce4c3a05f417c6b33c94973b13a33e2b1e7f9c354af6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-old.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-old.stdout",
+      "bytes": 3442,
+      "sha256": "d7ddace66e70b5788e41bfa77aa2319eccc775a8be3ab62fac5923d3862dea61"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-relative-mstfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-relative-mstfalse.stdout",
+      "bytes": 4014,
+      "sha256": "9874108ef37b73a4f3e70a334d687d14194013e57e0a8973892f11c5169c183e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-relative.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-compiled-relative.stdout",
+      "bytes": 4015,
+      "sha256": "0408bebdbc263bb30d8abb2dc4db2a6e073eeb413792ce5a91646c2a3e8e8067"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-allfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-allfalse.stdout",
+      "bytes": 3445,
+      "sha256": "c2a03ea873b8c66f8fe7a169b3607c768a31f531533236fb55d7f16f24fc09ea"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-both-oldabsent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-both-oldabsent.stdout",
+      "bytes": 4330,
+      "sha256": "22a26548a02dcfeb5c44e647ad221b690169cf3f411af0dd92c937c87d2e6288"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-both-oldtrue.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-both-oldtrue.stdout",
+      "bytes": 4328,
+      "sha256": "68d920bcbc5ce4f139f9687a7ece698cc6930a1b1fbfed80290b2142fde12b7d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-default.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-default.stdout",
+      "bytes": 3448,
+      "sha256": "8d323b976f6812b88eca87d47ee8bbfd2699a5445b1fce2affbb188432cacc29"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-mst-relativefalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-mst-relativefalse.stdout",
+      "bytes": 3660,
+      "sha256": "28ed49e190c3a77b7e34c71dc72bffd33e103478e32cb8121c0375cb6a74fce1"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-mst.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-mst.stdout",
+      "bytes": 3661,
+      "sha256": "b376babc8c7e44d73ade0f183849cae0ee2e6c220e943cf1a2f3e7bc44d03f34"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-old.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-old.stdout",
+      "bytes": 3544,
+      "sha256": "2565219284de7b0d0204939892888649efbbb3e00b79430f0ccb2a59d62c95bb"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-relative-mstfalse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-relative-mstfalse.stdout",
+      "bytes": 4116,
+      "sha256": "9added9e33568cf605873189ae5ee03d2d27b46d0854eb160c24ca933643910f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-relative.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-combined-source-relative.stdout",
+      "bytes": 4117,
+      "sha256": "3ee2739b58a6006b24eb86796ce6d9f790f73404242f9b824af731fce2fe576c"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-mst-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-mst-parent-source.stdout",
+      "bytes": 3652,
+      "sha256": "dc08bc56f55d50371bb6324b0c6cad7a083344e750811766178fbc089beafeed"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-old-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-old-parent-source.stdout",
+      "bytes": 3541,
+      "sha256": "300d1f0b17b4d2a0c6aaee152fab847c47e71f024a13927fd2cce5c56bc11005"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/plain-relative-parent-source.stdout",
+      "bytes": 4112,
+      "sha256": "2faa7811651b431170bf850256489efefae8a512adfe48cc0e015834e4652662"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/run-runtime-controls.py",
+      "bytes": 5802,
+      "sha256": "4db89292315eaa5bfd6666907f79c854d189d34c9daa4100d7970bb9d871f4fc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/runtime-child.ts",
+      "bytes": 9755,
+      "sha256": "d1b81973387ee4dbd8399edc29f7052b7d00904baa4229d68849841f1b8b95b4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/runtime-controls.log",
+      "bytes": 770,
+      "sha256": "f073ca14c3d7c655cda4616f4b5ef97612061f192bd6e39ce2a648b43ea3831d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-combined-compiled.stdout",
+      "bytes": 2249,
+      "sha256": "52ecb4a06d9d5435799bf5be1852e16f8c6ceefffd3904e7cd39f60ae1bc7ba2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-combined-source.stdout",
+      "bytes": 2351,
+      "sha256": "68c04dddbc0e38022e26e0764f82f86d85d7ed8f2d5717010a3530ffe06c5c25"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-anonymous-relative-parent-source.stdout",
+      "bytes": 2346,
+      "sha256": "2b6ff4b2f598d7cb7eea07fb8222da1489fa137e5069210e0904ac9517a88703"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-combined-compiled.stdout",
+      "bytes": 2247,
+      "sha256": "6b806a87d1002fea600224f3e23d12cf9af21825c7c2a57cbe26255193d8149b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-combined-source.stdout",
+      "bytes": 2349,
+      "sha256": "8ee4a41a7d6da198bfc33d5aa1648438c9918fa9e92746e56ccab75e22293ad6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-resolved-relative-parent-source.stdout",
+      "bytes": 2344,
+      "sha256": "81c6f23a80c4acd2b3a8db1438aea163276116e3997341cf8f8f84a5750a4717"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-combined-compiled.stdout",
+      "bytes": 2421,
+      "sha256": "46c45eddbb0602679e95b94e9fed84b623fb587a6ed7089b03c91690850dda84"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-combined-source.stdout",
+      "bytes": 2523,
+      "sha256": "8ae5ab35c9ae855769b788b9399422c6e5caa6699f6e1e68e96fed0970e4e637"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-extra-switch-relative-parent-source.stdout",
+      "bytes": 2518,
+      "sha256": "dc242e16bc6bfde33f9f4b38d21d2ea4403bc10dab9dba97660af4e0052449bb"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-combined-compiled.stdout",
+      "bytes": 2081,
+      "sha256": "b43765889bada9a69a28b66fd2647b68de4459028be86335202a2dae2b7534f8"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-combined-source.stdout",
+      "bytes": 2183,
+      "sha256": "81e911a42f2e48c497a23993562a10e3dc865baaf6d1dd44bd91589d29daf521"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-joint-relative-parent-source.stdout",
+      "bytes": 2178,
+      "sha256": "fa19de8f4453c5c55af60512cc09e010316d1037664dd4d749cddd08cc2bf028"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-combined-compiled.stdout",
+      "bytes": 1446,
+      "sha256": "180239ebd9c02804ecf99d3afe57f28ca8778c9fbab002b6e76cc39e9433bc3a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-combined-source.stdout",
+      "bytes": 1548,
+      "sha256": "92b7b5e1c78f04d6346397f201dd30303454519c1bbe394024f12193193cd7f0"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-overlap-relative-parent-source.stdout",
+      "bytes": 1543,
+      "sha256": "7668fc0087e8dea0f2c513bbe1685fd16b09ea33bac4d569cef4f2adc7bf2c61"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-combined-compiled.stdout",
+      "bytes": 1447,
+      "sha256": "ab513fd534eef34e1274fe5b20f25e5a447389620c71c021efe4ffc91d752882"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-combined-source.stdout",
+      "bytes": 1549,
+      "sha256": "f6af189970fbdcfc1d98272c38e5a368956ee8a0d62adc886ad0a5138a2597c9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-turnback-relative-parent-source.stdout",
+      "bytes": 1544,
+      "sha256": "c493e9b2509fd079659229c8976951c2f3f2ea7844274d8a9db697e6e7d45c26"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-combined-compiled.stdout",
+      "bytes": 1155,
+      "sha256": "ade1855a09f540105f71fa57a567d72ffe3453704aeb4761cfc1d423f6ddac89"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-combined-source.stdout",
+      "bytes": 1257,
+      "sha256": "b42a88922563ff1ff7b39fefb3ba1d33a40d47ac73e07223c3731249ba00991a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-pad-unsupported-relative-parent-source.stdout",
+      "bytes": 1252,
+      "sha256": "3ca6b6c0639019a411466066d88b6bceea7441f10153555d536ef93df0c78169"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-combined-compiled.stdout",
+      "bytes": 1815,
+      "sha256": "bbd260b8ee26ac9cb6ad2aa39858374446543514ce46edeba9eb8bae997644fe"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-combined-source.stdout",
+      "bytes": 1917,
+      "sha256": "a0d69b6742bfb76e5deb63b39b48c49a7b248fe1c1882ba6bacd3db15ca86dd6"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-hidden-relative-parent-source.stdout",
+      "bytes": 1912,
+      "sha256": "f4e5d9b61e55ab1177619d3d1c2f16b9c5ad0be8dd3c779dd17d1d445532ff7b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-combined-compiled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-combined-compiled.stdout",
+      "bytes": 1816,
+      "sha256": "6874bf9524d2f91363b318c57dfc510c238fada42ebacd972b40e48dfc61f7b2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-combined-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-combined-source.stdout",
+      "bytes": 1918,
+      "sha256": "5de380b73ed805701d8975ac132e4c42bb9105c7113e8be3d835a165d1b1e85e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-relative-parent-source.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/stage-via-trace-visible-relative-parent-source.stdout",
+      "bytes": 1913,
+      "sha256": "829b2b1d493ecabd159d8fd0a74df4a6d734fe8c509693ace8dc947b6d391a50"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/types.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/types.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/write-qa.py",
+      "bytes": 9401,
+      "sha256": "cdf4657f6613fed9e58582419b0a1b0f7cb5638535b6bc50dd5c9142ae85a98e"
+    }
+  ],
+  "priorEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/QA-FINAL.json",
+      "bytes": 13515,
+      "sha256": "eae8e113b395884e559c97ccb5a4b8729a4e25f0fdf6e9ebadf7574e9252f7ca"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 10044,
+      "sha256": "3f4654b7b2125df993747ada66a852fc39b387347aed637b910ff5d53628509f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST-SOURCE-PUBLICATION-v1.json",
+      "bytes": 2268,
+      "sha256": "6e224943459c503c21a90c2c9509485cdb1d8d1130ddbb262f2934e9b9ece73d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/QA-FINAL.json",
+      "bytes": 41919,
+      "sha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 12018,
+      "sha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-STAGE-TRIAL-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 12110,
+      "sha256": "faa68af1a9253fd5c67016fcdedc8a00eefd372b9c01f63bd2d3aeed1458511b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-STAGE-TRIAL-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 11176,
+      "sha256": "b9bf9d7a170e1d917f8a314575fe5726ee834372ad220b1ab4c149d488f55c13"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/MST18-11-VIA45-EXACT-SWEEP-FEASIBILITY-v2.json",
+      "bytes": 7661,
+      "sha256": "5616288e4a03e2bbac6b193c36f9b6fcbae4f72b53896dd801af8c88386439f2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/MST18-11-NATIVE-VIA-VISIBILITY-AND-ALIAS-ROOT-CAUSE-v1.json",
+      "bytes": 49397,
+      "sha256": "ea7f1777cd812024a4cac5ce8268a559e390260312b2616cc28f4ba39facef43"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 73176,
+      "sha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 13835,
+      "sha256": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f"
+    }
+  ],
+  "publicationExport": {
+    "path": "/tmp/bottleneck-mst-relative-v4-combined-source-export.json",
+    "bytes": 462707,
+    "sha256": "94660c5a516cc1efcd76ad5ecc254d2e213468d0162e4d96211716db02562fa0"
+  },
+  "localActualDatasetRoutingExecutions": 0,
+  "localActualDatasetCheckerExecutions": 0,
+  "remoteMutations": 0,
+  "combinedActualAttempts": 0,
+  "combinedRemotePublication": false,
+  "full84Launch": false,
+  "prospectiveGate": "Root may publish combined source and seal/launch full42paired84 only after independently qualified positive actual retained MAIN-MST18 relativeV4 production-stage trial. StandaloneV4 publication must separately be root-bound to this exact component tree; local preparation was authorized before that gate; no combined remote mutation or actual launch performed.",
+  "boardRecoveryNoRegressionOrSpeedCredit": false,
+  "worktreeClean": true
+}

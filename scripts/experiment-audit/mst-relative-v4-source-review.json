@@ -1,0 +1,517 @@
+{
+  "schemaVersion": 1,
+  "status": "COMBINED_V4_LOCAL_SOURCE_REVIEW_READY_CONDITIONAL_ON_INDEPENDENT_POSITIVE_ACTUAL_V4_PRODUCTION_STAGE_GATE",
+  "atUtc": "2026-10-30T02:03:58.435564+00:00",
+  "reviewer": "/root/quality_review",
+  "reviewerRole": "Independent read-only production/test review; reviewer authored only external synthetic QA probes, no source/controller edits.",
+  "worktree": "/tmp/autorouter-mst-relative-v4-combined",
+  "localCommit": "cb6e176c7bb2a00605bd09c0b67629d1ec4e4dc3",
+  "tree": "1c8c555d2fccef02ef02d454efe6fbac9fb399bb",
+  "localMergeParents": [
+    "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+    "f102982aabd4fe78121412fa3cf399046908cc95"
+  ],
+  "commonBaseline": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "componentsAsFrozenAtAuthorQA": {
+    "originalMst": {
+      "localCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+      "remoteCommit": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+      "tree": "7a5f248d5772307119c7856f732849dd4e03f120",
+      "flag": "experimentLayerAwareMstIdentity",
+      "default": false,
+      "all8NonP9ProductionFilesExact": true
+    },
+    "relativeV4": {
+      "localCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+      "remoteCommit": null,
+      "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+      "flag": "experimentRelativeWitnessRepair",
+      "default": false,
+      "all10CoreProductionFilesExact": true
+    }
+  },
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/mst-relative-v4-combined/QA-FINAL.json",
+    "bytes": 104637,
+    "sha256": "ef5801be5ed731cf656616d8bb361fb9af37cbab6f8399c3b5060cc6ba9ba4e5"
+  },
+  "standaloneV4PublicationBindingAddedByPeer": {
+    "remoteSha": "f5d60ecabaf3850758f392f26c86dc450b986fc6",
+    "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+    "publicationReceipt": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-WITNESS-V4-SOURCE-PUBLICATION-v1.json",
+      "bytes": 2468,
+      "sha256": "7004701447f832bc8e3ba2d00d9448870934ced03385f68bf399afcc8602f399"
+    },
+    "fullSourcePeer": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 12018,
+      "sha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3"
+    },
+    "componentLocalSha": "f102982aabd4fe78121412fa3cf399046908cc95",
+    "note": "AuthorQA recorded remoteCommit:null before publication; this peer binds subsequent standalone publication without rewriting frozen QA."
+  },
+  "verifiedInventoryCounts": {
+    "files": 92,
+    "exactParentComponentFiles": 90,
+    "protectedBaselineFiles": 8,
+    "compiledFiles": 7,
+    "qaEvidence": 155,
+    "priorEvidence": 11
+  },
+  "allInventoryByteCountsAndHashesVerified": true,
+  "all90NonoverlappingComponentModeBlobsExact": true,
+  "all8NonP9OriginalMstAnd10RelativeV4ProductionFilesExact": true,
+  "mechanicalP9MergeIndependentlyReproduced": true,
+  "p9ExactlyPriorReviewedCombined2a2859Blob": true,
+  "trackedAndUntrackedClean": true,
+  "compiledIndex": {
+    "path": "/tmp/autorouter-mst-relative-v4-combined/dist/index.js",
+    "bytes": 3247912,
+    "sha256": "c6c98e42b232bd88d2b7bfe6e1d7b437b82a4692d75392fb969316823c63dc04"
+  },
+  "publicationExport": {
+    "path": "/tmp/bottleneck-mst-relative-v4-combined-source-export.json",
+    "bytes": 462707,
+    "sha256": "94660c5a516cc1efcd76ad5ecc254d2e213468d0162e4d96211716db02562fa0"
+  },
+  "criticalReview": [
+    "Composes ORIGINAL MST32097/remote5d550 with relativeV4f102/remotef5d60, never stable087. Exact parent entry union except sole shared P9 import merge and one additive whole-P9 physical composition test. Every8 MST and10 relative non-P9 production file remains byte-exact.",
+    "Independent three-way merge reproduction has one import conflict only; retaining both sides reproduces frozen P9, which is also byte-exact previously reviewed combined2a2859. Independent default-off gates, constructor original snapshot, final-stage/getter selection and legacy witness precedence remain unchanged.",
+    "RelativeV4 preserves its complete original-owner/raw inventory, exact non-target full finding multisets, UNKNOWN full scope, anonymous fixed-hard UNKNOWN cancellation, exact final literal target margin and separate immutable electrical interface proof. No additional source algorithm, predicate, material contract or budget change is introduced by composition.",
+    "MST ledger still measures conceptual requirement coverage rather than actual final connectivity. Full-P9 combined synthetic boards explicitly retain opposite-layer SMT terminals at coincident XY through a real manufactured off-pad via, with nativeDRC0/viaInPad0 and no unmaterialized layer jump.",
+    "Default/false baseline, MST-only, relative-only and legacy-only modes independently match respective parent entire outputs, point-pair context, stage work/counters, both getters, ledgers and full relative qualification/old certificate returns. Source and compiled variants agree.",
+    "Twenty-seven fresh direct-stage parent/source/compiled checks cover viaPad joint/overlap/turnback/unsupported, native-hidden/visible isolatedviaTrace, resolved existing-defect preservation, anonymous-hard duplicated fixed-via preservation and switched-closest exact-margin rejection. All relative source/kernel/material masks remain exact V4."
+  ],
+  "authorValidation": {
+    "bunVersion": "1.4.2",
+    "focusedTests": 70,
+    "assertions": 1973,
+    "newCompositionTests": 1,
+    "fullTypesExit": 0,
+    "workersEsmDtsBuildExit": 0,
+    "freshRuntimeControls": 71,
+    "freshWholeP9Controls": 44,
+    "freshRelativeParentSourceCompiledStageControls": 27,
+    "defaultAbsentFalseExactE703": true,
+    "mstOnlyExactOriginalMst": true,
+    "relativeOnlyExactRelativeV4": true,
+    "legacyOldOnlyExactParent": true,
+    "bothFlagsTrueSameXYMultilayerSmtFixture": {
+      "allOriginalLayerRequirementsCovered": true,
+      "explicitManufacturedOffPadLayerBridge": true,
+      "nativeDrcAndViaInPadFindings": 0,
+      "unmaterializedWireLayerJumps": 0,
+      "cleanOutputUnchangedByRelativeStage": true,
+      "fullCertificateBeforeAfter": "PASS",
+      "globalAccepted": false
+    },
+    "bothPositiveRelativeSyntheticClasses": {
+      "viaPadAndWireJoint": true,
+      "isolatedForeignViaTraceHiddenAndVisible": true,
+      "anonymousHardObstacleExactPreservation": true,
+      "literalTargetClearanceAndSwitchedClosestSegmentRejection": true,
+      "exactParentMovesOutputsStatsAndCertificates": true,
+      "fullStatusBeforeAfter": "UNKNOWN",
+      "relativeProof": "PASS",
+      "globalAccepted": false
+    },
+    "compiledAsyncWorkerDispatchExecuted": false,
+    "compiledIndexSha256": "c6c98e42b232bd88d2b7bfe6e1d7b437b82a4692d75392fb969316823c63dc04"
+  },
+  "independentFocusedValidation": {
+    "tests": 70,
+    "assertions": 1973,
+    "log": {
+      "path": "/tmp/combined-v4-independent-focused.log",
+      "bytes": 12125,
+      "sha256": "e57c316d83c9670a0ae71dafc3bd3b747dbbf3623abb4f3f276bec6a9697b1bc"
+    }
+  },
+  "independentFreshRuntimeValidation": {
+    "totalProcesses": 57,
+    "wholeP9": 30,
+    "directRelativeStage": 27,
+    "realOffPadLayerBridgeChecks": 4,
+    "summary": {
+      "path": "/tmp/combined-v4-independent-controls/SUMMARY.json",
+      "bytes": 13775,
+      "sha256": "e34ab90bfec54d93f1f85b937c9bce340436f02ce2a53e0fd9f7595529a6ee59"
+    },
+    "runner": {
+      "path": "/tmp/combined-v4-independent-controls.py",
+      "bytes": 3535,
+      "sha256": "16fd0e86efd572a9db85dbe7622c4ce52879083679fe8f7b6821e08c6de68ad6"
+    },
+    "pipelineChild": {
+      "path": "/tmp/combined-independent-pipeline-child.ts",
+      "bytes": 4135,
+      "sha256": "075a00cc9b21f7caefc9af569c6be32b29892982621ce3ae4eb8cbc1aa0f450f"
+    },
+    "relativeStageChild": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/runtime-child.ts",
+      "bytes": 7107,
+      "sha256": "ca319db2a63345cfa9db71e931243e59c2d6e639687012675ac4b5c47294b1d9"
+    },
+    "records": [
+      {
+        "name": "plain-default-base-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-default-base-source.json",
+        "sha256": "947e6481eb2651e7dbeb756182c31065f4ad01cb06bd01b129f908c760e12781"
+      },
+      {
+        "name": "plain-default-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-default-combined-source.json",
+        "sha256": "947e6481eb2651e7dbeb756182c31065f4ad01cb06bd01b129f908c760e12781"
+      },
+      {
+        "name": "plain-default-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/plain-default-combined-compiled.json",
+        "sha256": "947e6481eb2651e7dbeb756182c31065f4ad01cb06bd01b129f908c760e12781"
+      },
+      {
+        "name": "plain-false-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-false-combined-source.json",
+        "sha256": "947e6481eb2651e7dbeb756182c31065f4ad01cb06bd01b129f908c760e12781"
+      },
+      {
+        "name": "plain-mst-mst-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-mst-mst-source.json",
+        "sha256": "e2628ccf5c6569e1e98b51cff5820799fecdd2caec57f3335e80b168c7b84866"
+      },
+      {
+        "name": "plain-mst-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-mst-combined-source.json",
+        "sha256": "e2628ccf5c6569e1e98b51cff5820799fecdd2caec57f3335e80b168c7b84866"
+      },
+      {
+        "name": "plain-mst-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/plain-mst-combined-compiled.json",
+        "sha256": "e2628ccf5c6569e1e98b51cff5820799fecdd2caec57f3335e80b168c7b84866"
+      },
+      {
+        "name": "plain-rel-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-rel-rel-source.json",
+        "sha256": "f9e29e1d6bfc3e979bd6e457e8629de310c92cc731f0211bd86b91af3ae56ccd"
+      },
+      {
+        "name": "plain-rel-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-rel-combined-source.json",
+        "sha256": "f9e29e1d6bfc3e979bd6e457e8629de310c92cc731f0211bd86b91af3ae56ccd"
+      },
+      {
+        "name": "plain-rel-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/plain-rel-combined-compiled.json",
+        "sha256": "f9e29e1d6bfc3e979bd6e457e8629de310c92cc731f0211bd86b91af3ae56ccd"
+      },
+      {
+        "name": "plain-legacy-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-legacy-rel-source.json",
+        "sha256": "85c2cb6d41b9191a0662bb95e72d64c5cf5f7ed24157ace9579324c780c7a2eb"
+      },
+      {
+        "name": "plain-legacy-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-legacy-combined-source.json",
+        "sha256": "85c2cb6d41b9191a0662bb95e72d64c5cf5f7ed24157ace9579324c780c7a2eb"
+      },
+      {
+        "name": "plain-legacy-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/plain-legacy-combined-compiled.json",
+        "sha256": "85c2cb6d41b9191a0662bb95e72d64c5cf5f7ed24157ace9579324c780c7a2eb"
+      },
+      {
+        "name": "plain-both-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/plain-both-combined-source.json",
+        "sha256": "5b0d0f201c4bae2a2b26f8f9d3451ffa938a53767da14cfcc1ee6422591bb010"
+      },
+      {
+        "name": "plain-both-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/plain-both-combined-compiled.json",
+        "sha256": "5b0d0f201c4bae2a2b26f8f9d3451ffa938a53767da14cfcc1ee6422591bb010"
+      },
+      {
+        "name": "pads-default-base-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-default-base-source.json",
+        "sha256": "82d8f5eacf7464f2c853111f0526c030e025669f39a7db729d091b4b32c15f56"
+      },
+      {
+        "name": "pads-default-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-default-combined-source.json",
+        "sha256": "82d8f5eacf7464f2c853111f0526c030e025669f39a7db729d091b4b32c15f56"
+      },
+      {
+        "name": "pads-default-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/pads-default-combined-compiled.json",
+        "sha256": "82d8f5eacf7464f2c853111f0526c030e025669f39a7db729d091b4b32c15f56"
+      },
+      {
+        "name": "pads-false-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-false-combined-source.json",
+        "sha256": "82d8f5eacf7464f2c853111f0526c030e025669f39a7db729d091b4b32c15f56"
+      },
+      {
+        "name": "pads-mst-mst-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-mst-mst-source.json",
+        "sha256": "75ffc8c4c64d808ec74d2792a4f5859078a3a698f186cef95f7507f35de334f9"
+      },
+      {
+        "name": "pads-mst-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-mst-combined-source.json",
+        "sha256": "75ffc8c4c64d808ec74d2792a4f5859078a3a698f186cef95f7507f35de334f9"
+      },
+      {
+        "name": "pads-mst-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/pads-mst-combined-compiled.json",
+        "sha256": "75ffc8c4c64d808ec74d2792a4f5859078a3a698f186cef95f7507f35de334f9"
+      },
+      {
+        "name": "pads-rel-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-rel-rel-source.json",
+        "sha256": "f83e28bdc5c4b9991abdf428746b2cf09f6057e7d68913dc9383c33aac0b76b5"
+      },
+      {
+        "name": "pads-rel-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-rel-combined-source.json",
+        "sha256": "f83e28bdc5c4b9991abdf428746b2cf09f6057e7d68913dc9383c33aac0b76b5"
+      },
+      {
+        "name": "pads-rel-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/pads-rel-combined-compiled.json",
+        "sha256": "f83e28bdc5c4b9991abdf428746b2cf09f6057e7d68913dc9383c33aac0b76b5"
+      },
+      {
+        "name": "pads-legacy-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-legacy-rel-source.json",
+        "sha256": "96688e987877c06aef0e39a17990a6c671d688464233ff6acb3bb24cb472b469"
+      },
+      {
+        "name": "pads-legacy-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-legacy-combined-source.json",
+        "sha256": "96688e987877c06aef0e39a17990a6c671d688464233ff6acb3bb24cb472b469"
+      },
+      {
+        "name": "pads-legacy-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/pads-legacy-combined-compiled.json",
+        "sha256": "96688e987877c06aef0e39a17990a6c671d688464233ff6acb3bb24cb472b469"
+      },
+      {
+        "name": "pads-both-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/pads-both-combined-source.json",
+        "sha256": "9667196f34b5632bb05ef5bf789d2b87b8000e1c657f8c9cb6cbdeffb7530712"
+      },
+      {
+        "name": "pads-both-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/pads-both-combined-compiled.json",
+        "sha256": "9667196f34b5632bb05ef5bf789d2b87b8000e1c657f8c9cb6cbdeffb7530712"
+      },
+      {
+        "name": "stage-via-pad-joint-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-joint-rel-source.json",
+        "sha256": "bfc86448588b2cc70add253059891d6faf17d62af24b6bdc05efb22e0c49cfd2"
+      },
+      {
+        "name": "stage-via-pad-joint-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-joint-combined-source.json",
+        "sha256": "1bfac82a4b43528ec44b79b7b1cce19344132333023cb5294a69e3cd6af92d24"
+      },
+      {
+        "name": "stage-via-pad-joint-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-joint-combined-compiled.json",
+        "sha256": "a6469a8ed7d4021096031862300686eb7fea47aede3a3e9fafdd6face324d79d"
+      },
+      {
+        "name": "stage-via-pad-overlap-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-overlap-rel-source.json",
+        "sha256": "32a1f04d310b5eb41a5c28e5f5aa43da0be5c2d4daec9d25bd4509b05709cce9"
+      },
+      {
+        "name": "stage-via-pad-overlap-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-overlap-combined-source.json",
+        "sha256": "081156f08efb89474c2391d19706cd010be74de8b5cf74a7734b508201559340"
+      },
+      {
+        "name": "stage-via-pad-overlap-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-overlap-combined-compiled.json",
+        "sha256": "4ff40a802e85393b1995962b2c0841dc2f98c67c1441ac62ead902c4661cfce4"
+      },
+      {
+        "name": "stage-via-pad-turnback-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-turnback-rel-source.json",
+        "sha256": "f2be735016003442acc968924149db466a58ce263b12fd3cd22580b0820e4bdf"
+      },
+      {
+        "name": "stage-via-pad-turnback-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-turnback-combined-source.json",
+        "sha256": "43910c39c570b8bc5e7b80f2ee0ce5bbed78e48986acb5b229ea63671907810a"
+      },
+      {
+        "name": "stage-via-pad-turnback-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-turnback-combined-compiled.json",
+        "sha256": "bf6a0ef4c94990d50f412018728a29cd9e0fceae937a9f00f94c8cfaaf5b973a"
+      },
+      {
+        "name": "stage-via-pad-unsupported-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-unsupported-rel-source.json",
+        "sha256": "5d2d44be8f6c5df581652c1e5375ef2e9a5205451534e8c8e3a3046de862d5b6"
+      },
+      {
+        "name": "stage-via-pad-unsupported-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-unsupported-combined-source.json",
+        "sha256": "750a818102c6f7accd219fc200ae115387225364d1b1c7936027e1e72f793a47"
+      },
+      {
+        "name": "stage-via-pad-unsupported-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-pad-unsupported-combined-compiled.json",
+        "sha256": "9587731f4cd17f9f9f9e97c95204feca736622e31a1c9cc9ed358abe4eb662f7"
+      },
+      {
+        "name": "stage-via-trace-hidden-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-hidden-rel-source.json",
+        "sha256": "b7395535f16842c9ffb5ddb33461b831c56e8008830fb65035752f87bb433789"
+      },
+      {
+        "name": "stage-via-trace-hidden-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-hidden-combined-source.json",
+        "sha256": "e806865e9a401901aa9f7c385ddc7e62039cc5b6bce85ab09bdc213b9d1898a8"
+      },
+      {
+        "name": "stage-via-trace-hidden-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-hidden-combined-compiled.json",
+        "sha256": "5c61cba6bc58c66c8b7e3c80db708f53ac2c2b328a79ebfece403fc55a143071"
+      },
+      {
+        "name": "stage-via-trace-visible-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-visible-rel-source.json",
+        "sha256": "fb555db029db53aceb75b9d5336769a61920f2ed9fdb1a131e4f6d4fbc96fce9"
+      },
+      {
+        "name": "stage-via-trace-visible-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-visible-combined-source.json",
+        "sha256": "7d627af766a8a77456fab1f5ca6dd1f05e3a12fdb8102e7b3677c1f818de4113"
+      },
+      {
+        "name": "stage-via-trace-visible-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-via-trace-visible-combined-compiled.json",
+        "sha256": "89b91ee73065d8139b3dc803954e96f2067b26b95afea07a0f24eb17b2fb8833"
+      },
+      {
+        "name": "stage-v3-extra-resolved-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-resolved-rel-source.json",
+        "sha256": "0ee948e87d7820e69e4061613c8556ecd92f94bf519506881a9909ab59252ae3"
+      },
+      {
+        "name": "stage-v3-extra-resolved-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-resolved-combined-source.json",
+        "sha256": "5d718eb556b8a07cf0d28f7dc69d86774373401f661c428e7513038733d2286d"
+      },
+      {
+        "name": "stage-v3-extra-resolved-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-resolved-combined-compiled.json",
+        "sha256": "600c19bfc4f96286658cc7f91ed54414eeb157f4546a0661963e671726fd13a3"
+      },
+      {
+        "name": "stage-v3-extra-anonymous-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-anonymous-rel-source.json",
+        "sha256": "be91b4890c66028e68c074c6fdad0e3bb2da6c51d3ed94471e49f6d4545fa54b"
+      },
+      {
+        "name": "stage-v3-extra-anonymous-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-anonymous-combined-source.json",
+        "sha256": "7cee509fd2b2e18f895e8948a80c12675720fc1d8ac65f7b0a43223538da850a"
+      },
+      {
+        "name": "stage-v3-extra-anonymous-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-anonymous-combined-compiled.json",
+        "sha256": "8ee2458c772b64df4621a0d4f9966329f5ceaf4493768e4d1575fd5ae97a0392"
+      },
+      {
+        "name": "stage-v3-extra-switched-rel-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-switched-rel-source.json",
+        "sha256": "bf50b0aec7a3dcff733cf9c7224c9dcacd120531923fb06cde0008b595e30d5b"
+      },
+      {
+        "name": "stage-v3-extra-switched-combined-source",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-switched-combined-source.json",
+        "sha256": "879bb689e30abddbadf7e73d7230b0943ea64c57d6fb6d317910fde8681f2f2f"
+      },
+      {
+        "name": "stage-v3-extra-switched-combined-compiled",
+        "path": "/tmp/combined-v4-independent-controls/stage-v3-extra-switched-combined-compiled.json",
+        "sha256": "211ca85d71c81aab2882bf8472c5d35c2ec521e5800858d5b2c72c8d3ab103c6"
+      }
+    ]
+  },
+  "priorEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/QA-FINAL.json",
+      "bytes": 13515,
+      "sha256": "eae8e113b395884e559c97ccb5a4b8729a4e25f0fdf6e9ebadf7574e9252f7ca"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 10044,
+      "sha256": "3f4654b7b2125df993747ada66a852fc39b387347aed637b910ff5d53628509f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST-SOURCE-PUBLICATION-v1.json",
+      "bytes": 2268,
+      "sha256": "6e224943459c503c21a90c2c9509485cdb1d8d1130ddbb262f2934e9b9ece73d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/QA-FINAL.json",
+      "bytes": 41919,
+      "sha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 12018,
+      "sha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-STAGE-TRIAL-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 12110,
+      "sha256": "faa68af1a9253fd5c67016fcdedc8a00eefd372b9c01f63bd2d3aeed1458511b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/WITNESS-RELATIVE-STAGE-TRIAL-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 11176,
+      "sha256": "b9bf9d7a170e1d917f8a314575fe5726ee834372ad220b1ab4c149d488f55c13"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/MST18-11-VIA45-EXACT-SWEEP-FEASIBILITY-v2.json",
+      "bytes": 7661,
+      "sha256": "5616288e4a03e2bbac6b193c36f9b6fcbae4f72b53896dd801af8c88386439f2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/quality-portfolio-analysis/MST18-11-NATIVE-VIA-VISIBILITY-AND-ALIAS-ROOT-CAUSE-v1.json",
+      "bytes": 49397,
+      "sha256": "ea7f1777cd812024a4cac5ce8268a559e390260312b2616cc28f4ba39facef43"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 73176,
+      "sha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 13835,
+      "sha256": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f"
+    }
+  ],
+  "limits": [
+    "Local composition/source/synthetic readiness only. StandaloneV4 publication is now bound, while remote combined source/full84 remains gated on independently qualified positive actualV4 retained production-stage evidence and root approval.",
+    "Six stageSolve0 diagnostic component leads do not satisfy the new production-stage gate. No combined real routing, recovered-board/no-regression/performance result exists at this review."
+  ],
+  "sourceReviewBlockers": [],
+  "sourceReadyAfterPositiveActualV4Gate": true,
+  "actualV4PositiveGateSatisfiedByThisReview": false,
+  "readyForImmediateRemotePublication": false,
+  "combinedActualAttempts": 0,
+  "localActualDatasetCheckerExecutions": 0,
+  "localActualDatasetRoutingExecutions": 0,
+  "productionSourceEdits": 0,
+  "remoteWrites": 0,
+  "accepted": false,
+  "fullBoardRecovery": false,
+  "qualityOrSpeedCredit": false
+}
