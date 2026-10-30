@@ -42,7 +42,8 @@ const runtime = new SolverRuntime({
   requireWorker: true,
 })
 let dispatchCount = 0
-const executor: SolverRuntimeExecutor = {
+const executor: SolverRuntimeExecutor & { persistentWorkerCount: number } = {
+  persistentWorkerCount: 4,
   executeAsync(
     Solver: string | SolverConstructor<any, any>,
     input: unknown,
