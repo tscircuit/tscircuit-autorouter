@@ -1,0 +1,38 @@
+name: Worker tail profile
+on:
+  push:
+    branches: [codex/worker-tail-profile]
+    paths: [.github/workflows/worker-tail-profile.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [profile]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Instrument individual node cost
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts")
+          s=p.read_text()
+          s=s.replace("      solver.solve()", '      const nodeStarted = performance.now()\n      solver.solve()\n      const nodeTime = performance.now() - nodeStarted\n      if (nodeTime > 50) console.log("NODE_COST", JSON.stringify({ node: node.capacityMeshNodeId, ports: node.portPoints.length, width: node.width, height: node.height, milliseconds: nodeTime, iterations: solver.iterations }))')
+          p.write_text(s)
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worker-tail-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
