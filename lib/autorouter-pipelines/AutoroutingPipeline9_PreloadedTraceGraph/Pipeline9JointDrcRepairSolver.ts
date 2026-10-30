@@ -18,7 +18,10 @@ import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import {
+  convertToCircuitJson,
+  createPcbBoardElement,
+} from "lib/testing/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -1422,6 +1425,56 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
+    if (
+      (params.originalSrj.traces?.length ?? 0) === 0 &&
+      params.updatedPreloadedTraces.length === 0 &&
+      this.movablePreloadedSections.length === 0
+    ) {
+      const initialCandidate = prepareCandidateDrcInput(initialCombinedRoutes)
+      const candidateCircuitJson = convertToCircuitJson(
+        params.srjWithPointPairs,
+        initialCandidate.routedTraces,
+        {
+          minTraceWidth: params.originalSrj.minTraceWidth,
+          minViaDiameter: params.originalSrj.minViaDiameter,
+          originalSrj: params.originalSrj,
+          includeOriginalConnections: true,
+          connectivityMaps,
+        },
+      )
+      candidateCircuitJson.push(createPcbBoardElement({
+        ...params.originalSrj,
+        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
+      }))
+      const initialCircuitJson = convertToCircuitJson(
+        params.srjWithPointPairs,
+        preparedCurrentOutput.routedTraces,
+        {
+          minTraceWidth: params.originalSrj.minTraceWidth,
+          minViaDiameter: params.originalSrj.minViaDiameter,
+          originalSrj: params.originalSrj,
+          includeOriginalConnections: true,
+        },
+      )
+      initialCircuitJson.push(createPcbBoardElement({
+        ...params.originalSrj,
+        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
+      }))
+      // Trace-id collisions or imported connectivity can change the candidate
+      // circuit; reuse the initial DRC only when its complete input is equal.
+      if (JSON.stringify(candidateCircuitJson) === JSON.stringify(initialCircuitJson)) {
+        referenceDrcCache.set(
+          JSON.stringify(initialCombinedRoutes),
+          normalizeCandidateDrcResult({
+            errors: currentDrc.errors,
+            errorsWithCenters: currentDrc.errorsWithCenters,
+            circuitJson: currentDrcResult.circuitJson,
+            movableTraceIds: initialCandidate.movableTraceIds,
+            solverTraceIdByEvaluationTraceId: initialCandidate.solverTraceIdByEvaluationTraceId,
+          }),
+        )
+      }
+    }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1563,7 +1616,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       if (evaluatedNewErrors.length === 0) {
-        const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator({
           traces: [],
           routes: evaluatedRoutes,
@@ -1572,10 +1624,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors
-        if (
-          this.referenceDrcValidationCount > validationCountBefore &&
-          referenceErrors.length > 0
-        ) {
+        if (referenceErrors.length > 0) {
           this.referenceDrcFalseNegativeCount += 1
         }
         this.indexedDrcEvaluationTimeMs +=

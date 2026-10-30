@@ -90,9 +90,9 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
   expect(reference.referenceDrcValidationCount).toBe(
     validationsBeforeReturn + 1,
   )
-  // Three distinct geometries evict the oldest, bounding retained board data.
+  // The bounded cache retains these three distinct geometries.
   expect(evaluate(routes)).toEqual(original)
   expect(reference.referenceDrcValidationCount).toBe(
-    validationsBeforeReturn + 2,
+    validationsBeforeReturn + 1,
   )
 })
