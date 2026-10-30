@@ -1,0 +1,191 @@
+diff --git a/lib/prepared/LandmarkDistancePreparationSolver.ts b/lib/prepared/LandmarkDistancePreparationSolver.ts
+new file mode 100644
+--- /dev/null
++++ b/lib/prepared/LandmarkDistancePreparationSolver.ts
+@@ -0,0 +1,76 @@
++import { BaseSolver, SolverRuntime } from "@tscircuit/solver-utils"
++
++export type LandmarkDistanceInput = {
++  portX: ArrayLike<number>
++  portY: ArrayLike<number>
++  incidentPortRegion: number[][]
++  regionIncidentPorts: number[][]
++  landmark: number
++}
++
++/** Exact shortest geometric distances on the relaxed, undirected port graph. */
++export class LandmarkDistancePreparationSolver extends BaseSolver {
++  static readonly solverName = "LandmarkDistancePreparationSolver"
++  private output?: Float64Array
++  constructor(private readonly input: LandmarkDistanceInput) { super() }
++  override _step(): void {
++    const { portX, portY, incidentPortRegion, regionIncidentPorts, landmark } = this.input
++    const count = portX.length
++    const distances = new Float64Array(count).fill(Infinity)
++    const heap = new Int32Array(count)
++    const positions = new Int32Array(count).fill(-1)
++    const closed = new Uint8Array(count)
++    let size = 1
++    heap[0] = landmark
++    positions[landmark] = 0
++    distances[landmark] = 0
++    while (size > 0) {
++      const port = heap[0]!
++      positions[port] = -1
++      closed[port] = 1
++      const last = heap[--size]!
++      if (size > 0) {
++        let index = 0
++        while (index * 2 + 1 < size) {
++          let child = index * 2 + 1
++          if (child + 1 < size && distances[heap[child + 1]!]! < distances[heap[child]!]!) child++
++          if (distances[last]! <= distances[heap[child]!]!) break
++          heap[index] = heap[child]!
++          positions[heap[index]!] = index
++          index = child
++        }
++        heap[index] = last
++        positions[last] = index
++      }
++      const base = distances[port]!
++      for (const region of incidentPortRegion[port]!) {
++        for (const next of regionIncidentPorts[region]!) {
++          if (closed[next]) continue
++          const dx = portX[port]! - portX[next]!
++          const dy = portY[port]! - portY[next]!
++          const candidate = base + Math.sqrt(dx * dx + dy * dy)
++          if (candidate >= distances[next]!) continue
++          distances[next] = candidate
++          let index = positions[next]!
++          if (index === -1) index = size++
++          while (index > 0) {
++            const parent = (index - 1) >>> 1
++            if (distances[heap[parent]!]! <= candidate) break
++            heap[index] = heap[parent]!
++            positions[heap[index]!] = index
++            index = parent
++          }
++          heap[index] = next
++          positions[next] = index
++        }
++      }
++    }
++    this.output = distances
++    this.solved = true
++  }
++  getOutput(): Float64Array {
++    if (!this.output) throw new Error("Landmark distances are not prepared")
++    return this.output
++  }
++}
++SolverRuntime.registerSolver(LandmarkDistancePreparationSolver)
+diff --git a/lib/prepared/PreparedRoutingGeometry.ts b/lib/prepared/PreparedRoutingGeometry.ts
+--- a/lib/prepared/PreparedRoutingGeometry.ts
++++ b/lib/prepared/PreparedRoutingGeometry.ts
+@@ -1,3 +1,4 @@
++import { LandmarkDistancePreparationSolver, type LandmarkDistanceInput } from "./LandmarkDistancePreparationSolver"
+ import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+ import type { TinyHyperGraphTopology } from "../core"
+ import {
+@@ -9,6 +10,7 @@
+   readonly rowOffsets: Int32Array
+   private readonly jobs: RegionDistancePreparationInput[] = []
+   distances?: Float64Array
++  landmarkDistances?: Float64Array[]
+   readonly supported: boolean
+ 
+   constructor(private readonly topology: TinyHyperGraphTopology) {
+@@ -52,6 +54,30 @@
+       this.jobs.push({ portX: topology.portX, portY: topology.portY, regions })
+   }
+ 
++  private getLandmarkInputs(): LandmarkDistanceInput[] {
++    const { portX, portY, incidentPortRegion, regionIncidentPorts, portCount } = this.topology
++    if (portCount === 0) return []
++    const landmarks = new Set<number>()
++    for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
++      let landmark = 0
++      for (let index = 1; index < portCount; index++) {
++        if (portX[index]! * sx! + portY[index]! * sy! > portX[landmark]! * sx! + portY[landmark]! * sy!) landmark = index
++      }
++      landmarks.add(landmark)
++    }
++    return [...landmarks].map((landmark) => ({ portX, portY, incidentPortRegion, regionIncidentPorts, landmark }))
++  }
++
++  getLandmarkDistance(port: number, goal: number): number {
++    let distance = 0
++    for (const values of this.landmarkDistances ?? []) {
++      const from = values[port]!
++      const to = values[goal]!
++      if (Number.isFinite(from) && Number.isFinite(to)) distance = Math.max(distance, Math.abs(from - to) - 1e-9)
++    }
++    return distance
++  }
++
+   private accept(parts: Float64Array[]): void {
+     this.distances = new Float64Array(
+       parts.reduce((sum, part) => sum + part.length, 0),
+@@ -65,6 +91,11 @@
+ 
+   prepare(): void {
+     if (this.distances || !this.supported) return
++    this.landmarkDistances = this.getLandmarkInputs().map((input) => {
++      const solver = new LandmarkDistancePreparationSolver(input)
++      solver.solve()
++      return solver.getOutput()
++    })
+     this.accept(
+       this.jobs.map((input) => {
+         const solver = new RegionDistancePreparationSolver(input)
+@@ -76,12 +107,11 @@
+ 
+   async prepareAsync(runtime: SolverRuntimeExecutor): Promise<void> {
+     if (this.distances || !this.supported) return
+-    this.accept(
+-      await Promise.all(
+-        this.jobs.map((input) =>
+-          runtime.executeAsync(RegionDistancePreparationSolver, input),
+-        ),
+-      ),
+-    )
++    const [parts, landmarks] = await Promise.all([
++      Promise.all(this.jobs.map((input) => runtime.executeAsync(RegionDistancePreparationSolver, input))),
++      Promise.all(this.getLandmarkInputs().map((input) => runtime.executeAsync(LandmarkDistancePreparationSolver, input))),
++    ])
++    this.landmarkDistances = landmarks
++    this.accept(parts)
+   }
+ }
+diff --git a/lib/prepared/PreparedPortPointRoutingSolver.ts b/lib/prepared/PreparedPortPointRoutingSolver.ts
+--- a/lib/prepared/PreparedPortPointRoutingSolver.ts
++++ b/lib/prepared/PreparedPortPointRoutingSolver.ts
+@@ -13,10 +13,15 @@
+     topology: TinyHyperGraphSolver["topology"],
+     problem: TinyHyperGraphSolver["problem"],
+     options: TinyHyperGraphSolverOptions,
+-    geometry: PreparedRoutingGeometry,
++    private readonly geometry: PreparedRoutingGeometry,
+   ) {
+     super(topology, problem, options)
+     this.workspace = new DenseRoutingWorkspace(geometry)
++  }
++
++  protected override getRouteHeuristic(routeId: number, portId: number): number {
++    return Math.max(super.getRouteHeuristic(routeId, portId),
++      this.geometry.getLandmarkDistance(portId, this.getRouteEndPortId(routeId)) * this.DISTANCE_TO_COST)
+   }
+ 
+   override _step(): void {
+@@ -36,6 +41,11 @@
+   private readonly geometry = new PreparedRoutingGeometry(this.topology)
+   private readonly workspace = new DenseRoutingWorkspace(this.geometry)
+   private asyncRunning = false
++
++  protected override getRouteHeuristic(routeId: number, portId: number): number {
++    return Math.max(super.getRouteHeuristic(routeId, portId),
++      this.geometry.getLandmarkDistance(portId, this.getRouteEndPortId(routeId)) * this.DISTANCE_TO_COST)
++  }
+ 
+   override _step(): void {
+     const routeId = this.state.currentRouteId

@@ -1,3 +1,4 @@
+import "tiny-hypergraph/lib/prepared/LandmarkDistancePreparationSolver"
 import "../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceComponentWorker"
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/bun"
 import "tiny-hypergraph/lib/prepared/RegionDistancePreparationSolver"
