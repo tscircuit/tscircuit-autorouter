@@ -1,4 +1,3 @@
-import { createRepairSearchScratchStats, type RepairSearchScratchStats } from "lib/solvers/RepairSearchScratch/RepairSearchScratchStats"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -63,7 +62,6 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 type Pipeline9JointDrcRepairSolverParams = {
-  experimentRepairSearchScratch?: boolean
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -650,7 +648,6 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
-  readonly repairSearchScratchStats?: RepairSearchScratchStats
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
@@ -716,7 +713,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.initialBoundedRegionalRepairStartedAt = performance.now()
         this.initialBoundedRegionalRepairSolver =
           new Pipeline9BoundedRegionalRepairSolver({
-            repairSearchScratchStats: this.repairSearchScratchStats,
             connMap: this.params.connMap,
             originalSrj: {
               ...this.params.originalSrj,
@@ -809,9 +805,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     this.params = params
-    if (params.experimentRepairSearchScratch === true) {
-      this.repairSearchScratchStats = createRepairSearchScratchStats()
-    }
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
 
@@ -1946,7 +1939,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.params.effort,
     )
     this.boundedRegionalParams = {
-      repairSearchScratchStats: this.repairSearchScratchStats,
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
