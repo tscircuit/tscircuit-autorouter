@@ -1,0 +1,20 @@
+name: Parallel routing validation
+on:
+  push:
+    branches: [codex/overlap-worker-startup]
+    paths: [.github/workflows/parallel-routing-validation.yml]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun test tests/features/pipeline9-async-force-outer-budget.test.ts tests/features/pipeline9-async-no-runtime.test.ts tests/features/pipeline9-async-outer-budget.test.ts tests/features/pipeline9-async-portpoint-budget.test.ts tests/features/pipeline9-async-repair-outer-budget.test.ts tests/features/pipeline9-async-runtime-failure.test.ts tests/features/pipeline9-async.test.ts tests/features/pipeline9-high-density-async-batch-order.test.ts tests/features/pipeline9-high-density-async-budget.test.ts tests/features/pipeline9-high-density-async-no-runtime.test.ts tests/features/pipeline9-high-density-async-preloaded.test.ts tests/features/pipeline9-high-density-async-priority-ledger.test.ts tests/features/pipeline9-high-density-async.test.ts --timeout 9999999
+      - run: bun run build
