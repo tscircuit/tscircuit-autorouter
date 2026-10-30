@@ -739,6 +739,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
         traceWidth: this.constructorParams.traceWidth,
+        viaLayerIndices:
+          !this.constructorParams.allowBlindAndBuriedVias &&
+          this.constructorParams.layerCount !== undefined
+            ? Array.from(
+                { length: this.constructorParams.layerCount },
+                (_, z): number => z,
+              )
+            : undefined,
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
