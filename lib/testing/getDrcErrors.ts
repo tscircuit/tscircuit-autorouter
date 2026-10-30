@@ -81,11 +81,12 @@ const createDrcConnectivityMap = (
   return connMap
 }
 
-export const getDrcErrors = (
+export const getDrcErrorsForPartition = (
   circuitJson: CircuitJson,
-  options: GetDrcErrorsOptions = {},
-): GetDrcErrorsResult => {
-  const connMap = createDrcConnectivityMap(circuitJson)
+  options: GetDrcErrorsOptions,
+  connMap: ConnectivityMap,
+  partition: number,
+): DrcError[] => {
   const vias = circuitJson.filter(
     (
       element,
@@ -101,28 +102,28 @@ export const getDrcErrors = (
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
-  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
+  const traceErrors = partition === 0 ? checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
-  }).filter((error) => error.type !== "pcb_keepout_overlap_warning")
+  }).filter((error) => error.type !== "pcb_keepout_overlap_warning") : []
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
-  const viaTraceErrors = includeTypedTraceClearance
+  const viaTraceErrors = partition === 1 && includeTypedTraceClearance
     ? checkViaTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
-  const padTraceErrors = includeTypedTraceClearance
+  const padTraceErrors = partition === 2 && includeTypedTraceClearance
     ? checkPadTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
-  const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
+  const holeTraceErrors = partition === 2 ? checkHoleTraceClearance(circuitJson, {
     minClearance: options.holeClearance,
-  })
-  const viaPadErrors = checkViaPadClearance(circuitJson, {
+  }) : []
+  const viaPadErrors = partition === 3 ? checkViaPadClearance(circuitJson, {
     connMap,
     minClearance: options.viaToPadClearance,
   }).map((error): ViaPadDrcError => {
@@ -137,8 +138,8 @@ export const getDrcErrors = (
         ? { pcb_trace_id: via.pcb_trace_id }
         : {}),
     }
-  })
-  const viaErrors = [
+  }) : []
+  const viaErrors = partition === 3 ? [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
       minClearance: viaClearance,
@@ -147,12 +148,12 @@ export const getDrcErrors = (
       connMap,
       minClearance: viaClearance,
     }),
-  ]
+  ] : []
 
   const errors: DrcError[] = [
     ...traceErrors,
-    ...checkPcbTracesOutOfBoard(circuitJson),
-    ...(options.includeTraceContinuity === false
+    ...(partition === 1 ? checkPcbTracesOutOfBoard(circuitJson) : []),
+    ...(partition !== 1 || options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
@@ -161,6 +162,38 @@ export const getDrcErrors = (
     ...viaPadErrors,
     ...viaErrors,
   ]
+
+  return errors
+}
+
+export type DrcCheckExecutor = (
+  circuitJson: CircuitJson,
+  options: GetDrcErrorsOptions,
+  connMap: ConnectivityMap,
+) => DrcError[]
+
+export const getDrcErrors = (
+  circuitJson: CircuitJson,
+  options: GetDrcErrorsOptions = {},
+  executor?: DrcCheckExecutor,
+): GetDrcErrorsResult => {
+  const connMap = createDrcConnectivityMap(circuitJson)
+  const vias = circuitJson.filter(
+    (
+      element,
+    ): element is CircuitJsonElement & {
+      type: "pcb_via"
+      pcb_via_id: string
+      x: number
+      y: number
+    } => element.type === "pcb_via",
+  )
+  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
+  const errors = executor
+    ? executor(circuitJson, options, connMap)
+    : [0, 1, 2, 3].flatMap((partition) =>
+        getDrcErrorsForPartition(circuitJson, options, connMap, partition),
+      )
 
   const errorsWithCenters = errors.map((error) => {
     if (
