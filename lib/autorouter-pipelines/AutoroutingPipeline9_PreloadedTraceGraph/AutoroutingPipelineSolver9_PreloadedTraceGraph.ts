@@ -1,4 +1,6 @@
 import { getLayerAwareMstPointKey } from "lib/solvers/NetToPointPairsSolver/getLayerAwareMstPointKey"
+import { Pipeline9RelativeWitnessRepairSolver } from "./Pipeline9RelativeWitnessRepairSolver"
+import { Pipeline9WitnessViaPadRepairSolver } from "./Pipeline9WitnessViaPadRepairSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -116,6 +118,8 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  experimentWitnessViaPadRepair?: boolean
+  experimentRelativeWitnessRepair?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -276,6 +280,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  declare witnessViaPadRepairSolver?: Pipeline9WitnessViaPadRepairSolver
+  declare relativeWitnessRepairSolver?: Pipeline9RelativeWitnessRepairSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -310,7 +316,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -1088,6 +1094,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    const witnessOriginalSrj = opts.experimentWitnessViaPadRepair === true || opts.experimentRelativeWitnessRepair === true
+      ? structuredClone(srj)
+      : undefined
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
@@ -1111,6 +1120,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
         maxWidthHeight,
         targetMinCapacity,
+      )
+    }
+
+    if (mutableOpts.experimentRelativeWitnessRepair === true) {
+      if (witnessOriginalSrj === undefined) throw new Error("Relative repair requires constructor-time original declarations")
+      this.pipelineDef.push(definePipelineStep("relativeWitnessRepairSolver", Pipeline9RelativeWitnessRepairSolver, (cms) => {
+        if (!cms.powerTraceExpansionSolver?.solved || !cms.srjWithPointPairs) throw new Error("Relative repair requires the completed final power export")
+        return [{ originalSrj: witnessOriginalSrj, pointPairs: cms.srjWithPointPairs, traces: cms.powerTraceExpansionSolver.getOutput(), protectedTraces: cms.getPowerTraceExpansionFixedTraces() }]
+      }))
+    } else if (mutableOpts.experimentWitnessViaPadRepair === true) {
+      if (witnessOriginalSrj === undefined) {
+        throw new Error("Witness repair requires its constructor-time original declarations")
+      }
+      this.pipelineDef.push(
+        definePipelineStep(
+          "witnessViaPadRepairSolver",
+          Pipeline9WitnessViaPadRepairSolver,
+          (cms) => {
+            if (!cms.powerTraceExpansionSolver?.solved || !cms.srjWithPointPairs) {
+              throw new Error("Witness repair requires the completed final power export")
+            }
+            return [{
+              // The certificate retains the requested declarations before
+              // ordinary routing-obstacle layer normalization.
+              originalSrj: witnessOriginalSrj,
+              pointPairs: cms.srjWithPointPairs,
+              traces: cms.powerTraceExpansionSolver.getOutput(),
+              protectedTraces: cms.getPowerTraceExpansionFixedTraces(),
+            }]
+          },
+        ),
       )
     }
 
@@ -1239,7 +1279,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
-      pipelineStepDef.solverName === "effortCleanupSolver"
+      pipelineStepDef.solverName === "effortCleanupSolver" ||
+      pipelineStepDef.solverName === "witnessViaPadRepairSolver" ||
+      pipelineStepDef.solverName === "relativeWitnessRepairSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1695,7 +1737,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...(this.relativeWitnessRepairSolver
+        ? this.relativeWitnessRepairSolver.getOutput()
+        : this.witnessViaPadRepairSolver
+        ? this.witnessViaPadRepairSolver.getOutput()
+        : this.powerTraceExpansionSolver.getOutput()),
     ]
   }
 
@@ -1710,7 +1756,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...(this.relativeWitnessRepairSolver
+        ? this.relativeWitnessRepairSolver.getOutput()
+        : this.witnessViaPadRepairSolver
+        ? this.witnessViaPadRepairSolver.getOutput()
+        : this.powerTraceExpansionSolver.getOutput()),
     ]
     return {
       ...this.originalSrj,
