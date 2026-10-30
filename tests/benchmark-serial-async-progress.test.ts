@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test"
 import { solveWithProgress } from "../scripts/benchmark/benchmark-run-task"
-import type { BenchmarkTask, WorkerProgress } from "../scripts/benchmark/benchmark-types"
+import type {
+  BenchmarkTask,
+  WorkerProgress,
+} from "../scripts/benchmark/benchmark-types"
 
-test("serial solvers with solveAsync report progress through their step method", async (): Promise<void> => {
+test("serial solveAsync solvers report each phase", async (): Promise<void> => {
   const solver = {
     solved: false,
     failed: false,
@@ -37,11 +40,15 @@ test("serial solvers with solveAsync report progress through their step method",
   const reports: WorkerProgress[] = []
   await solveWithProgress(task, solver, performance.now(), {
     progressIntervalMs: Infinity,
-    onProgress: (progress): void => { reports.push(progress) },
+    onProgress: (progress): void => {
+      reports.push(progress)
+    },
   })
   expect(solver.solved).toBe(true)
   expect(reports.map((report) => report.phaseName)).toEqual([
-    "preprocess", "routing", "routing",
+    "preprocess",
+    "routing",
+    "routing",
   ])
   expect(reports[1]!.solverIterations).toBe(2)
 })
