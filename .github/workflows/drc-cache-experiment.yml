@@ -42,7 +42,7 @@ jobs:
             # serialization. Avoid an extra outer array walk for each primitive.
             start=s.index("    const key = JSON.stringify(",s.index("private getPrimitiveId("))
             end=s.index("    const existing =",start)
-            s=s[:start]+"    const key = JSON.stringify(values)\\n"+s[end:]
+            s=s[:start]+"    const key = JSON.stringify(values)\n"+s[end:]
           assert a in s
           p.write_text(s.replace(a,b))
           PY
