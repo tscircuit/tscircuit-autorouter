@@ -1,0 +1,41 @@
+name: Shared queue width
+on:
+  push:
+    branches: [codex/overlap-worker-startup]
+    paths: [.github/workflows/shared-queue-width.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        warmups: [8, 16]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Select shared queue consumer count
+        env:
+          WARMUPS: ${{ matrix.warmups }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
+          s=p.read_text()
+          assert s.count("Math.min(4, nodes.length)")==1
+          p.write_text(s.replace("Math.min(4, nodes.length)", "Math.min("+os.environ["WARMUPS"]+", nodes.length)"))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shared-queue-width-${{ matrix.warmups }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
