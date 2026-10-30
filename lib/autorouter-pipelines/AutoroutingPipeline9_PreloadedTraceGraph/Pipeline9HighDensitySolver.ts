@@ -517,7 +517,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         .map((node, index) => ({ node, index }))
         .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
       const sharedNodeCursor = new Int32Array(new SharedArrayBuffer(4))
-      const workerCount = Math.min(4, nodes.length)
+      const workerCount = Math.min(16, nodes.length)
       const settled = await Promise.allSettled(Array.from({ length: workerCount }, () =>
         runtime.executeAsync(Pipeline9HighDensityBatchSolver, {
           ...params,
