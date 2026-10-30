@@ -1613,6 +1613,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           this.primaryCandidateSummary = selected.summary
           this.iterations += selected.iterations
           this.finishCandidatePortfolio()
+          this.progress = 1
+          this.statsSnapshotDirty = true
+          this.activeSubSolver = null
         }
       }
       while (
