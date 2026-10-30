@@ -1,0 +1,45 @@
+name: Speculative high density feasibility
+on:
+  push:
+    branches: [codex/speculative-hd-feasibility]
+    paths: [.github/workflows/speculative-hd-feasibility.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Capture first complete global assignment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts")
+          s=p.read_text()
+          s=s.replace("  private asyncRunning = false", "  speculativeProfile?: { started: number; remainingMs?: number; nodes: Map<string, string>; matches?: number; finalNodes?: number; matchedPorts?: number; finalPorts?: number }\n"+"  private asyncRunning = false")
+          s=s.replace("  getOutput(): {", "  getOutput(solvedTinySolver = this.getSolvedTinySolver()): {")
+          s=s.replace("    const solvedTinySolver = this.getSolvedTinySolver()\n    const nodesWithPortPoints", "    const nodesWithPortPoints")
+          s=s.replace("          const previousIterations = phase.iterations", "          if (!this.speculativeProfile && !(phase as any).__profileHook) {\n            ;(phase as any).__profileHook = true\n            const original = phase.onAllRoutesRouted.bind(phase)\n            phase.onAllRoutesRouted = () => {\n              if (!this.speculativeProfile) {\n                const output = this.getOutput(phase)\n                this.speculativeProfile = {\n                  started: performance.now(),\n                  nodes: new Map(output.nodesWithPortPoints.map(node => [node.capacityMeshNodeId, JSON.stringify(node)])),\n                }\n              }\n              original()\n            }\n          }\n"+"          const previousIterations = phase.iterations")
+          s=s.replace('    } catch (error) {\n      this.failed = true\n      this.error = `Port-point asynchronous', "      if (this.solved && this.speculativeProfile) {\n        const profile = this.speculativeProfile\n        profile.remainingMs = performance.now() - profile.started\n        const nodes = this.getOutput().nodesWithPortPoints\n        profile.finalNodes = nodes.length\n        profile.matches = 0\n        profile.matchedPorts = 0\n        profile.finalPorts = 0\n        for (const node of nodes) {\n          profile.finalPorts += node.portPoints.length\n          if (profile.nodes.get(node.capacityMeshNodeId) === JSON.stringify(node)) {\n            profile.matches++\n            profile.matchedPorts += node.portPoints.length\n          }\n        }\n      }\n"+'    } catch (error) {\n      this.failed = true\n      this.error = `Port-point asynchronous')
+          p.write_text(s)
+          p=Path("scripts/benchmark/benchmark-run-task.ts")
+          s=p.read_text().replace("    highDensityIterations: solver.highDensityRouteSolver?.iterations,", "    highDensityIterations: solver.highDensityRouteSolver?.iterations,\n    speculativeProfile: (solver as any).portPointPathingSolver?.speculativeProfile,")
+          p.write_text(s)
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - run: |
+          python3 - <<'PY'
+          import json
+          for t in json.load(open("benchmark-result.json"))["tests"]:
+            print(t["scenarioName"], t["routingMetrics"].get("speculativeProfile"))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: speculative-hd-feasibility
+          path: benchmark-result.json
