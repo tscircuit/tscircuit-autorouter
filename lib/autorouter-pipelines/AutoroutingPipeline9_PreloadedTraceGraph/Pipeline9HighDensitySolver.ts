@@ -1,4 +1,4 @@
-import { createFuturePointCacheStats, type FuturePointCacheStats } from "lib/solvers/HighDensitySolver/futurePointCacheContext"
+import { restoreCoincidentNativeViaLandings } from "./restoreCoincidentNativeViaLandings"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -37,7 +37,6 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
-  experimentFuturePointCache?: boolean
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -57,6 +56,7 @@ export type Pipeline9HighDensitySolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   preserveTerminalPcbPortIds?: boolean
+  preserveCoincidentLayerTransitionLandings?: boolean
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
@@ -333,8 +333,6 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
-  experimentFuturePointCache?: boolean
-  futurePointCacheStats?: FuturePointCacheStats
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -354,8 +352,6 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  experimentFuturePointCache,
-  futurePointCacheStats,
   traceWidth,
   obstacleMargin,
   effort,
@@ -387,7 +383,6 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
-    ...(experimentFuturePointCache === true ? { experimentFuturePointCache: true, futurePointCacheStats } : {}),
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -438,7 +433,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
-    if (params.experimentFuturePointCache === true) this.futurePointCacheStats = createFuturePointCacheStats()
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -479,7 +473,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
-  declare readonly futurePointCacheStats?: FuturePointCacheStats
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
 
   override getSolverName(): string {
@@ -558,10 +551,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               // Each batch promise owns execution telemetry exactly once,
               // including completed nodes outside the accepted serial prefix.
               for (const result of results) {
-                if (result.futurePointCacheStats) {
-                  if (!this.futurePointCacheStats) throw new Error("Unexpected future-point worker evidence on default-OFF host")
-                  for (const key of Object.keys(result.futurePointCacheStats) as (keyof FuturePointCacheStats)[]) this.futurePointCacheStats[key] += result.futurePointCacheStats[key]
-                }
                 for (const [key, value] of Object.entries(
                   result.benchmarkDiagnosticCounters,
                 )) {
@@ -658,6 +647,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    if (this.params.preserveCoincidentLayerTransitionLandings === true) routes = routes.map(restoreCoincidentNativeViaLandings)
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -697,7 +687,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      ...(this.params.experimentFuturePointCache === true ? { experimentFuturePointCache: true, futurePointCacheStats: this.futurePointCacheStats } : {}),
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
