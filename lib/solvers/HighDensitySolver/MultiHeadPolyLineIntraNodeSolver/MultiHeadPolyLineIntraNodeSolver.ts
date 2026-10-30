@@ -1087,7 +1087,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (
       minGapTarget === undefined ||
       this.lastCandidate === null ||
-      this.lastCandidate.minGaps.length === 0
+      this.lastCandidate.minGaps.length === 0 ||
+      this.lastCandidate.polyLines.some((line) =>
+        line.mPoints.some(
+          (point) => !Number.isFinite(point.x) || !Number.isFinite(point.y),
+        ),
+      )
     )
       return
 
