@@ -28,10 +28,10 @@ jobs:
           s=s.replace("      solver.solve()", '      const nodeStarted = performance.now()\n      solver.solve()\n      const nodeTime = performance.now() - nodeStarted\n      solver.benchmarkDiagnosticCounters["nodeTime:" + node.capacityMeshNodeId] = nodeTime')
           p.write_text(s)
           p=Path("scripts/benchmark/benchmark-run-task.ts")
-          s=p.read_text().replace("    highDensityIterations: solver.highDensityRouteSolver?.iterations,", "    highDensityIterations: solver.highDensityRouteSolver?.iterations,\n    workerNodeTimes: (solver.highDensityRouteSolver as any)?.benchmarkDiagnosticCounters,")
+          s=p.read_text().replace("    highDensityIterations: solver.highDensityRouteSolver?.iterations,", "    highDensityIterations: solver.highDensityRouteSolver?.iterations,\n    workerNodeTimes: (solver.highDensityRouteSolver as any)?.benchmarkDiagnosticCounters,\n    jointDrcStats: (solver as any).pipeline9JointDrcRepairSolver?.stats,")
           p.write_text(s)
           PY
-      - run: bash benchmark.sh --dataset 18 --threads 4
+      - run: bash benchmark.sh --dataset 18 --threads 4 --sample-numbers 2,4,13
       - name: Report measured worker tails
         run: |
           python3 - <<'PY'
@@ -40,7 +40,7 @@ jobs:
           for t in x["tests"]:
             m=t["routingMetrics"]
             times=sorted([v for k,v in m["workerNodeTimes"].items() if k.startswith("nodeTime:")], reverse=True)
-            print(t["scenarioName"], "phase",m["phaseTimeMs"].get("highDensityRouteSolver"),"sum",sum(times),"top",times[:8])
+            print(t["scenarioName"], "drc", m.get("jointDrcStats"), "phase",m["phaseTimeMs"].get("highDensityRouteSolver"),"sum",sum(times),"top",times[:8])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
