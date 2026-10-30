@@ -1156,15 +1156,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.solve()
         return
       }
-      const parallelPortPointPathing = this.opts.parallelPortPointPathing ??
-        ("persistentWorkerCount" in runtime && runtime.persistentWorkerCount === 4)
+      const parallelPortPointPathing = this.opts.parallelPortPointPathing !== false
       while (!this.solved && !this.failed) {
         if (
           (parallelPortPointPathing &&
             this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver) ||
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
-          this.activeSubSolver instanceof
-            TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {

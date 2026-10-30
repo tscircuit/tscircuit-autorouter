@@ -2,7 +2,6 @@ import { solveWithWasmRoutes, WasmRouteReadyTask } from "tiny-hypergraph/lib/cor
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -1479,8 +1478,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private asyncRunning = false
-
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
     stopAtIteration = Infinity,
@@ -1488,27 +1485,33 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     if (this.asyncRunning) throw new Error("Port-point solveAsync is already running")
     if (this.solved || this.failed) return
     const startTime = performance.now()
+    const useWasm = runtime && ((runtime as { persistentWorkerCount?: number }).persistentWorkerCount ?? 0) >= 4
     this.asyncRunning = true
     try {
       if (!this.initialized) {
-        if (runtime) await this.initializeAsync(runtime)
+        if (useWasm) await this.initializeAsync(runtime)
         else this.initialize()
       }
       while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
         const pipeline = this.tinyPipelineSolver
         const search = pipeline.activeSubSolver
-        if (runtime && search instanceof OutsideInPartialRipTinyHyperGraphSolver) {
+        if (runtime && ((useWasm && search instanceof OutsideInPartialRipTinyHyperGraphSolver) || search instanceof PreparedPortPointRoutingSolver)) {
           const previousIterations = search.iterations
           const remaining = Math.min(
             stopAtIteration - this.iterations,
             this.MAX_ITERATIONS - this.iterations,
             pipeline.MAX_ITERATIONS - pipeline.iterations,
           )
-          await solveWithWasmRoutes(search, runtime, previousIterations + remaining)
+          if (useWasm) {
+            await solveWithWasmRoutes(search, runtime, previousIterations + remaining)
+          } else if (search instanceof PreparedPortPointRoutingSolver) {
+            await search.solveAsync(runtime, previousIterations + remaining)
+          }
           const terminal = search.solved || search.failed
           const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
           pipeline.iterations += consumed
           this.iterations += consumed
+          if (this.iterations >= stopAtIteration) break
         }
         this.step()
       }
@@ -1598,46 +1601,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             : this.tinyPipelineSolver.progress
     this.statsSnapshotDirty = true
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
-  }
-
-  async solveAsync(
-    runtime?: SolverRuntimeExecutor,
-    stopAtIteration = Infinity,
-  ): Promise<void> {
-    if (this.asyncRunning)
-      throw new Error("Port-point solveAsync is already running")
-    this.asyncRunning = true
-    try {
-      while (
-        !this.solved &&
-        !this.failed &&
-        this.iterations < stopAtIteration
-      ) {
-        const phase = this.tinyPipelineSolver.activeSubSolver
-        if (runtime && phase instanceof PreparedPortPointRoutingSolver) {
-          const previousIterations = phase.iterations
-          await phase.solveAsync(
-            runtime,
-            previousIterations + Math.max(0, stopAtIteration - this.iterations),
-          )
-          const terminal = phase.solved || phase.failed
-          const consumed = Math.max(
-            0,
-            phase.iterations - previousIterations - (terminal ? 1 : 0),
-          )
-          this.tinyPipelineSolver.iterations += consumed
-          this.iterations += consumed
-          if (this.iterations >= stopAtIteration) break
-        }
-        this.step()
-      }
-    } catch (error) {
-      this.failed = true
-      this.error = `Port-point asynchronous solve failed: ${error}`
-      throw error
-    } finally {
-      this.asyncRunning = false
-    }
   }
 
   private getStatsSnapshot(): Record<string, any> {
