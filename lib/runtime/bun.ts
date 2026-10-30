@@ -11,8 +11,8 @@ export type AutorouterSolverRuntimeOptions = Omit<
 export function createAutorouterSolverRuntime(
   options: AutorouterSolverRuntimeOptions,
 ): SolverRuntime {
-  return new SolverRuntime({
+  return Object.assign(new SolverRuntime({
     ...options,
     workerSource,
-  })
+  }), { persistentWorkerCount: options.workerCount })
 }
