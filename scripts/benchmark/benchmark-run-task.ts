@@ -65,6 +65,7 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   }
   highDensityRouteSolver?: HighDensityBenchmarkSource
   highDensityRepairSolver?: HighDensityBenchmarkSource
+  pipeline9JointDrcRepairSolver?: HighDensityBenchmarkSource
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -383,6 +384,24 @@ const getProgressKey = (solver: SolverInstance): string => {
 export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
+  const jointStats = solver.pipeline9JointDrcRepairSolver?.stats
+  const jointDrcRepair: RoutingBenchmarkMetrics["jointDrcRepair"] = {}
+  for (const key of [
+    "initialDrcWorkerCount",
+    "speculativeExactRepairDispatched",
+  ] as const) {
+    if (typeof jointStats?.[key] === "number") {
+      jointDrcRepair[key] = jointStats[key]
+    }
+  }
+  for (const key of [
+    "speculativeExactRepairAccepted",
+    "initialBoundedRegionalRepairAccepted",
+  ] as const) {
+    if (typeof jointStats?.[key] === "boolean") {
+      jointDrcRepair[key] = jointStats[key]
+    }
+  }
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
@@ -430,6 +449,8 @@ export const getRoutingBenchmarkMetrics = (
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
+    jointDrcRepair:
+      Object.keys(jointDrcRepair).length > 0 ? jointDrcRepair : undefined,
     networkedHighDensity,
   }
 }
