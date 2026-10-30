@@ -19,7 +19,7 @@ test("valid unowned original copper records an inactive domain and preserves nat
   expect(cold.originalOwnershipCoverage).toBe("UNKNOWN")
   expect(cold.appendedIssueCount).toBe(0)
   expect(cold.referenceEvaluations).toBe(2)
-  expect(Object.keys(cold)).toHaveLength(14)
+  expect(Object.keys(cold)).toHaveLength(15)
   expect(Object.values(cold).every((value) => value === null || ["string", "number", "boolean"].includes(typeof value))).toBe(true)
   expect(disabled.stats.originalOwnerCopperFeedback).toBeUndefined()
 })

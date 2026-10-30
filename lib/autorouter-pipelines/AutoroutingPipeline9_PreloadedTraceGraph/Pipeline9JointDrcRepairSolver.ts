@@ -56,6 +56,7 @@ import {
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 import {
   getPipeline9OriginalOwnerCopperFeedback,
+  getPipeline9SelectedOriginalOwnerCopperFeedback,
   mergePipeline9OriginalOwnerCopperFeedback,
   filterPipeline9OriginalOwnerCopperFeedbackErrors,
   type OriginalOwnerCopperFeedbackStats,
@@ -831,7 +832,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
     ): ReturnType<typeof evaluateRelaxedDrc> => {
       if (!feedbackActive) return result
-      const feedback = getPipeline9OriginalOwnerCopperFeedback({
+      const feedback = getPipeline9SelectedOriginalOwnerCopperFeedback({
         originalSrj: params.originalSrj, srjWithPointPairs: params.srjWithPointPairs,
         routedTraces, circuitJson: result.circuitJson, originalTraceIdByPreparedTraceId,
       })
@@ -917,10 +918,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: currentDrcResult.circuitJson,
         originalTraceIdByPreparedTraceId: preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId })
       const unsupported = baseline.status === "NOT_APPLICABLE" ? baseline : current.status === "NOT_APPLICABLE" ? current : undefined
-      feedbackStats = { version: 1, enabled: true,
+      feedbackStats = { version: 2, enabled: true,
         status: unsupported ? "NOT_APPLICABLE" : "SUPPORTED", reason: unsupported?.reason ?? null,
         originalOwnershipCoverage: unsupported ? "UNKNOWN" : "COMPLETE", selectedCheckCount: 2,
-        completePredicateSuite: true, baselineIssueCount: unsupported ? null : baseline.errors.length,
+        completeAdmissionPredicateSuite: true, referencePredicateCount: 2, baselineIssueCount: unsupported ? null : baseline.errors.length,
         initialIssueCount: unsupported ? null : current.errors.length,
         referenceEvaluations: 2, appendedIssueCount: 0, baselineMatchesFiltered: 0,
         unsupportedOwnerCount: unsupported?.unsupportedOwnerCount ?? 0, latestIssueCount: unsupported ? null : current.errors.length }
