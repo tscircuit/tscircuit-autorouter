@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "status": "READY_FOR_STANDALONE_V4_SOURCE_PUBLICATION_AND_NEW_SEALED_RETAINED_PRODUCTION_STAGE_TRIAL",
+  "atUtc": "2026-10-30T01:51:18.208462+00:00",
+  "reviewer": "/root/quality_review",
+  "reviewerRole": "Independent read-only production source review. Reviewer authored external synthetic runtime/adversarial probes, which QA archives and attributes. No production/test/controller source edits.",
+  "worktree": "/tmp/autorouter-relative-witness-v4",
+  "localCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+  "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "parentLocal": "063b15ec97ea49b3b30628b26a47439c7b5c6ad9",
+  "parentRemote": "78c9f2fd45bdb53953d4d9bd61100a8f5f52b1f9",
+  "parentTree": "8f3c07e567a0e2bb33dd094672e0700e50834569",
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/QA-FINAL.json",
+    "bytes": 41919,
+    "sha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67"
+  },
+  "sourceFlag": "experimentRelativeWitnessRepair",
+  "default": false,
+  "verifiedInventoryCounts": {
+    "files": 10,
+    "protectedV3AndOracleFiles": 16,
+    "compiledFiles": 7,
+    "qaEvidence": 104,
+    "priorEvidence": 5
+  },
+  "allInventoryByteCountsAndShaVerified": true,
+  "all16ProtectedFilesByteExactV3": true,
+  "allUnrelatedSourceUnchanged": true,
+  "old2109FullCertificateBodySha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c",
+  "compiledIndex": {
+    "path": "/tmp/autorouter-relative-witness-v4/dist/index.js",
+    "bytes": 3244811,
+    "sha256": "c103e171a767d70a1a8d8e62a0ae60bc037ab43f01549d9979a615f595e9f2b7"
+  },
+  "publicationExport": {
+    "path": "/tmp/bottleneck-relative-witness-v4-source-export.json",
+    "bytes": 49435,
+    "sha256": "08cef932963033f63242b27c2dea3e3b0f704098f09d1d7a64611bcc9ca0157a"
+  },
+  "criticalReview": [
+    "Narrow immutable successor of published V3/78c9. Three production changes: anonymous hard-obstacle admission in exact preservation, a new final target-clearance guard, and stage invocation of that guard. Full old certificate, original-owner typed checker, detailed predicate adapter, proposal factory, P9 integration, exact electrical-contact theorem/geometry kernel and native checker/dependency/oracle bytes are unchanged.",
+    "Anonymous non-target material remains explicitlyUNKNOWN. Only complete finite supported rect/oval original hard constraints with dense connectedTo:[], absent/empty electrical metadata, supported bounded fields/layers/rotation and exact original index/finding correspondence qualify. The full UNKNOWN status/reason/whole declaration/raw participant/finding/multiplicity must remain identical; no copper identity or connection is inferred.",
+    "This unknown-owner cancellation is sound within the existing theorem: the mutable bundle remains independently separated from the full fixed unknown outer footprint and never uses it as an admitted electrical contact. Existing other-via contact and its defects remain fixed. Target via/foreign trace and moved raw material still require distinct RESOLVED original owners and complete inventory.",
+    "Pinned native viaTrace uses .005mm tolerance, so frozen-oracle zero does not certify the literal threshold. New source-only exact admission checks the final via outer disk against EVERY shared manufactured-layer target foreign raw wire capsule using original declared minimum as a separate exact margin term. Maximum endpoint width conservatively bounds varying wire material.",
+    "The unchanged BigInt2^128 separating-axis kernel converts each radius and margin separately, with no inward-rounded radius sum or floating square root. A PASS is strict physical separation beyond the requested target minimum. Unsupported materials, nonfinite/domain values, invalid spans/layer jumps and absent target segments reject. Incomplete separating axes can only false-reject.",
+    "Existing global minimum baseline segment selection and helper proposal order are unchanged. ViaTrace admissions, including previously tolerance-only candidates, are intentionally tightened; viaPad semantics remain unchanged. This exact claim concerns the selected foreign trace, not every manufacturing rule or full-board validity.",
+    "Full V3 untargeted record multiset contract, explicit coherent seven-check target1\u21920 populations, UNKNOWN full status/reasons/demands/reference equality, zero board reasons, immutable masks/material/geometry and unchanged relative contact proof all remain mandatory. LocalRepaired remains separate from accepted/globalAccepted false; no physical guard or oracle is relaxed.",
+    "Fresh synthetic source/compiled anonymous-hard fixture now repairs10\u21929 with8SRJ and1policy defects preserved exactly, including two duplicated raw fixed-via records; V3 parent returns unchanged. Existing resolved extra-defect3\u21922 and35 inherited classes retain exact output/move/stats/full old2109 return parity.",
+    "A meaningful compiled negative U-shaped target moves its closest segment: V3 actually applies a candidate at .099mm under native tolerance while untargeted records match. New V4 source and compiled both reject/retain baseline, with findingPreservationPASS and exact-clearance rejection. This independently verifies production guard integration beyond positive-only tests."
+  ],
+  "authorValidation": {
+    "bunVersion": "1.4.2",
+    "focusedTests": 58,
+    "assertions": 442,
+    "inheritedTests": 52,
+    "newTests": 6,
+    "fullTypesExit": 0,
+    "workersEsmDtsBuildExit": 0,
+    "freshParentSourceCompiledControls": 44,
+    "externalControlAuthor": "Independent read-only quality_review",
+    "inheritedParityProcesses": 35,
+    "anonymousHardProcesses": 3,
+    "oldResolvedExtraProcesses": 3,
+    "closestSegmentDeadbandCounterexampleProcesses": 3,
+    "independentAdversarialRecordControls": 32,
+    "independentExactTargetControls": 14,
+    "anonymousPositive": {
+      "parentV3UnchangedNegative": true,
+      "newSourceAndCompiledLocalRepaired": true,
+      "geometryBeforeAfter": [
+        10,
+        9
+      ],
+      "unchangedSrjRecords": 8,
+      "unchangedViaPolicyRecords": 1,
+      "duplicatedRawFixedViaFindings": 2,
+      "fullBeforeAfter": "UNKNOWN",
+      "relativeProof": "PASS",
+      "proposals": 1,
+      "accepted": false
+    },
+    "strongestSegmentPositive": {
+      "firstDiagnosticSegmentNotMinimum": true,
+      "productionUsesGlobalSmallestGap": true,
+      "finalSyntheticTargetGapMm": 0.101
+    },
+    "closestSegmentCounterexample": {
+      "nativeViaTraceReportedZeroBelowLiteralMinimum": true,
+      "parentV3ActuallyApplies": true,
+      "newSourceAndCompiledRejectAndRetainOutput": true,
+      "untargetedFindingPreservationStillPasses": true,
+      "newExactAdmissionDecidesRejection": true
+    },
+    "compiledIndexSha256": "c103e171a767d70a1a8d8e62a0ae60bc037ab43f01549d9979a615f595e9f2b7",
+    "compiledAsyncWorkerDispatchExecuted": false
+  },
+  "independentFocusedValidation": {
+    "tests": 58,
+    "assertions": 442,
+    "log": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/INDEPENDENT-FOCUSED-FINAL.log",
+      "bytes": 10154,
+      "sha256": "1e11238be7e3680cac5a8bc808f2e2690d8c710fe15e4c3293d2b42af2a1c39d"
+    }
+  },
+  "independentExternalRuntimeValidation": {
+    "processes": 44,
+    "inheritedParity": 35,
+    "anonymousHard": 3,
+    "oldResolvedExtraParity": 3,
+    "closestSwitchCounterexample": 3,
+    "summary": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/RUNTIME-CONTROLS.json",
+      "bytes": 221446,
+      "sha256": "f171c87138739c8585442ff6c7ee3e69034e510bf630f83de63f22d324f1be92"
+    },
+    "runner": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/run-runtime-controls.py",
+      "bytes": 7450,
+      "sha256": "d6114dadb18fc5e7daf7464e8f3fcd13c3d01a996a60d2e4a18c12053dfb9501"
+    },
+    "child": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/runtime-child.ts",
+      "bytes": 7107,
+      "sha256": "ca319db2a63345cfa9db71e931243e59c2d6e639687012675ac4b5c47294b1d9"
+    },
+    "counterexampleFactory": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/switchedClosestFixture.ts",
+      "bytes": 534,
+      "sha256": "489f6cf908171cad87c9b2efebc8c42113dbb76af1b10e200e4a94a4ae7c3f16"
+    }
+  },
+  "independentRecordAdversaries": {
+    "controls": 32,
+    "summary": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/ADVERSARIAL-PRESERVATION-FINAL.json",
+      "bytes": 5215,
+      "sha256": "3f3b73ecc1eb15541f2232125f76db67b6f20ac0d0b8fb74a9204d9413efbad1"
+    },
+    "script": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/adversarial-preservation.ts",
+      "bytes": 5804,
+      "sha256": "ab83992c6d0d4847e188e3f5871f5e219c32ea0be2010bed8a32fabf6e08518a"
+    }
+  },
+  "independentExactTargetProbes": {
+    "controls": 14,
+    "summary": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/EXACT-TARGET-FINAL.json",
+      "bytes": 2363,
+      "sha256": "04fa88de7062f03ba703a177be0de78e34cd9933d16265976e42ec8e43689127"
+    },
+    "script": {
+      "path": "/tmp/autorouter-relative-witness-v4-runtime/exact-target-probes.ts",
+      "bytes": 2830,
+      "sha256": "06b2be99ce7bcc7f15d327f63157a66f1588a23fd06f2ae003b189833dec7c12"
+    },
+    "cases": [
+      "native .099mm deadband rejects/.101mm passes",
+      "all manufactured layers including bottom",
+      "closest target segment switches",
+      "reversed/clamped endpoint segments",
+      "variable endpoint widths",
+      "strict exact binary equality",
+      "nonfinite/unsupported/empty/unmaterialized target domains"
+    ]
+  },
+  "priorEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v3/QA-FINAL.json",
+      "bytes": 37789,
+      "sha256": "7e76bc3a817608c6b62a3b60d2de2d328f87a8230a94808f4f0971dcbe47ccd8"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v3/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 11676,
+      "sha256": "71350ccc1ecf51750ac004385f09dcae564d4cd8ae790e066ac7f3279fc71ff0"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-WITNESS-V3-SOURCE-PUBLICATION-v1.json",
+      "bytes": 2562,
+      "sha256": "f5858c8213c710b764803e42895e04f7541c629d2503d5d594c980e55cbd7c8e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 73176,
+      "sha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 13835,
+      "sha256": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f"
+    }
+  ],
+  "trackedAndUntrackedClean": true,
+  "limits": [
+    "Standalone source/synthetic readiness only. A NEW sealed controller and independently qualified actual V4 retained production-stage trial are still required.",
+    "Six authenticated V2 component diagnostic leads had stageSolve0 and are not actual V4 stage credit; one diagnostic candidate does not meet the literal target threshold.",
+    "Combined source/full84 publication remains gated on independently positive actual V4 source-stage evidence. No board recovery/no-regression/generalization/speed improvement follows from this source review."
+  ],
+  "sourceReviewBlockers": [],
+  "readyForStandalonePublication": true,
+  "actualV4PositiveProductionGateSatisfied": false,
+  "combinedPublicationOrFull84Ready": false,
+  "localActualDatasetCheckerExecutions": 0,
+  "localActualDatasetRoutingExecutions": 0,
+  "localActualRetainedStageExecutions": 0,
+  "productionSourceEditsByReviewer": 0,
+  "remoteWrites": 0,
+  "accepted": false,
+  "fullBoardRecovery": false,
+  "qualityOrSpeedCredit": false
+}

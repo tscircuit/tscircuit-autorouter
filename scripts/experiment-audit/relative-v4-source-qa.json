@@ -1,0 +1,830 @@
+{
+  "schemaVersion": 1,
+  "status": "V4_SOURCE_QA_COMPLETE_AWAITING_FROZEN_SOURCE_PEER",
+  "sourceWorktree": "/tmp/autorouter-relative-witness-v4",
+  "localCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+  "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "parentLocalCommit": "063b15ec97ea49b3b30628b26a47439c7b5c6ad9",
+  "parentRemoteSha": "78c9f2fd45bdb53953d4d9bd61100a8f5f52b1f9",
+  "parentTree": "8f3c07e567a0e2bb33dd094672e0700e50834569",
+  "sourceFlag": "experimentRelativeWitnessRepair",
+  "default": false,
+  "changes": [
+    "Allow exact-preserved anonymous fixed hard-obstacle UNKNOWN ownership without inferring an electrical owner",
+    "Require exact final via-to-EVERY-target-foreign-segment clearance beyond the declared minimum, independently of the frozen checker tolerance"
+  ],
+  "anonymousHardDomain": {
+    "originalConnectedTo": "Explicit empty dense array",
+    "electricalMetadata": "Absent or empty; no copper/SMT/PTH/port/net/trace identity fields",
+    "owner": "Explicit UNKNOWN with nonempty reason and exact status/reason structure retained; never RESOLVED or relabeled",
+    "identity": "Exact immutable original index/full declaration/finding obstacle-index correspondence and full implicated route/raw binding",
+    "footprint": "Finite positive rect/oval, supported explicit layers/rotation, conservative bounded original fields",
+    "fullRecordComparison": "Unchanged complete multiset equality, with duplicate multiplicity, all metadata, status, unknown reason, unrounded severity and geometry exact",
+    "unchangedRelativeTheorem": "Moving bundle must independently remain separated from the full anonymous fixed footprint; no use of anonymous material as a contact interface",
+    "otherUnknownCopperOrConflictingAliases": "Unsupported; remains unchanged/no repair"
+  },
+  "exactTargetAdmission": {
+    "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9RelativeViaTraceClearance.ts",
+    "reusesUnchangedKernel": "areCopperSweepsSeparated",
+    "objects": "Final via outer disk and EVERY same-layer target foreign raw wire capsule sharing any manufactured via layer",
+    "margin": "Original declared minimum_clearance passed separately to the exact BigInt kernel, no rounded radius sum",
+    "result": "PASS only for proven strict separation beyond minimum; unsupported or nonfinite materials/segments/layer jumps reject",
+    "globalBaselineSegmentSelection": "Existing minimum best.gap loop and proposal helper bytes unchanged",
+    "appliesTo": "ViaTrace proposals only; viaPad behavior unchanged",
+    "scope": "Exact fact for selected target foreign trace only; no universal manufacturing or minimum-clearance claim"
+  },
+  "unchangedV3Contract": {
+    "targetOriginalOwnersResolvedAndDistinct": true,
+    "completeOriginalRawCanonicalInventory": true,
+    "all7StrictPredicatesPerformedAndTargetGone": true,
+    "everyUntargetedNativeSrjPolicyViaInPadRecordExact": true,
+    "fullUnknownReasonsDemandsReferenceExact": true,
+    "boardEnvelopeZeroBeforeAfter": true,
+    "fullCertificateBodyUnchanged": true,
+    "relativeProofAndCapsUnchanged": true,
+    "globalAccepted": false,
+    "qualificationScalarCount": 10,
+    "legacyModeStatsAndBehaviorExactExceptApprovedViaTraceAdmissionTightening": true
+  },
+  "validation": {
+    "bunVersion": "1.4.2",
+    "focusedTests": 58,
+    "assertions": 442,
+    "inheritedTests": 52,
+    "newTests": 6,
+    "fullTypesExit": 0,
+    "workersEsmDtsBuildExit": 0,
+    "freshParentSourceCompiledControls": 44,
+    "externalControlAuthor": "Independent read-only quality_review",
+    "inheritedParityProcesses": 35,
+    "anonymousHardProcesses": 3,
+    "oldResolvedExtraProcesses": 3,
+    "closestSegmentDeadbandCounterexampleProcesses": 3,
+    "independentAdversarialRecordControls": 32,
+    "independentExactTargetControls": 14,
+    "anonymousPositive": {
+      "parentV3UnchangedNegative": true,
+      "newSourceAndCompiledLocalRepaired": true,
+      "geometryBeforeAfter": [
+        10,
+        9
+      ],
+      "unchangedSrjRecords": 8,
+      "unchangedViaPolicyRecords": 1,
+      "duplicatedRawFixedViaFindings": 2,
+      "fullBeforeAfter": "UNKNOWN",
+      "relativeProof": "PASS",
+      "proposals": 1,
+      "accepted": false
+    },
+    "strongestSegmentPositive": {
+      "firstDiagnosticSegmentNotMinimum": true,
+      "productionUsesGlobalSmallestGap": true,
+      "finalSyntheticTargetGapMm": 0.101
+    },
+    "closestSegmentCounterexample": {
+      "nativeViaTraceReportedZeroBelowLiteralMinimum": true,
+      "parentV3ActuallyApplies": true,
+      "newSourceAndCompiledRejectAndRetainOutput": true,
+      "untargetedFindingPreservationStillPasses": true,
+      "newExactAdmissionDecidesRejection": true
+    },
+    "compiledIndexSha256": "c103e171a767d70a1a8d8e62a0ae60bc037ab43f01549d9979a615f595e9f2b7",
+    "compiledAsyncWorkerDispatchExecuted": false
+  },
+  "files": [
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RelativeWitnessRepairSolver.ts",
+      "bytes": 21539,
+      "sha256": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9RelativeViaTraceClearance.ts",
+      "bytes": 2287,
+      "sha256": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preservePipeline9RelativeFindings.ts",
+      "bytes": 8937,
+      "sha256": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-anonymous-hard-forgeries.test.ts",
+      "bytes": 2407,
+      "sha256": "2ea271fe138d62ac93590455a81903167dbf1f3cf278e6cdbabcc3ce1bd03fe2"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-anonymous-hard-preservation.test.ts",
+      "bytes": 1966,
+      "sha256": "4da52cd54dadf5218fc89b5622363e62300dc72ca1da648d6a025d8d82cdcb0d"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-exact-target-all-segments.test.ts",
+      "bytes": 1496,
+      "sha256": "8f8ef7484ffb5df27da98fb8e2a8f7c59e0ca1ae23c55ea34fcd16a7a3c861cf"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-exact-target-deadband.test.ts",
+      "bytes": 1569,
+      "sha256": "9e0ad8c645f0d6d52a6501123355604f500dbd16d2ad8b108ec4680b13e47fa1"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-exact-target-stage-switch.test.ts",
+      "bytes": 1152,
+      "sha256": "370a3915824d7ba7007e8bb2188af79b4b8fed8db81f55677fcf98b1b49d2e3c"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relative-witness-via-trace-strongest-segment.test.ts",
+      "bytes": 1440,
+      "sha256": "76da62f708171f59dbc9ef32defcb1f366510e9d1113fc5590fca783a3419692"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/tests/features/relativeViaTraceAnonymousHardFixture.ts",
+      "bytes": 1185,
+      "sha256": "4770692efaecfd7be2903082ac64d2d396369614f65bffbe95a74fe8c1c49781"
+    }
+  ],
+  "protectedV3AndOracleFiles": [
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "bytes": 67394,
+      "sha256": "9f2eebf1e42341cfc3fb979a65fae786995004493ae5269202ef9e61dd30de05"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9WitnessViaPadRepairSolver.ts",
+      "bytes": 17557,
+      "sha256": "4cff98d94bea9ef15d41ae150b285fa89887ac9f8dc6420f56af18b108ddc852"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+      "bytes": 30677,
+      "sha256": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts",
+      "bytes": 27442,
+      "sha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/provePipeline9RelativeContacts.ts",
+      "bytes": 20647,
+      "sha256": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/relativeCopperSweepGeometry.ts",
+      "bytes": 5271,
+      "sha256": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getRelativeViaTraceTargets.ts",
+      "bytes": 1963,
+      "sha256": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9RelativeGeometryDetails.ts",
+      "bytes": 6593,
+      "sha256": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/testing/evaluate-relaxed-drc.ts",
+      "bytes": 3137,
+      "sha256": "87238d33bc0ed1316ccdbfb85958139dcfa4dc4bf315e2200d85fb78194243a2"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/testing/getDrcErrors.ts",
+      "bytes": 6646,
+      "sha256": "74bb779d0014d0b655015fdbfb1031b3fcd10893a227158abe5f4e6aba76bd66"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/testing/utils/convertToCircuitJson.ts",
+      "bytes": 38996,
+      "sha256": "5ff83973fcaa3b9f9eceff7d674752548bfec3e6a24eeddc617b6f82b4c1adb1"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/lib/testing/drcPresets.ts",
+      "bytes": 242,
+      "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/scripts/benchmark/benchmark-run-task.ts",
+      "bytes": 22856,
+      "sha256": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/scripts/benchmark/benchmark.child.ts",
+      "bytes": 1944,
+      "sha256": "ab77e556ff9b7ba07bae46fe4092e1700d09881c6aaa17240a3e7edd141d35e9"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/package.json",
+      "bytes": 7930,
+      "sha256": "aadcb9588ad08f890a9dddde643278547a1721196c0b3ea79874d611903a430c"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/scripts/build-solver-workers.ts",
+      "bytes": 949,
+      "sha256": "e9062471b4e1043244364dc037ed6cd9f296b4aa6bd93ee22d40082bfd9e0c6c"
+    }
+  ],
+  "compiledFiles": [
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/chunk-G3PMV62Z.js",
+      "bytes": 666,
+      "sha256": "f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/index.d.ts",
+      "bytes": 321283,
+      "sha256": "4574b2279f7864ddff7852af648c35d5ba9bf0e67193a2172dc0c629c8701777"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/index.js",
+      "bytes": 3244811,
+      "sha256": "c103e171a767d70a1a8d8e62a0ae60bc037ab43f01549d9979a615f595e9f2b7"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/runtime/bun.d.ts",
+      "bytes": 510,
+      "sha256": "c076a1bdf49b89a141fc255d4b0464b7b819a580d9b3fb3db8e059c5ca4433ee"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/runtime/bun.js",
+      "bytes": 1042803,
+      "sha256": "9fa25a18d0d638ba053e5afacfd38a9d97634b23cb8ab1cddbab95fe2af4ee41"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/runtime/node.d.ts",
+      "bytes": 511,
+      "sha256": "3a2ad69e62ea3900bfd09066a4c5644c5f8335efdf1aa783e294dd88c1bcf9cc"
+    },
+    {
+      "path": "/tmp/autorouter-relative-witness-v4/dist/runtime/node.js",
+      "bytes": 1094096,
+      "sha256": "4a0f832bd7979567d0fb1658dc08218ea3e407443adf87ec17fc3070cb32ac67"
+    }
+  ],
+  "qaEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/ADVERSARIAL-PRESERVATION-FINAL.json",
+      "bytes": 5215,
+      "sha256": "3f3b73ecc1eb15541f2232125f76db67b6f20ac0d0b8fb74a9204d9413efbad1"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/EXACT-TARGET-FINAL.json",
+      "bytes": 2363,
+      "sha256": "04fa88de7062f03ba703a177be0de78e34cd9933d16265976e42ec8e43689127"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/INDEPENDENT-FOCUSED-FINAL.log",
+      "bytes": 10154,
+      "sha256": "1e11238be7e3680cac5a8bc808f2e2690d8c710fe15e4c3293d2b42af2a1c39d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/RUNTIME-CONTROLS.json",
+      "bytes": 221446,
+      "sha256": "f171c87138739c8585442ff6c7ee3e69034e510bf630f83de63f22d324f1be92"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/adversarial-preservation.ts",
+      "bytes": 5804,
+      "sha256": "ab83992c6d0d4847e188e3f5871f5e219c32ea0be2010bed8a32fabf6e08518a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/build.log",
+      "bytes": 1192,
+      "sha256": "6d27bc05d9d8ab0014504a908086a9a2476b0a406525adc16eceb418fa424ce2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-absent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-absent.stdout",
+      "bytes": 3099,
+      "sha256": "f0d28604877da7650881f5e18f484caf9c5c7e6279c9ca41cb5a15187307ad52"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-false.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-false.stdout",
+      "bytes": 3098,
+      "sha256": "5d2edbfa3d0f3b07a052b7f0e6dfca224a239549647482d214e5954d19ab8ffc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-absent-old-true.stdout",
+      "bytes": 3197,
+      "sha256": "4581f64bcdf18dd9139baca487dab17fad140dd1f3b4f61887ac6f110d874275"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-absent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-absent.stdout",
+      "bytes": 3098,
+      "sha256": "0f0b78b4ef9bf61c03dbedf6689855a73c8844361c35e1a80fa9196b3826eca4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-false.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-false.stdout",
+      "bytes": 3097,
+      "sha256": "0a8c9435abe486b9e23511846a8757f67766dba54a616c9ba5b400755c3466bc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-false-old-true.stdout",
+      "bytes": 3196,
+      "sha256": "dac05a2ef6b7b3d8e66ee1773dccc7a74488000d589d58c475d5c572d08c3f14"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-new-true.stdout",
+      "bytes": 3451,
+      "sha256": "f23c9e61e9730f0166dc8e01ed2a9076bbc4f69bb18f40a209cae7a9d2e22dd9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-preserved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-preserved-defects.stdout",
+      "bytes": 3014,
+      "sha256": "517695b339e21d8bde3ce2afa1a4f7edae35a3253ef1aaaac608679530e9dda4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-preserved-resolved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-preserved-resolved-defects.stdout",
+      "bytes": 2890,
+      "sha256": "70613b845ab5002abeee7a5e5b7b8e07f3e6d35cf3047fecabc88188554c4396"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-switched-closest-deadband.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-v3-extra-switched-closest-deadband.stdout",
+      "bytes": 3202,
+      "sha256": "4ea0d43d54b84a3e6acbe41c43b15eb78a7d1a9a7c8630e625b96b3658aa5923"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-joint.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-joint.stdout",
+      "bytes": 2781,
+      "sha256": "02cd6b89da04b5e8cbc7b9f92277484415db4799bc1a8768c06a54c8e3e141f4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-overlap.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-overlap.stdout",
+      "bytes": 2197,
+      "sha256": "88d083f00cde11b24f70f655492024716c36251ac57162c713e1915d9bd1ecfa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-turnback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-turnback.stdout",
+      "bytes": 2198,
+      "sha256": "148835fb2099c6c76305c01bc267cd5065f7f9196cf8f08c5c50eb6bee984186"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-unsupported.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-pad-unsupported.stdout",
+      "bytes": 1592,
+      "sha256": "3cf62b4efe54ccae6a88053d7c6ad9f59cc07cb32d242427ef080f499d6cfc09"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-trace-hidden.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-trace-hidden.stdout",
+      "bytes": 2596,
+      "sha256": "906550728c85ea5f18df66d86c163b5537c3e5057eb4022e7ec097b38378cd37"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-trace-visible.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-compiled-stage-via-trace-visible.stdout",
+      "bytes": 2597,
+      "sha256": "5004dc51b81dc6e9268da4d80704fc045a68891fb71121af9f6a6812634847a1"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-absent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-absent.stdout",
+      "bytes": 3201,
+      "sha256": "501f52d75c52248a9a2cc14f8fe9f2647899ca293dacd6a21fd90ce1ef36cd86"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-false.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-false.stdout",
+      "bytes": 3200,
+      "sha256": "98d7da8b28ad3aec6829a29499113b33ba2ace9b22cafc344e6be4065fe048fa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-absent-old-true.stdout",
+      "bytes": 3299,
+      "sha256": "2d7bcbe76be45454c845207548da0e31f0a602cd12be08676f3d512971c0b51e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-absent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-absent.stdout",
+      "bytes": 3200,
+      "sha256": "2a1731a2846ef3a9f6461d0f51f529e7406fa0a3db77ddc88fd4850da2d5200a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-false.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-false.stdout",
+      "bytes": 3199,
+      "sha256": "7801804a0fe1f48e66301daf5506d542575ca1925f449a2277fee2c84af9f1fc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-false-old-true.stdout",
+      "bytes": 3298,
+      "sha256": "8b00f885aca33383a64232ac4eeb02a6322ab1ae52b7f3837345a0d9b7856acd"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-new-true.stdout",
+      "bytes": 3553,
+      "sha256": "4f0238da51adbbbafcc9b3e17135937e957e40b7fe2fd4ded65ee10cb3534069"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-preserved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-preserved-defects.stdout",
+      "bytes": 3116,
+      "sha256": "b13fbbd9cbea7dcf9837022e39c5147ace72851cd200c8f13120081192092b06"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-preserved-resolved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-preserved-resolved-defects.stdout",
+      "bytes": 2992,
+      "sha256": "76b5c62817585e33eeedffe5b2146011c32f3a1e2514877764f946fce470383b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-switched-closest-deadband.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-v3-extra-switched-closest-deadband.stdout",
+      "bytes": 3304,
+      "sha256": "90742471ca2ab712aeea9fbabb987b96059d10b1efb10a06d7221d6c0d10b890"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-joint.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-joint.stdout",
+      "bytes": 2883,
+      "sha256": "1dacce5b5a3cf11c43fc9e9582debf85743f545893fcb0dbdac80fec806998a1"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-overlap.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-overlap.stdout",
+      "bytes": 2299,
+      "sha256": "dbab781bea0c010651160a790a1223e10d220ac026a66a61a84925e226f4b759"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-turnback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-turnback.stdout",
+      "bytes": 2300,
+      "sha256": "30757741ab06d3b2495ff1632842f5a2a7deae49dff43532852b62732e142ffb"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-unsupported.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-pad-unsupported.stdout",
+      "bytes": 1694,
+      "sha256": "45968f67dba9b055712e909f5cb5f43d460289b890e5fab488640785e707435b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-trace-hidden.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-trace-hidden.stdout",
+      "bytes": 2698,
+      "sha256": "a2d06b8a9ce20ba749489798f953641b736530734dd60857d87146fc0800561b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-trace-visible.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/candidate-source-stage-via-trace-visible.stdout",
+      "bytes": 2699,
+      "sha256": "583f8a0bf421a4369018262a112e33fc6b404e11655a1d0e39f02299254147d3"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/exact-target-draft.json",
+      "bytes": 2363,
+      "sha256": "04fa88de7062f03ba703a177be0de78e34cd9933d16265976e42ec8e43689127"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/exact-target-probes.ts",
+      "bytes": 2830,
+      "sha256": "06b2be99ce7bcc7f15d327f63157a66f1588a23fd06f2ae003b189833dec7c12"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/focused-tests.log",
+      "bytes": 10152,
+      "sha256": "82f961bb208aaa275b09ece1fbbbcc03f54fcef0d36a95af14bc7cb6b9bc92e4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-absent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-absent.stdout",
+      "bytes": 3201,
+      "sha256": "fdb0c0115187e371afb36b3944a0bf059d1377b8362e47bf117567b9638bb2ff"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-false.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-false.stdout",
+      "bytes": 3200,
+      "sha256": "2daf499a2ea93fc45ca04a89f69ddbe90a3e2e545da2b54a022ddcb0ae8cd174"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-true.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-source-old-true.stdout",
+      "bytes": 3299,
+      "sha256": "e39c19d780cda179c920ebf866e21d5d2b2c5a36affebdcd97e32baeaa8a14bd"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-preserved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-preserved-defects.stdout",
+      "bytes": 3418,
+      "sha256": "d41994d744535581f5a660b35a8ff073589aa1d2f86e671b1bba347cbcc6694b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-preserved-resolved-defects.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-preserved-resolved-defects.stdout",
+      "bytes": 2992,
+      "sha256": "cc1e2ac6af5f3f4d59117a6b39bf86fe95e9b214da0eb5eb75a814248bafafae"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-switched-closest-deadband.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-v3-extra-switched-closest-deadband.stdout",
+      "bytes": 2991,
+      "sha256": "36dc928456533a7b4306ab3ccc18f96d9847dc885f62e4c681eb9b103e57b3bc"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-joint.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-joint.stdout",
+      "bytes": 2883,
+      "sha256": "2847dd479d81b4b8d4939b07278c189057f73b0e5088223e8e9eb74cb64a0e88"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-overlap.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-overlap.stdout",
+      "bytes": 2299,
+      "sha256": "d3b1ca2aae5a806585025652782848a9a91cf273a94b26102ec94156a96a5b47"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-turnback.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-turnback.stdout",
+      "bytes": 2300,
+      "sha256": "03024ca49721720013dcc599f6a64b26057a5fd71957e31eeac16e1070f92c4a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-unsupported.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-pad-unsupported.stdout",
+      "bytes": 1694,
+      "sha256": "81f8c1e63956b5573c057c1f2567b6c795faf0e1eaa32f83030ec17c248acd39"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-trace-hidden.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-trace-hidden.stdout",
+      "bytes": 2698,
+      "sha256": "e2340aeb4d2969cf8b9dbd390c55bd5594bb45dda24bf2817c4f4fe81897340a"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-trace-visible.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/parent-stage-via-trace-visible.stdout",
+      "bytes": 2699,
+      "sha256": "87f010d42fd446e5aff04f14543621faabdd759396ae8b79a155f73611fd8875"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/run-runtime-controls.py",
+      "bytes": 7450,
+      "sha256": "d6114dadb18fc5e7daf7464e8f3fcd13c3d01a996a60d2e4a18c12053dfb9501"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/runtime-child.ts",
+      "bytes": 7107,
+      "sha256": "ca319db2a63345cfa9db71e931243e59c2d6e639687012675ac4b5c47294b1d9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/switchedClosestFixture.ts",
+      "bytes": 534,
+      "sha256": "489f6cf908171cad87c9b2efebc8c42113dbb76af1b10e200e4a94a4ae7c3f16"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/types.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/types.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/write-qa.py",
+      "bytes": 8057,
+      "sha256": "91597b416c79ed5ad94248003b6a8e3d737bb3324e6b4d96aab1125fc9ed8fc6"
+    }
+  ],
+  "priorEvidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v3/QA-FINAL.json",
+      "bytes": 37789,
+      "sha256": "7e76bc3a817608c6b62a3b60d2de2d328f87a8230a94808f4f0971dcbe47ccd8"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v3/INDEPENDENT-REVIEW-v1.json",
+      "bytes": 11676,
+      "sha256": "71350ccc1ecf51750ac004385f09dcae564d4cd8ae790e066ac7f3279fc71ff0"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-WITNESS-V3-SOURCE-PUBLICATION-v1.json",
+      "bytes": 2562,
+      "sha256": "f5858c8213c710b764803e42895e04f7541c629d2503d5d594c980e55cbd7c8e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-QUALIFICATION-v1.json",
+      "bytes": 73176,
+      "sha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-INDEPENDENT-REVIEW-v1.json",
+      "bytes": 13835,
+      "sha256": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f"
+    }
+  ],
+  "publicationExport": {
+    "path": "/tmp/bottleneck-relative-witness-v4-source-export.json",
+    "bytes": 49435,
+    "sha256": "08cef932963033f63242b27c2dea3e3b0f704098f09d1d7a64611bcc9ca0157a"
+  },
+  "localActualDatasetRoutingExecutions": 0,
+  "localActualDatasetCheckerExecutions": 0,
+  "localActualRetainedStageExecutions": 0,
+  "remoteMutations": 0,
+  "actualV4Trials": 0,
+  "standaloneSourceReadyOnlyAfterPeer": true,
+  "combinedLocalPreparationAuthorizedAfterThisFreeze": true,
+  "combinedRemoteOrFull84Gate": "New independently qualified positive actual V4 retained production-stage trial plus root binding; component diagnostic stageSolve0 is not that gate",
+  "worktreeClean": true,
+  "boardRecoveryNoRegressionOrSpeedCredit": false
+}

@@ -1,0 +1,1714 @@
+{
+  "status": "PASS_AUTHENTICATED_SIX_RETAINED_COMPONENT_ORACLE_AND_RELATIVE_PROOF_LEADS_WITH_EXACT_UNTARGETED_FINDINGS",
+  "runId": "40985834555",
+  "jobId": 123836513460,
+  "controllerSha": "b278a3f61c070ee83f6990fc3b9a96de939a5594",
+  "controllerTree": "0dedf5c37701b5b302a10a3ef6608ad50b8c5422",
+  "manifestSha256": "18454d65d2e35fbe31bafa54317e571b314c4376a721dbb44e15023dd6043138",
+  "sourceSha": "ed7301ad717238118619e374972c19c40d2bc3ec",
+  "sourceTree": "0035e7b6a849b5e37aa782fb769c32a1aa8f1242",
+  "sourceFileHashes": {
+    "stage": "ead1ac2a120df86b316e79de7e693a79af0137a749800cc90211f4aa1a1325e8",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "06553f4568f2841d0337f9cf0dcc5fff820ae49555ab4588b0f16bc2f12e1978",
+    "independentReviewSha256": "142f5a8215738077e0783b5e62e7b32096b6c6f774a2d2bd6a5ffe80d0dd5e94",
+    "publicationReceiptSha256": "bed4ce5f5de967afcfa00f3248df7069dcb460c35185d6f12bd2b79303055c4a"
+  },
+  "controllerQaSha256": "f753d1061c75f047ba8b40749f3407737713a2ac36c8b460fe4de5f10e0686b7",
+  "controllerPeerSha256": "01de5206bacd9b09400bf3e5c87f3083703b645d823fda583a53fd0cc917e656",
+  "qualifierSha256": "649dc9e4b109af89daaef11d470f3aa0ac012813b01d997e984d3eb54fce495c",
+  "reusedPureJSONMaskHelperSha256": "8093e90ca750d3a8926094816738a85922302da00e09964f0a76a88c7f65cb5c",
+  "payloadPath": "/tmp/relative-v2-main18-component-40985834555-payload.json",
+  "payloadSha256": "868d8f401bfe2c7947877df95ae13ac28b0741494db6f294c875097fdb7cf27a",
+  "payloadBytes": 32708047,
+  "authenticatedLogPath": "/tmp/relative-v2-main18-component-123836513460.log",
+  "authenticatedLogSha256": "ba88c58f0861b891d662c99fa31c64d7163d6d571497fb443c842721ad6a4220",
+  "capturePath": "/tmp/relative-v2-main18-component-123836513460.capture.json",
+  "captureSha256": "edf5c2d67a2eaf4dbb302e8bdf9ceb96e277c13d7ae61286e8d7a8715fb4ef3d",
+  "authenticatedApiMetadata": {
+    "metadata": {
+      "path": "/tmp/run-40985834555-metadata-final-wrapper.json",
+      "sha256": "d21c4973969f8cbbf477a1c9134477d4b6a52baba3e53f5c6b9c26234783d1ca"
+    },
+    "jobs": {
+      "path": "/tmp/run-40985834555-jobs-final-wrapper.json",
+      "sha256": "cf4285ebf6eb1a29808998c77c1d8ac712f4c6476ef986caf8be60d5a527bd05"
+    },
+    "artifacts": {
+      "path": "/tmp/run-40985834555-artifacts-final-wrapper.json",
+      "sha256": "c9fcd88d713b9f1f6a91b56ea0c05957a06ce9696073e590ba3ae58507c004d0"
+    }
+  },
+  "orderedFrames": 348,
+  "outputArtifact": {
+    "id": 12946573394,
+    "name": "relative-v2-component-only-srj18-11",
+    "size_in_bytes": 5620692,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12946573394",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12946573394/zip",
+    "expired": false,
+    "created_at": "2026-10-30T01:28:09Z",
+    "expires_at": "2026-11-29T01:28:07Z",
+    "updated_at": "2026-10-30T01:28:09Z",
+    "digest": "sha256:5a40b89d73e6e5ea4f6017a9c8d38062b12a7ccdf71832fe08fc75ec46e24d16",
+    "workflow_run": {
+      "id": 40985834555,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/relative-v2-main18-component-diagnostic-20261030",
+      "head_sha": "b278a3f61c070ee83f6990fc3b9a96de939a5594"
+    }
+  },
+  "outputArtifactBytesLocallyDownloaded": false,
+  "outputArtifactTransportScope": "Complete framed diagnostic/proof payload recovered through authenticated job log. Output ZIP metadata bound; no local ZIP download claimed.",
+  "originalInputZipSha256": "f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+  "exactInputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "baselineFullCertificateSha256": "e7bbb4acf7c5d7ca21fe86c4937319cc6f9bc5768af27e38a0be852f80e0c2a1",
+  "baselineFullStatus": "UNKNOWN",
+  "baselineDemands": 139,
+  "baselineReasonCount": 66,
+  "baselineGeometryFindings": 8,
+  "completeOriginalInstrumentedFullReturnsEqual": true,
+  "taggedObservationsStripToExactOld2109": true,
+  "sameCallNativeArraysAllEmpty": true,
+  "untargetedOriginalSRJCount": 6,
+  "untargetedViaPolicyCount": 1,
+  "enrichedFixedObstacleViolations": [
+    {
+      "record": {
+        "key": "fixed-obstacle:2047:16:wire",
+        "center": {
+          "x": 1.5095076746425744,
+          "y": 4.061226325259276
+        },
+        "routeIndex": 2047,
+        "obstacleIndex": 16,
+        "kind": "wire",
+        "severity": 5.037317503897576e-06
+      },
+      "rawBinding": {
+        "routeIndex": 2047,
+        "traceIndex": 284,
+        "pointIndex": 21,
+        "nextPointIndex": 22,
+        "kind": "wire",
+        "pcb_trace_id": "source_trace_2__source_net_2_mst2_0",
+        "originalTraceReference": "source_trace_2",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"2:source_trace_2\",\"76:source_net_2\"]",
+          "anchors": [
+            "2:source_trace_2",
+            "76:source_net_2"
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"2:source_trace_2\",\"76:source_net_2\"]",
+          "rootConnectionName": "intent-owner:[\"2:source_trace_2\",\"76:source_net_2\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [],
+          "route": [
+            {
+              "x": 1.5095076746425744,
+              "y": 4.061226325259276,
+              "z": 0
+            },
+            {
+              "x": 1.673046672478319,
+              "y": 4.443110556882454,
+              "z": 0
+            }
+          ]
+        },
+        "rawStart": {
+          "route_type": "wire",
+          "x": 1.5095076746425744,
+          "y": 4.061226325259276,
+          "width": 0.1,
+          "layer": "top"
+        },
+        "rawEnd": {
+          "route_type": "wire",
+          "x": 1.673046672478319,
+          "y": 4.443110556882454,
+          "width": 0.1,
+          "layer": "top"
+        }
+      },
+      "obstacleIndex": 16,
+      "originalObstacle": {
+        "componentId": "pcb_component_6",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 1.98,
+          "y": 3.77
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "pcb_smtpad_16",
+          "connectivity_net1799",
+          "pcb_trace_234",
+          "pcb_trace_233",
+          "pcb_trace_232",
+          "source_trace_13",
+          "pcb_smtpad_16",
+          "pcb_component_6_port_2",
+          "pcb_port_16",
+          "pcb_smtpad_246",
+          "pcb_component_39_port_1",
+          "pcb_port_247",
+          "pcb_smtpad_287",
+          "pcb_component_53_port_19",
+          "pcb_port_289",
+          "pcb_smtpad_332",
+          "pcb_component_67_port_1",
+          "pcb_port_334",
+          "source_net_13"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_16",
+          "pcb_port_id": "pcb_component_6_port_2"
+        }
+      },
+      "originalOwner": {
+        "status": "RESOLVED",
+        "owner": "intent-owner:[\"13:source_trace_13\",\"87:source_net_13\"]",
+        "anchors": [
+          "13:source_trace_13",
+          "87:source_net_13"
+        ]
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_6",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 1.98,
+          "y": 3.77
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "intent-owner:[\"13:source_trace_13\",\"87:source_net_13\"]"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_16",
+          "pcb_port_id": "pcb_component_6_port_2"
+        }
+      }
+    },
+    {
+      "record": {
+        "key": "fixed-obstacle:793:288:wire",
+        "center": {
+          "x": 0.9627771487035833,
+          "y": 4.336541605896529
+        },
+        "routeIndex": 793,
+        "obstacleIndex": 288,
+        "kind": "wire",
+        "severity": 5.01365466745729e-06
+      },
+      "rawBinding": {
+        "routeIndex": 793,
+        "traceIndex": 92,
+        "pointIndex": 10,
+        "nextPointIndex": 11,
+        "kind": "wire",
+        "pcb_trace_id": "source_trace_13__source_net_13_mst1_0",
+        "originalTraceReference": "source_trace_13",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"13:source_trace_13\",\"87:source_net_13\"]",
+          "anchors": [
+            "13:source_trace_13",
+            "87:source_net_13"
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"13:source_trace_13\",\"87:source_net_13\"]",
+          "rootConnectionName": "intent-owner:[\"13:source_trace_13\",\"87:source_net_13\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [],
+          "route": [
+            {
+              "x": 1.0502341571936866,
+              "y": 4.49623456076816,
+              "z": 0
+            },
+            {
+              "x": 0.9388879603090405,
+              "y": 4.2929209155702495,
+              "z": 0
+            }
+          ]
+        },
+        "rawStart": {
+          "route_type": "wire",
+          "x": 1.0502341571936866,
+          "y": 4.49623456076816,
+          "width": 0.1,
+          "layer": "top"
+        },
+        "rawEnd": {
+          "route_type": "wire",
+          "x": 0.9388879603090405,
+          "y": 4.2929209155702495,
+          "width": 0.1,
+          "layer": "top"
+        }
+      },
+      "obstacleIndex": 288,
+      "originalObstacle": {
+        "componentId": "pcb_component_53",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 0.442,
+          "y": 4.621749
+        },
+        "width": 0.875,
+        "height": 0.25,
+        "connectedTo": [
+          "pcb_smtpad_288",
+          "connectivity_net1742",
+          "pcb_trace_177",
+          "pcb_trace_176",
+          "pcb_trace_175",
+          "pcb_trace_174",
+          "pcb_trace_173",
+          "source_trace_2",
+          "pcb_smtpad_2",
+          "pcb_component_1_port_1",
+          "pcb_port_2",
+          "pcb_smtpad_45",
+          "pcb_component_12_port_20",
+          "pcb_port_45",
+          "pcb_smtpad_78",
+          "pcb_component_18_port_1",
+          "pcb_port_78",
+          "pcb_smtpad_83",
+          "pcb_component_21_port_1",
+          "pcb_port_83",
+          "pcb_smtpad_288",
+          "pcb_component_53_port_20",
+          "pcb_port_290",
+          "source_net_2"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_288",
+          "pcb_port_id": "pcb_component_53_port_20"
+        }
+      },
+      "originalOwner": {
+        "status": "RESOLVED",
+        "owner": "intent-owner:[\"2:source_trace_2\",\"76:source_net_2\"]",
+        "anchors": [
+          "2:source_trace_2",
+          "76:source_net_2"
+        ]
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_53",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 0.442,
+          "y": 4.621749
+        },
+        "width": 0.875,
+        "height": 0.25,
+        "connectedTo": [
+          "intent-owner:[\"2:source_trace_2\",\"76:source_net_2\"]"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_288",
+          "pcb_port_id": "pcb_component_53_port_20"
+        }
+      }
+    },
+    {
+      "record": {
+        "key": "fixed-obstacle:1966:382:wire",
+        "center": {
+          "x": -11.190590537000233,
+          "y": 3.8162479560908626
+        },
+        "routeIndex": 1966,
+        "obstacleIndex": 382,
+        "kind": "wire",
+        "severity": 1.0439091371883258e-06
+      },
+      "rawBinding": {
+        "routeIndex": 1966,
+        "traceIndex": 275,
+        "pointIndex": 7,
+        "nextPointIndex": 8,
+        "kind": "wire",
+        "pcb_trace_id": "source_trace_5__source_net_5_mst97_0",
+        "originalTraceReference": "source_trace_5",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "anchors": [
+            "5:source_trace_5",
+            "79:source_net_5"
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "rootConnectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [],
+          "route": [
+            {
+              "x": -11.402271854136332,
+              "y": 3.908281334292791,
+              "z": 3
+            },
+            {
+              "x": -11.190590537000233,
+              "y": 3.8162479560908626,
+              "z": 3
+            }
+          ]
+        },
+        "rawStart": {
+          "route_type": "wire",
+          "x": -11.402271854136332,
+          "y": 3.908281334292791,
+          "width": 0.1,
+          "layer": "bottom"
+        },
+        "rawEnd": {
+          "route_type": "wire",
+          "x": -11.190590537000233,
+          "y": 3.8162479560908626,
+          "width": 0.1,
+          "layer": "bottom"
+        }
+      },
+      "obstacleIndex": 382,
+      "originalObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "pcb_smtpad_382",
+          "connectivity_net1766",
+          "pcb_trace_201",
+          "pcb_trace_200",
+          "source_trace_124",
+          "pcb_smtpad_269",
+          "pcb_component_53_port_1",
+          "pcb_port_271",
+          "pcb_smtpad_382",
+          "pcb_component_94_port_2",
+          "pcb_port_384",
+          "pcb_smtpad_412",
+          "pcb_component_110_port_2",
+          "pcb_port_414",
+          "source_net_124"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      },
+      "originalOwner": {
+        "status": "RESOLVED",
+        "owner": "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]",
+        "anchors": [
+          "198:source_net_124",
+          "67:source_trace_124"
+        ]
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      }
+    },
+    {
+      "record": {
+        "key": "fixed-obstacle:1967:382:wire",
+        "center": {
+          "x": -11.156001752045318,
+          "y": 3.816248085029664
+        },
+        "routeIndex": 1967,
+        "obstacleIndex": 382,
+        "kind": "wire",
+        "severity": 1.0439091371883258e-06
+      },
+      "rawBinding": {
+        "routeIndex": 1967,
+        "traceIndex": 275,
+        "pointIndex": 8,
+        "nextPointIndex": 9,
+        "kind": "wire",
+        "pcb_trace_id": "source_trace_5__source_net_5_mst97_0",
+        "originalTraceReference": "source_trace_5",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "anchors": [
+            "5:source_trace_5",
+            "79:source_net_5"
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "rootConnectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [],
+          "route": [
+            {
+              "x": -11.190590537000233,
+              "y": 3.8162479560908626,
+              "z": 3
+            },
+            {
+              "x": -10.94418797446668,
+              "y": 3.8162488746212806,
+              "z": 3
+            }
+          ]
+        },
+        "rawStart": {
+          "route_type": "wire",
+          "x": -11.190590537000233,
+          "y": 3.8162479560908626,
+          "width": 0.1,
+          "layer": "bottom"
+        },
+        "rawEnd": {
+          "route_type": "wire",
+          "x": -10.94418797446668,
+          "y": 3.8162488746212806,
+          "width": 0.1,
+          "layer": "bottom"
+        }
+      },
+      "obstacleIndex": 382,
+      "originalObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "pcb_smtpad_382",
+          "connectivity_net1766",
+          "pcb_trace_201",
+          "pcb_trace_200",
+          "source_trace_124",
+          "pcb_smtpad_269",
+          "pcb_component_53_port_1",
+          "pcb_port_271",
+          "pcb_smtpad_382",
+          "pcb_component_94_port_2",
+          "pcb_port_384",
+          "pcb_smtpad_412",
+          "pcb_component_110_port_2",
+          "pcb_port_414",
+          "source_net_124"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      },
+      "originalOwner": {
+        "status": "RESOLVED",
+        "owner": "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]",
+        "anchors": [
+          "198:source_net_124",
+          "67:source_trace_124"
+        ]
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      }
+    },
+    {
+      "record": {
+        "key": "fixed-obstacle:1968:382:wire",
+        "center": {
+          "x": -10.94418797446668,
+          "y": 3.8162488746212806
+        },
+        "routeIndex": 1968,
+        "obstacleIndex": 382,
+        "kind": "wire",
+        "severity": 1.2537871924012123e-07
+      },
+      "rawBinding": {
+        "routeIndex": 1968,
+        "traceIndex": 275,
+        "pointIndex": 9,
+        "nextPointIndex": 10,
+        "kind": "wire",
+        "pcb_trace_id": "source_trace_5__source_net_5_mst97_0",
+        "originalTraceReference": "source_trace_5",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "anchors": [
+            "5:source_trace_5",
+            "79:source_net_5"
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "rootConnectionName": "intent-owner:[\"5:source_trace_5\",\"79:source_net_5\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [],
+          "route": [
+            {
+              "x": -10.94418797446668,
+              "y": 3.8162488746212806,
+              "z": 3
+            },
+            {
+              "x": -10.86103898005345,
+              "y": 3.9247625161766404,
+              "z": 3
+            }
+          ]
+        },
+        "rawStart": {
+          "route_type": "wire",
+          "x": -10.94418797446668,
+          "y": 3.8162488746212806,
+          "width": 0.1,
+          "layer": "bottom"
+        },
+        "rawEnd": {
+          "route_type": "wire",
+          "x": -10.86103898005345,
+          "y": 3.9247625161766404,
+          "width": 0.1,
+          "layer": "bottom"
+        }
+      },
+      "obstacleIndex": 382,
+      "originalObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "pcb_smtpad_382",
+          "connectivity_net1766",
+          "pcb_trace_201",
+          "pcb_trace_200",
+          "source_trace_124",
+          "pcb_smtpad_269",
+          "pcb_component_53_port_1",
+          "pcb_port_271",
+          "pcb_smtpad_382",
+          "pcb_component_94_port_2",
+          "pcb_port_384",
+          "pcb_smtpad_412",
+          "pcb_component_110_port_2",
+          "pcb_port_414",
+          "source_net_124"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      },
+      "originalOwner": {
+        "status": "RESOLVED",
+        "owner": "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]",
+        "anchors": [
+          "198:source_net_124",
+          "67:source_trace_124"
+        ]
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_94",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": -11.156,
+          "y": 3.346249
+        },
+        "width": 0.59,
+        "height": 0.64,
+        "connectedTo": [
+          "intent-owner:[\"198:source_net_124\",\"67:source_trace_124\"]"
+        ],
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_382",
+          "pcb_port_id": "pcb_component_94_port_2"
+        }
+      }
+    },
+    {
+      "record": {
+        "key": "fixed-obstacle:450:430:via",
+        "center": {
+          "x": -13.775,
+          "y": -25.48
+        },
+        "routeIndex": 450,
+        "obstacleIndex": 430,
+        "kind": "via",
+        "severity": 0.0337499999999995
+      },
+      "rawBinding": {
+        "routeIndex": 450,
+        "traceIndex": 51,
+        "pointIndex": 5,
+        "kind": "via",
+        "pcb_trace_id": "source_trace_48__source_net_48_mst2_0",
+        "originalTraceReference": "source_trace_48",
+        "owner": {
+          "status": "RESOLVED",
+          "owner": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+          "anchors": [
+            "122:source_net_48",
+            "39:source_trace_48"
+          ]
+        },
+        "siteIndex": 47,
+        "site": {
+          "x": -13.775,
+          "y": -25.48,
+          "owner": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+          "layers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ],
+          "diameter": 0.3,
+          "drill": 0.15,
+          "occurrences": [
+            {
+              "traceIndex": 51,
+              "pointIndex": 5
+            }
+          ]
+        },
+        "route": {
+          "connectionName": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+          "rootConnectionName": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+          "traceThickness": 0.1,
+          "viaDiameter": 0.3,
+          "vias": [
+            {
+              "x": -13.775,
+              "y": -25.48
+            }
+          ],
+          "route": [
+            {
+              "x": -13.775,
+              "y": -25.48,
+              "z": 0
+            },
+            {
+              "x": -13.775,
+              "y": -25.48,
+              "z": 3
+            }
+          ]
+        }
+      },
+      "obstacleIndex": 430,
+      "originalObstacle": {
+        "componentId": "pcb_component_24",
+        "type": "rect",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -14.49125,
+          "y": -25.535466
+        },
+        "width": 1,
+        "height": 1,
+        "connectedTo": []
+      },
+      "originalOwner": {
+        "status": "UNKNOWN",
+        "reason": "Original obstacle lacks a resolved declared owner"
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_24",
+        "type": "rect",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -14.49125,
+          "y": -25.535466
+        },
+        "width": 1,
+        "height": 1,
+        "connectedTo": []
+      }
+    }
+  ],
+  "enrichedViaPolicyViolations": [
+    {
+      "record": {
+        "key": "new-via-pad:47:430:0",
+        "routeIndex": 47,
+        "obstacleIndex": 430,
+        "center": {
+          "x": -13.775,
+          "y": -25.48
+        },
+        "kind": "via",
+        "severity": 0.0337499999999995
+      },
+      "siteIndex": 47,
+      "site": {
+        "x": -13.775,
+        "y": -25.48,
+        "owner": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "diameter": 0.3,
+        "drill": 0.15,
+        "occurrences": [
+          {
+            "traceIndex": 51,
+            "pointIndex": 5
+          }
+        ]
+      },
+      "route": {
+        "connectionName": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+        "rootConnectionName": "intent-owner:[\"122:source_net_48\",\"39:source_trace_48\"]",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.3,
+        "vias": [
+          {
+            "x": -13.775,
+            "y": -25.48
+          }
+        ],
+        "route": [
+          {
+            "x": -13.775,
+            "y": -25.48,
+            "z": 0
+          },
+          {
+            "x": -13.775,
+            "y": -25.48,
+            "z": 3
+          }
+        ]
+      },
+      "obstacleIndex": 430,
+      "originalObstacle": {
+        "componentId": "pcb_component_24",
+        "type": "rect",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -14.49125,
+          "y": -25.535466
+        },
+        "width": 1,
+        "height": 1,
+        "connectedTo": []
+      },
+      "originalOwner": {
+        "status": "UNKNOWN",
+        "reason": "Original obstacle lacks a resolved declared owner"
+      },
+      "checkedObstacle": {
+        "componentId": "pcb_component_24",
+        "type": "rect",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -14.49125,
+          "y": -25.535466
+        },
+        "width": 1,
+        "height": 1,
+        "connectedTo": []
+      }
+    }
+  ],
+  "allRawTemporaryRouteBindingsIndependentlyCompared": true,
+  "losslessFullRecordFingerprintsAndMultiplicityVerified": true,
+  "sourceCertificateCalls": 7,
+  "instrumentedCertificateCalls": 7,
+  "publishedProposalHelperCalls": 7,
+  "sourceRelativeProofCalls": 6,
+  "candidateCount": 6,
+  "independentComponentLeadCount": 6,
+  "measuredCandidates": [
+    {
+      "index": 1,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.408511810911843,
+          "y": -20.274117306585918
+        },
+        "movementMmApprox": 0.03758403458481265,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "3aa9b80900fca9c431e2748c921e6b5fc8d030c5db4590d5548084e884785ac9",
+      "fullCertificateSha256": "194fc4c5cab27f608a1468770f29f392566a824959f2c8b17404d11c7ee969bb",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    },
+    {
+      "index": 2,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.443023621823684,
+          "y": -20.259234613171838
+        },
+        "movementMmApprox": 0.07516806916962228,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "05b289a4db19a9bd9a6557dad4cc189727ae1fd9998a81e66f4330c6ece2aafa",
+      "fullCertificateSha256": "e56a39377d05ef8e112205fce174174315d097e7ce972279ea0bffc68f28e227",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    },
+    {
+      "index": 3,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.51204724364737,
+          "y": -20.22946922634367
+        },
+        "movementMmApprox": 0.15033613833924758,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "252441bfc3ac245dfcd4df95af4639f136c3c0a96598f5c1c4432cc4ca39c3e5",
+      "fullCertificateSha256": "10f60538ac6359205268ea7fa1ee03e1f88d9f4f27b50b979f15c8945fe912ba",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    },
+    {
+      "index": 4,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.408121668779659,
+          "y": -20.269122903474052
+        },
+        "movementMmApprox": 0.039489077560897756,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "f4dedc2a041e285813bf4c05a3a417a2f97eeedbbeb14ded6de15feda9885265",
+      "fullCertificateSha256": "0b6b80160da17b3ea8e2f40e7b129e38d16613fcd80eed26608be40c578e4704",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    },
+    {
+      "index": 5,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.442243337559315,
+          "y": -20.249245806948103
+        },
+        "movementMmApprox": 0.07897815512179399,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "18f661a4ece8bef567bfca32ffdf2f52e6f4e9e6cd5f6b47cbd52b4a4f9064d5",
+      "fullCertificateSha256": "db62aaff7bb9fa7f6a38ad5d9472c06d14f2a866cf2c50dad2bd1e28849aaae1",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    },
+    {
+      "index": 6,
+      "move": {
+        "kind": "via",
+        "occurrences": [
+          {
+            "traceIndex": 48,
+            "pointIndex": 4
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 5
+          },
+          {
+            "traceIndex": 48,
+            "pointIndex": 6
+          }
+        ],
+        "oldXY": {
+          "x": 14.374,
+          "y": -20.289
+        },
+        "newXY": {
+          "x": 14.510486675118631,
+          "y": -20.209491613896205
+        },
+        "movementMmApprox": 0.1579563102435895,
+        "hardMaximumMm": 0.25,
+        "canonicalAliases": [
+          "via_45"
+        ]
+      },
+      "rawSha256": "ce0b18ffb56d7789ec6883729f485041e76f6741095aa22d97d8e98feee705e2",
+      "fullCertificateSha256": "ab13b38c4fdb3472c879e14072f7e177c0eb0c576c3b8376151c4c9fe31693cd",
+      "fullStatus": "UNKNOWN",
+      "fullReasons": [
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "An original net's demanded terminals lack one common physical component",
+        "Original SRJ obstacle-envelope violations remain"
+      ],
+      "fullGeometryFindings": 7,
+      "strictViaTraceFindings": 0,
+      "untargetedDetailedMultisetsExactlyUnchanged": true,
+      "sourceRelativeProof": {
+        "status": "PASS",
+        "reason": "Each connected replacement bundle preserves exactly its fixed copper interfaces; global connectivity remains independently reported",
+        "bundleCount": 1,
+        "boundaryCount": 2,
+        "primitivePairs": 9718
+      },
+      "independentSharedLayerPairs": 9763,
+      "relativeConditionallyPreserved": true,
+      "stageSolveCalls": 0,
+      "accepted": false
+    }
+  ],
+  "relativeProofPairCountDifference": {
+    "source": 9718,
+    "independent": 9763,
+    "explanation": "Independent replay conservatively retains duplicate canonical fixed-via aliases; source inventory uses unique raw manufactured sites. Both execute the same conservative interface/separation theorem."
+  },
+  "exactDeclaredMarginCaveat": {
+    "diagnosticCandidate": 1,
+    "baselineMeasuredGap": 0.06151092243910279,
+    "movementMm": 0.03758403458481265,
+    "maximumPossibleNewGapByLipschitzBound": 0.09909495702391544,
+    "declaredMinimum": 0.1,
+    "statement": "Candidate1 cannot reach exact declared0.1mm despite the unchanged frozen oracle returning zero; component lead means oracle-finding removal plus relative partition proof. No exact physical-margin claim is made for all six.",
+    "productionMinimumWitnessBinding": "Frozen production V2/V3 stage selects the smallest gap across all shared manufactured-layer foreign segments before invoking the helper; diagnostic calls the helper per segment. Production therefore uses the separate proper closest-segment portfolio (diagnostic candidate4/.039489mm first), rather than diagnostic candidate1."
+  },
+  "absoluteExistingGlobalConnectivityCertified": false,
+  "relativeSameOwnerOriginalTerminalPartitionsPreservedConditionally": true,
+  "fullGlobalStatus": "UNKNOWN",
+  "fullGlobalReasonsAndDemandCountsUnchanged": true,
+  "productionStageSolveCalls": 0,
+  "productionStageCredit": false,
+  "v3ActualStagePositiveGatePassed": false,
+  "nativeSourceCheckerExecutionsLocally": 0,
+  "actualRetainedProofReplayExecutionsLocally": 0,
+  "routingExecutions": 0,
+  "accepted": false,
+  "fullBoardRecovery": false,
+  "qualityOrSpeedCredit": false,
+  "scope": "One frozen original MAIN MST18 sample11 B retained component portfolio, not rerouting or production-stage execution. Six published-helper candidates remove the frozen strict viaTrace finding while every unrelated full native/SRJ/policy/viaInPad/board record, identity, metric and multiplicity remains exact. Source and independently authored Fraction proofs ran on Blacksmith and establish conditional same-owner original-terminal partition preservation for the same fixed unknown material completion. Full old-body certificates remain UNKNOWN139/66 with sixSRJ and onepolicy finding. No complete-board recovery, exact declared-margin claim for every candidate, paired84 no-regression, generalization, speed or actual V3 stage gate credit."
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "status": "PUBLISHED_DEFAULT_OFF_V4_EXACT_CLEARANCE_AND_UNTARGETED_FINDINGS_READY_FOR_MAIN18_TRIAL",
+  "atUtc": "2026-10-30T01:54:58.689824+00:00",
+  "branch": "codex/experiment-relative-witness-v4-20261030",
+  "remoteCommit": "f5d60ecabaf3850758f392f26c86dc450b986fc6",
+  "localCommit": "f102982aabd4fe78121412fa3cf399046908cc95",
+  "tree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "singleRemoteParent": "78c9f2fd45bdb53953d4d9bd61100a8f5f52b1f9",
+  "parentLocal": "063b15ec97ea49b3b30628b26a47439c7b5c6ad9",
+  "parentTree": "8f3c07e567a0e2bb33dd094672e0700e50834569",
+  "flag": "experimentRelativeWitnessRepair",
+  "defaultOff": true,
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/QA-FINAL.json",
+    "sha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/relative-witness-repair-v4/INDEPENDENT-REVIEW-v1.json",
+    "sha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3"
+  },
+  "rootExport": {
+    "path": "/tmp/bottleneck-relative-witness-v4-source-export-root.json",
+    "sha256": "4457dfe8985a12d035a33d23bb1822b4f80274d3556fcddd1d6e2a74ef81bbb0"
+  },
+  "remoteCommitTreeSingleParentAndBranchGetVerified": true,
+  "readyForFreshRetainedSrj18StageTrial": true,
+  "acceptanceMode": "EXACT_UNTARGETED_FINDINGS",
+  "anonymousUnownedFixedHardObstacleOnlyUnknownEligibility": true,
+  "unknownOriginalOwnersNeverAssigned": true,
+  "targetAndMovingCopperOwnersStrictlyResolved": true,
+  "completeUntargetedRecordMultisetsPreserved": true,
+  "fullUnknownStatusReasonsAndDemandsPreserved": true,
+  "newExactTargetClearance": "Existing immutable BigInt sweep arithmetic, margin=declared minimum, checked against every target foreign-trace segment on full manufactured via span. Separate from the published checker tolerance.",
+  "publishedCheckerToleranceMm": 0.005,
+  "frozenCertificateProofArithmeticTargetsGetterP9BytesUnchanged": true,
+  "hardViaMovementCapMm": 0.25,
+  "hardWireMovementCapMm": 0.02,
+  "tests": 58,
+  "assertions": 442,
+  "fullTypesWorkersEsmDtsPass": true,
+  "freshParentSourceCompiledControls": 44,
+  "independentPreservationAdversaries": 32,
+  "independentExactTargetControls": 14,
+  "actualV4ProductionStageAttempts": 0,
+  "qualityBoardRecoveryNoRegressionOrSpeedClaim": false,
+  "noMergeCloseDefaultEnablement": true
+}

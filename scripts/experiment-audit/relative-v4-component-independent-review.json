@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_INDEPENDENT_AUTHENTICATED_SIX_ORACLE_COMPONENT_REDUCTIONS_AND_RELATIVE_PROOFS_WITH_EXACT_MARGIN_CAVEAT",
+  "atUtc": "2026-10-30T01:39:25.687179+00:00",
+  "reviewer": "/root/quality_review",
+  "reviewerRole": "Independent offline API/frame/JSON/hash/raw/canonical/record provenance review plus read-only pinned native-source inspection. No production source edits, actual checker/stage or geometry proof replay locally.",
+  "runId": "40985834555",
+  "jobId": 123836513460,
+  "controllerSha": "b278a3f61c070ee83f6990fc3b9a96de939a5594",
+  "controllerTree": "0dedf5c37701b5b302a10a3ef6608ad50b8c5422",
+  "manifestSha256": "18454d65d2e35fbe31bafa54317e571b314c4376a721dbb44e15023dd6043138",
+  "sourceSha": "ed7301ad717238118619e374972c19c40d2bc3ec",
+  "sourceTree": "0035e7b6a849b5e37aa782fb769c32a1aa8f1242",
+  "sourceFileHashes": {
+    "stage": "ead1ac2a120df86b316e79de7e693a79af0137a749800cc90211f4aa1a1325e8",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "06553f4568f2841d0337f9cf0dcc5fff820ae49555ab4588b0f16bc2f12e1978",
+    "independentReviewSha256": "142f5a8215738077e0783b5e62e7b32096b6c6f774a2d2bd6a5ffe80d0dd5e94",
+    "publicationReceiptSha256": "bed4ce5f5de967afcfa00f3248df7069dcb460c35185d6f12bd2b79303055c4a"
+  },
+  "controllerQaSha256": "f753d1061c75f047ba8b40749f3407737713a2ac36c8b460fe4de5f10e0686b7",
+  "controllerPeerSha256": "01de5206bacd9b09400bf3e5c87f3083703b645d823fda583a53fd0cc917e656",
+  "authorQualification": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/RELATIVE-V2-MAIN18-COMPONENT-ACTUAL-QUALIFICATION-v1.json",
+    "bytes": 73176,
+    "sha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b"
+  },
+  "authorQualifier": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/qualify-relative-v2-main18-component-diagnostic-v1.py",
+    "bytes": 27922,
+    "sha256": "649dc9e4b109af89daaef11d470f3aa0ac012813b01d997e984d3eb54fce495c"
+  },
+  "authorReceiptIndependentlyReproducedByteExact": true,
+  "independentReviewScript": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/independent-qualify-main18-component-v1.py",
+    "bytes": 10950,
+    "sha256": "236cd39e9b30ea4ff106f8bd469edda2c8b6174cb28d6e515a43c5cfcee4fa65"
+  },
+  "independentControls": {
+    "path": "/tmp/main18-component-independent-40985834555/INDEPENDENT-CONTROLS.json",
+    "bytes": 3544,
+    "sha256": "8f88092d7903e2a608fe2148c801dc74c32a4cf662e5e085beba40ca723e308d"
+  },
+  "authenticatedApiMetadata": {
+    "metadata": {
+      "path": "/tmp/run-40985834555-metadata-final-wrapper.json",
+      "sha256": "d21c4973969f8cbbf477a1c9134477d4b6a52baba3e53f5c6b9c26234783d1ca"
+    },
+    "jobs": {
+      "path": "/tmp/run-40985834555-jobs-final-wrapper.json",
+      "sha256": "cf4285ebf6eb1a29808998c77c1d8ac712f4c6476ef986caf8be60d5a527bd05"
+    },
+    "artifacts": {
+      "path": "/tmp/run-40985834555-artifacts-final-wrapper.json",
+      "sha256": "c9fcd88d713b9f1f6a91b56ea0c05957a06ce9696073e590ba3ae58507c004d0"
+    }
+  },
+  "authenticatedLog": {
+    "path": "/tmp/relative-v2-main18-component-123836513460.log",
+    "bytes": 2926588,
+    "sha256": "ba88c58f0861b891d662c99fa31c64d7163d6d571497fb443c842721ad6a4220"
+  },
+  "capture": {
+    "path": "/tmp/relative-v2-main18-component-123836513460.capture.json",
+    "bytes": 472,
+    "sha256": "edf5c2d67a2eaf4dbb302e8bdf9ceb96e277c13d7ae61286e8d7a8715fb4ef3d"
+  },
+  "payload": {
+    "path": "/tmp/relative-v2-main18-component-40985834555-payload.json",
+    "bytes": 32708047,
+    "sha256": "868d8f401bfe2c7947877df95ae13ac28b0741494db6f294c875097fdb7cf27a"
+  },
+  "orderedFrames": 348,
+  "inputOriginalZipSha256": "f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "exactInputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "baselineFullCertificateSha256": "e7bbb4acf7c5d7ca21fe86c4937319cc6f9bc5768af27e38a0be852f80e0c2a1",
+  "baselineStatus": "UNKNOWN",
+  "baselineDemands": 139,
+  "baselineReasons": 66,
+  "geometryBeforeAfter": [
+    8,
+    7
+  ],
+  "candidateCount": 6,
+  "measuredCandidates": [
+    {
+      "index": 1,
+      "movementMm": 0.03758403458481265,
+      "newXY": {
+        "x": 14.408511810911843,
+        "y": -20.274117306585918
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    },
+    {
+      "index": 2,
+      "movementMm": 0.07516806916962228,
+      "newXY": {
+        "x": 14.443023621823684,
+        "y": -20.259234613171838
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    },
+    {
+      "index": 3,
+      "movementMm": 0.15033613833924758,
+      "newXY": {
+        "x": 14.51204724364737,
+        "y": -20.22946922634367
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    },
+    {
+      "index": 4,
+      "movementMm": 0.039489077560897756,
+      "newXY": {
+        "x": 14.408121668779659,
+        "y": -20.269122903474052
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    },
+    {
+      "index": 5,
+      "movementMm": 0.07897815512179399,
+      "newXY": {
+        "x": 14.442243337559315,
+        "y": -20.249245806948103
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    },
+    {
+      "index": 6,
+      "movementMm": 0.1579563102435895,
+      "newXY": {
+        "x": 14.510486675118631,
+        "y": -20.209491613896205
+      },
+      "sourcePairs": 9718,
+      "independentPairs": 9763,
+      "relativeConditionalPASS": true,
+      "untargetedExact": true
+    }
+  ],
+  "allCandidateRawHashesIndependentlyReconstructed": true,
+  "everyRawAndCanonicalProtectedValueBound": true,
+  "completeOldInstrumentedReturnsEqual": true,
+  "untargetedFullRecordMultisetsExactlyUnchanged": true,
+  "independentRawRouteOriginalObstacleAndMaterialBindingVerified": true,
+  "unknownFixedObstacle": {
+    "originalIndex": 430,
+    "fullOriginalObstacle": {
+      "componentId": "pcb_component_24",
+      "type": "rect",
+      "layers": [
+        "top",
+        "inner1",
+        "inner2",
+        "bottom"
+      ],
+      "center": {
+        "x": -14.49125,
+        "y": -25.535466
+      },
+      "width": 1,
+      "height": 1,
+      "connectedTo": []
+    },
+    "originalOwner": {
+      "status": "UNKNOWN",
+      "reason": "Original obstacle lacks a resolved declared owner"
+    },
+    "unchangedOtherRawTraceIndex": 51,
+    "unchangedOtherSiteIndex": 47,
+    "identityOrOwnerInferred": false,
+    "fixedFootprintContactNotWaived": true
+  },
+  "relativeProofEvidence": {
+    "sourcePASSCount": 6,
+    "sourcePairCount": 9718,
+    "independentBlacksmithFractionPASSCount": 6,
+    "independentPairCount": 9763,
+    "fixedPrimitives": 3125,
+    "originalPTHCount": 2,
+    "originalTerminalCount": 578,
+    "bundles": 1,
+    "fixedBoundaries": 2,
+    "uncutTailInterfaces": 2,
+    "mutablePrimitives": 5,
+    "extraFixedCanonicalViaAliases": 9,
+    "exactPairCountDifference": 45,
+    "differenceExplainedByAliasesTimesMutablePrimitives": true,
+    "relativeOriginalTerminalPartitionConditionallyPreserved": true,
+    "absoluteOriginalConnectivityCertified": false
+  },
+  "nativeDeclaredMarginCaveat": {
+    "pinnedNativeCheckSource": {
+      "path": "/tmp/autorouter-post588-dependencies/node_modules/@tscircuit/checks/dist/index.js",
+      "bytes": 697627,
+      "sha256": "4d568a55512ee599df1422eda189b7c7bbbd1ed20bace1e9922033e12b938a6b"
+    },
+    "packageName": "@tscircuit/checks",
+    "packageVersion": "0.0.259",
+    "epsilonMm": 0.005,
+    "suppressionExpression": "if (gap + EPSILON >= minClearance) continue;",
+    "sourceLines": {
+      "EPSILON": 685,
+      "viaTraceGuard": 6338
+    },
+    "nativeSourceExecutedLocally": false,
+    "diagnosticCandidate1MovementMm": 0.03758403458481265,
+    "baselineMeasuredGapMm": 0.06151092243910279,
+    "candidate1MaximumNewGapFromMeasuredBaselinePlusMotionMm": 0.09909495702391544,
+    "declaredMinimumMm": 0.1,
+    "candidate1CannotReachExactDeclaredMinimum": true,
+    "exactDeclaredMarginCertifiedForAllSix": false,
+    "productionSelectionDifference": "V2/V3 source selects the smallest baseline raw foreign-segment gap before calling its helper; this diagnostic calls the helper independently per eligible segment. Proper closest-witness first proposal corresponds to diagnostic candidate4. Final exact margin should be bound against every relevant target segment, including possible closest-segment changes."
+  },
+  "forgeryControlsRejected": [
+    "duplicate frame sequence",
+    "changed compressed frame byte",
+    "END claims board acceptance",
+    "duplicate JSON key",
+    "nonfinite JSON constant",
+    "changed severity",
+    "swapped original obstacle",
+    "changed raw segment binding",
+    "changed fingerprint multiplicity",
+    "lost native auxiliary observations"
+  ],
+  "criticalInterpretation": [
+    "All six are authenticated reductions of the unchanged frozen typed-oracle finding while preserving every other detailed native/SRJ/policy/viaInPad/board record and the same conditional relative terminal partition. They are not six recovered boards or proof that every candidate attains the exact declared physical clearance.",
+    "Full old-body certificates remain UNKNOWN139/66 with six original-SRJ and one via-policy finding. Global status/reasons/demands/reference and all non-target detailed identities/metrics/multiplicity remain exactly unchanged.",
+    "Original obstacle430 has explicit connectedTo:[] and no circuitJsonMetadata. Its owner staysUNKNOWN and its existing via51/site47 SRJ/policy contact remains fixed. This is compatible with relative fixed-unknown-material cancellation; the publishedV3 resolved-only non-target guard conservatively excludes it. A new reviewed source successor is needed rather than altering the published source or inventing its ownership.",
+    "Production stage solve count is0. The publishedV2 pure proposal helper and unchanged full old-body predicates/source relative proof ran on Blacksmith; independent Fraction proof replay ran there. No actual V3/V4 stage positive gate or full84 promotion follows from diagnostic component evidence."
+  ],
+  "outputArtifact": {
+    "id": 12946573394,
+    "name": "relative-v2-component-only-srj18-11",
+    "size_in_bytes": 5620692,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12946573394",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12946573394/zip",
+    "expired": false,
+    "created_at": "2026-10-30T01:28:09Z",
+    "expires_at": "2026-11-29T01:28:07Z",
+    "updated_at": "2026-10-30T01:28:09Z",
+    "digest": "sha256:5a40b89d73e6e5ea4f6017a9c8d38062b12a7ccdf71832fe08fc75ec46e24d16",
+    "workflow_run": {
+      "id": 40985834555,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/relative-v2-main18-component-diagnostic-20261030",
+      "head_sha": "b278a3f61c070ee83f6990fc3b9a96de939a5594"
+    }
+  },
+  "outputArtifactZipDownloadedLocally": false,
+  "outputArtifactTransportScope": "Complete framed diagnostic/proof payload recovered through authenticated job log. Output ZIP metadata bound; no local ZIP download claimed.",
+  "productionStageSolveCalls": 0,
+  "productionStageCredit": false,
+  "positiveV3OrV4ProductionStageGatePassed": false,
+  "combinedFull84PromotionCredit": false,
+  "localActualSourceCheckerExecutions": 0,
+  "localActualStageExecutions": 0,
+  "localActualGeometryProofReplayExecutions": 0,
+  "localRoutingExecutions": 0,
+  "productionSourceEdits": 0,
+  "remoteWrites": 0,
+  "accepted": false,
+  "fullBoardRecovery": false,
+  "qualityOrSpeedCredit": false
+}

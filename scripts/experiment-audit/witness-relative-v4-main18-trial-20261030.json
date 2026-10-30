@@ -1,0 +1,187 @@
+{
+  "certificateRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+  "certificateSha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c",
+  "inputArtifact": {
+    "id": 12942442764,
+    "name": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard0",
+    "digest": "sha256:f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+    "size_in_bytes": 3095352,
+    "workflow_run": {
+      "id": 40974963334,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/layer-aware-mst-controller-20261029",
+      "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d"
+    }
+  },
+  "inputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "inputIdentitySha256": "213d09e87a3a6c1c50f39169e53e089e18130ab78c7c6032026fd13d8f19a54a",
+  "expectedBaselineCertificateSha256": "e7bbb4acf7c5d7ca21fe86c4937319cc6f9bc5768af27e38a0be852f80e0c2a1",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bunVersion": "1.4.2",
+  "schemaVersion": 1,
+  "campaign": "witness-relative-v4-main18-trial-20261030",
+  "controllerBranch": "codex/witness-relative-v4-main18-trial-20261030",
+  "sealState": "SEALED",
+  "sourceBaseSha": "78c9f2fd45bdb53953d4d9bd61100a8f5f52b1f9",
+  "sourceBaseTree": "8f3c07e567a0e2bb33dd094672e0700e50834569",
+  "sourceSha": "f5d60ecabaf3850758f392f26c86dc450b986fc6",
+  "sourceTree": "1f79010eacfa320bf3f53bb9ea5be9f01d740211",
+  "sourceFileHashes": {
+    "targetClearance": "211b6fcc54166308101685b4ce9e8ee7be71812a366ba075a67bbc5fa6c8d155",
+    "detailGetter": "7d37c6dc9c57b61748ad753f4f487c8b6117fb7046dc97872f367c6ff2d96fcf",
+    "preservation": "114617d6ec6efe9307a2b42a780d109497feb193afbf10585ee8428018f0406e",
+    "stage": "50649a5d6ecf93d1e52b710df4b3ac303782b498b2b2aed9585fd788092306b6",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67",
+    "independentReviewSha256": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3",
+    "publicationReceiptSha256": "7004701447f832bc8e3ba2d00d9448870934ced03385f68bf399afcc8602f399"
+  },
+  "sourceDefaultOffReviewed": true,
+  "inheritedControllerLocal": "11a830b0915e2ce7c6f4a11990657c90637d3889",
+  "inheritedControllerTree": "0dedf5c37701b5b302a10a3ef6608ad50b8c5422",
+  "expectedRemoteParent": "b278a3f61c070ee83f6990fc3b9a96de939a5594",
+  "maximumCandidates": 16,
+  "maximumStageIterations": 20,
+  "maximumStageSolveCalls": 1,
+  "viaMaximumMove": 0.25,
+  "wireMaximumMove": 0.02,
+  "sourceApi": {
+    "className": "Pipeline9RelativeWitnessRepairSolver",
+    "constructorFields": [
+      "originalSrj",
+      "pointPairs",
+      "traces",
+      "protectedTraces"
+    ],
+    "solveMethod": "solve",
+    "outputMethod": "getOutput",
+    "pipelineFlag": "experimentRelativeWitnessRepair",
+    "defaultOff": true
+  },
+  "certificateVisibilityExports": [
+    "collectRawViaSites",
+    "checkBoardEnvelope"
+  ],
+  "productionStageSolveRequired": true,
+  "independentBlacksmithDataOnlyReplayRequired": true,
+  "localRelativeRepairAllowed": true,
+  "routingAllowed": false,
+  "localDatasetCheckerAllowed": false,
+  "qualityOrSpeedCredit": false,
+  "productionAcceptanceAllowed": false,
+  "fullBoardRecoveryClaim": false,
+  "trialScope": "One actual production source-V4 local-stage solve on exact prior-qualified original-MST18 B; full old2109 before/after independently reproduced plus11transparent taps, exact source/public detailed untargeted geometry preservation8-to7, strict viaTrace1-to0 and independent exact .1mm margin to ALL shared manufactured-layer foreign segments. Full UNKNOWN139demands/66reasons stays verbatim, no rerouting, no board/speed/quality credit.",
+  "assetHashes": {
+    "tests/relative-v4-detail-projection-controls.py": "0ac1bf8dd004d4bf87d4172607217e45d18f20d50df3490d9933f03bfe299718",
+    "relative-v4-component-qualification.json": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b",
+    "relative-v4-component-independent-review.json": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f",
+    "replay-relative-v4-target-clearance.py": "13413c202091236a1e2dd00b0ba1e2fc2b974024783c854e16e8a548f17591d6",
+    "tests/relative-v4-target-clearance-controls.py": "a5818c05a255e59f58ca1f3431c8f12b27f690a4b76402dd9308a50e426112c5",
+    "witness-relative-v2-srj18-trial-20261030.json": "294d529a719afd77e37cf7a9583bdb119d1d83308b9375ba834e279ea5dc0cea",
+    "download-witness-relative-v2-srj18-original.py": "83ec5d74a7b4a24fb160c720982bbef5b87d72b02863e81fbfe13bfd74c2b8c0",
+    "tests/witness-relative-v2-srj18-original-transport.py": "db3dea2489fdaf5d52d33901c647b56aa30a30c7111445f016475cf82f739b4c",
+    "run-witness-relative-v2-srj18-trial.py": "fe968079dd1b6352c20578cfd1aa090c382fa71daf7f3f2ff110cb4746995d48",
+    "replay-witness-relative-v2-srj18-proof.py": "8be537aba0cccb809985d5f063c68dd3145fddb0c94c34923b7980e504675a7f",
+    "seal-witness-relative-v2-srj18-trial.py": "444cf0c22c420e5016816e7d1c146103ec9cd764b845dac1ad88586c5d32b463",
+    "tests/witness-relative-v2-srj18-proof-replay.py": "622b0a1bb84654354c562db25a84dc829e17d922b774ff8f0590f388cf21ea30",
+    "tests/witness-relative-v2-srj18-trial-integrity.py": "df566fdd880458bb39bccd33dfffc5c4416d643d966c9582bbd54cc513137c8e",
+    "tests/witness-relative-stage-proof-replay.py": "d7cbb28cba1bd68a03dc9c5156c9229337cd2a14a1486f73433610ff4e6792aa",
+    "replay-witness-relative-stage-proof.py": "bdf44261f49da25ec1e394627b5f37aa04ec40e860d3fb34fa5f1b9d73c9557c",
+    "witness-local-repair-proposals.ts": "6e6e6111333c18610de11c88bba8f7695dd2194468ea1d0403542937aa83a636",
+    "run-witness-local-repair-diagnostic.py": "8c90dbb322a46581608e57ddb381ff81e97c57c6392c1412df58af1c245343b9",
+    "witness-local-repair-diagnostic-20261029.json": "e0f1b08aa1f49f81558094e28e318f425f0668a64cb74cb361b6629504712727",
+    "run-witness-contact-diagnostic.py": "ccda876d3fbf4d35f73fb9b5cf5c344de773b8ac5f41281ebd3b9191ab1655b1",
+    "witness-contact-diagnostic-20261029.json": "353825746c435aae90ba6868297246662e94f24986f66fdc31c12022f2cc65c1",
+    "witness-contact-raw-identity.json": "4d67c4d30f85b2d1cc66e34c7eab59560811ef3fa7ef6c87f511cb920338dd6d",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "witness-quality6-artifact-carrier.py": "cb7379cf40f043dddad25068a3d67361123fa90aaa93c9dc81692d92ec3e1a1b",
+    "run-witness-relative-v4-main18-trial.py": "1c621fb72d9fd5b7d076849a9b3b90b0fe9545f9f4aae6e80d01780f4002717f",
+    "seal-witness-relative-v4-main18-trial.py": "c79d26af998d3c3e98dc74c2a9d6534d00482864fe156eebc3711ca986497dc2",
+    "witness-relative-v4-main18-child.ts": "c4decde389fed7c44cb1364dec25d892d79d7d254ec64cb6175f88fe139773fc",
+    "replay-witness-relative-v4-main18-proof.py": "1b806c34fbd8142dc173df407d49c56ab1bf0ce6c8097785245dbe245e559e67",
+    "tests/witness-relative-v4-main18-trial-integrity.py": "0f41ac272b4a86ba64170171c6cc20166580f5e7e33b81e729b0c86771703c94",
+    "tests/witness-relative-v4-main18-proof-replay.py": "df3add579c43bf7872fad7d72e522a4cb4bdb8eacccffdeda7db2a5c55764dab",
+    "instrument-relative-v2-main18-component.py": "69f04edb35a056fa7bca145865ed093351b81d8ab0894019a500e1565081921d",
+    "relative-v4-untargeted-audit.py": "1d143d6d939f594e2db5d0ab795d56f9afbc339090f86ab5a834070243fcdca3",
+    "tests/relative-v4-untargeted-audit-controls.py": "bcc6edb52acb949edfa2561733a1635976a3b94d6e66de7cd3133b8236e3026d",
+    "relative-v4-source-qa.json": "e3a86cb78da544ae9ff53566a963741324ce0787716aef051f3f6f1007e71a67",
+    "relative-v4-source-review.json": "5d9c540babe3b98fe843cebb17c549ab66ca3538c691e4b67d0d187d4dfd7eb3",
+    "relative-v4-source-publication.json": "7004701447f832bc8e3ba2d00d9448870934ced03385f68bf399afcc8602f399"
+  },
+  "workflowSha256": "9f8b1595381496492f41b4f6db8ef93113860086794d76701496028a9bcd653b",
+  "certificateBodySourceSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+  "retainedCase": "srj18:11",
+  "inputArm": "B",
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "inputRoutedSourceTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "inputQualificationPins": {
+    "originalRawQualificationSha256": "1faf8c27ae3dd34f3359652c147d45afdbe7a2c0c91c1997cbf907ecba08ac14",
+    "independentRawReviewSha256": "2d0305a72997d0cda3809245ea9dd293e847f11adc3f9467aad53c613d06a2c6"
+  },
+  "baselineCertificateHashPolicy": "PRIOR_INDEPENDENTLY_QUALIFIED_ACTUAL18_OLD_BODY_RETURN",
+  "inputSourceRun": {
+    "id": 40974963334,
+    "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+    "head_branch": "codex/layer-aware-mst-controller-20261029",
+    "path": ".github/workflows/layer-aware-mst84-20261029.yml",
+    "tree": "03f9bde76aba4147502b63ac5d87a0df85162b1f",
+    "run_attempt": 1,
+    "repository_id": 924883209
+  },
+  "acceptanceMode": "EXACT_UNTARGETED_FINDINGS",
+  "expectedGlobalStatus": "UNKNOWN",
+  "expectedGlobalDemands": 139,
+  "expectedGlobalReasonCount": 66,
+  "expectedGeometryBefore": 8,
+  "expectedGeometryAfterIfApplied": 7,
+  "untargetedDetailedRecordMultisetsExact": true,
+  "completeOriginalInstrumentedReturnEqualityRequired": true,
+  "literalTargetClearanceContract": {
+    "minimumMm": 0.1,
+    "allForeignTraceSharedManufacturedLayerSegments": true,
+    "arithmetic": "EXACT_BINARY64_RATIONAL",
+    "noNativeToleranceCredit": true
+  },
+  "componentDiagnosticPrerequisite": {
+    "qualificationSha256": "51bd04c7ff4f80eadbe0dc5de3fd9bd51b04d7ff013f24e3b26d4e2c8679318b",
+    "independentReviewSha256": "b7bd16ca91e9286286931c891315abefe12ee980e85a3f02acf065a21e1b139f"
+  }
+}
