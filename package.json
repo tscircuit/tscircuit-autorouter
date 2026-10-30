@@ -63,7 +63,7 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
-    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#373262ebd0ffe04a03af945c3833a0d090819dbb",
+    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#136584be4bdf42a5d8ae1a805bd212ce0e6c947e",
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/88504e8908a3f2e35ad9805162757ef94357d717",
