@@ -6,6 +6,7 @@ import {
   getPrimaryId,
 } from "@tscircuit/circuit-json-util"
 import {
+  doesLineIntersectLine,
   isPointInsidePolygon,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
@@ -18,7 +19,7 @@ import type {
   PcbTrace,
 } from "circuit-json"
 import {
-  PcbConnectivityMap,
+  ConnectivityMap,
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
 import {
@@ -38,6 +39,40 @@ type ViaContact = Point & {
   layers: string[]
   radius?: number
   ownerTraceId?: string
+}
+
+const wireSegmentsTouch = (
+  first: WireSegment,
+  second: WireSegment,
+): boolean => {
+  const minX = Math.min(first.start.x, first.end.x)
+  const minY = Math.min(first.start.y, first.end.y)
+  const maxX = Math.max(first.start.x, first.end.x)
+  const maxY = Math.max(first.start.y, first.end.y)
+  const lineThickness = (first.start.width + second.start.width) / 2
+  const expansion = Math.max(0, lineThickness) + 1e-9
+  // Preserve the connectivity predicate's bounds guard for very short segments.
+  if (
+    Number.isFinite(minX) &&
+    Number.isFinite(minY) &&
+    Number.isFinite(maxX) &&
+    Number.isFinite(maxY) &&
+    Number.isFinite(second.start.x) &&
+    Number.isFinite(second.start.y) &&
+    Number.isFinite(second.end.x) &&
+    Number.isFinite(second.end.y) &&
+    Number.isFinite(lineThickness) &&
+    (Math.min(second.start.x, second.end.x) > maxX + expansion ||
+      Math.max(second.start.x, second.end.x) < minX - expansion ||
+      Math.min(second.start.y, second.end.y) > maxY + expansion ||
+      Math.max(second.start.y, second.end.y) < minY - expansion)
+  )
+    return false
+  return doesLineIntersectLine(
+    [first.start, first.end],
+    [second.start, second.end],
+    { lineThickness },
+  )
 }
 
 /** Pad shapes produced by convertToCircuitJson, including their boundaries. */
@@ -425,13 +460,10 @@ export const checkTraceContinuity = (
       ),
     ]),
   )
-  let physicalConnectivity: PcbConnectivityMap | undefined
-  const getPhysicalConnectivity = (): PcbConnectivityMap => {
+  let physicalConnectivity: ConnectivityMap | undefined
+  const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
-    const map = new PcbConnectivityMap()
-    map.circuitJson = circuitJson
-    for (const trace of traces) map.traceIdToElm.set(trace.pcb_trace_id, trace)
-    for (const port of ports) map.portIdToElm.set(port.pcb_port_id, port)
+    const map = new ConnectivityMap({})
     const connections: string[][] = []
     const indexedSegments = segments.map((segment, order) => ({
       ...segment,
@@ -464,12 +496,7 @@ export const checkTraceContinuity = (
           candidate.start.layer !== segment.start.layer
         )
           continue
-        if (
-          map._arePcbTracesConnected(
-            { ...segment.trace, route: [segment.start, segment.end] },
-            { ...candidate.trace, route: [candidate.start, candidate.end] },
-          )
-        )
+        if (wireSegmentsTouch(segment, candidate))
           connections.push([
             segment.trace.pcb_trace_id,
             candidate.trace.pcb_trace_id,
@@ -574,7 +601,7 @@ export const checkTraceContinuity = (
           connections.push([conductor.id, candidate.id])
       }
     }
-    map.connMap.addConnections(connections)
+    map.addConnections(connections)
     physicalConnectivity = map
     return map
   }
@@ -727,13 +754,15 @@ export const checkTraceContinuity = (
         )
       )
         continue
-      const connectedBySibling = getPhysicalConnectivity()
-        .getAllTracesConnectedToTrace(trace.pcb_trace_id)
-        .some((candidate) =>
-          touchedPortsByTrace
-            .get(candidate.pcb_trace_id)
-            ?.has(port.pcb_port_id),
-        )
+      const physical = getPhysicalConnectivity()
+      const physicalNet = physical.getNetConnectedToId(trace.pcb_trace_id)
+      const connectedBySibling =
+        physicalNet !== undefined &&
+        physical
+          .getIdsConnectedToNet(physicalNet)
+          .some((traceId) =>
+            touchedPortsByTrace.get(traceId)?.has(port.pcb_port_id),
+          )
       if (connectedBySibling) continue
       const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
       errors.push({
