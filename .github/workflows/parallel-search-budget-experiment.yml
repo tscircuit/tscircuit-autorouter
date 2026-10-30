@@ -1,0 +1,49 @@
+name: Parallel search budget experiment
+on:
+  push:
+    branches: [codex/parallel-search-budget-experiment]
+    paths: [.github/workflows/parallel-search-budget-experiment.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [quarter-million, half-million, million, forward-only]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Select routing search experiment
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts")
+          s=p.read_text()
+          variant=os.environ["VARIANT"]
+          if variant == "forward-only":
+            needle="OWNED_REGIONAL_HOP_FRONTIER: true,"
+            replacement=needle+"\n    OUTSIDE_IN_ROUTING: false,"
+          else:
+            count={"quarter-million":"250_000","half-million":"500_000","million":"1_000_000"}[variant]
+            needle="MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale)"
+            replacement="MAX_ITERATIONS: Math.ceil("+count+" * effortScale)"
+          assert s.count(needle)==1
+          p.write_text(s.replace(needle,replacement))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: search-budget-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
