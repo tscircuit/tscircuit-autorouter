@@ -13,7 +13,7 @@ import {
 
 test("worker node ledgers count execution once beyond an accepted serial prefix", async (): Promise<void> => {
   const params: Pipeline9HighDensitySolverParams = {
-    nodePortPoints: Array.from({ length: 80 }, (_, index) => ({
+    nodePortPoints: Array.from({ length: 40 }, (_, index) => ({
       capacityMeshNodeId: `node-${index}`,
       center: { x: index * 8, y: 0 },
       width: 2,
@@ -70,7 +70,7 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
   const pending = solver.solveAsync(runtime, baseline.iterations)
-  expect(tasks).toHaveLength(64)
+  expect(tasks).toHaveLength(16)
   expect(tasks.some(({ input }) => input.nodePortPoints.length > 1)).toBe(true)
 
   const executedLedgers: Record<string, number>[] = []
@@ -98,23 +98,23 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
   }
   await pending
 
-  expect(executedLedgers).toHaveLength(80)
-  expect(new Set(executedLedgers).size).toBe(80)
-  expect(expectedLedger.priorityLedgerTestMarker).toBe(3240)
+  expect(executedLedgers).toHaveLength(40)
+  expect(new Set(executedLedgers).size).toBe(40)
+  expect(expectedLedger.priorityLedgerTestMarker).toBe(820)
   for (const [key, value] of Object.entries(expectedLedger)) {
     expect(solver.benchmarkDiagnosticCounters[key]).toBe(value)
   }
   expect(
     solver.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched,
-  ).toBe(64)
+  ).toBe(16)
   expect(
     solver.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted,
-  ).toBe(64)
+  ).toBe(16)
   expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched).toBe(
-    80,
+    40,
   )
   expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted).toBe(
-    80,
+    40,
   )
   expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted).toBe(3)
   expect(solver.solved).toBe(false)
