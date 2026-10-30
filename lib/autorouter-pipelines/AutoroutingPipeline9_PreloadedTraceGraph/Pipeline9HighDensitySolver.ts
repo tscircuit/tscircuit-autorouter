@@ -508,81 +508,45 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
       const { connMap, nodePortPoints: _, ...params } = this.params
-      // Keep the expensive board context to a bounded number of messages.
-      // Assign crowded nodes first so a difficult node does not start only
-      // after hundreds of inexpensive nodes have passed through the pool.
-      const batches = Array.from(
-        { length: Math.min(16, nodes.length) },
-        () => ({
-          work: 0,
-          nodes: [] as { node: NodeWithPortPoints; index: number }[],
-        }),
-      )
+      // Workers claim individual nodes from one queue. Expensive nodes start
+      // first, but estimates never strand cheap work behind a long search.
       const plannedNodes = nodes
         .map((node, index) => ({ node, index }))
         .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
-      for (const entry of plannedNodes) {
-        const batch = batches.reduce((best, candidate) =>
-          candidate.work < best.work ? candidate : best,
-        )
-        batch.nodes.push(entry)
-        batch.work += Math.max(1, entry.node.portPoints.length) ** 3
-      }
-      const pending = []
-      for (const batch of batches) {
-        const nodePfById = new Map(
-          batch.nodes.map(({ node }) => [
-            node.capacityMeshNodeId,
-            this.nodePfById.get(node.capacityMeshNodeId) ?? null,
-          ]),
-        )
-        const promise = runtime
-          .executeAsync(Pipeline9HighDensityBatchSolver, {
-            ...params,
-            nodePortPoints: batch.nodes.map(({ node }) => node),
-            nodePfById,
-            connectivityNetMap: connMap.netMap,
-            maxIterations: this.MAX_ITERATIONS,
-          })
-          .then(
-            (results) => {
-              // Each batch promise owns execution telemetry exactly once,
-              // including completed nodes outside the accepted serial prefix.
-              for (const result of results) {
-                for (const [key, value] of Object.entries(
-                  result.benchmarkDiagnosticCounters,
-                )) {
-                  this.benchmarkDiagnosticCounters[key] =
-                    (this.benchmarkDiagnosticCounters[key] ?? 0) + value
-                }
-              }
-              this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted =
-                (this.benchmarkDiagnosticCounters
-                  .priorityWorkerBatchesCompleted ?? 0) + 1
-              this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted =
-                (this.benchmarkDiagnosticCounters
-                  .priorityWorkerNodesCompleted ?? 0) + results.length
-              return { type: "result" as const, results }
-            },
-            (error: unknown) => ({ type: "error" as const, error }),
-          )
-        for (const [batchIndex, { index }] of batch.nodes.entries()) {
-          pending[index] = promise.then((outcome) =>
-            outcome.type === "error"
-              ? outcome
-              : {
-                  type: "result" as const,
-                  result: outcome.results[batchIndex]!,
-                },
-          )
+      const sharedNodeCursor = new Int32Array(new SharedArrayBuffer(4))
+      const workerCount = Math.min(4, nodes.length)
+      const outcomes = await Promise.all(Array.from({ length: workerCount }, () =>
+        runtime.executeAsync(Pipeline9HighDensityBatchSolver, {
+          ...params,
+          nodePortPoints: plannedNodes.map(({ node }) => node),
+          nodePfById: this.nodePfById,
+          connectivityNetMap: connMap.netMap,
+          maxIterations: this.MAX_ITERATIONS,
+          sharedNodeCursor,
+        }),
+      ))
+      const pending = new Array(nodes.length)
+      for (const results of outcomes) {
+        for (const result of results) {
+          const sourceIndex = result.sourceNodeIndex
+          if (sourceIndex === undefined || !plannedNodes[sourceIndex])
+            throw new Error("High-density worker returned an invalid node index")
+          const index = plannedNodes[sourceIndex]!.index
+          if (pending[index])
+            throw new Error("High-density workers returned a duplicate node")
+          pending[index] = { type: "result" as const, result }
+          for (const [key, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
+            this.benchmarkDiagnosticCounters[key] =
+              (this.benchmarkDiagnosticCounters[key] ?? 0) + value
+          }
         }
       }
-      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched =
-        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ??
-          0) + batches.length
-      this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched =
-        (this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched ?? 0) +
-        nodes.length
+      if (pending.some((outcome) => outcome === undefined) || outcomes.reduce((count, results) => count + results.length, 0) !== nodes.length)
+        throw new Error("High-density workers did not complete every node")
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched = workerCount
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted = workerCount
+      this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched = nodes.length
+      this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted = nodes.length
       for (const promise of pending) {
         const outcome = await promise
         if (outcome.type === "error") throw outcome.error

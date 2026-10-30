@@ -13,10 +13,12 @@ export type Pipeline9HighDensityBatchInput = Omit<
 > & {
   connectivityNetMap: Record<string, string[]>
   maxIterations: number
+  sharedNodeCursor?: Int32Array
 }
 
 export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
+  sourceNodeIndex?: number
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
   iterations: number
@@ -44,7 +46,12 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
     }
     const connMap = new ConnectivityMap(this.input.connectivityNetMap)
     this.output = []
-    for (const node of this.input.nodePortPoints) {
+    let sequentialIndex = 0
+    const nextIndex = (): number => this.input.sharedNodeCursor
+      ? Atomics.add(this.input.sharedNodeCursor, 0, 1)
+      : sequentialIndex++
+    for (let nodeIndex = nextIndex(); nodeIndex < this.input.nodePortPoints.length; nodeIndex = nextIndex()) {
+      const node = this.input.nodePortPoints[nodeIndex]!
       const solver = new Pipeline9HighDensitySolver({
         ...this.input,
         nodePortPoints: [node],
@@ -55,6 +62,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
       // Every node has an independent outcome. In particular, a failed node
       // must not skip another node that precedes it in the parent's order.
       this.output.push({
+        sourceNodeIndex: this.input.sharedNodeCursor ? nodeIndex : undefined,
         routes: solver.routes,
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
