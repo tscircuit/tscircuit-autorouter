@@ -12,6 +12,9 @@ export type Node = {
 
 export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
   private heap: T[] = []
+  // Search-node priorities are fixed while queued. Keep them contiguous so
+  // sifts do not chase node objects and their retained parent paths.
+  private costs: number[] = []
 
   constructor(nodes: T[]) {
     this.heap = []
@@ -31,6 +34,8 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     const item = this.heap[0]
     this.heap[0] = this.heap[this.heap.length - 1]
     this.heap.pop()
+    this.costs[0] = this.costs[this.costs.length - 1]
+    this.costs.pop()
     this.heapifyDown()
     return item
   }
@@ -44,6 +49,7 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
 
   enqueue(item: T) {
     this.heap.push(item)
+    this.costs.push(item.f)
     this.heapifyUp()
   }
 
@@ -53,11 +59,13 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)
       const parent = this.heap[parentIndex]
-      if (parent.f <= item.f) break
+      if (this.costs[parentIndex] <= item.f) break
+      this.costs[index] = this.costs[parentIndex]
       this.heap[index] = parent
       index = parentIndex
     }
     this.heap[index] = item
+    this.costs[index] = item.f
   }
 
   heapifyDown() {
@@ -72,17 +80,19 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
       let smallerChildIndex = leftChildIndex
       if (
         rightChildIndex < heapLength &&
-        this.heap[rightChildIndex].f < this.heap[leftChildIndex].f
+        this.costs[rightChildIndex] < this.costs[leftChildIndex]
       ) {
         smallerChildIndex = rightChildIndex
       }
-      if (item.f < this.heap[smallerChildIndex].f) {
+      if (item.f < this.costs[smallerChildIndex]) {
         break
       }
       this.heap[index] = this.heap[smallerChildIndex]
+      this.costs[index] = this.costs[smallerChildIndex]
       index = smallerChildIndex
     }
     this.heap[index] = item
+    this.costs[index] = item.f
   }
 
   /**
