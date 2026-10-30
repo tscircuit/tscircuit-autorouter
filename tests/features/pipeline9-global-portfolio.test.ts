@@ -5,7 +5,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 
-test("spatial warm starts produce complete DRC-clean routes with four workers", async (): Promise<void> => {
+test("global routing portfolio produces complete DRC-clean routes with four workers", async (): Promise<void> => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -31,8 +31,8 @@ test("spatial warm starts produce complete DRC-clean routes with four workers", 
     await solver.solveAsync(runtime)
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
-    expect(solver.portPointPathingSolver?.spatialWarmStartPartitions).toBeGreaterThan(1)
-    expect(solver.portPointPathingSolver?.spatialWarmStartCompletedRoutes).toBeGreaterThan(0)
+    expect(solver.portPointPathingSolver?.portfolioCandidatesDispatched).toBe(4)
+    expect(solver.portPointPathingSolver?.portfolioCandidatesSolved).toBe(4)
     const result = solver.getOutputSimpleRouteJson()
     expect(result.traces?.length).toBe(100)
     const drc = evaluateRelaxedDrc({ inputSrj: srj, srjWithPointPairs: srj, routedTraces: result.traces ?? [] })
