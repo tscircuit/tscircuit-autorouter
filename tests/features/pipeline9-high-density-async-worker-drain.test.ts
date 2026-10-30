@@ -38,8 +38,13 @@ test("shared routing waits for outstanding workers before surfacing a worker fai
   })
   let settled = false
   const pending = solver.solveAsync(runtime).then(
-    (): void => { settled = true },
-    (error: unknown): unknown => { settled = true; return error },
+    (): void => {
+      settled = true
+    },
+    (error: unknown): unknown => {
+      settled = true
+      return error
+    },
   )
   expect(tasks.length).toBeGreaterThan(1)
   const failure = new Error("worker transport failed")

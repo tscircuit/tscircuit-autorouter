@@ -10,9 +10,17 @@ export type AutorouterSolverRuntimeOptions = Omit<
 /** The host owns this pool and reuses it across solves before disposing it. */
 export function createAutorouterSolverRuntime(
   options: AutorouterSolverRuntimeOptions,
-): SolverRuntime & { readonly workerCount: number } {
-  return Object.assign(new SolverRuntime({
+): SolverRuntime {
+  const runtime = new SolverRuntime({
     ...options,
     workerSource,
-  }), { workerCount: options.workerCount })
+  })
+  // Compatibility with solver-utils 0.0.23; remove after upstream #53 releases.
+  // https://github.com/tscircuit/solver-utils/pull/53
+  if (!("workerCount" in runtime)) {
+    Object.defineProperty(runtime, "workerCount", {
+      value: options.workerCount,
+    })
+  }
+  return runtime
 }

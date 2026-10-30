@@ -47,16 +47,22 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
     const connMap = new ConnectivityMap(this.input.connectivityNetMap)
     this.output = []
     let sequentialIndex = 0
-    const nextIndex = (): number => this.input.sharedNodeCursor
-      ? Atomics.add(this.input.sharedNodeCursor, 0, 1)
-      : sequentialIndex++
-    for (let nodeIndex = nextIndex(); nodeIndex < this.input.nodePortPoints.length; nodeIndex = nextIndex()) {
+    const nextIndex = (): number =>
+      this.input.sharedNodeCursor
+        ? Atomics.add(this.input.sharedNodeCursor, 0, 1)
+        : sequentialIndex++
+    for (
+      let nodeIndex = nextIndex();
+      nodeIndex < this.input.nodePortPoints.length;
+      nodeIndex = nextIndex()
+    ) {
       const node = this.input.nodePortPoints[nodeIndex]!
       // Only this node is routed by the child. Avoid copying the board-wide
       // priority map twice for every claimed node.
-      const nodePf = this.input.nodePfById instanceof Map
-        ? this.input.nodePfById.get(node.capacityMeshNodeId)
-        : this.input.nodePfById?.[node.capacityMeshNodeId]
+      const nodePf =
+        this.input.nodePfById instanceof Map
+          ? this.input.nodePfById.get(node.capacityMeshNodeId)
+          : this.input.nodePfById?.[node.capacityMeshNodeId]
       const solver = new Pipeline9HighDensitySolver({
         ...this.input,
         nodePortPoints: [node],

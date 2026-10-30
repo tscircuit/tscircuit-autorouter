@@ -1,4 +1,5 @@
 import { RoutingWorkerStartupSolver } from "../../runtime/RoutingWorkerStartupSolver"
+import { getPipeline9ForceWarmupIterations } from "./getPipeline9ForceWarmupIterations"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -829,12 +830,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
             // A brief warm-up leaves the full joint repair search in control.
-            // Multilayer and preloaded-copper boards retain the longer warm-up.
-            maxIterations:
-              cms.originalSrj.layerCount === 2 &&
-              (cms.originalSrj.traces?.length ?? 0) === 0
-                ? 2
-                : 16,
+            // Preserve the established path for custom physical clearances.
+            maxIterations: getPipeline9ForceWarmupIterations(cms.originalSrj),
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
@@ -1165,7 +1162,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       }
       workerStartup = runtime.executeAsync(RoutingWorkerStartupSolver, {}).then(
         (): void => {},
-        (error: unknown): void => { startupFailure = { error } },
+        (error: unknown): void => {
+          startupFailure = { error }
+        },
       )
       while (!this.solved && !this.failed) {
         if (
