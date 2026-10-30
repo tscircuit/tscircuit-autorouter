@@ -1,0 +1,41 @@
+name: Parallel repair portfolio probe
+on:
+  push:
+    branches: [codex/parallel-repair-portfolio-probe]
+    paths: [.github/workflows/parallel-repair-portfolio-probe.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [2, 4, 8, 32]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Measure independent repair starting strategies
+        env:
+          FORCE_WARMUP: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          s=p.read_text()
+          assert s.count("maxIterations: 16,")==1
+          p.write_text(s.replace("maxIterations: 16,", "maxIterations: "+os.environ["FORCE_WARMUP"]+","))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repair-portfolio-probe-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
