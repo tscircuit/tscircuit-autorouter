@@ -67,6 +67,7 @@ jobs:
             paired-results/pr/benchmark-result.json \
             paired-results/comparison.md
           cat paired-results/comparison.md >> "$GITHUB_STEP_SUMMARY"
+          cat paired-results/comparison.md
 
       - name: Upload reports and diagnostics
         if: always()

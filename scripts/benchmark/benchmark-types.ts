@@ -68,6 +68,9 @@ export type WorkerProgress = {
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
+  portfolioCandidatesDispatched?: number
+  portfolioCandidatesSolved?: number
+  portfolioSelectedFactor?: number
   routeCount: number
   traceDensityCandidateEvaluated?: boolean
   traceDensityCandidateSelected?: boolean

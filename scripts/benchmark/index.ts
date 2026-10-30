@@ -1603,6 +1603,9 @@ export const runBenchmarkTasks = async (
           `[benchmark] joint DRC ${result.scenarioName} ${JSON.stringify(result.routingMetrics.jointDrcRepair)}`,
         )
       }
+      if (result.routingMetrics?.tinyHypergraph?.portfolioCandidatesDispatched) {
+        console.log(`[benchmark] route portfolio ${result.scenarioName} ${JSON.stringify(result.routingMetrics.tinyHypergraph)}`)
+      }
 
       if (restartWorker) {
         console.warn(
