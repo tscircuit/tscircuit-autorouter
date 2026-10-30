@@ -426,6 +426,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
+  deferPreloadedMutations = false
+  preloadedMutationDeferred = false
+
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -492,10 +495,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      if (this.fixedHdRoutes.length > 0) {
-        this.solveUntilIteration(stopAtIteration)
-        return
-      }
       while (
         this.activeNode &&
         !this.solved &&
@@ -506,6 +505,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       if (this.solved || this.failed || this.iterations >= stopAtIteration)
         return
       this.asyncRunning = true
+      while (this.unsolvedNodePortPoints.length > 0 && !this.failed && !this.solved && this.iterations < stopAtIteration) {
       const nodes = [...this.unsolvedNodePortPoints].reverse()
       const { connMap, nodePortPoints: _, ...params } = this.params
       // Workers claim individual nodes from one queue. Expensive nodes start
@@ -518,6 +518,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const outcomes = await Promise.all(Array.from({ length: workerCount }, () =>
         runtime.executeAsync(Pipeline9HighDensityBatchSolver, {
           ...params,
+          fixedHdRoutes: this.getUpdatedFixedHdRoutes(),
+          deferPreloadedMutations: true,
           nodePortPoints: plannedNodes.map(({ node }) => node),
           nodePfById: this.nodePfById,
           connectivityNetMap: connMap.netMap,
@@ -551,6 +553,23 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         const outcome = await promise
         if (outcome.type === "error") throw outcome.error
         const result = outcome.result
+        if (result.preloadedMutationDeferred) {
+          // Mutating copper is a synchronization boundary. Discard the
+          // speculative suffix and replay this node with the host's full
+          // mutation history before taking another immutable snapshot.
+          const remainingNodeCount = this.unsolvedNodePortPoints.length
+          do {
+            this.step()
+          } while (
+            !this.solved && !this.failed &&
+            this.iterations < Math.min(this.MAX_ITERATIONS, stopAtIteration) &&
+            (this.activeNode !== null ||
+              this.unsolvedNodePortPoints.length === remainingNodeCount)
+          )
+          this.benchmarkDiagnosticCounters.preloadedMutationBarriers =
+            (this.benchmarkDiagnosticCounters.preloadedMutationBarriers ?? 0) + 1
+          break
+        }
         const logicalIterations = result.iterations - (result.solved ? 1 : 0)
         if (
           this.iterations + logicalIterations >
@@ -581,8 +600,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           return
         }
       }
+      }
       this.asyncRunning = false
-      if (this.iterations < stopAtIteration) this.step()
+      if (!this.failed && !this.solved && this.iterations < stopAtIteration) this.step()
     } catch (error) {
       this.failed = true
       this.error = `Pipeline9 high-density runtime error: ${error}`
@@ -655,6 +675,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   private startRegionalFallback(
     promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
   ): void {
+    if (this.deferPreloadedMutations) {
+      this.preloadedMutationDeferred = true
+      return
+    }
     if (!this.activeNode) {
       throw new Error(
         "Pipeline9 cannot start a regional fallback without an active node",
