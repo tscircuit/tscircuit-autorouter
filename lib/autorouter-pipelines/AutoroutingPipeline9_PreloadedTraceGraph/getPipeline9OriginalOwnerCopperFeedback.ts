@@ -5,7 +5,7 @@ import {
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { checkPipeline9OriginalIntentCopper } from "./checkPipeline9OriginalIntentCopper"
+import { checkPipeline9OriginalIntentCopper, checkPipeline9SelectedOriginalIntentCopper } from "./checkPipeline9OriginalIntentCopper"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
 
 type Data = Record<string, unknown>
@@ -14,13 +14,14 @@ export type OriginalOwnerCopperFeedback =
   | { status: "SUPPORTED"; reason: null; unsupportedOwnerCount: 0; errors: Data[] }
 
 export type OriginalOwnerCopperFeedbackStats = {
-  version: 1
+  version: 2
   enabled: true
   status: "SUPPORTED" | "NOT_APPLICABLE"
   reason: string | null
   originalOwnershipCoverage: "COMPLETE" | "UNKNOWN"
   selectedCheckCount: 2
-  completePredicateSuite: boolean
+  completeAdmissionPredicateSuite: boolean
+  referencePredicateCount: 2
   baselineIssueCount: number | null
   initialIssueCount: number | null
   referenceEvaluations: number
@@ -47,26 +48,35 @@ const stableGeometry = (value: unknown): unknown => {
     .map(([key, item]) => [key, key === "layers" && Array.isArray(item) ? [...item].sort() : stableGeometry(item)]))
 }
 
-/** Add published copper predicates using declared owners, without generated source edges. */
-export const getPipeline9OriginalOwnerCopperFeedback = ({
-  originalSrj, srjWithPointPairs, routedTraces, circuitJson,
-  originalTraceIdByPreparedTraceId = new Map(),
-}: {
+type FeedbackInput = {
   originalSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   routedTraces: SimplifiedPcbTrace[]
   circuitJson: AnyCircuitElement[]
   originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
-}): OriginalOwnerCopperFeedback => {
-  const report = checkPipeline9OriginalIntentCopper({ original: originalSrj,
-    pointPairs: srjWithPointPairs, traces: routedTraces, circuitJson }, {
+}
+
+/** Admission and admitted references share all inventory and target invariants. */
+const getOriginalOwnerCopperFeedbackWithPredicates = ({
+  originalSrj, srjWithPointPairs, routedTraces, circuitJson,
+  originalTraceIdByPreparedTraceId = new Map(),
+}: FeedbackInput, selectedOnly: boolean): OriginalOwnerCopperFeedback => {
+  const input = { original: originalSrj, pointPairs: srjWithPointPairs, traces: routedTraces, circuitJson }
+  const report = selectedOnly ? checkPipeline9SelectedOriginalIntentCopper(input, {
+    viaTrace: checkViaTraceClearance, traceOverlap: checkEachPcbTraceNonOverlapping,
+  }) : checkPipeline9OriginalIntentCopper(input, {
     viaPad: checkViaPadClearance, padTrace: checkPadTraceClearance,
     viaTrace: checkViaTraceClearance, traceOverlap: checkEachPcbTraceNonOverlapping,
     differentNetViaSpacing: checkDifferentNetViaSpacing,
     sameNetViaSpacing: checkSameNetViaSpacing, padPad: checkPadPadClearance,
   })
-  if (report.allPublishedCopperChecksRun !== true) {
+  if (!selectedOnly && report.allPublishedCopperChecksRun !== true) {
     throw new Error("Original-owner feedback did not execute the complete pinned copper suite")
+  }
+  if (selectedOnly && (report.reportKind !== "SELECTED_ORIGINAL_OWNER_COPPER" ||
+    report.fullCopperGrade !== "NOT_EVALUATED" || report.allPublishedCopperChecksRun !== false ||
+    report.checksRun.join(",") !== "viaTrace,traceOverlap")) {
+    throw new Error("Admitted original-owner reference did not execute exactly the selected predicates")
   }
   if (report.ownershipCoverageStatus !== "COMPLETE") return {
     status: "NOT_APPLICABLE", reason: "Original declared copper ownership or geometry is incomplete",
@@ -136,6 +146,20 @@ export const getPipeline9OriginalOwnerCopperFeedback = ({
     })
   }
   return { status: "SUPPORTED", reason: null, unsupportedOwnerCount: 0, errors: [...errors.values()] }
+}
+
+/** Admission retains the complete seven-predicate policy and legacy report API. */
+export const getPipeline9OriginalOwnerCopperFeedback = (
+  input: FeedbackInput,
+): OriginalOwnerCopperFeedback => {
+  return getOriginalOwnerCopperFeedbackWithPredicates(input, false)
+}
+
+/** After admission, only the same two feedback predicates require reevaluation. */
+export const getPipeline9SelectedOriginalOwnerCopperFeedback = (
+  input: FeedbackInput,
+): OriginalOwnerCopperFeedback => {
+  return getOriginalOwnerCopperFeedbackWithPredicates(input, true)
 }
 
 /** Retain native findings; attach strict identity to an identical native pair once. */

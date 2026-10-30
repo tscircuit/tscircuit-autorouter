@@ -7,6 +7,32 @@ export type OriginalIntentOwner = { status: "RESOLVED"; owner: string; anchors: 
 type Input = { original: OriginalIntentJson; pointPairs: OriginalIntentJson; traces: OriginalIntentJson[]; circuitJson: OriginalIntentJson[] }
 type CheckName = "viaPad" | "padTrace" | "viaTrace" | "traceOverlap" | "differentNetViaSpacing" | "sameNetViaSpacing" | "padPad"
 type GeometryChecker = (circuit: any[], options: { connMap: any; minClearance?: number }) => OriginalIntentJson[]
+export type SelectedOriginalIntentCopperReport = {
+  schemaVersion: 1
+  reportKind: "SELECTED_ORIGINAL_OWNER_COPPER"
+  fullCopperGrade: "NOT_EVALUATED"
+  allPublishedCopperChecksRun: false
+  ownershipCoverageStatus: "COMPLETE" | "UNKNOWN"
+  unknownViaCount: number
+  unknownPadCount: number
+  unknownTraceCount: number
+  unknownOwnerReasonCounts: Record<string, number>
+  viaCount: number
+  padCount: number
+  traceCount: number
+  checksRun: ["viaTrace", "traceOverlap"]
+  checks: Record<"viaTrace" | "traceOverlap", OriginalIntentJson>
+  allFindings: OriginalIntentJson[]
+  viaOwners: OriginalIntentJson[]
+  padOwners: OriginalIntentJson[]
+  traceOwners: OriginalIntentJson[]
+  originalObstacleCoverage: OriginalIntentJson
+  canonicalSemanticKey: string
+  copperGeometryKey: string
+  originalStackSupported: boolean
+  supportedStackLayers: string[]
+  geometryUnchanged: true
+}
 const stable = (value: any): any => Array.isArray(value) ? value.map(stable) :
   value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])])) : value
 const digest = (value: any): string => JSON.stringify(stable(value))
@@ -21,6 +47,8 @@ export class Pipeline9IntentOwners {
   private pointPairAliases = new Map<string, OriginalIntentOwner[]>()
   private connectionTokens = new Map<string, string[]>()
   private originalTokens: string[] = []
+  private ownerByRoot = new Map<string, { owner: string; anchors: string[] }>()
+  private ownerIndexDirty = true
 
   constructor(original: OriginalIntentJson, pointPairs: OriginalIntentJson) {
     if (!Array.isArray(original.connections)) throw new Error("Original connection declarations are required")
@@ -66,7 +94,12 @@ export class Pipeline9IntentOwners {
     }
   }
 
-  private ensure(id: string): void { if (!this.parents.has(id)) this.parents.set(id, id) }
+  private ensure(id: string): void {
+    if (!this.parents.has(id)) {
+      this.parents.set(id, id)
+      this.ownerIndexDirty = true
+    }
+  }
   private find(id: string): string {
     this.ensure(id)
     const parent = this.parents.get(id)!
@@ -77,7 +110,10 @@ export class Pipeline9IntentOwners {
   }
   private union(left: string, right: string): void {
     const a = this.find(left), b = this.find(right)
-    if (a !== b) this.parents.set(b, a)
+    if (a !== b) {
+      this.parents.set(b, a)
+      this.ownerIndexDirty = true
+    }
   }
   private alias(id: string, typed: string): void {
     const group = this.aliases.get(id) ?? new Set<string>()
@@ -89,12 +125,30 @@ export class Pipeline9IntentOwners {
     this.alias(id, typed)
     this.union(root, typed)
   }
+  private rebuildOwnerIndex(): void {
+    const anchorsByRoot = new Map<string, string[]>()
+    for (const [candidate, name] of this.anchors) {
+      const root = this.find(candidate)
+      const anchors = anchorsByRoot.get(root) ?? []
+      anchors.push(name)
+      anchorsByRoot.set(root, anchors)
+    }
+    this.ownerByRoot.clear()
+    for (const [root, anchors] of anchorsByRoot) {
+      anchors.sort()
+      this.ownerByRoot.set(root, { owner: `intent-owner:${digest(anchors)}`, anchors })
+    }
+    this.ownerIndexDirty = false
+  }
   private typed(id: string): OriginalIntentOwner {
     if (!this.parents.has(id)) return unknown("Identity is absent from original declarations")
     const root = this.find(id)
-    const anchors = [...this.anchors].filter(([candidate]) => this.find(candidate) === root).map(([, name]) => name).sort()
-    if (anchors.length === 0) return unknown("Identity has no original connection anchor")
-    return { status: "RESOLVED", owner: `intent-owner:${digest(anchors)}`, anchors }
+    // All original unions precede the first resolution. Keep the index local
+    // to this freshly constructed inventory; later additions/unions invalidate it.
+    if (this.ownerIndexDirty) this.rebuildOwnerIndex()
+    const resolved = this.ownerByRoot.get(root)
+    if (!resolved) return unknown("Identity has no original connection anchor")
+    return { status: "RESOLVED", owner: resolved.owner, anchors: [...resolved.anchors] }
   }
   combine(owners: OriginalIntentOwner[], absent: string): OriginalIntentOwner {
     if (owners.some((owner) => owner.status === "AMBIGUOUS")) return { status: "AMBIGUOUS", reason: "Conflicting declared owner references" }
@@ -162,9 +216,13 @@ function obstaclePadProjection(obstacle: OriginalIntentJson, index: number): { g
   return { geometry: padGeometry(pad), aliases: [String(base), `${base}_fragment_${index}`] }
 }
 
-export function checkPipeline9OriginalIntentCopper(input: Input, checkerOrSuite: GeometryChecker | Partial<Record<CheckName, GeometryChecker>>): OriginalIntentJson {
+function checkOriginalIntentCopperWithPredicates(input: Input, checkerOrSuite: GeometryChecker | Partial<Record<CheckName, GeometryChecker>>, selectedOnly: boolean): OriginalIntentJson {
   const suite: Partial<Record<CheckName, GeometryChecker>> = typeof checkerOrSuite === "function" ? { viaPad: checkerOrSuite } : checkerOrSuite
-  if (typeof suite.viaPad !== "function") throw new Error("Pinned via-pad checker is required")
+  if (!selectedOnly && typeof suite.viaPad !== "function") throw new Error("Pinned via-pad checker is required")
+  if (selectedOnly && (Object.keys(suite).join(",") !== "viaTrace,traceOverlap" ||
+    typeof suite.viaTrace !== "function" || typeof suite.traceOverlap !== "function")) {
+    throw new Error("Selected original-owner copper requires exactly the two pinned predicates")
+  }
   if (!Array.isArray(input.circuitJson) || !Array.isArray(input.traces)) throw new Error("Canonical circuit and raw traces must be arrays")
   const stackSupported = Number.isSafeInteger(input.original.layerCount) && input.original.layerCount >= 1 && input.original.layerCount <= 10
   const stackLayers = stackSupported ? (input.original.layerCount === 1 ? ["top"] :
@@ -319,8 +377,8 @@ export function checkPipeline9OriginalIntentCopper(input: Input, checkerOrSuite:
       appliedMinClearance: checkMinimums[checkClass as CheckName] ?? null, findings }
     allFindings.push(...findings)
   }
-  const knownForeignFindingCount = checks.viaPad.knownForeignFindingCount
-  const unknownFindingCount = checks.viaPad.unknownFindingCount
+  const knownForeignFindingCount = selectedOnly ? undefined : checks.viaPad.knownForeignFindingCount
+  const unknownFindingCount = selectedOnly ? undefined : checks.viaPad.unknownFindingCount
   const knownForeignCopperFindingCount = allFindings.filter((finding) => finding.classification === "DECLARED_FOREIGN_COPPER").length
   const unknownCopperFindingCount = allFindings.filter((finding) => finding.classification === "UNKNOWN_OWNER_COPPER").length
   const definiteCopperRuleFindingCount = allFindings.length - unknownCopperFindingCount
@@ -335,8 +393,6 @@ export function checkPipeline9OriginalIntentCopper(input: Input, checkerOrSuite:
       (meta.source_component_name && meta.source_port_name))
   })
   const coverageUnknown = !stackSupported || unknownViaCount + unknownPadCount + unknownTraceCount + unmappedDeclaredCopper.length > 0
-  const status = knownForeignFindingCount > 0 ? "FAIL_FOREIGN_CLEARANCE" : knownForeignCopperFindingCount > 0 ? "FAIL_FOREIGN_COPPER" :
-    definiteCopperRuleFindingCount > 0 ? "FAIL_SUPPORTED_COPPER_RULE" : coverageUnknown || unknownCopperFindingCount > 0 ? "UNKNOWN_OWNERSHIP" : "PASS"
   const unknownOwnerReasonCounts: Record<string, number> = {}
   for (const item of [...viaOwners, ...padOwners, ...traceOwnerRecords].filter((item) => item.status !== "RESOLVED")) {
     const reason = `${item.status}:${item.reason}`
@@ -347,6 +403,22 @@ export function checkPipeline9OriginalIntentCopper(input: Input, checkerOrSuite:
   const beforeGeometry = digest(geometryOnly(input.circuitJson)), afterGeometry = digest(geometryOnly(transformed))
   if (beforeGeometry !== afterGeometry) throw new Error("Offline checker changed copper geometry")
   const allPublishedCopperChecksRun = ["viaPad", "padTrace", "viaTrace", "traceOverlap", "differentNetViaSpacing", "sameNetViaSpacing", "padPad"].every((name) => checks[name] !== undefined)
+  if (selectedOnly) return {
+    schemaVersion: 1, reportKind: "SELECTED_ORIGINAL_OWNER_COPPER", fullCopperGrade: "NOT_EVALUATED",
+    allPublishedCopperChecksRun: false, ownershipCoverageStatus: coverageUnknown ? "UNKNOWN" : "COMPLETE",
+    unknownViaCount, unknownPadCount, unknownTraceCount, unknownOwnerReasonCounts,
+    viaCount: viaOwners.length, padCount: padOwners.length, traceCount: traceOwnerRecords.length,
+    checksRun: Object.keys(checks), checks, allFindings, viaOwners, padOwners, traceOwners: traceOwnerRecords,
+    originalObstacleCoverage: { originalCount: obstacles.length, representedCount: representedObstacles.size,
+      unmappedCount: unmappedOriginalObstacles.length, unmappedDeclaredCopperCount: unmappedDeclaredCopper.length,
+      unmappedDeclaredCopper: unmappedDeclaredCopper.map((candidate: OriginalIntentJson) => ({ originalIndex: candidate.originalIndex,
+        declaredIds: candidate.aliases, ownerStatus: candidate.owner.status })),
+      genericUnmappedObstacleScope: "Generic SRJ obstacle rectangles without typed copper provenance are reported as unmapped; they are not silently invented as manufactured pads." },
+    canonicalSemanticKey: digest(input.circuitJson), copperGeometryKey: beforeGeometry,
+    originalStackSupported: stackSupported, supportedStackLayers: stackLayers, geometryUnchanged: true,
+  }
+  const status = knownForeignFindingCount > 0 ? "FAIL_FOREIGN_CLEARANCE" : knownForeignCopperFindingCount > 0 ? "FAIL_FOREIGN_COPPER" :
+    definiteCopperRuleFindingCount > 0 ? "FAIL_SUPPORTED_COPPER_RULE" : coverageUnknown || unknownCopperFindingCount > 0 ? "UNKNOWN_OWNERSHIP" : "PASS"
   return { schemaVersion: 2, status, qualifiedPhysicalClean: status === "PASS" && allPublishedCopperChecksRun,
     qualifiedSupportedCopper: status === "PASS" && allPublishedCopperChecksRun, allPublishedCopperChecksRun,
     ownershipCoverageStatus: coverageUnknown ? "UNKNOWN" : "COMPLETE", knownForeignFindingCount, unknownFindingCount,
@@ -366,3 +438,19 @@ export function checkPipeline9OriginalIntentCopper(input: Input, checkerOrSuite:
   }
 }
 
+/** Preserve the full and legacy partial checker APIs and their exact reports. */
+export function checkPipeline9OriginalIntentCopper(
+  input: Input,
+  checkerOrSuite: GeometryChecker | Partial<Record<CheckName, GeometryChecker>>,
+): OriginalIntentJson {
+  return checkOriginalIntentCopperWithPredicates(input, checkerOrSuite, false)
+}
+
+/** Recheck the entire owner/material inventory, without claiming a full grade. */
+export function checkPipeline9SelectedOriginalIntentCopper(
+  input: Input,
+  suite: Record<"viaTrace" | "traceOverlap", GeometryChecker>,
+): SelectedOriginalIntentCopperReport {
+  return checkOriginalIntentCopperWithPredicates(input,
+    { viaTrace: suite.viaTrace, traceOverlap: suite.traceOverlap }, true) as SelectedOriginalIntentCopperReport
+}
