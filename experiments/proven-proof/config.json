@@ -1,0 +1,72 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "0da00f5bef6d9945b3fa63e1aa72c138e68e1c7f",
+  "candidates": {
+    "paged_occupancy": "25d3020043ab5e030f3a39bdb57d3b0e2a32d6a7"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 3,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "55c2a84347139cbae000aecb6ce3a04b60c07c72",
+    "root_changed_files": [
+      "package.json"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA01/OwnerStorage.ts",
+      "tests/a01/paged-occupancy.test.ts"
+    ],
+    "candidate_parent_sha": "9287aa032e0fa932f6c62b08f5ad097786c89086"
+  },
+  "caseOrdering": "Three prespecified boards18/1,18/15,24/20 in fixedorder, oneboardperdedicatedCPUlane. Sameboard ABthenBA remains sequential on onecore; no candidate results used forordering.",
+  "selectionScope": "PRIVATE V4threshold-template: candidate ONLYchangesqualifiedV2OwnerStoragegenericpagingcutofffrom1MiBto16MiB(4194304Int32cells); retains4096-cellpages/encodedowner+1/lazyzeropages/unsignedintegerbounds+shiftmask,originalnegativeonedensearraysbelowcutoff. No V3sharedsentinel/COWfill/direct-ownerstorage. SourceparentpublicV29287; qualifiedupstream55c2a843 ONLYhelperthreshold+focusedtest changes fromparent9287; ROOT25d302onepin. Rootonlypackagepin. Finalofficial10cdsourcewhitelistA01TS+OwnerStorage+focusedtest remains. No productionboardIDs/searchpolicy/lazysetup/A03/cache/futurecostcompounds. All5hash/iterations/fullDRC/lint/native/timegates unchanged.",
+  "confirmation_scope": "PRIVATEliteralV4sourcefreeze for prespecified3boardABBA12freshprocessscreen,3CPUlanes16ARM26GiBpreflight/defaultcacheeffort1. Root25d302/treea7bf43b5 pinupstream55c2a843/treeb0eeee parent9287, official10cdancestor sourceguards. Upstreamfunctional/types/build/independent/publicQAqualified; ROOTfunctional/deps/freshGB stillpending: NOtriggeruntilcompletePASS+freshindependentprivate/publiccontroller/sourceauth. NoV1/V2/V3timing/RSSpooling. Originalglobal5time/15primaryRSS+memoryonly2percentdataset/all>5RSSflags unchanged.",
+  "screening_scope": "Twofreshobservations perarm/board, ABthenBA, production-defaultcacheeffort1. No cross-VMabsolute timingpooling; a favorable screen only selects forfull42confirmation underoriginal5time/15primaryRSS gates/all>5RSSflaginvestigation."
+}
