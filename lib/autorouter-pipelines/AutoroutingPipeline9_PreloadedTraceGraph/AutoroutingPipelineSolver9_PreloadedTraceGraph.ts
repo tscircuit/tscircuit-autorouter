@@ -57,6 +57,7 @@ import {
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { CapacityMeshBoundaryEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshBoundaryEdgeSolver"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
@@ -105,6 +106,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  experimentBoundaryEdges?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -1227,8 +1229,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
+    const solverClass =
+      pipelineStepDef.solverName === "edgeSolver" &&
+      this.opts.experimentBoundaryEdges === true
+        ? CapacityMeshBoundaryEdgeSolver
+        : pipelineStepDef.solverClass
     // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    this.activeSubSolver = new solverClass(...constructorParams)
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
