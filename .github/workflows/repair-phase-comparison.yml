@@ -1,0 +1,29 @@
+name: Repair phase comparison
+on:
+  push:
+    branches: [codex/repair-portfolio-width]
+    paths: [.github/workflows/repair-phase-comparison.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download completed benchmark evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for run in 40999238886 41034809976 41035403738; do
+            gh run download "$run" --repo tscircuit/tscircuit-autorouter --dir "results/$run"
+          done
+      - name: Print phase costs
+        run: |
+          python3 - <<'PY'
+          import json,glob
+          for path in sorted(glob.glob("results/**/benchmark-result.json",recursive=True)):
+            if "probe-" in path and "probe-2/" not in path: continue
+            report=json.load(open(path))
+            for t in report["tests"]:
+              print(json.dumps(dict(artifact=path,sample=t["scenarioName"],elapsed=t.get("elapsedTimeMs"),passed=t.get("relaxedDrcPassed"),phases=t.get("routingMetrics",{}).get("phaseTimeMs",{}))))
+          PY
