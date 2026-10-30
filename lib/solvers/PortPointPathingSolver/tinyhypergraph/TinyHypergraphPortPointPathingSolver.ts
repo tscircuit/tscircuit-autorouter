@@ -1,6 +1,8 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { TinyHypergraphSpatialWarmStartSolver } from "./TinyHypergraphSpatialWarmStartSolver"
+import { partitionTinyHypergraph } from "./partitionTinyHypergraph"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -908,7 +910,7 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
-class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+export class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
@@ -1056,6 +1058,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
   private asyncRunning = false
+  spatialWarmStartPartitions = 0
+  spatialWarmStartCompletedRoutes = 0
+  spatialWarmStartAttemptedRoutes = 0
+  spatialWarmStartExhaustedPartitions = 0
+  spatialWarmStartErrors: (string | null)[] = []
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1382,6 +1389,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
+      spatialWarmStartPartitions: this.spatialWarmStartPartitions,
+      spatialWarmStartCompletedRoutes: this.spatialWarmStartCompletedRoutes,
+      spatialWarmStartAttemptedRoutes: this.spatialWarmStartAttemptedRoutes,
+      spatialWarmStartExhaustedPartitions: this.spatialWarmStartExhaustedPartitions,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
       downstreamNodePfSum: selectedCandidateSummary?.nodePfSum,
@@ -1515,6 +1526,55 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       throw new Error("Port-point solveAsync is already running")
     this.asyncRunning = true
     try {
+      if (
+        runtime &&
+        stopAtIteration - this.iterations >= 200_000 &&
+        this.iterations === 0 &&
+        !this.alternativeTinyPipelineInput &&
+        this.params.flags.USE_SELECTIVE_RERIP_ROUTING &&
+        this.params.flags.USE_PREPARED_PORT_POINT_ROUTING
+      ) {
+        const input = this.tinyPipelineSolver.inputProblem
+        const graph = input.serializedHyperGraph
+        const hasExistingAssignments = graph.regions.some(
+          (region) => (region.assignments?.length ?? 0) > 0,
+        )
+        const preloadedStats = getSerializedPreloadedTraceStats(graph)
+        if (!hasExistingAssignments && preloadedStats.preloadedPortCount === 0 && preloadedStats.preloadedTraceCount === 0) {
+          const partitions = partitionTinyHypergraph(graph)
+          const proposals = await Promise.all(partitions.map((partition) =>
+            runtime.executeAsync(TinyHypergraphSpatialWarmStartSolver, {
+              graph: partition,
+              solveGraphOptions: input.solveGraphOptions,
+              sectionSolverOptions: input.sectionSolverOptions,
+            }),
+          ))
+          this.spatialWarmStartErrors = proposals.map((proposal) => proposal.error)
+          this.spatialWarmStartPartitions = proposals.length
+          this.spatialWarmStartCompletedRoutes = proposals.reduce((total, proposal) => total + proposal.completedRoutes, 0)
+          this.spatialWarmStartAttemptedRoutes = proposals.reduce((total, proposal) => total + proposal.attemptedRoutes, 0)
+          this.spatialWarmStartExhaustedPartitions = proposals.filter((proposal) => proposal.exhausted).length
+          const byRegion = new Map(
+            proposals.flatMap((proposal) => proposal.assignmentsByRegion)
+              .map(({ regionId, assignments }) => [regionId, assignments] as const),
+          )
+          if (byRegion.size > 0) {
+            const warmGraph: SerializedHyperGraph = {
+              ...graph,
+              regions: graph.regions.map((region) => ({
+                ...region,
+                assignments: byRegion.get(region.regionId) ?? region.assignments,
+              })),
+            }
+            this.tinyPipelineSolver = new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+              { ...input, serializedHyperGraph: warmGraph },
+              true,
+              true,
+            )
+            this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+          }
+        }
+      }
       while (
         !this.solved &&
         !this.failed &&

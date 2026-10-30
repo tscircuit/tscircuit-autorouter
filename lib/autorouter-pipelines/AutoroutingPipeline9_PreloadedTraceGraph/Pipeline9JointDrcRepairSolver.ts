@@ -1,4 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
@@ -652,6 +653,7 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
+  private asyncRunning = false
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
@@ -1439,7 +1441,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCache.size >= 2) {
+      if (referenceDrcCache.size >= 64) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
       }
@@ -1652,6 +1654,31 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
+  }
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Joint DRC solveAsync is already running")
+    this.asyncRunning = true
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const child = this.activeSubSolver
+        if (child instanceof Pipeline9BoundedRegionalRepairSolver ||
+          child instanceof Pipeline9ClearanceProjectionSolver) {
+          const before = child.iterations
+          await child.solveAsync(runtime, before + Math.max(0, stopAtIteration - this.iterations))
+          this.iterations += Math.max(0, child.iterations - before - (child.solved || child.failed ? 1 : 0))
+          this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS,
+            this.iterations + child.MAX_ITERATIONS - child.iterations + 2)
+          if (this.iterations >= stopAtIteration) break
+        }
+        this.step()
+      }
+    } finally {
+      this.asyncRunning = false
+    }
   }
 
   override _step(): void {

@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
@@ -9,6 +10,8 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { Pipeline9ClearanceProjectionWorker } from "./Pipeline9ClearanceProjectionWorker"
+import { cropPipeline9ProjectionInput } from "./cropPipeline9ProjectionInput"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
@@ -61,10 +64,130 @@ type ProjectionState =
 export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
   readonly params: Pipeline9ClearanceProjectionParams
   private state: ProjectionState = { phase: "initialize" }
+  private asyncRunning = false
+  private parallelAttempted = false
 
   constructor(params: Pipeline9ClearanceProjectionParams) {
     super()
     this.params = params
+  }
+
+  /** Try independent spatial partitions and publish only a validated candidate. */
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Clearance projection is already running")
+    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+    this.asyncRunning = true
+    try {
+      if (this.state.phase === "initialize") this.step()
+      const state = this.state
+      if (
+        runtime &&
+        !this.parallelAttempted &&
+        state.phase === "relax" &&
+        state.solver.iterations === 0 &&
+        stopAtIteration - this.iterations >= 256
+      ) {
+        this.parallelAttempted = true
+        const input = state.solver.input
+        // Identical coordinates share a partition, including shared-net junctions.
+        const points = new Map<string, { x: number; y: number; count: number }>()
+        for (const [routeIndex, route] of input.routes.entries()) {
+          for (const [pointIndex, point] of route.route.entries()) {
+            if (input.lockedPointIndices[routeIndex]![pointIndex]) continue
+            const key = `${point.x},${point.y}`
+            const existing = points.get(key)
+            if (existing) existing.count++
+            else points.set(key, { x: point.x, y: point.y, count: 1 })
+          }
+        }
+        // Avoid four full-board preparations when the available work is tiny.
+        const entries = [...points.entries()].sort(
+          ([, a], [, b]) => a.x - b.x || a.y - b.y,
+        )
+        if (entries.length >= 32) {
+          const assignments = new Map<string, number>()
+          const total = entries.reduce((sum, [, point]) => sum + point.count, 0)
+          let assigned = 0
+          for (const [key, point] of entries) {
+            assignments.set(key, Math.min(3, Math.floor((assigned * 4) / total)))
+            assigned += point.count
+          }
+          const crops = Array.from({ length: 4 }, (_, partition) =>
+            cropPipeline9ProjectionInput(input, assignments, partition),
+          )
+          const results = await Promise.all(
+            crops.map((crop) =>
+              runtime.executeAsync(Pipeline9ClearanceProjectionWorker, crop.input),
+            ),
+          )
+          this.stats.parallelProjectionWorkers = results.length
+          this.stats.parallelProjectionRouteCounts = crops.map((crop) => crop.routeIndexes.length)
+          const childIterations = Math.max(...results.map((result) => result.iterations))
+          if (this.iterations + childIterations <= stopAtIteration) {
+            const candidate = structuredClone(input.routes)
+            for (const [partition, crop] of crops.entries()) {
+              for (const [localIndex, routeIndex] of crop.routeIndexes.entries()) {
+                const route = input.routes[routeIndex]!
+                const projected = results[partition]!.routes[localIndex]!
+                for (const [pointIndex, point] of route.route.entries()) {
+                  if (assignments.get(`${point.x},${point.y}`) !== partition) continue
+                  candidate[routeIndex]!.route[pointIndex]!.x = projected.route[pointIndex]!.x
+                  candidate[routeIndex]!.route[pointIndex]!.y = projected.route[pointIndex]!.y
+                }
+              }
+            }
+            for (const output of candidate) {
+              output.vias = []
+              for (let i = 1; i < output.route.length; i++) {
+                const a = output.route[i - 1]!
+                const b = output.route[i]!
+                if (
+                  a.z !== b.z &&
+                  a.toNextSegmentType !== "through_obstacle" &&
+                  !output.vias.some((via) => via.x === b.x && via.y === b.y)
+                ) output.vias.push({ x: b.x, y: b.y })
+              }
+            }
+            const savedIterations = this.iterations
+            const savedMaximum = this.MAX_ITERATIONS
+            const savedProgress = this.progress
+            this.iterations += childIterations
+            this.MAX_ITERATIONS = Math.max(...results.map((result) => result.maxIterations)) + 4
+            this.activeSubSolver = null
+            this.state = { phase: "select", context: state.context, candidate }
+            while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+              this.step()
+            }
+            const finalState = this.state as ProjectionState
+            if (this.solved && finalState.phase === "finished" && finalState.output !== this.params.routes) {
+              this.stats.parallelProjectionAccepted = true
+              return
+            }
+            // A rejected or budget-truncated proposal is not part of the serial
+            // solver's logical work; replay from its untouched relaxation child.
+            this.stats.parallelProjectionAccepted = false
+            this.solved = false
+            this.iterations = savedIterations
+            this.MAX_ITERATIONS = savedMaximum
+            this.progress = savedProgress
+            this.state = state
+            this.activeSubSolver = state.solver
+          }
+        }
+      }
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Clearance projection runtime error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+    }
   }
 
   override _step(): void {

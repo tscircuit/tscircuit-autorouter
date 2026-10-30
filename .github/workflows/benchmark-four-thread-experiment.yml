@@ -1,0 +1,82 @@
+name: Four-thread paired benchmark experiment
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/benchmark-four-thread-experiment.yml
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: blacksmith-16vcpu-ubuntu-2404-arm
+    timeout-minutes: 120
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+
+    steps:
+      - name: Checkout PR base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install base dependencies
+        working-directory: base
+        run: bun install
+
+      - name: Install PR dependencies
+        working-directory: pr
+        run: bun install
+
+      - name: Run base, then PR
+        run: |
+          mkdir -p paired-results/base paired-results/pr
+          for revision in base pr; do
+            (cd "$revision" && bash ./benchmark.sh --dataset 18 --threads 4 --concurrency 3)
+            cp "$revision/benchmark-result.json" "$revision/benchmark-result.txt" paired-results/"$revision"/
+          done
+
+      - name: Validate and render comparison
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          BENCHMARK_REPOSITORY: ${{ github.repository }}
+          BENCHMARK_RUNNER_NAME: ${{ runner.name }}
+        run: |
+          bun pr/scripts/benchmark/renderFourThreadComparison.ts \
+            paired-results/base/benchmark-result.json \
+            paired-results/pr/benchmark-result.json \
+            paired-results/comparison.md
+          cat paired-results/comparison.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload reports and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: four-thread-paired-srj18
+          path: |
+            paired-results
+            base/benchmark-interrupted.json
+            base/benchmark-failure.json
+            pr/benchmark-interrupted.json
+            pr/benchmark-failure.json
+          if-no-files-found: warn
