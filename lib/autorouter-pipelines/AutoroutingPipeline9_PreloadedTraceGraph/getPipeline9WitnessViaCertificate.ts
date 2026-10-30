@@ -75,7 +75,7 @@ function pointSegmentDistance(point: Point, start: Point, end: Point): number {
 }
 
 /** Conservative board copper-envelope guard, including manufactured via lands. */
-function checkBoardEnvelope(original: SimpleRouteJson, traces: SimplifiedPcbTrace[], sites: WitnessViaSite[]): string[] {
+export function checkBoardEnvelope(original: SimpleRouteJson, traces: SimplifiedPcbTrace[], sites: WitnessViaSite[]): string[] {
   const { minX, minY, maxX, maxY } = original.bounds
   const boardClearance = original.minBoardEdgeClearance ?? 0
   if (![minX, minY, maxX, maxY, boardClearance].every(Number.isFinite) || minX >= maxX || minY >= maxY || boardClearance < 0) return ["Invalid board bounds/clearance"]
@@ -262,7 +262,7 @@ function checkDemandGraph(
 /** Full raw inventory prevents owner-blind canonical via dedup from hiding
  * an unselected conflicting owner, material, fixed via, or manufactured span.
  */
-function collectRawViaSites(
+export function collectRawViaSites(
   original: SimpleRouteJson,
   pointPairs: SimpleRouteJson,
   traces: SimplifiedPcbTrace[],

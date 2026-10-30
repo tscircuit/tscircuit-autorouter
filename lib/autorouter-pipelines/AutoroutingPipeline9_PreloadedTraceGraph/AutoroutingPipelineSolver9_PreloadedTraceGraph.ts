@@ -1,3 +1,4 @@
+import { Pipeline9RelativeWitnessRepairSolver } from "./Pipeline9RelativeWitnessRepairSolver"
 import { Pipeline9WitnessViaPadRepairSolver } from "./Pipeline9WitnessViaPadRepairSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
@@ -116,6 +117,7 @@ interface CapacityMeshSolverOptions {
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
   experimentWitnessViaPadRepair?: boolean
+  experimentRelativeWitnessRepair?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -277,6 +279,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   declare witnessViaPadRepairSolver?: Pipeline9WitnessViaPadRepairSolver
+  declare relativeWitnessRepairSolver?: Pipeline9RelativeWitnessRepairSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -1087,7 +1090,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    const witnessOriginalSrj = opts.experimentWitnessViaPadRepair === true
+    const witnessOriginalSrj = opts.experimentWitnessViaPadRepair === true || opts.experimentRelativeWitnessRepair === true
       ? structuredClone(srj)
       : undefined
     const srjWithBoardValidObstacleLayers =
@@ -1116,7 +1119,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
 
-    if (mutableOpts.experimentWitnessViaPadRepair === true) {
+    if (mutableOpts.experimentRelativeWitnessRepair === true) {
+      if (witnessOriginalSrj === undefined) throw new Error("Relative repair requires constructor-time original declarations")
+      this.pipelineDef.push(definePipelineStep("relativeWitnessRepairSolver", Pipeline9RelativeWitnessRepairSolver, (cms) => {
+        if (!cms.powerTraceExpansionSolver?.solved || !cms.srjWithPointPairs) throw new Error("Relative repair requires the completed final power export")
+        return [{ originalSrj: witnessOriginalSrj, pointPairs: cms.srjWithPointPairs, traces: cms.powerTraceExpansionSolver.getOutput(), protectedTraces: cms.getPowerTraceExpansionFixedTraces() }]
+      }))
+    } else if (mutableOpts.experimentWitnessViaPadRepair === true) {
       if (witnessOriginalSrj === undefined) {
         throw new Error("Witness repair requires its constructor-time original declarations")
       }
@@ -1267,7 +1276,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
       pipelineStepDef.solverName === "effortCleanupSolver" ||
-      pipelineStepDef.solverName === "witnessViaPadRepairSolver"
+      pipelineStepDef.solverName === "witnessViaPadRepairSolver" ||
+      pipelineStepDef.solverName === "relativeWitnessRepairSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1723,7 +1733,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...(this.witnessViaPadRepairSolver
+      ...(this.relativeWitnessRepairSolver
+        ? this.relativeWitnessRepairSolver.getOutput()
+        : this.witnessViaPadRepairSolver
         ? this.witnessViaPadRepairSolver.getOutput()
         : this.powerTraceExpansionSolver.getOutput()),
     ]
@@ -1740,7 +1752,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...(this.witnessViaPadRepairSolver
+      ...(this.relativeWitnessRepairSolver
+        ? this.relativeWitnessRepairSolver.getOutput()
+        : this.witnessViaPadRepairSolver
         ? this.witnessViaPadRepairSolver.getOutput()
         : this.powerTraceExpansionSolver.getOutput()),
     ]
