@@ -460,6 +460,38 @@ export const checkTraceContinuity = (
       ),
     ]),
   )
+  const traceIdsByTouchedPort = new Map<string, string[]>()
+  for (const [traceId, portIds] of touchedPortsByTrace) {
+    for (const portId of portIds) {
+      const traceIds = traceIdsByTouchedPort.get(portId)
+      if (traceIds) traceIds.push(traceId)
+      else traceIdsByTouchedPort.set(portId, [traceId])
+    }
+  }
+  const padConnectedPortsByTrace = new Map<string, Set<string>>()
+  const connectsThroughPads = (traceId: string, portId: string): boolean => {
+    const cached = padConnectedPortsByTrace.get(traceId)
+    if (cached) return cached.has(portId)
+    const pending = [traceId]
+    const visited = new Set(pending)
+    const connectedPorts = new Set<string>()
+    while (pending.length > 0) {
+      const current = pending.pop()!
+      for (const touchedPortId of touchedPortsByTrace.get(current)!) {
+        if (connectedPorts.has(touchedPortId)) continue
+        connectedPorts.add(touchedPortId)
+        for (const neighbor of traceIdsByTouchedPort.get(touchedPortId)!) {
+          if (visited.has(neighbor)) continue
+          visited.add(neighbor)
+          pending.push(neighbor)
+        }
+      }
+    }
+    for (const member of visited) {
+      padConnectedPortsByTrace.set(member, connectedPorts)
+    }
+    return connectedPorts.has(portId)
+  }
   let physicalConnectivity: ConnectivityMap | undefined
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
@@ -681,7 +713,7 @@ export const checkTraceContinuity = (
           sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
         )
       : []
-    const traceName = getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+    let traceName: string | undefined
     const sourceTraceId =
       sourceTrace?.source_trace_id ||
       trace.source_trace_id ||
@@ -734,6 +766,7 @@ export const checkTraceContinuity = (
         (outgoingAtVia || next.layer === current.to_layer)
       )
         continue
+      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Via in trace [${traceName}] does not connect its adjacent wire layers at position {x: ${current.x}, y: ${current.y}}.`,
@@ -754,6 +787,7 @@ export const checkTraceContinuity = (
         )
       )
         continue
+      if (connectsThroughPads(trace.pcb_trace_id, port.pcb_port_id)) continue
       const physical = getPhysicalConnectivity()
       const physicalNet = physical.getNetConnectedToId(trace.pcb_trace_id)
       const connectedBySibling =
@@ -765,6 +799,7 @@ export const checkTraceContinuity = (
           )
       if (connectedBySibling) continue
       const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
+      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Trace [${traceName}] is missing a connection to ${portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"} ${portName}`,
@@ -799,6 +834,7 @@ export const checkTraceContinuity = (
         endpointTouchesCopper(trace, index === 0 ? "start" : "end")
       )
         continue
+      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Trace [${traceName}] has disconnected endpoint at (${endpoint.x.toFixed(2)}, ${endpoint.y.toFixed(2)})`,

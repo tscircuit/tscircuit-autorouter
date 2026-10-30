@@ -288,4 +288,35 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
     expect(expected).toHaveLength(length === 0 ? 1 : 0)
   }
+
+  const sharedPadSrj = structuredClone(srj)
+  sharedPadSrj.obstacles.push({
+    type: "rect",
+    center: { x: 2, y: 0 },
+    width: 0.4,
+    height: 0.4,
+    layers: ["top"],
+    connectedTo: ["pcb_smtpad_middle", "pcb_port_middle"],
+  })
+  sharedPadSrj.connections[0]!.pointsToConnect.push({
+    x: 2,
+    y: 0,
+    layer: "top",
+    pcb_port_id: "pcb_port_middle",
+  })
+  for (const branchStart of [2, 2.6]) {
+    const circuit = convertToCircuitJson(sharedPadSrj, [
+      createTrace("shared_a", [
+        { x: 0, y: 0 },
+        { x: 2, y: 0 },
+      ]),
+      createTrace("shared_b", [
+        { x: branchStart, y: 0 },
+        { x: 4, y: 0 },
+      ]),
+    ])
+    const expected = checkTracesAreContiguous(circuit)
+    expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
+    expect(expected).toHaveLength(branchStart === 2 ? 0 : 1)
+  }
 })
