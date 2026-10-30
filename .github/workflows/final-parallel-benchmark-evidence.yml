@@ -1,0 +1,47 @@
+name: Final parallel benchmark evidence
+on:
+  push:
+    branches: [codex/routing-portfolio-analysis]
+    paths: [.github/workflows/final-parallel-benchmark-evidence.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Wait for the final paired run and fetch its reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run watch 41039040350 --repo tscircuit/tscircuit-autorouter --exit-status --interval 30
+          gh run download 41039040350 --repo tscircuit/tscircuit-autorouter --name final-parallel-routing-paired-results --dir results
+      - name: Print per-board and aggregate evidence
+        run: |
+          python3 - <<'PY'
+          import json,glob,statistics,math
+          groups={}
+          for path in sorted(glob.glob("results/*.json")):
+            report=json.load(open(path))
+            variant="inline" if "inline" in path else ("baseline" if "baseline" in path else "candidate")
+            groups.setdefault(variant,[]).append(report)
+            assert len(report["tests"])==16 and all(t["relaxedDrcPassed"] for t in report["tests"]),path
+            print(json.dumps(dict(type="run",path=path,runtime=report["runtime"],summary=report["summary"],totalMs=sum(t["elapsedTimeMs"] for t in report["tests"]))))
+          base={}
+          candidate={}
+          for variant,out in [("baseline",base),("candidate",candidate)]:
+            for report in groups[variant]:
+              for t in report["tests"]:
+                out.setdefault(t["scenarioName"],[]).append(t["elapsedTimeMs"])
+          ratios=[]
+          for sample in sorted(base):
+            a=statistics.median(base[sample]);b=statistics.median(candidate[sample]);ratios.append(b/a)
+            print(json.dumps(dict(type="board",sample=sample,baselineMs=a,candidateMs=b,reductionPercent=100*(1-b/a))))
+          a=statistics.median(r["summary"][0]["p50TimeMs"] for r in groups["baseline"])
+          b=statistics.median(r["summary"][0]["p50TimeMs"] for r in groups["candidate"])
+          at=statistics.median(sum(t["elapsedTimeMs"] for t in r["tests"]) for r in groups["baseline"])
+          bt=statistics.median(sum(t["elapsedTimeMs"] for t in r["tests"]) for r in groups["candidate"])
+          inline=groups["inline"][0]["summary"][0]["p50TimeMs"]
+          print(json.dumps(dict(type="aggregate",baselineP50Ms=a,candidateP50Ms=b,p50ReductionPercent=100*(1-b/a),totalTimeReductionPercent=100*(1-bt/at),geometricMeanReductionPercent=100*(1-math.exp(statistics.mean(map(math.log,ratios)))),inlineP50Ms=inline,threadedVsInlineReductionPercent=100*(1-b/inline))))
+          PY
