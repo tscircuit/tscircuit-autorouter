@@ -32,7 +32,7 @@ export class ParallelDrcChecksSolver extends BaseSolver {
         }
         if (command === -1) break
         if (command !== 1) throw new Error("Invalid parallel DRC command")
-        const frame = deserialize(Buffer.from(input.subarray(0, state[2])))
+        const frame = deserialize(new Uint8Array(input.subarray(0, state[2])))
         const errors = getDrcErrorsForPartition(
           frame.circuitJson,
           frame.options,
@@ -135,7 +135,7 @@ export class ParallelDrcChecksSession {
         }
       }
       if (Atomics.load(state, 0) !== 2) throw new Error("Parallel DRC worker query failed")
-      const result = deserialize(Buffer.from(output.subarray(0, state[3])))
+      const result = deserialize(new Uint8Array(output.subarray(0, state[3])))
       errors.push(...result)
     }
     return errors
