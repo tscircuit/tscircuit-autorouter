@@ -64,10 +64,12 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
   layerCount,
+  mergeFreeLayerVolumes = false,
 }: {
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  mergeFreeLayerVolumes?: boolean
 }): TopologyMergingLayerTopology[] {
   const layerTopologyBySignature = new Map<
     string,
@@ -125,7 +127,46 @@ export function getLayerTopologiesForCoveredNodes({
     }
   }
 
-  return [...layerTopologyBySignature.values()]
+  const layerTopologies = [...layerTopologyBySignature.values()]
+  if (!mergeFreeLayerVolumes) return layerTopologies
+  const freeSourceKeys = new Set(
+    coveringNodes
+      .filter(
+        ({ node }): boolean =>
+          !node._containsObstacle &&
+          !node._containsTarget &&
+          !node._offBoardConnectionId &&
+          !node._isVirtualOffboard &&
+          !node._connectedTo?.length,
+      )
+      .map(({ sourceKey }): string => sourceKey),
+  )
+  const freeTopologies = layerTopologies.filter((topology): boolean =>
+    topology.sourceKeys.every((key): boolean => freeSourceKeys.has(key)),
+  )
+  if (freeTopologies.length === 0) return layerTopologies
+
+  // Free space at the same XY location is one volume even when its layers
+  // came from different component/global decompositions. Keeping them separate
+  // prevents vias from connecting those otherwise unobstructed layers.
+  const sourceKeys = Array.from(
+    new Set(freeTopologies.flatMap((topology): string[] => topology.sourceKeys)),
+  ).sort()
+  const availableZ = Array.from(
+    new Set(freeTopologies.flatMap((topology): number[] => topology.availableZ)),
+  ).sort((a, b): number => a - b)
+  const topologyMode = "free" as const
+  return [
+    ...layerTopologies.filter(
+      (topology): boolean => !freeTopologies.includes(topology),
+    ),
+    {
+      sourceKeys,
+      availableZ,
+      topologyMode,
+      topologySignature: JSON.stringify({ mode: topologyMode, availableZ }),
+    },
+  ]
 }
 
 export function restoreAuthoritativeTargetRegions({
@@ -262,6 +303,11 @@ function mergeRegionRun(
       previousRegion.bounds.maxX = region.bounds.maxX
     } else {
       previousRegion.bounds.maxY = region.bounds.maxY
+    }
+    if (previousRegion.topologyMode === "free") {
+      previousRegion.sourceKeys = Array.from(
+        new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+      ).sort()
     }
   }
 

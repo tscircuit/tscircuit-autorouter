@@ -358,6 +358,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            mergeFreeLayerVolumes: !cms.originalSrj.traces?.length,
             nodeGroups: [
               {
                 groupId: "global",

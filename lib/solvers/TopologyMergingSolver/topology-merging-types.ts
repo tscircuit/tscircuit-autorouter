@@ -13,6 +13,8 @@ export interface TopologyMergingNodeGroup {
 export interface TopologyMergingSolverParams {
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  /** Connect unobstructed layers across component/global decompositions. */
+  mergeFreeLayerVolumes?: boolean
 }
 
 export type PreparedTopologyMergingNode = {
@@ -23,6 +25,7 @@ export type PreparedTopologyMergingNode = {
 }
 
 export type TopologyMergingMode =
+  | "free"
   | "passthrough"
   | "merged"
   | "target-passthrough"
