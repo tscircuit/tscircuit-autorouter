@@ -1,0 +1,674 @@
+{
+  "schemaVersion": 2,
+  "recordSchema": "EXPLICIT_N_P_F_TRIPLET_V1",
+  "campaign": "owner-root-memo126-20261030",
+  "repository": "tscircuit/tscircuit-autorouter",
+  "controllerBranch": "codex/owner-root-memo126-controller-20261030",
+  "expectedRemoteParent": "815d192f376cbc927ffad2ffad709bea59edfa2f",
+  "inheritedControllerTree": "a36468b76f05307d3df7c1918d57f8b563db6557",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "roles": {
+    "N": {
+      "id": "owner-root-memo126",
+      "option": "experimentLayerAwareMstIdentity",
+      "evidencePaths": [
+        "netToPointPairsSolver.layerAwareMstStats",
+        "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback"
+      ],
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "coverageContract": {
+        "statsPath": "netToPointPairsSolver.layerAwareMstStats",
+        "stageName": "netToPointPairsSolver",
+        "countFields": [
+          "connectionsProcessed",
+          "inputPointOccurrences",
+          "inputDistinctLayerKeys",
+          "mstCoveredLayerKeys",
+          "missingLayerKeys",
+          "coincidentCrossLayerGroups",
+          "zeroDistanceLayerEdges",
+          "mstSelectedEdges"
+        ],
+        "booleanFields": [
+          "completed"
+        ],
+        "scope": "Intermediate MST selected requirements before explicit preconnection filtering and off-board substitution; not emitted point-pair or electrical proof."
+      },
+      "role": "N",
+      "roleName": "native",
+      "candidateSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+      "candidateTree": "c79d9f76c9eff681a0c4665b341fd8af7d750e28",
+      "feedbackVersion": 1,
+      "options": {
+        "cacheProvider": null,
+        "effort": 1
+      },
+      "secondaryCoverageContract": {
+        "statsPath": "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback",
+        "option": "experimentOriginalOwnerCopperFeedback",
+        "fields": [
+          "version",
+          "enabled",
+          "status",
+          "reason",
+          "originalOwnershipCoverage",
+          "selectedCheckCount",
+          "completePredicateSuite",
+          "baselineIssueCount",
+          "initialIssueCount",
+          "referenceEvaluations",
+          "appendedIssueCount",
+          "baselineMatchesFiltered",
+          "unsupportedOwnerCount",
+          "latestIssueCount"
+        ],
+        "selectedPredicates": [
+          "viaTrace",
+          "traceOverlap"
+        ],
+        "notApplicableIsNotFeatureCredit": true,
+        "sourceBoundObservationOnly": true,
+        "independentOutputGradeRequired": true,
+        "schemaVersion": 1,
+        "referencePredicateCount": 7,
+        "fullAdmissionPredicateCount": 7
+      }
+    },
+    "P": {
+      "id": "owner-root-memo126",
+      "option": "experimentLayerAwareMstIdentity",
+      "evidencePaths": [
+        "netToPointPairsSolver.layerAwareMstStats",
+        "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback"
+      ],
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "coverageContract": {
+        "statsPath": "netToPointPairsSolver.layerAwareMstStats",
+        "stageName": "netToPointPairsSolver",
+        "countFields": [
+          "connectionsProcessed",
+          "inputPointOccurrences",
+          "inputDistinctLayerKeys",
+          "mstCoveredLayerKeys",
+          "missingLayerKeys",
+          "coincidentCrossLayerGroups",
+          "zeroDistanceLayerEdges",
+          "mstSelectedEdges"
+        ],
+        "booleanFields": [
+          "completed"
+        ],
+        "scope": "Intermediate MST selected requirements before explicit preconnection filtering and off-board substitution; not emitted point-pair or electrical proof."
+      },
+      "role": "P",
+      "roleName": "selected-two-feedback",
+      "candidateSha": "50a8051cd9853d260b26d312246714cddbb67749",
+      "candidateTree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+      "feedbackVersion": 2,
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "experimentLayerAwareMstIdentity": true,
+        "experimentOriginalOwnerCopperFeedback": true
+      },
+      "secondaryCoverageContract": {
+        "statsPath": "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback",
+        "option": "experimentOriginalOwnerCopperFeedback",
+        "fields": [
+          "version",
+          "enabled",
+          "status",
+          "reason",
+          "originalOwnershipCoverage",
+          "selectedCheckCount",
+          "completeAdmissionPredicateSuite",
+          "baselineIssueCount",
+          "initialIssueCount",
+          "referenceEvaluations",
+          "appendedIssueCount",
+          "baselineMatchesFiltered",
+          "unsupportedOwnerCount",
+          "latestIssueCount",
+          "referencePredicateCount"
+        ],
+        "selectedPredicates": [
+          "viaTrace",
+          "traceOverlap"
+        ],
+        "notApplicableIsNotFeatureCredit": true,
+        "sourceBoundObservationOnly": true,
+        "independentOutputGradeRequired": true,
+        "schemaVersion": 2,
+        "referencePredicateCount": 2,
+        "fullAdmissionPredicateCount": 7
+      }
+    },
+    "F": {
+      "id": "owner-root-memo126",
+      "option": "experimentLayerAwareMstIdentity",
+      "evidencePaths": [
+        "netToPointPairsSolver.layerAwareMstStats",
+        "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback"
+      ],
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "coverageContract": {
+        "statsPath": "netToPointPairsSolver.layerAwareMstStats",
+        "stageName": "netToPointPairsSolver",
+        "countFields": [
+          "connectionsProcessed",
+          "inputPointOccurrences",
+          "inputDistinctLayerKeys",
+          "mstCoveredLayerKeys",
+          "missingLayerKeys",
+          "coincidentCrossLayerGroups",
+          "zeroDistanceLayerEdges",
+          "mstSelectedEdges"
+        ],
+        "booleanFields": [
+          "completed"
+        ],
+        "scope": "Intermediate MST selected requirements before explicit preconnection filtering and off-board substitution; not emitted point-pair or electrical proof."
+      },
+      "role": "F",
+      "roleName": "owner-root-index-feedback",
+      "candidateSha": "b110666594b06e5e5c883eb24e7575bc1cdef753",
+      "candidateTree": "f697703ff8fce07c2321af29e89dfa450008da2f",
+      "feedbackVersion": 2,
+      "options": {
+        "cacheProvider": null,
+        "effort": 1,
+        "experimentLayerAwareMstIdentity": true,
+        "experimentOriginalOwnerCopperFeedback": true
+      },
+      "secondaryCoverageContract": {
+        "statsPath": "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback",
+        "option": "experimentOriginalOwnerCopperFeedback",
+        "fields": [
+          "version",
+          "enabled",
+          "status",
+          "reason",
+          "originalOwnershipCoverage",
+          "selectedCheckCount",
+          "completeAdmissionPredicateSuite",
+          "baselineIssueCount",
+          "initialIssueCount",
+          "referenceEvaluations",
+          "appendedIssueCount",
+          "baselineMatchesFiltered",
+          "unsupportedOwnerCount",
+          "latestIssueCount",
+          "referencePredicateCount"
+        ],
+        "selectedPredicates": [
+          "viaTrace",
+          "traceOverlap"
+        ],
+        "notApplicableIsNotFeatureCredit": true,
+        "sourceBoundObservationOnly": true,
+        "independentOutputGradeRequired": true,
+        "schemaVersion": 2,
+        "referencePredicateCount": 2,
+        "fullAdmissionPredicateCount": 7
+      }
+    }
+  },
+  "shards": [
+    {
+      "dataset": "srj18",
+      "shardIndex": 0,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 1,
+          "inputHash": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+          "order": "NPF"
+        },
+        {
+          "sample": 11,
+          "inputHash": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+          "order": "FNP"
+        },
+        {
+          "sample": 13,
+          "inputHash": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+          "order": "NPF"
+        },
+        {
+          "sample": 14,
+          "inputHash": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+          "order": "NFP"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 1,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 3,
+          "inputHash": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+          "order": "PNF"
+        },
+        {
+          "sample": 4,
+          "inputHash": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+          "order": "PFN"
+        },
+        {
+          "sample": 9,
+          "inputHash": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+          "order": "PNF"
+        },
+        {
+          "sample": 15,
+          "inputHash": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+          "order": "PNF"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 2,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 2,
+          "inputHash": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+          "order": "NFP"
+        },
+        {
+          "sample": 7,
+          "inputHash": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+          "order": "NPF"
+        },
+        {
+          "sample": 8,
+          "inputHash": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+          "order": "NFP"
+        },
+        {
+          "sample": 10,
+          "inputHash": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+          "order": "PFN"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 3,
+      "shardCount": 4,
+      "cases": [
+        {
+          "sample": 5,
+          "inputHash": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+          "order": "FNP"
+        },
+        {
+          "sample": 6,
+          "inputHash": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+          "order": "FPN"
+        },
+        {
+          "sample": 12,
+          "inputHash": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+          "order": "FPN"
+        },
+        {
+          "sample": 16,
+          "inputHash": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+          "order": "PFN"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 0,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 1,
+          "inputHash": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+          "order": "FNP"
+        },
+        {
+          "sample": 12,
+          "inputHash": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+          "order": "PFN"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 1,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 3,
+          "inputHash": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+          "order": "NPF"
+        },
+        {
+          "sample": 13,
+          "inputHash": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+          "order": "FNP"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 2,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 4,
+          "inputHash": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+          "order": "NFP"
+        },
+        {
+          "sample": 21,
+          "inputHash": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+          "order": "NPF"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 3,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 7,
+          "inputHash": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+          "order": "FNP"
+        },
+        {
+          "sample": 11,
+          "inputHash": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+          "order": "PNF"
+        },
+        {
+          "sample": 17,
+          "inputHash": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+          "order": "PNF"
+        },
+        {
+          "sample": 23,
+          "inputHash": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+          "order": "PNF"
+        },
+        {
+          "sample": 25,
+          "inputHash": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+          "order": "FNP"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 4,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 5,
+          "inputHash": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+          "order": "PNF"
+        },
+        {
+          "sample": 15,
+          "inputHash": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+          "order": "NPF"
+        },
+        {
+          "sample": 18,
+          "inputHash": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+          "order": "PFN"
+        },
+        {
+          "sample": 22,
+          "inputHash": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+          "order": "NFP"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 5,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 8,
+          "inputHash": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+          "order": "FPN"
+        },
+        {
+          "sample": 9,
+          "inputHash": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+          "order": "NPF"
+        },
+        {
+          "sample": 14,
+          "inputHash": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+          "order": "FPN"
+        },
+        {
+          "sample": 16,
+          "inputHash": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+          "order": "NFP"
+        },
+        {
+          "sample": 24,
+          "inputHash": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+          "order": "PFN"
+        },
+        {
+          "sample": 26,
+          "inputHash": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+          "order": "FPN"
+        }
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 6,
+      "shardCount": 7,
+      "cases": [
+        {
+          "sample": 2,
+          "inputHash": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+          "order": "FPN"
+        },
+        {
+          "sample": 6,
+          "inputHash": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+          "order": "PFN"
+        },
+        {
+          "sample": 10,
+          "inputHash": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+          "order": "NFP"
+        },
+        {
+          "sample": 19,
+          "inputHash": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+          "order": "FNP"
+        },
+        {
+          "sample": 20,
+          "inputHash": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+          "order": "FPN"
+        }
+      ]
+    }
+  ],
+  "plannedJobs": 11,
+  "plannedAttempts": 126,
+  "caseCounts": {
+    "srj18": 16,
+    "srj24": 26
+  },
+  "orderCounts": {
+    "NPF": 7,
+    "NFP": 7,
+    "PNF": 7,
+    "PFN": 7,
+    "FNP": 7,
+    "FPN": 7
+  },
+  "fullOriginalInputPopulationHashes": {
+    "srj18": {
+      "1": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+      "2": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+      "3": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+      "4": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+      "5": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+      "6": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+      "7": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+      "8": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+      "9": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+      "10": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+      "11": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "12": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+      "13": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+      "14": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+      "15": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+      "16": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9"
+    },
+    "srj24": {
+      "1": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+      "2": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+      "3": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+      "4": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+      "5": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+      "6": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+      "7": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+      "8": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+      "9": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+      "10": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+      "11": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+      "12": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+      "13": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+      "14": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+      "15": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+      "16": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+      "17": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+      "18": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+      "19": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+      "20": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+      "21": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+      "22": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+      "23": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+      "24": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+      "25": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+      "26": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113"
+    }
+  },
+  "allOrdersSealedBeforeMemoOutcomes": true,
+  "priorSchedulingOnly": true,
+  "sampleTimeoutSeconds": 360,
+  "externalControllerGuardSeconds": 480,
+  "threads": 1,
+  "concurrency": 1,
+  "effort": 1,
+  "freshProcessPerAttempt": true,
+  "cpuProfiling": false,
+  "correctedClocks": false,
+  "timingsPooledWithPriorCampaigns": false,
+  "crossArmParityRequired": false,
+  "originalServerZipRawProofRequired": true,
+  "estimators": {
+    "primaryComparisons": [
+      "N/F",
+      "P/F"
+    ],
+    "wholeClock": "Actual constructorTimeMs plus official elapsedTimeMs, samecase freshprocess samehost; separate matchedphysicalclean pairs percomparison.",
+    "quality": "All42 roles retained: sourcequalified native completions and frozen sevenpredicate/scoped supplemental physical identities; failures/timeouts/UNKNOWN never dropped or countedclean. FullPCBelectricalPASS remainsUNPROVEN.",
+    "runtime": "360s native solve afterconstructor;480s externalguard; effort1/cacheNull/thread1/concurrency1; no oldclocks or baseline reuse.",
+    "order": "Six permutations seven cases eachglobally; eachpair21/21 ordering. Existing prioronly11LPT groups unchanged.",
+    "semanticPreservation": "P/F rawoutput/pointpairs/nativework/coldcounter differences reported as outcomes, never integrityorcohortgate.",
+    "mechanism": "N featureabsence; P/F exact15scalarv2 full7admission/reference2. Only F adds a fresh per-invocation owner-root index; no cross-call context cache. Ledger notrepairorspeedproof.",
+    "proof": "Perarm fullseven originalowner reports/fullsupplemental/native errors and originalserverZIPbytes;24:8 sixlogicalrequirements and sixstructuralmanufacturedbridges required separately."
+  },
+  "authoritySha256": "67d852edd48186ce5cc97413c773c11f2bd793edef9a1407d0531e6266339058",
+  "workflowSha256": "3e2b07670daeff05026760ec6e844013416910fa96ed98f6628bc9113db286cc",
+  "runtimeSourceHashes": {
+    "bottleneck-artifact-carrier.py": "4fb63aa5ab8ffdab2b18342013eda457ffd329545bd63150fcd201657f6562d7",
+    "bottleneck-coverage.py": "35c41c383d699c8bf3c9c422cbed8b115a3f216c7310d35018393e2ca0bd2ca9",
+    "bottleneck-feature-contracts.json": "7375e4b9acf69b7eb7306d38156508a257272388acf1c940330879e827514da1",
+    "capture-terminal-failure-geometry.ts": "94dd3a9aa41f482532c8e0cbf198d910dfa7fb277b89640e6576f19e49242cc6",
+    "declared-intent-copper-v3.ts": "fee128fedcfd96c1d7e70e6597c027a4aa94fe2af69183fd1e38d77f65e8adf4",
+    "experiment-audit-adapter.ts": "ae6fb244421fc73593ba4765d5dbc9b06d2f18c279e96ebbe32f1118e8af40bf",
+    "experiment-dataset-identity.ts": "be094163e7fdb4ea5ebb022353227f28b15665de377f90d0d8d261f0a7bb60c8",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "layer-aware-mst-case8-terminal-requirements.json": "22b2e5976f1dddfaaa82063e4d6f6ab5c051f69b7bd1d0c2f41d1f79d568bb7f",
+    "layer-aware-mst-coverage.py": "63a8bd3ed9564d120d26958fc174b96b2e4d98ab5dd3415cef6ed55b45e67416",
+    "layer-aware-mst-prior-lpt-plan.json": "2c49b68072c1fe87c63918910d934769f4a8868db55466f554b305b5b3324a50",
+    "layer-aware-mst-prior-lpt-review.json": "5718e58e18503ae80ea3bd804a48456160b2dfd78a793adfc20a1af366a19fea",
+    "layer-aware-mst-transition-audit.py": "1cc238e3298fbb2eab8b7389f8490a6a117691ed08a0803b561b4962f8b4ccbe",
+    "owner-feedback-coverage.py": "36f6d822244712fda2362167373769f2c1f076a3daa7a5e4ea96d25053ae5cfe",
+    "owner-feedback-fast126-artifact-carrier.py": "06e30eef51a1baa5ab7841e7b006be6b33ba680b259129770f1e99b2f6e6df0e",
+    "owner-feedback-fast126-coverage.py": "3e5e25092b6bcf22c3f1979cac79d29308c3a31e92bb83890181fb89d449caa6",
+    "owner-feedback-fast126-raw-proof.py": "3d806e0070972b06a0f62d901632e50cd0a36b3627601d9b1ceb01ed5595007b",
+    "owner-feedback-fast126-role-qualification.py": "874af64cad4fa066d2b18a4ef6486cbcc99710e24f9a9aab6a0bcca98117e6c6",
+    "owner-feedback-fast126-source-publication.json": "09ec0c6a0394da5399c76b1c77759b059ce38e12d36a4b4dbaedf80a796c0e71",
+    "owner-feedback-fast126-source-qa.json": "615c08584f50263f37bd44362c1edd8ca3c7e6b8a9d3ee48edd7a86387c1878a",
+    "owner-feedback-fast126-source-review.json": "e1e6e112d896489ee7649dc8a6fefff1ddad4b2fd39dfeb53946df79ae7417f8",
+    "owner-feedback-source-publication.json": "bc88045cca51d93c0f4c6a76f9eeadfa0778205c13dff4a835cf72120d1ab13f",
+    "owner-feedback-source-qa.json": "5fa99c4e8f7b96135d54106eaa5edbfa5ba85a9211b1f8f39d14d86699e5bafb",
+    "owner-feedback-source-review.json": "d2e988a7e16c6fc519a76da6c9eb84cc8c9359e2d24e0633e6d56b2dff476f15",
+    "owner-feedback4-prior84-independent-review.json": "2d0305a72997d0cda3809245ea9dd293e847f11adc3f9467aad53c613d06a2c6",
+    "owner-feedback84-artifact-carrier.py": "321778b457acb04156cb321881b879ad853f9c2d9d6c989e60291d3aa255ad10",
+    "owner-feedback84-prior-targeted4-index.json": "0a43e22667bc85d4cca7cf10add00e82416b1870428add878c0a4945a1a75ea3",
+    "owner-feedback84-prior-targeted4-review.json": "9537aff50cebcf5fc7f1fa8e8729bf634f30d18fa13766409f48b95ba36f8c5b",
+    "owner-feedback84-raw-proof.py": "d45caf0cbdbade0ea04c4df53cc0d4e29f1b681a48863f9747587301750d1d6c",
+    "owner-root-memo126-artifact-carrier.py": "98bf384accbdb41da57bb8427016a84fc6dc516932996cca45be15a9f982a51a",
+    "owner-root-memo126-coverage.py": "3e5e25092b6bcf22c3f1979cac79d29308c3a31e92bb83890181fb89d449caa6",
+    "owner-root-memo126-raw-proof.py": "4e777a377f4f2b573a95186372ef49c429304c8fc8496fc4669d2a1f44ec4a71",
+    "owner-root-memo126-role-qualification.py": "bba3a795861c9e18ffec1081f9f473d27bed118c260b790fd16a01b905f3cd55",
+    "owner-root-memo126-source-publication.json": "a8d78a42e867db9886c94ff80cd9715926cacf1911700352e4401e8ff0b2b6f4",
+    "owner-root-memo126-source-qa.json": "b5763e170c0b1fb87e94d05503721d20c40f598ce7db1045a6ffbb54e7351a5d",
+    "owner-root-memo126-source-review.json": "a863abb81b0ff293d9551293ab735da8cd856e8f397c65807f544b444216cd04",
+    "parse-post588-experiments-log.py": "f9d59dc262f97d970eb7faf4df55a5f6a0a31c271de325c74fac427851518949",
+    "phase-checkpoint-observer.ts": "4541d446ad7c26e9900562e525c98c8d9bba19400d4574f2931d9fc4237c2294",
+    "post588-declared-qualification.py": "c4e23d4495b2b376a48c4e911d962f646ebd0cd8173eb903492e291796de2336",
+    "prepare-pinned-harness.py": "31f614b0e05b36eeb8a263838510cf7267eda8c5313b7671ea0f3d5c14565ce1",
+    "pruning-context-coverage.py": "5805294bc92e05937511d34efbe40f3827dc39e5d1b5402ca95cf4b576a56285",
+    "qualify-pinned-output.ts": "9f79b7439a64c67bbd03e7c80b0b432e46f153766c54eab69c7210564b7cffec",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "run-owner-feedback-fast126.py": "0253614af866d4cf25ffd192c676295ffc4024fc9ce32cb5cf4c11b5eb834759",
+    "run-owner-feedback84.py": "39c7e4545a71cc2c2258b62c4b1cb5965e5cca51239f25ce385c4a7ad06c5be3",
+    "run-owner-root-memo126.py": "00a55cd8d1fa1ab3470c79aaa649af66c2df1bd999742633bbbdccac172d6c57",
+    "run-pinned-experiment.py": "44cebea2837ffbc5f38600c3e436c5a4bc3f77ef9bc102858d4ef015c0e36db9",
+    "run-scratch-repeat.py": "f186d039d3e6f3721fa1baf84ff9e257f654b8a8e739dab2fe811e6729eed7f3",
+    "seal-owner-feedback-fast126.py": "e52651eb63bfa7a22556b19beabe3c3302a2e8e6d4dc57ce0f39f1fa64966a01",
+    "seal-owner-feedback84.py": "580abdc5cf2a50b384627378f6fc4c465b8199dc1b486fc1da8ec84370f24c41",
+    "seal-owner-root-memo126.py": "9201c69c32a563a936f4b601758991d4b16c7faba7938469336ed9b6d44b8c7e",
+    "select-pinned-experiment.py": "9ee91025b7f293c1f89d5276a14487160ebd6d3f1a4bbcfa35169d299dcdefd3",
+    "tests/bottleneck-artifact-carrier-integrity.py": "40bef0b0b967f2e1971acbb2fda3c1ac42354dd4ec5e6d29addb07da978d2c63",
+    "tests/layer-aware-mst-coverage-integrity.py": "6c1ec5786f6738e2e30d4a4aa3ddd1fe3cc101ef245ab478d81c532e28b6951b",
+    "tests/layer-aware-mst-transition-audit-integrity.py": "c1a6010d545e171092777a1129608c2a2221a9143727a800c642b2687a091967",
+    "tests/layer-aware-mst84-integrity.py": "e897fddb55c353a4cac3e475360702dbb211bb54d7bfce4c7f14f83de19df16b",
+    "tests/owner-feedback-coverage-integrity.py": "2ef7ae4b27b35bd4d4405ae127e44fe88cb94ad3c2e4472ef7f8f97238d0bf10",
+    "tests/owner-feedback-fast126-carrier-integrity.py": "02f64002410668a149f08fd90298f6c53beaa9fb05f4920586735c2eb1ab39ff",
+    "tests/owner-feedback-fast126-integrity.py": "a207f7abc4d6902d84393fbc83117c6c298c9f6a55a378b7d63f675582a3e2df",
+    "tests/owner-feedback-fast126-observer-integrity.ts": "09d00525c6815d9bee5e11be5c01db974b175ab2aa3ae33de8cdd1abf657c4a9",
+    "tests/owner-feedback-fast126-raw-binding-integrity.py": "53a38fe15acf1c68ec89c9f08a4fc6ed62669888431ecdaff145553592471039",
+    "tests/owner-feedback-observer-integrity.ts": "f9acaeb6d2d39fa470deef9cf98923771f0c11b13833a460c3ea8aa46c0020b1",
+    "tests/owner-feedback84-artifact-carrier-integrity.py": "e7a82c0963eb9c756e2d21476f843fa5350a32d8fcdb669d2706126b2ed72593",
+    "tests/owner-feedback84-coverage-integrity.py": "f62c6f86cd2420fa508896216bd97320e206fb1a757dbe8941cfa9573a56ac23",
+    "tests/owner-feedback84-integrity.py": "8177d265416dc42b8765c49a82ff8b59d93c6b9181a883be5db4a9df233834b1",
+    "tests/owner-feedback84-observer-integrity.ts": "1ec255a338b9f757e66425aba2509e8dd40bc7f3da9669ec820193d104e39e7b",
+    "tests/owner-feedback84-raw-binding-integrity.py": "76bf25661d38489b8d9be6cbb29072624cc8c407e488e277ccaf95600f931641",
+    "tests/owner-root-memo126-carrier-integrity.py": "9125931ea1df9add8d4a29e5185ee224f90c9103d948793c03b773f2546c1bd6",
+    "tests/owner-root-memo126-integrity.py": "d33f420391207d8e048824b463b3d679a8f77e93176b5f23ceb5988812ca87c3",
+    "tests/owner-root-memo126-observer-integrity.ts": "ab24db41a213e1ede09111a33f366997dfb5d0ea248a557fe88fb388f12648cb",
+    "tests/owner-root-memo126-raw-binding-integrity.py": "420c9f6a76e64b09af674178b3f9583d44074e8e92a48e3c3bd858bef263293b",
+    "tests/owner-root-memo126-unsealed-integrity.py": "b360ccba491c0b2ae4fc5633ab872701ee036d13ca0a4b8e42297994b2862c06"
+  },
+  "runSampleSourceSha256": "c59222511a8fcade8c59399f8cca643f0ecffc33e8b6e4f01a19c675d8767396",
+  "sourcePublicationState": "PUBLISHED_MEMO_SOURCE"
+}

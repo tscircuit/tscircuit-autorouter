@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "status": "PASS_FROZEN_LOCAL_SOURCE_FULL_QA_AND_FRESH_PARENT_SOURCE_COMPILED_PARITY_FOR_ROOT_EXPERIMENT_DECISION",
+  "createdUtc": "2026-10-30T15:29:15.267268+00:00",
+  "reviewer": "/root/runtime_restore",
+  "source": {
+    "worktree": "/tmp/autorouter-owner-root-memo-prototype",
+    "parentLocal": "a5bf2059783c0a822ce74b1e7a68aea530c947e6",
+    "parentRemote": "50a8051cd9853d260b26d312246714cddbb67749",
+    "parentTree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+    "productionPath": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts",
+    "parentProductionSha256": "c5d5214498a89500a16702ad5513961b2798097d009955995bc04fa84a9ef735",
+    "prototypeProductionSha256": "3d44a8f56ec9a2194442cbe60fbcc7596badb2d2ed1c21dfd3125a420642df1c",
+    "frozenCommit": "fbd091ca03268a66df41b4b85ee5024318cc01e8",
+    "remotePublished": false,
+    "tree": "f697703ff8fce07c2321af29e89dfa450008da2f",
+    "worktreeClean": true,
+    "changedFiles": 3,
+    "productionFiles": 1,
+    "currentFast126SourceAndControllerChanged": false
+  },
+  "staticFindings": [
+    "Per-instance root-owner map is rebuilt lazily at first actual resolution after original unions, preserving no-resolution constructor behavior.",
+    "Actual DSU union or newly ensured node invalidates the root index; path compression alone does not change owner partition.",
+    "Index walks original anchor set once, retains exact lexical anchor sorting/digest string construction, and returns fresh resolved objects/copied anchor arrays from typed().",
+    "All owner ambiguity/unknown combination, original alias joining, point-pair nonjoining, reference and obstacle semantics remain unchanged.",
+    "No cross-call original input/geometry memo, obstacle index, checker changes, clearance or repair-budget changes.",
+    "Direct unsupported mutation of private internal anchor maps is not an established public API; the review exercises runtime-visible union/ensure mutations but does not promise arbitrary internals tampering equivalence."
+  ],
+  "independentDifferential": {
+    "status": "PASS_INDEPENDENT_OWNER_CLASS_DIFFERENTIAL",
+    "syntheticOriginalGraphs": 400,
+    "exactJsonQueries": 81073,
+    "mutationControls": 801,
+    "actualDatasetSolverOrCheckerExecutions": 0,
+    "seed": "0x24180001"
+  },
+  "independentOperationCount": {
+    "status": "PASS_SYNTHETIC_OPERATION_COUNT",
+    "anchors": 1000,
+    "queries": 3000,
+    "parentAnchorEntriesVisited": 3000000,
+    "candidateAnchorEntriesVisited": 1000,
+    "anchorVisitReductionFactor": 3000,
+    "wallClockClaim": false,
+    "actualDatasetSolverOrCheckerExecutions": 0
+  },
+  "evidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/differential.ts",
+      "sha256": "e49bba396eabbe45e4f2a0fe630fffe892153c20775613a31bdaf2c209db65b0",
+      "bytes": 5075
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/differential-result.json",
+      "sha256": "16a5120419bef400fe900526f0a9265ed5f1aa616cb4f23370d1f867d23bf88a",
+      "bytes": 196
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/operation-count.ts",
+      "sha256": "1d572b991f79dce6a50cf5acfde0f2f52db224b864b896a6f63bdd67736af9c3",
+      "bytes": 1253
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/operation-count-result.json",
+      "sha256": "b36403361c3aca23792b86d0b63d92d0e3e5562911ee0942f079037f7809be55",
+      "bytes": 248
+    }
+  ],
+  "remainingSemanticBlockers": [],
+  "limits": [
+    "Source/type/build/synthetic functional qualification only; no actual dataset checker/solver/worker dispatch/benchmark or measured routing-time benefit is established.",
+    "The exact source-class prototype retains all frozen current FAST guards/cold contracts and selected predicates; no cross-call cache, budget relaxation, fallback or residual violation waiver.",
+    "Synthetic operation-count gain remains an algorithmic work fact, not71%/3000x routing speedup or memory/generalization claim.",
+    "Current FAST126 source50a805/treeaed1 and controller remain unchanged. Root decides whether actual126results justify publishing and measuring this separate exact-tree successor.",
+    "If selected, fresh Blacksmith native/FAST/prototype role-aware original42 comparison and independent original ZIP/output qualification are required; parent performance is never transferred to this source."
+  ],
+  "supersedes": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/INDEPENDENT-PROTOTYPE-REVIEW-v1.json",
+    "sha256": "360f72bff29e557066e4f77eda9846f5d97f7ed3dab02d976f4d86dedb95f829",
+    "bytes": 4127
+  },
+  "ownerQa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/LOCAL-PROTOTYPE-VALIDATION-v2.json",
+    "sha256": "b5763e170c0b1fb87e94d05503721d20c40f598ce7db1045a6ffbb54e7351a5d",
+    "bytes": 9399
+  },
+  "buildRuntimeBinding": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/BUILD-RUNTIME-BINDING-v1.json",
+    "sha256": "9139dbbaeb15dc66de21c6e5ab5737289a0dc46f97a84dd362831aba3c8a8d61",
+    "bytes": 17418
+  },
+  "runtimeControlLedger": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/RUNTIME-CONTROLS-v1.json",
+    "sha256": "b962e41d04cb02badd6e7b9dc39136f830f26e0d332e2a9e5011526987c9ab4a",
+    "bytes": 268922
+  },
+  "sourceExport": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/source-export.json",
+    "sha256": "1749a87ebcaa34c0902b2329bee69f0dfa52cc9a0a42351628603cfa0ac303c1",
+    "bytes": 38028
+  },
+  "independentQaAudit": {
+    "nestedQaEvidenceReferencesVerified": 58,
+    "uniqueEvidenceFiles": 57,
+    "rootsVerified": 2,
+    "builtFilesVerified": 18,
+    "dependencyManifestsVerified": 12,
+    "allTrackedTypesMaterialized": true,
+    "parentCandidateOnlySourceClassChange": true,
+    "rawControlLogFilesMatched": 36,
+    "cartesianControls": "parent/candidate x source/compiled x absent/false/true x Joint/two-layer/four-layer",
+    "offParityRecords": 24,
+    "onParityRecords": 12,
+    "positiveJointRecords": 4,
+    "positiveInitialStrictIssues": 1,
+    "positiveFinalSelectedAndNativeIssues": 0,
+    "positiveOutputSha256": "7de55ffe187b4c58a37f9d64b40232bd3a2d78b6e386822acd4e4493a79b6455",
+    "allNativeIterationsBudgetStatsAndCold15FieldsExact": true,
+    "schemaOrCounterExclusions": [],
+    "onlyClockExclusions": "timeSpent and explicit suffix TimeMs/DurationMs/ElapsedMs/StartedAt/EndedAt/TimeToSolve",
+    "freshFrozenParentAndCandidateRuntimeFilesHashed": 18,
+    "allTrackedTypesPresent": {
+      "parent": 1891,
+      "candidate": 1893
+    },
+    "fullProjectTypeLogs": "PASS before and after generated worker source, empty error logs; no tsconfig edits",
+    "workerBuildLogs": "Both serialized Bun/Node worker generation + ESM + DTS build success",
+    "sourceCompiledControlReexecutionByPeer": false,
+    "reason": "Existing peer400-graph owner-class differential and work-count receipts bind the exact unchanged production SHA; peer independently replays all36 raw JSON log/ledger comparisons and byte hashes without rerunning broader solvers."
+  },
+  "additionalStaticReview": [
+    "Both new repository test files contain one meaningful test: current declaration changes observed in a fresh copper invocation, and returned owner isolation plus later union/ensure/link invalidation.",
+    "Exact3UTF8 source-export entries match frozen git blobs, changed paths, parent tree and final tree; no package, build config, frozen external checker or solver-budget edits.",
+    "All generic report/selected predicate code after Pipeline9IntentOwners class is byte-identical to frozen FAST parent.",
+    "Runtime-control child body is exact original except two frozen-parent import roots; no new schema/issue/counter filtering.",
+    "Both builds resolve the same restored dependency directory;12 observed package manifests and pinned published checks module hash verified. No lock or complete historical dependency/bundle identity claim is inferred."
+  ],
+  "readyForRootDecision": true,
+  "remotePublished": false,
+  "actualDatasetQualified": false,
+  "historicalCompiledRuntimeCaveat": "Fresh parent3of4JS hashes differ historical FAST control receipt. Old binaries are unavailable for content diff; observed physical dependency path labels may affect packaging but do not establish full cause. This review binds two new fresh builds and measured functional parity, not historical binary identity."
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "EXACT_FULLY_LOCAL_AND_INDEPENDENTLY_QUALIFIED_OWNER_ROOT_INDEX_SOURCE_PUBLISHED_FRESH_MEMO126_PENDING",
+  "createdAtUtc": "2026-10-30T16:06:49.580912+00:00",
+  "localCommit": "fbd091ca03268a66df41b4b85ee5024318cc01e8",
+  "remoteCommit": "b110666594b06e5e5c883eb24e7575bc1cdef753",
+  "tree": "f697703ff8fce07c2321af29e89dfa450008da2f",
+  "remoteParent": "50a8051cd9853d260b26d312246714cddbb67749",
+  "baseTree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+  "branch": "codex/experiment-owner-root-index-20261030",
+  "remoteCommitTreeParentsAndBranchGetVerified": true,
+  "rootStrictExport": {
+    "path": "/tmp/owner-root-memo-source-export-root.json",
+    "sha256": "1749a87ebcaa34c0902b2329bee69f0dfa52cc9a0a42351628603cfa0ac303c1",
+    "characters": 38028,
+    "entries": 3
+  },
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/LOCAL-PROTOTYPE-VALIDATION-v2.json",
+    "sha256": "b5763e170c0b1fb87e94d05503721d20c40f598ce7db1045a6ffbb54e7351a5d"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/INDEPENDENT-PROTOTYPE-REVIEW-v2.json",
+    "sha256": "a863abb81b0ff293d9551293ab735da8cd856e8f397c65807f544b444216cd04"
+  },
+  "localCloseout": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/LOCAL-CLOSEOUT-v1.json",
+    "sha256": "abac434dcdeb6fc3e4c3ff656873303e7683e4ff8d81865fa5856a7ec6f5d507"
+  },
+  "rootReverifiedTopLevelReferencedFiles": {
+    "qa": 15,
+    "peer": 9
+  },
+  "gateSatisfied": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/ROOT-ACTUAL-EXPERIMENT-GATE-SATISFIED-v1.json",
+    "sha256": "0f8a9f5e473415d426a4d79910b052a4b40af7d3442b84cd59b8262b6295d4e2"
+  },
+  "defaultEnabled": false,
+  "options": {
+    "experimentLayerAwareMstIdentity": true,
+    "experimentOriginalOwnerCopperFeedback": true
+  },
+  "productionFilesChanged": 1,
+  "testsChanged": 2,
+  "scope": "Each fresh copper inventory lazily builds one original-owner-root index after the original union phase, invalidates it on added node/changed union, preserves private typed() fresh returned objects/anchor arrays and existing public pointPairAliases identity behavior. No state retained across inventory calls. Original material/geometry/owner/stack checks and strict predicates, repair ranking/budgets/refusal remain unchanged.",
+  "coldSchema": "Same15scalarv2 full7admission/reference2. No newly invented operation counter or speed claim.",
+  "localValidation": {
+    "fullProjectTypes": "PASS",
+    "workerEsmDtsBuilds": "PASS_BOTH_CURRENT_PARENT_AND_CANDIDATE",
+    "focusedTests": 20,
+    "assertions": 195,
+    "sourceAndCompiledParityProcesses": 36,
+    "offRecords": 24,
+    "onRecords": 12,
+    "positiveJointRecords": 4,
+    "all15ColdFieldsEqual": true,
+    "independentExactQueries": 81073,
+    "independentMutationControls": 801
+  },
+  "operationCountScope": "Synthetic1000anchors/3000queries:3000000to1000anchorentryvisits. This is not measured routing latency.",
+  "historicalBinaryScope": "Fresh same-environment parent/candidate outputs/work parity qualified. Three old historical parent compiled binaries differ; historical byte identity is not claimed.",
+  "actualMemoDatasetAttempts": 0,
+  "next": "Pin this source+publication into separate reviewed memo126 controller, reseal+pin-onlyindependentreview, rootpublish thenall42freshN/P/F126; ownnewraw/clockauthority, fullqualityfailures retained.",
+  "mergeOrDefaultEnable": false
+}

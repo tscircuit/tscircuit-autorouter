@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 2,
+  "status": "FROZEN_UNPUBLISHED_PROTOTYPE_FULL_TYPES_WORKER_ESM_DTS_AND_PARENT_EXACT_SYNTHETIC_RUNTIME_QA_PASS_PENDING_FINAL_PEER",
+  "createdAtUtc": "2026-10-30T15:27:40.264834+00:00",
+  "worktree": "/tmp/autorouter-owner-root-memo-prototype",
+  "branch": "codex/prototype-owner-root-index-20261030",
+  "localCommit": "fbd091ca03268a66df41b4b85ee5024318cc01e8",
+  "tree": "f697703ff8fce07c2321af29e89dfa450008da2f",
+  "parentLocal": "a5bf2059783c0a822ce74b1e7a68aea530c947e6",
+  "parentRemote": "50a8051cd9853d260b26d312246714cddbb67749",
+  "parentTree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+  "worktreeClean": true,
+  "changedFiles": 3,
+  "productionFiles": 1,
+  "sourceProductionSha256": "3d44a8f56ec9a2194442cbe60fbcc7596badb2d2ed1c21dfd3125a420642df1c",
+  "defaultEnabled": false,
+  "currentFast126SourceAndControllerChanged": false,
+  "remotePublished": false,
+  "newActualBenchmarkApproved": false,
+  "actualDatasetRuns": 0,
+  "change": "One private root-owner index per freshly constructed Pipeline9IntentOwners. Build lazily at first actual resolution after original unions; invalidate on added node or changed union. Reuse exact sorted anchor labels/owner string, return independently mutable fresh owner objects and anchor arrays. No context retained between copper-check calls.",
+  "semanticInvariants": [
+    "Same original declaration/typed alias unions and point-pair nonjoining rules.",
+    "No caller SRJ immutability assumption, WeakMap, original geometry cache or obstacle index.",
+    "Every reference still reconstructs fresh original owner/material inventory and validates actual canonical IDs, trace/via/pad geometry, stack, clearances, coverage, geometry unchanged and the same selected predicates.",
+    "No new predicate, removed guard, new budget, fallback or error waiver. All feature admission and private residual refusal unchanged.",
+    "The generic full/selected report APIs and original emitted owner strings/anchor order are preserved on independent synthetic differential controls."
+  ],
+  "focusedTests": {
+    "runtime": "Bun1.4.2",
+    "tests": 20,
+    "assertions": 195,
+    "result": "PASS",
+    "newTests": 2,
+    "log": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/focused-final.log",
+      "sha256": "bc1c4ebce729f04f2d56577f71cac004b1c24f45addd4849c0daf4c711ba95a5",
+      "bytes": 3965
+    }
+  },
+  "productionTypes": {
+    "result": "PASS_FULL_REPOSITORY_PROJECT",
+    "command": "bun node_modules/typescript/bin/tsc --noEmit --pretty false",
+    "scope": "All tracked TypeScript/TSX/MTS files materialized in both worktrees; exact counts in runtime binding. Project tsconfig unchanged. Full candidate project type check passed before and after worker-generated source creation; no formatter/lint invoked.",
+    "initialFullLog": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/full-repository-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "postBuildFullLog": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/full-repository-types-post-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "earlierTypeAttempt": {
+    "result": "FAILED_AND_FIXED",
+    "reason": "New test merged.status inferred as string; corrected to literal asconst. Missing sparse imported calculateMse source restored exactly from parent. Production code unchanged during these fixes.",
+    "log": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/types.log",
+      "sha256": "fb61452efbb0b0c0b6b86f51be2af2c5424cff05421cbab938f4af73ce12f5e4",
+      "bytes": 4629
+    }
+  },
+  "independentSourcePeer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype-independent/INDEPENDENT-PROTOTYPE-REVIEW-v1.json",
+    "sha256": "360f72bff29e557066e4f77eda9846f5d97f7ed3dab02d976f4d86dedb95f829",
+    "bytes": 4127
+  },
+  "independentSourceEvidenceVerified": 4,
+  "independentFunctionalDifferential": {
+    "status": "PASS_INDEPENDENT_OWNER_CLASS_DIFFERENTIAL",
+    "syntheticOriginalGraphs": 400,
+    "exactJsonQueries": 81073,
+    "mutationControls": 801,
+    "actualDatasetSolverOrCheckerExecutions": 0,
+    "seed": "0x24180001"
+  },
+  "independentOperationCount": {
+    "status": "PASS_SYNTHETIC_OPERATION_COUNT",
+    "anchors": 1000,
+    "queries": 3000,
+    "parentAnchorEntriesVisited": 3000000,
+    "candidateAnchorEntriesVisited": 1000,
+    "anchorVisitReductionFactor": 3000,
+    "wallClockClaim": false,
+    "actualDatasetSolverOrCheckerExecutions": 0
+  },
+  "workClaimLimit": "Synthetic1000anchor/3000query control reduces anchor-entry visits3000000to1000. This is an operation-count fact, not a measured wall-time, memory or fullrouting speedup claim. Remaining published checker/JSON/geometry work is unchanged.",
+  "fullWorkerAndCompiledParityBuild": "PASS_NEW_FRESH_PARENT_AND_PROTOTYPE; does not claim historical03:22compiled-byte identity.",
+  "export": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/source-export.json",
+    "sha256": "1749a87ebcaa34c0902b2329bee69f0dfa52cc9a0a42351628603cfa0ac303c1",
+    "bytes": 38028
+  },
+  "recoveryPatch": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/frozen-source.patch",
+    "sha256": "76fea605bff09788dad2535d98cc008f53ea915104e0979f5af246117f7b852a",
+    "bytes": 8775
+  },
+  "rawLocalCommit": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/frozen-local-commit.txt",
+    "sha256": "aa3f44d3aa907a61293e567abafff93b20497b272552a84e630c891afdb65ac1",
+    "bytes": 297
+  },
+  "remainingBeforeAnyPromotion": [
+    "Final independent frozen commit/tree/newownerQA/build-runtime/control-ledger review and versioned binding receipt.",
+    "Root decision after current FAST126 actual results whether another candidate study is worthwhile; no extra actual benchmark yet authorized.",
+    "If selected, root exact-tree publication and a fresh authorized Blacksmith actual comparison with independent raw-output quality/runtime qualification. No measured parent performance transfer."
+  ],
+  "authorization": "Root explicitly authorized only this separate local per-call owner-index prototype, independent synthetic review and parking. Root owns all remote publication, STATE/CONTINUE and any subsequent actual experiment decision.",
+  "supersedes": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/LOCAL-PROTOTYPE-VALIDATION-v1.json",
+    "sha256": "ea21910d31b85edda1f7e67657246a5e920168f83e3f0862c7e6da55f5dc64fc",
+    "bytes": 6518
+  },
+  "workerEsmDtsBuild": {
+    "result": "PASS_BOTH_FRESH_PARENT_AND_CANDIDATE_SERIALIZED",
+    "parentLog": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/parent/build.log",
+      "sha256": "265e7d978ba6e7548d3e94d65b9ea414e10d0fc69c7f430bddc1bddcdb04c731",
+      "bytes": 1192
+    },
+    "candidateLog": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/qa/build-final.log",
+      "sha256": "eb0abffbaed193c11578548b76acfe0ed502c5369b06f0a46eec3439301ff9a2",
+      "bytes": 1195
+    },
+    "binding": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/BUILD-RUNTIME-BINDING-v1.json",
+      "sha256": "9139dbbaeb15dc66de21c6e5ab5737289a0dc46f97a84dd362831aba3c8a8d61",
+      "bytes": 17418
+    }
+  },
+  "runtimeControls": {
+    "result": "PASS_EXACT_PARENT_OUTPUT_AND_NATIVE_WORK_SOURCE_AND_COMPILED",
+    "report": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/RUNTIME-CONTROLS-v1.json",
+      "sha256": "b962e41d04cb02badd6e7b9dc39136f830f26e0d332e2a9e5011526987c9ab4a",
+      "bytes": 268922
+    },
+    "offParityRecords": 24,
+    "onParityRecords": 12,
+    "jointPositiveRecords": 4,
+    "positiveOutputSha256": "7de55ffe187b4c58a37f9d64b40232bd3a2d78b6e386822acd4e4493a79b6455",
+    "clockExclusions": "Only explicit timeSpent and suffix TimeMs/DurationMs/ElapsedMs/StartedAt/EndedAt/TimeToSolve. No appended counters or owner cold fields removed.",
+    "schemaExclusions": [],
+    "allCold15FieldsExactlyCompared": true,
+    "child": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/runtime-control-child.ts",
+      "sha256": "7ab52766f6314f7e7c1b51eaf97fd7cddda9b1036935c34025651381db7d026c",
+      "bytes": 4965
+    },
+    "runner": {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-root-memo-prototype/run-runtime-controls.py",
+      "sha256": "e46abfacd7ff8e12feafc84b38291ce457993c50aa7b88c8b0db47dbb0551be0",
+      "bytes": 4938
+    },
+    "scope": "Synthetic functional controls only.24OFFrecords and12ONrecords on three contexts, including actual compiled P9 Joint factory positive plus whole2layer/4layer pipeline execution. No worker dispatch, actual dataset solve/checker or timing claim."
+  }
+}
