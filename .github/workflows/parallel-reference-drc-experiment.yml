@@ -1,0 +1,38 @@
+name: Parallel reference DRC experiment
+on:
+  push:
+    branches: [codex/parallel-reference-drc]
+    paths:
+      - .github/workflows/parallel-reference-drc-experiment.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun test tests/solvers/parallel-reference-drc-workers.test.ts tests/features/pipeline9-srj18-sample01-thread-parity.test.ts --timeout 9999999
+  benchmark:
+    needs: validate
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parallel-reference-drc-result
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
