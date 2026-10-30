@@ -37,6 +37,8 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+// Share A13's existing state limit across the portfolio's grid candidates.
+const MAX_GRID_CELL_COUNT = 2_000_000
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -101,7 +103,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return this.nodeSegmentCount
   }
 
-  private getCandidateProgress(solver: { progress: number }): number {
+  private getCandidateProgress(solver: {
+    progress: number
+    failed: boolean
+  }): number {
+    if (solver.failed) return 0
     if (solver instanceof HighDensitySolverA13) {
       if (solver.solved) return 1
       const connectionCount = solver.connections.length
@@ -398,6 +404,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: unknown) {
+    if (
+      solver instanceof HighDensitySolverA01 ||
+      solver instanceof HighDensityA03Solver ||
+      solver instanceof HighDensitySolverA13
+    ) {
+      const node = solver.nodeWithPortPoints
+      const layerCount =
+        node.availableZ?.length ??
+        new Set(node.portPoints.map((point) => point.z)).size
+      const cellCount =
+        (Math.ceil(node.width / 0.1) + 1) *
+        (Math.ceil(node.height / 0.1) + 1) *
+        layerCount
+      if (cellCount > MAX_GRID_CELL_COUNT) {
+        solver.failed = true
+        solver.error = `Grid cell count ${cellCount} exceeds allocation budget ${MAX_GRID_CELL_COUNT}`
+        return
+      }
+    }
     // A13 already declares its search limit; allocate its grid only if selected.
     if (solver instanceof HighDensitySolverA13) return
     const setup = (solver as any).setup
