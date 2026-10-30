@@ -47,6 +47,8 @@ export class Pipeline9IntentOwners {
   private pointPairAliases = new Map<string, OriginalIntentOwner[]>()
   private connectionTokens = new Map<string, string[]>()
   private originalTokens: string[] = []
+  private ownerByRoot = new Map<string, { owner: string; anchors: string[] }>()
+  private ownerIndexDirty = true
 
   constructor(original: OriginalIntentJson, pointPairs: OriginalIntentJson) {
     if (!Array.isArray(original.connections)) throw new Error("Original connection declarations are required")
@@ -92,7 +94,12 @@ export class Pipeline9IntentOwners {
     }
   }
 
-  private ensure(id: string): void { if (!this.parents.has(id)) this.parents.set(id, id) }
+  private ensure(id: string): void {
+    if (!this.parents.has(id)) {
+      this.parents.set(id, id)
+      this.ownerIndexDirty = true
+    }
+  }
   private find(id: string): string {
     this.ensure(id)
     const parent = this.parents.get(id)!
@@ -103,7 +110,10 @@ export class Pipeline9IntentOwners {
   }
   private union(left: string, right: string): void {
     const a = this.find(left), b = this.find(right)
-    if (a !== b) this.parents.set(b, a)
+    if (a !== b) {
+      this.parents.set(b, a)
+      this.ownerIndexDirty = true
+    }
   }
   private alias(id: string, typed: string): void {
     const group = this.aliases.get(id) ?? new Set<string>()
@@ -115,12 +125,30 @@ export class Pipeline9IntentOwners {
     this.alias(id, typed)
     this.union(root, typed)
   }
+  private rebuildOwnerIndex(): void {
+    const anchorsByRoot = new Map<string, string[]>()
+    for (const [candidate, name] of this.anchors) {
+      const root = this.find(candidate)
+      const anchors = anchorsByRoot.get(root) ?? []
+      anchors.push(name)
+      anchorsByRoot.set(root, anchors)
+    }
+    this.ownerByRoot.clear()
+    for (const [root, anchors] of anchorsByRoot) {
+      anchors.sort()
+      this.ownerByRoot.set(root, { owner: `intent-owner:${digest(anchors)}`, anchors })
+    }
+    this.ownerIndexDirty = false
+  }
   private typed(id: string): OriginalIntentOwner {
     if (!this.parents.has(id)) return unknown("Identity is absent from original declarations")
     const root = this.find(id)
-    const anchors = [...this.anchors].filter(([candidate]) => this.find(candidate) === root).map(([, name]) => name).sort()
-    if (anchors.length === 0) return unknown("Identity has no original connection anchor")
-    return { status: "RESOLVED", owner: `intent-owner:${digest(anchors)}`, anchors }
+    // All original unions precede the first resolution. Keep the index local
+    // to this freshly constructed inventory; later additions/unions invalidate it.
+    if (this.ownerIndexDirty) this.rebuildOwnerIndex()
+    const resolved = this.ownerByRoot.get(root)
+    if (!resolved) return unknown("Identity has no original connection anchor")
+    return { status: "RESOLVED", owner: resolved.owner, anchors: [...resolved.anchors] }
   }
   combine(owners: OriginalIntentOwner[], absent: string): OriginalIntentOwner {
     if (owners.some((owner) => owner.status === "AMBIGUOUS")) return { status: "AMBIGUOUS", reason: "Conflicting declared owner references" }
