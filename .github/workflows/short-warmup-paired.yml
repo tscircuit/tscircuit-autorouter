@@ -1,0 +1,63 @@
+name: Paired short warmup benchmark
+on:
+  push:
+    branches: [codex/short-warmup-paired]
+    paths: [.github/workflows/short-warmup-paired.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5f65e9a8bb43223266883f8d65c50408c1c5e8a1
+          path: baseline
+      - uses: actions/checkout@v4
+        with:
+          ref: de3d73de08d8650a90c815984a9d28e9f73ecae0
+          path: candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+        working-directory: baseline
+      - run: bun install
+        working-directory: candidate
+      - name: Run alternating paired four-thread benchmarks
+        run: |
+          mkdir results
+          round=0
+          for variant in baseline candidate candidate baseline baseline candidate; do
+            round=$((round + 1))
+            (
+              cd "$variant"
+              bash benchmark.sh --dataset 18 --threads 4
+            )
+            cp "$variant/benchmark-result.json" "results/$round-$variant.json"
+            cp "$variant/benchmark-result.txt" "results/$round-$variant.txt"
+          done
+      - name: Print paired evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,glob,statistics,math
+          groups={}
+          for path in sorted(glob.glob("results/*.json")):
+            report=json.load(open(path))
+            times=[t["elapsedTimeMs"] for t in report["tests"]]
+            assert len(times)==16 and all(t["relaxedDrcPassed"] for t in report["tests"]), path
+            variant=path.split("-")[-1].split(".")[0]
+            groups.setdefault(variant,[]).append(statistics.median(times))
+            print(json.dumps(dict(path=path,summary=report["summary"],medianMs=statistics.median(times),sumMs=sum(times))))
+          if len(groups)==2:
+            a=statistics.median(groups["baseline"])
+            b=statistics.median(groups["candidate"])
+            print(json.dumps(dict(baselineMedianMs=a,candidateMedianMs=b,reductionPercent=100*(1-b/a))))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: short-warmup-paired-results
+          path: results
