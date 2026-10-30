@@ -48,21 +48,22 @@ diff --git a/dist/index.js b/dist/index.js
    }
    addConnections(connections) {
 +    const memberships = new Map();
-+    let netCount = Object.keys(this.netMap).length;
++    let netCount;
      for (const connection of connections) {
        const existingNets = /* @__PURE__ */ new Set();
        for (const id of connection) {
-@@ -65,7 +66,8 @@
+@@ -65,7 +66,9 @@
        }
        let targetNetId;
        if (existingNets.size === 0) {
 -        targetNetId = `connectivity_net${Object.keys(this.netMap).length}`;
++        netCount ??= Object.keys(this.netMap).length;
 +        targetNetId = `connectivity_net${netCount}`;
 +        if (!Object.hasOwn(this.netMap, targetNetId)) netCount++;
          this.netMap[targetNetId] = [];
        } else if (existingNets.size === 1) {
          targetNetId = existingNets.values().next().value ?? `connectivity_net${Object.keys(this.netMap).length}`;
-@@ -74,6 +76,7 @@
+@@ -74,6 +77,7 @@
          for (const netId of existingNets) {
            if (netId !== targetNetId) {
              this.netMap[targetNetId].push(...this.netMap[netId]);
@@ -70,7 +71,7 @@ diff --git a/dist/index.js b/dist/index.js
              this.netMap[netId] = this.netMap[targetNetId];
              for (const id of this.netMap[targetNetId]) {
                this.idToNetMap[id] = targetNetId;
-@@ -81,9 +84,16 @@
+@@ -81,9 +85,16 @@
            }
          }
        }
