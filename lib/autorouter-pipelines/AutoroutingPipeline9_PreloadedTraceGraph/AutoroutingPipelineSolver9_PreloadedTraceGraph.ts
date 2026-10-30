@@ -743,7 +743,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            hdRoutes: newHdRoutes,
+            hdRoutes: canonicalizePipeline9HdRoutes(newHdRoutes),
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
