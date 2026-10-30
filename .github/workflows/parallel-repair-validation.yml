@@ -18,3 +18,4 @@ jobs:
       - run: bunx tsc --noEmit
       - run: bun test tests/features/pipeline9-parallel-repair-portfolio.test.ts tests/features/pipeline9-async-no-runtime.test.ts tests/features/pipeline9-async-outer-budget.test.ts tests/features/pipeline9-async-runtime-failure.test.ts --timeout 9999999
       - run: bun run build
+# Validate typed worker forwarding.
