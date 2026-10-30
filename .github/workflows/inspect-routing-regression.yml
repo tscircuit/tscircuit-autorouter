@@ -1,0 +1,28 @@
+name: Inspect routing regression
+on:
+  push:
+    branches: [codex/final-parallel-routing]
+    paths: [.github/workflows/inspect-routing-regression.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect benchmark report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 41037029711 --repo tscircuit/tscircuit-autorouter --name regression-dataset-24 --dir results
+          python3 - <<'PY'
+          import json,urllib.request
+          url="https://raw.githubusercontent.com/tscircuit/dataset-srj24/6340ee442bc36cc5a0fd3c9b84070548ed5f416a/samples/sample002.json"
+          srj=json.load(urllib.request.urlopen(url))
+          print(json.dumps(dict(layerCount=srj.get("layerCount"),traceCount=len(srj.get("traces",[])),connectionCount=len(srj.get("connections",[])))))
+          for variant in ["baseline","candidate"]:
+            report=json.load(open("results/"+variant+".json"))
+            for t in report["tests"]:
+              if t["scenarioName"]=="sample002":
+                print(json.dumps(dict(variant=variant,keys=list(t),passed=t.get("relaxedDrcPassed"),errors=t.get("relaxedDrcErrors"),metrics=t.get("routingMetrics"))))
+          PY
