@@ -45,3 +45,5 @@ jobs:
           path: |
             benchmark-result.json
             benchmark-result.txt
+
+# Worker results use numeric port IDs; metadata stays on the host.
