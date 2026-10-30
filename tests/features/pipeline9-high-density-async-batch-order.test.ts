@@ -13,7 +13,7 @@ import {
 
 test("crowded nodes are scheduled first in bounded batches while results retain serial order", async (): Promise<void> => {
   const params: Pipeline9HighDensitySolverParams = {
-    nodePortPoints: Array.from({ length: 40 }, (_, index) => ({
+    nodePortPoints: Array.from({ length: 80 }, (_, index) => ({
       capacityMeshNodeId: `node-${index}`,
       center: { x: index * 8, y: 0 },
       width: 2,
@@ -37,7 +37,7 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
     fixedHdRoutes: [],
     connMap: new ConnectivityMap({}),
     nodePfById: new Map(
-      Array.from({ length: 40 }, (_, index) => [`node-${index}`, index / 40]),
+      Array.from({ length: 80 }, (_, index) => [`node-${index}`, index / 80]),
     ),
     obstacles: [],
     layerCount: 2,
@@ -61,7 +61,8 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
   const pending = solver.solveAsync(runtime)
-  expect(tasks).toHaveLength(16)
+  expect(tasks).toHaveLength(64)
+  expect(tasks.some(({ input }) => input.nodePortPoints.length > 1)).toBe(true)
   expect(tasks[0]!.input.nodePortPoints[0]!.capacityMeshNodeId).toBe("node-2")
   for (const { input, resolve } of tasks.toReversed()) {
     expect(

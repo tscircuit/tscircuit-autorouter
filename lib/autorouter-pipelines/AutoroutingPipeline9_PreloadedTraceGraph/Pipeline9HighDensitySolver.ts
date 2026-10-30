@@ -512,7 +512,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // Assign crowded nodes first so a difficult node does not start only
       // after hundreds of inexpensive nodes have passed through the pool.
       const batches = Array.from(
-        { length: Math.min(16, nodes.length) },
+        { length: Math.min(64, nodes.length) },
         () => ({
           work: 0,
           nodes: [] as { node: NodeWithPortPoints; index: number }[],
