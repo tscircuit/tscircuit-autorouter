@@ -3,7 +3,7 @@ import { applyPipeline9TerminalEscapeRelocations } from "lib/autorouter-pipeline
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-test("terminal relocation stays in physical rotated copper instead of its routing envelope", (): void => {
+test("terminal approach stays in physical rotated copper and preserves the center", (): void => {
   const terminal: Obstacle = {
     type: "rect",
     layers: ["top"],
@@ -63,7 +63,7 @@ test("terminal relocation stays in physical rotated copper instead of its routin
       vias: [],
     },
   ]
-  const candidateEndpoints: Array<{ x: number; y: number }> = []
+  const candidateApproaches: Array<{ x: number; y: number }> = []
   const result = applyPipeline9TerminalEscapeRelocations({
     srj: routingSrj,
     originalSrj,
@@ -72,8 +72,10 @@ test("terminal relocation stays in physical rotated copper instead of its routin
     syntheticConnectionNames: new Set(),
     drcEvaluator: ({ hdRoutes }) => {
       const endpoint = hdRoutes![0]!.route.at(-1)!
-      if (endpoint.x !== 0 || endpoint.y !== 0) {
-        candidateEndpoints.push(endpoint)
+      expect(endpoint).toEqual(routes[0]!.route.at(-1)!)
+      const approach = hdRoutes![0]!.route.at(-2)!
+      if (approach.x !== -0.35 || approach.y !== 1.15) {
+        candidateApproaches.push(approach)
       }
       return [
         {
@@ -88,9 +90,9 @@ test("terminal relocation stays in physical rotated copper instead of its routin
   })
 
   expect(result.attemptedCandidateCount).toBeGreaterThan(0)
-  expect(candidateEndpoints.length).toBe(result.attemptedCandidateCount)
+  expect(candidateApproaches.length).toBe(result.attemptedCandidateCount)
   const inverseRotation = (-225 * Math.PI) / 180
-  for (const endpoint of candidateEndpoints) {
+  for (const endpoint of candidateApproaches) {
     const localX =
       endpoint.x * Math.cos(inverseRotation) -
       endpoint.y * Math.sin(inverseRotation)
