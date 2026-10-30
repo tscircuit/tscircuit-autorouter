@@ -16,7 +16,7 @@ jobs:
           path: baseline
       - uses: actions/checkout@v4
         with:
-          ref: 3c2eead401d22de00faa3eae414c338f2530f453
+          ref: 6e05be2952527433db08a43b4d4db5f5d78490f3
           path: candidate
       - uses: oven-sh/setup-bun@v2
         with:
