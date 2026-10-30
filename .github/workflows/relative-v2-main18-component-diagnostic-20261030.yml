@@ -1,0 +1,42 @@
+name: Relative V2 exact MAIN18 component observational diagnostic
+on:
+  push:
+    branches: [codex/relative-v2-main18-component-diagnostic-20261030]
+    paths: [scripts/experiment-audit/relative-v2-main18-component-diagnostic-20261030.json]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  retained_stage:
+    name: relative-v2-main18-component / srj18 / 11 / no-stage-no-routing
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Verify sealed observational component source and exact retained inputs
+        run: python3 controller/scripts/experiment-audit/run-relative-v2-main18-component-diagnostic.py --mode plan
+      - uses: actions/checkout@v4
+        with:
+          ref: ed7301ad717238118619e374972c19c40d2bc3ec
+          path: source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact pinned source dependencies
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py source
+      - name: Observe untouched detailed predicates and test published bounded component proposals
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 controller/scripts/experiment-audit/run-relative-v2-main18-component-diagnostic.py --mode run --source source --output results
+      - name: Retain complete component evidence without stage board or speed credit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relative-v2-component-only-srj18-11
+          path: results
+          if-no-files-found: warn
+          retention-days: 30

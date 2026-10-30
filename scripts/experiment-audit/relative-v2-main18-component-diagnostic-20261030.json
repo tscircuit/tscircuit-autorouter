@@ -1,0 +1,125 @@
+{
+  "sourceSha": "ed7301ad717238118619e374972c19c40d2bc3ec",
+  "sourceTree": "0035e7b6a849b5e37aa782fb769c32a1aa8f1242",
+  "sourceBaseSha": "c9fd3d90b17fcb9dffe7a3b634823b982506f474",
+  "sourceFileHashes": {
+    "stage": "ead1ac2a120df86b316e79de7e693a79af0137a749800cc90211f4aa1a1325e8",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "06553f4568f2841d0337f9cf0dcc5fff820ae49555ab4588b0f16bc2f12e1978",
+    "independentReviewSha256": "142f5a8215738077e0783b5e62e7b32096b6c6f774a2d2bd6a5ffe80d0dd5e94",
+    "publicationReceiptSha256": "bed4ce5f5de967afcfa00f3248df7069dcb460c35185d6f12bd2b79303055c4a"
+  },
+  "sourceDefaultOffReviewed": true,
+  "certificateRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+  "certificateSha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bunVersion": "1.4.2",
+  "inputArtifact": {
+    "id": 12942442764,
+    "name": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard0",
+    "digest": "sha256:f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+    "size_in_bytes": 3095352,
+    "workflow_run": {
+      "id": 40974963334,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/layer-aware-mst-controller-20261029",
+      "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d"
+    }
+  },
+  "inputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "inputSourceRun": {
+    "id": 40974963334,
+    "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+    "head_branch": "codex/layer-aware-mst-controller-20261029",
+    "path": ".github/workflows/layer-aware-mst84-20261029.yml",
+    "tree": "03f9bde76aba4147502b63ac5d87a0df85162b1f",
+    "run_attempt": 1,
+    "repository_id": 924883209
+  },
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "inputRoutedSourceTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "inputQualificationPins": {
+    "originalRawQualificationSha256": "1faf8c27ae3dd34f3359652c147d45afdbe7a2c0c91c1997cbf907ecba08ac14",
+    "independentRawReviewSha256": "2d0305a72997d0cda3809245ea9dd293e847f11adc3f9467aad53c613d06a2c6"
+  },
+  "inputIdentitySha256": "213d09e87a3a6c1c50f39169e53e089e18130ab78c7c6032026fd13d8f19a54a",
+  "campaign": "relative-v2-main18-component-diagnostic-20261030",
+  "controllerBranch": "codex/relative-v2-main18-component-diagnostic-20261030",
+  "inheritedManifestSha256": "3f49ba6c6e498771f1fd60ebeef30363df0f50f3e60c68c46d0c52a8894cd825",
+  "inheritedLocal": "63f0c7bebeae77462b08900997b995d7bc8e2100",
+  "inheritedTree": "1db33a77f360180a4446c7f40929b7786214e199",
+  "expectedRemoteParent": "0007038a546f092e0d5be1695901272e7d4ac054",
+  "baselineCertificateSha256": "e7bbb4acf7c5d7ca21fe86c4937319cc6f9bc5768af27e38a0be852f80e0c2a1",
+  "negativeActualQualificationSha256": "9619bf7d9d2145f2553de1f1c0749ab9dde568047d6f45af5a3fd8839cfcbce3",
+  "negativeActualIndependentReviewSha256": "219828a4d66a5d454ce509b1a1f3acbd4ccca5046b82b38aff03b9aaa580b875",
+  "maximumCandidates": 16,
+  "maximumConceptualSteps": 20,
+  "viaMaximumMove": 0.25,
+  "wireMaximumMove": 0.02,
+  "stageSolveCalls": 0,
+  "routingAllowed": false,
+  "localDatasetCheckerAllowed": false,
+  "productionAcceptanceAllowed": false,
+  "fullBoardRecoveryClaim": false,
+  "qualityOrSpeedCredit": false,
+  "productionStageCredit": false,
+  "completeOriginalInstrumentedReturnEqualityRequired": true,
+  "detailedUntargetedFindingMultisetsExact": true,
+  "publishedV2ProposalHelperRequired": true,
+  "samePublishedRelativeProofRequired": true,
+  "independentBlacksmithDataOnlyReplayRequired": true,
+  "assetHashes": {
+    "run-relative-v2-main18-component-diagnostic.py": "c7275ba3ca84a7d42521fdbcdc2e7a9fbeaf4773ad5f952aae3e7c8efc6b4b88",
+    "seal-relative-v2-main18-component-diagnostic.py": "660e5e1042f692ddcafa4477ae985a34620209dd359c98726bf16b53b4ad0cb1",
+    "instrument-relative-v2-main18-component.py": "69f04edb35a056fa7bca145865ed093351b81d8ab0894019a500e1565081921d",
+    "relative-v2-main18-component-child.ts": "ebb0d7ddebfbbd9776baaaf1a1e7d990f21bcefd1cdfd9bbb5ff3c75850effbc",
+    "replay-relative-v2-main18-component-proof.py": "f90d6f6143726a36dac86d40f96560fdbff7b10a323298aa92d45f7cb46e961e",
+    "tests/relative-v2-main18-component-controls.py": "c9ba462d9e8df358ae55f09172edb3cc38f624d3ebed75a0950bdcaf83df9836",
+    "tests/relative-v2-main18-component-proof-controls.py": "b1fb20e2073179000877afe73b8515397fd041e3ee15edc022091c134d8518a9",
+    "run-witness-relative-v2-srj18-trial-hotfix.py": "7d81f4cb718928e7ce45a8f69e2dbc130c211ecb1ca08bac123051ccd17740ea",
+    "witness-relative-v2-srj18-trial-hotfix-20261030.json": "3f49ba6c6e498771f1fd60ebeef30363df0f50f3e60c68c46d0c52a8894cd825",
+    "download-witness-relative-v2-srj18-original.py": "83ec5d74a7b4a24fb160c720982bbef5b87d72b02863e81fbfe13bfd74c2b8c0",
+    "witness-local-repair-proposals.ts": "6e6e6111333c18610de11c88bba8f7695dd2194468ea1d0403542937aa83a636",
+    "witness-quality6-artifact-carrier.py": "cb7379cf40f043dddad25068a3d67361123fa90aaa93c9dc81692d92ec3e1a1b",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db"
+  },
+  "workflowSha256": "2592d344f6d5d42d6c777bb2b85ff1aacc0aef5847d4209027adf10b1f05722f"
+}
