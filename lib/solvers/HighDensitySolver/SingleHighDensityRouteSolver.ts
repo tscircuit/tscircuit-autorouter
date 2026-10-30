@@ -704,25 +704,34 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     let queriedPlanarNeighbors = false
 
     const { maxX, minX, maxY, minY } = this.bounds
+    const lowerY = clamp(node.y - this.cellStep, minY, maxY)
+    const centerY = clamp(node.y, minY, maxY)
+    const upperY = clamp(node.y + this.cellStep, minY, maxY)
+    const lowerYIndex = Math.round(lowerY / this.cellStep) - this.gridMinYIndex
+    const centerYIndex =
+      Math.round(centerY / this.cellStep) - this.gridMinYIndex
+    const upperYIndex = Math.round(upperY / this.cellStep) - this.gridMinYIndex
 
     for (let x = -1; x <= 1; x++) {
+      const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+      const xIndex = Math.round(neighborX / this.cellStep) - this.gridMinXIndex
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
+        const neighborY = y < 0 ? lowerY : y === 0 ? centerY : upperY
+        const yIndex =
+          y < 0 ? lowerYIndex : y === 0 ? centerYIndex : upperYIndex
+        const neighborKey =
+          (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+        if (this.exploredNodes.has(neighborKey)) continue
         const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
+          x: neighborX,
+          y: neighborY,
           z: node.z,
           g: node.g,
           h: node.h,
           f: node.f,
           parent: node,
-        }
-
-        const neighborKey = this.getNodeKey(neighbor)
-
-        if (this.exploredNodes.has(neighborKey)) {
-          continue
         }
 
         if (!queriedPlanarNeighbors) {
