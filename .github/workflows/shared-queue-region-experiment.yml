@@ -1,0 +1,44 @@
+name: Shared queue routing region experiment
+on:
+  push:
+    branches: [codex/shared-high-density-queue]
+    paths: [.github/workflows/shared-queue-region-experiment.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        dimension: [15, 20, 30]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Set experiment region dimension
+        env:
+          REGION_DIMENSION: ${{ matrix.dimension }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          path = Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          original = path.read_text()
+          source = "this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 15"
+          assert original.count(source) == 1
+          path.write_text(original.replace(source, "this.maxNodeDimension = mutableOpts.maxNodeDimension ?? " + os.environ["REGION_DIMENSION"]))
+          PY
+      - name: Benchmark all dataset18 boards with four routing threads
+        run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: region-${{ matrix.dimension }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
+            benchmark-snapshots.html
