@@ -1,10 +1,13 @@
 import { expect, test } from "bun:test"
-import { SingleRouteCandidatePriorityQueue, type Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import {
+  SingleRouteCandidatePriorityQueue,
+  type Node,
+} from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import { OriginalSingleRouteQueue } from "../fixtures/OriginalSingleRouteQueue"
 
 test("parallel heap priorities preserve reference tie order and interleaved operations", (): void => {
-  const actual = new SingleRouteCandidatePriorityQueue([])
-  const reference = new OriginalSingleRouteQueue([])
+  const actual = new SingleRouteCandidatePriorityQueue<Node>([])
+  const reference = new OriginalSingleRouteQueue<Node>([])
   let state = 817231
   for (let i = 0; i < 50000; i++) {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0

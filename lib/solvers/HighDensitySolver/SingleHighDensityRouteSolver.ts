@@ -708,7 +708,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const centerY = clamp(node.y, minY, maxY)
     const upperY = clamp(node.y + this.cellStep, minY, maxY)
     const lowerYIndex = Math.round(lowerY / this.cellStep) - this.gridMinYIndex
-    const centerYIndex = Math.round(centerY / this.cellStep) - this.gridMinYIndex
+    const centerYIndex =
+      Math.round(centerY / this.cellStep) - this.gridMinYIndex
     const upperYIndex = Math.round(upperY / this.cellStep) - this.gridMinYIndex
 
     for (let x = -1; x <= 1; x++) {
@@ -718,7 +719,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         if (x === 0 && y === 0) continue
 
         const neighborY = y < 0 ? lowerY : y === 0 ? centerY : upperY
-        const yIndex = y < 0 ? lowerYIndex : y === 0 ? centerYIndex : upperYIndex
+        const yIndex =
+          y < 0 ? lowerYIndex : y === 0 ? centerYIndex : upperYIndex
         const neighborKey =
           (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
         if (this.exploredNodes.has(neighborKey)) continue
