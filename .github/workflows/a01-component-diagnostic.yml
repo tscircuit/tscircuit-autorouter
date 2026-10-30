@@ -1,0 +1,56 @@
+name: A01 V3 component diagnostic
+
+on:
+  push:
+    branches: [codex/proven-a01-component-v3-20261030]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a01-component-v3-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  proof:
+    name: Baseline capture and standalone A01 ABBA
+    env:
+      PROOF_CANDIDATE: paged_occupancy
+      PYTHONDONTWRITEBYTECODE: "1"
+    runs-on: blacksmith-16vcpu-ubuntu-2404-arm
+    timeout-minutes: 120
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate literal source refs and frozen component protocol
+        id: refs
+        run: python3 experiments/proven-proof/run.py refs
+      - name: Checkout frozen baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: proof-source/base
+          persist-credentials: false
+      - name: Setup frozen Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare frozen candidate and upstream worktrees
+        run: python3 experiments/proven-proof/run.py prepare
+      - name: Install baseline once and authenticate physical dependency overlays
+        run: python3 experiments/proven-proof/run.py install
+      - name: Freeze baseline captures and stock verification then measure standalone ABBA
+        run: python3 experiments/proven-proof/run.py run
+      - name: Preserve every diagnostic and measured result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a01-component-v3-${{ github.run_id }}-${{ github.run_attempt }}
+          path: proof-results
+          if-no-files-found: error
+          retention-days: 30
+      - name: Print component-only result manifest
+        if: always()
+        run: python3 experiments/proven-proof/run.py summary
