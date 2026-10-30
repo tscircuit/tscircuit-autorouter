@@ -480,9 +480,10 @@ export class TraceWidthSolver extends BaseSolver {
     return !obstacle.__zLayers || obstacle.__zLayers.includes(point.z)
   }
 
-  private getAdjacentNonCoincidentRoutePoint(
+  private getTerminalEscapeRoutePoint(
     route: HighDensityRoute,
     endpointIndex: number,
+    obstacle: Obstacle,
   ): RoutePoint | undefined {
     const endpoint = route.route[endpointIndex]
     if (!endpoint) return undefined
@@ -494,7 +495,7 @@ export class TraceWidthSolver extends BaseSolver {
       index += step
     ) {
       const candidate = route.route[index]!
-      if (distance(candidate, endpoint) > COORDINATE_EPSILON) {
+      if (pointToBoxDistance(candidate, obstacle) > COORDINATE_EPSILON) {
         return candidate
       }
     }
@@ -512,11 +513,19 @@ export class TraceWidthSolver extends BaseSolver {
     const widthAxis = { x: cos, y: sin }
     const heightAxis = { x: -sin, y: cos }
 
-    return (
-      Math.abs(vector.x * widthAxis.x + vector.y * widthAxis.y) *
-        obstacle.width +
-      Math.abs(vector.x * heightAxis.x + vector.y * heightAxis.y) *
-        obstacle.height
+    const widthComponent = Math.abs(
+      vector.x * widthAxis.x + vector.y * widthAxis.y,
+    )
+    const heightComponent = Math.abs(
+      vector.x * heightAxis.x + vector.y * heightAxis.y,
+    )
+    return Math.min(
+      widthComponent > COORDINATE_EPSILON
+        ? obstacle.width / widthComponent
+        : Infinity,
+      heightComponent > COORDINATE_EPSILON
+        ? obstacle.height / heightComponent
+        : Infinity,
     )
   }
 
@@ -528,22 +537,6 @@ export class TraceWidthSolver extends BaseSolver {
     const endpoint = route.route[endpointIndex]
     if (!endpoint) return undefined
 
-    const adjacent = this.getAdjacentNonCoincidentRoutePoint(
-      route,
-      endpointIndex,
-    )
-    if (!adjacent) return undefined
-
-    const tangent =
-      endpointIndex === 0
-        ? getUnitVectorFromPointAToB(endpoint, adjacent)
-        : getUnitVectorFromPointAToB(adjacent, endpoint)
-
-    if (distance(tangent, { x: 0, y: 0 }) <= COORDINATE_EPSILON) {
-      return undefined
-    }
-
-    const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
 
     for (const obstacle of this.obstacles) {
@@ -552,6 +545,18 @@ export class TraceWidthSolver extends BaseSolver {
       // pads before scanning their potentially large connectivity lists.
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+
+      // Tiny corrections inside the pad do not determine its escape direction.
+      const adjacent = this.getTerminalEscapeRoutePoint(
+        route,
+        endpointIndex,
+        obstacle,
+      )
+      if (!adjacent) continue
+      const tangent = endpointIndex === 0
+        ? getUnitVectorFromPointAToB(endpoint, adjacent)
+        : getUnitVectorFromPointAToB(adjacent, endpoint)
+      const normal = { x: -tangent.y, y: tangent.x }
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
       if (limit <= COORDINATE_EPSILON) continue
