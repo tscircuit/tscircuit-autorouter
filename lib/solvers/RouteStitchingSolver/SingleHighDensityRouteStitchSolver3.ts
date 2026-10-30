@@ -92,6 +92,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    sameNetPcbPortIds?: ReadonlySet<string>
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -184,10 +185,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const taggedPcbPortIds = canonicalHdRoutes
       .flatMap((route) => [route.startPcbPortId, route.endPcbPortId])
       .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
+    const knownPcbPortIds = new Set([
+      ...expectedPcbPortIds,
+      ...(opts.sameNetPcbPortIds ?? []),
+    ])
 
     if (expectedPcbPortIds.size > 0) {
       for (const taggedPcbPortId of taggedPcbPortIds) {
-        if (!expectedPcbPortIds.has(taggedPcbPortId)) {
+        if (!knownPcbPortIds.has(taggedPcbPortId)) {
           throw new Error(
             `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}"`,
           )
