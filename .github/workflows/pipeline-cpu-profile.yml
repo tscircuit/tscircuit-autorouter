@@ -22,6 +22,7 @@ jobs:
           from pathlib import Path
           p=Path("scripts/benchmark/index.ts")
           s=p.read_text().replace('"scripts/benchmark/benchmark.child.ts"', '"--cpu-prof", "--cpu-prof-dir=cpu-profiles", "scripts/benchmark/benchmark.child.ts"')
+          s=s.replace('slot.child.kill("SIGKILL")', 'slot.child.kill("SIGTERM")')
           p.write_text(s)
           p=Path("scripts/benchmark/benchmark.child.ts")
           s=p.read_text().replace('const rl =', 'process.on("SIGTERM", () => process.exit(0))\nconst rl =')
