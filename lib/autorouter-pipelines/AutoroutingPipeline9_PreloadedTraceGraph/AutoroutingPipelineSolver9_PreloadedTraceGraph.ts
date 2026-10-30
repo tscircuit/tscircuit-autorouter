@@ -828,7 +828,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
-            maxIterations: 2,
+            // A brief warm-up leaves the full joint repair search in control.
+            // Preserve the established preloaded-copper repair path.
+            maxIterations: (cms.originalSrj.traces?.length ?? 0) === 0 ? 2 : 16,
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
