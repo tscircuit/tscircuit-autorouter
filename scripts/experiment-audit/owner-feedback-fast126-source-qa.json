@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "status": "FROZEN_LOCAL_QUALIFIED_FOR_INDEPENDENT_REVIEW_AND_FAIR_THREE_ARM_BLACKSMITH_TRIAL",
+  "sourceSha": "a5bf2059783c0a822ce74b1e7a68aea530c947e6",
+  "sourceTree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+  "localCommit": "a5bf2059783c0a822ce74b1e7a68aea530c947e6",
+  "tree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+  "parentLocal": "9bcfa0e3966068b06efc0efc89a973ebc998a458",
+  "parentRemote": "94ab08d34aee46bddc20fd96101aeb4c52898bb4",
+  "parentTree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+  "worktreeClean": true,
+  "flag": "experimentOriginalOwnerCopperFeedback",
+  "defaultEnabled": false,
+  "changedFiles": 8,
+  "productionFiles": 3,
+  "frozenValidatorHarnessPackageChanges": false,
+  "diffCheck": "PASS",
+  "selectedRuntime": "Bun1.4.2",
+  "focusedTests": 18,
+  "focusedAssertions": 176,
+  "focusedResult": "PASS",
+  "fullTypes": "PASS",
+  "serializedWorkerEsmDtsBuild": "PASS",
+  "runtimeControls": {
+    "status": "PASS_PARENT_EXACT_OUTPUT_AND_NATIVE_WORK_SOURCE_AND_COMPILED",
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/RUNTIME-CONTROLS.json",
+    "sha256": "7a91c3706def6a1017f2c34fdb2596ed894073eadacc1e5112a406e6819739c5",
+    "offParityRecords": 18,
+    "onParityRecords": 12,
+    "jointPositiveRecords": 4,
+    "positiveOutputSha256": "7de55ffe187b4c58a37f9d64b40232bd3a2d78b6e386822acd4e4493a79b6455",
+    "scope": "Synthetic functional controls only.18OFFrecords and12ONrecords on three contexts, including actual compiled P9 Joint factory positive plus whole2layer/4layer pipeline execution. No worker dispatch, actual dataset solve/checker or timing claim.",
+    "deliberateSchemaDifference": "Parent coldv1/14fields vs successor coldv2/15fields; ONLY version, completePredicateSuite/completeAdmissionPredicateSuite and new referencePredicateCount capability fields are excluded for work equality. All raw ledgers remain retained. All actual work/issue/evaluation counters, output/status/iterations/MAX_ITERATIONS match."
+  },
+  "parentRuntimeBinding": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/PARENT-FROZEN-RUNTIME-BINDING.json",
+    "sha256": "f6ca444026ee8cd2358cb534e0c804071d8590d8a26b660440e638a4b64c9035"
+  },
+  "defaultFullApi": {
+    "status": "JSON_EXACT_PARENT_FULL_FUNCTION_AND_LEGACY_PARTIAL_API_REPORTS_AND_CHECKER_ORDER",
+    "independentCases": 29,
+    "legacyErrorAndReadPriorityPreserved": true,
+    "reportsComparedToParentLocal": "9bcfa0e3966068b06efc0efc89a973ebc998a458"
+  },
+  "selectedApi": {
+    "name": "checkPipeline9SelectedOriginalIntentCopper",
+    "reportKind": "SELECTED_ORIGINAL_OWNER_COPPER",
+    "fullCopperGrade": "NOT_EVALUATED",
+    "allPublishedCopperChecksRun": false,
+    "overallStatusOrQualifiedFieldsPresent": false,
+    "checksRun": [
+      "viaTrace",
+      "traceOverlap"
+    ],
+    "completeOriginalInventoryAndGeometryKeysRetained": true,
+    "selectedFindingsAndActualFeedbackAdapterExactParent": true,
+    "allFourDeclaredClearanceInvariantsRetained": true,
+    "crossCallCacheIntroduced": false
+  },
+  "workReduction": {
+    "scope": "Strict feedback predicates only, not native iterations or measured time.",
+    "initialAdmissionActualCalls": 14,
+    "parentPerAdmittedReferenceMiss": 7,
+    "successorPerAdmittedReferenceMiss": 2,
+    "removedCallsPerMiss": 5,
+    "strictReferencePredicateCallReductionFraction": 0.7142857142857143,
+    "referenceCacheHitStrictCalls": 0,
+    "continuityOffReferenceStrictCalls": 2,
+    "offStrictCalls": 0,
+    "actualJointIndependentInstrumented": true,
+    "allCallbacksDelegateUnmodifiedPublishedPredicates": true
+  },
+  "coldContract": {
+    "path": "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback",
+    "version": 2,
+    "scalarFieldCount": 15,
+    "fields": [
+      "version",
+      "enabled",
+      "status",
+      "reason",
+      "originalOwnershipCoverage",
+      "selectedCheckCount",
+      "completeAdmissionPredicateSuite",
+      "referencePredicateCount",
+      "baselineIssueCount",
+      "initialIssueCount",
+      "referenceEvaluations",
+      "appendedIssueCount",
+      "baselineMatchesFiltered",
+      "unsupportedOwnerCount",
+      "latestIssueCount"
+    ],
+    "completeAdmissionPredicateSuite": "Both initial baseline/current use the unchanged full seven-predicate API.",
+    "referencePredicateCount": 2,
+    "referenceEvaluations": "As parent: two admission evaluations plus admitted complete-reference cache misses. Predicate count differs honestly per mode.",
+    "notApplicable": "Original valid ownership/material domain incomplete: explicitly inactive, exact legacy native behavior, no strict credit.",
+    "lateUnknown": "After complete admission, inventory or map inconsistency still throws.",
+    "baselineMatchesFiltered": "Entries across errors and errorsWithCenters, not unique defects.",
+    "off": "Object absent; no extra strict checks or native work."
+  },
+  "invariants": [
+    "Unchanged full seven-predicate admission, original-owner/material/stack inventory and geometry-unchanged validation on every reference.",
+    "Only selected viaTrace then traceOverlap predicate invocations replace full seven reference invocation; no noop/fake checkers or invented unselected counts/grade.",
+    "Native errors, selected finding/target fields, stable physical baseline keys, native indexed ranking, reference cache, budget formulas/caps and private residual refusal guard remain unchanged.",
+    "The finite deliberate Joint refusal with residual selected contacts is retained; this optimization does not purport to recover the previously dirty native case24:14.",
+    "All six frozen oracle/harness files and external published geometry remain untouched."
+  ],
+  "limits": [
+    "No actual dataset checker/solver or benchmark was run locally; all controls are synthetic functional or data-only differential checks.",
+    "No wall-time, population-speed, output-optimization or broad no-regression claim. Five fewer strict reference predicate calls do not imply a71% overall speedup.",
+    "The parent scoped quality improvement21\u219223 belongs to frozen94ab full84 evidence, not this successor. New full42 three-arm qualification must prove preservation and paired cost against parent and native.",
+    "Inventory reconstruction, cloning and exact physical participant keys are intentionally retained and may remain expensive; no cross-call mutable owner-context cache is introduced.",
+    "Default full API error/read ordering is preserved for inherited checker entries; no internal error fallback added."
+  ],
+  "dependencies": {
+    "packageJsonSha256": "aadcb9588ad08f890a9dddde643278547a1721196c0b3ea79874d611903a430c",
+    "nodeModulesResolved": "/tmp/autorouter-post588-dependencies/node_modules",
+    "unchangedFromParent": true
+  },
+  "independentReview": {
+    "agent": "bottleneck_review",
+    "status": "FROZEN_SOURCE_18_TESTS_176_ASSERTIONS_29_DIFFERENTIAL_CASES_AND_ACTUAL_CALL_AUDIT_PASS_PENDING_FINAL_OWNER_QA_BINDING",
+    "evidence": [
+      {
+        "path": "/tmp/original-owner-feedback-fast-independent/frozen-differential-epsilon.json",
+        "sha256": "bca762dcb916eaea8888e7f88ef37c8d31899c7ee8030772247d94aaf10d7195"
+      },
+      {
+        "path": "/tmp/original-owner-feedback-fast-independent/hot-call-audit.json",
+        "sha256": "a505b425b0f22abdaafcfc4701b604ad9ab80a9f12bbcae2df7535092a5aa428"
+      },
+      {
+        "path": "/tmp/original-owner-feedback-fast-independent/legacy-error-order-fixed.json",
+        "sha256": "00776e8863b8bcc211f33e472e24bba8d0f6c6647fdb469a89693726891a773e"
+      }
+    ]
+  },
+  "publicationManifestSha256": "ede77deaa40202e371f33b538b03403f37b307a4f170e5badad57062d2f5c522",
+  "evidence": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/build.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/build.log",
+      "sha256": "9a0350e71eb12cf0dc6a23eba6f179969bdcce272ba1240e70e63ff05a407ee3",
+      "bytes": 1208
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/focused.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/focused.log",
+      "sha256": "caf5cbe45178e87d71c1f3d3525d9e029f3cdb760e8c99f5a51e55066b95dad6",
+      "bytes": 3590
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/selected-bun.txt",
+      "sha256": "b99b4c7cdf236f59bc9f65d963deaecae3b16a7dad87939cacb9057f7664daee",
+      "bytes": 6
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/types.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/selected-qa/types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/RUNTIME-CONTROLS.json",
+      "sha256": "7a91c3706def6a1017f2c34fdb2596ed894073eadacc1e5112a406e6819739c5",
+      "bytes": 226923
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/PARENT-FROZEN-RUNTIME-BINDING.json",
+      "sha256": "f6ca444026ee8cd2358cb534e0c804071d8590d8a26b660440e638a4b64c9035",
+      "bytes": 1362
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/runtime-control-child.ts",
+      "sha256": "6bd6ce6469a0bbe0895e6b6b62b8c17fd9c3f5a281fb8c5462b40f9311221ed9",
+      "bytes": 4981
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/run-runtime-controls.py",
+      "sha256": "8ecb66eeb21bccd9163f95255216c8144435da269a467a134f441a597c1f55dd",
+      "bytes": 4955
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/publication/manifest.json",
+      "sha256": "ede77deaa40202e371f33b538b03403f37b307a4f170e5badad57062d2f5c522",
+      "bytes": 3927
+    }
+  ]
+}

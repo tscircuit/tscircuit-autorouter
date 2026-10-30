@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "EXACT_QUALIFIED_FAST_SOURCE_PUBLISHED_FRESH_THREE_ARM_BENCHMARK_PENDING",
+  "createdAtUtc": "2026-10-30T15:03:31.673720+00:00",
+  "localCommit": "a5bf2059783c0a822ce74b1e7a68aea530c947e6",
+  "remoteCommit": "50a8051cd9853d260b26d312246714cddbb67749",
+  "tree": "aed1e4ca2eef423389ef4adedc039667b617d4af",
+  "remoteParent": "94ab08d34aee46bddc20fd96101aeb4c52898bb4",
+  "baseTree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+  "branch": "codex/experiment-original-owner-copper-feedback-fast-20261030",
+  "remoteCommitTreeParentsAndBranchGetVerified": true,
+  "rootStrictExport": {
+    "path": "/tmp/owner-feedback-fast-source-export-root.json",
+    "sha256": "ecb5fa506c876ae8f060653614bb1beaa588d2317d02d7e5adf8bdc95cdd54a1",
+    "characters": 146393,
+    "entries": 8
+  },
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/LOCAL-VALIDATION.json",
+    "sha256": "615c08584f50263f37bd44362c1edd8ca3c7e6b8a9d3ee48edd7a86387c1878a"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/INDEPENDENT-SOURCE-REVIEW-v1.json",
+    "sha256": "e1e6e112d896489ee7649dc8a6fefff1ddad4b2fd39dfeb53946df79ae7417f8"
+  },
+  "manifest": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback-fast/publication/manifest.json",
+    "sha256": "ede77deaa40202e371f33b538b03403f37b307a4f170e5badad57062d2f5c522"
+  },
+  "rootReverifiedPersistedQaEvidenceFiles": 12,
+  "defaultEnabled": false,
+  "flags": [
+    "experimentLayerAwareMstIdentity",
+    "experimentOriginalOwnerCopperFeedback"
+  ],
+  "sourceOnlyClaim": "Full seven-predicate initial admission remains; each admitted reference miss evaluates only the same two predicates consumed by repair. Five fewer calls per miss, no measured wall-time credit. Native repair ranking/caps/refusal unchanged.",
+  "actualFastDatasetAttempts": 0,
+  "qualityPreservationAndRuntime": "UNMEASURED_PENDING_FRESH_N_P_F_126_ATTEMPTS",
+  "runtimeRestart": "Temporary worktrees/dependencies/rawZIPs lost at restart; persistent source objects and all closed-study receipts survive. Old raw archive local availability is no longer claimed; immutable independent attestations retained."
+}
