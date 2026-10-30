@@ -1148,6 +1148,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
+    if (this.solved || this.failed) return
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
