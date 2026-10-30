@@ -7,6 +7,7 @@ import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
   GlobalDrcBranchPortfolioSolver,
+  GlobalDrcForceImproveSolver,
   TraceContactGuard,
   TraceContactRepairSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
@@ -66,6 +67,7 @@ type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 export type Pipeline9JointDrcRepairSolverParams = {
   regionalRepairSizes?: readonly number[]
+  forceWarmupIterations?: number
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -2139,10 +2141,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const cancellation = new Int32Array(new SharedArrayBuffer(4))
       let winner: JointRepairCandidateOutput | undefined
-      const sizes = [undefined, [12, 24], [24, 48], [32, 64]] as const
-      const pending = sizes.map((regionSizes, index) =>
+      const warmups = [2, 4, 8, 16] as const
+      const pending = warmups.map((forceWarmup, index) =>
         runtime.executeAsync(Pipeline9JointRepairCandidateSolver, {
-          params: { ...this.params, regionalRepairSizes: regionSizes },
+          params: this.params,
+          forceWarmup,
           cancellation,
           index,
           stopAtIteration,
@@ -2270,6 +2273,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
 type JointRepairCandidateInput = {
   params: Pipeline9JointDrcRepairSolverParams
+  forceWarmup: number
   cancellation: Int32Array
   index: number
   stopAtIteration: number
@@ -2290,6 +2294,7 @@ type JointRepairCandidateOutput =
 export class Pipeline9JointRepairCandidateSolver extends BaseSolver {
   static readonly solverName = "Pipeline9JointRepairCandidateSolver"
   private candidate?: Pipeline9JointDrcRepairSolver
+  private forceSolver?: GlobalDrcForceImproveSolver
   private output?: JointRepairCandidateOutput
 
   constructor(private readonly input: JointRepairCandidateInput) {
@@ -2309,7 +2314,25 @@ export class Pipeline9JointRepairCandidateSolver extends BaseSolver {
       const connMap = new ConnectivityMap({})
       connMap.netMap = params.connMap.netMap
       connMap.idToNetMap = params.connMap.idToNetMap
-      this.candidate = new Pipeline9JointDrcRepairSolver({ ...params, connMap })
+      let newHdRoutes = params.newHdRoutes
+      if (this.input.forceWarmup !== (params.forceWarmupIterations ?? 16)) {
+        if (!params.originalNewHdRoutes) throw new Error("Parallel repair requires the pre-force routes")
+        this.forceSolver ??= new GlobalDrcForceImproveSolver({
+          srj: params.srj as any,
+          hdRoutes: params.originalNewHdRoutes,
+          connMap,
+          effort: Math.min(1, params.effort),
+          maxIterations: this.input.forceWarmup,
+          enableLargeBoardBroadFallback: false,
+          enablePostSolveClearanceRelaxation: false,
+          deferTraceContactGuard: true,
+        })
+        if (!this.forceSolver.solved && !this.forceSolver.failed) this.forceSolver.step()
+        if (this.forceSolver.failed) throw new Error("Parallel force warm-up failed: " + this.forceSolver.error)
+        if (!this.forceSolver.solved) return
+        newHdRoutes = this.forceSolver.getOutput()
+      }
+      this.candidate = new Pipeline9JointDrcRepairSolver({ ...params, connMap, newHdRoutes })
     }
     const candidate = this.candidate
     if (!candidate.solved && !candidate.failed && candidate.iterations < stopAtIteration) candidate.step()
@@ -2342,7 +2365,7 @@ export class Pipeline9JointRepairCandidateSolver extends BaseSolver {
     })
     this.output = {
       status: "finished", index, routes, valid: validation.errors.length === 0,
-      stats: candidate.stats, iterations: candidate.iterations,
+      stats: { ...candidate.stats, parallelForceWarmup: this.input.forceWarmup }, iterations: candidate.iterations + (this.forceSolver?.iterations ?? 0),
       maxIterations: candidate.MAX_ITERATIONS,
     }
     this.solved = true
