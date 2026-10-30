@@ -1,0 +1,49 @@
+name: Reference DRC worker profile
+on:
+  push:
+    branches: [codex/reference-drc-profile]
+    paths: [.github/workflows/reference-drc-profile.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Add diagnostic timing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/ParallelDrcChecksSession.ts")
+          s=p.read_text()
+          s=s.replace("        const frame = deserialize", "        const workerStarted = performance.now()\n        const frame = deserialize")
+          s=s.replace("const result = serialize(errors)", "const result = serialize({ errors, workerMs: performance.now() - workerStarted })")
+          s=s.replace("    const encoded = serialize", '    const started = performance.now()\n    const timing = ((globalThis as any).__referenceDrcTiming ??= { encode: 0, total: 0, bytes: 0, frames: 0, workers: [0,0,0,0] })\n    const encoded = serialize')
+          s=s.replace("    this.inputBuffer!.set(encoded)", "    timing.encode += performance.now() - started\n    timing.bytes += encoded.length\n    timing.frames++\n    let partition = 0\n    this.inputBuffer!.set(encoded)")
+          s=s.replace("      errors.push(...result)", "      errors.push(...result.errors)\n      timing.workers[partition++] += result.workerMs")
+          s=s.replace("    return errors", "    timing.total += performance.now() - started\n    return errors")
+          p.write_text(s)
+          p=Path("lib/testing/getDrcErrors.ts")
+          s=p.read_text().replace("  const connMap = createDrcConnectivityMap(circuitJson)", "  const started = performance.now()\n  const connMap = createDrcConnectivityMap(circuitJson)\n  ;(globalThis as any).__referenceConnectivityTime = ((globalThis as any).__referenceConnectivityTime ?? 0) + performance.now() - started")
+          p.write_text(s)
+          p=Path("scripts/benchmark/benchmark-run-task.ts")
+          s=p.read_text().replace("    highDensityIterations: solver.highDensityRouteSolver?.iterations,", "    highDensityIterations: solver.highDensityRouteSolver?.iterations,\n    referenceProfile: { timing: (globalThis as any).__referenceDrcTiming, connectivity: (globalThis as any).__referenceConnectivityTime },")
+          p.write_text(s)
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4 --sample-numbers 2,13,16
+      - run: |
+          python3 - <<'PY'
+          import json
+          for t in json.load(open("benchmark-result.json"))["tests"]:
+            print(t["scenarioName"], t["routingMetrics"].get("referenceProfile"))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reference-drc-profile
+          path: benchmark-result.json
