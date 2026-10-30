@@ -827,7 +827,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
-            maxIterations: 16,
+            maxIterations: cms.parallelRepairEnabled ? 2 : 16,
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
@@ -852,6 +852,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             originalNewHdRoutes:
               cms.globalDrcForceImproveSolver!.guardedInputHdRoutes,
+            forceWarmupIterations: cms.parallelRepairEnabled ? 2 : 16,
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
             mutatedPreloadedTraceIds: new Set(
@@ -1140,6 +1141,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   currentPipelineStepIndex = 0
   private asyncRunning = false
+  private parallelRepairEnabled = false
 
   /** Keep orchestration on the host while independent node work uses its pool. */
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
@@ -1148,6 +1150,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
+    this.parallelRepairEnabled = runtime !== undefined && (this.originalSrj.traces?.length ?? 0) === 0
     try {
       if (runtime === undefined) {
         this.solve()
@@ -1190,6 +1193,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       throw error
     } finally {
       this.asyncRunning = false
+      this.parallelRepairEnabled = false
       this.timeToSolve = performance.now() - startTime
     }
   }
