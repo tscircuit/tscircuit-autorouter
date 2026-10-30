@@ -1,0 +1,39 @@
+name: Review changed routing snapshot
+on:
+  push:
+    branches: [codex/final-parallel-routing]
+    paths: [.github/workflows/review-routing-snapshot.yml]
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/final-parallel-routing
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Save baseline and regenerate the changed snapshot with DRC assertions
+        run: |
+          mkdir -p .benchmark-previews
+          git show 5f65e9a8bb43223266883f8d65c50408c1c5e8a1:tests/bugs/__snapshots__/bugreport94-56fa2e-linux.snap.svg > .benchmark-previews/before.svg
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport94-56fa2e.test.ts --timeout 9999999
+          bun --eval '
+          import { Resvg } from "@resvg/resvg-js"
+          import { readFileSync, writeFileSync } from "node:fs"
+          for (const [name,path] of [["before",".benchmark-previews/before.svg"],["after","tests/bugs/__snapshots__/bugreport94-56fa2e-linux.snap.svg"]]) {
+            const png=new Resvg(readFileSync(path,"utf8"),{background:"white",fitTo:{mode:"width",value:1200}}).render().asPng()
+            writeFileSync(".benchmark-previews/"+name+".png",png)
+          }'
+      - name: Save review artifacts on the experiment branch
+        run: |
+          git config user.name "codex[bot]"
+          git config user.email "codex@openai.com"
+          git add tests/bugs/__snapshots__/bugreport94-56fa2e-linux.snap.svg .benchmark-previews/before.png .benchmark-previews/after.png
+          git commit -m "Prepare DRC-validated routing snapshot for visual review"
+          git push origin HEAD:codex/final-parallel-routing
