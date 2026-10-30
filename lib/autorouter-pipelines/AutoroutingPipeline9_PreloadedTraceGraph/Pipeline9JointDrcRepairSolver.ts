@@ -16,8 +16,6 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
-  type EvaluateRelaxedDrcInput,
-  type EvaluateRelaxedDrcResult,
 } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
@@ -65,7 +63,7 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
-export type Pipeline9JointDrcRepairSolverParams = {
+type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -82,51 +80,6 @@ export type Pipeline9JointDrcRepairSolverParams = {
   defaultViaHoleDiameter: number
   effort: number
   colorMap: Record<string, string>
-}
-
-type Pipeline9InitialDrcSnapshots = {
-  baseline: EvaluateRelaxedDrcResult
-  current: EvaluateRelaxedDrcResult
-  workerTimeMs: number
-}
-
-/** Prepare exactly the same two snapshots for inline or worker execution. */
-export const getPipeline9InitialDrcInputs = (
-  params: Pipeline9JointDrcRepairSolverParams,
-): [EvaluateRelaxedDrcInput, EvaluateRelaxedDrcInput] => {
-  const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-    connections: params.newConnections,
-    originalConnections: params.originalSrj.connections,
-    layerCount: params.layerCount,
-    obstacles: params.obstacles,
-    defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-    connMap: params.connMap,
-  })
-  const prepared = preparePipeline9DrcRoutedTracesWithMetadata({
-    originalPreloadedTraces: params.originalSrj.traces ?? [],
-    mutatedPreloadedTraces: params.updatedPreloadedTraces.filter((trace) =>
-      params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
-    ),
-    newTraces: convert(params.newHdRoutes),
-  })
-  const traceClearance =
-    params.originalSrj.minTraceToPadEdgeClearance ??
-    RELAXED_DRC_OPTIONS.traceClearance ??
-    0.1
-  const viaHoleClearance =
-    params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
-    RELAXED_DRC_OPTIONS.viaClearance ??
-    0.1
-  const common = {
-    includeBoardClearance: true,
-    inputSrj: params.originalSrj,
-    srjWithPointPairs: params.srjWithPointPairs,
-    drcOptions: { traceClearance, viaClearance: viaHoleClearance },
-  }
-  return [
-    { ...common, routedTraces: [] },
-    { ...common, routedTraces: prepared.routedTraces },
-  ]
 }
 
 type MovablePreloadedSection = {
@@ -856,10 +809,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.indexedDrcCandidateCache.set(candidateKey, result)
   }
 
-  constructor(
-    params: Pipeline9JointDrcRepairSolverParams,
-    initialSnapshots?: Pipeline9InitialDrcSnapshots,
-  ) {
+  constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
@@ -901,7 +851,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
-    const baselineDrc = initialSnapshots?.baseline ?? evaluateRelaxedDrc({
+    const baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -923,7 +873,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = initialSnapshots?.current ?? evaluateRelaxedDrc({
+    const currentDrcResult = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -1158,8 +1108,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
-      initialDrcWorkerTimeMs: initialSnapshots?.workerTimeMs ?? 0,
-      initialDrcWorkerCount: initialSnapshots ? 2 : 0,
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<

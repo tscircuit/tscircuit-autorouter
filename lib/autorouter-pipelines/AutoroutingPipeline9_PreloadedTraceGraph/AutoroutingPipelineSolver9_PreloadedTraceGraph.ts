@@ -91,11 +91,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import {
-  Pipeline9JointDrcRepairSolver,
-  getPipeline9InitialDrcInputs,
-} from "./Pipeline9JointDrcRepairSolver"
-import { Pipeline9InitialDrcSolver } from "./Pipeline9InitialDrcSolver"
+import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -1144,11 +1140,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   currentPipelineStepIndex = 0
   private asyncRunning = false
-  private pendingJointDrc?: {
-    params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0]
-    snapshots: NonNullable<ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[1]>
-    startedAt: number
-  }
 
   /** Keep orchestration on the host while independent node work uses its pool. */
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
@@ -1163,26 +1154,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return
       }
       while (!this.solved && !this.failed) {
-        if (
-          !this.activeSubSolver &&
-          this.getCurrentPhase() === "pipeline9JointDrcRepairSolver"
-        ) {
-          const startedAt = performance.now()
-          const step = this.pipelineDef[this.currentPipelineStepIndex]!
-          const [params] = step.getConstructorParams(this) as [
-            ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0],
-          ]
-          const [baselineInput, currentInput] = getPipeline9InitialDrcInputs(params)
-          const [baseline, current] = await Promise.all([
-            runtime.executeAsync(Pipeline9InitialDrcSolver, baselineInput),
-            runtime.executeAsync(Pipeline9InitialDrcSolver, currentInput),
-          ])
-          this.pendingJointDrc = {
-            params,
-            snapshots: { baseline, current, workerTimeMs: performance.now() - startedAt },
-            startedAt,
-          }
-        }
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
           this.activeSubSolver instanceof
@@ -1255,13 +1226,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return
     }
 
-    const pendingJointDrc = this.pendingJointDrc
-    const constructorParams = pendingJointDrc
-      ? [pendingJointDrc.params, pendingJointDrc.snapshots]
-      : pipelineStepDef.getConstructorParams(this)
+    const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    this.pendingJointDrc = undefined
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
@@ -1279,8 +1246,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
-    this.startTimeOfPhase[pipelineStepDef.solverName] =
-      pendingJointDrc?.startedAt ?? performance.now()
+    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
   solveUntilPhase(phase: string) {
