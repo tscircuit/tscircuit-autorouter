@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "status": "FROZEN_LOCAL_QUALIFIED_FOR_REVIEWED_BLACKSMITH_MECHANISM_TRIAL",
+  "sourceSha": "9bcfa0e3966068b06efc0efc89a973ebc998a458",
+  "sourceTree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+  "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "parentRemote": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "worktreeClean": true,
+  "flag": "experimentOriginalOwnerCopperFeedback",
+  "defaultEnabled": false,
+  "changedFiles": 19,
+  "productionFiles": 4,
+  "copiedStrictHelperSha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717",
+  "frozenOracleHarnessPackageChanges": false,
+  "diffCheck": {
+    "status": "INHERITED_EXACT_HELPER_WHITESPACE_EXCEPTION_ONLY",
+    "warning": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/checkPipeline9OriginalIntentCopper.ts:368: new blank line at EOF.",
+    "reason": "Exact reviewed V2 helper bytes preserved as instructed; no formatting change. All other files clean."
+  },
+  "selectedRuntime": "Bun1.4.2",
+  "focusedTests": 14,
+  "focusedAssertions": 109,
+  "focusedResult": "PASS",
+  "fullTypes": "PASS",
+  "serializedWorkerEsmDtsBuild": "PASS",
+  "freshOriginalMstParentBuild": "PASS",
+  "runtimeControls": {
+    "status": "PASS_SYNTHETIC_SOURCE_AND_COMPILED_RUNTIME_CONTROLS",
+    "file": "RUNTIME-CONTROLS.json",
+    "sha256": "ec103f7e1d31c53b814acfcb04026f5b0f56e219ac596178b5a34acc7704ec0b",
+    "offParityRecords": 18,
+    "compiledAndSourcePositiveRecords": 2,
+    "positiveOutputSha256": "7de55ffe187b4c58a37f9d64b40232bd3a2d78b6e386822acd4e4493a79b6455",
+    "completeColdScalarCount": 14,
+    "clockExclusions": "Only explicit timeSpent and clock suffixes TimeMs/DurationMs/ElapsedMs/StartedAt/EndedAt/TimeToSolve are excluded; all 14 scalar cold counters including appendedIssueCount are retained; output, solver status, iterations, all configured max iterations and remaining native stage counters are exact."
+  },
+  "independentReview": {
+    "agent": "bottleneck_review",
+    "status": "FROZEN_SOURCE_AND_INDEPENDENT_14_TESTS_109_ASSERTIONS_AND_COMPILED_POSITIVES_PASS_PENDING_FINAL_OWNER_QA_BINDING",
+    "independentRuntimeReceipt": "/tmp/original-owner-feedback-independent/compiled-independent-controls.json",
+    "independentRuntimeSha256": "81eb62c9c3198509777fd151a2995c0fe29a474ebdbf99c60249ed4e7becb9ec"
+  },
+  "coldContract": {
+    "path": "pipeline9JointDrcRepairSolver.stats.originalOwnerCopperFeedback",
+    "scalarFieldCount": 14,
+    "fields": [
+      "version",
+      "enabled",
+      "status",
+      "reason",
+      "originalOwnershipCoverage",
+      "selectedCheckCount",
+      "completePredicateSuite",
+      "baselineIssueCount",
+      "initialIssueCount",
+      "referenceEvaluations",
+      "appendedIssueCount",
+      "baselineMatchesFiltered",
+      "unsupportedOwnerCount",
+      "latestIssueCount"
+    ],
+    "off": "Object absent; no extra strict checks or native solver work.",
+    "supported": "Both initial baseline/current original ownership and geometry complete. All seven pinned copper checks run; only DECLARED_FOREIGN_COPPER viaTrace and traceOverlap contacts feed repair.",
+    "notApplicable": "Incomplete/ambiguous valid original declarations are explicitly inactive; native validation/repair continue with no strict-feature credit.",
+    "lateUnknown": "Supported candidate loses coverage or actual-ID binding: throw, never convert internal inconsistency into inactivity.",
+    "referenceEvaluations": "Two initial strict preflights plus each active full-reference cache miss, including continuity-off reference.",
+    "appendedIssueCount": "New feedback entries in errors only; equivalent native entries retain all native fields and gain strict identity once.",
+    "baselineMatchesFiltered": "Filtered feedback entries across errors and errorsWithCenters arrays, not unique defects."
+  },
+  "mechanism": [
+    "Unmodified pinned copper predicates receive strict original owners rather than generated source-trace endpoint/obstacle alias edges.",
+    "Actual manufactured CJSON via footprint and original full stack are checked; true declared blind spans are retained.",
+    "Unique actual IDs and stable physical participant keys support native repair targeting and inherited-baseline matching independently of canonical order and via ordinals.",
+    "All native errors stay visible. Baseline/current and every full reference carry feedback; indexed ranking and existing budget formulas remain unchanged.",
+    "Private admitted state gates final residual publication: new selected strict contacts cannot be published by aggregate count trade or telemetry mutation."
+  ],
+  "limitations": [
+    "No actual dataset checker or solver was invoked locally, no new Blacksmith run dispatched, and no remote/source-head update performed by this author.",
+    "This is a mechanism candidate: no real sample recovery, broad solve improvement, speedup or regression-free performance claim.",
+    "All seven strict predicates run on active full-reference cache misses; only selected two feed repair. Other five external benchmark screens remain unchanged and must remain visible.",
+    "Strict passes/clones and exact full-trace participant keys add unmeasured time/memory cost in the existing bounded caches.",
+    "True mode can naturally choose a different existing error-count budget tier; no budget policy/cap/reset changes.",
+    "No claim every later pipeline stage uses strict original owners. Whole-pipeline Blacksmith qualification must catch later changes.",
+    "Initial root four-record campaign compares combined original-MST+feedback against native e703; it does not isolate feedback causality or speed."
+  ],
+  "dependencies": {
+    "packageJsonSha256": "aadcb9588ad08f890a9dddde643278547a1721196c0b3ea79874d611903a430c",
+    "nodeModulesResolved": "/tmp/autorouter-post588-dependencies/node_modules",
+    "directPinsUnchangedFromParent": true
+  },
+  "evidence": [
+    {
+      "file": "selected-qa/build.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "file": "selected-qa/build.log",
+      "sha256": "cfc66a5610c70de791c87dfee3f382648768db6e535f6bbbc4cd7ec084dcab15",
+      "bytes": 1203
+    },
+    {
+      "file": "selected-qa/focused.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "file": "selected-qa/focused.log",
+      "sha256": "ccff009fa807c4e5e440fa9379e8f52287a5e6c3f615ca0fda6709804379d875",
+      "bytes": 2743
+    },
+    {
+      "file": "selected-qa/parent-build.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "file": "selected-qa/parent-build.log",
+      "sha256": "87f09abdea860ec401714ef3ca045cd96d48c7af5e22ee39c849c3173c551148",
+      "bytes": 1202
+    },
+    {
+      "file": "selected-qa/parent-selected-bun.txt",
+      "sha256": "b99b4c7cdf236f59bc9f65d963deaecae3b16a7dad87939cacb9057f7664daee",
+      "bytes": 6
+    },
+    {
+      "file": "selected-qa/selected-bun.txt",
+      "sha256": "b99b4c7cdf236f59bc9f65d963deaecae3b16a7dad87939cacb9057f7664daee",
+      "bytes": 6
+    },
+    {
+      "file": "selected-qa/types.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "file": "selected-qa/types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "runtime-control-child.ts",
+      "sha256": "6bd6ce6469a0bbe0895e6b6b62b8c17fd9c3f5a281fb8c5462b40f9311221ed9",
+      "bytes": 4981
+    },
+    {
+      "file": "run-runtime-controls.py",
+      "sha256": "120ef083d8b8890c0017ba586ea8274853fd24c5546f7bc1ba838522b4cf8e26",
+      "bytes": 4614
+    },
+    {
+      "file": "RUNTIME-CONTROLS.json",
+      "sha256": "ec103f7e1d31c53b814acfcb04026f5b0f56e219ac596178b5a34acc7704ec0b",
+      "bytes": 134825
+    },
+    {
+      "file": "publication/manifest.json",
+      "sha256": "5dbbe67403fa5683701e8c334b31a83fa1b299aef98bf46384e6320b02c89ffb",
+      "bytes": 7600
+    }
+  ],
+  "publicationManifestSha256": "5dbbe67403fa5683701e8c334b31a83fa1b299aef98bf46384e6320b02c89ffb"
+}

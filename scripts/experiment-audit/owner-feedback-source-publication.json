@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "status": "PUBLISHED_DEFAULT_OFF_ORIGINAL_OWNER_COPPER_FEEDBACK_READY_FOR_FRESH_TARGETED4",
+  "atUtc": "2026-10-30T01:48:55.288562+00:00",
+  "branch": "codex/experiment-original-owner-copper-feedback-20261030",
+  "remoteCommit": "94ab08d34aee46bddc20fd96101aeb4c52898bb4",
+  "localCommit": "9bcfa0e3966068b06efc0efc89a973ebc998a458",
+  "tree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+  "singleRemoteParent": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "flag": "experimentOriginalOwnerCopperFeedback",
+  "defaultOff": true,
+  "qa": {
+    "path": "/workspace/experiment-audit/strongest-refinement-20261028/further-refinement/original-owner-copper-feedback/LOCAL-VALIDATION.json",
+    "sha256": "5fa99c4e8f7b96135d54106eaa5edbfa5ba85a9211b1f8f39d14d86699e5bafb"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/original-owner-copper-feedback/INDEPENDENT-SOURCE-REVIEW-v1.json",
+    "sha256": "d2e988a7e16c6fc519a76da6c9eb84cc8c9359e2d24e0633e6d56b2dff476f15"
+  },
+  "rootExport": {
+    "path": "/tmp/bottleneck-original-owner-feedback-source-export-root.json",
+    "sha256": "6a5a70114abd51f2404f1ecbf114b49c38329a132e4d9804595850f2d7ddd4af"
+  },
+  "remoteCommitTreeSingleParentAndBranchGetVerified": true,
+  "readyForFreshTargetedSemantic4": true,
+  "all8OriginalMstNonPipelineProductionFilesExact": true,
+  "sixFrozenValidatorsAndHarnessFilesExact": true,
+  "strictOwnerHelperExactReviewedV2": true,
+  "selectedFeedbackPredicates": [
+    "viaTrace",
+    "traceOverlap"
+  ],
+  "strictPredicateSuiteOnEveryFullReferenceCacheMiss": 7,
+  "baselineCurrentCachedAndFullReferenceAugmented": true,
+  "everyLegacyErrorPreserved": true,
+  "newRepairStage": false,
+  "existingNativeBudgetPolicyUnchanged": true,
+  "trueErrorCountsCanSelectDifferentExistingBudgetTier": true,
+  "explicitUnsupportedOriginalOwnerDomain": "NOT_APPLICABLE_WITHOUT_FEATURE_CREDIT",
+  "unexpectedMappingLossAfterAdmission": "THROW",
+  "feedbackCounterScope": "appendedIssueCount cumulative entries, baselineMatchesFiltered includes errors plus errorsWithCenters passes, not unique fixed defects",
+  "tests": 14,
+  "assertions": 109,
+  "fullTypesWorkersEsmDtsPassBun142": true,
+  "freshOffControls": 18,
+  "freshSourceAndCompiledPositiveControls": 2,
+  "actualWholePipelineDatasetAttempts": 0,
+  "laterPipelineStagesNotNewlyStrictGuarded": true,
+  "qualityBoardRecoveryNoRegressionOrSpeedClaim": false,
+  "noMergeCloseDefaultEnablement": true
+}

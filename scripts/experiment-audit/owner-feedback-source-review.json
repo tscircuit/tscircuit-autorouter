@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "/root/bottleneck_review",
+  "createdUtc": "2026-10-30T01:47:12.479609+00:00",
+  "status": "PASS_FROZEN_SOURCE_AND_LOCAL_QA_FOR_CONTROLLED_BLACKSMITH_EXPERIMENT",
+  "source": {
+    "localCommit": "9bcfa0e3966068b06efc0efc89a973ebc998a458",
+    "tree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+    "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+    "parentRemote": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+    "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+    "clean": true,
+    "files": 19,
+    "productionFiles": 4,
+    "flag": "experimentOriginalOwnerCopperFeedback",
+    "defaultEnabled": false
+  },
+  "ownerQa": {
+    "path": "/workspace/experiment-audit/strongest-refinement-20261028/further-refinement/original-owner-copper-feedback/LOCAL-VALIDATION.json",
+    "sha256": "5fa99c4e8f7b96135d54106eaa5edbfa5ba85a9211b1f8f39d14d86699e5bafb",
+    "evidenceFilesVerified": 14,
+    "selectedRuntime": "Bun1.4.2",
+    "types": "PASS",
+    "workerEsmDtsBuild": "PASS",
+    "freshParentBuild": "PASS",
+    "authorFocusedTests": 14,
+    "authorFocusedAssertions": 109
+  },
+  "publication": {
+    "manifest": "/workspace/experiment-audit/strongest-refinement-20261028/further-refinement/original-owner-copper-feedback/publication/manifest.json",
+    "sha256": "5dbbe67403fa5683701e8c334b31a83fa1b299aef98bf46384e6320b02c89ffb",
+    "payloadsByteAndGitBlobVerified": 19,
+    "frozenHelperSha256": "c3eba7544bba3e773e6a9275a1a379ac3df8e9838e63ccc69c6b6e7010742717",
+    "frozenHelperExactV2": true,
+    "inheritedEofWhitespacePreserved": true,
+    "remotePublicationByReviewer": false
+  },
+  "independentChecks": {
+    "focusedTests": 14,
+    "focusedAssertions": 109,
+    "result": "PASS",
+    "runtimeExecutable": "/tmp/autorouter-post588-bun/package/bin/bun",
+    "originalRuntimeValidatorHarnessFilesExactE703": 6,
+    "ownFreshActualCompiledAndSourcePositiveProcesses": 2,
+    "positiveOutputSha256": "7de55ffe187b4c58a37f9d64b40232bd3a2d78b6e386822acd4e4493a79b6455",
+    "positiveInitialNativeCount": 0,
+    "positiveInitialStrictSelectedCount": 1,
+    "positiveFinalNativeCount": 0,
+    "positiveFinalStrictSelectedCount": 0,
+    "positiveFullNonclockStateParity": true,
+    "positiveAll14FeedbackFieldsRetained": true,
+    "positiveAppendedIssueCount": 2,
+    "ownerOffParityRecordsIndependentlyAudited": 18,
+    "ownerBuiltRuntimeFilesHashVerified": 8,
+    "ownInheritedConstructorControl": "baseline strict1/current strict1 filtered to initialJoint0 with unchanged inherited preloads"
+  },
+  "reviewedSemantics": [
+    "Exact V2 original-intent helper and pinned published copper predicates are reused. Generated source-trace connectivity never establishes original ownership.",
+    "Both initial baseline/current reports must qualify before feedback activation. Unsupported original ownership/geometry/identities are explicitly NOT_APPLICABLE; subsequent loss after activation throws.",
+    "Only DECLARED_FOREIGN_COPPER viaTrace/traceOverlap findings are additions. Native same-owner self-short findings remain ordinary native findings.",
+    "Typed findings bind back to unique actual canonical members and explicit actual via/trace IDs. Native overlap/clearance IDs are reconstructed from proven members, with no ordinal or opaque-ID parsing used for attribution.",
+    "Exact physical participant keys independently filter inherited feedback defects across prepared aliases, canonical reorder and generated via ordinals; moved or worsened copper is retained.",
+    "Every full reference path, including cached miss and continuity-off reference, receives feedback before baseline filtering and solver-ID normalization. Indexed nonzero ranking remains native; reference-zero validation remains mandatory.",
+    "Final bounded residual acceptance uses private admitted state, not mutable telemetry; remaining new selected contacts cause explicit failure.",
+    "Native repair engine, candidate scopes and budget formulas are unchanged. Default omitted/false routing behavior remains identical in tested source and compiled controls."
+  ],
+  "issuesFoundAndResolved": [
+    "Stable feedback keys were separated from native IDs to preserve fixed-to-movable normalizer behavior.",
+    "One-member same-owner self-short findings are not forced into foreign pair mapping.",
+    "Final residual guard uses private admission state.",
+    "QA timing filtering no longer accidentally deletes appendedIssueCount; complete14-field positive source/compiled state equality is asserted."
+  ],
+  "counterInterpretation": [
+    "referenceEvaluations counts two initial preflights plus active full-reference misses, not cache hits.",
+    "appendedIssueCount counts cumulative new errors-array feedback entries; inherited baseline additions can be positive without activating repair.",
+    "baselineMatchesFiltered counts filtered entries across errors and errorsWithCenters arrays, not unique defects.",
+    "selectedCheckCount2 describes appended classes; all seven strict predicates run on active full-reference misses."
+  ],
+  "limitations": [
+    "No actual dataset routing/checks, benchmark dispatch or remote writes performed by reviewer.",
+    "This receipt approves source/local readiness, not real sample recovery, speedup, full-board physical correctness or regression-free behavior.",
+    "No claim later pipeline stages use strict original-owner validation. All external frozen physical and supplemental acceptance checks remain required.",
+    "Unchanged budget policy can produce different configured tiers when real issue counts change; no budget reset/cap relaxation is implied.",
+    "All-seven strict checking, cloning, reports and exact full-trace keys add unmeasured time/memory cost.",
+    "A native-e703 versus combined MST+feedback developmental pair would combine mechanisms and cannot alone isolate feedback causality."
+  ],
+  "remainingSourceBlockers": [],
+  "actualBenchmarkQualification": "PENDING_BLACKSMITH_ONLY",
+  "evidence": [
+    {
+      "path": "/tmp/original-owner-feedback-independent/frozen-focused-tests.log",
+      "sha256": "d0ca19f4974cc541ee8dbd44ffba4632e048565ab481cd616f5654a112fde7fd",
+      "bytes": 2743
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/frozen-source-pins.json",
+      "sha256": "a948e981735573a4bae76be55a198a23e53aab6ecd3c59c721bd10b9f173c30c",
+      "bytes": 1338
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/copper-probe.ts",
+      "sha256": "9b7946279a3e853d89acd69dc6cc20c701a8a796ab63c0ecc68341dea1ed6c1f",
+      "bytes": 3304
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/copper-probe.json",
+      "sha256": "4f5c96647211e96b18c9036224ad2b473ffeaee175cbeb50e67bfa780707eec1",
+      "bytes": 853
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/self-short-probe.ts",
+      "sha256": "e0e57ed4e0c69d00aca346942bef54dfd6d922326959368c914f5b5cdfd1d4ea",
+      "bytes": 1720
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/self-short-probe.json",
+      "sha256": "5833ddb1ebe677154a590abf184a83b834c12616d4710eb99106826048ceaf1f",
+      "bytes": 3114
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/inherited-probe.ts",
+      "sha256": "8524fc0f44fe2a9812de3a10d70eccc61ddd4499be878479ed156cfc83e9960a",
+      "bytes": 1346
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/inherited-probe-plain.json",
+      "sha256": "2c3f2d190e5c26ece61575319676ffe0601033ebcec558eb2ab77b47633fe494",
+      "bytes": 980
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/runtime-control-child.ts",
+      "sha256": "6bd6ce6469a0bbe0895e6b6b62b8c17fd9c3f5a281fb8c5462b40f9311221ed9",
+      "bytes": 4981
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/source-positive.log",
+      "sha256": "9b61bc36bf29bbc81b872ad40c4545413dcbc3e60d33cc9080fabf7d97d3a245",
+      "bytes": 2378
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/compiled-positive.log",
+      "sha256": "26ee6ada396982518fc30f6734e9e6860bd4607b8fb177368a968f0c129e2f8a",
+      "bytes": 2380
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/compiled-independent-controls.json",
+      "sha256": "81eb62c9c3198509777fd151a2995c0fe29a474ebdbf99c60249ed4e7becb9ec",
+      "bytes": 6570
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/runtime-controls-audit.json",
+      "sha256": "78f7619e6299b8023fb4296b740c63de64df682ceb056f92c05250635e2c8ec2",
+      "bytes": 289
+    },
+    {
+      "path": "/tmp/original-owner-feedback-independent/final-owner-qa-audit.json",
+      "sha256": "d5485909bc2ee075f0d9bdd14a32668ee5ee9ccfedecd0b4bc1843d1bba606fc",
+      "bytes": 437
+    }
+  ]
+}
