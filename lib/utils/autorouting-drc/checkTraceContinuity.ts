@@ -554,7 +554,13 @@ export const checkTraceContinuity = (
     type Conductor = {
       id: string
       layers: string[]
-      polygon: ReturnType<typeof circlePolygon>
+      geometry:
+        | { kind: "polygon"; polygon: ReturnType<typeof circlePolygon> }
+        | {
+            kind: "segment"
+            segment: WireSegment
+            polygon?: ReturnType<typeof circlePolygon>
+          }
       bridge: boolean
       platedPort: boolean
       minX: number
@@ -576,7 +582,7 @@ export const checkTraceContinuity = (
       conductors.push({
         id,
         layers,
-        polygon: scaled,
+        geometry: { kind: "polygon", polygon: scaled },
         bridge,
         platedPort,
         minX: box.xmin,
@@ -606,12 +612,47 @@ export const checkTraceContinuity = (
         (segment.start.x === segment.end.x && segment.start.y === segment.end.y)
       )
         continue
-      addConductor(
-        segment.trace.pcb_trace_id,
-        [segment.start.layer],
-        getTraceSegmentPolygon(segment.start, segment.end, segment.start.width),
-        false,
-      )
+      const radius = segment.start.width / 2
+      if (!Number.isFinite(radius) || radius <= 0) {
+        addConductor(
+          segment.trace.pcb_trace_id,
+          [segment.start.layer],
+          getTraceSegmentPolygon(
+            segment.start,
+            segment.end,
+            segment.start.width,
+          ),
+          false,
+        )
+        continue
+      }
+      // Construct copper polygons only for segments near a layer bridge.
+      conductors.push({
+        id: segment.trace.pcb_trace_id,
+        layers: [segment.start.layer],
+        geometry: { kind: "segment", segment },
+        bridge: false,
+        platedPort: false,
+        minX: (Math.min(segment.start.x, segment.end.x) - radius) * 1e6 - 0.1,
+        minY: (Math.min(segment.start.y, segment.end.y) - radius) * 1e6 - 0.1,
+        maxX: (Math.max(segment.start.x, segment.end.x) + radius) * 1e6 + 0.1,
+        maxY: (Math.max(segment.start.y, segment.end.y) + radius) * 1e6 + 0.1,
+      })
+    }
+    const getConductorPolygon = (
+      conductor: Conductor,
+    ): ReturnType<typeof circlePolygon> => {
+      const geometry = conductor.geometry
+      if (geometry.kind === "polygon") return geometry.polygon
+      if (!geometry.polygon) {
+        const { start, end } = geometry.segment
+        geometry.polygon = getTraceSegmentPolygon(
+          start,
+          end,
+          start.width,
+        ).scale(1e6, 1e6)
+      }
+      return geometry.polygon
     }
     const conductorIndex = new RBush<Conductor>().load(conductors)
     for (const conductor of conductors) {
@@ -629,7 +670,18 @@ export const checkTraceContinuity = (
           !candidate.layers.some((layer) => conductor.layers.includes(layer))
         )
           continue
-        if (copperPolygonsTouch(conductor.polygon, candidate.polygon, 0.1))
+        const polygon = getConductorPolygon(candidate)
+        const box = polygon.box
+        // Match the original bounds before testing the exact copper contact.
+        if (
+          polygon.isEmpty() ||
+          box.xmax < conductor.minX - 0.1 ||
+          box.ymax < conductor.minY - 0.1 ||
+          box.xmin > conductor.maxX + 0.1 ||
+          box.ymin > conductor.maxY + 0.1
+        )
+          continue
+        if (copperPolygonsTouch(getConductorPolygon(conductor), polygon, 0.1))
           connections.push([conductor.id, candidate.id])
       }
     }
