@@ -1,3 +1,4 @@
+import type { Pipeline9HighDensityForceImproveSampleOutput } from "./Pipeline9HighDensityForceImproveSampleSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -36,6 +37,7 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
+  forceImprovement?: { totalStepsPerNode: number; nodeAssignmentMargin: number }
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -393,6 +395,8 @@ export const createPipeline9RegularNodeSolver = ({
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
+  readonly completedForceImprovements = new Map<string, Pipeline9HighDensityForceImproveSampleOutput>()
+
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
@@ -601,6 +605,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           (this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted ?? 0) +
           1
         this.iterations += logicalIterations
+        if (result.forceImprovement) {
+          const node = this.unsolvedNodePortPoints.at(-1)
+          if (!node) throw new Error("Fused result has no pending node")
+          this.completedForceImprovements.set(node.capacityMeshNodeId, result.forceImprovement)
+        }
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
           if (key !== "nodeCount" && key !== "fixedObstacleCount")

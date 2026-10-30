@@ -6,6 +6,15 @@ import {
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
 
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
+  private readonly precomputed?: ReadonlyMap<string, Pipeline9HighDensityForceImproveSampleOutput>
+
+  constructor(params: ConstructorParameters<typeof HighDensityForceImproveSolver>[0] & {
+    precomputed?: ReadonlyMap<string, Pipeline9HighDensityForceImproveSampleOutput>
+  }) {
+    super(params)
+    this.precomputed = params.precomputed
+  }
+
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
 
@@ -21,7 +30,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
     const startTime = performance.now()
     this.asyncRunning = true
     try {
-      if (runtime === undefined) {
+      if (runtime === undefined || this.precomputed?.size) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -90,7 +99,10 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   }
 
   override _step(): void {
-    const result = this.completedSample
+    const entryForPrecomputed = this.sampleEntries[this.activeSampleIndex]
+    const result = this.completedSample ?? (entryForPrecomputed
+      ? this.precomputed?.get(entryForPrecomputed.node.capacityMeshNodeId)
+      : undefined)
     if (!result) {
       super._step()
       return
