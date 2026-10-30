@@ -1,0 +1,157 @@
+{
+  "certificateRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+  "certificateSha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c",
+  "inputArtifact": {
+    "id": 12942442764,
+    "name": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard0",
+    "digest": "sha256:f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+    "size_in_bytes": 3095352,
+    "workflow_run": {
+      "id": 40974963334,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/layer-aware-mst-controller-20261029",
+      "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d"
+    }
+  },
+  "inputMembers": {
+    "original-input.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/original-input.json",
+      "sha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+      "bytes": 1291807
+    },
+    "point-pair-context.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/point-pair-context.json",
+      "sha256": "15467fae6ad5d927beaf25f28cff5a3820c5cb283de0818eb75509129cc5a8f1",
+      "bytes": 1334251
+    },
+    "raw-new-traces.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/raw-new-traces.json",
+      "sha256": "880216e518f24c0c40269b6e28fe5e35146eb1cbef4eb6d5fe63a0f37d81bb44",
+      "bytes": 271197
+    },
+    "canonical-circuit-json.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/canonical-circuit-json.json",
+      "sha256": "6cb6f30f9023ce8b957056e34c186488808613f4a8a241b125db57819baea043",
+      "bytes": 516928
+    },
+    "declared-intent-via-pad.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/declared-intent-via-pad.json",
+      "sha256": "169e108dc91be73d82e7adec17dccb615c7fda81e1b749a2d78cd3b4e53e1e7f",
+      "bytes": 443371
+    },
+    "supplemental-validation.json": {
+      "member": "layer-aware-mst-srj18-shard0/sample-011/B/raw/supplemental-validation.json",
+      "sha256": "6188fbf57cf28fa12bebfc00f799b3d0669a46bcdc220c93b8e180cfab14a24e",
+      "bytes": 16696
+    }
+  },
+  "inputIdentitySha256": "213d09e87a3a6c1c50f39169e53e089e18130ab78c7c6032026fd13d8f19a54a",
+  "expectedBaselineCertificateSha256": null,
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bunVersion": "1.4.2",
+  "schemaVersion": 1,
+  "campaign": "witness-relative-v2-srj18-trial-hotfix-20261030",
+  "controllerBranch": "codex/witness-relative-v2-srj18-trial-20261030",
+  "sealState": "SEALED",
+  "sourceBaseSha": "c9fd3d90b17fcb9dffe7a3b634823b982506f474",
+  "sourceBaseTree": "298c50207aae9aafb1e05acd6bd5ff996f6ba57c",
+  "sourceSha": "ed7301ad717238118619e374972c19c40d2bc3ec",
+  "sourceTree": "0035e7b6a849b5e37aa782fb769c32a1aa8f1242",
+  "sourceFileHashes": {
+    "stage": "ead1ac2a120df86b316e79de7e693a79af0137a749800cc90211f4aa1a1325e8",
+    "viaTraceTargets": "3e326358d47d9b1487b3c4091836b96627754630f47f41f4ed7a0eb464229a8d",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "06553f4568f2841d0337f9cf0dcc5fff820ae49555ab4588b0f16bc2f12e1978",
+    "independentReviewSha256": "142f5a8215738077e0783b5e62e7b32096b6c6f774a2d2bd6a5ffe80d0dd5e94",
+    "publicationReceiptSha256": "bed4ce5f5de967afcfa00f3248df7069dcb460c35185d6f12bd2b79303055c4a"
+  },
+  "sourceDefaultOffReviewed": true,
+  "inheritedControllerLocal": "144332d0141a8a5cae25064d7a0446cb6240735d",
+  "inheritedControllerTree": "0fd28043ea4c8dd47711bea558919aca9355c328",
+  "expectedRemoteParent": "abe016ce41bf3c67d8e90383a4896cc9ea077032",
+  "maximumCandidates": 16,
+  "maximumStageIterations": 20,
+  "maximumStageSolveCalls": 1,
+  "viaMaximumMove": 0.25,
+  "wireMaximumMove": 0.02,
+  "sourceApi": {
+    "className": "Pipeline9RelativeWitnessRepairSolver",
+    "constructorFields": [
+      "originalSrj",
+      "pointPairs",
+      "traces",
+      "protectedTraces"
+    ],
+    "solveMethod": "solve",
+    "outputMethod": "getOutput",
+    "pipelineFlag": "experimentRelativeWitnessRepair",
+    "defaultOff": true
+  },
+  "certificateVisibilityExports": [
+    "collectRawViaSites",
+    "checkBoardEnvelope"
+  ],
+  "productionStageSolveRequired": true,
+  "independentBlacksmithDataOnlyReplayRequired": true,
+  "localRelativeRepairAllowed": true,
+  "routingAllowed": false,
+  "localDatasetCheckerAllowed": false,
+  "qualityOrSpeedCredit": false,
+  "productionAcceptanceAllowed": false,
+  "fullBoardRecoveryClaim": false,
+  "trialScope": "One actual V2 production-stage solve on exact authenticated MAIN-MST5d550 srj18:11 B original ZIP/raw, never stable18/rerouted output. Only coupled via coordinates may move; no candidate-proposal reimplementation. Before full old source2109-body hash is not preknown and is measured on Blacksmith. Both complete old-body before/after returns must equal new stage returns; full UNKNOWN and native7/SRJ/policy arrays retained, no global acceptance. Independent Fraction proof derives actual via-only annulus fanout/mask/fixed/PTH contacts from returned source moves. Source theorem and numeric bounds unchanged from reviewed C9.",
+  "assetHashes": {
+    "witness-relative-v2-srj18-trial-20261030.json": "294d529a719afd77e37cf7a9583bdb119d1d83308b9375ba834e279ea5dc0cea",
+    "run-witness-relative-v2-srj18-trial-hotfix.py": "7d81f4cb718928e7ce45a8f69e2dbc130c211ecb1ca08bac123051ccd17740ea",
+    "download-witness-relative-v2-srj18-original.py": "83ec5d74a7b4a24fb160c720982bbef5b87d72b02863e81fbfe13bfd74c2b8c0",
+    "seal-witness-relative-v2-srj18-trial-hotfix.py": "bb58bbc00e90c4351654c2b16881fa92546590711c7aa398c93e468c7f689480",
+    "tests/witness-relative-v2-srj18-original-transport.py": "db3dea2489fdaf5d52d33901c647b56aa30a30c7111445f016475cf82f739b4c",
+    "run-witness-relative-v2-srj18-trial.py": "fe968079dd1b6352c20578cfd1aa090c382fa71daf7f3f2ff110cb4746995d48",
+    "witness-relative-v2-srj18-child.ts": "4fe66fab356d0118229645dd44ebf5cda2c5c464069905395d4dc48fe298e144",
+    "replay-witness-relative-v2-srj18-proof.py": "8be537aba0cccb809985d5f063c68dd3145fddb0c94c34923b7980e504675a7f",
+    "seal-witness-relative-v2-srj18-trial.py": "444cf0c22c420e5016816e7d1c146103ec9cd764b845dac1ad88586c5d32b463",
+    "tests/witness-relative-v2-srj18-proof-replay.py": "622b0a1bb84654354c562db25a84dc829e17d922b774ff8f0590f388cf21ea30",
+    "tests/witness-relative-v2-srj18-trial-integrity.py": "df566fdd880458bb39bccd33dfffc5c4416d643d966c9582bbd54cc513137c8e",
+    "tests/witness-relative-stage-proof-replay.py": "d7cbb28cba1bd68a03dc9c5156c9229337cd2a14a1486f73433610ff4e6792aa",
+    "replay-witness-relative-stage-proof.py": "bdf44261f49da25ec1e394627b5f37aa04ec40e860d3fb34fa5f1b9d73c9557c",
+    "witness-local-repair-proposals.ts": "6e6e6111333c18610de11c88bba8f7695dd2194468ea1d0403542937aa83a636",
+    "run-witness-local-repair-diagnostic.py": "8c90dbb322a46581608e57ddb381ff81e97c57c6392c1412df58af1c245343b9",
+    "witness-local-repair-diagnostic-20261029.json": "e0f1b08aa1f49f81558094e28e318f425f0668a64cb74cb361b6629504712727",
+    "run-witness-contact-diagnostic.py": "ccda876d3fbf4d35f73fb9b5cf5c344de773b8ac5f41281ebd3b9191ab1655b1",
+    "witness-contact-diagnostic-20261029.json": "353825746c435aae90ba6868297246662e94f24986f66fdc31c12022f2cc65c1",
+    "witness-contact-raw-identity.json": "4d67c4d30f85b2d1cc66e34c7eab59560811ef3fa7ef6c87f511cb920338dd6d",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "witness-quality6-artifact-carrier.py": "cb7379cf40f043dddad25068a3d67361123fa90aaa93c9dc81692d92ec3e1a1b"
+  },
+  "workflowSha256": "8072345b485e3f4ffc70e7393fab1420ac8a1e476faaf57ee0e95ea629108d71",
+  "certificateBodySourceSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+  "retainedCase": "srj18:11",
+  "inputArm": "B",
+  "inputRoutedSourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "inputRoutedSourceTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "inputQualificationPins": {
+    "originalRawQualificationSha256": "1faf8c27ae3dd34f3359652c147d45afdbe7a2c0c91c1997cbf907ecba08ac14",
+    "independentRawReviewSha256": "2d0305a72997d0cda3809245ea9dd293e847f11adc3f9467aad53c613d06a2c6"
+  },
+  "baselineCertificateHashPolicy": "MEASURED_ON_BLACKSMITH_FULL_OLD_BODY_RETURN_NO_PREDECLARED_HASH",
+  "inputSourceRun": {
+    "id": 40974963334,
+    "head_sha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+    "head_branch": "codex/layer-aware-mst-controller-20261029",
+    "path": ".github/workflows/layer-aware-mst84-20261029.yml",
+    "tree": "03f9bde76aba4147502b63ac5d87a0df85162b1f",
+    "run_attempt": 1,
+    "repository_id": 924883209
+  },
+  "hotfixInheritedLocal": "60b53d120295fd7f87e68559e2360fef02664552",
+  "hotfixInheritedTree": "2e0cd14f36a6cc8d7482bf23d4bae30f3a59375d",
+  "hotfixExpectedRemoteParent": "6b805bc9ce4fa7a54303a060f190d7652b149d7d",
+  "supersedesNonqualifyingRun": "40982873934",
+  "transportCorrection": "Exact MAIN MST workflow and artifact-name/lineage checks replace incompatible quality6-only carrier pin helpers. HTTP client, exact server ZIP/six members, production source/stage/proof and full old certificate are unchanged."
+}

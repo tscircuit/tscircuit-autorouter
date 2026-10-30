@@ -1,0 +1,42 @@
+name: Witness relative V2 retained MST18 production stage trial exact input transport
+on:
+  push:
+    branches: [codex/witness-relative-v2-srj18-trial-20261030]
+    paths: [scripts/experiment-audit/witness-relative-v2-srj18-trial-hotfix-20261030.json]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  retained_stage:
+    name: witness-relative-v2-srj18-trial / srj18 / 11 / production-stage-only
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Verify sealed production stage source and exact retained inputs
+        run: python3 controller/scripts/experiment-audit/run-witness-relative-v2-srj18-trial-hotfix.py --mode plan
+      - uses: actions/checkout@v4
+        with:
+          ref: ed7301ad717238118619e374972c19c40d2bc3ec
+          path: source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact pinned source dependencies
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py source
+      - name: Execute production stage solve and independently replay relative proof
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 controller/scripts/experiment-audit/run-witness-relative-v2-srj18-trial-hotfix.py --mode run --source source --output results
+      - name: Retain complete production stage proof without board or speed credit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: witness-relative-v2-production-stage-only-srj18-11
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
