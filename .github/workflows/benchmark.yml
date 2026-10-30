@@ -1,4 +1,4 @@
-name: Motherboard end-to-end comparison
+name: Compare A01 batching implementations
 on:
   workflow_dispatch:
 permissions:
@@ -6,53 +6,51 @@ permissions:
 jobs:
   compare:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: 67497a16129f5d4b69d7cfe1ed54a719d5e597b5
-          path: base
       - uses: actions/checkout@v4
         with:
-          ref: 2b81a95c94973efd18eeb9f06dbd22938d51a20c
-          path: candidate
+          repository: tscircuit/high-density-a01
+          ref: 07531ede34e762c5b18cbbf59d573f7fe132bb53
+          path: a01-basic
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-a01
+          ref: bench/a01-batch-pool
+          path: a01-pool
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Install baseline dependencies
-        working-directory: base
-        run: bun install
-      - name: Install candidate dependencies
-        working-directory: candidate
-        run: bun install
-      - name: Compare complete routes in ABBA order
-        env:
-          ROUTE_OUTPUT_DIR: ${{ github.workspace }}/results
+      - run: bun install
+        working-directory: a01-basic
+      - run: bun install
+        working-directory: a01-pool
+      - name: Compare alternating fresh processes
         run: |
-          mkdir -p "$ROUTE_OUTPUT_DIR"
-          for pass in base1 candidate1 candidate2 base2; do
-            revision="${pass%?}"
-            (cd "$revision" && ROUTE_LABEL="$pass" bun fixtures/bug-reports/bugreport110-motherboard-power-phase/profile-full-route.ts) > "$ROUTE_OUTPUT_DIR/$pass.log" 2>&1
+          mkdir results
+          cat > run-batch.ts <<'SCRIPT'
+          import { createHash } from "node:crypto"
+          import workload from "./fixtures/bug-reports/bugreport110-motherboard-power-phase/a01-search-workload.json"
+          const label = process.env.MODE!
+          const { HighDensitySolverA01 } = await import(`./a01-${label === "pool" ? "pool" : "basic"}/lib/index.ts`)
+          const outputs = []
+          const start = performance.now()
+          for (const {props,stepLimit} of workload) {
+            const solver = new HighDensitySolverA01(props)
+            solver.setup()
+            solver.MAX_ITERATIONS = stepLimit
+            if (label === "serial") solver.solve()
+            else while (!solver.solved && !solver.failed) solver.stepBatch(100)
+            outputs.push({solved:solver.solved,failed:solver.failed,iterations:solver.iterations,routes:solver.getOutput()})
+          }
+          console.log(JSON.stringify({label,ms:performance.now()-start,hash:createHash("sha256").update(JSON.stringify(outputs)).digest("hex")}))
+          SCRIPT
+          for mode in serial basic pool pool basic serial serial pool basic basic pool serial; do
+            MODE="$mode" bun run-batch.ts >> results/timings.jsonl
           done
-      - name: Summarize timings and verify identical routed output
-        run: |
-          python3 - <<'PY'
-          import json, pathlib, statistics
-          root = pathlib.Path('results')
-          runs = [json.loads((root / (name + '.summary.json')).read_text()) for name in ['base1', 'candidate1', 'candidate2', 'base2']]
-          assert all(r['solved'] and not r['failed'] for r in runs)
-          assert len({r['outputHash'] for r in runs}) == 1
-          base = [r for r in runs if r['label'].startswith('base')]
-          candidate = [r for r in runs if r['label'].startswith('candidate')]
-          base_mean = statistics.mean(r['elapsedMs'] for r in base)
-          candidate_mean = statistics.mean(r['elapsedMs'] for r in candidate)
-          result = {'baseCommit': '67497a16129f5d4b69d7cfe1ed54a719d5e597b5', 'candidateCommit': '2b81a95c94973efd18eeb9f06dbd22938d51a20c', 'baseMeanMs': base_mean, 'candidateMeanMs': candidate_mean, 'improvementPercent': (1 - candidate_mean / base_mean) * 100, 'runs': runs}
-          (root / 'comparison.json').write_text(json.dumps(result, indent=2))
-          print(json.dumps({k: v for k, v in result.items() if k != 'runs'}, indent=2))
-          PY
-      - name: Upload raw routes, SVG snapshots, timings, and logs
-        if: always()
-        uses: actions/upload-artifact@v4
+          cat results/timings.jsonl
+      - uses: actions/upload-artifact@v4
         with:
-          name: motherboard-end-to-end-comparison
+          name: a01-batching-comparison
           path: results
