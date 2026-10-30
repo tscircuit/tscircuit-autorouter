@@ -1,10 +1,15 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import {
+  evaluateRelaxedDrc,
+  type EvaluateRelaxedDrcInput,
+} from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import type { SimpleRouteJson } from "lib/types"
+import srj from "../../fixtures/bug-reports/pipeline9-srj33-sample37-pair-repair/input.srj.json"
 
 test("Pipeline9 jointly repairs SRJ33 sample37 with fixed terminals and preload copper", async (): Promise<void> => {
-  const { scenario } = await loadScenarioBySampleNumber("srj33", 37)
+  const scenario: SimpleRouteJson = srj as SimpleRouteJson
   const input = structuredClone(scenario)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -31,11 +36,12 @@ test("Pipeline9 jointly repairs SRJ33 sample37 with fixed terminals and preload 
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  const { errors } = evaluateRelaxedDrc({
+  const drcInput: EvaluateRelaxedDrcInput = {
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  })
+  }
+  const { errors } = evaluateRelaxedDrc(drcInput)
   expect(errors).toEqual([])
   expect(joint.fixedPreloadedObstacleRoutes).toEqual(fixedCopper)
   expect(joint.inputNewHdRoutes).toEqual(inputRoutes)
@@ -65,4 +71,7 @@ test("Pipeline9 jointly repairs SRJ33 sample37 with fixed terminals and preload 
   expect(
     joint.stats.regionalB01RepairCandidateSearchBudgetExhausted,
   ).toBeFalse()
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
