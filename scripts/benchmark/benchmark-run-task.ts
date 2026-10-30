@@ -545,7 +545,10 @@ export const solveWithProgress = async (
     throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
   }
 
-  if (typeof solver.solveAsync === "function") {
+  if (
+    typeof solver.solveAsync === "function" &&
+    ((task.threads ?? 1) > 1 || typeof solver.step !== "function")
+  ) {
     const interval =
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
