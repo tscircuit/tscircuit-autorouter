@@ -54,6 +54,12 @@ import {
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
+import {
+  getPipeline9OriginalOwnerCopperFeedback,
+  mergePipeline9OriginalOwnerCopperFeedback,
+  filterPipeline9OriginalOwnerCopperFeedbackErrors,
+  type OriginalOwnerCopperFeedbackStats,
+} from "./getPipeline9OriginalOwnerCopperFeedback"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
@@ -76,6 +82,7 @@ type Pipeline9JointDrcRepairSolverParams = {
   defaultViaHoleDiameter: number
   effort: number
   colorMap: Record<string, string>
+  experimentOriginalOwnerCopperFeedback?: boolean
 }
 
 type MovablePreloadedSection = {
@@ -666,6 +673,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
+  declare private originalOwnerCopperFeedbackActive?: true
   private indexedDrcEvaluationCount = 0
   private indexedDrcCacheHitCount = 0
   private indexedDrcEvaluationTimeMs = 0
@@ -807,6 +815,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
+    let feedbackActive = false
+    let feedbackStats: OriginalOwnerCopperFeedbackStats | undefined
+    const filterDrcErrorsAgainstBaseline: typeof filterPipeline9DrcErrorsAgainstBaseline = (input) => {
+      if (!feedbackActive) return filterPipeline9DrcErrorsAgainstBaseline(input)
+      const filtered = filterPipeline9OriginalOwnerCopperFeedbackErrors(input)
+      feedbackStats!.baselineMatchesFiltered += input.errors.filter((error) =>
+        typeof error.originalOwnerCopperFeedbackKey === "string").length -
+        filtered.filter((error) => typeof error.originalOwnerCopperFeedbackKey === "string").length
+      return filtered
+    }
+    const augmentReferenceDrc = (
+      result: ReturnType<typeof evaluateRelaxedDrc>,
+      routedTraces: SimplifiedPcbTrace[],
+      originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
+    ): ReturnType<typeof evaluateRelaxedDrc> => {
+      if (!feedbackActive) return result
+      const feedback = getPipeline9OriginalOwnerCopperFeedback({
+        originalSrj: params.originalSrj, srjWithPointPairs: params.srjWithPointPairs,
+        routedTraces, circuitJson: result.circuitJson, originalTraceIdByPreparedTraceId,
+      })
+      if (feedback.status !== "SUPPORTED") throw new Error("Supported original-owner feedback lost candidate ownership or geometry")
+      const merged = mergePipeline9OriginalOwnerCopperFeedback(result.errors as unknown as Array<Record<string, unknown>>, feedback.errors)
+      feedbackStats!.referenceEvaluations++
+      feedbackStats!.appendedIssueCount += merged.appendedCount
+      feedbackStats!.latestIssueCount = feedback.errors.length
+      return { ...result, errors: merged.errors as unknown as typeof result.errors,
+        errorsWithCenters: mergePipeline9OriginalOwnerCopperFeedback(result.errorsWithCenters as unknown as Array<Record<string, unknown>>, feedback.errors).errors as unknown as typeof result.errorsWithCenters }
+    }
 
     const currentMutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
       (trace) => params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
@@ -844,7 +880,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
-    const baselineDrc = evaluateRelaxedDrc({
+    let baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -854,25 +890,56 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
     )
-    const baselineErrors = addAutoroutingViaTraceIds({
+    let baselineErrors = addAutoroutingViaTraceIds({
       errors: baselineDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const baselineErrorsWithCenters = addAutoroutingViaTraceIds({
+    let baselineErrorsWithCenters = addAutoroutingViaTraceIds({
       errors: baselineDrc.errorsWithCenters as unknown as Array<
         Record<string, unknown>
       >,
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
+    let currentDrcResult = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
+    if (params.experimentOriginalOwnerCopperFeedback === true) {
+      const baseline = getPipeline9OriginalOwnerCopperFeedback({ originalSrj: params.originalSrj,
+        srjWithPointPairs: params.srjWithPointPairs, routedTraces: [], circuitJson: baselineDrc.circuitJson })
+      const current = getPipeline9OriginalOwnerCopperFeedback({ originalSrj: params.originalSrj,
+        srjWithPointPairs: params.srjWithPointPairs, routedTraces: preparedCurrentOutput.routedTraces,
+        circuitJson: currentDrcResult.circuitJson,
+        originalTraceIdByPreparedTraceId: preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId })
+      const unsupported = baseline.status === "NOT_APPLICABLE" ? baseline : current.status === "NOT_APPLICABLE" ? current : undefined
+      feedbackStats = { version: 1, enabled: true,
+        status: unsupported ? "NOT_APPLICABLE" : "SUPPORTED", reason: unsupported?.reason ?? null,
+        originalOwnershipCoverage: unsupported ? "UNKNOWN" : "COMPLETE", selectedCheckCount: 2,
+        completePredicateSuite: true, baselineIssueCount: unsupported ? null : baseline.errors.length,
+        initialIssueCount: unsupported ? null : current.errors.length,
+        referenceEvaluations: 2, appendedIssueCount: 0, baselineMatchesFiltered: 0,
+        unsupportedOwnerCount: unsupported?.unsupportedOwnerCount ?? 0, latestIssueCount: unsupported ? null : current.errors.length }
+      if (baseline.status === "SUPPORTED" && current.status === "SUPPORTED") {
+        feedbackActive = true
+        this.originalOwnerCopperFeedbackActive = true
+        const mergedBaseline = mergePipeline9OriginalOwnerCopperFeedback(baselineDrc.errors as unknown as Array<Record<string, unknown>>, baseline.errors)
+        const mergedCurrent = mergePipeline9OriginalOwnerCopperFeedback(currentDrcResult.errors as unknown as Array<Record<string, unknown>>, current.errors)
+        baselineDrc = { ...baselineDrc, errors: mergedBaseline.errors as unknown as typeof baselineDrc.errors,
+          errorsWithCenters: mergePipeline9OriginalOwnerCopperFeedback(baselineDrc.errorsWithCenters as unknown as Array<Record<string, unknown>>, baseline.errors).errors as unknown as typeof baselineDrc.errorsWithCenters }
+        currentDrcResult = { ...currentDrcResult, errors: mergedCurrent.errors as unknown as typeof currentDrcResult.errors,
+          errorsWithCenters: mergePipeline9OriginalOwnerCopperFeedback(currentDrcResult.errorsWithCenters as unknown as Array<Record<string, unknown>>, current.errors).errors as unknown as typeof currentDrcResult.errorsWithCenters }
+        feedbackStats.appendedIssueCount += mergedBaseline.appendedCount + mergedCurrent.appendedCount
+        baselineErrors = addAutoroutingViaTraceIds({ errors: baselineDrc.errors as unknown as Array<Record<string, unknown>>,
+          circuitJson: baselineDrc.circuitJson, evaluatedTraceIds: baselineEvaluatedTraceIds })
+        baselineErrorsWithCenters = addAutoroutingViaTraceIds({ errors: baselineDrc.errorsWithCenters as unknown as Array<Record<string, unknown>>,
+          circuitJson: baselineDrc.circuitJson, evaluatedTraceIds: baselineEvaluatedTraceIds })
+      }
+    }
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
@@ -895,13 +962,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const currentDrc = {
       ...currentDrcResult,
-      errors: filterPipeline9DrcErrorsAgainstBaseline({
+      errors: filterDrcErrorsAgainstBaseline({
         errors: currentErrors,
         baselineErrors,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
-      errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
+      errorsWithCenters: filterDrcErrorsAgainstBaseline({
         errors: currentErrorsWithCenters,
         baselineErrors: baselineErrorsWithCenters,
         originalTraceIdByPreparedTraceId:
@@ -1101,6 +1168,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
+      ...(feedbackStats ? { originalOwnerCopperFeedback: feedbackStats } : {}),
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
@@ -1345,7 +1413,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
+      const evaluatedDrc = augmentReferenceDrc(evaluateRelaxedDrc({
         includeBoardClearance: true,
         connectivityMaps,
         inputSrj: params.originalSrj,
@@ -1356,7 +1424,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
         },
-      })
+      }), candidateDrcInput.routedTraces, candidateDrcInput.originalTraceIdByEvaluationTraceId)
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )
@@ -1374,14 +1442,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterDrcErrorsAgainstBaseline({
         errors: evaluatedErrors,
         baselineErrors,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterDrcErrorsAgainstBaseline({
           errors: evaluatedErrorsWithCenters,
           baselineErrors: baselineErrorsWithCenters,
           originalTraceIdByPreparedTraceId:
@@ -1518,7 +1586,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: viaCircuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterDrcErrorsAgainstBaseline({
         errors: evaluatedErrors,
         baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
           Record<string, unknown>
@@ -1527,7 +1595,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterDrcErrorsAgainstBaseline({
           errors: evaluatedErrorsWithCenters,
           baselineErrors:
             autoroutingBaselineDrc.errorsWithCenters as unknown as Array<
@@ -1970,6 +2038,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    if (this.originalOwnerCopperFeedbackActive === true) {
+      const reference = this.cachedReferenceDrcEvaluator!({ traces: [],
+        routes: boundedRegionalRepairResult.routes, hdRoutes: boundedRegionalRepairResult.routes })
+      const errors = Array.isArray(reference) ? reference : reference.errors
+      const remaining = errors.filter((error) => typeof error.originalOwnerCopperFeedbackKey === "string")
+      if (remaining.length > 0) {
+        this.failed = true
+        this.error = `Pipeline9 original-owner copper feedback retains ${remaining.length} new selected copper violations`
+        return
+      }
+    }
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,

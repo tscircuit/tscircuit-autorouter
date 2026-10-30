@@ -107,6 +107,7 @@ import {
 
 interface CapacityMeshSolverOptions {
   experimentLayerAwareMstIdentity?: boolean
+  experimentOriginalOwnerCopperFeedback?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -867,6 +868,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
+            ...(cms.opts.experimentOriginalOwnerCopperFeedback === true ? { experimentOriginalOwnerCopperFeedback: true } : {}),
           },
         ]
       },
