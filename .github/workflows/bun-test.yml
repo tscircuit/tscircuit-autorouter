@@ -66,7 +66,7 @@ jobs:
           full_board_tests=()
           for test_file in "${test_files[@]}"; do
             case "$test_file" in
-              tests/bugs/bugreport107-board-1726.test.ts)
+              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts)
                 full_board_tests+=("$test_file")
                 ;;
               tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts)
@@ -93,5 +93,6 @@ jobs:
           path: |
             **/*.diff.png
             **/*.received.svg
+            **/*.received.json.gz
             **/*-drc.received.json
             **/*.snap.svg

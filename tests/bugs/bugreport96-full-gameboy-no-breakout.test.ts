@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import simpleRouteJson from "../../fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json" with {
   type: "json",
@@ -26,6 +27,20 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  })
+  expect(errors.length).toBeLessThanOrEqual(28)
+  let viaCount: number = 0
+  for (const trace of routedTraces) {
+    for (const point of trace.route) {
+      if (point.route_type === "via") viaCount++
+    }
+  }
+  expect(viaCount).toBeLessThanOrEqual(144)
   expect(
     solver.highDensityRouteSolver?.fixedRouteReplacements.has(
       "source_trace_0_fixed_70_0",
