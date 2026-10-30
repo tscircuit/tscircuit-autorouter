@@ -1,0 +1,137 @@
+name: Stable MST identity targeted four-attempt experiment
+
+on:
+  push:
+    branches: [codex/layer-aware-mst-stable4-controller-20261030]
+    paths: [scripts/experiment-audit/layer-aware-mst-stable4-20261030.json]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify all reviewed immutable sources and plan fresh characterization
+        id: plan
+        run: python3 scripts/experiment-audit/run-layer-aware-mst-stable4.py --mode plan
+  experiment:
+    needs: plan
+    name: layer-aware-mst-stable-shard / ${{ matrix.dataset }} / ${{ matrix.shard }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Select exact source pair
+        id: refs
+        run: python3 controller/scripts/experiment-audit/run-layer-aware-mst-stable4.py --mode select --dataset '${{ matrix.dataset }}' --shard '${{ matrix.shard }}'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.harness_sha }}
+          path: pinned-main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.baseline_sha }}
+          path: baseline
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify source trees and unchanged current-main validators
+        run: python3 controller/scripts/experiment-audit/run-layer-aware-mst-stable4.py --mode verify-checkouts --dataset '${{ matrix.dataset }}' --shard '${{ matrix.shard }}' --baseline baseline --candidate candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install fresh baseline dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py baseline
+      - name: Install fresh candidate dependencies with provenance
+        run: python3 controller/scripts/experiment-audit/install-pinned-dependencies.py candidate
+      - name: Verify complete installed pinned dependency source bytes
+        run: python3 controller/scripts/experiment-audit/run-layer-aware-mst-stable4.py --mode verify-dependencies --dataset '${{ matrix.dataset }}' --shard '${{ matrix.shard }}' --baseline baseline --candidate candidate
+      - name: Build baseline
+        working-directory: baseline
+        run: bun run build
+      - name: Build candidate
+        working-directory: candidate
+        run: bun run build
+      - name: Prepare identical current-main harness and bounded observer
+        run: |
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-main --target baseline --expected-sha '${{ steps.refs.outputs.baseline_sha }}'
+          python3 controller/scripts/experiment-audit/prepare-pinned-harness.py --controller pinned-main --target candidate --expected-sha '${{ steps.refs.outputs.candidate_sha }}'
+      - name: Run every prospectively ordered original case pair in this exact shard
+        run: python3 controller/scripts/experiment-audit/run-layer-aware-mst-stable4.py --mode run --dataset '${{ matrix.dataset }}' --shard '${{ matrix.shard }}' --baseline baseline --candidate candidate --output 'results/layer-aware-mst-stable-${{ matrix.dataset }}-shard${{ matrix.shard }}'
+      - name: Retain compact all-record metrics, aggregates and qualification provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-aware-mst-stable4-metrics-layer-aware-mst-stable-${{ matrix.dataset }}-shard${{ matrix.shard }}
+          path: |
+            results/*/results.jsonl
+            results/*/summary.json
+            results/*/provenance.json
+            results/*/sample-*/config-*.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Retain exact inputs, output copper, checks, stage evidence and failures separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-aware-mst-stable4-raw-layer-aware-mst-stable-${{ matrix.dataset }}-shard${{ matrix.shard }}
+          path: results
+          if-no-files-found: warn
+          retention-days: 30
+
+  carrier_plan:
+    needs: [plan, experiment]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.parts.outputs.matrix }}
+      count: ${{ steps.parts.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Plan every original raw ZIP segment from authenticated artifact metadata
+        id: parts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/experiment-audit/layer-aware-mst-stable-artifact-carrier.py plan --manifest scripts/experiment-audit/layer-aware-mst-stable4-20261030.json --run-id '${{ github.run_id }}' --controller-sha '${{ github.sha }}'
+  artifact_carrier:
+    needs: carrier_plan
+    if: always() && needs.carrier_plan.result == 'success' && needs.carrier_plan.outputs.count != '0'
+    name: layer-aware-mst-stable-artifact-carrier / ${{ matrix.artifact_id }} / ${{ matrix.part_index }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.carrier_plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Retain one exact bounded original server ZIP segment in authenticated logs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CARRIER_SPEC_JSON: ${{ toJSON(matrix) }}
+        run: python3 scripts/experiment-audit/layer-aware-mst-stable-artifact-carrier.py carry --repository tscircuit/tscircuit-autorouter

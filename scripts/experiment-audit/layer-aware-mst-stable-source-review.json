@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_FOCUSED_SOURCE_REFINEMENT_INDEPENDENT_REVIEW_NO_ACTUAL_BOARD_CLAIM",
+  "reviewer": "/root/analysis_closeout",
+  "atUtc": "2026-10-30T00:10:40.401341+00:00",
+  "sourceLocal": "d0bd6ff2795ebd7f59eaf16a0f9bfb63c0b200dd",
+  "sourceTree": "319fde34548c761746444080560f3412ed63affd",
+  "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "expectedRemoteParent": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "sourceQa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/QA-FINAL-v1.json",
+    "sha256": "633de81abbdcbebd4387d0819736606f4d057fd7e422e5c0f7a7fa5d04dd349f"
+  },
+  "changedFiles": [
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 10460,
+      "sha256": "418c4aaa3e640f68dbfea058e3ea9688a6582a892679b624340fd95aad2c2dfc",
+      "repositoryPath": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts"
+    },
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6918,
+      "sha256": "0b3802ce22bf6a50df0558b0d532539e57018beb6fe4a973830b2b292055db40",
+      "repositoryPath": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts"
+    },
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/tests/features/layer-aware-mst-stable-emission.test.ts",
+      "bytes": 2742,
+      "sha256": "3fbe83c1d9a6bdfff7a38540bc93ad7ffe32048205c2f10b493dfbf2d9635b6d",
+      "repositoryPath": "tests/features/layer-aware-mst-stable-emission.test.ts"
+    }
+  ],
+  "checkedQaSourceAndProofArtifactCount": 42,
+  "worktreeFrozenClean": true,
+  "nativeMstSelectionAndAdaptersUnchanged": true,
+  "sourceFindings": [
+    "Kruskal/KD-tree/DSU selection is byte-unchanged. Only emitted selected-edge order and queue are changed.",
+    "Feature-on stable partition preserves selected noncoincident-XY edges in exact relative order; only new coincident-XY selected layer edges move after them before sequential _mstN naming. Explicit initially-connected edges still filter before naming/emission.",
+    "Both base and active OffBoard override use the same helper methods. Original two-point connection fast paths still push in their existing position and never enter deferred queue.",
+    "Feature-off creates no deferred own property and uses original edge array. New helper methods are on the prototype only.",
+    "All deferred connections flush before cold completed=true and solved=true. Queue is emptied, so repeated completion cannot duplicate added demands; partial stages never claim completed coverage.",
+    "OffBoard selection still receives the original selected edge and native equivalence lookup; defer classification uses original selected coincidence, with optimized points preserved unmodified.",
+    "Coverage calculation remains before ordering/defer, with exact original nine fields. No added budget, validator change, routing acceptance waiver or native via/terminal adapter edit."
+  ],
+  "independentVerification": {
+    "command": "/tmp/autorouter-post588-bun/package/bin/bun test --timeout 9999999 /tmp/layer-aware-mst-stable-independent.test.ts tests/features/layer-aware-mst-stable-emission.test.ts tests/features/layer-aware-mst-explicit-preconnection.test.ts tests/solvers/net-to-point-pairs-explicit-initial-connectivity.test.ts",
+    "bunVersion": "1.4.2",
+    "passed": 4,
+    "failed": 0,
+    "assertions": 2176,
+    "ownDataOnlyScenarioCount": 10,
+    "ownTestSha256": "1948f33606b25e8e50a9b78094adb549719206e91319aa7368fd0fdcb2a84abf",
+    "scenarios": [
+      "partial/deferred queue not prematurely complete",
+      "every original demand remains native prefix in tiny fixtures",
+      "original coincident two-point demand position unchanged",
+      "explicit external preconnection filters one new bridge",
+      "preloaded trace+external groups filter both bridges",
+      "active nontrivial offboard group preserves native substitution",
+      "empty input completes cleanly",
+      "queue drains once and cannot duplicate on repeated completion",
+      "default own fields absent",
+      "caller input bytes unchanged"
+    ]
+  },
+  "fullAuthorQaBoundButNotReexecuted": {
+    "tests": {
+      "command": "bun test --timeout 9999999 tests/features/layer-aware-mst-*.test.ts tests/solvers/mst-expansion-preserves-preconnections.test.ts tests/solvers/net-to-point-pairs-explicit-initial-connectivity.test.ts tests/stitch-solver/disconnected-island-after-terminal-route.test.ts",
+      "passed": 12,
+      "failed": 0,
+      "assertions": 3566,
+      "newPropertyCases": 128,
+      "newPropertyClasses": 2,
+      "newPropertyAssertions": 2048,
+      "oneTestPerFile": true
+    },
+    "fullProjectTypes": {
+      "exit": 0
+    },
+    "build": {
+      "exit": 0,
+      "bun": "1.4.2",
+      "workers": true,
+      "esm": true,
+      "dts": true,
+      "compiledIndexSha256": "83a5da631c6588de25381032f5faf472767e5bd7e94b9a87fc63ede278495ce9"
+    },
+    "freshWholePipelineRuntimeControls": {
+      "count": 14,
+      "sourceAndCompiled": true,
+      "baselineOmittedCandidateOmittedFalseExactParity": true,
+      "sameLayerTrueParity": true,
+      "oppositeSmtOriginal3IdsRetained": true,
+      "offPadExplicitVia": true,
+      "nativeDrc0": true,
+      "publishedViaInPad0": true,
+      "unmaterializedWireLayerJumps0": true,
+      "sourceCompiledGeometryParity": true
+    },
+    "runtimeControlSha256": "5dc30141481ca74583d61ca716472659c946cfd408aa399ecf3c0b82f9d29c36"
+  },
+  "limitations": [
+    "No real dataset routing, benchmark, or checker execution by this review.",
+    "Actual18:11 regression cause is not proved by this ordering change; original-serverZIP geometry and a fresh qualified targeted trial must establish whether it helps.",
+    "Preserving emitted selected-edge order/names does not assert all arbitrary-input legacy positive MST selections are identical: unchanged KNN expansion may select differently when layer-aware connectivity needs more neighbors.",
+    "Restored intermediate or emitted layer requirements remain separate from actual manufactured via contacts and full electrical/board PASS."
+  ],
+  "actualDatasetRuns": 0,
+  "performanceClaim": false,
+  "regressionFixedClaim": false,
+  "remoteMutationsByReviewer": 0
+}

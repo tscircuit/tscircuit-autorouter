@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "status": "PUBLISHED_PEER_REVIEWED_EXACT_STABLE_LAYER_AWARE_SOURCE",
+  "atUtc": "2026-10-30T00:12:07.212639+00:00",
+  "branch": "codex/experiment-layer-aware-mst-stable-20261030",
+  "remoteCommit": "087075c2dbb9a96e1d1a1a5a2eb43b5f8b2326d2",
+  "localCommit": "d0bd6ff2795ebd7f59eaf16a0f9bfb63c0b200dd",
+  "tree": "319fde34548c761746444080560f3412ed63affd",
+  "singleRemoteParent": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "flag": "experimentLayerAwareMstIdentity",
+  "defaultOff": true,
+  "qa": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/QA-FINAL-v1.json",
+    "sha256": "633de81abbdcbebd4387d0819736606f4d057fd7e422e5c0f7a7fa5d04dd349f"
+  },
+  "peer": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/INDEPENDENT-REVIEW-v1.json",
+    "sha256": "1ce40d4157a61b76e2b1c81945dce26c3842ca7e489d3f324c7f77319a429aad"
+  },
+  "export": {
+    "path": "/tmp/bottleneck-layer-aware-mst-stable-source-export.json",
+    "sha256": "6556c566b62e81478559c0911984646be0bf4da46ae7da8278f348d4da779fae"
+  },
+  "remoteCommitTreeSingleParentAndBranchGetVerified": true,
+  "readyForFreshTargetedSemantic4": true,
+  "actualRefinementAttempts": 0,
+  "targetedCases": [
+    {
+      "dataset": "srj18",
+      "sample": 11,
+      "order": "AB"
+    },
+    {
+      "dataset": "srj24",
+      "sample": 8,
+      "order": "BA"
+    }
+  ],
+  "allOldSourceAndActualMst84EvidenceUnchanged": true,
+  "oldActualFull84IndependentReview": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-ACTUAL-RAW-INDEPENDENT-REVIEW-v1.json",
+    "sha256": "2d0305a72997d0cda3809245ea9dd293e847f11adc3f9467aad53c613d06a2c6"
+  },
+  "sourceDeltaFiles": 3,
+  "tests": 12,
+  "assertions": 3566,
+  "fullProjectTypesAndWorkersEsmDtsBuildPass": true,
+  "freshSourceCompiledControls": 14,
+  "actualRegressionFixOrBoardGainClaim": false,
+  "noMergeCloseDefaultEnablement": true
+}

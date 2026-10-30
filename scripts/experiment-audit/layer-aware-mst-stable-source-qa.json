@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "status": "SOURCE_QA_PASS_PENDING_FINAL_INDEPENDENT_REVIEW",
+  "atUtc": "2026-10-30T00:07:37.093402+00:00",
+  "author": "/root",
+  "worktree": "/tmp/autorouter-layer-aware-mst-stable",
+  "localCommit": "d0bd6ff2795ebd7f59eaf16a0f9bfb63c0b200dd",
+  "tree": "319fde34548c761746444080560f3412ed63affd",
+  "parentLocal": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+  "expectedRemoteParent": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "parentTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "baselineSha": "e703f0499188f858b2b5e571ac80091d4c10733a",
+  "flag": "experimentLayerAwareMstIdentity",
+  "defaultOff": true,
+  "sourceInventory": [
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "bytes": 10460,
+      "sha256": "418c4aaa3e640f68dbfea058e3ea9688a6582a892679b624340fd95aad2c2dfc",
+      "repositoryPath": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts"
+    },
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+      "bytes": 6918,
+      "sha256": "0b3802ce22bf6a50df0558b0d532539e57018beb6fe4a973830b2b292055db40",
+      "repositoryPath": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts"
+    },
+    {
+      "path": "/tmp/autorouter-layer-aware-mst-stable/tests/features/layer-aware-mst-stable-emission.test.ts",
+      "bytes": 2742,
+      "sha256": "3fbe83c1d9a6bdfff7a38540bc93ad7ffe32048205c2f10b493dfbf2d9635b6d",
+      "repositoryPath": "tests/features/layer-aware-mst-stable-emission.test.ts"
+    }
+  ],
+  "productionFilesChanged": 2,
+  "newTests": 1,
+  "sourceDiff": "39 production insertions/10 deletions plus one meaningful prefix-preservation property test. No change to Kruskal edge selection, original9-field coverage ledger, native planned-via adapter, or terminal layer identity.",
+  "mechanism": "Keep nonzeroXY selected edges in their existing relative order and names. Defer only new unpreconnected zeroXY layer bridges to the global connection tail, flush before completed/solved, then empty queue. Existing original2-point demands stay in native position. Feature off initializes no deferred field.",
+  "rootCauseEvidence": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/results/MST18-11-OLD-REQUIREMENTS-AND-ORDER-RIPPLE-HYPOTHESIS-v1.json",
+    "bytes": 9649,
+    "sha256": "d2a6c45df69086e8897e747f2f640b413c0e89454a0e076c4834ae13527cc158"
+  },
+  "regressionRelation": "Hypothesis: preserve earlier native routing identities/order while retaining all new layer requirements; not proven as actual regression fix yet.",
+  "testRedObservation": {
+    "oldSourceCommit": "32097cb5c9edb7e9f3946861febbf1ba1516a2dc",
+    "newPrefixTestFailedBeforeCodeChange": true,
+    "observed": "New layer edges occupied affected_mst0/1 and shifted legacy positive edges/global unaffected connection, violating exact prefix assertion.",
+    "scope": "Tiny synthetic fixture, no real dataset execution."
+  },
+  "tests": {
+    "command": "bun test --timeout 9999999 tests/features/layer-aware-mst-*.test.ts tests/solvers/mst-expansion-preserves-preconnections.test.ts tests/solvers/net-to-point-pairs-explicit-initial-connectivity.test.ts tests/stitch-solver/disconnected-island-after-terminal-route.test.ts",
+    "passed": 12,
+    "failed": 0,
+    "assertions": 3566,
+    "newPropertyCases": 128,
+    "newPropertyClasses": 2,
+    "newPropertyAssertions": 2048,
+    "oneTestPerFile": true
+  },
+  "fullProjectTypes": {
+    "exit": 0
+  },
+  "build": {
+    "exit": 0,
+    "bun": "1.4.2",
+    "workers": true,
+    "esm": true,
+    "dts": true,
+    "compiledIndexSha256": "83a5da631c6588de25381032f5faf472767e5bd7e94b9a87fc63ede278495ce9"
+  },
+  "freshWholePipelineRuntimeControls": {
+    "count": 14,
+    "sourceAndCompiled": true,
+    "baselineOmittedCandidateOmittedFalseExactParity": true,
+    "sameLayerTrueParity": true,
+    "oppositeSmtOriginal3IdsRetained": true,
+    "offPadExplicitVia": true,
+    "nativeDrc0": true,
+    "publishedViaInPad0": true,
+    "unmaterializedWireLayerJumps0": true,
+    "sourceCompiledGeometryParity": true
+  },
+  "proofs": [
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/RUNTIME-CONTROLS.json",
+      "bytes": 77918,
+      "sha256": "5dc30141481ca74583d61ca716472659c946cfd408aa399ecf3c0b82f9d29c36"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/build.log",
+      "bytes": 1195,
+      "sha256": "d82fb8236b6925afe78944d40dd2f63676fdb8b6058941420d958ac5438f875f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-baseline-source-absent.stderr",
+      "bytes": 166,
+      "sha256": "e45d7c3d80021e03dadf4ab908a2fa99624e2e6e5c03f464e8417e44aaa69fca"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-baseline-source-absent.stdout",
+      "bytes": 3241,
+      "sha256": "43deed546acf04ceb3b5ae1472efbcc343e72e98d7815c541ae757b8a55e7045"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-absent.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-absent.stdout",
+      "bytes": 3141,
+      "sha256": "b77a207144824ad2eae05261668303dc81077d168b2be3091ebc1184fc06f8aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-false.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-false.stdout",
+      "bytes": 3140,
+      "sha256": "c80fd0361cab5078d3acfe1f6e1729ece18f310ac450292e2bd7e726576d327c"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-true.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-compiled-true.stdout",
+      "bytes": 3481,
+      "sha256": "6d53417e9ef1f42aa500329d8530ed9ef095d016df0a04fd001bceea04f84000"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-absent.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-absent.stdout",
+      "bytes": 3243,
+      "sha256": "b5cd7a05a961803a48cb51a65712172187dd337dd6fac7bf64ac805f418240dd"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-false.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-false.stdout",
+      "bytes": 3242,
+      "sha256": "06e952ade69f006fe2b09670c19ed84bea6b6e0677541916e3ef1a96732f8fc4"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-true.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/layered-candidate-source-true.stdout",
+      "bytes": 3583,
+      "sha256": "a4f3a66794a5547493b638c946885fb4b664a1206ee03d58724d15dde29caf3b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-baseline-source-absent.stderr",
+      "bytes": 166,
+      "sha256": "e45d7c3d80021e03dadf4ab908a2fa99624e2e6e5c03f464e8417e44aaa69fca"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-baseline-source-absent.stdout",
+      "bytes": 3239,
+      "sha256": "9d70305a16fd7bcaef4c5e1b157722fc313bd01ff2991f36e16bd4f46fa76da3"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-absent.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-absent.stdout",
+      "bytes": 3139,
+      "sha256": "141ac99a1e81674bb239ae55da87950d46179d494ec054fa4a128978523228aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-false.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-false.stdout",
+      "bytes": 3138,
+      "sha256": "999f86444d0ef38496687390f398012968e34a3434692542e8671e4a5010db29"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-true.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-compiled-true.stdout",
+      "bytes": 3352,
+      "sha256": "91384e4e7da785e556955a8bb995d7052a167eec9bc10f4de90d32508a96b0e2"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-absent.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-absent.stdout",
+      "bytes": 3241,
+      "sha256": "dfc3b366954c58e31438452848abd87e7e0127b6f1f09d285513a5300484ca2f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-false.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-false.stdout",
+      "bytes": 3240,
+      "sha256": "d8099621f233ca49d77f9b624c5dbd40eb8927cfd87b65cf40239002731ebea8"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-true.stderr",
+      "bytes": 168,
+      "sha256": "25fb47152d3ab4ef4ac0b7dbcd25987af2b21923b4f6f271ccc5d8afa308ee30"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/plain-candidate-source-true.stdout",
+      "bytes": 3454,
+      "sha256": "75b36c6862ce2ce50f13c11b918509266691613ea03c50ae160640f0c308101d"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/run-runtime-controls.py",
+      "bytes": 3411,
+      "sha256": "8cc86b55afdfc51cd354aec24244cee27f235f16fb5a3699054da35dd464869f"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/runtime-child.ts",
+      "bytes": 4423,
+      "sha256": "98913bb40841733cab288c3e62d6a4163078535a410d41dd6f7e59066b3c171b"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/runtime-controls.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/runtime-controls.log",
+      "bytes": 474,
+      "sha256": "d188bab495b7d9c7dfb4f6b8154794822b4157ad98eb5d26e454a1c3651c986e"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/tests.log",
+      "bytes": 2045,
+      "sha256": "32c0108525a49ed63fe8f8fd913e2aefa54b80f71291a2216e03068f24959af9"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/types.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-stable/types.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "originalValidatorsAndHarnessUnchanged": [
+    {
+      "path": "lib/testing/evaluate-relaxed-drc.ts",
+      "sha256": "87238d33bc0ed1316ccdbfb85958139dcfa4dc4bf315e2200d85fb78194243a2"
+    },
+    {
+      "path": "lib/testing/getDrcErrors.ts",
+      "sha256": "74bb779d0014d0b655015fdbfb1031b3fcd10893a227158abe5f4e6aba76bd66"
+    },
+    {
+      "path": "lib/testing/utils/convertToCircuitJson.ts",
+      "sha256": "5ff83973fcaa3b9f9eceff7d674752548bfec3e6a24eeddc617b6f82b4c1adb1"
+    },
+    {
+      "path": "lib/testing/drcPresets.ts",
+      "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+    },
+    {
+      "path": "scripts/benchmark/benchmark-run-task.ts",
+      "sha256": "9f216df24e5627c5463c554c084b07381e642ef41f8cff2823a659d50641aa66"
+    },
+    {
+      "path": "scripts/benchmark/benchmark.child.ts",
+      "sha256": "ab77e556ff9b7ba07bae46fe4092e1700d09881c6aaa17240a3e7edd141d35e9"
+    }
+  ],
+  "dependenciesOrBudgetsChanged": false,
+  "sourceFrozenClean": true,
+  "originalSource32097AndRemote5d550Unchanged": true,
+  "actualRefinementDatasetRuns": 0,
+  "actualRegressionOrGainClaim": false,
+  "plannedFirstActualScope": [
+    "srj18:11",
+    "srj24:8"
+  ],
+  "plannedActualAttempts": 4,
+  "noLocalDatasetRoutingOrCheckerExecution": true,
+  "noRemoteMutationByThisQa": true
+}

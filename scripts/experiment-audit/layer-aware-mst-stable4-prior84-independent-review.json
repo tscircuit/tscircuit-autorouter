@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_ALL_SEMANTIC_MST84_INDEPENDENT_ORIGINAL_SERVER_ZIP_AND_SOURCE_RAW_REPLAY",
+  "runId": "40974963334",
+  "controllerSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+  "manifestSha256": "6baf34a60d57f5b8e6317f3911498063482694e832a2358c128ffa308f6e7aa4",
+  "sourceSha": "5d5500e3da02a7b1ed3eec74fc262f31c04f47df",
+  "sourceTree": "7a5f248d5772307119c7856f732849dd4e03f120",
+  "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+  "carrierHelperSha256": "a20fc797cc7e8a17a478f4c387f3458bc4326df62668ae31477803041838fe45",
+  "controllerReadinessPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/layer-aware-mst-controller/INDEPENDENT-REVIEW-v1.json",
+  "controllerReadinessSha256": "11604daeda522be028f07ac369a82bfed882eb060c17efb46d46b20b49bb4f9e",
+  "independentActualGitPublicationBindingPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-INDEPENDENT-ACTUAL-PUBLICATION-BINDING-v1.json",
+  "independentActualGitPublicationBindingSha256": "ef155f32cc5c1dcc76a2329595251dda3817872a7b422a3ead46aa0ec7a62bc7",
+  "reviewScriptPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/review-layer-aware-mst84-actual-original-zips-v1.py",
+  "reviewScriptSha256": "71bbcadb4532456d0a39c1731ed045af58054761ba4033900d9fd2835724e7fe",
+  "sourceIndexPath": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-ACTUAL-RAW-QUALIFICATION-INDEX-v1.json",
+  "sourceIndexSha256": "67b13e585a8b3f80f6e573d37bf1ce68871c4fb4fa430c56eebf3641d3ee68da",
+  "records": 84,
+  "approvedReceiptCount": 11,
+  "carrierLogsIndependentlyReplayed": 33,
+  "approved": [
+    {
+      "dataset": "srj24",
+      "shardIndex": 5,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD5-RAW-QUALIFICATION-v1.json",
+      "sha256": "c1388c950de7b57bb0b3ef3e3295109312d3fd3e54a64d139f6ee0734d3724b3",
+      "records": 12,
+      "strictRecords": 10,
+      "completedNativeOutputs": 10,
+      "strictFalseSeparatelyProvenTimeouts": 2,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard5-40974963334-v1.json",
+      "independentQualifierReplaySha256": "714d07921bb3f812c48cca812e15169919716de8e71066b51b94ebbf81de6fe9",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard5-parsed.json",
+      "parsedSha256": "bcf7faa216292bcbd1cb132b15b5c2182e498dcd018cfe507f35a28d74604ca1",
+      "producerLogPath": "/tmp/mst84-producer-123800701332.log",
+      "producerLogSha256": "562d755e4ecc970464140ff283069f08a2396a90eadb1833269448bcdfd3ecbd",
+      "producerJobId": 123800701332,
+      "producerUploadProof": {
+        "jobId": 123800701332,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12943585136,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard5",
+        "rawArtifactSha256": "187ebc869c3bf9b548746058edee6740320670c0347b17a646c5ba8ea475c009",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard5.zip",
+      "originalServerZipSha256": "187ebc869c3bf9b548746058edee6740320670c0347b17a646c5ba8ea475c009",
+      "originalServerZipBytes": 2875121,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard5-carrierlogs.json",
+      "carrierLogsJsonSha256": "ddeba4de4ebdf2b1c2bcd374adad26829c3a47e5988beab882122921b73fc54f",
+      "carrierParts": 3,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772498,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772498.capture.json",
+          "captureSha256": "69ce1b771a5c1a5b378a1d07802e334fd80a87ab440a98bd661e4cd6fa0c2dcf",
+          "authenticatedUtf8LogSha256": "4448d3c3d3105fa7f688a20031c52850b80ff4d343e91efedbeb5ba83beb76df"
+        },
+        {
+          "jobId": 123807772528,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772528.capture.json",
+          "captureSha256": "9ee4fdd01ef52561ded59e94503e727989b228940551e3135ce9fac2835d681f",
+          "authenticatedUtf8LogSha256": "8991f921a87bee389ea18578bc592aeacb882d5c9477dad035a1f35012d1b4c3"
+        },
+        {
+          "jobId": 123807772462,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772462.capture.json",
+          "captureSha256": "9d5aded1a50ea977893ce1987928ba319954b9ddbc18a834a27709312640cce6",
+          "authenticatedUtf8LogSha256": "3466a49d76ed9791244eb44194420755dfe1796f21aec1b616dd2aaca5044adf"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 0,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj18-SHARD0-RAW-QUALIFICATION-v1.json",
+      "sha256": "1faf8c27ae3dd34f3359652c147d45afdbe7a2c0c91c1997cbf907ecba08ac14",
+      "records": 8,
+      "strictRecords": 8,
+      "completedNativeOutputs": 8,
+      "strictFalseSeparatelyProvenTimeouts": 0,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj18-shard0-40974963334-v1.json",
+      "independentQualifierReplaySha256": "58580fea5dd6fb9dcc9ada3868feb9637de742a905fe6e619bb7cce552471ed9",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj18-shard0-parsed.json",
+      "parsedSha256": "d600cbc4067bebdd9995df68d9c4bcf08febdba33162916e852bc96e0c62df5d",
+      "producerLogPath": "/tmp/mst84-producer-123800701391.log",
+      "producerLogSha256": "e437e5f78dac8035dc838c07c4f7fcda453c8c4d49de8de5c525a4cde10408d0",
+      "producerJobId": 123800701391,
+      "producerUploadProof": {
+        "jobId": 123800701391,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942442764,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard0",
+        "rawArtifactSha256": "f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj18-shard0.zip",
+      "originalServerZipSha256": "f2932c4d29d4914e744385f4b02c4f0180b1118471f6eb2b661915f619d68624",
+      "originalServerZipBytes": 3095352,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj18-shard0-carrierlogs.json",
+      "carrierLogsJsonSha256": "0b12c495ca85be39fb84682e9bf066452b2da40bdc1ee9f790399b5725b1b06a",
+      "carrierParts": 3,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772364,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772364.capture.json",
+          "captureSha256": "c2e9f079fe4714bcfe6aad58398f07ea7257ba85d2575561f8b33be606bc5a4a",
+          "authenticatedUtf8LogSha256": "8f5d7e72d151164c38951b97afdc6ea79c4396d35481c5e5415c29f05ef2b257"
+        },
+        {
+          "jobId": 123807772517,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772517.capture.json",
+          "captureSha256": "a9467520c63b20b60b6fc42bdbc38270fa9e4a6728172cb41d637795555bd0b4",
+          "authenticatedUtf8LogSha256": "6c566fb945b3e52b8e53f066e3cabb67bedfc5742f4e60908910a6669dfe0af3"
+        },
+        {
+          "jobId": 123807772390,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772390.capture.json",
+          "captureSha256": "54c9c5eab32407efca363758589691ecedf71c25994eee4a99b4bea063f585e1",
+          "authenticatedUtf8LogSha256": "0ad5b9a9088ee0d81b4cb5140c932f4a7a0fb58fcb205edc52c1a8e4a7e02669"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 1,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj18-SHARD1-RAW-QUALIFICATION-v1.json",
+      "sha256": "4ea03929cccbd3de7d1ee754e266559fbb687a9da5269a209bb9454cbe7c3ab3",
+      "records": 8,
+      "strictRecords": 8,
+      "completedNativeOutputs": 8,
+      "strictFalseSeparatelyProvenTimeouts": 0,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj18-shard1-40974963334-v1.json",
+      "independentQualifierReplaySha256": "e983aa90ce527473b8e44c8d482093ec58b027a12e83a09374838f5ceaf3dc35",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj18-shard1-parsed.json",
+      "parsedSha256": "a045bb897f21deb97ff452f015a5c4cb97d6aae6662976b4992bc4faa325ecfd",
+      "producerLogPath": "/tmp/mst84-producer-123800701444.log",
+      "producerLogSha256": "6cb0c1e62cad0e553b2a4c8d3b03776d86d5263449b859d2be3ed61e80cd5cb4",
+      "producerJobId": 123800701444,
+      "producerUploadProof": {
+        "jobId": 123800701444,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942816753,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard1",
+        "rawArtifactSha256": "8aaad571028c93dbce952aa459bf422f3fd0cfcc0c2f121b07cae39d68bff782",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj18-shard1.zip",
+      "originalServerZipSha256": "8aaad571028c93dbce952aa459bf422f3fd0cfcc0c2f121b07cae39d68bff782",
+      "originalServerZipBytes": 3091674,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj18-shard1-carrierlogs.json",
+      "carrierLogsJsonSha256": "ecbeaf064466a24975d4bb6a702857967c57917a48ddd1d8f01ed942087bf0fa",
+      "carrierParts": 3,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772542,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772542.capture.json",
+          "captureSha256": "545789799f5626fb35d1321892ebf5dd63598bcbc7d838965ad219e5c891253b",
+          "authenticatedUtf8LogSha256": "0303f63ab3898b89ccfa3851cb4259cdfebff3068b82d13ccefda4559f59025f"
+        },
+        {
+          "jobId": 123807772602,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772602.capture.json",
+          "captureSha256": "7759c00136f8fdc39d7ad222117264bda52631e76646c3825fdec278acd6bff1",
+          "authenticatedUtf8LogSha256": "034ca927f9bf53ecbd90710556b438d9449988677ff4f9fb880b1b0482a3aab8"
+        },
+        {
+          "jobId": 123807772399,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772399.capture.json",
+          "captureSha256": "372702210194ddaa78e822ac68b96bba783bf27040488d6adda19ce03cef92a1",
+          "authenticatedUtf8LogSha256": "77a095328eb917b86fed06fe3e23969ccc36923de0ef7540781477f5299ae305"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 2,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj18-SHARD2-RAW-QUALIFICATION-v1.json",
+      "sha256": "a7e6790ada670a8e14dfa7023af0d8eea6a93463cb30b10ce5a582951e1828c7",
+      "records": 8,
+      "strictRecords": 8,
+      "completedNativeOutputs": 8,
+      "strictFalseSeparatelyProvenTimeouts": 0,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj18-shard2-40974963334-v1.json",
+      "independentQualifierReplaySha256": "b915f3296f9fbf13d2ba9ebcd9c8f42a8159263a12c5a39efe2b092db212e35e",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj18-shard2-parsed.json",
+      "parsedSha256": "cb93618f977647476c3ae6bfa934cc8995c596dfeab47c659b5290ef98b91c9c",
+      "producerLogPath": "/tmp/mst84-producer-123800701396.log",
+      "producerLogSha256": "39bce3759ed5080cf421da0ae0dbe3c3b4f6e72cb36e937fb049a034f3ef5b79",
+      "producerJobId": 123800701396,
+      "producerUploadProof": {
+        "jobId": 123800701396,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942257299,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard2",
+        "rawArtifactSha256": "c66705730a34811f4f8f0cbb09a3c6e9524b98fa8eb28062bb036a8bfaae562d",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj18-shard2.zip",
+      "originalServerZipSha256": "c66705730a34811f4f8f0cbb09a3c6e9524b98fa8eb28062bb036a8bfaae562d",
+      "originalServerZipBytes": 3810501,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj18-shard2-carrierlogs.json",
+      "carrierLogsJsonSha256": "e8a103276e10463450e90cca95f2e3f6fa05af697c39a07eca46b232c48518c5",
+      "carrierParts": 4,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772568,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772568.capture.json",
+          "captureSha256": "aced32d31cfb6929bdaba555ee80c4d9817538a5875ab7531ba74982f5b2d31e",
+          "authenticatedUtf8LogSha256": "896456422d6c5115124fad334af9476bf6a6a4b27139e095c430a4d59a496a1f"
+        },
+        {
+          "jobId": 123807772461,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772461.capture.json",
+          "captureSha256": "526cb50f2825899cb81f03a4ae3ea1a616eaf991f3943539e12dbdc847117b39",
+          "authenticatedUtf8LogSha256": "7128a026c4ba1ef7b91173a1a9072c125448db3a8e14c40cc1b607dd20c20cbe"
+        },
+        {
+          "jobId": 123807772408,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772408.capture.json",
+          "captureSha256": "1b72ddad630c0601d19f8e970227cced0d83723cd65e9999a4acd88ca808a4c3",
+          "authenticatedUtf8LogSha256": "90f0515731494c4e7079a344ac21bcca8428c59fe08ee01fe61941be6f6269ac"
+        },
+        {
+          "jobId": 123807772437,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772437.capture.json",
+          "captureSha256": "a32cbc11e6cff9964124ab63bda750fd33b8bc2284580be326563eea2727119e",
+          "authenticatedUtf8LogSha256": "601cad4fd29d552d814f669da1e086bb5762a34b007e58e3c6226a5d927f93be"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 3,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj18-SHARD3-RAW-QUALIFICATION-v1.json",
+      "sha256": "9931d7bc91f5a417acf9a0763ce858cbdc5a4af6d88c67d508f636b9ce3be3ba",
+      "records": 8,
+      "strictRecords": 8,
+      "completedNativeOutputs": 8,
+      "strictFalseSeparatelyProvenTimeouts": 0,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj18-shard3-40974963334-v1.json",
+      "independentQualifierReplaySha256": "52aee472c4c9d2daf5fbc8688c7b82113356975d7f33aa08ff29c18e1b6f5bea",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj18-shard3-parsed.json",
+      "parsedSha256": "5fbde8ba323a82d51f60fe25700595de9a1bcfd2e407d37bc6c5342d83937b3d",
+      "producerLogPath": "/tmp/mst84-producer-123800701475.log",
+      "producerLogSha256": "8ae0aa317ca6c0a2b8dca5ea1bb9aebe723b33d839695f6b9b171e416b7de1fe",
+      "producerJobId": 123800701475,
+      "producerUploadProof": {
+        "jobId": 123800701475,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942172464,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj18-shard3",
+        "rawArtifactSha256": "2afe9097ae1390509ffccbc620a469034369db1aef8172af8bd4750d86a849f4",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj18-shard3.zip",
+      "originalServerZipSha256": "2afe9097ae1390509ffccbc620a469034369db1aef8172af8bd4750d86a849f4",
+      "originalServerZipBytes": 3683579,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj18-shard3-carrierlogs.json",
+      "carrierLogsJsonSha256": "a5d2edf34bcdf77887a95c85052060d5560fa5082a2b4294ff1cdbb62dcd702c",
+      "carrierParts": 4,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772410,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772410.capture.json",
+          "captureSha256": "6149045d499c9c2b8ddb75baf8507b8c7041de2337544fcdd3b5b22ebd22bf13",
+          "authenticatedUtf8LogSha256": "9ed8ee5339ff9b84e07126ed90349c3cba7066619b77d5e3a260351d5cba2657"
+        },
+        {
+          "jobId": 123807772457,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772457.capture.json",
+          "captureSha256": "c3adffef3f320ef2508fdf5e3b4ba9095d827520ee82f0ac61d85ca75a4b7b16",
+          "authenticatedUtf8LogSha256": "5ba7c6c710c82ebefc5d3afccaaad480ea0bd6b3f71fe7db5d49069a213ba92d"
+        },
+        {
+          "jobId": 123807772409,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772409.capture.json",
+          "captureSha256": "367adec17a264d00bda9a1d050fe9c8ac45e4c8cbee94ec371e8bffbfe500893",
+          "authenticatedUtf8LogSha256": "eace9921bb919aa63c440fd6750d928c1fff2c408b2460425005f011f0fc4990"
+        },
+        {
+          "jobId": 123807772435,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772435.capture.json",
+          "captureSha256": "b55cd444fbc0287e04a953d77c21990501aa0bc168cb0f080f28ee9f00fe61d1",
+          "authenticatedUtf8LogSha256": "cbbf9e00a7e82e18021d98f4abcb40583d45c73845e35c7837bb2d9dab05defc"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 0,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD0-RAW-QUALIFICATION-v1.json",
+      "sha256": "39dc09dde6ddb85ecafffe1fe60e7e39c4523c19a9a5b717fa682f9d7ea36c90",
+      "records": 4,
+      "strictRecords": 2,
+      "completedNativeOutputs": 2,
+      "strictFalseSeparatelyProvenTimeouts": 2,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard0-40974963334-v1.json",
+      "independentQualifierReplaySha256": "d75178f3323c92c64e31bf46f0d710460cc5bacf7a68f5c1188ff6d76fb3534b",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard0-parsed.json",
+      "parsedSha256": "945a66c62acbaccbe955593867fbf932a05328db2e8debdde09bcdc73640aafe",
+      "producerLogPath": "/tmp/mst84-producer-123800701469.log",
+      "producerLogSha256": "d9ab786de4c6d6ed970895df5630dcf0b3e542b48492c2aa2277d2257b37488f",
+      "producerJobId": 123800701469,
+      "producerUploadProof": {
+        "jobId": 123800701469,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942324854,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard0",
+        "rawArtifactSha256": "69c53deaf30b66d9080aac32d7e976fd87b455c189e0339f533704ee5baeeafc",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard0.zip",
+      "originalServerZipSha256": "69c53deaf30b66d9080aac32d7e976fd87b455c189e0339f533704ee5baeeafc",
+      "originalServerZipBytes": 1036304,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard0-carrierlogs.json",
+      "carrierLogsJsonSha256": "ffe539799628445c8f6cde21bfddf3f5013ace331ab5f314b93f69d6e3937576",
+      "carrierParts": 1,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772485,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772485.capture.json",
+          "captureSha256": "cda3f24cad5645583349aa1fc41e40b539579c7460d05fe04666c24eac1acac4",
+          "authenticatedUtf8LogSha256": "42680ec913e4a8cddd84e434cdeff6ea7c69150f56cd7fa688447f39656813d6"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 1,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD1-RAW-QUALIFICATION-v1.json",
+      "sha256": "83e9250e0bb8c69255a3223fc6d6f216174d31a3e930dca21c51f255ff68185a",
+      "records": 4,
+      "strictRecords": 2,
+      "completedNativeOutputs": 0,
+      "strictFalseSeparatelyProvenTimeouts": 2,
+      "nativeFailuresRetained": 2,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard1-40974963334-v1.json",
+      "independentQualifierReplaySha256": "ca3923293e14f60f5d8822efde0dd97a307228b7305ca7765d60b0f24151313b",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard1-parsed.json",
+      "parsedSha256": "bc3ba6e95ba220aa64d9cab4cdebe3cb5e24ad49388e172cf6f05a86beb716e8",
+      "producerLogPath": "/tmp/mst84-producer-123800701398.log",
+      "producerLogSha256": "41abc4a46aee33b0f895b92105b20290e0feccad0fd711c62ddc3d3d3d2cc662",
+      "producerJobId": 123800701398,
+      "producerUploadProof": {
+        "jobId": 123800701398,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942279909,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard1",
+        "rawArtifactSha256": "c61990d46534b39897bd6ceeb2ea81d14282207bd8f93b05c484a81e36df5790",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard1.zip",
+      "originalServerZipSha256": "c61990d46534b39897bd6ceeb2ea81d14282207bd8f93b05c484a81e36df5790",
+      "originalServerZipBytes": 203259,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard1-carrierlogs.json",
+      "carrierLogsJsonSha256": "857075e4e4f6270edb3e714b0c06c43fe32c53eacbadf70b1ceef071ecbfa726",
+      "carrierParts": 1,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772510,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772510.capture.json",
+          "captureSha256": "124d1da7d30d5918b7f7e0bea1eff6bba57b5195d661eaf5eee30547b4828490",
+          "authenticatedUtf8LogSha256": "e964bba4d4a861c78c910a384a46c0e73a4949ada2185098eae9083fa648b2c3"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 2,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD2-RAW-QUALIFICATION-v1.json",
+      "sha256": "05831f2bc2a327bbae3f485e93038e28bcc5e5974ef034d3ddd58fe549ae5363",
+      "records": 4,
+      "strictRecords": 2,
+      "completedNativeOutputs": 2,
+      "strictFalseSeparatelyProvenTimeouts": 2,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard2-40974963334-v1.json",
+      "independentQualifierReplaySha256": "c6395985e54089a5d7c5115a20568029cc2078a540eeaa491a9df362d6f33e03",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard2-parsed.json",
+      "parsedSha256": "6eb1a35a4b65de6606b598e91f5c0f6c6356e80c133ed146e6b1a689fcde8b74",
+      "producerLogPath": "/tmp/mst84-producer-123800701339.log",
+      "producerLogSha256": "133a37557f8f42de0718d8b818158fa8ac4db03bd3ccec3e3d4808c8cf7c0a5d",
+      "producerJobId": 123800701339,
+      "producerUploadProof": {
+        "jobId": 123800701339,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942443904,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard2",
+        "rawArtifactSha256": "bedbb84b5d466e99ae3a8f59b3ace438e27a0e127f63aa6c85d17a11e20e509d",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard2.zip",
+      "originalServerZipSha256": "bedbb84b5d466e99ae3a8f59b3ace438e27a0e127f63aa6c85d17a11e20e509d",
+      "originalServerZipBytes": 2056212,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard2-carrierlogs.json",
+      "carrierLogsJsonSha256": "f657dc0151e7f1264c1158221903e53e3774b180f49eac79887cbc9a9a0ffbea",
+      "carrierParts": 2,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772433,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772433.capture.json",
+          "captureSha256": "211b97c6e495237267415fc21a1b01c6a34870ee0f14e73e1bd27b26bdd97a72",
+          "authenticatedUtf8LogSha256": "fc5fa4f995bf444d0f623777da415f5db0f25a4c224be21cfbaee5b9eeab17b7"
+        },
+        {
+          "jobId": 123807772598,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772598.capture.json",
+          "captureSha256": "338cf39f99a9b7f6afeae7bf9a77f4f14fdd19fea3fa5434dfd7c28f8dfd37c0",
+          "authenticatedUtf8LogSha256": "03e1301cb89e4ac8a8cdcaa2195c1e494e1e56a0b3be8e00c7f7878690730ff5"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 3,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD3-RAW-QUALIFICATION-v1.json",
+      "sha256": "503785535e404353bb17beb4ff3b97493c3c51d93163474672014ac5c2d4b258",
+      "records": 10,
+      "strictRecords": 9,
+      "completedNativeOutputs": 9,
+      "strictFalseSeparatelyProvenTimeouts": 1,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard3-40974963334-v1.json",
+      "independentQualifierReplaySha256": "3edf85cd014790546b22fd009fa72b8b32fb48aa21419f43ae4fddf63132224c",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard3-parsed.json",
+      "parsedSha256": "db6893f1cb21c2057d72a1529b621eebcfc89c2120244cf606b3389527a2e4bf",
+      "producerLogPath": "/tmp/mst84-producer-123800701362.log",
+      "producerLogSha256": "b63bdcea06930b884eb3dab0fea3858483cc28a311c74a507dc90de49da94e98",
+      "producerJobId": 123800701362,
+      "producerUploadProof": {
+        "jobId": 123800701362,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942852164,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard3",
+        "rawArtifactSha256": "970163f2230eed1a9e9b6cbe18269402239e264f4ad226cceccf4cb989041be3",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard3.zip",
+      "originalServerZipSha256": "970163f2230eed1a9e9b6cbe18269402239e264f4ad226cceccf4cb989041be3",
+      "originalServerZipBytes": 3319841,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard3-carrierlogs.json",
+      "carrierLogsJsonSha256": "3ebd04dc09b982441453cc0bd8627993569fadf578340395295b8c24665dfb3f",
+      "carrierParts": 4,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772417,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772417.capture.json",
+          "captureSha256": "42714debad7800af522ba7db46a9c85b5db950b5e60d7db5b0150098ae4d5b18",
+          "authenticatedUtf8LogSha256": "1ba9c7407451519d426befe3392de7558d62c4e58dff94e3e7a8f0a7b14ac3e4"
+        },
+        {
+          "jobId": 123807772489,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772489.capture.json",
+          "captureSha256": "4db4264555b25bf5dd94f9207bb3f712a50f859c4709276fc79877ae4753a2e7",
+          "authenticatedUtf8LogSha256": "35d8d9edef8f7d2eb50f7c8db41dcf1a42a61e9a5a66310f3a21edfbe277d4e5"
+        },
+        {
+          "jobId": 123807772525,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772525.capture.json",
+          "captureSha256": "f79b1c8bffc60faa09ba43278ece3b5d885b48586929c59b1a15925613e43a0d",
+          "authenticatedUtf8LogSha256": "43383e2b0ad47627f4564e7f34d5e87048d9efc63efefcc5614231d5dd48c199"
+        },
+        {
+          "jobId": 123807772501,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772501.capture.json",
+          "captureSha256": "4b239c4e67bfcd1b1a47b0e7f1d4cfcdededc7bd2d974a641def0cc8e98046dc",
+          "authenticatedUtf8LogSha256": "7a5c64074b11d66cebfd5cbc447f5a5cfd47a05170aed47c45c1c125f1cd46f3"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 4,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD4-RAW-QUALIFICATION-v1.json",
+      "sha256": "e1201e58ff149c5115783e29d2626012aee0c579c545e7610dfa2d8d7d079a93",
+      "records": 8,
+      "strictRecords": 6,
+      "completedNativeOutputs": 6,
+      "strictFalseSeparatelyProvenTimeouts": 2,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard4-40974963334-v1.json",
+      "independentQualifierReplaySha256": "adb65fb709f7ad4f0f9336ba8b1bf52b85bde8ff26eb66f37ecec46ea7ee6133",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard4-parsed.json",
+      "parsedSha256": "44e6112d060c21097dfdc6e284be569d6efb9b1c2cc23e2d81fc8a0a606ecffd",
+      "producerLogPath": "/tmp/mst84-producer-123800701348.log",
+      "producerLogSha256": "ba8ebbafe44a1f16f1f3dd6c05b3c316c875c2b5b2c75f1edca789f492d42929",
+      "producerJobId": 123800701348,
+      "producerUploadProof": {
+        "jobId": 123800701348,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12942758294,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard4",
+        "rawArtifactSha256": "421439c162f79565ef61e44846efd33884522c0052ae243f4941fa8223de2042",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard4.zip",
+      "originalServerZipSha256": "421439c162f79565ef61e44846efd33884522c0052ae243f4941fa8223de2042",
+      "originalServerZipBytes": 2806472,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard4-carrierlogs.json",
+      "carrierLogsJsonSha256": "b96b09261d648b2276b446df818b84c29316f9f313d39452aa99f0fb02ec44ab",
+      "carrierParts": 3,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772543,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772543.capture.json",
+          "captureSha256": "09f8969c9790c8acb0a70672a9b1687c6516095ee0cb7cafb1d0f21d5e373b96",
+          "authenticatedUtf8LogSha256": "43ea7862de2a12f82801d3b967b05cdda87f775a88e7b97845b735c4afaf0a49"
+        },
+        {
+          "jobId": 123807772530,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772530.capture.json",
+          "captureSha256": "7c90253f7e541188619566286d02829fcba29560f8a63ca445ec7d6d1366c7d4",
+          "authenticatedUtf8LogSha256": "7941e71b85a0ddfa870b0f545a2164890940f712b24eb01b6d894af1540b8359"
+        },
+        {
+          "jobId": 123807772412,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772412.capture.json",
+          "captureSha256": "468db78b311701a55209da11bd6b806c399a50171f05bc2ae1e3fc03caf0e974",
+          "authenticatedUtf8LogSha256": "6dfe433fb32141db4c0a9f6cadb96da33d78d51e16d2a22c343a00d98a474ddc"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    },
+    {
+      "dataset": "srj24",
+      "shardIndex": 6,
+      "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/controller/LAYER-AWARE-MST84-srj24-SHARD6-RAW-QUALIFICATION-v1.json",
+      "sha256": "8b2ab7ccac5fc06b48387f2f87c5dd040f1e5885a7416b2832b56a4af8d829ab",
+      "records": 10,
+      "strictRecords": 10,
+      "completedNativeOutputs": 10,
+      "strictFalseSeparatelyProvenTimeouts": 0,
+      "nativeFailuresRetained": 0,
+      "independentQualifierReplayPath": "/tmp/independent-mst84-srj24-shard6-40974963334-v1.json",
+      "independentQualifierReplaySha256": "31d6e29bdb6e65e5a4cb83e63fe38ca54aaa57d3560fa9da152b7f8f4779c25f",
+      "deepEqualExceptCarrierTemporaryArchivePath": true,
+      "qualifierSha256": "a86f8df2f90028c9b976c298725b0ff7fc373740523d3fe81b69adae86219609",
+      "parsedPath": "/tmp/mst84-40974963334-srj24-shard6-parsed.json",
+      "parsedSha256": "ed28463b572aa55be0494aaa12b24a5e2b3f2cd73f8ce73a3bfbe5afa38a2346",
+      "producerLogPath": "/tmp/mst84-producer-123800701556.log",
+      "producerLogSha256": "42b16a04d5931b289c50e423cfdd43a118d9e665c104662a92dcea5229231a3d",
+      "producerJobId": 123800701556,
+      "producerUploadProof": {
+        "jobId": 123800701556,
+        "runAttempt": 1,
+        "headSha": "fd28c1325f48efaba0f4189e432777be7dd51d6d",
+        "rawArtifactId": 12943091793,
+        "rawArtifactName": "layer-aware-mst84-raw-layer-aware-mst-srj24-shard6",
+        "rawArtifactSha256": "d82b5f972632d131d7dbc807d4e515b84b8e13b4c7154b772e1e92b32721340a",
+        "matchingFinalizedLines": 1
+      },
+      "originalServerZipPath": "/tmp/clean336-original-server-zips/40974963334-layer-aware-mst-srj24-shard6.zip",
+      "originalServerZipSha256": "d82b5f972632d131d7dbc807d4e515b84b8e13b4c7154b772e1e92b32721340a",
+      "originalServerZipBytes": 4966079,
+      "carrierLogsJsonPath": "/tmp/mst84-40974963334-srj24-shard6-carrierlogs.json",
+      "carrierLogsJsonSha256": "d25f8333d221755d5f112a14e4f0f64c352e0e0e8f2af12281143c94328e18ca",
+      "carrierParts": 5,
+      "independentlyVerifiedCarrierCaptures": [
+        {
+          "jobId": 123807772446,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772446.capture.json",
+          "captureSha256": "6bffac303eb94b997286a9694dc7d02d7146258c1b7acb25925deda1014a1e48",
+          "authenticatedUtf8LogSha256": "1994529b27d0b017cd3304688e1e18759443b620159dee0f7f9bb4ea0adcc78a"
+        },
+        {
+          "jobId": 123807772507,
+          "capturePath": "/tmp/clean336-carrier-logs/123807772507.capture.json",
+          "captureSha256": "442059560856834fcc0cb935ec72d181d914729a7e4718dfd8d08ea1f578daf4",
+          "authenticatedUtf8LogSha256": "aea1884482390bfee0de4134ad6883816f6b41145513ca32d09b42a551089b2f"
+        },
+        {
+          "jobId": 123807773929,
+          "capturePath": "/tmp/clean336-carrier-logs/123807773929.capture.json",
+          "captureSha256": "00994e13db10211d8f7bfee94531b1f0d9f737f824a6319e9c27616f13f4df4c",
+          "authenticatedUtf8LogSha256": "a940ff81e4d7fd6470de4430a756cc989651b753d5e3e60e86c46f57be80fc4e"
+        },
+        {
+          "jobId": 123807774535,
+          "capturePath": "/tmp/clean336-carrier-logs/123807774535.capture.json",
+          "captureSha256": "91f888a59d519e943dd6f48da4d07866a9a2f787508210537cb0522ba383d0e0",
+          "authenticatedUtf8LogSha256": "260098c8a3af04efc8e4a189cafb69caa9ab8f7df54e3a9fee41720b058c1232"
+        },
+        {
+          "jobId": 123807774383,
+          "capturePath": "/tmp/clean336-carrier-logs/123807774383.capture.json",
+          "captureSha256": "52e874a3577bcddbe43b2e78bf90caf31517f94f10e3d25229bf698f0dbb8611",
+          "authenticatedUtf8LogSha256": "29f7591969c0454c6d523d5c38b1463ae9f77d5d259065c79785821258facdbb"
+        }
+      ],
+      "originalServerZipIndependentlyReconstructedAndByteCompared": true,
+      "crossArmOutputOrNativeWorkParityRequired": false,
+      "logicalAndStructuralMechanismRemainSeparateFromWholeElectricalPass": true
+    }
+  ],
+  "fullUnionReplayPath": "/tmp/independent-mst84-all11-log-union-v1.json",
+  "fullUnionReplaySha256": "7b97fe9e24a79bae7c00afdf553b4a87e0427c26704a609ed1982e4a8afd5d9f",
+  "full42OriginalCasesRetained": true,
+  "prospectiveOrderCounts": {
+    "AB": 21,
+    "BA": 21
+  },
+  "temporaryArchivePathOnlyNormalized": true,
+  "crossArmOutputGeometryOrNativeWorkParityRequired": false,
+  "timingsPooledWithPriorCampaigns": false,
+  "clockCorrectionApplied": false,
+  "performanceConclusionMade": false,
+  "overallElectricalPassClaim": false,
+  "noSolverBenchmarkReruns": true,
+  "scope": "Independent exact11 original API serverZIP/authenticated carrier/source/raw-member proof replay for all84 fresh semantic-routing attempts. Every completed, dirty, native-failed, timeout, missing or UNKNOWN mechanism result retained. Per-arm physical grades, emitted demands, structural via witnesses and whole electrical certification remain distinct. No cross-arm geometry/iteration equality gate, old evidence pooling, corrected clocks or performance conclusion."
+}
