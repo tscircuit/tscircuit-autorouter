@@ -105,6 +105,8 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Uses the accelerated backend by default with a verified four-worker runtime. */
+  parallelPortPointPathing?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -529,6 +531,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
+            deferInitialization: true,
             graph,
             connections,
             layerCount: cms.srj.layerCount,
@@ -1153,8 +1156,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.solve()
         return
       }
+      const parallelPortPointPathing = this.opts.parallelPortPointPathing ??
+        ("persistentWorkerCount" in runtime && runtime.persistentWorkerCount === 4)
       while (!this.solved && !this.failed) {
         if (
+          (parallelPortPointPathing &&
+            this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver) ||
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
           this.activeSubSolver instanceof
             TinyHypergraphPortPointPathingSolver ||
