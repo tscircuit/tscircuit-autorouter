@@ -172,7 +172,7 @@ diff --git a/lib/prepared/PreparedPortPointRoutingSolver.ts b/lib/prepared/Prepa
 +  }
 +
 +  protected override getRouteHeuristic(routeId: number, portId: number): number {
-+    return Math.max(super.getRouteHeuristic(routeId, portId),
++    return 1.5 * Math.max(super.getRouteHeuristic(routeId, portId),
 +      this.geometry.getLandmarkDistance(portId, this.getRouteEndPortId(routeId)) * this.DISTANCE_TO_COST)
    }
  
@@ -183,7 +183,7 @@ diff --git a/lib/prepared/PreparedPortPointRoutingSolver.ts b/lib/prepared/Prepa
    private asyncRunning = false
 +
 +  protected override getRouteHeuristic(routeId: number, portId: number): number {
-+    return Math.max(super.getRouteHeuristic(routeId, portId),
++    return 1.5 * Math.max(super.getRouteHeuristic(routeId, portId),
 +      this.geometry.getLandmarkDistance(portId, this.getRouteEndPortId(routeId)) * this.DISTANCE_TO_COST)
 +  }
  
