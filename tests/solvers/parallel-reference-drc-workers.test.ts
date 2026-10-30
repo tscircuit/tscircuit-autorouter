@@ -29,6 +29,7 @@ test("parallel reference checks preserve errors and centers across changing cand
     await session.enable(runtime)
     for (const offset of [0, 0.01, 0, -0, 0.2]) {
       const traces = Array.from({ length: 12 }, (_, index) => ({
+        type: "pcb_trace" as const,
         pcb_trace_id: "trace-" + index,
         connection_name: "net-" + index,
         route: [
