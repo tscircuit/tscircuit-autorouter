@@ -1,3 +1,4 @@
+import { RoutingWorkerStartupSolver } from "../../runtime/RoutingWorkerStartupSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -1148,11 +1149,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
+    let workerStartup: Promise<void> | undefined
+    let startupFailure: { error: unknown } | undefined
     try {
       if (runtime === undefined) {
         this.solve()
         return
       }
+      workerStartup = runtime.executeAsync(RoutingWorkerStartupSolver, {}).then(
+        (): void => {},
+        (error: unknown): void => { startupFailure = { error } },
+      )
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
@@ -1183,7 +1190,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           lastYield = performance.now()
         }
       }
+      await workerStartup
+      if (startupFailure) throw startupFailure.error
     } catch (error) {
+      await workerStartup
       this.failed = true
       this.error = `Pipeline9 asynchronous solve error: ${error}`
       throw error
