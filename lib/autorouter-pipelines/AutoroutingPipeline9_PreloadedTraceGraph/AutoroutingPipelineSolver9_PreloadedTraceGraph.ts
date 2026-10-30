@@ -105,6 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  experimentSharedRepairGeometry?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -864,6 +865,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             defaultViaDiameter: cms.viaDiameter,
             defaultViaHoleDiameter: cms.viaHoleDiameter,
+            ...(cms.opts.experimentSharedRepairGeometry === true
+              ? { experimentSharedRepairGeometry: true }
+              : {}),
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
           },

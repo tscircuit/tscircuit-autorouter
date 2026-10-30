@@ -44,6 +44,10 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
+import {
+  createInitialRepairConnectivityMaps,
+  type InitialRepairConnectivityStats,
+} from "./createInitialRepairConnectivityMaps"
 import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
@@ -64,6 +68,7 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 type Pipeline9JointDrcRepairSolverParams = {
+  experimentSharedRepairGeometry?: boolean
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -653,6 +658,7 @@ export const getPipeline9PreloadRepairTraceIds = ({
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9JointDrcRepairSolverParams
+  declare readonly initialRepairConnectivityStats?: InitialRepairConnectivityStats
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
   readonly movablePreloadedSections: MovablePreloadedSection[]
@@ -851,7 +857,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
+    let initialConnectivityMaps: ReturnType<typeof createInitialRepairConnectivityMaps> | undefined
+    if (params.experimentSharedRepairGeometry === true) {
+      this.initialRepairConnectivityStats = {
+        extraNormalizationCalls: 0,
+        sourceMapBuilds: 0,
+        routeMapBuilds: 0,
+        sourceMapReuses: 0,
+        routeMapReuses: 0,
+      }
+      initialConnectivityMaps = createInitialRepairConnectivityMaps(
+        params.srjWithPointPairs,
+        params.originalSrj,
+        this.initialRepairConnectivityStats,
+      )
+    }
     const baselineDrc = evaluateRelaxedDrc({
+      ...(initialConnectivityMaps ? { connectivityMaps: initialConnectivityMaps } : {}),
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -874,12 +896,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
     const currentDrcResult = evaluateRelaxedDrc({
+      ...(initialConnectivityMaps ? { connectivityMaps: initialConnectivityMaps } : {}),
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
+    // Later candidate evaluators retain their original, raw-SRJ native maps.
+    initialConnectivityMaps = undefined
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
