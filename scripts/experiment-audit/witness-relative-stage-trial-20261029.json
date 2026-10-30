@@ -1,0 +1,136 @@
+{
+  "certificateRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9WitnessViaCertificate.ts",
+  "certificateSha256": "aa1cb03f667c8132cda85e64aa2bf61ed9ca5c17313969021f86232b9a19fa6c",
+  "inputArtifact": {
+    "id": 12938275121,
+    "name": "witness-quality6-raw-witness-via-pad-sample-008-srj24-AB",
+    "digest": "sha256:6383d958509ebe285f6dd658d7fe0bdafa8496c66a8201b557e5bc26c1d19e5c",
+    "size_in_bytes": 1412595,
+    "workflow_run": {
+      "id": 40964225540,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "codex/witness-quality6-controller-20261029",
+      "head_sha": "d8e7dc203691d037aedcf3e2ed23050554563f9f"
+    }
+  },
+  "inputMembers": {
+    "original-input.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/original-input.json",
+      "sha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+      "bytes": 1954213
+    },
+    "point-pair-context.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/point-pair-context.json",
+      "sha256": "83125988e62414393665f116deb6daa845ad7d5ea6e7ba324438087508607d64",
+      "bytes": 2058628
+    },
+    "raw-new-traces.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-new-traces.json",
+      "sha256": "34f2294589bb9744f2921eece7dcce1361c0dffa6285b338fcce368d73fa8c96",
+      "bytes": 381855
+    },
+    "canonical-circuit-json.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/canonical-circuit-json.json",
+      "sha256": "3ea0190b503152c219cfba664b9e694933633e150c423b264dca3af06a9b2b7d",
+      "bytes": 810293
+    },
+    "raw-solver-output.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/raw-solver-output.json",
+      "sha256": "fd9def8e942d691c2020f1fb2680203d63d993c3d197fa5a3b293d50b0e3023a",
+      "bytes": 2366612
+    },
+    "declared-intent-via-pad.json": {
+      "member": "witness-via-pad-sample-008-srj24-AB/pair-1/A/raw/declared-intent-via-pad.json",
+      "sha256": "1d482cbaa28d8f291fc10e102b99792efb02fc83e351628d034fd405a940980e",
+      "bytes": 869143
+    }
+  },
+  "inputIdentitySha256": "4d67c4d30f85b2d1cc66e34c7eab59560811ef3fa7ef6c87f511cb920338dd6d",
+  "expectedCertificateSummary": {
+    "status": "UNKNOWN",
+    "demandsChecked": 167,
+    "reasonCount": 51,
+    "referenceErrorCount": 0,
+    "srjObstacleViolationCount": 2,
+    "viaPadPolicyViolationCount": 1,
+    "viaInPadViolationCount": 0,
+    "foreignViaPadFindings": 1,
+    "ownershipCoverageStatus": "COMPLETE"
+  },
+  "expectedBaselineCertificateSha256": "0b5243f76bc3a3e0aa84001d6657d13d99d5d624e14de1436652aaef923ea2ad",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bunVersion": "1.4.2",
+  "schemaVersion": 1,
+  "campaign": "witness-relative-stage-trial-20261029",
+  "controllerBranch": "codex/witness-relative-stage-trial-20261029",
+  "sealState": "SEALED",
+  "sourceBaseSha": "2109f9e96957c06f23aef2b079f6d59fba23ea52",
+  "sourceBaseTree": "83d39c038ba8bdbb01fc53728e5069fd594d2d23",
+  "sourceSha": "c9fd3d90b17fcb9dffe7a3b634823b982506f474",
+  "sourceTree": "298c50207aae9aafb1e05acd6bd5ff996f6ba57c",
+  "sourceFileHashes": {
+    "stage": "17e481f1dc3de437296c1c43f34af052d288e969c87093562f623d625c7bfe3b",
+    "proof": "8e992acc9d28bc591c2ce798339cc684e00b57a4f2cd2a47044686a6d5c7bd40",
+    "geometry": "d1d5ada4c4dc5c76aca51b5bb7039ebeb01d440b91d2b860d697249ce886189c",
+    "certificate": "99d19f25ee9ddb4b66e41116aaf90b75437d2a322f8c50593bf54c28d0d69cae"
+  },
+  "sourceReceiptPins": {
+    "authorQaSha256": "740d006e55b1f7f52487679cccccdf224d769b233c82606779f75ab468f6ef96",
+    "independentReviewSha256": "df6689db7b6518e72f34d81f7c3c3bacdde1ffaf5946cc818d0da7dea23d2a82",
+    "publicationReceiptSha256": "cfedb3becfb78371b9bc3ba4235892b0e4237a112b6f8eb481bd30d5e05682fe"
+  },
+  "sourceDefaultOffReviewed": true,
+  "inheritedControllerLocal": "fac9cf15c9a16d50da272be5ca34ec2cbc9880dd",
+  "inheritedControllerTree": "50d71f441a29ddcf0ed4e67d89da731230798552",
+  "expectedRemoteParent": "52948c4f0955a102c8d52995e4a1ac2b08488415",
+  "maximumCandidates": 16,
+  "maximumStageIterations": 20,
+  "maximumStageSolveCalls": 1,
+  "viaMaximumMove": 0.25,
+  "wireMaximumMove": 0.02,
+  "sourceApi": {
+    "className": "Pipeline9RelativeWitnessRepairSolver",
+    "constructorFields": [
+      "originalSrj",
+      "pointPairs",
+      "traces",
+      "protectedTraces"
+    ],
+    "solveMethod": "solve",
+    "outputMethod": "getOutput",
+    "pipelineFlag": "experimentRelativeWitnessRepair",
+    "defaultOff": true
+  },
+  "certificateVisibilityExports": [
+    "collectRawViaSites",
+    "checkBoardEnvelope"
+  ],
+  "productionStageSolveRequired": true,
+  "independentBlacksmithDataOnlyReplayRequired": true,
+  "localRelativeRepairAllowed": true,
+  "routingAllowed": false,
+  "localDatasetCheckerAllowed": false,
+  "qualityOrSpeedCredit": false,
+  "productionAcceptanceAllowed": false,
+  "fullBoardRecoveryClaim": false,
+  "trialScope": "Prospective until fully sealed reviewed published source. One actual production relative-stage solve on exact retained original/pairs/raw/canonical; no candidate proposal reimplementation or board rerouting. Two literal certificate export prefixes must revert to exact old source2109; independent old-body full before/after returns must deep-equal production stage returns. All UNKNOWN reasons, native7/SRJ/policy arrays and output masks retained. Independent exact-rational data-only replay proves local anchored same-owner partition conditions without inferring unknown original PTH drills or certifying existing global opens. No full-board acceptance or timing credit.",
+  "assetHashes": {
+    "run-witness-relative-stage-trial.py": "b143860c729bb41337bfd08ece30b51cc76c7cb2b74b31710676b89767a52ea9",
+    "witness-relative-stage-child.ts": "6a1b5cb3e77c780038f5aaaa7d47d2d92dc3b5e964b7ad557bc28eca1e93bcbb",
+    "replay-witness-relative-stage-proof.py": "bdf44261f49da25ec1e394627b5f37aa04ec40e860d3fb34fa5f1b9d73c9557c",
+    "seal-witness-relative-stage-trial.py": "4920e73ec779508e75222bfb7b943d26cecb49302cb896f922b5c12e70d4b349",
+    "tests/witness-relative-stage-proof-replay.py": "d7cbb28cba1bd68a03dc9c5156c9229337cd2a14a1486f73433610ff4e6792aa",
+    "tests/witness-relative-stage-trial-integrity.py": "d9c93873435f39a9277c62de66e66f27873ab66157a5dbc230377816696c0522",
+    "witness-local-repair-proposals.ts": "6e6e6111333c18610de11c88bba8f7695dd2194468ea1d0403542937aa83a636",
+    "run-witness-local-repair-diagnostic.py": "8c90dbb322a46581608e57ddb381ff81e97c57c6392c1412df58af1c245343b9",
+    "witness-local-repair-diagnostic-20261029.json": "e0f1b08aa1f49f81558094e28e318f425f0668a64cb74cb361b6629504712727",
+    "run-witness-contact-diagnostic.py": "ccda876d3fbf4d35f73fb9b5cf5c344de773b8ac5f41281ebd3b9191ab1655b1",
+    "witness-contact-diagnostic-20261029.json": "353825746c435aae90ba6868297246662e94f24986f66fdc31c12022f2cc65c1",
+    "witness-contact-raw-identity.json": "4d67c4d30f85b2d1cc66e34c7eab59560811ef3fa7ef6c87f511cb920338dd6d",
+    "run-bottleneck-experiments.py": "112380350c5e3e659c69a1604dd31dab0e86650eb137675871ce011c07537d6d",
+    "install-pinned-dependencies.py": "ca1e467ae67a42e8108a3d5d1ad16ab112055c9999ebb100fbf13cc1d96cf1db",
+    "witness-quality6-artifact-carrier.py": "cb7379cf40f043dddad25068a3d67361123fa90aaa93c9dc81692d92ec3e1a1b"
+  },
+  "workflowSha256": "702661f8b3af110b6369931f4f1f4f4501a02a13c908cd6dfaafd909e01e2897"
+}
