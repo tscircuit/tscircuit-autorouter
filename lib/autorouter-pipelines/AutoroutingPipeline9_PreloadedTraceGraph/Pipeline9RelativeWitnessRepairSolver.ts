@@ -6,6 +6,7 @@ import { Pipeline9IntentOwners, type OriginalIntentJson } from "./checkPipeline9
 import { collectRawViaSites, checkBoardEnvelope, getPipeline9WitnessViaCertificate, type WitnessViaCertificate } from "./getPipeline9WitnessViaCertificate"
 import { getPipeline9RelativeGeometryDetails, type RelativeGeometryDetails } from "./getPipeline9RelativeGeometryDetails"
 import { preservePipeline9RelativeFindings } from "./preservePipeline9RelativeFindings"
+import { checkPipeline9RelativeViaTraceClearance } from "./checkPipeline9RelativeViaTraceClearance"
 import { getRelativeViaTraceTargets } from "./getRelativeViaTraceTargets"
 import { provePipeline9RelativeContacts, type RelativeWitnessMove } from "./provePipeline9RelativeContacts"
 import { isCopperPointWithinRadius, type CopperPoint } from "./relativeCopperSweepGeometry"
@@ -29,6 +30,7 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
   finalGeometryDetails?: RelativeGeometryDetails
   findingPreservation?: ReturnType<typeof preservePipeline9RelativeFindings>
   private localizedViaTrace = false
+  private viaTraceClearanceTarget?: { site: WitnessViaCertificate["sites"][number]; trace: SimplifiedPcbTrace; minimumClearance: number }
   readonly qualification: Record<string, string | number | boolean | null> = {
     status: "UNINITIALIZED", localRepaired: false, accepted: false,
     initialFullCertificateStatus: "UNKNOWN", finalFullCertificateStatus: "UNKNOWN",
@@ -165,6 +167,7 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
         if (Number.isFinite(gap) && (!best || gap < best.gap)) best = { start: a, end: b, wireWidth: width, wireLayer: a.layer, gap }
       }
       if (!best || best.gap <= 0 || best.gap >= finding.error.minimum_clearance) { this.noProposal("The strict via-trace finding lacks a nonoverlapping finite raw segment witness"); return }
+      this.viaTraceClearanceTarget = { site, trace: raw[0]!, minimumClearance: finding.error.minimum_clearance }
       targets = getRelativeViaTraceTargets({ site, ...best, minimumClearance: finding.error.minimum_clearance })
     } else {
       const clearance = Math.max(finding.error.minimum_clearance, this.params.originalSrj.defaultObstacleMargin ?? 0, this.params.originalSrj.minViaEdgeToPadEdgeClearance ?? 0)
@@ -217,9 +220,12 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     const details = this.localizedViaTrace && inventoryComplete ? getPipeline9RelativeGeometryDetails({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, traces: candidate, certificate }) : undefined
     if (this.localizedViaTrace && !this.baselineGeometryDetails) throw new Error("Localized repair lost its complete baseline geometry records")
     const preservation = details && this.baselineGeometryDetails ? preservePipeline9RelativeFindings({ before: this.baselineGeometryDetails, after: details, baseline: this.baselineCertificate, candidate: certificate }) : undefined
-    const admissibleGeometry = this.localizedViaTrace ? preservation?.status === "PASS" : geometryComplete
+    const viaMove = proposal.moves.find((move) => move.kind === "via")
+    if (this.viaTraceClearanceTarget && !viaMove) throw new Error("A via-trace proposal lost its required via move")
+    const exactTarget = this.viaTraceClearanceTarget && viaMove ? checkPipeline9RelativeViaTraceClearance({ ...this.viaTraceClearanceTarget, target: viaMove.occurrences[0]!.newXY }) : undefined
+    const admissibleGeometry = (this.localizedViaTrace ? preservation?.status === "PASS" : geometryComplete) && (!this.viaTraceClearanceTarget || exactTarget?.status === "PASS")
     const proof = admissibleGeometry ? provePipeline9RelativeContacts({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, before: this.params.traces, after: candidate, moves: proposal.moves, baselineCertificate: this.baselineCertificate, candidateCertificate: certificate }) : undefined
-    ;(this.stats.candidateLedger as OriginalIntentJson[]).push({ proposal: this.proposalIndex, fullStatus: certificate.status, geometryFindings: this.geometryCount(certificate), geometryComplete, relativeStatus: proof?.status ?? "UNKNOWN", reason: proof?.reason ?? preservation?.reason ?? "Geometry screens did not all pass", ...(preservation ? { findingPreservationStatus: preservation.status } : {}) })
+    ;(this.stats.candidateLedger as OriginalIntentJson[]).push({ proposal: this.proposalIndex, fullStatus: certificate.status, geometryFindings: this.geometryCount(certificate), geometryComplete, relativeStatus: proof?.status ?? "UNKNOWN", reason: proof?.reason ?? (exactTarget?.status === "UNKNOWN" ? exactTarget.reason : undefined) ?? preservation?.reason ?? "Geometry screens did not all pass", ...(preservation ? { findingPreservationStatus: preservation.status } : {}) })
     this.assertInputsUnchanged()
     if (!admissibleGeometry || !proof || proof.status !== "PASS" || this.geometryCount(certificate) >= this.geometryCount(this.baselineCertificate)) return
     this.output = candidate

@@ -31,6 +31,22 @@ function exactRecord(value: unknown, ancestors = new Set<object>()): string | un
   return array ? `[${entries.join(",")}]` : `{${entries.join(",")}}`
 }
 
+/** Anonymous hard constraints need no inferred electrical owner. Their entire
+ * original record stays exact and the unchanged contact proof independently
+ * excludes the moving bundle from their complete outer footprint.
+ */
+function isAnonymousHardObstacle(record: Record<string, any>): boolean {
+  const obstacle = record.originalObstacle, owner = record.originalObstacleOwner
+  if (!Number.isSafeInteger(record.originalObstacleIndex) || record.originalObstacleIndex < 0 || record.finding?.obstacleIndex !== record.originalObstacleIndex) return false
+  if (!obstacle || !owner || owner.status !== "UNKNOWN" || typeof owner.reason !== "string" || owner.reason.length === 0 || Object.keys(owner).sort().join(",") !== "reason,status") return false
+  if (!Array.isArray(obstacle.connectedTo) || obstacle.connectedTo.length !== 0 || !["rect", "oval"].includes(obstacle.type)) return false
+  if (![obstacle.center?.x, obstacle.center?.y, obstacle.width, obstacle.height, obstacle.ccwRotationDegrees ?? 0].every(Number.isFinite) || obstacle.width <= 0 || obstacle.height <= 0) return false
+  if (!Array.isArray(obstacle.layers) || obstacle.layers.length === 0 || new Set(obstacle.layers).size !== obstacle.layers.length || obstacle.layers.some((layer: unknown) => typeof layer !== "string" || !/^(top|bottom|inner[1-9][0-9]*)$/.test(layer))) return false
+  if (obstacle.circuitJsonMetadata !== undefined && (obstacle.circuitJsonMetadata === null || typeof obstacle.circuitJsonMetadata !== "object" || Reflect.ownKeys(obstacle.circuitJsonMetadata).length !== 0)) return false
+  const fields = new Set(["componentId", "type", "center", "width", "height", "layers", "connectedTo", "circuitJsonMetadata", "ccwRotationDegrees"])
+  return Object.keys(obstacle).every((key) => fields.has(key))
+}
+
 /** This is a local improvement contract, never a clean-board qualification. */
 export function preservePipeline9RelativeFindings({ before, after, baseline, candidate }: Input): Preservation {
   const unknown = (reason: string): Preservation => ({ status: "UNKNOWN", reason })
@@ -51,15 +67,15 @@ export function preservePipeline9RelativeFindings({ before, after, baseline, can
       if (!row || row.count !== expected || !Array.isArray(row.findings) || row.findings.length !== expected || row.unknownFindingCount !== 0 || row.sameOwnerRuleFindingCount !== 0 || row.knownForeignFindingCount !== expected) return unknown("Strict predicate populations are incomplete or incoherent")
     }
   }
-  for (const details of [before, after]) for (const key of ["srjObstacles", "viaPadPolicy"] as const) {
-    if (!Array.isArray(details[key]) || details[key].some((record) => record?.originalObstacleOwner?.status !== "RESOLVED" || !record.originalObstacle || !record.route || !record.raw)) return unknown("An untargeted physical finding has ambiguous original participants")
-  }
   const keys = ["nativeErrors", "nativeErrorsWithCenters", "nativeLocationAwareErrors", "viaInPad", "srjObstacles", "viaPadPolicy"] as const
   for (const key of keys) {
     if (!Array.isArray(before[key]) || !Array.isArray(after[key]) || exactRecord(before[key]) === undefined || exactRecord(after[key]) === undefined) return unknown("A detailed predicate was not performed")
     const oldRecords = before[key].map((record) => exactRecord(record)), newRecords = after[key].map((record) => exactRecord(record))
     if (oldRecords.some((value) => value === undefined) || newRecords.some((value) => value === undefined)) return unknown("A detailed finding has unsupported/nonfinite data")
     if (JSON.stringify(oldRecords.sort()) !== JSON.stringify(newRecords.sort())) return unknown(`Untargeted ${key} records changed`)
+  }
+  for (const details of [before, after]) for (const key of ["srjObstacles", "viaPadPolicy"] as const) {
+    if (!Array.isArray(details[key]) || details[key].some((record) => !record || record.originalObstacleOwner?.status !== "RESOLVED" && !isAnonymousHardObstacle(record) || !record.originalObstacle || !record.route || !record.raw)) return unknown("An untargeted physical finding has ambiguous original participants")
   }
   for (const [details, certificate] of [[before, baseline], [after, candidate]] as const) {
     if (details.nativeErrors.length !== certificate.referenceErrorCount || details.viaInPad.length !== certificate.viaInPadViolationCount || details.srjObstacles.length !== certificate.srjObstacleViolationCount || details.viaPadPolicy.length !== certificate.viaPadPolicyViolationCount) return unknown("Detailed records do not match their full-certificate populations")
