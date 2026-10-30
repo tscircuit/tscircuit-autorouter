@@ -1,5 +1,4 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
@@ -18,10 +17,7 @@ import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
-import {
-  convertToCircuitJson,
-  createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -656,7 +652,6 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
-  private asyncRunning = false
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
@@ -696,7 +691,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private initialBoundedRegionalRepairStartedAt?: number
-  private initialBoundedReferenceValidationStart?: number
   readonly pipelineDef = [
     {
       solverName: "clearanceProjectionSolver",
@@ -718,13 +712,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     {
       solverName: "initialBoundedRegionalRepairSolver",
       createSolver: (): BaseSolver => {
-        if (!this.exactRepairParams || !this.drcEvaluator) {
+        if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) {
           throw new Error(
             "Pipeline9 initial regional repair is missing its input",
           )
         }
         this.initialBoundedRegionalRepairStartedAt = performance.now()
-        this.initialBoundedReferenceValidationStart = this.referenceDrcValidationCount
         this.initialBoundedRegionalRepairSolver =
           new Pipeline9BoundedRegionalRepairSolver({
             connMap: this.params.connMap,
@@ -740,7 +733,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               this.exactRepairParams.hdRoutes,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
-            drcEvaluator: this.drcEvaluator,
+            drcEvaluator: this.cachedReferenceDrcEvaluator,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -1427,56 +1420,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
-    if (
-      (params.originalSrj.traces?.length ?? 0) === 0 &&
-      params.updatedPreloadedTraces.length === 0 &&
-      this.movablePreloadedSections.length === 0
-    ) {
-      const initialCandidate = prepareCandidateDrcInput(initialCombinedRoutes)
-      const candidateCircuitJson = convertToCircuitJson(
-        params.srjWithPointPairs,
-        initialCandidate.routedTraces,
-        {
-          minTraceWidth: params.originalSrj.minTraceWidth,
-          minViaDiameter: params.originalSrj.minViaDiameter,
-          originalSrj: params.originalSrj,
-          includeOriginalConnections: true,
-          connectivityMaps,
-        },
-      )
-      candidateCircuitJson.push(createPcbBoardElement({
-        ...params.originalSrj,
-        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-      }))
-      const initialCircuitJson = convertToCircuitJson(
-        params.srjWithPointPairs,
-        preparedCurrentOutput.routedTraces,
-        {
-          minTraceWidth: params.originalSrj.minTraceWidth,
-          minViaDiameter: params.originalSrj.minViaDiameter,
-          originalSrj: params.originalSrj,
-          includeOriginalConnections: true,
-        },
-      )
-      initialCircuitJson.push(createPcbBoardElement({
-        ...params.originalSrj,
-        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-      }))
-      // Trace-id collisions or imported connectivity can change the candidate
-      // circuit; reuse the initial DRC only when its complete input is equal.
-      if (JSON.stringify(candidateCircuitJson) === JSON.stringify(initialCircuitJson)) {
-        referenceDrcCache.set(
-          JSON.stringify(initialCombinedRoutes),
-          normalizeCandidateDrcResult({
-            errors: currentDrc.errors,
-            errorsWithCenters: currentDrc.errorsWithCenters,
-            circuitJson: currentDrcResult.circuitJson,
-            movableTraceIds: initialCandidate.movableTraceIds,
-            solverTraceIdByEvaluationTraceId: initialCandidate.solverTraceIdByEvaluationTraceId,
-          }),
-        )
-      }
-    }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1496,7 +1439,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCache.size >= 64) {
+      if (referenceDrcCache.size >= 2) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
       }
@@ -1618,6 +1561,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       if (evaluatedNewErrors.length === 0) {
+        const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator({
           traces: [],
           routes: evaluatedRoutes,
@@ -1626,7 +1570,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors
-        if (referenceErrors.length > 0) {
+        if (
+          this.referenceDrcValidationCount > validationCountBefore &&
+          referenceErrors.length > 0
+        ) {
           this.referenceDrcFalseNegativeCount += 1
         }
         this.indexedDrcEvaluationTimeMs +=
@@ -1707,31 +1654,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return "Pipeline9JointDrcRepairSolver"
   }
 
-  async solveAsync(
-    runtime?: SolverRuntimeExecutor,
-    stopAtIteration = Infinity,
-  ): Promise<void> {
-    if (this.asyncRunning) throw new Error("Joint DRC solveAsync is already running")
-    this.asyncRunning = true
-    try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
-        const child = this.activeSubSolver
-        if (child instanceof Pipeline9BoundedRegionalRepairSolver ||
-          child instanceof Pipeline9ClearanceProjectionSolver) {
-          const before = child.iterations
-          await child.solveAsync(runtime, before + Math.max(0, stopAtIteration - this.iterations))
-          this.iterations += Math.max(0, child.iterations - before - (child.solved || child.failed ? 1 : 0))
-          this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS,
-            this.iterations + child.MAX_ITERATIONS - child.iterations + 2)
-          if (this.iterations >= stopAtIteration) break
-        }
-        this.step()
-      }
-    } finally {
-      this.asyncRunning = false
-    }
-  }
-
   override _step(): void {
     if (this.traceContactRepairSolver) {
       const solver = this.traceContactRepairSolver
@@ -1804,7 +1726,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (
       !this.initialBoundedRegionalRepairSolver?.solved ||
       this.initialBoundedRegionalRepairStartedAt === undefined ||
-      this.initialBoundedReferenceValidationStart === undefined ||
       !this.cachedReferenceDrcEvaluator
     ) {
       throw new Error("Pipeline9 initial regional repair is not complete")
@@ -1822,28 +1743,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairPathSearchNodeCount:
         result.pathSearchNodeCount,
       initialBoundedRegionalRepairReferenceValidationCount:
-        this.referenceDrcValidationCount - this.initialBoundedReferenceValidationStart,
-      initialBoundedRegionalRepairEvaluatorCallCount:
         result.referenceValidationCount,
       initialBoundedRegionalRepairPublishedDrcIssueCount:
         result.publishedDrcIssueCount,
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
-      initialBoundedRegionalRepairPhaseTimeMs: {
-        ...this.initialBoundedRegionalRepairSolver.phaseTimeMs,
-      },
-      initialBoundedParallelRegionalTaskCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalTaskCount,
-      initialBoundedParallelRegionalDeferredCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalDeferredCount,
-      initialBoundedParallelRegionalIncompleteCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalIncompleteCount,
-      initialBoundedParallelProjectionWorkerCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionWorkerCount,
-      initialBoundedParallelProjectionAcceptedCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionAcceptedCount,
-      initialBoundedParallelProjectionRejectedCount:
-        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionRejectedCount,
     }
     // A complete bounded repair can avoid the much broader portfolio search.
     // Keep incomplete candidates private so the existing stages see their
@@ -1876,8 +1780,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,
       boundedRegionalRepairPathSearchNodeCount: result.pathSearchNodeCount,
       boundedRegionalRepairReferenceValidationCount:
-        this.referenceDrcValidationCount - this.initialBoundedReferenceValidationStart,
-      boundedRegionalRepairEvaluatorCallCount: result.referenceValidationCount,
+        result.referenceValidationCount,
       boundedRegionalRepairRepaired: result.repaired,
       boundedRegionalRepairPublishedDrcIssueCount:
         result.publishedDrcIssueCount,

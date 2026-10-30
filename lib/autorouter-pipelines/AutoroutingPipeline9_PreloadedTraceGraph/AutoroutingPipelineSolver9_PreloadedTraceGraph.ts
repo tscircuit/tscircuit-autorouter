@@ -1,3 +1,4 @@
+import { RoutingWorkerStartupSolver } from "../../runtime/RoutingWorkerStartupSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -827,7 +828,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
-            maxIterations: 16,
+            // A brief warm-up leaves the full joint repair search in control.
+            // Preserve the established preloaded-copper repair path.
+            maxIterations: (cms.originalSrj.traces?.length ?? 0) === 0 ? 2 : 16,
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
@@ -1145,22 +1148,28 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
+    if (this.solved || this.failed) return
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
+    let workerStartup: Promise<void> | undefined
+    let startupFailure: { error: unknown } | undefined
     try {
       if (runtime === undefined) {
         this.solve()
         return
       }
+      workerStartup = runtime.executeAsync(RoutingWorkerStartupSolver, {}).then(
+        (): void => {},
+        (error: unknown): void => { startupFailure = { error } },
+      )
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
           this.activeSubSolver instanceof
             TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
-          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver ||
-          this.activeSubSolver instanceof Pipeline9JointDrcRepairSolver
+          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
@@ -1184,7 +1193,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           lastYield = performance.now()
         }
       }
+      await workerStartup
+      if (startupFailure) throw startupFailure.error
     } catch (error) {
+      await workerStartup
       this.failed = true
       this.error = `Pipeline9 asynchronous solve error: ${error}`
       throw error

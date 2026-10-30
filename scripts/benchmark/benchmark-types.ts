@@ -68,9 +68,6 @@ export type WorkerProgress = {
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
-  portfolioCandidatesDispatched?: number
-  portfolioCandidatesSolved?: number
-  portfolioSelectedFactor?: number
   routeCount: number
   traceDensityCandidateEvaluated?: boolean
   traceDensityCandidateSelected?: boolean
@@ -110,22 +107,6 @@ export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
-  jointDrcRepair?: {
-    initialJointDrcIssueCount?: number
-    initialBoundedRegionalRepairTimeMs?: number
-    initialBoundedRegionalRepairPhaseTimeMs?: Record<string, number>
-    initialBoundedRegionalRepairAttemptedRegionCount?: number
-    initialBoundedRegionalRepairAcceptedRegionCount?: number
-    initialBoundedRegionalRepairCandidateAttemptCount?: number
-    initialBoundedRegionalRepairPathSearchNodeCount?: number
-    initialBoundedRegionalRepairAccepted?: boolean
-    initialBoundedParallelRegionalTaskCount?: number
-    initialBoundedParallelRegionalDeferredCount?: number
-    initialBoundedParallelRegionalIncompleteCount?: number
-    initialBoundedParallelProjectionWorkerCount?: number
-    initialBoundedParallelProjectionAcceptedCount?: number
-    initialBoundedParallelProjectionRejectedCount?: number
-  }
   networkedHighDensity?: {
     remoteRequestsStarted: number
     remoteRequestsCompleted: number

@@ -65,7 +65,6 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   }
   highDensityRouteSolver?: HighDensityBenchmarkSource
   highDensityRepairSolver?: HighDensityBenchmarkSource
-  pipeline9JointDrcRepairSolver?: HighDensityBenchmarkSource
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -384,39 +383,6 @@ const getProgressKey = (solver: SolverInstance): string => {
 export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
-  const jointStats = solver.pipeline9JointDrcRepairSolver?.stats
-  const jointDrcRepair: RoutingBenchmarkMetrics["jointDrcRepair"] = {}
-  for (const key of [
-    "initialJointDrcIssueCount",
-    "initialBoundedRegionalRepairTimeMs",
-    "initialBoundedRegionalRepairAttemptedRegionCount",
-    "initialBoundedRegionalRepairAcceptedRegionCount",
-    "initialBoundedRegionalRepairCandidateAttemptCount",
-    "initialBoundedRegionalRepairPathSearchNodeCount",
-    "initialBoundedParallelRegionalTaskCount",
-    "initialBoundedParallelRegionalDeferredCount",
-    "initialBoundedParallelRegionalIncompleteCount",
-    "initialBoundedParallelProjectionWorkerCount",
-    "initialBoundedParallelProjectionAcceptedCount",
-    "initialBoundedParallelProjectionRejectedCount",
-  ] as const) {
-    if (typeof jointStats?.[key] === "number") {
-      jointDrcRepair[key] = jointStats[key]
-    }
-  }
-  if (typeof jointStats?.initialBoundedRegionalRepairAccepted === "boolean") {
-    jointDrcRepair.initialBoundedRegionalRepairAccepted =
-      jointStats.initialBoundedRegionalRepairAccepted
-  }
-  const phaseTimes = jointStats?.initialBoundedRegionalRepairPhaseTimeMs
-  if (phaseTimes && typeof phaseTimes === "object" && !Array.isArray(phaseTimes)) {
-    jointDrcRepair.initialBoundedRegionalRepairPhaseTimeMs = Object.fromEntries(
-      Object.entries(phaseTimes).filter(
-        (entry): entry is [string, number] =>
-          typeof entry[1] === "number" && Number.isFinite(entry[1]),
-      ),
-    )
-  }
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
@@ -464,8 +430,6 @@ export const getRoutingBenchmarkMetrics = (
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
-    jointDrcRepair:
-      Object.keys(jointDrcRepair).length > 0 ? jointDrcRepair : undefined,
     networkedHighDensity,
   }
 }

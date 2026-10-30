@@ -9,7 +9,6 @@ import {
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -28,9 +27,6 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
-import { planPipeline9ParallelRegionalTasks } from "./planPipeline9ParallelRegionalTasks"
-import { mergePipeline9ParallelRegionalResults } from "./mergePipeline9ParallelRegionalResults"
-import { Pipeline9ParallelRegionalTaskSolver } from "./Pipeline9ParallelRegionalTaskSolver"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
@@ -146,17 +142,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
-  private asyncRunning = false
-  private parallelRegionalPlanned = false
-  private parallelRegionalTaskCount = 0
-  private parallelRegionalDeferredCount = 0
-  private parallelRegionalIncompleteCount = 0
-  private parallelProjectionWorkerCount = 0
-  private parallelProjectionAcceptedCount = 0
-  private parallelProjectionRejectedCount = 0
-  readonly phaseTimeMs: Record<string, number> = {}
-  private timedPhase?: BoundedRepairState["phase"]
-  private phaseStartedAt = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -197,13 +182,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ...this.result,
       routes: undefined,
       phase: this.state.phase,
-      phaseTimeMs: this.phaseTimeMs,
-      parallelRegionalTaskCount: this.parallelRegionalTaskCount,
-      parallelRegionalDeferredCount: this.parallelRegionalDeferredCount,
-      parallelRegionalIncompleteCount: this.parallelRegionalIncompleteCount,
-      parallelProjectionWorkerCount: this.parallelProjectionWorkerCount,
-      parallelProjectionAcceptedCount: this.parallelProjectionAcceptedCount,
-      parallelProjectionRejectedCount: this.parallelProjectionRejectedCount,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
       pathSearchNodeCount: this.result.pathSearchNodeCount + liveNodes,
       allowedRegionCount: allowance.maxRegions,
@@ -220,17 +198,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.progress = this.solved
       ? 1
       : Math.max(this.progress, Math.min(0.99, consumed))
-  }
-
-  private recordPhaseTransition(): void {
-    if (this.timedPhase === this.state.phase && !this.failed) return
-    const now = performance.now()
-    if (this.timedPhase !== undefined) {
-      this.phaseTimeMs[this.timedPhase] =
-        (this.phaseTimeMs[this.timedPhase] ?? 0) + now - this.phaseStartedAt
-    }
-    this.timedPhase = this.state.phase
-    this.phaseStartedAt = now
   }
 
   private startChild(solver: BaseSolver): void {
@@ -877,20 +844,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
 
   private completeChild(): void {
     const state = this.state
-    if (
-      "solver" in state &&
-      state.solver instanceof Pipeline9ClearanceProjectionSolver
-    ) {
-      const stats = state.solver.stats
-      if (typeof stats.parallelProjectionWorkers === "number") {
-        this.parallelProjectionWorkerCount += stats.parallelProjectionWorkers
-      }
-      if (stats.parallelProjectionAccepted === true) {
-        this.parallelProjectionAcceptedCount++
-      } else if (stats.parallelProjectionAccepted === false) {
-        this.parallelProjectionRejectedCount++
-      }
-    }
     switch (state.phase) {
       case "initial-projection": {
         const projectedRoutes = state.solver.getOutput()
@@ -982,101 +935,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
   }
 
-  async solveAsync(
-    runtime?: SolverRuntimeExecutor,
-    stopAtIteration = Infinity,
-  ): Promise<void> {
-    if (this.asyncRunning) throw new Error("Regional repair solveAsync is already running")
-    this.asyncRunning = true
-    try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
-        const state = this.state
-        if (runtime && state.phase === "select-region" &&
-          !this.parallelRegionalPlanned) {
-          const allowance = getPipeline9BoundedRepairAllowance(this.budget, this.result.acceptedRegionCount)
-          const reference = state.context.reference
-          const errors = Array.isArray(reference) ? reference : (reference.errorsWithCenters ?? reference.errors)
-          const availableIterations = Math.max(0, stopAtIteration - this.iterations)
-          const tasks = planPipeline9ParallelRegionalTasks({
-            srj: state.context.srj,
-            routes: state.context.currentRoutes,
-            errors,
-            maxTasks: Math.min(4, allowance.maxRegions - this.result.attemptedRegionCount),
-            maxPathSearchCalls: allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
-            maxPathSearchNodes: allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,
-            maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall ?? allowance.maxPathSearchNodes,
-            maxPathSearchCallsPerRegion: this.budget.maxCandidateAttemptsPerRegion,
-            regionSize: state.context.regionSizes[0],
-            pathHeuristicWeight: this.budget.pathHeuristicWeight,
-            pathGridSizeScale: this.budget.pathGridSizeScale,
-            searchDirectionCount: this.budget.searchDirectionCount,
-            maxLogicalIterations: availableIterations,
-            viaHoleDiameter: this.params.viaHoleDiameter,
-          })
-          this.parallelRegionalPlanned = true
-          if (tasks.length > 1 && tasks.every((task) => task.maxLogicalIterations >= 1)) {
-            const outputs = await Promise.all(tasks.map((task) => runtime.executeAsync(Pipeline9ParallelRegionalTaskSolver, task)))
-            const consumed = outputs.reduce((sum, output) => sum + output.iterations, 0)
-            for (const [index, output] of outputs.entries()) {
-              const task = tasks[index]!
-              if (
-                !Number.isSafeInteger(output.iterations) || output.iterations < 0 || output.iterations > task.maxLogicalIterations ||
-                !Number.isSafeInteger(output.pathSearchNodes) || output.pathSearchNodes < 0 || output.pathSearchNodes > task.maxPathSearchNodes ||
-                !Number.isSafeInteger(output.pathSearchCalls) || output.pathSearchCalls < 0 || output.pathSearchCalls > task.maxPathSearchCalls
-              ) throw new Error("Parallel regional repair exceeded its task budget")
-            }
-            this.MAX_ITERATIONS += consumed
-            this.iterations += consumed
-            this.result.attemptedRegionCount += tasks.length
-            this.result.candidateAttemptCount += outputs.reduce((sum, output) => sum + output.pathSearchCalls, 0)
-            this.result.pathSearchNodeCount += outputs.reduce((sum, output) => sum + output.pathSearchNodes, 0)
-            const merged = mergePipeline9ParallelRegionalResults(state.context.currentRoutes, outputs)
-            for (const [index, output] of outputs.entries()) {
-              if (output.result && !merged.deferredIndices.includes(index)) state.context.attemptedRegions.push({ bounds: tasks[index]!.region.mutableBounds, size: state.context.regionSizes[0]! })
-            }
-            this.parallelRegionalTaskCount += tasks.length
-            this.parallelRegionalDeferredCount += merged.deferredCount
-            this.parallelRegionalIncompleteCount += outputs.filter((output) => !output.result).length
-            if (merged.routes.some((route, index) => route !== state.context.currentRoutes[index])) {
-              const solver = new Pipeline9ClearanceProjectionSolver({
-                originalSrj: this.params.originalSrj,
-                routes: merged.routes,
-                previousRoutes: state.context.currentRoutes,
-                subdivideSegments: true,
-                drcEvaluator: (input): DrcResult => {
-                  this.result.referenceValidationCount++
-                  return this.params.drcEvaluator(input)
-                },
-              })
-              this.state = { phase: "candidate-projection", context: state.context, solver }
-              this.startChild(solver)
-            }
-            this.updateProgress()
-            if (this.iterations >= stopAtIteration) break
-          }
-        }
-        const child = this.activeSubSolver
-        if (child instanceof Pipeline9ClearanceProjectionSolver) {
-          const before = child.iterations
-          await child.solveAsync(runtime, before + Math.max(0, stopAtIteration - this.iterations))
-          this.MAX_ITERATIONS += Math.max(0, child.MAX_ITERATIONS - this.reservedChildMaximum)
-          this.reservedChildMaximum = child.MAX_ITERATIONS
-          this.iterations += Math.max(0, child.iterations - before - (child.solved || child.failed ? 1 : 0))
-          if (this.iterations >= stopAtIteration) break
-        }
-        this.step()
-      }
-    } catch (error) {
-      this.failed = true
-      this.error = `Pipeline9 regional repair runtime error: ${error}`
-      throw error
-    } finally {
-      this.asyncRunning = false
-    }
-  }
-
   override _step(): void {
-    if (this.timedPhase === undefined) this.recordPhaseTransition()
     const child = this.activeSubSolver
     if (child) {
       child.step()
@@ -1092,7 +951,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         this.reservedChildMaximum = 0
         this.completeChild()
       }
-      this.recordPhaseTransition()
       this.updateProgress()
       return
     }
@@ -1148,7 +1006,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           `Regional repair has no active child during phase ${state.phase}`,
         )
     }
-    this.recordPhaseTransition()
     this.updateProgress()
   }
 

@@ -1,4 +1,3 @@
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
@@ -10,11 +9,6 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
-import { Pipeline9ClearanceProjectionWorker } from "./Pipeline9ClearanceProjectionWorker"
-import {
-  createPipeline9ProjectionRegions,
-  planPipeline9ProjectionWindows,
-} from "./createPipeline9ProjectionRegions"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
@@ -45,7 +39,6 @@ export type Pipeline9ClearanceProjectionParams = {
 type ProjectionContext = {
   srj: SimpleRouteJson & { traces: undefined }
   errors: Pipeline9DrcError[]
-  centeredErrors: Pipeline9DrcError[]
   originalCanonicalRoutes: HighDensityRoute[]
   canonicalRoutes: HighDensityRoute[]
 }
@@ -68,176 +61,10 @@ type ProjectionState =
 export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
   readonly params: Pipeline9ClearanceProjectionParams
   private state: ProjectionState = { phase: "initialize" }
-  private asyncRunning = false
-  private parallelAttempted = false
 
   constructor(params: Pipeline9ClearanceProjectionParams) {
     super()
     this.params = params
-  }
-
-  /** Try independent spatial partitions and publish only a validated candidate. */
-  async solveAsync(
-    runtime?: SolverRuntimeExecutor,
-    stopAtIteration = Infinity,
-  ): Promise<void> {
-    if (this.asyncRunning) throw new Error("Clearance projection is already running")
-    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
-    this.asyncRunning = true
-    try {
-      if (this.state.phase === "initialize") this.step()
-      const state = this.state
-      if (
-        runtime &&
-        !this.parallelAttempted &&
-        state.phase === "relax" &&
-        state.solver.iterations === 0 &&
-        stopAtIteration - this.iterations >= 256
-      ) {
-        this.parallelAttempted = true
-        const input = state.solver.input
-        // Identical coordinates share a partition, including shared-net junctions.
-        const points = new Map<string, { x: number; y: number; count: number }>()
-        for (const [routeIndex, route] of input.routes.entries()) {
-          for (const [pointIndex, point] of route.route.entries()) {
-            if (
-              input.lockedPointIndices[routeIndex]![pointIndex] ||
-              pointIndex === 0 ||
-              pointIndex === route.route.length - 1 ||
-              point.pcb_port_id ||
-              point.insideJumperPad ||
-              point.toNextSegmentType
-            ) continue
-            const key = `${point.x},${point.y}`
-            const existing = points.get(key)
-            if (existing) existing.count++
-            else points.set(key, { x: point.x, y: point.y, count: 1 })
-          }
-        }
-        // Avoid four full-board preparations when the available work is tiny.
-        const entries = [...points.entries()].sort(
-          ([, a], [, b]) => a.x - b.x || a.y - b.y,
-        )
-        // Region extraction requires colocated layer transitions; otherwise
-        // retain the ordinary projection, which accepts those route inputs.
-        const canExtract = input.routes.every((route) =>
-          route.route.every((point, index) => {
-            const previous = route.route[index - 1]
-            return !previous || previous.z === point.z ||
-              previous.toNextSegmentType === "through_obstacle" ||
-              (Math.abs(previous.x - point.x) <= 1e-8 &&
-                Math.abs(previous.y - point.y) <= 1e-8)
-          }),
-        )
-        if (entries.length >= 32 && canExtract) {
-          const errorCenters = state.context.centeredErrors.flatMap((error) => {
-            const center = error.center ?? error.pcb_center
-            if (
-              !center || typeof center !== "object" ||
-              !("x" in center) || !("y" in center) ||
-              typeof center.x !== "number" || typeof center.y !== "number" ||
-              !Number.isFinite(center.x) || !Number.isFinite(center.y)
-            ) return []
-            return [{ x: center.x, y: center.y }]
-          })
-          const { centers, assignments } = planPipeline9ProjectionWindows(
-            input,
-            points,
-            [...(this.params.movableRegions?.map((region) => region.center) ?? []), ...errorCenters],
-          )
-          if (centers.length < 2) {
-            while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
-            return
-          }
-          const crops = createPipeline9ProjectionRegions(input, assignments, centers)
-          const results = await Promise.all(
-            crops.map((crop) =>
-              runtime.executeAsync(Pipeline9ClearanceProjectionWorker, crop.input),
-            ),
-          )
-          this.stats.parallelProjectionWorkers = results.length
-          this.stats.parallelProjectionRouteCounts = crops.map((crop) => crop.sourceRouteIndexes.length)
-          const childIterations = Math.max(...results.map((result) => result.iterations))
-          if (this.iterations + childIterations <= stopAtIteration) {
-            const candidate = structuredClone(input.routes)
-            const sourcePointIndexes = input.routes.map((route) => {
-              const indexes = new Map<string, number[]>()
-              for (const [index, point] of route.route.entries()) {
-                const key = `${point.x},${point.y},${point.z}`
-                const existing = indexes.get(key) ?? []
-                existing.push(index)
-                indexes.set(key, existing)
-              }
-              return indexes
-            })
-            for (const [partition, crop] of crops.entries()) {
-              for (const [localIndex, routeIndex] of crop.sourceRouteIndexes.entries()) {
-                const route = crop.input.routes[localIndex]!
-                const projected = results[partition]!.routes[localIndex]!
-                for (const [pointIndex, point] of route.route.entries()) {
-                  if (
-                    crop.input.lockedPointIndices[localIndex]![pointIndex] ||
-                    assignments.get(`${point.x},${point.y}`) !== partition
-                  ) continue
-                  const indexes = sourcePointIndexes[routeIndex]!.get(`${point.x},${point.y},${point.z}`) ?? []
-                  const span = crop.sourceSpans[localIndex]!
-                  for (const sourceIndex of indexes) {
-                    if (sourceIndex < span.firstSegment || sourceIndex > span.lastSegment + 1) continue
-                    candidate[routeIndex]!.route[sourceIndex]!.x = projected.route[pointIndex]!.x
-                    candidate[routeIndex]!.route[sourceIndex]!.y = projected.route[pointIndex]!.y
-                  }
-                }
-              }
-            }
-            for (const output of candidate) {
-              output.vias = []
-              for (let i = 1; i < output.route.length; i++) {
-                const a = output.route[i - 1]!
-                const b = output.route[i]!
-                if (
-                  a.z !== b.z &&
-                  a.toNextSegmentType !== "through_obstacle" &&
-                  !output.vias.some((via) => via.x === b.x && via.y === b.y)
-                ) output.vias.push({ x: b.x, y: b.y })
-              }
-            }
-            const savedIterations = this.iterations
-            const savedMaximum = this.MAX_ITERATIONS
-            const savedProgress = this.progress
-            this.iterations += childIterations
-            this.MAX_ITERATIONS = Math.max(...results.map((result) => result.maxIterations)) + 4
-            this.activeSubSolver = null
-            this.state = { phase: "select", context: state.context, candidate }
-            while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
-              this.step()
-            }
-            const finalState = this.state as ProjectionState
-            if (this.solved && finalState.phase === "finished" && finalState.output !== this.params.routes) {
-              this.stats.parallelProjectionAccepted = true
-              return
-            }
-            // A rejected or budget-truncated proposal is not part of the serial
-            // solver's logical work; replay from its untouched relaxation child.
-            this.stats.parallelProjectionAccepted = false
-            this.solved = false
-            this.iterations = savedIterations
-            this.MAX_ITERATIONS = savedMaximum
-            this.progress = savedProgress
-            this.state = state
-            this.activeSubSolver = state.solver
-          }
-        }
-      }
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
-        this.step()
-      }
-    } catch (error) {
-      this.failed = true
-      this.error = `Clearance projection runtime error: ${error}`
-      throw error
-    } finally {
-      this.asyncRunning = false
-    }
   }
 
   override _step(): void {
@@ -250,9 +77,6 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         hdRoutes: params.routes,
       })
       const errors = Array.isArray(reference) ? reference : reference.errors
-      const centeredErrors = Array.isArray(reference)
-        ? reference
-        : (reference.errorsWithCenters ?? reference.errors)
       if (errors.length === 0) {
         this.state = { phase: "finished", output: params.routes }
         this.solved = true
@@ -304,7 +128,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       this.activeSubSolver = solver
       this.state = {
         phase: "relax",
-        context: { srj, errors, centeredErrors, originalCanonicalRoutes, canonicalRoutes },
+        context: { srj, errors, originalCanonicalRoutes, canonicalRoutes },
         solver,
       }
       return
