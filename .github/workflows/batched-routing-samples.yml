@@ -1,0 +1,38 @@
+name: Batched routing sample experiment
+on:
+  push:
+    branches: [codex/batched-routing-samples]
+    paths:
+      - .github/workflows/batched-routing-samples.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun run build
+  benchmark:
+    needs: validate
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: batched-routing-samples-result
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
