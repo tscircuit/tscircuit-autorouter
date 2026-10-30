@@ -33,6 +33,7 @@ export class TinyHypergraphPortfolioSolver extends BaseSolver {
           ...this.input.solveGraphOptions,
           ...(this.input.traceDensityCostFactor === undefined ? {} : {
             TRACE_DENSITY_COST_FACTOR: this.input.traceDensityCostFactor,
+            MAX_ITERATIONS: Math.min(this.input.solveGraphOptions?.MAX_ITERATIONS ?? 500_000, 500_000),
           }),
         },
         sectionSolverOptions: this.input.sectionSolverOptions,
