@@ -28,7 +28,7 @@ test("parallel reference checks preserve errors and centers across changing cand
   })
   try {
     await session.enable(runtime)
-    const circuit = [
+    const circuit: Parameters<typeof getDrcErrors>[0] = [
       { type: "pcb_port" as const, pcb_port_id: "port-a", pcb_component_id: "component-a", source_port_id: "source-a", x: -1, y: 0, layers: ["top"] },
       { type: "pcb_port" as const, pcb_port_id: "port-b", pcb_component_id: "component-b", source_port_id: "source-b", x: 1, y: 0, layers: ["top"] },
       { type: "pcb_trace" as const, pcb_trace_id: "annotation-trace", route: [
