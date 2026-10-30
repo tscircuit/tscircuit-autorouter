@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/node"
-import { withDrcCheckExecutor } from "../../lib/testing/getDrcErrors"
+import { getDrcErrors, withDrcCheckExecutor } from "../../lib/testing/getDrcErrors"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import { ParallelDrcChecksSession } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/ParallelDrcChecksSession"
 
@@ -28,6 +28,21 @@ test("parallel reference checks preserve errors and centers across changing cand
   })
   try {
     await session.enable(runtime)
+    const circuit = [
+      { type: "pcb_port" as const, pcb_port_id: "port-a", pcb_component_id: "component-a", source_port_id: "source-a", x: -1, y: 0, layers: ["top"] },
+      { type: "pcb_port" as const, pcb_port_id: "port-b", pcb_component_id: "component-b", source_port_id: "source-b", x: 1, y: 0, layers: ["top"] },
+      { type: "pcb_trace" as const, pcb_trace_id: "annotation-trace", route: [
+        { route_type: "wire" as const, x: -1, y: 0, layer: "top", width: 0.1 },
+        { route_type: "wire" as const, x: 1, y: 0, layer: "top", width: 0.1 },
+      ] },
+    ]
+    const serialCircuit = structuredClone(circuit)
+    const parallelCircuit = structuredClone(circuit)
+    const serialErrors = getDrcErrors(serialCircuit)
+    expect(withDrcCheckExecutor(session.evaluate, () => getDrcErrors(parallelCircuit))).toEqual(serialErrors)
+    expect(parallelCircuit).toEqual(serialCircuit)
+    expect((parallelCircuit[2] as any).route[0].start_pcb_port_id).toBe("port-a")
+    expect((parallelCircuit[2] as any).route[1].end_pcb_port_id).toBe("port-b")
     for (const offset of [0, 0.01, 0, -0, 0.2]) {
       const traces = Array.from({ length: 12 }, (_, index) => ({
         type: "pcb_trace" as const,
