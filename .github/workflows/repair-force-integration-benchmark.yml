@@ -1,0 +1,78 @@
+name: Repair force integration benchmark
+
+on:
+  push:
+    branches: [techmannih/benchmark-repair-duplicate-force]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    if: github.ref_name == 'techmannih/benchmark-repair-duplicate-force'
+    name: ${{ matrix.dataset }} / round ${{ matrix.round }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        dataset: [srj18, dataset01]
+        round: [1, 2, 3]
+    env:
+      CONSUMER_SHA: 6f7d91e78d4867a42c04f1746bbc2ccbaae4956b
+      REPAIR_BASE_SHA: 28d833001e903ff5ba1342694762ef2a56555cad
+      REPAIR_FIX_SHA: 45f8e29b096f56cbdb057fb06f03752cf54632a0
+      DATASET: ${{ matrix.dataset }}
+      ROUND: ${{ matrix.round }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CONSUMER_SHA }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CONSUMER_SHA }}
+          path: fix
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install common dependencies
+        working-directory: base
+        run: bun install --no-save --ignore-scripts
+      - name: Install exact candidate archive with identical transitive dependencies
+        run: |
+          cp -a base/node_modules fix/node_modules
+          mkdir -p outputs/base outputs/pr
+          curl --fail --location --silent --show-error "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/$REPAIR_FIX_SHA" -o outputs/repair-fix.tar.gz
+          mv fix/node_modules/high-density-repair03 fix/benchmark-original-repair
+          mkdir fix/node_modules/high-density-repair03
+          tar -xzf outputs/repair-fix.tar.gz -C fix/node_modules/high-density-repair03 --strip-components=1
+          cp -a fix/benchmark-original-repair/node_modules fix/node_modules/high-density-repair03/node_modules
+          node <<'NODE'
+          const fs = require('node:fs')
+          const base = JSON.parse(fs.readFileSync('base/package.json'))
+          const key = 'high-density-repair03'
+          if (!base.devDependencies[key].endsWith(process.env.REPAIR_BASE_SHA)) throw Error('Unexpected base repair pin')
+          const candidate = JSON.parse(fs.readFileSync('fix/package.json'))
+          candidate.devDependencies[key] = `https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/${process.env.REPAIR_FIX_SHA}`
+          fs.writeFileSync('fix/package.json', JSON.stringify(candidate, null, 2) + '\n')
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({consumer:process.env.CONSUMER_SHA,repairBase:process.env.REPAIR_BASE_SHA,repairFix:process.env.REPAIR_FIX_SHA,dataset:process.env.DATASET,round:Number(process.env.ROUND),order:process.env.ROUND==='2'?['fix','base']:['base','fix'],bun:'1.4.3',concurrency:3,threads:1,effort:1,transitiveDependencies:'copied unchanged from the single baseline install'}, null, 2) + '\n')
+          NODE
+      - name: Run sequential comparison in alternating order
+        run: |
+          order="base fix"
+          if [ "$ROUND" = "2" ]; then order="fix base"; fi
+          for variant in $order; do
+            output_name="$variant"
+            if [ "$variant" = "fix" ]; then output_name="pr"; fi
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset "$DATASET" --concurrency 3 --threads 1 --effort 1) 2>&1 | tee "outputs/$output_name/run.log"
+            cp "$variant/benchmark-result.json" "$variant/benchmark-result.txt" "outputs/$output_name/"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repair-force-${{ matrix.dataset }}-${{ matrix.round }}
+          path: outputs
