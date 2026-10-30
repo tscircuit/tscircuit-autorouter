@@ -119,16 +119,28 @@ export class ParallelDrcChecksSession {
 
   readonly evaluate: DrcCheckExecutor = (circuitJson, options, connMap) => {
     if (!this.channels) throw new Error("Parallel DRC session is not active")
+    // The overlap checker annotates missing endpoint port IDs. Preserve this
+    // observable mutation before independent checks inspect the circuit.
+    const needsEndpointAnnotation = circuitJson.some((element) => {
+      if (element.type !== "pcb_trace") return false
+      const first = element.route[0]
+      const last = element.route.at(-1)
+      return (first?.route_type === "wire" && !first.start_pcb_port_id) ||
+        (last?.route_type === "wire" && !last.end_pcb_port_id)
+    })
+    const errors: ReturnType<DrcCheckExecutor> = needsEndpointAnnotation
+      ? getDrcErrorsForPartition(circuitJson, options, connMap, 0)
+      : []
+    const channels = needsEndpointAnnotation ? this.channels.slice(1) : this.channels
     const encoded = serialize({ circuitJson, options, netMap: connMap.netMap })
     if (encoded.length > this.inputBuffer!.length) throw new Error("Parallel DRC geometry exceeds shared buffer")
     this.inputBuffer!.set(encoded)
-    for (const { state } of this.channels) {
+    for (const { state } of channels) {
       state[2] = encoded.length
       Atomics.store(state, 0, 1)
       Atomics.notify(state, 0)
     }
-    const errors: ReturnType<DrcCheckExecutor> = []
-    for (const { state, output } of this.channels) {
+    for (const { state, output } of channels) {
       while (Atomics.load(state, 0) === 1) {
         if (Atomics.wait(state, 0, 1, 30_000) === "timed-out") {
           throw new Error("Parallel DRC query timed out")
