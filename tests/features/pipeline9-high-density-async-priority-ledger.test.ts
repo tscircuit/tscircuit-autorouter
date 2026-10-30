@@ -70,7 +70,7 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
   const pending = solver.solveAsync(runtime, baseline.iterations)
-  expect(tasks).toHaveLength(4)
+  expect(tasks).toHaveLength(16)
   expect(tasks.some(({ input }) => input.nodePortPoints.length > 1)).toBe(true)
 
   const executedLedgers: Record<string, number>[] = []
@@ -105,10 +105,10 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
   }
   expect(
     solver.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched,
-  ).toBe(4)
+  ).toBe(16)
   expect(
     solver.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted,
-  ).toBe(4)
+  ).toBe(16)
   expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched).toBe(
     40,
   )
