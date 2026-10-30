@@ -27,6 +27,8 @@ jobs:
           bun install
           bun run build
           cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+          cd ..
+          rm -rf checks-source
       - name: Use reverse membership for connectivity insertion
         run: |
           python3 - <<'PY'
@@ -60,6 +62,7 @@ jobs:
           console.log("100 seeded connectivity sequences match the reference")
           TS
           bun verify-connectivity.ts
+          rm verify-connectivity.ts
       - run: bunx tsc --noEmit
       - run: bun test tests/solvers/parallel-reference-drc-workers.test.ts tests/features/pipeline9-srj18-sample01-thread-parity.test.ts --timeout 9999999
   benchmark:
@@ -83,6 +86,8 @@ jobs:
           bun install
           bun run build
           cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+          cd ..
+          rm -rf checks-source
       - name: Use reverse membership for connectivity insertion
         run: |
           python3 - <<'PY'
@@ -95,27 +100,6 @@ jobs:
           assert old in s
           p.write_text(s.replace(old,new))
           PY
-          cat > verify-connectivity.ts <<'TS'
-          import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-          import { ConnectivityMap as Reference } from "./node_modules/circuit-json-to-connectivity-map/dist/reference.js"
-          import { deepStrictEqual } from "node:assert"
-          let seed = 12345
-          const rand = () => (seed = Math.imul(seed, 1664525) + 1013904223 >>> 0)
-          for (let trial = 0; trial < 100; trial++) {
-            const base = Object.fromEntries(Array.from({length: 8}, (_, i) => ["net"+i, ["id"+i]]))
-            const actual = new ConnectivityMap(structuredClone(base))
-            const expected = new Reference(structuredClone(base))
-            for (let step = 0; step < 80; step++) {
-              const connections = [Array.from({length: 2 + rand()%3}, () => "id"+rand()%60)]
-              actual.addConnections(connections)
-              expected.addConnections(connections)
-              deepStrictEqual(actual.netMap, expected.netMap)
-              deepStrictEqual(actual.idToNetMap, expected.idToNetMap)
-            }
-          }
-          console.log("100 seeded connectivity sequences match the reference")
-          TS
-          bun verify-connectivity.ts
       - run: bash benchmark.sh --dataset 18 --threads 4
       - uses: actions/upload-artifact@v4
         if: always()
