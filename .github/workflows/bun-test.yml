@@ -69,7 +69,7 @@ jobs:
               tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts)
                 full_board_tests+=("$test_file")
                 ;;
-              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts)
+              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts|tests/repro/a64-original-byte0-length-matching.test.ts)
                 slow_tests+=("$test_file")
                 ;;
               *) regular_tests+=("$test_file") ;;
