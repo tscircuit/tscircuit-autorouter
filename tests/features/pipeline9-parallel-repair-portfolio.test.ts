@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/node"
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import type { SolverConstructor, SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline9 } from "../../lib"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
@@ -18,17 +18,17 @@ test("four repair workers retain the full strategy and publish reference-valid c
   const warmups: number[] = []
   let pendingRepairs = 0
   const executor: SolverRuntimeExecutor = {
-    executeAsync: ((...args: Parameters<typeof runtime.executeAsync>) => {
-      const [Solver, task] = args
+    executeAsync(Solver: string | SolverConstructor<any, any>, task: unknown): ReturnType<SolverRuntimeExecutor["executeAsync"]> {
       const repair = typeof Solver !== "string" && Solver.solverName === "Pipeline9JointRepairCandidateSolver"
       if (repair) {
         warmups.push((task as { forceWarmup: number }).forceWarmup)
         pendingRepairs++
       }
-      return runtime.executeAsync(Solver, task).finally((): void => {
+      const pending = typeof Solver === "string" ? runtime.executeAsync(Solver, task) : runtime.executeAsync(Solver, task)
+      return pending.finally((): void => {
         if (repair) pendingRepairs--
       })
-    }) as SolverRuntimeExecutor["executeAsync"],
+    },
   }
   try {
     await solver.solveAsync(executor)
