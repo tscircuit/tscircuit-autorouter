@@ -73,6 +73,48 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
 
+  private canFinishAtTerminal(point: Point3): boolean {
+    const gap = distance(point, this.end)
+    return (
+      point.z === this.end.z &&
+      gap <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3 &&
+      (gap < GEOMETRIC_TOLERANCE ||
+        this.stitchClearanceMode === "prefer_clear" ||
+        this.isPlanarStitchClear(point, this.end))
+    )
+  }
+
+  /** Reject a fragment direction that cannot lead to the declared terminal. */
+  private canReachTerminal(point: Point3, excludedRouteIndex: number): boolean {
+    const queue: Point3[] = [point]
+    const visited = new Set<number>()
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+      const current = queue[cursor]!
+      if (this.canFinishAtTerminal(current)) return true
+      for (const [index, route] of this.remainingHdRoutes.entries()) {
+        if (index === excludedRouteIndex) continue
+        const ends = [route.route[0]!, route.route.at(-1)!]
+        for (const side of [0, 1]) {
+          const key = index * 2 + side
+          if (visited.has(key)) continue
+          const next = ends[side]!
+          const gap = distance(current, next)
+          const canJoin = current.z === next.z
+            ? gap <= MAX_STITCH_GAP_DISTANCE_3 &&
+              (this.stitchClearanceMode === "prefer_clear" ||
+                this.isPlanarStitchClear(current, next))
+            : gap < GEOMETRIC_TOLERANCE &&
+              (!this.allowedLayerTransitionPointKeys ||
+                this.allowedLayerTransitionPointKeys.has(getXyPointKey(next)))
+          if (!canJoin) continue
+          visited.add(key)
+          queue.push(ends[1 - side]!)
+        }
+      }
+    }
+    return false
+  }
+
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
       connectionName: this.mergedHdRoute.connectionName,
@@ -362,6 +404,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     // A terminal-to-terminal path is complete here. Following leftover stubs
     // can traverse another via and disconnect the declared terminal layer.
     if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
+      if (
+        this.mergedHdRoute.endPcbPortId !== undefined &&
+        !this.canFinishAtTerminal(endpoint)
+      ) {
+        this.failed = true
+        this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" cannot reach its declared terminal`
+        return
+      }
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
@@ -395,7 +445,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
-    let bestScore = Infinity
+    const canCapTerminal =
+      this.mergedHdRoute.endPcbPortId !== undefined &&
+      this.canFinishAtTerminal(lastMergedPoint)
+    let bestScore = canCapTerminal
+      ? GAP_PENALTY +
+        distance(lastMergedPoint, this.end) +
+        (this.isPlanarStitchClear(lastMergedPoint, this.end)
+          ? 0
+          : COLLISION_PENALTY)
+      : Infinity
     let blockedByCollision = false
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
@@ -432,7 +491,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
-      if (scoreFirst < bestScore) {
+      if (
+        scoreFirst < bestScore &&
+        (this.mergedHdRoute.endPcbPortId === undefined ||
+          this.canReachTerminal(lastPointInCandidate, i))
+      ) {
         bestScore = scoreFirst
         closestRouteIndex = i
         matchedOn = "first"
@@ -464,7 +527,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreLast = VIA_PENALTY + distToLast
       }
 
-      if (scoreLast < bestScore) {
+      if (
+        scoreLast < bestScore &&
+        (this.mergedHdRoute.endPcbPortId === undefined ||
+          this.canReachTerminal(firstPointInCandidate, i))
+      ) {
         bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
@@ -472,12 +539,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      if (canCapTerminal) {
+        // The terminal cap won against the remaining fragment directions.
+        this.remainingHdRoutes = []
+        return
+      }
       if (blockedByCollision) {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
         return
       }
-      this.remainingHdRoutes = []
+      if (this.mergedHdRoute.endPcbPortId !== undefined) {
+        this.failed = true
+        this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" cannot reach its declared terminal`
+      } else {
+        this.remainingHdRoutes = []
+      }
       return
     }
 
