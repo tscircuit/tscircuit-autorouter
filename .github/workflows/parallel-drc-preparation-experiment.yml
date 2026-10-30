@@ -27,6 +27,8 @@ jobs:
           bun install
           bun run build
           cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+          cd ..
+          rm -rf checks-source
       - run: bunx tsc --noEmit
       - run: bun test tests/solvers/parallel-reference-drc-workers.test.ts tests/features/pipeline9-srj18-sample01-thread-parity.test.ts --timeout 9999999
   benchmark:
@@ -50,6 +52,8 @@ jobs:
           bun install
           bun run build
           cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+          cd ..
+          rm -rf checks-source
       - run: bash benchmark.sh --dataset 18 --threads 4
       - uses: actions/upload-artifact@v4
         if: always()
