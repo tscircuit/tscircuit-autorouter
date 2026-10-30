@@ -2,7 +2,7 @@ diff --git a/lib/prepared/LandmarkDistancePreparationSolver.ts b/lib/prepared/La
 new file mode 100644
 --- /dev/null
 +++ b/lib/prepared/LandmarkDistancePreparationSolver.ts
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,88 @@
 +import { BaseSolver, SolverRuntime } from "@tscircuit/solver-utils"
 +
 +export type LandmarkDistanceInput = {
@@ -11,6 +11,10 @@ new file mode 100644
 +  incidentPortRegion: number[][]
 +  regionIncidentPorts: number[][]
 +  landmark: number
++  start?: number
++  regionNetId?: Int32Array
++  reserved?: Int32Array
++  net?: number
 +}
 +
 +/** Exact shortest geometric distances on the relaxed, undirected port graph. */
@@ -29,10 +33,13 @@ new file mode 100644
 +    heap[0] = landmark
 +    positions[landmark] = 0
 +    distances[landmark] = 0
++    let stopDistance = Infinity
 +    while (size > 0) {
++      if (distances[heap[0]!]! > stopDistance) break
 +      const port = heap[0]!
 +      positions[port] = -1
 +      closed[port] = 1
++      if (port === this.input.start) stopDistance = Math.max(1, distances[port]! * 1.5)
 +      const last = heap[--size]!
 +      if (size > 0) {
 +        let index = 0
@@ -49,8 +56,12 @@ new file mode 100644
 +      }
 +      const base = distances[port]!
 +      for (const region of incidentPortRegion[port]!) {
++        const owner = this.input.regionNetId?.[region] ?? -1
++        if (owner !== -1 && owner !== this.input.net) continue
 +        for (const next of regionIncidentPorts[region]!) {
 +          if (closed[next]) continue
++          const owner = this.input.reserved?.[next] ?? -1
++          if (owner !== -1 && owner !== this.input.net) continue
 +          const dx = portX[port]! - portX[next]!
 +          const dy = portY[port]! - portY[next]!
 +          const candidate = base + Math.sqrt(dx * dx + dy * dy)
@@ -70,6 +81,7 @@ new file mode 100644
 +        }
 +      }
 +    }
++    for (let index = 0; index < count; index++) if (!closed[index]) distances[index] = Infinity
 +    this.output = distances
 +    this.solved = true
 +  }
@@ -79,6 +91,34 @@ new file mode 100644
 +  }
 +}
 +SolverRuntime.registerSolver(LandmarkDistancePreparationSolver)
+diff --git a/lib/prepared/GoalDistancePreparationSolver.ts b/lib/prepared/GoalDistancePreparationSolver.ts
+new file mode 100644
+--- /dev/null
++++ b/lib/prepared/GoalDistancePreparationSolver.ts
+@@ -0,0 +1,23 @@
++import { BaseSolver, SolverRuntime } from "@tscircuit/solver-utils"
++import { LandmarkDistancePreparationSolver, type LandmarkDistanceInput } from "./LandmarkDistancePreparationSolver"
++export type GoalDistancePreparationInput = Omit<LandmarkDistanceInput, "landmark" | "start" | "net"> & {
++  routes: Array<{ route: number; landmark: number; start: number; net: number }>
++}
++export class GoalDistancePreparationSolver extends BaseSolver {
++  static readonly solverName = "GoalDistancePreparationSolver"
++  private output?: Array<[number, Float64Array]>
++  constructor(private readonly input: GoalDistancePreparationInput) { super() }
++  override _step(): void {
++    this.output = this.input.routes.map((route): [number, Float64Array] => {
++      const solver = new LandmarkDistancePreparationSolver({ ...this.input, ...route })
++      solver.solve()
++      return [route.route, solver.getOutput()]
++    })
++    this.solved = true
++  }
++  getOutput(): Array<[number, Float64Array]> {
++    if (!this.output) throw new Error("Goal distances have not been prepared")
++    return this.output
++  }
++}
++SolverRuntime.registerSolver(GoalDistancePreparationSolver)
 diff --git a/lib/prepared/PreparedRoutingGeometry.ts b/lib/prepared/PreparedRoutingGeometry.ts
 --- a/lib/prepared/PreparedRoutingGeometry.ts
 +++ b/lib/prepared/PreparedRoutingGeometry.ts
@@ -160,7 +200,12 @@ diff --git a/lib/prepared/PreparedRoutingGeometry.ts b/lib/prepared/PreparedRout
 diff --git a/lib/prepared/PreparedPortPointRoutingSolver.ts b/lib/prepared/PreparedPortPointRoutingSolver.ts
 --- a/lib/prepared/PreparedPortPointRoutingSolver.ts
 +++ b/lib/prepared/PreparedPortPointRoutingSolver.ts
-@@ -13,10 +13,15 @@
+@@ -1,3 +1,4 @@
++import { GoalDistancePreparationSolver, type GoalDistancePreparationInput } from "./GoalDistancePreparationSolver"
+ import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+ import type { TinyHyperGraphSolver, TinyHyperGraphSolverOptions } from "../core"
+ import { SelectiveReripTinyHyperGraphSolver } from "../selective-rerip-tiny-hyper-graph-solver"
+@@ -13,10 +14,15 @@
      topology: TinyHyperGraphSolver["topology"],
      problem: TinyHyperGraphSolver["problem"],
      options: TinyHyperGraphSolverOptions,
@@ -177,15 +222,56 @@ diff --git a/lib/prepared/PreparedPortPointRoutingSolver.ts b/lib/prepared/Prepa
    }
  
    override _step(): void {
-@@ -36,6 +41,11 @@
+@@ -36,8 +42,39 @@
    private readonly geometry = new PreparedRoutingGeometry(this.topology)
    private readonly workspace = new DenseRoutingWorkspace(this.geometry)
    private asyncRunning = false
++  private goalDistances?: Array<Float64Array | undefined>
++
++  private goalInputs(): GoalDistancePreparationInput[] {
++    const { topology, problem } = this
++    const batches: GoalDistancePreparationInput[] = Array.from({ length: 4 }, () => ({
++      portX: topology.portX, portY: topology.portY, incidentPortRegion: topology.incidentPortRegion,
++      regionIncidentPorts: topology.regionIncidentPorts, regionNetId: problem.regionNetId,
++      reserved: this.problemSetup.portEndpointReservationNetId, routes: [],
++    }))
++    for (let route = 0; route < problem.routeCount; route++) batches[route % 4]!.routes.push({
++      route, landmark: problem.routeEndPort[route]!, start: problem.routeStartPort[route]!, net: problem.routeNet[route]!,
++    })
++    return batches
++  }
++
++  private acceptGoalDistances(parts: Array<Array<[number, Float64Array]>>): void {
++    this.goalDistances = []
++    for (const part of parts) for (const [route, distances] of part) this.goalDistances[route] = distances
++  }
++
 +
 +  protected override getRouteHeuristic(routeId: number, portId: number): number {
++    const distance = this.goalDistances?.[routeId]?.[portId]
 +    return Math.max(super.getRouteHeuristic(routeId, portId),
-+      this.geometry.getLandmarkDistance(portId, this.getRouteEndPortId(routeId)) * this.DISTANCE_TO_COST)
++      distance !== undefined && Number.isFinite(distance) ? Math.max(0, distance - 1e-9) * this.DISTANCE_TO_COST : 0)
 +  }
  
    override _step(): void {
++    if (!this.goalDistances) this.acceptGoalDistances(this.goalInputs().map((input) => {
++      const solver = new GoalDistancePreparationSolver(input)
++      solver.solve()
++      return solver.getOutput()
++    }))
      const routeId = this.state.currentRouteId
+     if (
+       (routeId !== undefined && this.partialRipRoutePlans.has(routeId)) ||
+@@ -83,7 +120,11 @@
+         !this.failed &&
+         this.iterations < stopAtIteration
+       )
+-        await this.geometry.prepareAsync(runtime)
++        {
++          await this.geometry.prepareAsync(runtime)
++          if (!this.goalDistances) this.acceptGoalDistances(await Promise.all(
++            this.goalInputs().map((input) => runtime.executeAsync(GoalDistancePreparationSolver, input))))
++        }
+       while (!this.solved && !this.failed && this.iterations < stopAtIteration)
+         this.step()
+     } catch (error) {
