@@ -1,3 +1,4 @@
+import { Pipeline9HighDensityForceImproveBatchSolver } from "./Pipeline9HighDensityForceImproveBatchSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import {
@@ -32,32 +33,41 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
           Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations,
         ),
       )
-      const pending = this.sampleEntries
+      const inputs = this.sampleEntries
         .slice(
           this.activeSampleIndex,
           this.activeSampleIndex + parallelSampleCount,
         )
-        .map((entry) =>
-          runtime
-            .executeAsync(Pipeline9HighDensityForceImproveSampleSolver, {
-              nodeWithPortPoints: [entry.node],
-              hdRoutes: entry.routeIndexes.map(
-                (routeIndex) => this.originalHdRoutes[routeIndex],
-              ),
-              totalStepsPerNode: this.totalStepsPerNode,
-              nodeAssignmentMargin: this.nodeAssignmentMargin,
-              colorMap: Object.fromEntries(
-                entry.routeIndexes.map((routeIndex) => {
-                  const name = this.originalHdRoutes[routeIndex].connectionName
-                  return [name, this.colorMap[name]]
-                }),
-              ),
-            })
-            .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
+        .map((entry) => ({
+          nodeWithPortPoints: [entry.node],
+          hdRoutes: entry.routeIndexes.map(
+            (routeIndex) => this.originalHdRoutes[routeIndex],
+          ),
+          totalStepsPerNode: this.totalStepsPerNode,
+          nodeAssignmentMargin: this.nodeAssignmentMargin,
+          colorMap: Object.fromEntries(
+            entry.routeIndexes.map((routeIndex) => {
+              const name = this.originalHdRoutes[routeIndex].connectionName
+              return [name, this.colorMap[name]]
+            }),
+          ),
+        }))
+      const pending: Array<Promise<
+        | { type: "result"; result: Pipeline9HighDensityForceImproveSampleOutput }
+        | { type: "error"; error: unknown }
+      >> = []
+      for (let index = 0; index < inputs.length; index += 8) {
+        const batch = inputs.slice(index, index + 8)
+        const job = runtime.executeAsync(Pipeline9HighDensityForceImproveBatchSolver, batch).then(
+          (results) => ({ type: "results" as const, results }),
+          (error: unknown) => ({ type: "error" as const, error }),
         )
+        for (let offset = 0; offset < batch.length; offset++) {
+          pending.push(job.then((outcome) => outcome.type === "error"
+            ? outcome
+            : { type: "result" as const, result: outcome.results[offset]! }))
+        }
+      }
       for (const promise of pending) {
         if (
           this.solved ||
