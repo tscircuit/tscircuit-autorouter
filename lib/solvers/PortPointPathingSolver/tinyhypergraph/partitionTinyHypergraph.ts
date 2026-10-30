@@ -56,7 +56,7 @@ export function partitionTinyHypergraph(graph: SerializedHyperGraph): Serialized
     const partitionRegions = graph.regions.filter((region) => keepRegion.has(region.regionId)).map((region) => ({
       ...region,
       pointIds: region.pointIds.filter((pointId) => portIds.has(pointId)),
-      d: typeof region.d?.netId === "number" ? { ...region.d, netId: remappedNetIndex.get(region.d.netId) ?? localNetIndex.size + region.d.netId } : region.d,
+      d: typeof region.d?.netId === "number" && region.d.netId >= 0 ? { ...region.d, netId: remappedNetIndex.get(region.d.netId) ?? localNetIndex.size + region.d.netId } : region.d,
     }))
     partitions.push({
       regions: partitionRegions,
