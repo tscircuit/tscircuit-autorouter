@@ -1,3 +1,4 @@
+import { restoreCoincidentNativeViaLandings } from "./restoreCoincidentNativeViaLandings"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -55,6 +56,7 @@ export type Pipeline9HighDensitySolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   preserveTerminalPcbPortIds?: boolean
+  preserveCoincidentLayerTransitionLandings?: boolean
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
@@ -645,6 +647,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    if (this.params.preserveCoincidentLayerTransitionLandings === true) routes = routes.map(restoreCoincidentNativeViaLandings)
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes

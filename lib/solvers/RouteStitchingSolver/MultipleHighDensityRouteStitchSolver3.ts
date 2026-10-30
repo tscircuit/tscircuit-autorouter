@@ -145,6 +145,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    requireSameLayerTerminalIdentity?: boolean
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -258,10 +259,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             params.layerCount,
           ),
         }
+        const preserveCoincidentLayerIdentity = params.requireSameLayerTerminalIdentity === true &&
+          globalStart.x === globalEnd.x && globalStart.y === globalEnd.y && globalStart.z !== globalEnd.z
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
           globalEnd,
+          preferSameLayerTerminalIdentity: preserveCoincidentLayerIdentity,
         }))
 
         if (
@@ -274,10 +278,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: [globalStart, globalEnd],
+          requireSameLayerTerminalIdentity: preserveCoincidentLayerIdentity,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
           terminals: [globalStart, globalEnd],
+          requireSameLayerTerminalIdentity: preserveCoincidentLayerIdentity,
         })
       } else {
         start = {
