@@ -1,3 +1,4 @@
+import { Pipeline4HighDensityRepairBatchSolver } from "./Pipeline4HighDensityRepairBatchSolver"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
@@ -432,22 +433,31 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
             2,
         ),
       )
-      const pending = this.sampleEntries
+      const inputs = this.sampleEntries
         .slice(
           this.activeSampleIndex,
           this.activeSampleIndex + parallelSampleCount,
         )
-        .map((entry) =>
-          runtime
-            .executeAsync(Pipeline4HighDensityRepairSampleSolver, {
-              sample: entry.sample,
-              margin: this.repairMargin,
-            })
-            .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
+        .map((entry) => ({
+          sample: entry.sample,
+          margin: this.repairMargin,
+        }))
+      const pending: Array<Promise<
+        | { type: "result"; result: Pipeline4HighDensityRepairSampleOutput }
+        | { type: "error"; error: unknown }
+      >> = []
+      for (let index = 0; index < inputs.length; index += 8) {
+        const batch = inputs.slice(index, index + 8)
+        const job = runtime.executeAsync(Pipeline4HighDensityRepairBatchSolver, batch).then(
+          (results) => ({ type: "results" as const, results }),
+          (error: unknown) => ({ type: "error" as const, error }),
         )
+        for (let offset = 0; offset < batch.length; offset++) {
+          pending.push(job.then((outcome) => outcome.type === "error"
+            ? outcome
+            : { type: "result" as const, result: outcome.results[offset]! }))
+        }
+      }
       for (const promise of pending) {
         // A serial sample uses one construction step and one repair step.
         if (
