@@ -1,0 +1,42 @@
+name: Verify multilayer repair preservation
+on:
+  push:
+    branches: [codex/final-parallel-routing]
+    paths: [.github/workflows/verify-multilayer-repair.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6e05be2952527433db08a43b4d4db5f5d78490f3
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Record dataset18 layer counts
+        run: |
+          bun --eval '
+          import { loadScenarioBySampleNumber } from "./scripts/benchmark/scenarios"
+          for (let i=1;i<=16;i++) {
+            const { scenario } = await loadScenarioBySampleNumber("srj18",i)
+            console.log(JSON.stringify({sample:i,layers:scenario.layerCount,traces:scenario.traces?.length??0}))
+          }'
+      - run: bash benchmark.sh --dataset 24 --threads 4 --sample 2
+      - name: Require reference DRC success
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("benchmark-result.json"))
+          assert len(r["tests"])==1 and r["tests"][0]["relaxedDrcPassed"], r["tests"][0].get("drcErrorMessages")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: multilayer-repair-preservation
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
