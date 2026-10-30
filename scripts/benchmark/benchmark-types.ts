@@ -116,6 +116,12 @@ export type RoutingBenchmarkMetrics = {
     initialBoundedRegionalRepairCandidateAttemptCount?: number
     initialBoundedRegionalRepairPathSearchNodeCount?: number
     initialBoundedRegionalRepairAccepted?: boolean
+    initialBoundedParallelRegionalTaskCount?: number
+    initialBoundedParallelRegionalDeferredCount?: number
+    initialBoundedParallelRegionalIncompleteCount?: number
+    initialBoundedParallelProjectionWorkerCount?: number
+    initialBoundedParallelProjectionAcceptedCount?: number
+    initialBoundedParallelProjectionRejectedCount?: number
   }
   networkedHighDensity?: {
     remoteRequestsStarted: number

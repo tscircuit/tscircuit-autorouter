@@ -151,6 +151,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private parallelRegionalTaskCount = 0
   private parallelRegionalDeferredCount = 0
   private parallelRegionalIncompleteCount = 0
+  private parallelProjectionWorkerCount = 0
+  private parallelProjectionAcceptedCount = 0
+  private parallelProjectionRejectedCount = 0
   readonly phaseTimeMs: Record<string, number> = {}
   private timedPhase?: BoundedRepairState["phase"]
   private phaseStartedAt = 0
@@ -198,6 +201,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       parallelRegionalTaskCount: this.parallelRegionalTaskCount,
       parallelRegionalDeferredCount: this.parallelRegionalDeferredCount,
       parallelRegionalIncompleteCount: this.parallelRegionalIncompleteCount,
+      parallelProjectionWorkerCount: this.parallelProjectionWorkerCount,
+      parallelProjectionAcceptedCount: this.parallelProjectionAcceptedCount,
+      parallelProjectionRejectedCount: this.parallelProjectionRejectedCount,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
       pathSearchNodeCount: this.result.pathSearchNodeCount + liveNodes,
       allowedRegionCount: allowance.maxRegions,
@@ -871,6 +877,20 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
 
   private completeChild(): void {
     const state = this.state
+    if (
+      "solver" in state &&
+      state.solver instanceof Pipeline9ClearanceProjectionSolver
+    ) {
+      const stats = state.solver.stats
+      if (typeof stats.parallelProjectionWorkers === "number") {
+        this.parallelProjectionWorkerCount += stats.parallelProjectionWorkers
+      }
+      if (stats.parallelProjectionAccepted === true) {
+        this.parallelProjectionAcceptedCount++
+      } else if (stats.parallelProjectionAccepted === false) {
+        this.parallelProjectionRejectedCount++
+      }
+    }
     switch (state.phase) {
       case "initial-projection": {
         const projectedRoutes = state.solver.getOutput()

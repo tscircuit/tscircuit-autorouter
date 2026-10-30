@@ -20,6 +20,12 @@ test("benchmark records observed initial joint DRC repair metrics", (): void => 
         initialBoundedRegionalRepairCandidateAttemptCount: 7,
         initialBoundedRegionalRepairPathSearchNodeCount: 23,
         initialBoundedRegionalRepairAccepted: false,
+        initialBoundedParallelRegionalTaskCount: 4,
+        initialBoundedParallelRegionalDeferredCount: 1,
+        initialBoundedParallelRegionalIncompleteCount: 2,
+        initialBoundedParallelProjectionWorkerCount: 8,
+        initialBoundedParallelProjectionAcceptedCount: 1,
+        initialBoundedParallelProjectionRejectedCount: 1,
       },
     },
   }

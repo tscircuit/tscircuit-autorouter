@@ -1778,6 +1778,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairPhaseTimeMs: {
         ...this.initialBoundedRegionalRepairSolver.phaseTimeMs,
       },
+      initialBoundedParallelRegionalTaskCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalTaskCount,
+      initialBoundedParallelRegionalDeferredCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalDeferredCount,
+      initialBoundedParallelRegionalIncompleteCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelRegionalIncompleteCount,
+      initialBoundedParallelProjectionWorkerCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionWorkerCount,
+      initialBoundedParallelProjectionAcceptedCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionAcceptedCount,
+      initialBoundedParallelProjectionRejectedCount:
+        this.initialBoundedRegionalRepairSolver.stats.parallelProjectionRejectedCount,
     }
     // A complete bounded repair can avoid the much broader portfolio search.
     // Keep incomplete candidates private so the existing stages see their

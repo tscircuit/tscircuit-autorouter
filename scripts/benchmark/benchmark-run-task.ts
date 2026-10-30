@@ -393,6 +393,12 @@ export const getRoutingBenchmarkMetrics = (
     "initialBoundedRegionalRepairAcceptedRegionCount",
     "initialBoundedRegionalRepairCandidateAttemptCount",
     "initialBoundedRegionalRepairPathSearchNodeCount",
+    "initialBoundedParallelRegionalTaskCount",
+    "initialBoundedParallelRegionalDeferredCount",
+    "initialBoundedParallelRegionalIncompleteCount",
+    "initialBoundedParallelProjectionWorkerCount",
+    "initialBoundedParallelProjectionAcceptedCount",
+    "initialBoundedParallelProjectionRejectedCount",
   ] as const) {
     if (typeof jointStats?.[key] === "number") {
       jointDrcRepair[key] = jointStats[key]
