@@ -1,0 +1,91 @@
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2,14 +2,15 @@
+ function findConnectedNetworks(connections) {
+   const networks = /* @__PURE__ */ new Map();
+   let netCounter = 0;
++  const networkByNode = new Map();
++  const keyByNetwork = new Map();
+   function getOrCreateNetwork(nodeId) {
+-    for (const [, network] of networks) {
+-      if (network.has(nodeId)) {
+-        return network;
+-      }
+-    }
+-    const newNetwork = /* @__PURE__ */ new Set();
+-    networks.set(`connectivity_net${netCounter++}`, newNetwork);
++    const known = networkByNode.get(nodeId);
++    if (known) return known;
++    const newNetwork = new Set();
++    const key = `connectivity_net${netCounter++}`;
++    networks.set(key, newNetwork);
++    keyByNetwork.set(newNetwork, key);
+     return newNetwork;
+   }
+   for (const connection of connections) {
+@@ -22,15 +23,13 @@
+         if (existingNetwork !== network) {
+           for (const node of existingNetwork) {
+             network.add(node);
++            networkByNode.set(node, network);
+           }
+-          networks.delete(
+-            Array.from(networks.entries()).find(
+-              ([, net]) => net === existingNetwork
+-            )[0]
+-          );
++          networks.delete(keyByNetwork.get(existingNetwork));
+         }
+       }
+       network.add(nodeId);
++      networkByNode.set(nodeId, network);
+     }
+   }
+   return Object.fromEntries(
+@@ -55,6 +54,8 @@
+     }
+   }
+   addConnections(connections) {
++    const memberships = new Map();
++    let netCount = Object.keys(this.netMap).length;
+     for (const connection of connections) {
+       const existingNets = /* @__PURE__ */ new Set();
+       for (const id of connection) {
+@@ -65,7 +66,8 @@
+       }
+       let targetNetId;
+       if (existingNets.size === 0) {
+-        targetNetId = `connectivity_net${Object.keys(this.netMap).length}`;
++        targetNetId = `connectivity_net${netCount}`;
++        if (!Object.hasOwn(this.netMap, targetNetId)) netCount++;
+         this.netMap[targetNetId] = [];
+       } else if (existingNets.size === 1) {
+         targetNetId = existingNets.values().next().value ?? `connectivity_net${Object.keys(this.netMap).length}`;
+@@ -74,6 +76,7 @@
+         for (const netId of existingNets) {
+           if (netId !== targetNetId) {
+             this.netMap[targetNetId].push(...this.netMap[netId]);
++            memberships.delete(this.netMap[targetNetId]);
+             this.netMap[netId] = this.netMap[targetNetId];
+             for (const id of this.netMap[targetNetId]) {
+               this.idToNetMap[id] = targetNetId;
+@@ -81,9 +84,16 @@
+           }
+         }
+       }
++      const targetIds = this.netMap[targetNetId];
++      let membership = memberships.get(targetIds);
++      if (!membership) {
++        membership = new Set(targetIds);
++        memberships.set(targetIds, membership);
++      }
+       for (const id of connection) {
+-        if (!this.netMap[targetNetId].includes(id)) {
+-          this.netMap[targetNetId].push(id);
++        if (!membership.has(id)) {
++          targetIds.push(id);
++          membership.add(id);
+         }
+         this.idToNetMap[id] = targetNetId;
+       }
