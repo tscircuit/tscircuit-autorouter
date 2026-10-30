@@ -97,7 +97,19 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  const bounds = getBoundFromCenteredRect(obstacle)
+  if (!obstacle.ccwRotationDegrees) return isPointInsideBounds(point, bounds)
+
+  // Test in the pad's local axes before deciding which approximation owns
+  // this terminal. Same-net neighboring pads can share every connection ID.
+  const angle = (obstacle.ccwRotationDegrees * Math.PI) / 180
+  const dx = point.x - obstacle.center.x
+  const dy = point.y - obstacle.center.y
+  const localPoint = {
+    x: obstacle.center.x + dx * Math.cos(angle) + dy * Math.sin(angle),
+    y: obstacle.center.y - dx * Math.sin(angle) + dy * Math.cos(angle),
+  }
+  return isPointInsideBounds(localPoint, bounds)
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {

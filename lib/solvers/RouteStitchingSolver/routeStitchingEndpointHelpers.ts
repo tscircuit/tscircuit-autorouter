@@ -182,9 +182,23 @@ export const selectIslandEndpoints = (params: {
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
-  terminals: Point3[]
-}) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  terminals: Array<Point3 & { pcb_port_id?: string }>
+  pcbPortId?: string
+  otherPcbPortId?: string
+}): Point3 => {
+  const candidates = params.pcbPortId
+    ? params.terminals.filter(
+        (terminal) => terminal.pcb_port_id === params.pcbPortId,
+      )
+    : params.otherPcbPortId
+      ? params.terminals.filter(
+          (terminal) => terminal.pcb_port_id !== params.otherPcbPortId,
+        )
+      : params.terminals
+  if (candidates.length === 0) {
+    throw new Error(`No stitch terminal matches PCB port "${params.pcbPortId}"`)
+  }
+  const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
