@@ -1,11 +1,19 @@
+diff --git a/node_modules/@tscircuit/repair04/.bun-tag-9a507927d6e4bd71 b/.bun-tag-9a507927d6e4bd71
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/node_modules/@tscircuit/repair04/.bun-tag-ae9107942992abba b/.bun-tag-ae9107942992abba
 new file mode 100644
 index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/lib/RelaxTraceClearanceSolver.ts b/lib/RelaxTraceClearanceSolver.ts
-index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae8c5330cf 100644
+index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..a35a098ba5d3356694e3e7cc02ebe492d194efbf 100644
 --- a/lib/RelaxTraceClearanceSolver.ts
 +++ b/lib/RelaxTraceClearanceSolver.ts
-@@ -64,6 +64,21 @@ type PadContact = {
+@@ -1,3 +1,4 @@
++import Flatbush from "flatbush"
+ import { BaseSolver } from "@tscircuit/solver-utils"
+ import type { RelaxTraceClearanceInput } from "./relaxTraceClearance"
+ import { getRepairCopperLayerSpan } from "./getRepairCopperLayerSpan"
+@@ -64,6 +65,21 @@ type PadContact = {
    contact: Contact | null
  }
  
@@ -27,7 +35,17 @@ index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae
  const MAX_SWEEPS = 256
  const MAX_DISPLACEMENT = 0.25
  
-@@ -146,6 +161,7 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+@@ -138,6 +154,9 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+   private viaPadConstraints = new Map<Vertex, ViaPadConstraint[]>()
+   private traceClearance = 0.1
+   private viaClearance = 0.1
++  private segmentIndex?: Flatbush
++  private pairCandidates?: number[]
++  private pairCandidateOffset = 0
+   private pairOuterIndex = 0
+   private pairInnerIndex = 1
+   private obstacleIndex = 0
+@@ -146,6 +165,7 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
    private sweepPadIndex = 0
    private preparedPairCount = 0
    private projectedConstraintCount = 0
@@ -35,7 +53,7 @@ index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae
  
    constructor(input: RelaxTraceClearanceInput) {
      super()
-@@ -153,6 +169,94 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+@@ -153,6 +173,94 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
      this.MAX_ITERATIONS = 1024
    }
  
@@ -130,7 +148,64 @@ index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae
    private prepareGeometry(): void {
      const input = this.input
      const routes = structuredClone(input.routes)
-@@ -555,7 +659,10 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+@@ -275,6 +383,14 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+     this.nets = nets
+     this.vertices = vertices
+     this.segments = segments
++    if (segments.length > 0) {
++      this.segmentIndex = new Flatbush(segments.length)
++      for (const segment of segments) {
++        const bounds = segment.initialBounds
++        this.segmentIndex.add(bounds.minX - segment.radius, bounds.minY - segment.radius, bounds.maxX + segment.radius, bounds.maxY + segment.radius)
++      }
++      this.segmentIndex.finish()
++    }
+     this.traceClearance = traceClearance
+     this.viaClearance = viaClearance
+     const pairCount = (segments.length * (segments.length - 1)) / 2
+@@ -291,13 +407,20 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+   private preparePairs(): void {
+     let processed = 0
+     while (processed < 4096 && this.pairOuterIndex < this.segments.length) {
+-      if (this.pairInnerIndex >= this.segments.length) {
++      const a = this.segments[this.pairOuterIndex]!
++      if (!this.pairCandidates) {
++        const bounds = a.initialBounds
++        const reach = a.radius + Math.max(this.traceClearance, this.viaClearance) + 2 * Math.SQRT2 * MAX_DISPLACEMENT
++        this.pairCandidates = this.segmentIndex!.search(bounds.minX - reach, bounds.minY - reach, bounds.maxX + reach, bounds.maxY + reach)
++          .filter((index) => index > this.pairOuterIndex).sort((left, right) => left - right)
++        this.pairCandidateOffset = 0
++      }
++      if (this.pairCandidateOffset >= this.pairCandidates.length) {
+         this.pairOuterIndex++
+-        this.pairInnerIndex = this.pairOuterIndex + 1
++        this.pairCandidates = undefined
+         continue
+       }
+-      const a = this.segments[this.pairOuterIndex]!
+-      const b = this.segments[this.pairInnerIndex++]!
++      const b = this.segments[this.pairCandidates[this.pairCandidateOffset++]!]!
+       processed++
+       this.preparedPairCount++
+       if (a.net === b.net || a.maxZ < b.minZ || b.maxZ < a.minZ) continue
+@@ -374,7 +497,15 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+         minY: Math.min(...corners.map((corner): number => corner.y)),
+         maxY: Math.max(...corners.map((corner): number => corner.y)),
+       }
+-      for (const segment of segments) {
++      const searchMargin = Math.max(traceClearance, viaClearance, input.srj.defaultObstacleMargin ?? 0,
++        input.srj.minTraceToPadEdgeClearance ?? 0, input.srj.minTraceToHoleEdgeClearance ?? 0,
++        input.srj.minViaEdgeToPadEdgeClearance ?? 0) + Math.SQRT2 * MAX_DISPLACEMENT
++      const nearby = this.segmentIndex
++        ? this.segmentIndex.search(padBounds.minX - searchMargin, padBounds.minY - searchMargin,
++            padBounds.maxX + searchMargin, padBounds.maxY + searchMargin).sort((left, right) => left - right)
++        : []
++      for (const segmentIndex of nearby) {
++        const segment = segments[segmentIndex]!
+         if (
+           (!segment.via && obstacleNets.has(segment.net)) ||
+           !zs.some((z) => z >= segment.minZ && z <= segment.maxZ)
+@@ -555,7 +686,10 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
          )
        )
          continue
@@ -142,7 +217,7 @@ index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae
        vertex.x = x
        vertex.y = y
      }
-@@ -910,7 +1017,8 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+@@ -910,7 +1044,8 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
        this.sweepIndex++
        this.sweepPairIndex = 0
        this.sweepPadIndex = 0
