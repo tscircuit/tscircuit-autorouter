@@ -1210,7 +1210,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? orderConnectionsByNetCardinality(tinyConnections, getTinyRouteConnectionNetId) : tinyConnections
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     const solver = this.createDuplicationSolver(serializedGraph)
-    solver.solve()
+    await solver.solveAsync(runtime)
     const failure = await startup
     if (failure) throw failure.error
     this.initialize({ serializedGraph, solver })
