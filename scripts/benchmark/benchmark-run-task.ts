@@ -1,3 +1,4 @@
+import { profile } from "bun:jsc"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
@@ -563,7 +564,8 @@ export const solveWithProgress = async (
           requireWorker: true,
         })
       }
-      await solver.solveAsync(runtime)
+      const cpu = await profile(async () => { await solver.solveAsync!(runtime) })
+      console.error(`[CPU ${task.scenarioName}] ${cpu.functions}`)
     } finally {
       if (interval) {
         clearInterval(interval)
