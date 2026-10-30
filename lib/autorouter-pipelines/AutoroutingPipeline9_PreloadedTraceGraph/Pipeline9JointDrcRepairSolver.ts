@@ -1,5 +1,6 @@
+import { SolverRuntime, type SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { AnyCircuitElement } from "circuit-json"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
@@ -63,7 +64,8 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
-type Pipeline9JointDrcRepairSolverParams = {
+export type Pipeline9JointDrcRepairSolverParams = {
+  regionalRepairSizes?: readonly number[]
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -734,11 +736,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
             drcEvaluator: this.cachedReferenceDrcEvaluator,
-            budget: getPipeline9BoundedRepairBudget(
-              this.exactRepairParams.hdRoutes.length,
-              this.stats.initialJointDrcIssueCount,
-              this.params.effort,
-            ),
+            budget: {
+              ...getPipeline9BoundedRepairBudget(
+                this.exactRepairParams.hdRoutes.length,
+                this.stats.initialJointDrcIssueCount,
+                this.params.effort,
+              ),
+              ...(this.params.regionalRepairSizes
+                ? { regionSizes: this.params.regionalRepairSizes }
+                : {}),
+            },
           })
         return this.initialBoundedRegionalRepairSolver
       },
@@ -2113,6 +2120,58 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
   }
 
+  private asyncRunning = false
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Joint repair is already running")
+    if (this.solved || this.failed) return
+    this.asyncRunning = true
+    try {
+      if (!runtime || this.iterations !== 0 ||
+          stopAtIteration < this.MAX_ITERATIONS ||
+          this.params.updatedPreloadedTraces.length > 0 ||
+          (this.params.originalSrj.traces?.length ?? 0) > 0) {
+        while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
+        return
+      }
+      const cancellation = new Int32Array(new SharedArrayBuffer(4))
+      let winner: JointRepairCandidateOutput | undefined
+      const sizes = [undefined, [12, 24], [24, 48], [32, 64]] as const
+      const pending = sizes.map((regionSizes, index) =>
+        runtime.executeAsync(Pipeline9JointRepairCandidateSolver, {
+          params: { ...this.params, regionalRepairSizes: regionSizes },
+          cancellation,
+          index,
+          stopAtIteration,
+        }).then((result): JointRepairCandidateOutput => {
+          if (result.status === "finished" && result.valid && !winner) {
+            winner = result
+            Atomics.store(cancellation, 0, index + 1)
+          }
+          return result
+        }),
+      )
+      const outcomes = await Promise.allSettled(pending)
+      for (const outcome of outcomes) {
+        if (outcome.status === "rejected") throw outcome.reason
+      }
+      const first = outcomes[0]!
+      if (first.status !== "fulfilled") throw new Error("Missing baseline repair result")
+      const selected = winner ?? first.value
+      if (selected.status !== "finished") throw new Error("Repair portfolio exhausted its iteration allowance")
+      this.combinedOutput = selected.routes
+      this.stats = { ...selected.stats, parallelRepairCandidate: selected.index }
+      this.iterations = selected.iterations
+      this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS, selected.maxIterations)
+      this.solved = true
+    } finally {
+      this.asyncRunning = false
+    }
+  }
+
   private getCombinedOutput(): HighDensityRoute[] {
     return (
       this.combinedOutput ??
@@ -2208,3 +2267,91 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return this.exactRepairSolver?.visualize() ?? {}
   }
 }
+
+type JointRepairCandidateInput = {
+  params: Pipeline9JointDrcRepairSolverParams
+  cancellation: Int32Array
+  index: number
+  stopAtIteration: number
+}
+
+type JointRepairCandidateOutput =
+  | { status: "cancelled" | "paused"; index: number }
+  | {
+      status: "finished"
+      index: number
+      routes: HighDensityRoute[]
+      valid: boolean
+      stats: Record<string, any>
+      iterations: number
+      maxIterations: number
+    }
+
+export class Pipeline9JointRepairCandidateSolver extends BaseSolver {
+  static readonly solverName = "Pipeline9JointRepairCandidateSolver"
+  private candidate?: Pipeline9JointDrcRepairSolver
+  private output?: JointRepairCandidateOutput
+
+  constructor(private readonly input: JointRepairCandidateInput) {
+    super()
+    this.MAX_ITERATIONS = 1_000_000_000
+  }
+
+  override _step(): void {
+    const { index, cancellation, params, stopAtIteration } = this.input
+    const selected = Atomics.load(cancellation, 0)
+    if (selected !== 0 && selected !== index + 1) {
+      this.output = { status: "cancelled", index }
+      this.solved = true
+      return
+    }
+    if (!this.candidate) {
+      const connMap = new ConnectivityMap({})
+      connMap.netMap = params.connMap.netMap
+      connMap.idToNetMap = params.connMap.idToNetMap
+      this.candidate = new Pipeline9JointDrcRepairSolver({ ...params, connMap })
+    }
+    const candidate = this.candidate
+    if (!candidate.solved && !candidate.failed && candidate.iterations < stopAtIteration) candidate.step()
+    if (candidate.failed) throw new Error("Joint repair candidate failed: " + candidate.error)
+    if (!candidate.solved) {
+      if (candidate.iterations >= stopAtIteration) {
+        this.output = { status: "paused", index }
+        this.solved = true
+      }
+      return
+    }
+    const routes = candidate.getOutput()
+    const converter = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+      connections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      connMap: Object.assign(new ConnectivityMap({}), { netMap: params.connMap.netMap, idToNetMap: params.connMap.idToNetMap }),
+    })
+    const validation = evaluateRelaxedDrc({
+      inputSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      routedTraces: converter(routes),
+      includeBoardClearance: true,
+      drcOptions: {
+        traceClearance: params.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+        viaClearance: params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+      },
+    })
+    this.output = {
+      status: "finished", index, routes, valid: validation.errors.length === 0,
+      stats: candidate.stats, iterations: candidate.iterations,
+      maxIterations: candidate.MAX_ITERATIONS,
+    }
+    this.solved = true
+  }
+
+  getOutput(): JointRepairCandidateOutput {
+    if (!this.output) throw new Error("Joint repair candidate is incomplete")
+    return this.output
+  }
+}
+
+SolverRuntime.registerSolver(Pipeline9JointRepairCandidateSolver)
