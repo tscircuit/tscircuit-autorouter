@@ -1598,6 +1598,11 @@ export const runBenchmarkTasks = async (
       console.log(
         `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${suffix}`,
       )
+      if (result.routingMetrics?.jointDrcRepair) {
+        console.log(
+          `[benchmark] joint DRC ${result.scenarioName} ${JSON.stringify(result.routingMetrics.jointDrcRepair)}`,
+        )
+      }
 
       if (restartWorker) {
         console.warn(
