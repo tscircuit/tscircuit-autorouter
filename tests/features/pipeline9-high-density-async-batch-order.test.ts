@@ -11,7 +11,7 @@ import {
   type Pipeline9HighDensitySolverParams,
 } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 
-test("crowded nodes are scheduled first in bounded batches while results retain serial order", async (): Promise<void> => {
+test("workers claim crowded nodes first from a shared queue while results retain serial order", async (): Promise<void> => {
   const params: Pipeline9HighDensitySolverParams = {
     nodePortPoints: Array.from({ length: 40 }, (_, index) => ({
       capacityMeshNodeId: `node-${index}`,
@@ -61,12 +61,15 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
   const pending = solver.solveAsync(runtime)
-  expect(tasks).toHaveLength(16)
+  expect(tasks).toHaveLength(4)
   expect(tasks[0]!.input.nodePortPoints[0]!.capacityMeshNodeId).toBe("node-2")
   for (const { input, resolve } of tasks.toReversed()) {
-    expect(
-      [...(input.nodePfById as Map<string, number | null>)].map(([id]) => id),
-    ).toEqual(input.nodePortPoints.map((node) => node.capacityMeshNodeId))
+    expect(input.sharedNodeCursor).toBe(tasks[0]!.input.sharedNodeCursor)
+    for (const node of input.nodePortPoints) {
+      expect(input.nodePfById?.get(node.capacityMeshNodeId)).toBe(
+        params.nodePfById?.get(node.capacityMeshNodeId),
+      )
+    }
     const batch = new Pipeline9HighDensityBatchSolver(input)
     batch.solve()
     resolve(batch.getOutput())
