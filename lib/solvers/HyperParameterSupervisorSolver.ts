@@ -155,8 +155,14 @@ export class HyperParameterSupervisorSolver<
       return
     }
 
-    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
-      supervisedSolver.solver.step()
+    // A batch must preserve the state of exactly MIN_SUBSTEPS public steps,
+    // including iteration limits. Fitness is only observed after this boundary.
+    const solver: T & { stepBatch?: (count: number) => void } =
+      supervisedSolver.solver
+    if (solver.stepBatch) {
+      solver.stepBatch(this.MIN_SUBSTEPS)
+    } else {
+      for (let i = 0; i < this.MIN_SUBSTEPS; i++) solver.step()
     }
     this.activeSubSolver = supervisedSolver.solver
 
