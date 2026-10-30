@@ -1,0 +1,26 @@
+name: Publish reviewed parallel routing implementation
+on:
+  push:
+    branches: [codex/final-parallel-routing]
+    paths: [.github/workflows/publish-parallel-routing-pr.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/parallel-routing-performance
+          fetch-depth: 0
+      - name: Replace abandoned experiment with reviewed implementation
+        run: |
+          test "$(git rev-parse HEAD)" = d23d3b129e2c6c6cb4471dfb3a3cfa87495c7690
+          git fetch origin 3c2eead401d22de00faa3eae414c338f2530f453
+          git read-tree --reset -u 5f65e9a8bb43223266883f8d65c50408c1c5e8a1
+          git restore --source=3c2eead401d22de00faa3eae414c338f2530f453 --staged --worktree -- lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver.ts lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts lib/runtime/RoutingWorkerStartupSolver.ts lib/runtime/bun.ts lib/runtime/bun.worker.ts lib/runtime/node.ts lib/runtime/node.worker.ts tests/features/pipeline9-high-density-async-batch-order.test.ts tests/features/pipeline9-high-density-async-priority-ledger.test.ts tests/features/pipeline9-high-density-async-worker-drain.test.ts tests/fixtures/pipeline9SolverRuntime.worker.ts
+          git diff --cached --stat
+          git config user.name "codex[bot]"
+          git config user.email "codex@openai.com"
+          git commit -m "Improve parallel routing scheduling and bound the global repair warm-up"
+          git push origin HEAD:codex/parallel-routing-performance
