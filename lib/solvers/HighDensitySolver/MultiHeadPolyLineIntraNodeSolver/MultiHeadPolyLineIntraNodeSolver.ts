@@ -51,6 +51,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   viaDiameter: number = 0.3
   obstacleMargin: number = 0.1
   traceWidth: number = 0.15
+  protected readonly viaLayerIndices?: number[]
   availableZ: number[] = []
   uniqueConnections: number = 0
 
@@ -71,6 +72,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     connMap?: ConnectivityMap
     viaDiameter?: number
     traceWidth?: number
+    viaLayerIndices?: number[]
   }) {
     super()
     this.MAX_ITERATIONS = 10e3
@@ -85,6 +87,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
     this.traceWidth = params.traceWidth ?? this.traceWidth
+    this.viaLayerIndices = params.viaLayerIndices
 
     // TODO swap with more sophisticated grid in SingleHighDensityRouteSolver
     this.cellSize = this.nodeWithPortPoints.width / 1024
@@ -502,7 +505,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         }
         points1.forEach((p, k) => {
           if (p.z1 !== p.z2)
-            vias1.push({ point: p, layers: [p.z1, p.z2], index: k })
+            vias1.push({ point: p, layers: this.viaLayerIndices ?? [p.z1, p.z2], index: k })
         })
 
         const segments2: Array<{
@@ -528,7 +531,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         }
         points2.forEach((p, k) => {
           if (p.z1 !== p.z2)
-            vias2.push({ point: p, layers: [p.z1, p.z2], index: k })
+            vias2.push({ point: p, layers: this.viaLayerIndices ?? [p.z1, p.z2], index: k })
         })
 
         // --- Interaction Calculations ---
@@ -866,7 +869,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         []
       points.forEach((p, k) => {
         if (p.z1 !== p.z2)
-          vias.push({ point: p, layers: [p.z1, p.z2], index: k })
+          vias.push({ point: p, layers: this.viaLayerIndices ?? [p.z1, p.z2], index: k })
       })
 
       if (vias.length < 2) continue // Need at least two vias to interact
@@ -1084,17 +1087,20 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   //  Try accepting the best candidate even if normal solving failed.
   // ------------------------------------------------------------------
   tryFinalAcceptance() {
+    if (
+      this.lastCandidate?.polyLines.some((line) =>
+        line.mPoints.some((point) =>
+          !Number.isFinite(point.x) || !Number.isFinite(point.y),
+        ),
+      )
+    )
+      return
     const minGapTarget =
       this.hyperParameters?.MINIMUM_FINAL_ACCEPTANCE_GAP ?? undefined
     if (
       minGapTarget === undefined ||
       this.lastCandidate === null ||
-      this.lastCandidate.minGaps.length === 0 ||
-      this.lastCandidate.polyLines.some((line) =>
-        line.mPoints.some(
-          (point) => !Number.isFinite(point.x) || !Number.isFinite(point.y),
-        ),
-      )
+      this.lastCandidate.minGaps.length === 0
     )
       return
 
