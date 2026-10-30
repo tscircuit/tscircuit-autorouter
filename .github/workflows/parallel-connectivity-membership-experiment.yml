@@ -1,0 +1,126 @@
+name: Parallel DRC with connectivity membership experiment
+on:
+  push:
+    branches: [codex/parallel-connectivity-membership]
+    paths:
+      - .github/workflows/parallel-connectivity-membership-experiment.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/checks
+          ref: 2632078db20dbc4af65b4d7e9ba0cb932a97d22d
+          path: checks-source
+      - name: Build prepared reference checks
+        run: |
+          cd checks-source
+          bun install
+          bun run build
+          cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+      - name: Use reverse membership for connectivity insertion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("node_modules/circuit-json-to-connectivity-map/dist/index.js")
+          s=p.read_text()
+          Path("node_modules/circuit-json-to-connectivity-map/dist/reference.js").write_text(s)
+          old="if (!this.netMap[targetNetId].includes(id))"
+          new="if (this.idToNetMap[id] === undefined || (this.idToNetMap[id] !== targetNetId && !this.netMap[targetNetId].includes(id)))"
+          assert old in s
+          p.write_text(s.replace(old,new))
+          PY
+          cat > verify-connectivity.ts <<'TS'
+          import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+          import { ConnectivityMap as Reference } from "./node_modules/circuit-json-to-connectivity-map/dist/reference.js"
+          import { deepStrictEqual } from "node:assert"
+          let seed = 12345
+          const rand = () => (seed = Math.imul(seed, 1664525) + 1013904223 >>> 0)
+          for (let trial = 0; trial < 100; trial++) {
+            const base = Object.fromEntries(Array.from({length: 8}, (_, i) => ["net"+i, ["id"+i]]))
+            const actual = new ConnectivityMap(structuredClone(base))
+            const expected = new Reference(structuredClone(base))
+            for (let step = 0; step < 80; step++) {
+              const connections = [Array.from({length: 2 + rand()%3}, () => "id"+rand()%60)]
+              actual.addConnections(connections)
+              expected.addConnections(connections)
+              deepStrictEqual(actual.netMap, expected.netMap)
+              deepStrictEqual(actual.idToNetMap, expected.idToNetMap)
+            }
+          }
+          console.log("100 seeded connectivity sequences match the reference")
+          TS
+          bun verify-connectivity.ts
+      - run: bunx tsc --noEmit
+      - run: bun test tests/solvers/parallel-reference-drc-workers.test.ts tests/features/pipeline9-srj18-sample01-thread-parity.test.ts --timeout 9999999
+  benchmark:
+    needs: validate
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/checks
+          ref: 2632078db20dbc4af65b4d7e9ba0cb932a97d22d
+          path: checks-source
+      - name: Build prepared reference checks
+        run: |
+          cd checks-source
+          bun install
+          bun run build
+          cp -r dist/. ../node_modules/@tscircuit/checks/dist/
+      - name: Use reverse membership for connectivity insertion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("node_modules/circuit-json-to-connectivity-map/dist/index.js")
+          s=p.read_text()
+          Path("node_modules/circuit-json-to-connectivity-map/dist/reference.js").write_text(s)
+          old="if (!this.netMap[targetNetId].includes(id))"
+          new="if (this.idToNetMap[id] === undefined || (this.idToNetMap[id] !== targetNetId && !this.netMap[targetNetId].includes(id)))"
+          assert old in s
+          p.write_text(s.replace(old,new))
+          PY
+          cat > verify-connectivity.ts <<'TS'
+          import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+          import { ConnectivityMap as Reference } from "./node_modules/circuit-json-to-connectivity-map/dist/reference.js"
+          import { deepStrictEqual } from "node:assert"
+          let seed = 12345
+          const rand = () => (seed = Math.imul(seed, 1664525) + 1013904223 >>> 0)
+          for (let trial = 0; trial < 100; trial++) {
+            const base = Object.fromEntries(Array.from({length: 8}, (_, i) => ["net"+i, ["id"+i]]))
+            const actual = new ConnectivityMap(structuredClone(base))
+            const expected = new Reference(structuredClone(base))
+            for (let step = 0; step < 80; step++) {
+              const connections = [Array.from({length: 2 + rand()%3}, () => "id"+rand()%60)]
+              actual.addConnections(connections)
+              expected.addConnections(connections)
+              deepStrictEqual(actual.netMap, expected.netMap)
+              deepStrictEqual(actual.idToNetMap, expected.idToNetMap)
+            }
+          }
+          console.log("100 seeded connectivity sequences match the reference")
+          TS
+          bun verify-connectivity.ts
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parallel-connectivity-membership-result
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
