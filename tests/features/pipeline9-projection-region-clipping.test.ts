@@ -22,7 +22,9 @@ test("projection windows lock cut points and map only their original source rout
     boundaryMargin: 0,
     lockedPointIndices: fixture.routes.map((route) => route.route.map(() => false)),
   }
-  const regions = createPipeline9ProjectionRegions(input, assignments)
+  const regions = createPipeline9ProjectionRegions(input, assignments, [
+    { x: 0, y: 5 }, { x: 0, y: 15 }, { x: 0, y: 25 }, { x: 0, y: 35 },
+  ])
   expect(regions).toHaveLength(4)
   let cutPoints = 0
   let movablePoints = 0

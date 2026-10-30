@@ -19,7 +19,7 @@ test("parallel projection publishes a validated improvement", async (): Promise<
   const original = JSON.stringify(fixture.routes)
   const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => ({
     errors: JSON.stringify(routes ?? hdRoutes) === original
-      ? [{ type: "pcb_trace_error", pcb_trace_error_id: "conflict" }]
+      ? [{ type: "pcb_trace_error", pcb_trace_error_id: "conflict", center: { x: 0, y: 3 } }]
       : [],
   })
   const solver = new Pipeline9ClearanceProjectionSolver({

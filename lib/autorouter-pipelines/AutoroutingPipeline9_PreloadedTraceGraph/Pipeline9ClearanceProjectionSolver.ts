@@ -11,7 +11,10 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { Pipeline9ClearanceProjectionWorker } from "./Pipeline9ClearanceProjectionWorker"
-import { createPipeline9ProjectionRegions } from "./createPipeline9ProjectionRegions"
+import {
+  createPipeline9ProjectionRegions,
+  planPipeline9ProjectionWindows,
+} from "./createPipeline9ProjectionRegions"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
@@ -42,6 +45,7 @@ export type Pipeline9ClearanceProjectionParams = {
 type ProjectionContext = {
   srj: SimpleRouteJson & { traces: undefined }
   errors: Pipeline9DrcError[]
+  centeredErrors: Pipeline9DrcError[]
   originalCanonicalRoutes: HighDensityRoute[]
   canonicalRoutes: HighDensityRoute[]
 }
@@ -126,14 +130,26 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           }),
         )
         if (entries.length >= 32 && canExtract) {
-          const assignments = new Map<string, number>()
-          const total = entries.reduce((sum, [, point]) => sum + point.count, 0)
-          let assigned = 0
-          for (const [key, point] of entries) {
-            assignments.set(key, Math.min(3, Math.floor((assigned * 4) / total)))
-            assigned += point.count
+          const errorCenters = state.context.centeredErrors.flatMap((error) => {
+            const center = error.center ?? error.pcb_center
+            if (
+              !center || typeof center !== "object" ||
+              !("x" in center) || !("y" in center) ||
+              typeof center.x !== "number" || typeof center.y !== "number" ||
+              !Number.isFinite(center.x) || !Number.isFinite(center.y)
+            ) return []
+            return [{ x: center.x, y: center.y }]
+          })
+          const { centers, assignments } = planPipeline9ProjectionWindows(
+            input,
+            points,
+            [...(this.params.movableRegions?.map((region) => region.center) ?? []), ...errorCenters],
+          )
+          if (centers.length < 2) {
+            while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
+            return
           }
-          const crops = createPipeline9ProjectionRegions(input, assignments)
+          const crops = createPipeline9ProjectionRegions(input, assignments, centers)
           const results = await Promise.all(
             crops.map((crop) =>
               runtime.executeAsync(Pipeline9ClearanceProjectionWorker, crop.input),
@@ -234,6 +250,9 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         hdRoutes: params.routes,
       })
       const errors = Array.isArray(reference) ? reference : reference.errors
+      const centeredErrors = Array.isArray(reference)
+        ? reference
+        : (reference.errorsWithCenters ?? reference.errors)
       if (errors.length === 0) {
         this.state = { phase: "finished", output: params.routes }
         this.solved = true
@@ -285,7 +304,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       this.activeSubSolver = solver
       this.state = {
         phase: "relax",
-        context: { srj, errors, originalCanonicalRoutes, canonicalRoutes },
+        context: { srj, errors, centeredErrors, originalCanonicalRoutes, canonicalRoutes },
         solver,
       }
       return
