@@ -1,0 +1,170 @@
+{
+  "phase": "a01-component-diagnostic",
+  "base_sha": "0da00f5bef6d9945b3fa63e1aa72c138e68e1c7f",
+  "candidates": {
+    "paged_occupancy": "25d3020043ab5e030f3a39bdb57d3b0e2a32d6a7"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 2,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 1200,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 600,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "scope": "Component diagnostic only. Existing global paged5time/15heavyRSS gates FAILED and remain failed. A component win never authorizes full/globalpromotion or replacementPR.",
+    "maximumTotalReplayTimeIncreaseFraction": 0.05,
+    "requireEveryCaseAndOrder": true,
+    "quality": "2instrumentedbaselinefullpipelinecaptures matchoriginal0da5hash/fullquality/counters. CaptureRLEcompleteorderedstepcontrols, ALLpublicbefore/afterscalartrajectoryrollinghash,terminalrouteoutputonly.2freshUNMEASUREDstockverifychildren independentlymatchactualcapturedscalartrajectory+terminaloutput,freezeFULLterminal+setupprivatefingerprints.8freshMEASUREDABBAchildren useONLYrecordedcontrolassignments+publicstepinwindow; terminalfullpublic/privatefingerprintsaftermetricsmatchverifiedstock. Measuredpersteptrajectoryhashiscopiedfrozenverification, NOTindependentlyobservedperstep; no intermediate-route-output/private-pipeline-trajectoryclaim.",
+    "nativeRssMetric": "peakRssAfterReplayBytes",
+    "timeMetric": "totalReplayMs=constructorMs+setupMs+replayMs",
+    "setupMetricsSecondaryOnly": true,
+    "censoring": "Any missing/timedout/memorycensored/nativeNULL/qualitymismatch blocks componentacceptance; nativeboundaries never filledfromparentRSS.",
+    "globalGateStatus": "FAILED_UNCHANGED",
+    "isolation": "No perstepstate/output/hash/pageobserver insideMEASUREDwindow; onlyfrozencontrolassignments+nativeexactstepcalls. NativeRSS/time frozenfirst, terminalfullhashes/endpagecountsafter; setupallocationsreconstructedseparatefreshinstanceAFTERallprimarymetrics, neverasprimaryRSS.",
+    "maximumAfterReplayNativeRssRatioByCase": {
+      "srj18/15": 0.75,
+      "srj24/20": 1.05
+    },
+    "primaryCase": "srj18/15",
+    "secondaryCase": "srj24/20",
+    "preDataCriterionRecordedUtc": "2026-10-30T00:33:35.842214+00:00",
+    "preDataRationale": {
+      "historicalOfficialBaselineRun": 40957745792,
+      "historicalRawRowsSha256": "978676dec5bfce689cfe241caf15199d3f2674d5b19818018cd7745507fa11fe",
+      "historicalSource": "3c42bb98f062c00cce2a5cd617553b7968c3f201",
+      "largestSetupWorkspaceAllA01BufferPayloadBytes": {
+        "srj18/15": 599189016,
+        "srj24/20": 14552008
+      },
+      "qualification": "Allscratchworkspacebytes, NOT3ownerbytes, NOTnativeRSS/livepeak, NOTnewcomponentdata. Rationaleonly: secondarycasehasasmallA01payloadceiling, so primary25RSS andsecondaryno>5RSSregressionpredeclaredBEFOREcapture/measurement. Globalfailedgatesunchanged.",
+      "independentAgreementSha256": "18363aec210e596a811394a3f319c28660737ef3e4372f4ca9650c224713aa11"
+    }
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "55c2a84347139cbae000aecb6ce3a04b60c07c72",
+    "root_changed_files": [
+      "package.json"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA01/OwnerStorage.ts",
+      "tests/a01/paged-occupancy.test.ts"
+    ],
+    "candidate_parent_sha": "9287aa032e0fa932f6c62b08f5ad097786c89086"
+  },
+  "caseOrdering": "Exactly18/15lane0,24/20lane1. ALLbaselinecaptures frozenbeforeANYverify; ALLstockverifications frozenbeforeANYmeasuredcandidate/baseline. PerboardABthenBAsequentialsamecore. No candidate datausedfor selection orordering.",
+  "selectionScope": "Baseline-only largest exactA01 withACTUAL_step andall3allocatedoccupancies; max3logicalownerarraybytes, firstactual-step tie. NoA11. Losslessconstructor params inclundefined/negativezero/aliases; rejectunsupported/functions/nonfinite. OrderedRLEMAX_ITERATIONS/MAX_RIPS/stepMultipliercontrols, ALLpublicSCALARtrajectoryrollinghash+terminalrouteoutputonly. No solver/array/WeakRef retention; no perstepintermediateoutput/fullprivatepipelineclaim.",
+  "confirmation_scope": "PRIVATE V4literal-source freeze: ROOT25d302 pinsupstream55c2a843 parent9287. Upstreamqualified; ROOTfunctional/dependency/freshGBQAongoing. NOtriggeruntilPASS andfreshindependentprivate/publicsource/controllerauth. FreshBlacksmith16ARM2lanes18GiBpreflight:2UNMEASUREDbaselinefullpipelinecaptures,2UNMEASUREDstockstandaloneverifications,8freshMEASUREDstandaloneABBA. EXACTcorrectedV1encodedpage statehelper schema1/f4b969 preserved includinglegalzero-sizefix; NO V3COWadapter. V4 ONLYchangesV2genericpagingcutoff1MiB->16MiB(4194304cells); same4096pages/encodedzero/UIntshiftmask. Stockallnative; candidatepagediffarray>=4194304cells and<=2^31-1, smallerarraysnative. Heavy18/15actual3arraysallabove16MiB; secondary24/20all3below16MiB; thesearevalidationexpectationsfrombaselinegeometry,notproductionboardconditions. Nativewindows/controlparams/RLE/publicscalar/fullterminalsemanticquality and25primaryRSSbothorders/secondary5RSS/time5each unchanged. No V1/V2/V3 performancepooling. Rootonlypublication/executionafterindependentfreshsource/controllerauth.",
+  "screening_scope": "V4threshold componentstudy only; upstream55c2a843qualified, ROOT25d302QAongoing, performancebenefitunmeasured. Existingfailedglobalstudiesremainfailed. Componentwin alone cannotauthorizePR/fullpromotion. No new/relaxedcomponentprotocol or native/time/quality gate.",
+  "capture_timeout_s": 1200,
+  "replay_timeout_s": 600,
+  "baseline_quality_fields": [
+    "status",
+    "error",
+    "inputSha256",
+    "drcErrorCount",
+    "drcErrorTypes",
+    "boardAwareDrcErrorCount",
+    "traceLintIssueCounts",
+    "traceCount",
+    "viaCount",
+    "wireCount",
+    "iterations",
+    "hashes",
+    "jointDrcCacheDiagnostics"
+  ],
+  "baseline_quality_fingerprints": {
+    "srj18/15": {
+      "status": "solved",
+      "error": null,
+      "inputSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "boardAwareDrcErrorCount": 0,
+      "traceLintIssueCounts": {
+        "odd_angle": 916
+      },
+      "traceCount": 461,
+      "viaCount": 321,
+      "wireCount": 3559,
+      "iterations": 2414988,
+      "hashes": {
+        "tracesSha256": "7d08cbf47ddf56559af9e27c98ddabb13cc7a37d4d804cef9be216e127cf22a4",
+        "outputSha256": "647010c9fdc1a4d57bf455346bb94a5f560014a9aaac7b702d21af8c3020c2c8",
+        "relaxedErrorsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "boardAwareErrorsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "inputAfterSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df"
+      },
+      "jointDrcCacheDiagnostics": {
+        "referenceValidationCount": 12,
+        "referenceFalseNegativeCount": 0,
+        "indexedCacheHitCount": 0
+      }
+    },
+    "srj24/20": {
+      "status": "solved",
+      "error": null,
+      "inputSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "boardAwareDrcErrorCount": 0,
+      "traceLintIssueCounts": {
+        "odd_angle": 1280
+      },
+      "traceCount": 576,
+      "viaCount": 443,
+      "wireCount": 5166,
+      "iterations": 2526834,
+      "hashes": {
+        "tracesSha256": "02e668e630d3d8b7e2f1c1c461e6207823501ae39d39b7a8605951fed22cffdd",
+        "outputSha256": "24d54de052e65bb5478125cce0bbc6b7b0808ea11318434331c3aa386cd994a4",
+        "relaxedErrorsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "boardAwareErrorsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "inputAfterSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f"
+      },
+      "jointDrcCacheDiagnostics": {
+        "referenceValidationCount": 30,
+        "referenceFalseNegativeCount": 0,
+        "indexedCacheHitCount": 0
+      }
+    }
+  },
+  "baseline_quality_provenance": {
+    "run": 40976795980,
+    "controller": "55701bb56dff1a1e5b8c1afc09acef99ee50cde9",
+    "rawRowsSha256": "867a96642f4b7c506fed0f91df4fc7d67cf86e61ae94ec74c15e61d7a36120a4",
+    "baselineObservationCountPerCase": 2,
+    "totalBaselineObservationsAcrossSelectedCases": 4,
+    "qualification": "Only exact baseline quality fingerprints are reused; no prior timing/RSS pooled. All two original AB/BA baseline observations per selected case agree."
+  },
+  "unmeasured_pipeline_captures": 2,
+  "unmeasured_stock_verifications": 2,
+  "performance_observations": 8,
+  "component_capture_schema": 1,
+  "component_verified_schema": 1
+}
