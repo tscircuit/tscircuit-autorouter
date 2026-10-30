@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "status": "BOTH2_AUTHOR_ORIGINAL_SERVER_ZIP_QUALIFIED_AWAITING_INDEPENDENT_RAW_REPLAY",
+  "runId": "40988389086",
+  "headSha": "d5681a579fbef62350be2fae6fc6d24ca1f8184f",
+  "manifestSha256": "ed91cb6a16eebe9b538828e68f4acb1936569f0c7962e858c2c7eb2d66678d9e",
+  "sourceSha": "94ab08d34aee46bddc20fd96101aeb4c52898bb4",
+  "sourceTree": "414e673e15a51666df95452e74f9e70202b4c8ed",
+  "entries": [
+    {
+      "dataset": "srj24",
+      "shardIndex": 0,
+      "receipt": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/OWNER-FEEDBACK4-srj24-SHARD0-RAW-QUALIFICATION-v1.json",
+      "sha256": "4f3122600b28e26fc2e0275603b526aaedd757bb288babc8e31b791d4a750037",
+      "parsed": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/srj24-shard0-parsed.json",
+      "producerLog": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/authenticated-logs/123844731643.log",
+      "rawZip": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/original-server-zips/40988389086-owner-feedback-srj24-shard0.zip",
+      "runMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/run-final.json",
+      "jobsMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/jobs-all-final.json",
+      "artifactMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/artifacts-all-final.json",
+      "carrierLogsJson": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/srj24-shard0-carrierlogs.json",
+      "transportReceipt": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/OWNER-FEEDBACK4-srj24-SHARD0-TRANSPORT-v1.json",
+      "carrierCaptures": [
+        {
+          "jobId": 123846187719,
+          "capturePath": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/authenticated-logs/123846187719.capture.json",
+          "captureSha256": "9f4f2616ad4e244e2ba514fa014870f66873bf12b2c2311e4932315bac622af2"
+        },
+        {
+          "jobId": 123846187773,
+          "capturePath": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/authenticated-logs/123846187773.capture.json",
+          "captureSha256": "d9478e97f7da95dd258264d6bb96e14a52145eb13970f814e5d8930fb780a332"
+        }
+      ]
+    },
+    {
+      "dataset": "srj18",
+      "shardIndex": 0,
+      "receipt": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/OWNER-FEEDBACK4-srj18-SHARD0-RAW-QUALIFICATION-v1.json",
+      "sha256": "b146e98cb0e9403884914e1fe6e5d343f7fe12cdd75b0d508b841c2767d8d5a2",
+      "parsed": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/srj18-shard0-parsed.json",
+      "producerLog": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/authenticated-logs/123844731706.log",
+      "rawZip": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/original-server-zips/40988389086-owner-feedback-srj18-shard0.zip",
+      "runMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/run-final.json",
+      "jobsMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/jobs-all-final.json",
+      "artifactMetadata": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/api/artifacts-all-final.json",
+      "carrierLogsJson": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/srj18-shard0-carrierlogs.json",
+      "transportReceipt": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/OWNER-FEEDBACK4-srj18-SHARD0-TRANSPORT-v1.json",
+      "carrierCaptures": [
+        {
+          "jobId": 123846187762,
+          "capturePath": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/authenticated-logs/123846187762.capture.json",
+          "captureSha256": "dfe2442f8310e7fd3a276ca3b1f13dc9681c83640c3da85182e7ddf1ae6efb17"
+        }
+      ]
+    }
+  ],
+  "records": 4,
+  "originalCases": 2,
+  "fullCorpusClaim": false,
+  "independentApproval": false,
+  "union": {
+    "path": "/workspace/experiment-audit/bottleneck-experiments-20261029/owner-feedback4-actual/OWNER-FEEDBACK4-BOTH2-AUTHENTICATED-LOG-UNION-v1.json",
+    "sha256": "b193728eb248c7964fa062600a28bc04687411fd7393b0443039e67ecbad2acc"
+  },
+  "allPriorClocksUnpooled": true
+}
