@@ -4,6 +4,7 @@ import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
   getDrcErrors,
+  type DrcCheckExecutor,
   type GetDrcErrorsOptions,
   type GetDrcErrorsResult,
 } from "./getDrcErrors"
@@ -23,6 +24,7 @@ export interface EvaluateRelaxedDrcInput {
   drcOptions?: GetDrcErrorsOptions
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
+  drcExecutor?: DrcCheckExecutor
   connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
@@ -60,6 +62,7 @@ export const evaluateRelaxedDrc = ({
   drcOptions,
   includeBoardClearance = false,
   connectivityMaps,
+  drcExecutor,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -92,6 +95,6 @@ export const evaluateRelaxedDrc = ({
       holeClearance: inputSrj.minTraceToHoleEdgeClearance,
       viaToPadClearance: getViaToPadClearance(inputSrj),
       ...drcOptions,
-    }),
+    }, drcExecutor),
   }
 }
