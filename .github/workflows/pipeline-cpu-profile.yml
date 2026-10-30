@@ -1,0 +1,49 @@
+name: Pipeline CPU profile
+on:
+  push:
+    branches: [codex/pipeline-cpu-profile]
+    paths: [.github/workflows/pipeline-cpu-profile.yml]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Enable child CPU profiling
+        run: |
+          mkdir -p cpu-profiles
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("scripts/benchmark/index.ts")
+          s=p.read_text().replace('"scripts/benchmark/benchmark.child.ts"', '"--cpu-prof", "--cpu-prof-dir=cpu-profiles", "scripts/benchmark/benchmark.child.ts"')
+          p.write_text(s)
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4 --sample-numbers 13,16
+      - name: Summarize CPU samples
+        run: |
+          python3 - <<'PY'
+          import json,glob,collections
+          for path in glob.glob("cpu-profiles/*"):
+            p=json.load(open(path))
+            nodes={n["id"]:n for n in p["nodes"]}
+            counts=collections.Counter(p.get("samples",[]))
+            totals=collections.Counter()
+            for i,c in counts.items():
+              f=nodes[i]["callFrame"]
+              totals[(f["functionName"],f["url"],f["lineNumber"])]+=c
+            print(path, "SAMPLES",sum(counts.values()))
+            for f,c in totals.most_common(50): print(c,f)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-cpu-profile
+          path: |
+            cpu-profiles
+            benchmark-result.json
