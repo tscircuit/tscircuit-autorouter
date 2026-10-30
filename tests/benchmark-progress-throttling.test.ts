@@ -11,6 +11,7 @@ test("throttled benchmark progress avoids building reports but preserves phase c
     solved: false,
     failed: false,
     iterations: 0,
+    asyncCalls: 0,
     currentPipelineStepIndex: 0,
     pipelineDef: [{ solverName: "first" }, { solverName: "second" }],
     startTimeOfPhase: { first: 0, second: 0 },
@@ -25,10 +26,14 @@ test("throttled benchmark progress avoids building reports but preserves phase c
       if (this.iterations === 100) this.currentPipelineStepIndex = 1
       if (this.iterations === 200) this.solved = true
     },
+    async solveAsync(): Promise<void> {
+      this.asyncCalls++
+      while (!this.solved) this.step()
+    },
   }
   const task: BenchmarkTask = {
     datasetName: "test",
-    solverName: "test",
+    solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
     scenarioName: "test",
     sampleNumber: 1,
     scenario: {
@@ -47,6 +52,7 @@ test("throttled benchmark progress avoids building reports but preserves phase c
     },
   })
   expect(solver.solved).toBe(true)
+  expect(solver.asyncCalls).toBe(0)
   expect(reports.map((report) => report.phaseName)).toEqual([
     "first",
     "second",
