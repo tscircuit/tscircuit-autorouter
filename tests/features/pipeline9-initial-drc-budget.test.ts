@@ -33,7 +33,9 @@ test("initial DRC workers preserve the pipeline iteration limit", async (): Prom
     )
     expect(index).toBeGreaterThanOrEqual(0)
     solver.currentPipelineStepIndex = index
-    solver.pipelineDef[index]!.getConstructorParams = () => [params]
+    Object.assign(solver.pipelineDef[index]!, {
+      getConstructorParams: (): [typeof params] => [params],
+    })
     solver.MAX_ITERATIONS = 0
     return solver
   }
