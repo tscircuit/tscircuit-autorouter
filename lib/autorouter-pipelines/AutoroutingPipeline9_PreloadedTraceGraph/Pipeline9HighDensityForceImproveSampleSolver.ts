@@ -2,14 +2,20 @@ import { SolverRuntime } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import {
+  SparseHighDensityForceImproveSolver,
+  type SparseForceStats,
+} from "lib/solvers/SparseForceImproveSolver/SparseHighDensityForceImproveSolver"
 
 export type Pipeline9HighDensityForceImproveSampleInput = ConstructorParameters<
   typeof HighDensityForceImproveSolver
 >[0]
+  & { experimentSparseForce?: boolean }
 
 export type Pipeline9HighDensityForceImproveSampleOutput = {
   routes: ReturnType<HighDensityForceImproveSolver["getOutput"]>
   latestVisualization: GraphicsObject
+  sparseForceStats?: SparseForceStats
 }
 
 /** Run the upstream numerical step on one node already assigned by the host. */
@@ -25,7 +31,9 @@ export class Pipeline9HighDensityForceImproveSampleSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const solver = new HighDensityForceImproveSolver(this.input)
+    const solver = this.input.experimentSparseForce === true
+      ? new SparseHighDensityForceImproveSolver(this.input)
+      : new HighDensityForceImproveSolver(this.input)
     const entry = solver.sampleEntries[0]
     if (
       this.input.nodeWithPortPoints.length !== 1 ||
@@ -42,6 +50,9 @@ export class Pipeline9HighDensityForceImproveSampleSolver extends BaseSolver {
     this.output = {
       routes: solver.getOutput(),
       latestVisualization: solver.latestVisualization,
+      ...(solver instanceof SparseHighDensityForceImproveSolver
+        ? { sparseForceStats: solver.sparseForceStats }
+        : {}),
     }
     this.solved = true
   }

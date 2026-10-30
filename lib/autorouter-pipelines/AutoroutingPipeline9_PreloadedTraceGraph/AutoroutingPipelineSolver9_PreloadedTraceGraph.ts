@@ -109,6 +109,7 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  experimentSparseForce?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -662,6 +663,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          ...(cms.opts.experimentSparseForce === true
+            ? { experimentSparseForce: true }
+            : {}),
         },
       ],
     ),
