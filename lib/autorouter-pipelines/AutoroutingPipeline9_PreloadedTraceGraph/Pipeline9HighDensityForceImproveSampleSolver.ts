@@ -53,3 +53,42 @@ export class Pipeline9HighDensityForceImproveSampleSolver extends BaseSolver {
 }
 
 SolverRuntime.registerSolver(Pipeline9HighDensityForceImproveSampleSolver)
+
+export type Pipeline9HighDensityForceImproveBatchInput = {
+  samples: Pipeline9HighDensityForceImproveSampleInput[]
+  cursor: Int32Array
+}
+export type Pipeline9HighDensityForceImproveBatchOutput = Array<{
+  index: number
+  result: Pipeline9HighDensityForceImproveSampleOutput
+}>
+
+/** Share a node queue across workers while retaining each native numerical solve. */
+export class Pipeline9HighDensityForceImproveBatchSolver extends BaseSolver {
+  static readonly solverName: string = "Pipeline9HighDensityForceImproveBatchSolver"
+  private readonly output: Pipeline9HighDensityForceImproveBatchOutput = []
+
+  constructor(private readonly input: Pipeline9HighDensityForceImproveBatchInput) {
+    super()
+  }
+
+  override _step(): void {
+    for (let index = Atomics.add(this.input.cursor, 0, 1);
+      index < this.input.samples.length;
+      index = Atomics.add(this.input.cursor, 0, 1)) {
+      const solver = new Pipeline9HighDensityForceImproveSampleSolver(this.input.samples[index]!)
+      solver.solve()
+      if (!solver.solved || solver.failed)
+        throw new Error(solver.error ?? "Force-improve batch node failed")
+      this.output.push({ index, result: solver.getOutput() })
+    }
+    this.solved = true
+  }
+
+  getOutput(): Pipeline9HighDensityForceImproveBatchOutput {
+    if (!this.solved) throw new Error("Force-improve batch has not completed")
+    return this.output
+  }
+}
+
+SolverRuntime.registerSolver(Pipeline9HighDensityForceImproveBatchSolver)
