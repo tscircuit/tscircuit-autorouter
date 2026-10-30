@@ -5,7 +5,7 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("initial indexed bounded repair checks false negatives with full DRC before publication", (): void => {
+test("initial bounded repair uses the native evaluator and publishes a reference-clean board", (): void => {
   const endpoint = (x: number, id: string): Obstacle => ({
     type: "rect", center: { x, y: 0 }, width: 0.5, height: 0.5,
     layers: ["top"], connectedTo: [id],
@@ -46,9 +46,6 @@ test("initial indexed bounded repair checks false negatives with full DRC before
   const initial = solver.initialBoundedRegionalRepairSolver!
   const checked = initial.params.drcEvaluator({ traces: [], routes, hdRoutes: routes })
   expect((Array.isArray(checked) ? checked : checked.errors).length).toBeGreaterThan(0)
-  const telemetry = solver as unknown as { referenceDrcFalseNegativeCount: number }
-  expect(telemetry.referenceDrcFalseNegativeCount).toBeGreaterThan(0)
-
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)

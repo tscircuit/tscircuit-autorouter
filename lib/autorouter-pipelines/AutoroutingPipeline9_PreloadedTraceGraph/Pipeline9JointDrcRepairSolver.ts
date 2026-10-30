@@ -3,6 +3,8 @@ import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
+import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
+import { validateNativeDrcCandidate } from "./validateNativeDrcCandidate"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -672,6 +674,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >[0]
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
+  private nativeBoundedDrcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
@@ -718,7 +721,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     {
       solverName: "initialBoundedRegionalRepairSolver",
       createSolver: (): BaseSolver => {
-        if (!this.exactRepairParams || !this.drcEvaluator) {
+        if (!this.exactRepairParams || !this.nativeBoundedDrcEvaluator) {
           throw new Error(
             "Pipeline9 initial regional repair is missing its input",
           )
@@ -740,7 +743,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               this.exactRepairParams.hdRoutes,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
-            drcEvaluator: this.drcEvaluator,
+            drcEvaluator: this.nativeBoundedDrcEvaluator,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -1505,6 +1508,50 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    const nativeReference = createPipeline9AutoroutingDrcEvaluator({
+      originalSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      includeBoardClearance: true,
+      connectivityMaps,
+      drcOptions: {
+        traceClearance,
+        viaClearance: viaHoleClearance,
+        holeClearance: params.originalSrj.minTraceToHoleEdgeClearance,
+        viaToPadClearance,
+      },
+    })
+    const nativeCandidateCache = new Map<string, ReturnType<DrcEvaluator>>()
+    this.nativeBoundedDrcEvaluator = ({ routes, hdRoutes }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) throw new Error("Native bounded DRC requires routes")
+      const key = JSON.stringify(evaluatedRoutes)
+      const cached = nativeCandidateCache.get(key)
+      if (cached !== undefined) return cached
+      const input = prepareCandidateDrcInput(evaluatedRoutes)
+      const native = nativeReference(input.routedTraces)
+      const traceIds = new Set(input.evaluatedTraces.map((trace) => trace.pcb_trace_id))
+      const filtered = (errors: Array<Record<string, unknown>>): Array<Record<string, unknown>> =>
+        filterPipeline9DrcErrorsAgainstBaseline({
+          errors: addAutoroutingViaTraceIds({ errors, circuitJson: native.circuitJson, evaluatedTraceIds: traceIds }),
+          baselineErrors: errors === native.errors ? baselineErrors : baselineErrorsWithCenters,
+          originalTraceIdByPreparedTraceId: input.originalTraceIdByEvaluationTraceId,
+        })
+      const errors = filtered(native.errors)
+      const result = validateNativeDrcCandidate(
+        normalizeCandidateDrcResult({
+          errors,
+          errorsWithCenters: filtered(native.errorsWithCenters),
+          circuitJson: native.circuitJson,
+          movableTraceIds: input.movableTraceIds,
+          solverTraceIdByEvaluationTraceId: input.solverTraceIdByEvaluationTraceId,
+        }),
+        () => cachedReferenceDrcEvaluator({ traces: [], routes: evaluatedRoutes, hdRoutes: evaluatedRoutes }),
+      )
+      if (nativeCandidateCache.size >= 64) nativeCandidateCache.delete(nativeCandidateCache.keys().next().value!)
+      nativeCandidateCache.set(key, result)
+      return result
+    }
+    this.nativeBoundedDrcEvaluator.inputMode = "routes-only"
     this.clearancePrecisionDrcEvaluator = ({
       routes,
       hdRoutes,
