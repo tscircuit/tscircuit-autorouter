@@ -1,0 +1,56 @@
+name: Compare A01 batching implementations
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-a01
+          ref: 07531ede34e762c5b18cbbf59d573f7fe132bb53
+          path: a01-basic
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-a01
+          ref: bench/a01-batch-pool
+          path: a01-pool
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+        working-directory: a01-basic
+      - run: bun install
+        working-directory: a01-pool
+      - name: Compare alternating fresh processes
+        run: |
+          mkdir results
+          cat > run-batch.ts <<'SCRIPT'
+          import { createHash } from "node:crypto"
+          import workload from "./fixtures/bug-reports/bugreport110-motherboard-power-phase/a01-search-workload.json"
+          const label = process.env.MODE!
+          const { HighDensitySolverA01 } = await import(`./a01-${label === "pool" ? "pool" : "basic"}/lib/index.ts`)
+          const outputs = []
+          const start = performance.now()
+          for (const {props,stepLimit} of workload) {
+            const solver = new HighDensitySolverA01(props)
+            solver.setup()
+            solver.MAX_ITERATIONS = stepLimit
+            if (label === "serial") solver.solve()
+            else while (!solver.solved && !solver.failed) solver.stepBatch(100)
+            outputs.push({solved:solver.solved,failed:solver.failed,iterations:solver.iterations,routes:solver.getOutput()})
+          }
+          console.log(JSON.stringify({label,ms:performance.now()-start,hash:createHash("sha256").update(JSON.stringify(outputs)).digest("hex")}))
+          SCRIPT
+          for mode in serial basic pool pool basic serial serial pool basic basic pool serial; do
+            MODE="$mode" bun run-batch.ts >> results/timings.jsonl
+          done
+          cat results/timings.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a01-batching-comparison
+          path: results
