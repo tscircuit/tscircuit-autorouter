@@ -121,6 +121,7 @@
     "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#0f6718e1a6a9c34ceca6667a83e08477f4295173"
   }
 }
