@@ -52,9 +52,15 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
       : sequentialIndex++
     for (let nodeIndex = nextIndex(); nodeIndex < this.input.nodePortPoints.length; nodeIndex = nextIndex()) {
       const node = this.input.nodePortPoints[nodeIndex]!
+      // Only this node is routed by the child. Avoid copying the board-wide
+      // priority map twice for every claimed node.
+      const nodePf = this.input.nodePfById instanceof Map
+        ? this.input.nodePfById.get(node.capacityMeshNodeId)
+        : this.input.nodePfById?.[node.capacityMeshNodeId]
       const solver = new Pipeline9HighDensitySolver({
         ...this.input,
         nodePortPoints: [node],
+        nodePfById: new Map([[node.capacityMeshNodeId, nodePf ?? null]]),
         connMap,
       })
       solver.MAX_ITERATIONS = this.input.maxIterations
