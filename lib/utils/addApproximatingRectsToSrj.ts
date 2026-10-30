@@ -7,6 +7,7 @@ import {
 } from "@tscircuit/math-utils"
 import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
+import { mergeAnonymousObstacleRects } from "./mergeAnonymousObstacleRects"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -510,6 +511,6 @@ export const addApproximatingRectsToSrj = (
   return {
     ...srj,
     connections: repairedConnections,
-    obstacles: [...obstaclesByRect.values()],
+    obstacles: mergeAnonymousObstacleRects([...obstaclesByRect.values()]),
   }
 }
