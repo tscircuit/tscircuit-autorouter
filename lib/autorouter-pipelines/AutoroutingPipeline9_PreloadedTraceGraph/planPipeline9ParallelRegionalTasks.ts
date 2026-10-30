@@ -84,20 +84,32 @@ export function planPipeline9ParallelRegionalTasks(
     )
     if (overlapping) {
       for (const id of traceIds) overlapping.traceIds.add(id)
-    } else if (regions.length < taskLimit) {
+    } else {
       regions.push({ bounds, traceIds: new Set(traceIds) })
     }
   }
   const srj = { ...createSrjWithBoardValidObstacleLayers(input.srj), traces: undefined }
-  const extracted = regions.flatMap(({ bounds, traceIds }) => {
+  const extracted: Array<{
+    region: ReturnType<typeof extractRepairRegion>
+    dirtyRouteIndices: number[]
+  }> = []
+  const usedSourceRouteIndices = new Set<number>()
+  for (const { bounds, traceIds } of regions) {
     const region = extractRepairRegion({ srj, routes: input.routes, bounds })
     const dirtyRouteIndices = region.routes.flatMap((route, index): number[] =>
       [...traceIds].some((id) => id === route.connectionName || id.startsWith(`${route.connectionName}_`))
         ? [index]
         : [],
     )
-    return dirtyRouteIndices.length > 0 ? [{ region, dirtyRouteIndices }] : []
-  })
+    if (dirtyRouteIndices.length === 0) continue
+    // The merge uses source-route provenance. Even spatially separated crops
+    // cannot be combined safely if either may replace the same source route.
+    const sourceRouteIndices = new Set(region.routeMappings.map((mapping) => mapping.sourceRouteIndex))
+    if ([...sourceRouteIndices].some((index) => usedSourceRouteIndices.has(index))) continue
+    for (const index of sourceRouteIndices) usedSourceRouteIndices.add(index)
+    extracted.push({ region, dirtyRouteIndices })
+    if (extracted.length >= taskLimit) break
+  }
   if (extracted.length === 0) return []
   const callsPerTask = Math.min(
     Math.floor(input.maxPathSearchCalls / extracted.length),

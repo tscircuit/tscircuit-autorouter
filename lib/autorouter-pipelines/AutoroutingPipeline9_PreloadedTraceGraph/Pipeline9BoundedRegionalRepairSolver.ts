@@ -147,7 +147,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
   private asyncRunning = false
-  private lastParallelRoutes?: HighDensityRoute[]
+  private parallelRegionalPlanned = false
   private parallelRegionalTaskCount = 0
   private parallelRegionalDeferredCount = 0
   private parallelRegionalIncompleteCount = 0
@@ -992,7 +992,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
         const state = this.state
         if (runtime && state.phase === "select-region" &&
-          state.context.currentRoutes !== this.lastParallelRoutes) {
+          !this.parallelRegionalPlanned) {
           const allowance = getPipeline9BoundedRepairAllowance(this.budget, this.result.acceptedRegionCount)
           const reference = state.context.reference
           const errors = Array.isArray(reference) ? reference : (reference.errorsWithCenters ?? reference.errors)
@@ -1013,8 +1013,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
             maxLogicalIterations: availableIterations,
             viaHoleDiameter: this.params.viaHoleDiameter,
           })
+          this.parallelRegionalPlanned = true
           if (tasks.length > 1 && tasks.every((task) => task.maxLogicalIterations >= 1)) {
-            this.lastParallelRoutes = state.context.currentRoutes
             const outputs = await Promise.all(tasks.map((task) => runtime.executeAsync(Pipeline9ParallelRegionalTaskSolver, task)))
             const consumed = outputs.reduce((sum, output) => sum + output.iterations, 0)
             for (const [index, output] of outputs.entries()) {
