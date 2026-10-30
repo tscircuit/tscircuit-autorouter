@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -545,8 +546,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           ? undefined
           : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
       allowLayerChanges: true,
-      traceClearance: 0.1,
-      viaClearance: context.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
+      traceClearance: RELAXED_DRC_OPTIONS.traceClearance,
+      viaClearance:
+        context.srj.minPadEdgeToPadEdgeClearance ??
+        RELAXED_DRC_OPTIONS.viaClearance,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
     })

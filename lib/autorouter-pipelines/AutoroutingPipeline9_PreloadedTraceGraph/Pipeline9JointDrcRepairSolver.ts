@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -12,7 +13,7 @@ import {
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -828,17 +829,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance = params.originalSrj.minTraceToPadEdgeClearance ?? 0.1
+    const traceClearance =
+      params.originalSrj.minTraceToPadEdgeClearance ??
+      RELAXED_DRC_OPTIONS.traceClearance
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
-    const viaClearance = 0.1
+    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance
     const viaToPadClearance = getViaToPadClearance(params.originalSrj)
     const viaHoleClearance =
-      params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1
+      params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
+      RELAXED_DRC_OPTIONS.viaClearance
     const evaluateInitialDrc = createPipeline9AutoroutingDrcEvaluator({
       includeBoardClearance: true,
-      originalSrj: params.originalSrj,
+      inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
@@ -1327,7 +1331,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const evaluateCandidateDrc = createPipeline9AutoroutingDrcEvaluator({
       includeBoardClearance: true,
       connectivityMaps,
-      originalSrj: params.originalSrj,
+      inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })

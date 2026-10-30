@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
@@ -112,12 +113,14 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
-          (params.originalSrj.minTraceToPadEdgeClearance ?? 0.1) +
+          (params.originalSrj.minTraceToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.traceClearance) +
           (params.allowPartialRepair || params.usePrecisionMargin
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
         viaClearance:
-          (params.originalSrj.minPadEdgeToPadEdgeClearance ?? 0.1) +
+          (params.originalSrj.minPadEdgeToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.viaClearance) +
           VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })

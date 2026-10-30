@@ -8,6 +8,8 @@ import {
   Vector,
 } from "@flatten-js/core"
 import {
+  type Bounds,
+  type Point,
   getSegmentIntersection,
   isPointInsidePolygon,
   pointToSegmentClosestPoint,
@@ -24,22 +26,17 @@ import {
   getDrcReadableTraceName,
 } from "./drcReadableNames"
 
-type Point = { x: number; y: number }
 type PadOrVia = Extract<
   AnyCircuitElement,
   { type: "pcb_smtpad" | "pcb_plated_hole" | "pcb_via" | "pcb_hole" }
 >
-export type IndexedObstacle = {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
+export type IndexedObstacle = Bounds & {
   id: string
   order: number
   layers: string[]
   element: PadOrVia
   holePolygon?: Polygon
-  clearanceBounds: { minX: number; minY: number; maxX: number; maxY: number }
+  clearanceBounds: Bounds
   shape:
     | { kind: "circle"; center: Point; radius: number }
     | {
@@ -55,11 +52,7 @@ export type IndexedObstacle = {
       }
 }
 type Clearance = { gap: number; center: Point }
-type TraceSegment = {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
+type TraceSegment = Bounds & {
   order: number
   trace: PcbTrace
   traceOrder: number

@@ -890,7 +890,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.originalSrj.traces ?? [],
           )
         const evaluateCleanupDrc = createPipeline9AutoroutingDrcEvaluator({
-          originalSrj: inputSrj,
+          inputSrj,
           srjWithPointPairs: cms.srjWithPointPairs!,
           includeBoardClearance: true,
           drcOptions: {

@@ -6,6 +6,7 @@ import {
   getPrimaryId,
 } from "@tscircuit/circuit-json-util"
 import {
+  type Point,
   doesLineIntersectLine,
   isPointInsidePolygon,
   pointToSegmentDistance,
@@ -28,7 +29,6 @@ import {
 } from "./drcReadableNames"
 import RBush from "rbush"
 
-type Point = { x: number; y: number }
 type Pad = PcbSmtPad | PcbPlatedHole
 type RoutePoint = PcbTrace["route"][number]
 type PadMap = Map<string, Pad[]>

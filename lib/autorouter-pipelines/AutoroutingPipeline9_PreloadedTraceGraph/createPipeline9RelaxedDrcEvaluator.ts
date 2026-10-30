@@ -19,7 +19,10 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
-  const evaluateAutoroutingDrc = createPipeline9AutoroutingDrcEvaluator(options)
+  const evaluateAutoroutingDrc = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: options.originalSrj,
+    srjWithPointPairs: options.srjWithPointPairs,
+  })
   const evaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {

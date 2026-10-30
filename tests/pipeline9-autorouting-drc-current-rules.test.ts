@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test"
-import {
-  createPipeline9AutoroutingDrcEvaluator,
-  type AutoroutingDrcOptions,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type {
+  GetDrcErrorsOptions,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
 import {
   issue3130Input,
   issue3130Traces,
@@ -101,7 +102,7 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
   ]
   const cases: Array<{
     includeBoardClearance: boolean
-    drcOptions: AutoroutingDrcOptions
+    drcOptions: GetDrcErrorsOptions
   }> = [
     { includeBoardClearance: false, drcOptions: {} },
     {
@@ -138,6 +139,7 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
   const observedTypes = new Set<string>()
   const observedMessages: string[] = []
   for (const options of cases) {
+    const inputBeforeEvaluation = structuredClone(input)
     const reference = evaluateRelaxedDrc({
       inputSrj: input,
       srjWithPointPairs: input,
@@ -145,11 +147,12 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
       ...options,
     })
     const evaluate = createPipeline9AutoroutingDrcEvaluator({
-      originalSrj: input,
+      inputSrj: input,
       srjWithPointPairs: input,
       ...options,
     })
     const actual = evaluate(traces)
+    expect(input).toEqual(inputBeforeEvaluation)
     expect(reference.errors.length).toBeGreaterThan(0)
     expect(actual.errors as unknown[]).toEqual(reference.errors as unknown[])
     expect(actual.errorsWithCenters as unknown[]).toEqual(
@@ -190,7 +193,7 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
   ).toBeTrue()
 
   const evaluateWidths = createPipeline9AutoroutingDrcEvaluator({
-    originalSrj: input,
+    inputSrj: input,
     srjWithPointPairs: input,
     drcOptions: { includeTraceContinuity: false },
   })
@@ -263,7 +266,7 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
   paired.connections[2]!.pointsToConnect.pop()
   paired.connections[3]!.pointsToConnect = []
   const evaluateConnectivity = createPipeline9AutoroutingDrcEvaluator({
-    originalSrj: original,
+    inputSrj: original,
     srjWithPointPairs: paired,
   })
   for (const connected of [false, true, false]) {

@@ -1,13 +1,11 @@
 import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
-import {
-  getFullConnectivityMapFromCircuitJson,
-  type ConnectivityMap,
-} from "circuit-json-to-connectivity-map"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
 import {
   convertToCircuitJson,
   createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
+} from "lib/utils/convertToCircuitJson"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -120,14 +118,7 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
     if (this.validationParams.boardGeometry) {
       circuitJson.push(createPcbBoardElement(srj))
     }
-    const drcConnectivity = getFullConnectivityMapFromCircuitJson(circuitJson)
-    drcConnectivity.addConnections(
-      circuitJson.flatMap((element) =>
-        element.type === "pcb_via" && typeof element.pcb_trace_id === "string"
-          ? [[element.pcb_via_id, element.pcb_trace_id]]
-          : [],
-      ),
-    )
+    const drcConnectivity = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const clearanceErrors = createTraceObstacleClearanceEvaluator(circuitJson, {
       traceClearance: this.traceMargin,

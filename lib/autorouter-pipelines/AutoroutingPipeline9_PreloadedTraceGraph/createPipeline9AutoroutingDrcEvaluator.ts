@@ -1,11 +1,16 @@
 import type { AnyCircuitElement } from "circuit-json"
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import {
   type CircuitJsonConnectivityMaps,
   convertToCircuitJson,
   createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+} from "lib/utils/convertToCircuitJson"
+import type {
+  GetDrcErrorsOptions,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
+import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 import { checkBoardTraceClearance } from "lib/utils/autorouting-drc/checkBoardTraceClearance"
 import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
@@ -17,15 +22,6 @@ import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 
 type DrcError = Record<string, unknown>
 
-export type AutoroutingDrcOptions = {
-  holeClearance?: number
-  viaClearance?: number
-  viaToPadClearance?: number
-  traceClearance?: number
-  includeTraceContinuity?: boolean
-  includeTypedTraceClearance?: boolean
-}
-
 export type Pipeline9AutoroutingDrcResult = {
   circuitJson: AnyCircuitElement[]
   errors: DrcError[]
@@ -35,15 +31,15 @@ export type Pipeline9AutoroutingDrcResult = {
 
 /** Reuses static pad geometry while evaluating joint repair candidates. */
 export const createPipeline9AutoroutingDrcEvaluator = ({
-  originalSrj,
+  inputSrj,
   srjWithPointPairs,
   drcOptions = {},
   includeBoardClearance = false,
   connectivityMaps,
 }: {
-  originalSrj: SimpleRouteJson
+  inputSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
-  drcOptions?: AutoroutingDrcOptions
+  drcOptions?: GetDrcErrorsOptions
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): ((
@@ -51,16 +47,16 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   options?: { includeTraceContinuity?: boolean },
 ) => Pipeline9AutoroutingDrcResult) => {
   const conversionOptions = {
-    minTraceWidth: originalSrj.minTraceWidth,
-    minViaDiameter: originalSrj.minViaDiameter,
-    originalSrj,
+    minTraceWidth: inputSrj.minTraceWidth,
+    minViaDiameter: inputSrj.minViaDiameter,
+    originalSrj: inputSrj,
     includeOriginalConnections: true,
     connectivityMaps,
   }
   const board = includeBoardClearance
     ? createPcbBoardElement({
-        ...originalSrj,
-        minBoardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0,
+        ...inputSrj,
+        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
       })
     : undefined
   const staticCircuitJson = convertToCircuitJson(
@@ -72,18 +68,19 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
     {
-      traceClearance: drcOptions.traceClearance ?? 0.1,
+      traceClearance:
+        drcOptions.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       holeClearance:
-        drcOptions.holeClearance ?? originalSrj.minTraceToHoleEdgeClearance,
+        drcOptions.holeClearance ?? inputSrj.minTraceToHoleEdgeClearance,
     },
   )
   const evaluateViaPads = createViaPadClearanceEvaluator(staticCircuitJson, {
     minClearance:
-      drcOptions.viaToPadClearance ?? getViaToPadClearance(originalSrj),
+      drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
   })
   return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
-      originalSrj.traces ?? [],
+      inputSrj.traces ?? [],
       routedTraces,
     )
     const circuitJson = convertToCircuitJson(
@@ -92,14 +89,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       conversionOptions,
     )
     if (board) circuitJson.push(board)
-    const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-    connMap.addConnections(
-      circuitJson.flatMap((element) =>
-        element.type === "pcb_via" && typeof element.pcb_trace_id === "string"
-          ? [[element.pcb_via_id, element.pcb_trace_id]]
-          : [],
-      ),
-    )
+    const connMap = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [
@@ -115,7 +105,8 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...obstacleErrors.holeErrors,
       ...evaluateViaPads(circuitJson, connMap),
       ...checkViaPairClearance(circuitJson, connMap, {
-        viaClearance: drcOptions.viaClearance ?? 0.1,
+        viaClearance:
+          drcOptions.viaClearance ?? RELAXED_DRC_OPTIONS.viaClearance,
       }),
     ]
     const viasById = new Map(

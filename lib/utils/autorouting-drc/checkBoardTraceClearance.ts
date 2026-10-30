@@ -1,7 +1,6 @@
-import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
+import { type Point, segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbBoard } from "circuit-json"
 
-type Point = { x: number; y: number }
 type BoardEdge = { start: Point; end: Point }
 type BoardTraceClearanceOptions = { board?: PcbBoard; margin?: number }
 

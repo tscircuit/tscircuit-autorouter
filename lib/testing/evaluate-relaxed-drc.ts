@@ -12,7 +12,7 @@ import {
   type CircuitJsonConnectivityMaps,
   convertToCircuitJson,
   createPcbBoardElement,
-} from "./utils/convertToCircuitJson"
+} from "lib/utils/convertToCircuitJson"
 
 /** Inputs used by the benchmark's relaxed DRC evaluation. */
 export interface EvaluateRelaxedDrcInput {

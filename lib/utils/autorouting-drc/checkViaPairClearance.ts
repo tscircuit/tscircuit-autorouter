@@ -1,13 +1,11 @@
+import type { Bounds } from "@tscircuit/math-utils"
+import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import RBush from "rbush"
 import { getDrcReadableElementName } from "./drcReadableNames"
 
-type IndexedVia = {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
+type IndexedVia = Bounds & {
   order: number
   via: PcbVia
 }
@@ -19,7 +17,10 @@ export const checkViaPairClearance = (
   options: { viaClearance?: number } = {},
 ): Record<string, unknown>[] => {
   const board = circuitJson.find((element) => element.type === "pcb_board")
-  const viaClearance = Math.max(options.viaClearance ?? 0.1, 0.1)
+  const viaClearance = Math.max(
+    options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
+    MIN_VIA_TO_VIA_CLEARANCE,
+  )
   const copperClearance = board?.min_pad_edge_to_pad_edge_clearance ?? 0.1
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
   const indexedVias: IndexedVia[] = vias.map((via, order) => ({
