@@ -1,0 +1,244 @@
+{
+  "srj": {
+    "layerCount": 6,
+    "minTraceWidth": 0.1066,
+    "nominalTraceWidth": 0.127,
+    "minViaPadDiameter": 0.327,
+    "minViaHoleDiameter": 0.2,
+    "allowBlindAndBuriedVias": false,
+    "allowViaInPad": false,
+    "defaultObstacleMargin": 0.10668,
+    "bounds": {
+      "minX": 100.0,
+      "maxX": 190.0,
+      "minY": -100.0,
+      "maxY": -37.5
+    },
+    "traces": [],
+    "connections": [
+      {
+        "name": "/S0SDQ2",
+        "pointsToConnect": [
+          {
+            "x": 131.0,
+            "y": -84.6,
+            "pointId": "U2.F2",
+            "port_selector": "U2.F2",
+            "layer": "top"
+          },
+          {
+            "x": 142.35,
+            "y": -78.0,
+            "pointId": "U1.H3",
+            "port_selector": "U1.H3",
+            "layer": "top"
+          }
+        ],
+        "nominalTraceWidth": 0.127
+      }
+    ],
+    "obstacles": [
+      {
+        "obstacleId": "U2.F3",
+        "componentId": "U2",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 131.0,
+          "y": -85.4
+        },
+        "width": 0.4,
+        "height": 0.4,
+        "connectedTo": [
+          "/S0SDQS0_P",
+          "U2.F3"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U2",
+          "source_port_name": "F3"
+        },
+        "shape": "circle"
+      },
+      {
+        "obstacleId": "U2.F2",
+        "componentId": "U2",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 131.0,
+          "y": -84.6
+        },
+        "width": 0.4,
+        "height": 0.4,
+        "connectedTo": [
+          "/S0SDQ2",
+          "U2.F2"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U2",
+          "source_port_name": "F2"
+        },
+        "shape": "circle"
+      },
+      {
+        "obstacleId": "U1.H3",
+        "componentId": "U1",
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 142.35,
+          "y": -78.0
+        },
+        "width": 0.3,
+        "height": 0.3,
+        "connectedTo": [
+          "/S0SDQ2",
+          "U1.H3"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "H3"
+        },
+        "shape": "circle"
+      }
+    ],
+    "metadata": {
+      "source": "OLIMEX A64-OLinuXino rev H byte0; exact DQ2 terminal pads, U2.F3 and DQ2 route from published autorouter0.0.1011. Input geometry and clearance unchanged.",
+      "sourceInputSha256": "1966c316d2223d5c9f5a162dd00f3fdf61b811ab7ef707cac160a42fe1a4c01e",
+      "sourceDesignRules": {
+        "minWidth": 0.1066,
+        "nominalWidth": 0.127,
+        "clearance": 0.10668,
+        "viaPad": 0.327,
+        "viaDrill": 0.2,
+        "source": "A64 board setup and Default net class"
+      }
+    }
+  },
+  "trace": {
+    "type": "pcb_trace",
+    "pcb_trace_id": "/S0SDQ2_0",
+    "connection_name": "/S0SDQ2",
+    "connectsTo": [
+      "U2.F2",
+      "U1.H3"
+    ],
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 131,
+        "y": -84.6,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 131,
+        "y": -84.63904344047216,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 130.8508986947093,
+        "y": -84.78814474576288,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 130.8508986947093,
+        "y": -84.94910130529072,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 130.8,
+        "y": -85,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "via",
+        "x": 130.8,
+        "y": -85,
+        "from_layer": "top",
+        "to_layer": "inner4",
+        "via_diameter": 0.327,
+        "via_hole_diameter": 0.2
+      },
+      {
+        "route_type": "wire",
+        "x": 130.8,
+        "y": -85,
+        "width": 0.1066,
+        "layer": "inner4"
+      },
+      {
+        "route_type": "wire",
+        "x": 130.95,
+        "y": -85,
+        "width": 0.1066,
+        "layer": "inner4"
+      },
+      {
+        "route_type": "wire",
+        "x": 142.80925,
+        "y": -77.33555,
+        "width": 0.1066,
+        "layer": "inner4"
+      },
+      {
+        "route_type": "via",
+        "x": 142.80925,
+        "y": -77.33555,
+        "from_layer": "inner4",
+        "to_layer": "top",
+        "via_diameter": 0.327,
+        "via_hole_diameter": 0.2
+      },
+      {
+        "route_type": "wire",
+        "x": 142.80925,
+        "y": -77.33555,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 142.70264999999998,
+        "y": -77.49545,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 142.59605,
+        "y": -77.65535,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 142.54274999999998,
+        "y": -77.65535,
+        "width": 0.1066,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 142.35,
+        "y": -78,
+        "width": 0.1066,
+        "layer": "top"
+      }
+    ]
+  }
+}
