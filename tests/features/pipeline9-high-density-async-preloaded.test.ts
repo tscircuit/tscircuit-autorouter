@@ -45,15 +45,25 @@ const params: Pipeline9HighDensitySolverParams = {
 }
 
 test("async solving retains ordered preloaded-copper routing and mutation metadata", async (): Promise<void> => {
-  const baseline = new Pipeline9HighDensitySolver(params)
+  for (const width of [4, 16]) {
+  const input = {
+    ...params,
+    nodePortPoints: params.nodePortPoints.map((node) => ({ ...node, width })),
+  }
+  const baseline = new Pipeline9HighDensitySolver(input)
   baseline.solve()
   expect(baseline.solved).toBe(true)
-  const solver = new Pipeline9HighDensitySolver(params)
-  await solver.solveAsync({
-    executeAsync: async (): Promise<never> => {
-      throw new Error("Dependent preloaded nodes must stay serial")
-    },
-  })
+  const solver = new Pipeline9HighDensitySolver(input)
+  const runtime = createPipeline9TestRuntime(4)
+  try {
+    await solver.solveAsync(runtime)
+  } finally {
+    await runtime.dispose()
+  }
+  expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted).toBeGreaterThan(0)
+  if (width > 15) {
+    expect(solver.benchmarkDiagnosticCounters.preloadedMutationBarriers).toBeGreaterThan(0)
+  }
   expect(solver.solved).toBe(true)
   expect(solver.routes).toEqual(baseline.routes)
   expect(solver.getUpdatedFixedHdRoutes()).toEqual(
@@ -64,4 +74,5 @@ test("async solving retains ordered preloaded-copper routing and mutation metada
   )
   expect(solver.stats).toEqual(baseline.stats)
   expect(solver.iterations).toBe(baseline.iterations)
+  }
 })
