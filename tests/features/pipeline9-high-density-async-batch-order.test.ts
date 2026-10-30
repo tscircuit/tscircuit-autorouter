@@ -66,8 +66,8 @@ test("workers claim crowded nodes first from a shared queue while results retain
   for (const { input, resolve } of tasks.toReversed()) {
     expect(input.sharedNodeCursor).toBe(tasks[0]!.input.sharedNodeCursor)
     for (const node of input.nodePortPoints) {
-      expect(input.nodePfById?.get(node.capacityMeshNodeId)).toBe(
-        params.nodePfById?.get(node.capacityMeshNodeId),
+      expect((input.nodePfById as Map<string, number | null>).get(node.capacityMeshNodeId)).toBe(
+        (params.nodePfById as Map<string, number | null>).get(node.capacityMeshNodeId),
       )
     }
     const batch = new Pipeline9HighDensityBatchSolver(input)
