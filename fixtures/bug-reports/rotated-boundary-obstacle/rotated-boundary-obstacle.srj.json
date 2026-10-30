@@ -1,0 +1,86 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.15,
+  "bounds": {
+    "minX": -4,
+    "maxX": 4,
+    "minY": -4,
+    "maxY": 4
+  },
+  "outline": [
+    {
+      "x": -4,
+      "y": -4
+    },
+    {
+      "x": 4,
+      "y": -4
+    },
+    {
+      "x": 4,
+      "y": 4
+    },
+    {
+      "x": -4,
+      "y": 4
+    }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "boundary_keepout",
+      "type": "rect",
+      "layers": ["top", "bottom"],
+      "center": {
+        "x": 5,
+        "y": 0
+      },
+      "width": 1,
+      "height": 8,
+      "ccwRotationDegrees": 90,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "terminal_a",
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": 2,
+        "y": -3
+      },
+      "width": 0.3,
+      "height": 0.3,
+      "connectedTo": ["A", "signal"]
+    },
+    {
+      "obstacleId": "terminal_b",
+      "type": "rect",
+      "layers": ["top"],
+      "center": {
+        "x": 2,
+        "y": 3
+      },
+      "width": 0.3,
+      "height": 0.3,
+      "connectedTo": ["B", "signal"]
+    }
+  ],
+  "connections": [
+    {
+      "name": "signal",
+      "pointsToConnect": [
+        {
+          "x": 2,
+          "y": -3,
+          "layer": "top",
+          "pcb_port_id": "A"
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "layer": "top",
+          "pcb_port_id": "B"
+        }
+      ]
+    }
+  ]
+}
