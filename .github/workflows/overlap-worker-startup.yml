@@ -36,3 +36,4 @@ jobs:
           path: |
             benchmark-result.json
             benchmark-result.txt
+# Validate map-shaped node priority metadata.
