@@ -3,7 +3,9 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { Pipeline9IntentOwners, type OriginalIntentJson } from "./checkPipeline9OriginalIntentCopper"
-import { checkBoardEnvelope, getPipeline9WitnessViaCertificate, type WitnessViaCertificate } from "./getPipeline9WitnessViaCertificate"
+import { collectRawViaSites, checkBoardEnvelope, getPipeline9WitnessViaCertificate, type WitnessViaCertificate } from "./getPipeline9WitnessViaCertificate"
+import { getPipeline9RelativeGeometryDetails, type RelativeGeometryDetails } from "./getPipeline9RelativeGeometryDetails"
+import { preservePipeline9RelativeFindings } from "./preservePipeline9RelativeFindings"
 import { getRelativeViaTraceTargets } from "./getRelativeViaTraceTargets"
 import { provePipeline9RelativeContacts, type RelativeWitnessMove } from "./provePipeline9RelativeContacts"
 import { isCopperPointWithinRadius, type CopperPoint } from "./relativeCopperSweepGeometry"
@@ -23,6 +25,10 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
   finalCertificate?: WitnessViaCertificate
   relativeProof?: ReturnType<typeof provePipeline9RelativeContacts>
   selectedMoves: RelativeWitnessMove[] = []
+  baselineGeometryDetails?: RelativeGeometryDetails
+  finalGeometryDetails?: RelativeGeometryDetails
+  findingPreservation?: ReturnType<typeof preservePipeline9RelativeFindings>
+  private localizedViaTrace = false
   readonly qualification: Record<string, string | number | boolean | null> = {
     status: "UNINITIALIZED", localRepaired: false, accepted: false,
     initialFullCertificateStatus: "UNKNOWN", finalFullCertificateStatus: "UNKNOWN",
@@ -117,10 +123,11 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
       if ((point.route_type === "wire" || point.route_type === "via") && point.x === site.x && point.y === site.y && (point.route_type === "via" || site.layers.includes(point.layer))) siteOccurrences.push({ traceIndex: ti, pointIndex: pi })
     }
     const wireWitnesses = this.getWireWitnesses(owners)
-    if (wireWitnesses.length > 1) { this.noProposal("Only one optional original-obstacle wire defect is in the planned search"); return }
-    if (viaTraceWitness && wireWitnesses.length !== 0) { this.noProposal("Via-trace repair requires no additional original-obstacle wire defect"); return }
+    this.localizedViaTrace = viaTraceWitness && (certificate.srjObstacleViolationCount > 0 || certificate.viaPadPolicyViolationCount > 0 || certificate.viaInPadViolationCount > 0)
+    if (!this.localizedViaTrace && wireWitnesses.length > 1) { this.noProposal("Only one optional original-obstacle wire defect is in the planned search"); return }
+    if (!this.localizedViaTrace && viaTraceWitness && wireWitnesses.length !== 0) { this.noProposal("Via-trace repair requires no additional original-obstacle wire defect"); return }
     const offsets: (CopperPoint | undefined)[] = [undefined]
-    const wire = wireWitnesses[0]
+    const wire = this.localizedViaTrace ? undefined : wireWitnesses[0]
     if (wire) {
       offsets.length = 0
       const trace = this.params.traces[wire.traceIndex]!, a = trace.route[wire.pointIndex], b = trace.route[wire.pointIndex + 1]
@@ -176,6 +183,15 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     }
     this.proposals = this.proposals.slice(0, 16)
     if (this.proposals.length === 0) { this.noProposal("No supported face proposal fits the hard movement bounds"); return }
+    if (this.localizedViaTrace) {
+      if (certificate.status !== "UNKNOWN") { this.noProposal("Existing-defect preservation requires an unresolved full certificate"); return }
+      if (collectRawViaSites(this.params.originalSrj, this.params.pointPairs, this.params.traces, owners, certificate.circuitJson).reasons.length !== 0) { this.noProposal("Localized repair requires complete supported raw material inventory"); return }
+      this.stats.acceptanceMode = "EXACT_UNTARGETED_FINDINGS"
+      this.stats.targetFindingCountBefore = this.stats.targetFindingCountAfter = 1
+      this.stats.untargetedFindingsPreserved = false
+      this.baselineGeometryDetails = this.finalGeometryDetails = getPipeline9RelativeGeometryDetails({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, traces: this.params.traces, certificate })
+      if (this.baselineGeometryDetails.boardReasons.length !== 0) { this.noProposal("Existing board-envelope defects are outside the localized domain"); return }
+    }
     this.stats.status = this.qualification.status = "SEARCHING"
   }
 
@@ -197,14 +213,24 @@ export class Pipeline9RelativeWitnessRepairSolver extends BaseSolver {
     this.stats.certificateChecks = Number(this.stats.certificateChecks) + 1
     this.stats.proposalCount = this.qualification.proposals = this.proposalIndex
     const geometryComplete = certificate.copper.allPublishedCopperChecksRun === true && certificate.copper.qualifiedSupportedCopper === true && certificate.copper.ownershipCoverageStatus === "COMPLETE" && certificate.referenceErrorCount === 0 && certificate.srjObstacleViolationCount === 0 && certificate.viaPadPolicyViolationCount === 0 && certificate.viaInPadViolationCount === 0 && certificate.copper.allFindings.length === 0 && checkBoardEnvelope(this.params.originalSrj, candidate, certificate.sites).length === 0
-    const proof = geometryComplete ? provePipeline9RelativeContacts({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, before: this.params.traces, after: candidate, moves: proposal.moves, baselineCertificate: this.baselineCertificate, candidateCertificate: certificate }) : undefined
-    ;(this.stats.candidateLedger as OriginalIntentJson[]).push({ proposal: this.proposalIndex, fullStatus: certificate.status, geometryFindings: this.geometryCount(certificate), geometryComplete, relativeStatus: proof?.status ?? "UNKNOWN", reason: proof?.reason ?? "Geometry screens did not all pass" })
+    const inventoryComplete = !this.localizedViaTrace || collectRawViaSites(this.params.originalSrj, this.params.pointPairs, candidate, new Pipeline9IntentOwners(this.params.originalSrj, this.params.pointPairs), certificate.circuitJson).reasons.length === 0
+    const details = this.localizedViaTrace && inventoryComplete ? getPipeline9RelativeGeometryDetails({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, traces: candidate, certificate }) : undefined
+    if (this.localizedViaTrace && !this.baselineGeometryDetails) throw new Error("Localized repair lost its complete baseline geometry records")
+    const preservation = details && this.baselineGeometryDetails ? preservePipeline9RelativeFindings({ before: this.baselineGeometryDetails, after: details, baseline: this.baselineCertificate, candidate: certificate }) : undefined
+    const admissibleGeometry = this.localizedViaTrace ? preservation?.status === "PASS" : geometryComplete
+    const proof = admissibleGeometry ? provePipeline9RelativeContacts({ original: this.params.originalSrj, pointPairs: this.params.pointPairs, before: this.params.traces, after: candidate, moves: proposal.moves, baselineCertificate: this.baselineCertificate, candidateCertificate: certificate }) : undefined
+    ;(this.stats.candidateLedger as OriginalIntentJson[]).push({ proposal: this.proposalIndex, fullStatus: certificate.status, geometryFindings: this.geometryCount(certificate), geometryComplete, relativeStatus: proof?.status ?? "UNKNOWN", reason: proof?.reason ?? preservation?.reason ?? "Geometry screens did not all pass", ...(preservation ? { findingPreservationStatus: preservation.status } : {}) })
     this.assertInputsUnchanged()
-    if (!geometryComplete || !proof || proof.status !== "PASS" || this.geometryCount(certificate) >= this.geometryCount(this.baselineCertificate)) return
+    if (!admissibleGeometry || !proof || proof.status !== "PASS" || this.geometryCount(certificate) >= this.geometryCount(this.baselineCertificate)) return
     this.output = candidate
     this.finalCertificate = certificate
     this.relativeProof = proof
     this.selectedMoves = proposal.moves
+    if (details && preservation) {
+      this.finalGeometryDetails = details; this.findingPreservation = preservation
+      this.stats.targetFindingCountAfter = 0
+      this.stats.untargetedFindingsPreserved = true
+    }
     this.stats.status = this.qualification.status = "LOCAL_REPAIRED"
     this.stats.localRepaired = this.qualification.localRepaired = true
     this.qualification.finalFullCertificateStatus = certificate.status
