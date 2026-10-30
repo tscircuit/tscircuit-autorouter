@@ -1,7 +1,5 @@
-import "../../lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortfolioSolver"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionWorker"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ParallelRegionalTaskSolver"
-import "../../lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphSpatialWarmStartSolver"
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/node"
 import "tiny-hypergraph/lib/prepared/RegionDistancePreparationSolver"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver"
