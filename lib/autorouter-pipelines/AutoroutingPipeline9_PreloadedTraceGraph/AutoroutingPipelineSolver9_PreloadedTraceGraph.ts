@@ -1,3 +1,5 @@
+import { RoutingWorkerStartupSolver } from "../../runtime/RoutingWorkerStartupSolver"
+import { getPipeline9ForceWarmupIterations } from "./getPipeline9ForceWarmupIterations"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -830,7 +832,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
-            maxIterations: 16,
+            // A brief warm-up leaves the full joint repair search in control.
+            // Preserve the established path for custom physical clearances.
+            maxIterations: getPipeline9ForceWarmupIterations(cms.originalSrj),
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
@@ -1147,14 +1151,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
+    if (this.solved || this.failed) return
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
+    let workerStartup: Promise<void> | undefined
+    let startupFailure: { error: unknown } | undefined
     try {
       if (runtime === undefined) {
         this.solve()
         return
       }
+      workerStartup = runtime.executeAsync(RoutingWorkerStartupSolver, {}).then(
+        (): void => {},
+        (error: unknown): void => {
+          startupFailure = { error }
+        },
+      )
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
@@ -1185,7 +1198,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           lastYield = performance.now()
         }
       }
+      await workerStartup
+      if (startupFailure) throw startupFailure.error
     } catch (error) {
+      await workerStartup
       this.failed = true
       this.error = `Pipeline9 asynchronous solve error: ${error}`
       throw error

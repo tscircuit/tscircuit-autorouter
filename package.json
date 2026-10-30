@@ -119,7 +119,7 @@
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
   },
   "dependencies": {
-    "@tscircuit/solver-utils": "^0.0.23",
+    "@tscircuit/solver-utils": "^0.0.24",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"
