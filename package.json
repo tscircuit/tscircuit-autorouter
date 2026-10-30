@@ -122,5 +122,8 @@
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"
+  },
+  "patchedDependencies": {
+    "@tscircuit/repair04@https://codeload.github.com/tscircuit/repair04/tar.gz/88504e8908a3f2e35ad9805162757ef94357d717": "patches/@tscircuit%2Frepair04@https%3A%2F%2Fcodeload.github.com%2Ftscircuit%2Frepair04%2Ftar.gz%2F88504e8908a3f2e35ad9805162757ef94357d717.patch"
   }
 }

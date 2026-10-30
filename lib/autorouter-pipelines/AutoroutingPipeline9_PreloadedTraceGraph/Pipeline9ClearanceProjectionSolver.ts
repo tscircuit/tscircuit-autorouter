@@ -1,7 +1,8 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { RelaxTraceClearanceSolver } from "@tscircuit/repair04"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
-  RelaxTraceClearanceSolver,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -65,6 +66,19 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
   constructor(params: Pipeline9ClearanceProjectionParams) {
     super()
     this.params = params
+  }
+
+  async solveAsync(runtime: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      if (this.state.phase === "relax") {
+        const child = this.state.solver
+        const before = child.iterations
+        await child.solveAsync(runtime, before + stopAtIteration - this.iterations)
+        this.MAX_ITERATIONS = child.MAX_ITERATIONS + 4
+        this.iterations += Math.max(0, child.iterations - before - (child.solved ? 1 : 0))
+      }
+      this.step()
+    }
   }
 
   override _step(): void {

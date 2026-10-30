@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -932,6 +933,18 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         throw new Error(
           `Regional repair child completed during phase ${state.phase}`,
         )
+    }
+  }
+
+  async solveAsync(runtime: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      const child = this.activeSubSolver
+      if (child instanceof Pipeline9ClearanceProjectionSolver) {
+        const before = child.iterations
+        await child.solveAsync(runtime, before + Math.max(0, stopAtIteration - this.iterations))
+        this.iterations += Math.max(0, child.iterations - before - (child.solved || child.failed ? 1 : 0))
+      }
+      this.step()
     }
   }
 
