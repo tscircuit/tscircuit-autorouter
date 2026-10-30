@@ -1,0 +1,72 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "0da00f5bef6d9945b3fa63e1aa72c138e68e1c7f",
+  "candidates": {
+    "paged_occupancy": "441f0b6ee67d15c8dec4863b109911102b0842ae"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 3,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "0afd41ec103d9a027540ab6f6649013dd064219f",
+    "root_changed_files": [
+      "package.json"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "lib/HighDensitySolverA01/OwnerStorage.ts",
+      "tests/a01/paged-occupancy.test.ts"
+    ],
+    "candidate_parent_sha": "9287aa032e0fa932f6c62b08f5ad097786c89086"
+  },
+  "caseOrdering": "Three prespecified boards18/1,18/15,24/20 in fixedorder, oneboardperdedicatedCPUlane. Sameboard ABthenBA remains sequential on onecore; no candidate results used forordering.",
+  "selectionScope": "NEW V3 shared-empty-page refinement of A01 paged occupancy, compared directly with frozen official10cd. Large occupancy arrays at least1MiB use a plain directory of4096-cell pages. Untouched slots across all instances share one module-private negative-one-filled page; first nonempty writes copy on write to a private page. Logical owners are stored directly, with bounded unsigned integer page addressing. Small arrays preserve original negative-one-filled Int32Arrays. Upstream source history is official10cd -> V1paged8e890 -> V2index9287 -> V3COW0afd; final source diff versus official10cd remains exactly A01TS, OwnerStorage.ts and one focused test. Root differs only by its legitimate Git pin. No lazy setup, A03, search policy, future cost or cache compounds. Benefits unmeasured; exact all5output/error/input hashes, iterations, fullDRC/lint gates retained.",
+  "confirmation_scope": "PRIVATE prespecified3board ABBA12freshprocess screen,3CPUlanes on16ARM with26GiBpreflight. Full42confirmation required for a substantial improvement claim. Frozen baseline0da00f5 including its actual dependencies; allotherstockdependencies physically shared. V3upstreampublic0afd is qualified; ROOTcandidate441f is an unreferenced published source object pending fresh full functional/source QA, GameBoy parity and root branch publication. No controller trigger until QA and independent source/controller authentication pass. No V1/V2 observations are pooled.",
+  "screening_scope": "Twofreshobservations perarm/board, ABthenBA, production-defaultcacheeffort1. No cross-VMabsolute timingpooling; a favorable screen only selects forfull42confirmation underoriginal5time/15primaryRSS gates/all>5RSSflaginvestigation."
+}
