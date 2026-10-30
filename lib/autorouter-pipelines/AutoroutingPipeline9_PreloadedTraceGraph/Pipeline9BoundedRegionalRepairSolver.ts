@@ -142,6 +142,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  readonly phaseTimeMs: Record<string, number> = {}
+  private timedPhase?: BoundedRepairState["phase"]
+  private phaseStartedAt = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -182,6 +185,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ...this.result,
       routes: undefined,
       phase: this.state.phase,
+      phaseTimeMs: this.phaseTimeMs,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
       pathSearchNodeCount: this.result.pathSearchNodeCount + liveNodes,
       allowedRegionCount: allowance.maxRegions,
@@ -198,6 +202,17 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.progress = this.solved
       ? 1
       : Math.max(this.progress, Math.min(0.99, consumed))
+  }
+
+  private recordPhaseTransition(): void {
+    if (this.timedPhase === this.state.phase && !this.failed) return
+    const now = performance.now()
+    if (this.timedPhase !== undefined) {
+      this.phaseTimeMs[this.timedPhase] =
+        (this.phaseTimeMs[this.timedPhase] ?? 0) + now - this.phaseStartedAt
+    }
+    this.timedPhase = this.state.phase
+    this.phaseStartedAt = now
   }
 
   private startChild(solver: BaseSolver): void {
@@ -936,6 +951,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.timedPhase === undefined) this.recordPhaseTransition()
     const child = this.activeSubSolver
     if (child) {
       child.step()
@@ -951,6 +967,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         this.reservedChildMaximum = 0
         this.completeChild()
       }
+      this.recordPhaseTransition()
       this.updateProgress()
       return
     }
@@ -1006,6 +1023,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           `Regional repair has no active child during phase ${state.phase}`,
         )
     }
+    this.recordPhaseTransition()
     this.updateProgress()
   }
 

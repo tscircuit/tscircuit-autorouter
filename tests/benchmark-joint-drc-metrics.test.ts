@@ -13,6 +13,10 @@ test("benchmark records observed initial joint DRC repair metrics", (): void => 
         initialDrcWorkerCount: 2,
         initialDrcWorkerTimeMs: 3.5,
         initialBoundedRegionalRepairTimeMs: 42.5,
+        initialBoundedRegionalRepairPhaseTimeMs: {
+          negotiate: 21.5,
+          "initial-reference": 3,
+        },
         initialBoundedRegionalRepairAttemptedRegionCount: 4,
         initialBoundedRegionalRepairAcceptedRegionCount: 2,
         initialBoundedRegionalRepairCandidateAttemptCount: 7,

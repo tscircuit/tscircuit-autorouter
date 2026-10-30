@@ -404,6 +404,15 @@ export const getRoutingBenchmarkMetrics = (
     jointDrcRepair.initialBoundedRegionalRepairAccepted =
       jointStats.initialBoundedRegionalRepairAccepted
   }
+  const phaseTimes = jointStats?.initialBoundedRegionalRepairPhaseTimeMs
+  if (phaseTimes && typeof phaseTimes === "object" && !Array.isArray(phaseTimes)) {
+    jointDrcRepair.initialBoundedRegionalRepairPhaseTimeMs = Object.fromEntries(
+      Object.entries(phaseTimes).filter(
+        (entry): entry is [string, number] =>
+          typeof entry[1] === "number" && Number.isFinite(entry[1]),
+      ),
+    )
+  }
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
