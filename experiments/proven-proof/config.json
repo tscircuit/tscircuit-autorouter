@@ -1,0 +1,73 @@
+{
+  "phase": "work-reduction-pilot",
+  "base_sha": "6f7d91e78d4867a42c04f1746bbc2ccbaae4956b",
+  "candidates": {
+    "zero_occupancy": "c481a6172f03f28495ebf400cc82d856723293e0"
+  },
+  "bun_version": "1.4.3",
+  "cpu_lanes": 3,
+  "orders": [
+    "AB",
+    "BA"
+  ],
+  "cycles": 1,
+  "run_correctness": false,
+  "hash_after_performance": true,
+  "effort": 1,
+  "startup_timeout_s": 120,
+  "solve_timeout_s": 360,
+  "validation_timeout_s": 120,
+  "hash_timeout_s": 120,
+  "cases": [
+    {
+      "dataset": "srj18",
+      "sample": 1
+    },
+    {
+      "dataset": "srj18",
+      "sample": 15
+    },
+    {
+      "dataset": "srj24",
+      "sample": 20
+    }
+  ],
+  "cache_mode": "production-default",
+  "acceptance": {
+    "quality": "All completed raw route/output hashes and DRC/lint results identical; no new solve failure, timeout, or memory censoring. Unfinished outputs are censored, never counted as route parity.",
+    "substantialRuntimeImprovementFraction": 0.05,
+    "substantialHeavyCaseMemoryImprovementFraction": 0.15,
+    "maxOtherCaseMedianPeakMemoryIncreaseFraction": 0.05,
+    "maxDatasetRoutingSlowdownForMemoryOnlyWinFraction": 0.02,
+    "primaryTimingMetric": "routingMs = constructorMs + solveMs",
+    "memoryMetrics": [
+      "peakRssAfterSolveBytes",
+      "peakRssAfterValidationBytes"
+    ],
+    "comparison": "Paired frozen current main in this run; no comparison with historical hardware/defaults.",
+    "additionalInvestigation": "Any repeated-median memory increase >5% or outcome disagreement requires follow-up before acceptance; no silent noise waiver."
+  },
+  "child_memory_limit_mib": 8192,
+  "screening_only": true,
+  "dependency_overlay": {
+    "mode": "one-frozen-typescript-git-dependency",
+    "name": "@tscircuit/high-density-a01",
+    "repository": "tscircuit/high-density-a01",
+    "base_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
+    "candidate_sha": "c237ac7fc9094adefe6dfc4733888250df665a6e",
+    "root_changed_files": [
+      "package.json"
+    ],
+    "upstream_changed_files": [
+      "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "tests/a01/zero-initialized-occupancy.test.ts"
+    ],
+    "candidate_parent_sha": "10cdce5ad507adfaaec8ac32ea905ab02ffefa8a"
+  },
+  "caseOrdering": "Three prespecified boards18/1,18/15,24/20 in fixedorder, oneboardperdedicatedCPUlane. Sameboard ABthenBA remains sequential on onecore; no candidate results used forordering.",
+  "selectionScope": "NEWLATEST6fZEROdense study,upstreamc237A01TS+zero-initialized-occupancytestONLY; defaultzero full-sizeDENSEInt32ownerarrays,owner+1logicalencoding,no .fill(-1),no paging/OwnerStoragehelper/Proxy/Map/searchpolicychanges. StockA01Git201regularfiles,candidate202. Genericdirectparentofficial10cd. ROOTc481ONLYA01packagepin; ALLotherlatest6f fields/version1020/newofficialrepair0328dunchangedinBOTHarms. Runtimegraph/countsrecomputedfromactualLATESTphysicaldeps,neverold887/888/212assumptions. CandidateGC/nativeRAMbehaviorUNPROVEN; nohistoricaltiming/RSSpooling.",
+  "confirmation_scope": "PRIVATE NEWLATEST6fpairedglobalpilot, NOTold0daexperiment.12freshABBA3boards18/1,18/15,24/20/defaultcacheeffort1/singlethreadsolve/3CPU16ARM26GiBpreflight/360ssolvecap. Baseline6f7d91e/tree160b19 andthiscandidate both legitimateofficialrepair03pin28d833/version1020; REMOTEbaselineBuninstallONCEandcandidateusesSAMEphysicalstockdependencies, NOrepair03candidateoverlay/compound. Allactualsource/deps/counts freshrecomputed. NObranch/benchmarkuntilnewBASE+candidatefunctional/types/build/freshGB/currentphysicaldeps+independentprivate/publicsource/controllerauthPASS. Originalglobal5time/15primaryRSSgates reportedSEPARATELYfromNEWcomponent25RSSbothorders/time5 plusLATESTglobalnonreg<=2%datasets/allquality/no unresolved>5RSSflags/full42+CIconditions. No olddata/time/RSSpooling orsilent swap.",
+  "screening_scope": "PRE_DATA_LATEST6F_STUDIES.json e7e35647 frozenBEFOREbothpublicROOTsourceobjects. Original5a/0dafailuresremainFAILED/privateoldfullsunchanged. Thisrunnewpairedlatest6fobservationsONLY. Componentmechanismevidencefromfrozen0dacapture canbeexplicitlyscopedoldparams replay, neverlatest6fpipelinegain. AnyaccuratelyscopedPRrequiresrealcomponentbenefitANDfreshlatest6fglobalnonregscreen/full42+ordinaryCI. Every>5RSSflaginvestigated,nativeNULLneverparentfilled.",
+  "pre_data_latest_study_sha256": "e7e35647d67c76ba3fb2eee36d358dd40a320055d2e05a69cee66595437e572d",
+  "baseline_official_repair03_sha": "28d833001e903ff5ba1342694762ef2a56555cad"
+}
