@@ -1,0 +1,56 @@
+name: DRC cache cost experiment
+on:
+  push:
+    branches: [codex/drc-cache-experiment]
+    paths: [.github/workflows/drc-cache-experiment.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [uncached, short-keys, small-cells]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Select DRC cache experiment
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts")
+          s=p.read_text()
+          v=os.environ["VARIANT"]
+          if v=="uncached":
+            a="options.queryResultCacheBudget ?? 8_000_000"
+            b="options.queryResultCacheBudget ?? 0"
+          elif v=="small-cells":
+            a="Math.max(boardWidth, boardHeight) / 64"
+            b="Math.max(boardWidth, boardHeight) / 256"
+          else:
+            a="values.map((value) => {"
+            b="values.map((value) => {"
+            # Numeric primitive geometry already has exact shortest decimal
+            # serialization. Avoid an extra outer array walk for each primitive.
+            start=s.index("    const key = JSON.stringify(",s.index("private getPrimitiveId("))
+            end=s.index("    const existing =",start)
+            s=s[:start]+"    const key = JSON.stringify(values)\\n"+s[end:]
+          assert a in s
+          p.write_text(s.replace(a,b))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: drc-cost-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
