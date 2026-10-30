@@ -12,12 +12,14 @@ export type Pipeline9HighDensityBatchInput = Omit<
   "connMap"
 > & {
   connectivityNetMap: Record<string, string[]>
+  deferPreloadedMutations?: boolean
   maxIterations: number
   sharedNodeCursor?: Int32Array
 }
 
 export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
+  preloadedMutationDeferred: boolean
   sourceNodeIndex?: number
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
@@ -39,11 +41,6 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.input.fixedHdRoutes.length !== 0) {
-      throw new Error(
-        "Parallel high-density batches cannot mutate preloaded copper",
-      )
-    }
     const connMap = new ConnectivityMap(this.input.connectivityNetMap)
     this.output = []
     let sequentialIndex = 0
@@ -58,10 +55,17 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         connMap,
       })
       solver.MAX_ITERATIONS = this.input.maxIterations
-      solver.solve()
+      solver.deferPreloadedMutations = this.input.deferPreloadedMutations === true
+      while (!solver.solved && !solver.failed && !solver.preloadedMutationDeferred) {
+        solver.step()
+      }
+      if (solver.fixedRouteReplacements.size || solver.removedFixedRouteConnectionNames.size) {
+        throw new Error("A parallel node mutated shared preloaded copper")
+      }
       // Every node has an independent outcome. In particular, a failed node
       // must not skip another node that precedes it in the parent's order.
       this.output.push({
+        preloadedMutationDeferred: solver.preloadedMutationDeferred,
         sourceNodeIndex: this.input.sharedNodeCursor ? nodeIndex : undefined,
         routes: solver.routes,
         stats: solver.stats,
