@@ -1,6 +1,3 @@
-import { Pipeline9HighDensityForceImproveSampleSolver, type Pipeline9HighDensityForceImproveSampleOutput } from "./Pipeline9HighDensityForceImproveSampleSolver"
-import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -19,7 +16,6 @@ export type Pipeline9HighDensityBatchInput = Omit<
 }
 
 export type Pipeline9HighDensityNodeOutput = {
-  forceImprovement?: Pipeline9HighDensityForceImproveSampleOutput
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
   benchmarkDiagnosticCounters: Record<string, number>
@@ -56,21 +52,9 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
       })
       solver.MAX_ITERATIONS = this.input.maxIterations
       solver.solve()
-      let forceImprovement: Pipeline9HighDensityForceImproveSampleOutput | undefined
-      if (solver.solved && this.input.forceImprovement && solver.routes.length > 0) {
-        const forceSolver = new Pipeline9HighDensityForceImproveSampleSolver({
-          ...this.input.forceImprovement,
-          nodeWithPortPoints: [node],
-          hdRoutes: simplifyPipeline9CollinearRoutePoints(materializePipeline9HdRouteVias(solver.routes)),
-          colorMap: this.input.colorMap,
-        })
-        forceSolver.solve()
-        forceImprovement = forceSolver.getOutput()
-      }
       // Every node has an independent outcome. In particular, a failed node
       // must not skip another node that precedes it in the parent's order.
       this.output.push({
-        forceImprovement,
         routes: solver.routes,
         stats: solver.stats,
         benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,

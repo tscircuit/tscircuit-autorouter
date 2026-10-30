@@ -620,10 +620,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            forceImprovement: {
-              totalStepsPerNode: Math.max(12, Math.round(20 * Math.min(1, cms.effort))),
-              nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-            },
             nodePortPoints: nodePortPointsSource,
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
@@ -657,7 +653,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          precomputed: cms.highDensityRouteSolver?.completedForceImprovements,
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
