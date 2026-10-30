@@ -1,0 +1,43 @@
+name: Parallel weighted global search probe
+on:
+  push:
+    branches: [codex/parallel-weighted-global-search]
+    paths: [.github/workflows/parallel-weighted-global-search.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [1.5, 2, 3, 4]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Measure full-budget weighted global search
+        env:
+          HEURISTIC_WEIGHT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path("node_modules/tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver.ts")
+          s=p.read_text()
+          marker="  private asyncRunning = false"
+          assert marker in s
+          method="  override computeH(portId: number): number { return super.computeH(portId) * "+os.environ["HEURISTIC_WEIGHT"]+" }"
+          p.write_text(s.replace(marker, marker+"\n"+method))
+          PY
+      - run: bash benchmark.sh --dataset 18 --threads 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weighted-global-${{ matrix.variant }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
