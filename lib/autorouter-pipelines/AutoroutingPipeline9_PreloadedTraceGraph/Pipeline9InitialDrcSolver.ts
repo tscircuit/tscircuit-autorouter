@@ -20,7 +20,7 @@ export class Pipeline9InitialDrcSolver extends BaseSolver {
     this.solved = true
   }
 
-  getOutput(): EvaluateRelaxedDrcResult {
+  override getOutput(): EvaluateRelaxedDrcResult {
     if (!this.output) throw new Error("Initial DRC evaluation has not completed")
     return this.output
   }
