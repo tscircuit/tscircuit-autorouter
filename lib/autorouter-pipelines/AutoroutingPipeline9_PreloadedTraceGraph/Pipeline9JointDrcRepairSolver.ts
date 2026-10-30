@@ -1,7 +1,12 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
+import {
+  Pipeline9SpeculativeExactRepairSolver,
+  type Pipeline9SpeculativeExactRepairOutput,
+} from "./Pipeline9SpeculativeExactRepairSolver"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -64,6 +69,14 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
+
+type SpeculativeDrcTelemetry = {
+  referenceValidations: number
+  referenceFalseNegatives: number
+  indexedEvaluations: number
+  indexedCacheHits: number
+  indexedEvaluationTimeMs: number
+}
 
 export type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -699,6 +712,11 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
+  private asyncRunning = false
+  private pendingSpeculativeExact?: Promise<
+    | { type: "result"; result: Pipeline9SpeculativeExactRepairOutput }
+    | { type: "error"; error: unknown }
+  >
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
@@ -1704,6 +1722,103 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
+  }
+
+  /** Create the exact candidate from the same input used after bounded repair. */
+  createSpeculativeExactSolver(
+    projectedRoutes?: HighDensityRoute[],
+  ): GlobalDrcBranchPortfolioSolver {
+    if (!this.exactRepairParams) {
+      throw new Error("Pipeline9 exact repair stage is missing its input")
+    }
+    return new GlobalDrcBranchPortfolioSolver({
+      ...this.exactRepairParams,
+      hdRoutes: projectedRoutes ?? this.exactRepairParams.hdRoutes,
+    })
+  }
+
+  getSpeculativeDrcTelemetry(before?: SpeculativeDrcTelemetry): SpeculativeDrcTelemetry {
+    return {
+      referenceValidations: this.referenceDrcValidationCount - (before?.referenceValidations ?? 0),
+      referenceFalseNegatives: this.referenceDrcFalseNegativeCount - (before?.referenceFalseNegatives ?? 0),
+      indexedEvaluations: this.indexedDrcEvaluationCount - (before?.indexedEvaluations ?? 0),
+      indexedCacheHits: this.indexedDrcCacheHitCount - (before?.indexedCacheHits ?? 0),
+      indexedEvaluationTimeMs: this.indexedDrcEvaluationTimeMs - (before?.indexedEvaluationTimeMs ?? 0),
+    }
+  }
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) throw new Error("Joint DRC solveAsync is already running")
+    this.asyncRunning = true
+    let lastYield = performance.now()
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        if (
+          runtime &&
+          !this.pendingSpeculativeExact &&
+          this.getCurrentPhase() === "initialBoundedRegionalRepairSolver" &&
+          this.initialBoundedRegionalRepairSolver !== undefined &&
+          this.activeSubSolver === this.initialBoundedRegionalRepairSolver
+        ) {
+          const { connMap, ...params } = this.params
+          this.pendingSpeculativeExact = runtime.executeAsync(Pipeline9SpeculativeExactRepairSolver, {
+            params,
+            connectivityNetMap: connMap.netMap,
+            connectivityIdToNetMap: connMap.idToNetMap,
+            projectedRoutes: this.clearanceProjectionSolver?.getOutput(),
+          }).then(
+            (result) => ({ type: "result" as const, result }),
+            (error: unknown) => ({ type: "error" as const, error }),
+          )
+          this.stats.speculativeExactRepairDispatched =
+            (this.stats.speculativeExactRepairDispatched ?? 0) + 1
+        }
+        if (
+          this.pendingSpeculativeExact &&
+          this.getCurrentPhase() === "exactRepairSolver" &&
+          (!this.activeSubSolver || this.activeSubSolver === this.exactRepairSolver)
+        ) {
+          if (!this.activeSubSolver) this.step()
+          if (this.iterations >= stopAtIteration) break
+          const pending = this.pendingSpeculativeExact
+          this.pendingSpeculativeExact = undefined
+          const outcome = this.exactRepairSolver!.iterations === 0
+            ? await pending
+            : undefined
+          if (outcome?.type === "error") throw outcome.error
+          const result = outcome?.result
+          if (result && this.iterations + result.iterations <= stopAtIteration) {
+            const exact = this.exactRepairSolver!
+            exact.outputHdRoutes = result.routes
+            exact.stats = result.stats
+            exact.iterations = result.iterations
+            exact.solved = true
+            this.iterations += Math.max(0, result.iterations - 1)
+            this.referenceDrcValidationCount += result.telemetry.referenceValidations
+            this.referenceDrcFalseNegativeCount += result.telemetry.referenceFalseNegatives
+            this.indexedDrcEvaluationCount += result.telemetry.indexedEvaluations
+            this.indexedDrcCacheHitCount += result.telemetry.indexedCacheHits
+            this.indexedDrcEvaluationTimeMs += result.telemetry.indexedEvaluationTimeMs
+            this.stats.speculativeExactRepairAccepted = true
+          }
+        }
+        this.step()
+        if (performance.now() - lastYield >= 16) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 0))
+          lastYield = performance.now()
+        }
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Pipeline9 joint DRC runtime error: ${error}`
+      throw error
+    } finally {
+      if (this.solved || this.failed) this.pendingSpeculativeExact = undefined
+      this.asyncRunning = false
+    }
   }
 
   override _step(): void {
