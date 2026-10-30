@@ -18,7 +18,8 @@ test("four repair workers retain the full strategy and publish reference-valid c
   const warmups: number[] = []
   let pendingRepairs = 0
   const executor: SolverRuntimeExecutor = {
-    executeAsync(Solver, task) {
+    executeAsync: ((...args: Parameters<typeof runtime.executeAsync>) => {
+      const [Solver, task] = args
       const repair = typeof Solver !== "string" && Solver.solverName === "Pipeline9JointRepairCandidateSolver"
       if (repair) {
         warmups.push((task as { forceWarmup: number }).forceWarmup)
@@ -27,7 +28,7 @@ test("four repair workers retain the full strategy and publish reference-valid c
       return runtime.executeAsync(Solver, task).finally((): void => {
         if (repair) pendingRepairs--
       })
-    },
+    }) as SolverRuntimeExecutor["executeAsync"],
   }
   try {
     await solver.solveAsync(executor)
