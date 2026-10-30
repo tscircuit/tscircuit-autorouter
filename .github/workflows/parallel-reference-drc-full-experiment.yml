@@ -38,3 +38,5 @@ jobs:
             benchmark-result.txt
 
 # Validate endpoint annotation ordering.
+
+# Typed circuit fixture.
