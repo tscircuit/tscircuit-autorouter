@@ -696,6 +696,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private initialBoundedRegionalRepairStartedAt?: number
+  private initialBoundedReferenceValidationStart?: number
   readonly pipelineDef = [
     {
       solverName: "clearanceProjectionSolver",
@@ -717,12 +718,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     {
       solverName: "initialBoundedRegionalRepairSolver",
       createSolver: (): BaseSolver => {
-        if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) {
+        if (!this.exactRepairParams || !this.drcEvaluator) {
           throw new Error(
             "Pipeline9 initial regional repair is missing its input",
           )
         }
         this.initialBoundedRegionalRepairStartedAt = performance.now()
+        this.initialBoundedReferenceValidationStart = this.referenceDrcValidationCount
         this.initialBoundedRegionalRepairSolver =
           new Pipeline9BoundedRegionalRepairSolver({
             connMap: this.params.connMap,
@@ -738,7 +740,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               this.exactRepairParams.hdRoutes,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
-            drcEvaluator: this.cachedReferenceDrcEvaluator,
+            drcEvaluator: this.drcEvaluator,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -1802,6 +1804,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (
       !this.initialBoundedRegionalRepairSolver?.solved ||
       this.initialBoundedRegionalRepairStartedAt === undefined ||
+      this.initialBoundedReferenceValidationStart === undefined ||
       !this.cachedReferenceDrcEvaluator
     ) {
       throw new Error("Pipeline9 initial regional repair is not complete")
@@ -1819,6 +1822,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairPathSearchNodeCount:
         result.pathSearchNodeCount,
       initialBoundedRegionalRepairReferenceValidationCount:
+        this.referenceDrcValidationCount - this.initialBoundedReferenceValidationStart,
+      initialBoundedRegionalRepairEvaluatorCallCount:
         result.referenceValidationCount,
       initialBoundedRegionalRepairPublishedDrcIssueCount:
         result.publishedDrcIssueCount,
@@ -1871,7 +1876,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,
       boundedRegionalRepairPathSearchNodeCount: result.pathSearchNodeCount,
       boundedRegionalRepairReferenceValidationCount:
-        result.referenceValidationCount,
+        this.referenceDrcValidationCount - this.initialBoundedReferenceValidationStart,
+      boundedRegionalRepairEvaluatorCallCount: result.referenceValidationCount,
       boundedRegionalRepairRepaired: result.repaired,
       boundedRegionalRepairPublishedDrcIssueCount:
         result.publishedDrcIssueCount,
