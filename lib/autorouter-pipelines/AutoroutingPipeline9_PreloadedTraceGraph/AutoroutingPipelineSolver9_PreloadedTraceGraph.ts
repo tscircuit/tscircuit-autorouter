@@ -1,3 +1,5 @@
+import { withDrcCheckExecutor } from "lib/testing/getDrcErrors"
+import { ParallelDrcChecksSession } from "./ParallelDrcChecksSession"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -1153,14 +1155,29 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.solve()
         return
       }
+      const referenceStages = new Set(["pipeline9JointDrcRepairSolver", "effortCleanupSolver"])
+      const workerCount = (runtime as SolverRuntimeExecutor & { persistentWorkerCount?: number }).persistentWorkerCount
       while (!this.solved && !this.failed) {
+        if (workerCount === 4 && referenceStages.has(this.getCurrentPhase())) {
+          const checks = new ParallelDrcChecksSession()
+          try {
+            await checks.enable(runtime)
+            withDrcCheckExecutor(checks.evaluate, () => {
+              while (!this.solved && !this.failed && referenceStages.has(this.getCurrentPhase())) {
+                this.step()
+              }
+            })
+          } finally {
+            await checks.close()
+          }
+          continue
+        }
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
           this.activeSubSolver instanceof
             TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
-          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver ||
-          this.activeSubSolver instanceof Pipeline9JointDrcRepairSolver
+          this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
