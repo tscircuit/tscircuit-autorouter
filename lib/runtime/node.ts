@@ -11,16 +11,8 @@ export type AutorouterSolverRuntimeOptions = Omit<
 export function createAutorouterSolverRuntime(
   options: AutorouterSolverRuntimeOptions,
 ): SolverRuntime {
-  const runtime = new SolverRuntime({
+  return new SolverRuntime({
     ...options,
     workerSource,
   })
-  // Compatibility with solver-utils 0.0.23; remove after upstream #53 releases.
-  // https://github.com/tscircuit/solver-utils/pull/53
-  if (!("workerCount" in runtime)) {
-    Object.defineProperty(runtime, "workerCount", {
-      value: options.workerCount,
-    })
-  }
-  return runtime
 }

@@ -517,11 +517,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         .map((node, index) => ({ node, index }))
         .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
       const sharedNodeCursor = new Int32Array(new SharedArrayBuffer(4))
-      const poolSize = (
-        runtime as SolverRuntimeExecutor & {
-          readonly workerCount?: number
-        }
-      ).workerCount
+      const poolSize = runtime.workerCount
       if (
         poolSize !== undefined &&
         (!Number.isInteger(poolSize) || poolSize < 1)
