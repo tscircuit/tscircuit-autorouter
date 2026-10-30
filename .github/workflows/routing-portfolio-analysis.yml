@@ -1,0 +1,45 @@
+name: Routing portfolio evidence analysis
+on:
+  push:
+    branches: [codex/routing-portfolio-analysis]
+    paths: [.github/workflows/routing-portfolio-analysis.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read completed benchmark artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for run in 40999238886 41030805048 41033548986; do
+            gh run download "$run" --repo tscircuit/tscircuit-autorouter --dir "results/$run"
+          done
+      - name: Report global routing quality and downstream time
+        run: |
+          python3 - <<'PY'
+          import json,glob
+          for path in sorted(glob.glob("results/**/benchmark-result.json",recursive=True)):
+            report=json.load(open(path))
+            for t in report["tests"]:
+              m=t.get("routingMetrics",{})
+              g=m.get("tinyHypergraph") or {}
+              phases=m.get("phaseTimeMs") or {}
+              print(json.dumps(dict(
+                artifact=path,
+                sample=t["scenarioName"],
+                elapsed=t.get("elapsedTimeMs"),
+                passed=t.get("relaxedDrcPassed"),
+                routeCount=g.get("routeCount"),
+                pf=g.get("downstreamNodePfSum"),
+                pfSquared=g.get("downstreamNodePfSquaredSum"),
+                pfMax=g.get("downstreamNodePfMax"),
+                concentration=g.get("downstreamSquaredNodePortPointCount"),
+                segments=g.get("finalSegmentCount"),
+                globalMs=phases.get("portPointPathingSolver"),
+                hdMs=phases.get("highDensityRouteSolver"),
+                repairMs=phases.get("pipeline9JointDrcRepairSolver")
+              )))
+          PY
