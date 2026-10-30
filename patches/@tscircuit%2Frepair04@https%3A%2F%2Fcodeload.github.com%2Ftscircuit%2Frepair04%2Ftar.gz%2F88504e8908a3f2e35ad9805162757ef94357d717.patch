@@ -1,0 +1,164 @@
+diff --git a/node_modules/@tscircuit/repair04/.bun-tag-ae9107942992abba b/.bun-tag-ae9107942992abba
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/lib/RelaxTraceClearanceSolver.ts b/lib/RelaxTraceClearanceSolver.ts
+index 3cf597b9f8c6fcc107a14f3df938eec46ae89ae3..3dbe0b8a433c9b20350166affc712fae8c5330cf 100644
+--- a/lib/RelaxTraceClearanceSolver.ts
++++ b/lib/RelaxTraceClearanceSolver.ts
+@@ -64,6 +64,21 @@ type PadContact = {
+   contact: Contact | null
+ }
+ 
++
++export type ClearanceComponentInput = {
++  vertices: Array<[number, Vertex]>
++  pairs: SegmentPair[]
++  padContacts: PadContact[]
++  viaPadConstraints: Map<Vertex, ViaPadConstraint[]>
++  traceClearance: number
++  viaClearance: number
++}
++export type ClearanceComponentOutput = {
++  vertices: Array<{ index: number; x: number; y: number; revision: number }>
++  sweeps: number
++  constraints: number
++}
++
+ const MAX_SWEEPS = 256
+ const MAX_DISPLACEMENT = 0.25
+ 
+@@ -146,6 +161,7 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+   private sweepPadIndex = 0
+   private preparedPairCount = 0
+   private projectedConstraintCount = 0
++  private sweepChanged = false
+ 
+   constructor(input: RelaxTraceClearanceInput) {
+     super()
+@@ -153,6 +169,94 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+     this.MAX_ITERATIONS = 1024
+   }
+ 
++  static solveComponent(input: ClearanceComponentInput): ClearanceComponentOutput {
++    // Prepared constraints contain everything needed by the numerical sweeps.
++    // No board geometry is rebuilt or cropped inside workers.
++    const solver = new RelaxTraceClearanceSolver({} as RelaxTraceClearanceInput)
++    solver.pairs = input.pairs
++    solver.padContacts = input.padContacts
++    solver.viaPadConstraints = input.viaPadConstraints
++    solver.traceClearance = input.traceClearance
++    solver.viaClearance = input.viaClearance
++    solver.phase = "sweeps"
++    while (solver.phase === "sweeps") solver.stepSweep()
++    return {
++      vertices: input.vertices.map(([index, vertex]) => ({ index, x: vertex.x, y: vertex.y, revision: vertex.revision })),
++      sweeps: solver.sweepIndex,
++      constraints: solver.projectedConstraintCount,
++    }
++  }
++
++  async solveAsync(runtime: { executeAsync(name: string, input: unknown): Promise<unknown> }, stopAtIteration = Infinity): Promise<void> {
++    while (!this.solved && !this.failed && this.phase !== "sweeps" && this.iterations < stopAtIteration) this.step()
++    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
++    if (stopAtIteration < this.MAX_ITERATIONS || this.sweepIndex > 0 || this.sweepPairIndex > 0 || this.sweepPadIndex > 0) {
++      while (!this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
++      return
++    }
++    const vertices = [...this.vertices.values()]
++    const indexByVertex = new Map(vertices.map((vertex, index) => [vertex, index]))
++    const parents = vertices.map((_, index) => index)
++    const root = (index: number): number => {
++      while (parents[index] !== index) {
++        parents[index] = parents[parents[index]]!
++        index = parents[index]!
++      }
++      return index
++    }
++    const connect = (points: Vertex[]): void => {
++      const mutable = points.filter((vertex) => !vertex.locked)
++      if (mutable.length < 2) return
++      const first = root(indexByVertex.get(mutable[0]!)!)
++      for (const vertex of mutable.slice(1)) parents[root(indexByVertex.get(vertex)!)] = first
++    }
++    for (const pair of this.pairs) connect([pair.a.a, pair.a.b, pair.b.a, pair.b.b])
++    for (const pad of this.padContacts) connect([pad.segment.a, pad.segment.b])
++    const groups = new Map<number, ClearanceComponentInput>()
++    for (const [index, vertex] of vertices.entries()) {
++      if (vertex.locked) continue
++      const key = root(index)
++      let group = groups.get(key)
++      if (!group) {
++        group = { vertices: [], pairs: [], padContacts: [], viaPadConstraints: new Map(), traceClearance: this.traceClearance, viaClearance: this.viaClearance }
++        groups.set(key, group)
++      }
++      group.vertices.push([index, vertex])
++      const pads = this.viaPadConstraints.get(vertex)
++      if (pads) group.viaPadConstraints.set(vertex, pads)
++    }
++    for (const pair of this.pairs) {
++      const vertex = [pair.a.a, pair.a.b, pair.b.a, pair.b.b].find((vertex) => !vertex.locked)
++      if (vertex) groups.get(root(indexByVertex.get(vertex)!))!.pairs.push(pair)
++    }
++    for (const pad of this.padContacts) {
++      const vertex = [pad.segment.a, pad.segment.b].find((vertex) => !vertex.locked)
++      if (vertex) groups.get(root(indexByVertex.get(vertex)!))!.padContacts.push(pad)
++    }
++    const active = [...groups.values()].filter((group) => group.pairs.length + group.padContacts.length > 0)
++    active.sort((a, b) => b.pairs.length + b.padContacts.length - a.pairs.length - a.padContacts.length)
++    // Batch small independent components to bound serialization and queue costs.
++    const batches: ClearanceComponentInput[][] = Array.from({ length: Math.min(4, active.length) }, () => [])
++    const weights = batches.map(() => 0)
++    for (const group of active) {
++      const index = weights.indexOf(Math.min(...weights))
++      batches[index]!.push(group)
++      weights[index]! += group.pairs.length + group.padContacts.length
++    }
++    const results = await Promise.all(batches.map((components) => runtime.executeAsync("Pipeline9ClearanceComponentWorker", { components }) as Promise<ClearanceComponentOutput[]>))
++    let sweeps = 0
++    let constraints = 0
++    for (const batch of results) for (const result of batch) {
++      sweeps = Math.max(sweeps, result.sweeps)
++      constraints += result.constraints
++      for (const value of result.vertices) Object.assign(vertices[value.index]!, { x: value.x, y: value.y, revision: value.revision })
++    }
++    this.iterations += Math.max(1, sweeps * Math.max(1, Math.ceil((this.pairs.length + this.padContacts.length) / 4096)))
++    this.stats = { ...this.stats, sweepCount: sweeps, projectedConstraintCount: constraints, parallelComponentCount: active.length, parallelBatchCount: batches.length }
++    this.phase = "finalize"
++    this.step()
++  }
++
+   private prepareGeometry(): void {
+     const input = this.input
+     const routes = structuredClone(input.routes)
+@@ -555,7 +659,10 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+         )
+       )
+         continue
+-      if (vertex.x !== x || vertex.y !== y) vertex.revision++
++      if (vertex.x !== x || vertex.y !== y) {
++        vertex.revision++
++        this.sweepChanged = true
++      }
+       vertex.x = x
+       vertex.y = y
+     }
+@@ -910,7 +1017,8 @@ export class RelaxTraceClearanceSolver extends BaseSolver {
+       this.sweepIndex++
+       this.sweepPairIndex = 0
+       this.sweepPadIndex = 0
+-      if (this.sweepIndex === MAX_SWEEPS) this.phase = "finalize"
++      if (this.sweepIndex === MAX_SWEEPS || !this.sweepChanged) this.phase = "finalize"
++      this.sweepChanged = false
+     }
+     this.progress = this.sweepIndex / (MAX_SWEEPS + 1)
+     this.stats = {
+diff --git a/lib/index.ts b/lib/index.ts
+index 0752d5e03914dc0ab47f052a00cb77ad4660cde1..546136717959b748b44d0a4585af940729b9f2d8 100644
+--- a/lib/index.ts
++++ b/lib/index.ts
+@@ -44,3 +44,5 @@ export {
+   findPairedClearancePath,
+ } from "./PairedClearancePathSolver"
+ export type { PairedClearancePathInput } from "./PairedClearancePathSolver"
++
++export type { ClearanceComponentInput, ClearanceComponentOutput } from "./RelaxTraceClearanceSolver"

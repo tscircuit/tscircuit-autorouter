@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -1652,6 +1653,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
+  }
+
+  async solveAsync(runtime: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      const child = this.activeSubSolver
+      if (child instanceof Pipeline9BoundedRegionalRepairSolver || child instanceof Pipeline9ClearanceProjectionSolver) {
+        const before = child.iterations
+        await child.solveAsync(runtime, before + Math.max(0, stopAtIteration - this.iterations))
+        this.iterations += Math.max(0, child.iterations - before - (child.solved || child.failed ? 1 : 0))
+      }
+      this.step()
+    }
   }
 
   override _step(): void {
