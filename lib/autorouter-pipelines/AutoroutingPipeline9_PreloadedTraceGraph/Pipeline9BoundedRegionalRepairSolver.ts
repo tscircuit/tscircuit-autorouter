@@ -138,6 +138,8 @@ type BoundedRepairState =
     }
 
 const REGION_SIZES = [10, 16] as const
+// This experiment isolates native DRC and parallel projection from regional batches.
+const ENABLE_PARALLEL_REGIONAL_BATCHES = false
 
 /** Routes bounded regions through negotiation, projection and guarded publication. */
 export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
@@ -991,7 +993,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     try {
       while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
         const state = this.state
-        if (runtime && state.phase === "select-region" &&
+        if (ENABLE_PARALLEL_REGIONAL_BATCHES && runtime && state.phase === "select-region" &&
           !this.parallelRegionalPlanned) {
           const allowance = getPipeline9BoundedRepairAllowance(this.budget, this.result.acceptedRegionCount)
           const reference = state.context.reference
