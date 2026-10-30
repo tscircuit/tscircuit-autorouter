@@ -123,8 +123,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
-      if (this.layerAwareMstStats) this.layerAwareMstStats.completed = true
-      this.solved = true
+      this.finishPointPairQueue()
       return
     }
     const currentConnection = this.unprocessedConnections.pop()!
@@ -164,7 +163,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     this.recordLayerAwareMstCoverage(currentConnection, minimumSpanningTreeEdges)
     let mstEdgeIndex = 0
-    for (const mstEdge of minimumSpanningTreeEdges) {
+    for (const mstEdge of this.orderMstEdgesForEmission(minimumSpanningTreeEdges)) {
       if (arePointsConnected(mstEdge.from, mstEdge.to)) {
         continue
       }
@@ -174,7 +173,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         mstEdge.to,
       )
 
-      this.newConnections.push({
+      this.appendMstConnection({
         ...currentConnection,
         pointsToConnect: optimizedMstEdge.pointsToConnect,
         name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
@@ -182,7 +181,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
-      })
+      }, mstEdge)
     }
   }
 }

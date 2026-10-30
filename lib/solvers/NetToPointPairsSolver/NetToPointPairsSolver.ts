@@ -44,6 +44,7 @@ export class NetToPointPairsSolver extends BaseSolver {
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
   declare protected mstPointKey?: (point: ConnectionPoint) => PointKey
+  declare protected layerAwareDeferredConnections?: SimpleRouteConnection[]
   declare readonly layerAwareMstStats?: LayerAwareMstStats
 
   constructor(
@@ -88,6 +89,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     this.initiallyConnectedMap = initiallyConnectedMap
     if (options?.pointKey !== undefined) {
       this.mstPointKey = options.pointKey
+      this.layerAwareDeferredConnections = []
       this.layerAwareMstStats = { completed: false, connectionsProcessed: 0, inputPointOccurrences: 0, inputDistinctLayerKeys: 0, mstCoveredLayerKeys: 0, missingLayerKeys: 0, coincidentCrossLayerGroups: 0, zeroDistanceLayerEdges: 0, mstSelectedEdges: 0 }
     }
   }
@@ -115,10 +117,38 @@ export class NetToPointPairsSolver extends BaseSolver {
     stats.mstSelectedEdges += edges.length
   }
 
+  protected orderMstEdgesForEmission<T extends { from: ConnectionPoint; to: ConnectionPoint }>(edges: T[]): T[] {
+    if (!this.mstPointKey) return edges
+    const legacyEdges: T[] = []
+    const addedLayerEdges: T[] = []
+    for (const edge of edges) {
+      const target = edge.from.x === edge.to.x && edge.from.y === edge.to.y ? addedLayerEdges : legacyEdges
+      target.push(edge)
+    }
+    return [...legacyEdges, ...addedLayerEdges]
+  }
+
+  protected appendMstConnection(connection: SimpleRouteConnection, edge: { from: ConnectionPoint; to: ConnectionPoint }): void {
+    if (this.layerAwareDeferredConnections !== undefined && edge.from.x === edge.to.x && edge.from.y === edge.to.y) {
+      // New layer bridges must not rename or reorder existing routing demands.
+      this.layerAwareDeferredConnections.push(connection)
+    } else {
+      this.newConnections.push(connection)
+    }
+  }
+
+  protected finishPointPairQueue(): void {
+    if (this.layerAwareDeferredConnections !== undefined) {
+      this.newConnections.push(...this.layerAwareDeferredConnections)
+      this.layerAwareDeferredConnections.length = 0
+    }
+    if (this.layerAwareMstStats) this.layerAwareMstStats.completed = true
+    this.solved = true
+  }
+
   _step() {
     if (this.unprocessedConnections.length === 0) {
-      if (this.layerAwareMstStats) this.layerAwareMstStats.completed = true
-      this.solved = true
+      this.finishPointPairQueue()
       return
     }
     const connection = this.unprocessedConnections.pop()!
@@ -151,11 +181,11 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     this.recordLayerAwareMstCoverage(connection, edges)
     let mstIdx = 0
-    for (const edge of edges) {
+    for (const edge of this.orderMstEdgesForEmission(edges)) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
-      this.newConnections.push({
+      this.appendMstConnection({
         ...connection,
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
@@ -163,7 +193,7 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
-      })
+      }, edge)
     }
   }
 
