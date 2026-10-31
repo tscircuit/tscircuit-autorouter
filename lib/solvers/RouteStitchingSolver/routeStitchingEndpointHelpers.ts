@@ -1,6 +1,5 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import {
   comparePoints,
   compareRoutes,
@@ -189,10 +188,15 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   const sameLayerTerminals = params.terminals.filter(
     (terminal) => terminal.z === params.islandEndpoint.z,
   )
-  const candidates =
-    params.preferSameLayerTerminalEndpoints && sameLayerTerminals.length > 0
-      ? sameLayerTerminals
-      : params.terminals
+  if (
+    params.preferSameLayerTerminalEndpoints &&
+    sameLayerTerminals.length === 0
+  ) {
+    return params.islandEndpoint
+  }
+  const candidates = params.preferSameLayerTerminalEndpoints
+    ? sameLayerTerminals
+    : params.terminals
   const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
@@ -226,7 +230,6 @@ export const selectRoutesAlongEndpointPath = (params: {
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-  isStitchSegmentClear?: IsStitchSegmentClear
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -273,9 +276,6 @@ export const selectRoutesAlongEndpointPath = (params: {
   const sortedEndpointClusters = [
     ...params.endpointIndex.getClusters(params.connectionName),
   ].sort((a, b) => comparePoints(a.point, b.point))
-  const hasTerminalIds = canonicalHdRoutes.some(
-    (route) => route.startPcbPortId || route.endPcbPortId,
-  )
   for (let i = 0; i < sortedEndpointClusters.length; i++) {
     const endpointA = sortedEndpointClusters[i]!
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
@@ -283,17 +283,6 @@ export const selectRoutesAlongEndpointPath = (params: {
       if (endpointA.point.z !== endpointB.point.z) continue
       if (
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
-      )
-        continue
-      if (
-        hasTerminalIds &&
-        params.isStitchSegmentClear &&
-        !params.isStitchSegmentClear({
-          connectionName: params.connectionName,
-          start: endpointA.point,
-          end: endpointB.point,
-          traceThickness: canonicalHdRoutes[0]!.traceThickness,
-        })
       )
         continue
 

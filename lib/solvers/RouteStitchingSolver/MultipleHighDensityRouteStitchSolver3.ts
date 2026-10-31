@@ -126,8 +126,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       start: params.start,
       end: params.end,
       endpointIndex: this.endpointIndex,
-      isStitchSegmentClear: (segment) =>
-        this.clearanceValidator.isSegmentClear(segment),
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
     })
@@ -329,8 +327,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         start,
         end,
         endpointIndex: this.endpointIndex,
-        isStitchSegmentClear: (segment) =>
-          this.clearanceValidator.isSegmentClear(segment),
         canStitchBetweenTerminals: (selection) =>
           this.canStitchBetweenTerminals(selection),
       })
@@ -419,8 +415,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               start,
               end,
               endpointIndex: this.endpointIndex,
-              isStitchSegmentClear: (segment) =>
-                this.clearanceValidator.isSegmentClear(segment),
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
             }),
