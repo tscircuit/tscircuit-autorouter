@@ -400,8 +400,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ),
       }
 
-      const hdRoutes = unsolvedRoutes.flatMap(
-        (unsolvedRoute) => unsolvedRoute.hdRoutes,
+      // Rejoining islands needs fragments removed by per-island path selection.
+      const hdRoutes = canonicalHdRoutes.filter(
+        (route): boolean => route.connectionName === connectionName,
       )
       const sharedRootPathRoutes =
         unsolvedRoutes.length > 1
