@@ -92,6 +92,7 @@ import {
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { getPipeline9SimplificationObstacles } from "./getPipeline9SimplificationObstacles"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -744,7 +745,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: canonicalizePipeline9HdRoutes(newHdRoutes),
-            obstacles: cms.srj.obstacles,
+            obstacles: getPipeline9SimplificationObstacles(cms.srj),
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -780,7 +781,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: editableHdRoutes,
-            obstacles: cms.srj.obstacles,
+            obstacles: getPipeline9SimplificationObstacles(cms.srj),
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -904,7 +905,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             config: {
               hdRoutes,
               preserveRouteEndpoints: true,
-              obstacles: cms.srj.obstacles,
+              obstacles: getPipeline9SimplificationObstacles(cms.srj),
               connMap: cms.connMap,
               colorMap: cms.colorMap,
               outline: cms.srj.outline,
