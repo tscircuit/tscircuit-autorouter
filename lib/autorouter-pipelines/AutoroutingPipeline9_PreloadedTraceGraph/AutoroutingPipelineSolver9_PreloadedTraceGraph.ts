@@ -754,6 +754,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
@@ -790,6 +791,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes,
             netByConnectionName: getPipeline9NetByConnectionName(
@@ -927,6 +929,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               defaultViaDiameter: cms.viaDiameter,
               layerCount: cms.srj.layerCount,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+              minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
               minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
               otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
                 convertPreloadedTraceToHdRoutes(

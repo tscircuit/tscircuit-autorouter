@@ -97,7 +97,14 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  const rotation = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const dx = point.x - obstacle.center.x
+  const dy = point.y - obstacle.center.y
+  const localPoint = {
+    x: obstacle.center.x + dx * Math.cos(rotation) + dy * Math.sin(rotation),
+    y: obstacle.center.y - dx * Math.sin(rotation) + dy * Math.cos(rotation),
+  }
+  return isPointInsideBounds(localPoint, getBoundFromCenteredRect(obstacle))
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
