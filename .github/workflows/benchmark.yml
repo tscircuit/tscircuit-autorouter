@@ -14,7 +14,7 @@ jobs:
           path: base
       - uses: actions/checkout@v4
         with:
-          ref: 5da0ce3
+          ref: 5da0ce311c88b607c279e294eb5ce4b5fed3711f
           path: candidate
       - uses: oven-sh/setup-bun@v2
         with:
@@ -46,7 +46,7 @@ jobs:
           candidate = [r for r in runs if r['label'].startswith('candidate')]
           base_mean = statistics.mean(r['elapsedMs'] for r in base)
           candidate_mean = statistics.mean(r['elapsedMs'] for r in candidate)
-          result = {'baseCommit': '67497a16129f5d4b69d7cfe1ed54a719d5e597b5', 'candidateCommit': '5da0ce3', 'baseMeanMs': base_mean, 'candidateMeanMs': candidate_mean, 'improvementPercent': (1 - candidate_mean / base_mean) * 100, 'runs': runs}
+          result = {'baseCommit': '67497a16129f5d4b69d7cfe1ed54a719d5e597b5', 'candidateCommit': '5da0ce311c88b607c279e294eb5ce4b5fed3711f', 'baseMeanMs': base_mean, 'candidateMeanMs': candidate_mean, 'improvementPercent': (1 - candidate_mean / base_mean) * 100, 'runs': runs}
           (root / 'comparison.json').write_text(json.dumps(result, indent=2))
           print(json.dumps({k: v for k, v in result.items() if k != 'runs'}, indent=2))
           PY
