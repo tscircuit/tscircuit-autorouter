@@ -38,8 +38,8 @@ jobs:
           PY
           python3 - <<'PY2'
           from pathlib import Path
-          p=Path('candidate/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts')
-          p.write_text(p.read_text().replace('gridSearchWorkScale: layerCount > 2 ? 0.25 : 1', 'gridSearchWorkScale: layerCount > 2 ? ${{ matrix.scale }} : 1'))
+          p=Path('candidate/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts')
+          p.write_text(p.read_text().replace('useGrowShrinkHighDensityIntraNodeSolver: true,', 'useGrowShrinkHighDensityIntraNodeSolver: true,\n      gridSearchWorkScale: ${{ matrix.scale }},'))
           p=Path('candidate/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts')
           p.write_text(p.read_text().replace('const budgetScale = layerCount > 2 ? this.gridSearchWorkScale : 1', 'const budgetScale = this.gridSearchWorkScale'))
           PY2
