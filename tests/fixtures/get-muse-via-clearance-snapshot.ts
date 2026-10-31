@@ -8,37 +8,56 @@ export function getMuseViaClearanceSnapshot(input: EvaluateRelaxedDrcInput): {
   svg: string
   copperGap: number
 } {
-  // These locations select the reported pair for visualization only.
-  // Neither the solver nor the clearance assertions use this selection.
-  const targets = [
-    { net: "source_net_2", x: 16.147295435728953, y: 11.046851707207189 },
-    { net: "source_net_1", x: 15.911643654309586, y: 10.456754126462537 },
-  ]
-  const pair = targets.map((target) => {
-    const via = input.routedTraces
-      .filter((trace) => trace.connection_name === target.net)
-      .flatMap((trace) => trace.route)
+  // Show the tightest actual different-net pair after routing changes.
+  const vias = input.routedTraces.flatMap((trace) =>
+    trace.route
       .filter((point) => point.route_type === "via")
-      .sort(
-        (a, b) =>
-          Math.hypot(a.x - target.x, a.y - target.y) -
-          Math.hypot(b.x - target.x, b.y - target.y),
-      )[0]
-    if (!via || !via.via_diameter || !via.via_hole_diameter) {
-      throw new Error(`Missing physical via for ${target.net}`)
+      .map((via) => ({ ...via, connectionName: trace.connection_name })),
+  )
+  let pair: [(typeof vias)[number], (typeof vias)[number]] | undefined
+  let copperGap = Infinity
+  for (let i = 0; i < vias.length; i++) {
+    for (let j = i + 1; j < vias.length; j++) {
+      const a = vias[i]!
+      const b = vias[j]!
+      if (a.connectionName === b.connectionName) continue
+      if (
+        !a.via_diameter ||
+        !b.via_diameter ||
+        !a.via_hole_diameter ||
+        !b.via_hole_diameter
+      ) {
+        throw new Error("Snapshot vias must declare copper and drill diameters")
+      }
+      const gap =
+        Math.hypot(a.x - b.x, a.y - b.y) -
+        (a.via_diameter + b.via_diameter) / 2
+      if (gap < copperGap) {
+        copperGap = gap
+        pair = [a, b]
+      }
     }
-    return via
-  })
-  const [a, b] = pair
+  }
+  if (!pair) throw new Error("Snapshot requires vias on two different nets")
+  const originalPair =
+    pair[0].connectionName === "source_net_2" &&
+    pair[1].connectionName === "source_net_1"
+  const center = originalPair
+    ? { x: 16.03, y: 10.76 }
+    : {
+        x: (pair[0].x + pair[1].x) / 2,
+        y: (pair[0].y + pair[1].y) / 2,
+      }
+  const labels = originalPair
+    ? ["BOOST_SW", "RESE"]
+    : pair.map((via): string => via.connectionName)
   const minimum = input.inputSrj.minPadEdgeToPadEdgeClearance!
-  const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y)
-  const copperGap = distance - (a!.via_diameter! + b!.via_diameter!) / 2
   const color = copperGap < minimum - 1e-9 ? "#b91c1c" : "#166534"
   const focus = getSvgFromGraphicsObject(
     {
       rects: [
         {
-          center: { x: 16.03, y: 10.76 },
+          center,
           width: 2,
           height: 2,
           fill: "#ffffff",
@@ -55,7 +74,7 @@ export function getMuseViaClearanceSnapshot(input: EvaluateRelaxedDrcInput): {
           center: via,
           radius: via.via_diameter! / 2,
           fill: "blue",
-          label: index === 0 ? "BOOST_SW" : "RESE",
+          label: labels[index],
         })),
         ...pair.map((via) => ({
           center: via,
@@ -65,16 +84,16 @@ export function getMuseViaClearanceSnapshot(input: EvaluateRelaxedDrcInput): {
       ],
       texts: [
         {
-          x: 16.03,
-          y: 11.55,
-          text: "BOOST_SW (upper)",
+          x: center.x,
+          y: center.y + 0.79,
+          text: `${labels[0]} (upper)`,
           fontSize: 0.1,
           anchorSide: "center",
         },
         {
-          x: 16.03,
-          y: 9.97,
-          text: "RESE (lower)",
+          x: center.x,
+          y: center.y - 0.79,
+          text: `${labels[1]} (lower)`,
           fontSize: 0.1,
           anchorSide: "center",
         },
