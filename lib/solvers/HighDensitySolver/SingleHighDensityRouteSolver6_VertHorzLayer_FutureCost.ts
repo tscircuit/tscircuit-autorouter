@@ -3,6 +3,7 @@ import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
+const FUTURE_VIA_CACHE_SLOTS = 1024
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -22,6 +23,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private cachedFutureConnections?: typeof this.futureConnections
+  private cachedFutureConnectionCount = 0
+  private readonly futureViaCacheCoordinates = new Float64Array(
+    FUTURE_VIA_CACHE_SLOTS * 2,
+  )
+  private readonly futureViaCacheStates = new Uint8Array(FUTURE_VIA_CACHE_SLOTS)
+  private cachedFutureViaMinCenterlineDistance: number | undefined
+  private cachedFutureViaSegmentsRef: FutureConnectionSegment[] | null = null
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -87,8 +96,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     for (const point of this.futureConnectionPoints) {
       const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+        distance(node, point) + (node.z !== point.z ? viaPenaltyDistance : 0)
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
@@ -110,8 +118,12 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return closestPoint
   }
 
-  getFutureConnectionSegments() {
-    if (this.futureConnectionSegmentsCache) {
+  getFutureConnectionSegments(): FutureConnectionSegment[] {
+    if (
+      this.futureConnectionSegmentsCache &&
+      this.cachedFutureConnections === this.futureConnections &&
+      this.cachedFutureConnectionCount === this.futureConnections.length
+    ) {
       return this.futureConnectionSegmentsCache
     }
     const segments: FutureConnectionSegment[] = []
@@ -140,29 +152,86 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           connectionName: futureConnection.connectionName,
           start,
           end,
+          minX: Math.min(start.x, end.x),
+          maxX: Math.max(start.x, end.x),
+          minY: Math.min(start.y, end.y),
+          maxY: Math.max(start.y, end.y),
         })
       }
     }
 
+    this.cachedFutureConnections = this.futureConnections
+    this.cachedFutureConnectionCount = this.futureConnections.length
     this.futureConnectionSegmentsCache = segments
     return segments
   }
 
-  isViaTooCloseToFutureConnectionTrace(node: Node) {
+  isViaTooCloseToFutureConnectionTrace(node: Node): boolean {
     const minCenterlineDistance =
       this.viaDiameter / 2 +
       this.traceThickness / 2 +
       this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+    if (!(minCenterlineDistance > 0)) return false
 
-    for (const segment of this.getFutureConnectionSegments()) {
+    const segments = this.getFutureConnectionSegments()
+    if (segments.length === 0) return false
+
+    let cacheSlot = -1
+    if (this.gridWidth !== undefined) {
+      if (
+        this.cachedFutureViaMinCenterlineDistance !== minCenterlineDistance ||
+        this.cachedFutureViaSegmentsRef !== segments
+      ) {
+        this.futureViaCacheStates.fill(0)
+        this.cachedFutureViaMinCenterlineDistance = minCenterlineDistance
+        this.cachedFutureViaSegmentsRef = segments
+      }
+      const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+      const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+      const columnKey = yIndex * this.gridWidth + xIndex
+      if (Number.isSafeInteger(columnKey)) {
+        cacheSlot = Math.abs(columnKey % FUTURE_VIA_CACHE_SLOTS)
+        const coordinateOffset = cacheSlot * 2
+        const cachedState = this.futureViaCacheStates[cacheSlot]
+        if (
+          cachedState !== 0 &&
+          this.futureViaCacheCoordinates[coordinateOffset] === node.x &&
+          this.futureViaCacheCoordinates[coordinateOffset + 1] === node.y
+        ) {
+          return cachedState === 2
+        }
+      }
+    }
+
+    for (const segment of segments) {
+      if (
+        node.x + minCenterlineDistance < segment.minX ||
+        node.y + minCenterlineDistance < segment.minY ||
+        node.x - minCenterlineDistance > segment.maxX ||
+        node.y - minCenterlineDistance > segment.maxY
+      ) {
+        continue
+      }
       if (
         pointToSegmentDistance(node, segment.start, segment.end) <
         minCenterlineDistance
       ) {
+        if (cacheSlot >= 0) {
+          const coordinateOffset = cacheSlot * 2
+          this.futureViaCacheCoordinates[coordinateOffset] = node.x
+          this.futureViaCacheCoordinates[coordinateOffset + 1] = node.y
+          this.futureViaCacheStates[cacheSlot] = 2
+        }
         return true
       }
     }
 
+    if (cacheSlot >= 0) {
+      const coordinateOffset = cacheSlot * 2
+      this.futureViaCacheCoordinates[coordinateOffset] = node.x
+      this.futureViaCacheCoordinates[coordinateOffset + 1] = node.y
+      this.futureViaCacheStates[cacheSlot] = 1
+    }
     return false
   }
 
@@ -195,11 +264,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return 1 - Math.exp((-goalDist / this.straightLineDistance) * 5)
   }
 
-  getFutureConnectionPenalty(node: Node, isVia: boolean) {
+  getFutureConnectionPenalty(
+    node: Node,
+    isVia: boolean,
+    precomputedGoalDist?: number,
+  ): number {
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
-    const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
+      const goalDist = precomputedGoalDist ?? distance(node, this.B)
       const distToFuturePoint = distance(node, closestFuturePoint)
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
@@ -215,8 +288,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   computeH(node: Node) {
-    const goalDist = distance(node, this.B) ** 1.6
-    const goalDistRatio = goalDist / this.straightLineDistance
+    const rawGoalDist = distance(node, this.B)
+    const goalDist = rawGoalDist ** 1.6
 
     // Base cost from original function
     const baseCost =
@@ -224,7 +297,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     return (
       baseCost +
-      this.getFutureConnectionPenalty(node, node.z !== node.parent?.z)
+      this.getFutureConnectionPenalty(
+        node,
+        node.z !== node.parent?.z,
+        rawGoalDist,
+      )
     )
   }
 
@@ -268,17 +345,20 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       : isEvenLayer
         ? dx
         : dy
+    const viaPenalty = this.viaPenaltyDistance
     const baseG =
       (node.parent?.g ?? 0) +
-      (node.z === node.parent?.z ? 0 : this.viaPenaltyDistance) +
+      (node.z === node.parent?.z ? 0 : viaPenalty) +
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    const goalDist = distance(node, this.B) ** 1.6
-    const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+    const rawGoalDist = distance(node, this.B)
+    const goalDist = rawGoalDist ** 1.6
+    const baseH = goalDist + (node.z !== this.B.z ? viaPenalty : 0)
     const futureConnectionPenalty = this.getFutureConnectionPenalty(
       node,
       node.z !== node.parent?.z,
+      rawGoalDist,
     )
 
     node.g = baseG + futureConnectionPenalty
@@ -291,4 +371,8 @@ type FutureConnectionSegment = {
   connectionName: string
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
 }

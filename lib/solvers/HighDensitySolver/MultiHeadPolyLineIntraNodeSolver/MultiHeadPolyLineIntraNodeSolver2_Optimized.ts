@@ -1,4 +1,3 @@
-import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
@@ -355,15 +354,27 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // b) Via <-> Segment
         for (const via1 of vias1) {
+          const via1Z0 = via1.layers[0]
+          const via1Z1 = via1.layers[1]
           for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
-              const closestPointOnSeg = pointToSegmentClosestPoint(
-                via1.point,
-                seg2.p1,
-                seg2.p2,
-              )
-              const dx = via1.point.x - closestPointOnSeg.x
-              const dy = via1.point.y - closestPointOnSeg.y
+            if (via1Z0 === seg2.layer || via1Z1 === seg2.layer) {
+              let closestX = seg2.p1.x
+              let closestY = seg2.p1.y
+              if (seg2.lengthSquared !== 0) {
+                const projectionRatio = Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    ((via1.point.x - seg2.p1.x) * seg2.deltaX +
+                      (via1.point.y - seg2.p1.y) * seg2.deltaY) /
+                      seg2.lengthSquared,
+                  ),
+                )
+                closestX += projectionRatio * seg2.deltaX
+                closestY += projectionRatio * seg2.deltaY
+              }
+              const dx = via1.point.x - closestX
+              const dy = via1.point.y - closestY
               const dSq = dx * dx + dy * dy
 
               if (dSq > EPSILON) {
@@ -413,15 +424,27 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           }
         }
         for (const via2 of vias2) {
+          const via2Z0 = via2.layers[0]
+          const via2Z1 = via2.layers[1]
           for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
-              const closestPointOnSeg = pointToSegmentClosestPoint(
-                via2.point,
-                seg1.p1,
-                seg1.p2,
-              )
-              const dx = via2.point.x - closestPointOnSeg.x
-              const dy = via2.point.y - closestPointOnSeg.y
+            if (via2Z0 === seg1.layer || via2Z1 === seg1.layer) {
+              let closestX = seg1.p1.x
+              let closestY = seg1.p1.y
+              if (seg1.lengthSquared !== 0) {
+                const projectionRatio = Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    ((via2.point.x - seg1.p1.x) * seg1.deltaX +
+                      (via2.point.y - seg1.p1.y) * seg1.deltaY) /
+                      seg1.lengthSquared,
+                  ),
+                )
+                closestX += projectionRatio * seg1.deltaX
+                closestY += projectionRatio * seg1.deltaY
+              }
+              const dx = via2.point.x - closestX
+              const dy = via2.point.y - closestY
               const dSq = dx * dx + dy * dy
 
               if (dSq > EPSILON) {
@@ -473,11 +496,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // c) Via <-> Via
         for (const via1 of vias1) {
+          const via1Z0 = via1.layers[0]
+          const via1Z1 = via1.layers[1]
           for (const via2 of vias2) {
-            const commonLayers = via1.layers.filter((z) =>
-              via2.layers.includes(z),
-            )
-            if (commonLayers.length > 0) {
+            const via2Z0 = via2.layers[0]
+            const via2Z1 = via2.layers[1]
+            if (
+              via1Z0 === via2Z0 ||
+              via1Z0 === via2Z1 ||
+              via1Z1 === via2Z0 ||
+              via1Z1 === via2Z1
+            ) {
               const dx = via1.point.x - via2.point.x
               const dy = via1.point.y - via2.point.y
               const dSq = dx * dx + dy * dy

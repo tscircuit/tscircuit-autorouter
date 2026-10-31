@@ -646,6 +646,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            captureSearchDebug: cms.opts.captureSearchDebug ?? false,
           },
         ]
       },
