@@ -428,7 +428,7 @@ function createSourceTraces(
       getSrjDeclaredConnectionReferences(connection),
     )
 
-    // Geometric overlap with a fixed foreign pad must not join its net.
+    // Physical terminals fix the net; unbound routes can attach by geometry.
     const obstaclesContainingEndpoints: Obstacle[] = []
     const hdRoute = hdRoutes.find(
       (r) =>
@@ -455,7 +455,8 @@ function createSourceTraces(
         for (const obstacle of obstacles) {
           if (
             pointToBoxDistance(endpoint, obstacle) <= 0 &&
-            (obstacle.netIsAssignable ||
+            (connectedPortIds.length === 0 ||
+              obstacle.netIsAssignable ||
               obstacle.connectedTo.some((id) => connectionReferences.has(id)))
           ) {
             obstaclesContainingEndpoints.push(obstacle)

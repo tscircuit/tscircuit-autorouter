@@ -754,8 +754,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minTraceToHoleEdgeClearance:
-              cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
@@ -792,8 +790,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minTraceToHoleEdgeClearance:
-              cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes,
             netByConnectionName: getPipeline9NetByConnectionName(
@@ -908,7 +904,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           srjWithPointPairs: cms.srjWithPointPairs!,
           includeBoardClearance: true,
           drcOptions: {
-            traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceClearance:
+              cms.originalSrj.minTraceToPadEdgeClearance ??
+              cms.originalSrj.defaultObstacleMargin ??
+              0.1,
             viaClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
           },
@@ -931,8 +930,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               defaultViaDiameter: cms.viaDiameter,
               layerCount: cms.srj.layerCount,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-              minTraceToHoleEdgeClearance:
-                cms.srj.minTraceToHoleEdgeClearance ?? 0.2,
               minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
               otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
                 convertPreloadedTraceToHdRoutes(
