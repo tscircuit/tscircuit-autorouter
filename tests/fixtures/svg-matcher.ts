@@ -1,20 +1,7 @@
 import { expect, type MatcherResult } from "bun:test"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import looksSame from "looks-same"
-import { Resvg } from "@resvg/resvg-js"
-
-// Convert SVGs to high-resolution PNGs for comparison
-function svgToPngBuffer(svg: string, scale: number = 4): Buffer {
-  const resvg = new Resvg(svg, {
-    fitTo: {
-      mode: "zoom",
-      value: scale,
-    },
-    background: "black",
-  })
-  return resvg.render().asPng()
-}
+import { compareSvgSnapshot } from "./compareSvgSnapshot"
 
 type SvgSnapshotOpts = {
   svgName?: string
@@ -69,21 +56,13 @@ async function toMatchSvgSnapshot(
 
   const existingSnapshot = fs.readFileSync(filePath, "utf-8")
 
-  // Render SVGs to PNG buffers for pixel comparison
-  const receivedPng = svgToPngBuffer(received, scale)
-  const existingPng = svgToPngBuffer(existingSnapshot, scale)
-
-  const result: any = await looksSame(receivedPng, existingPng, {
-    strict: false,
-    tolerance: 5,
-    antialiasingTolerance: 4,
-    ignoreCaret: true,
-    shouldCluster: true,
-    clustersSize: 10,
+  const comparison = await compareSvgSnapshot(received, existingSnapshot, {
+    scale,
+    tolerance: tolerancePercent,
   })
 
   if (updateSnapshot) {
-    if (!forceUpdate && result.equal) {
+    if (!forceUpdate && comparison.equal) {
       return {
         message: () => "SVG snapshot matches",
         pass: true,
@@ -97,74 +76,28 @@ async function toMatchSvgSnapshot(
     }
   }
 
-  if (result.equal) {
+  if (comparison.matches) {
+    if (!comparison.equal) {
+      console.log(
+        `✓ SVG snapshot matches (${comparison.diffPercentage.toFixed(3)}% difference, within ${tolerancePercent * 100}% threshold)`,
+      )
+    }
     return {
       message: () => "SVG snapshot matches",
       pass: true,
     }
   }
 
-  // Calculate diff percentage for cross-platform tolerance
-  if (result.diffBounds) {
-    // Get image dimensions from the PNG buffer
-    const width = existingPng.readUInt32BE(16)
-    const height = existingPng.readUInt32BE(20)
-    const totalPixels = width * height
-
-    const diffArea =
-      (result.diffBounds.right - result.diffBounds.left) *
-      (result.diffBounds.bottom - result.diffBounds.top)
-    const diffPercentage = (diffArea / totalPixels) * 100
-
-    // Allow up to tolerancePercent (default 5%) pixel difference for cross-platform rendering variations
-    const ACCEPTABLE_DIFF_PERCENTAGE =
-      (typeof tolerancePercent === "number" ? tolerancePercent : 0.05) * 100
-
-    if (diffPercentage <= ACCEPTABLE_DIFF_PERCENTAGE) {
-      console.log(
-        `✓ SVG snapshot matches (${diffPercentage.toFixed(3)}% difference, within ${ACCEPTABLE_DIFF_PERCENTAGE}% threshold)`,
-      )
-      return {
-        message: () =>
-          `SVG snapshot matches (${diffPercentage.toFixed(3)}% difference)`,
-        pass: true,
-      }
-    }
-
-    // If difference is too large, create diff image
-    const diffPath = filePath.replace(/\.snap\.svg$/, ".diff.png")
-    const receivedPath = filePath.replace(/\.snap\.svg$/, ".received.svg")
-    fs.writeFileSync(receivedPath, received)
-    await looksSame.createDiff({
-      reference: existingPng,
-      current: receivedPng,
-      diff: diffPath,
-      highlightColor: "#ff00ff",
-    })
-
-    return {
-      message: () =>
-        `SVG snapshot differs by ${diffPercentage.toFixed(3)}% (threshold: ${ACCEPTABLE_DIFF_PERCENTAGE}%). Diff saved at ${diffPath}. Use BUN_UPDATE_SNAPSHOTS=1 to update the snapshot.`,
-      pass: false,
-    }
-  }
-
-  // Fallback if diffBounds isn't available
   const diffPath = filePath.replace(/\.snap\.svg$/, ".diff.png")
   const receivedPath = filePath.replace(/\.snap\.svg$/, ".received.svg")
   fs.writeFileSync(receivedPath, received)
-  await looksSame.createDiff({
-    reference: existingPng,
-    current: receivedPng,
-    diff: diffPath,
-    highlightColor: "#ff00ff",
-  })
-
-  console.log(`📸 SVG snapshot mismatch (no diff bounds available)`)
-  console.log(`   Diff saved: ${diffPath}`)
-
+  if (comparison.diffImage === null) {
+    throw new Error("SVG comparison did not return its difference image")
+  }
+  await comparison.diffImage.save(diffPath)
   return {
-    message: () => `SVG snapshot does not match. Diff saved at ${diffPath}`,
+    message: () =>
+      `SVG snapshot differs by ${comparison.diffPercentage.toFixed(3)}% (threshold: ${tolerancePercent * 100}%). Diff saved at ${diffPath}. Use BUN_UPDATE_SNAPSHOTS=1 to update the snapshot.`,
     pass: false,
   }
 }
