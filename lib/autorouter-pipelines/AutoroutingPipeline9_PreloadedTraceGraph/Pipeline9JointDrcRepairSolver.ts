@@ -810,7 +810,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     if (params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)) {
-      const holeClearance = params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
+      const holeClearance =
+        params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
       params = {
         ...params,
         srj: { ...params.srj, minTraceToHoleEdgeClearance: holeClearance },

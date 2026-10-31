@@ -20,17 +20,19 @@ test("simplification preserves default and explicit non-plated hole clearance", 
       minTraceToHoleEdgeClearance: holeClearance,
       bounds: { minX: -3, maxX: 3, minY: -3, maxY: 3 },
       connections: [],
-      obstacles: [{
-        obstacleId: "mounting-hole",
-        type: "rect",
-        shape: "circle",
-        isNonPlatedHole: true,
-        center: { x: 0, y: 0 },
-        width: 1,
-        height: 1,
-        layers: ["top", "bottom"],
-        connectedTo: [],
-      }],
+      obstacles: [
+        {
+          obstacleId: "mounting-hole",
+          type: "rect",
+          shape: "circle",
+          isNonPlatedHole: true,
+          center: { x: 0, y: 0 },
+          width: 1,
+          height: 1,
+          layers: ["top", "bottom"],
+          connectedTo: [],
+        },
+      ],
     }
     const original = structuredClone(input)
     const route: HighDensityRoute = {
@@ -60,12 +62,14 @@ test("simplification preserves default and explicit non-plated hole clearance", 
     expect(solver.solved).toBe(true)
     const result = solver.simplifiedHdRoutes[0]!
     const gap = Math.min(
-      ...result.route.slice(1).map((point, index): number =>
-        segmentToCircleMinDistance(result.route[index]!, point, {
-          x: 0,
-          y: 0,
-          radius: 0.5,
-        }) - result.traceThickness / 2,
+      ...result.route.slice(1).map(
+        (point, index): number =>
+          segmentToCircleMinDistance(result.route[index]!, point, {
+            x: 0,
+            y: 0,
+            radius: 0.5,
+          }) -
+          result.traceThickness / 2,
       ),
     )
     expect(gap).toBeGreaterThanOrEqual((holeClearance ?? 0.2) - 1e-9)
