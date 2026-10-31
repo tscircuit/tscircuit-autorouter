@@ -1,4 +1,4 @@
-name: Motherboard search policy comparison
+name: Motherboard grid budget comparison
 on:
   workflow_dispatch:
 permissions:
@@ -10,15 +10,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        greedy: [1.5, 2, 2.5, 4]
+        scale: [0.125, 0.0625, 0.375]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 67497a16129f5d4b69d7cfe1ed54a719d5e597b5
+          ref: 0197334e37644348c5e9307be8fc09ed8402c8d5
           path: base
       - uses: actions/checkout@v4
         with:
-          ref: 36959e935a1d8a85006e409ad117086ef3fe69a5
+          ref: 0197334e37644348c5e9307be8fc09ed8402c8d5
           path: candidate
       - uses: oven-sh/setup-bun@v2
         with:
@@ -36,24 +36,20 @@ jobs:
             s=p.read_text().replace('const drc = validationInput ? evaluateRelaxedDrc(validationInput) : null', 'const drc = validationInput ? evaluateRelaxedDrc(validationInput) : null\nif (drc) writeFileSync(resolve(outputDirectory, `${label}.drc.json`), JSON.stringify(drc))')
             p.write_text(s)
           PY
-          cat > candidate/search-weight.ts <<'SCRIPT'
-          import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
-          const setup = HighDensitySolverA01.prototype._setup
-          HighDensitySolverA01.prototype._setup = function () {
-            this.hyperParameters.greedyMultiplier = Number(process.env.SEARCH_WEIGHT)
-            return setup.call(this)
-          }
-          SCRIPT
+          python3 - <<'PY2'
+          from pathlib import Path
+          p=Path('candidate/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts')
+          p.write_text(p.read_text().replace('gridSearchWorkScale: layerCount > 2 ? 0.25 : 1', 'gridSearchWorkScale: layerCount > 2 ? ${{ matrix.scale }} : 1'))
+          PY2
       - name: Baseline and candidate on the same machine
         env:
           ROUTE_OUTPUT_DIR: ${{ github.workspace }}/results
-          SEARCH_WEIGHT: ${{ matrix.greedy }}
         run: |
           mkdir results
           (cd base && ROUTE_LABEL=base bun fixtures/bug-reports/bugreport110-motherboard-power-phase/profile-full-route.ts) > results/base.log 2>&1
-          (cd candidate && ROUTE_LABEL=candidate bun --preload ./search-weight.ts fixtures/bug-reports/bugreport110-motherboard-power-phase/profile-full-route.ts) > results/candidate.log 2>&1
+          (cd candidate && ROUTE_LABEL=candidate bun fixtures/bug-reports/bugreport110-motherboard-power-phase/profile-full-route.ts) > results/candidate.log 2>&1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: search-policy-${{ matrix.greedy }}
+          name: grid-budget-${{ matrix.scale }}
           path: results
