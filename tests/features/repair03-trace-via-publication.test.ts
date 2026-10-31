@@ -62,6 +62,8 @@ test("the installed repair03 preserves repairs without publishing a trace-to-via
   expect(owner.solved).toBe(true)
   expect(owner.failed).toBe(false)
   expect(getTraceViaCopperGap(owner.getOutput())).toBeGreaterThanOrEqual(-1e-9)
-  expect(getDrcSnapshot(input.srj, owner.getOutput()).count).toBeLessThanOrEqual(2)
+  expect(
+    getDrcSnapshot(input.srj, owner.getOutput()).count,
+  ).toBeLessThanOrEqual(2)
   expect(input).toEqual(original)
 })

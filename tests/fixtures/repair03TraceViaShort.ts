@@ -1,4 +1,7 @@
-import type { HighDensityRoute, SimpleRouteJson } from "high-density-repair03/lib"
+import type {
+  HighDensityRoute,
+  SimpleRouteJson,
+} from "high-density-repair03/lib"
 
 type Point = HighDensityRoute["route"][number]
 
