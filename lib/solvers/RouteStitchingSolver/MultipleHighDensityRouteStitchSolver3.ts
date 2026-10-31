@@ -297,12 +297,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: [globalStart, globalEnd],
-          preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+          preferSameLayerTerminalEndpoints:
+            this.preferSameLayerTerminalEndpoints,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
           terminals: [globalStart, globalEnd],
-          preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+          preferSameLayerTerminalEndpoints:
+            this.preferSameLayerTerminalEndpoints,
         })
       } else {
         start = {
