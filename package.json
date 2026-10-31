@@ -102,7 +102,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#4860d0bac56ce12a70ad2a0337c1540f80f78bef",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#a99e159db422ba3ab7b645b153d8575fec5a263c",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -114,7 +114,7 @@
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/28d833001e903ff5ba1342694762ef2a56555cad",
-    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0",
+    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#65968707b5721c3f0d9ad7a783b5862e176c6ece",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
   },
