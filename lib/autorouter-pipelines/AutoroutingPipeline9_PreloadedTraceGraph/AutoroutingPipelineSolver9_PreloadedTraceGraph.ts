@@ -1076,6 +1076,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           }),
           {
             allowNewVias: false,
+            maxExpansionPasses: 1,
             ...configuredOptions,
             onlyConnectionNames,
           },
