@@ -27,7 +27,7 @@ export {
 
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
-    const { toNextSegmentType, ...rest } = point
+    const { toNextSegmentType, toNextSegmentCircuitJsonMetadata, ...rest } = point
     return rest
   }) as RoutePoint[]
 
@@ -38,6 +38,9 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
     reversed[reversedStartIndex] = {
       ...reversed[reversedStartIndex]!,
       toNextSegmentType: segmentType,
+      ...(points[i]?.toNextSegmentCircuitJsonMetadata && {
+        toNextSegmentCircuitJsonMetadata: points[i]!.toNextSegmentCircuitJsonMetadata,
+      }),
     }
   }
 
@@ -450,10 +453,19 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (
       pointsToAdd.length > 0 &&
       distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
-      lastMergedPoint.z === pointsToAdd[0].z
+      lastMergedPoint.z === pointsToAdd[0].z &&
+      // A through-hole transition must retain its exact copper anchor.
+      // A nearby endpoint can lie outside the plated hole.
+      (!pointsToAdd[0].toNextSegmentType ||
+        (lastMergedPoint.x === pointsToAdd[0].x &&
+          lastMergedPoint.y === pointsToAdd[0].y))
     ) {
       if (pointsToAdd[0].toNextSegmentType) {
         lastMergedPoint.toNextSegmentType = pointsToAdd[0].toNextSegmentType
+        if (pointsToAdd[0].toNextSegmentCircuitJsonMetadata) {
+          lastMergedPoint.toNextSegmentCircuitJsonMetadata =
+            pointsToAdd[0].toNextSegmentCircuitJsonMetadata
+        }
       }
       this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
     } else {
