@@ -84,18 +84,21 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
     (error) => error.type === "pcb_via_clearance_error",
   )
   expect(viaErrors).toHaveLength(0)
+  expect(drc.errors).toHaveLength(0)
 
   const vias = drc.circuitJson.filter(
     (element): element is PcbVia => element.type === "pcb_via",
   )
-  const mst10Vias = vias.filter((via) =>
-    via.pcb_trace_id?.includes("source_net_4_mst10_0"),
+  const powerNetVias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst"),
   )
-  const mst15Vias = vias.filter((via) =>
-    via.pcb_trace_id?.includes("source_net_4_mst15_0"),
-  )
-  const closestPair = mst10Vias
-    .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
+  const closestPair = powerNetVias
+    .flatMap((viaA, index) =>
+      powerNetVias
+        .slice(index + 1)
+        .filter((viaB) => viaA.pcb_trace_id !== viaB.pcb_trace_id)
+        .map((viaB) => [viaA, viaB] as const),
+    )
     .sort(
       ([viaA, viaB], [nextViaA, nextViaB]) =>
         Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
