@@ -82,6 +82,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    allowedTerminalPcbPortIds?: ReadonlySet<string>
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -177,12 +178,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     if (expectedPcbPortIds.size > 0) {
       for (const taggedPcbPortId of taggedPcbPortIds) {
-        if (!expectedPcbPortIds.has(taggedPcbPortId)) {
+        if (
+          !expectedPcbPortIds.has(taggedPcbPortId) &&
+          !opts.allowedTerminalPcbPortIds?.has(taggedPcbPortId)
+        ) {
           throw new Error(
             `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}"`,
           )
         }
       }
+    }
+
+    const getDistanceToTerminal = (
+      terminal: StitchTerminal,
+      point: Point3,
+      pcbPortId: string | undefined,
+    ): number => {
+      if (
+        opts.preserveTerminalPcbPortIds && terminal.pcb_port_id &&
+        pcbPortId && terminal.pcb_port_id !== pcbPortId
+      ) {
+        return Infinity
+      }
+      return distance(terminal, point)
     }
 
     let bestDist = Infinity
@@ -193,10 +211,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst = getDistanceToTerminal(opts.start, firstPoint, route.startPcbPortId)
+      const distStartToLast = getDistanceToTerminal(opts.start, lastPoint, route.endPcbPortId)
+      const distEndToFirst = getDistanceToTerminal(opts.end, firstPoint, route.startPcbPortId)
+      const distEndToLast = getDistanceToTerminal(opts.end, lastPoint, route.endPcbPortId)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -239,8 +257,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
+    const distToFirst = getDistanceToTerminal(this.start, firstRouteFirstPoint, firstRoute.startPcbPortId)
+    const distToLast = getDistanceToTerminal(this.start, firstRouteLastPoint, firstRoute.endPcbPortId)
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
@@ -274,7 +292,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         {
           x: this.start.x,
           y: this.start.y,
-          z: closestFirstRoutePoint.z,
+          z: this.start.z,
         },
       ],
       vias: [],

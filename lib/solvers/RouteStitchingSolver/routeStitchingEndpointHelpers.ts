@@ -184,7 +184,10 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
 }) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const sortedTerminals = params.terminals
+    .filter((terminal) => terminal.z === params.islandEndpoint.z)
+    .sort(comparePoints)
+  if (sortedTerminals.length === 0) return params.islandEndpoint
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
@@ -302,29 +305,33 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  const queue = [{ hash: startHash, gaps: 0 }]
+  const gapCountByHash = new Map<string, number>([[startHash, 0]])
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
   >()
 
   while (queue.length > 0) {
-    const currentHash = queue.shift()!
+    const { hash: currentHash, gaps } = queue.shift()!
+    if (gaps !== gapCountByHash.get(currentHash)) continue
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      const nextGaps = gaps + (edge.routeIndex === null ? 1 : 0)
+      if (nextGaps >= (gapCountByHash.get(edge.nextHash) ?? Infinity)) continue
+      gapCountByHash.set(edge.nextHash, nextGaps)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      const next = { hash: edge.nextHash, gaps: nextGaps }
+      if (edge.routeIndex === null) queue.push(next)
+      else queue.unshift(next)
     }
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
+  if (!gapCountByHash.has(endHash)) return canonicalHdRoutes
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash

@@ -23,6 +23,7 @@ export type PreparedTopologyMergingNode = {
 }
 
 export type TopologyMergingMode =
+  | "free"
   | "passthrough"
   | "merged"
   | "target-passthrough"

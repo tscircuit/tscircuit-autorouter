@@ -59,13 +59,16 @@ export function createTopologyMergingOutputNodes({
       return preparedNode
     })
     const sourceNodes = sourcePreparedNodes.map(({ node }) => node)
-    const isComponentTopologyNode = sourcePreparedNodes.some(
+    const isComponentTopologyNode = region.topologyMode !== "free" && sourcePreparedNodes.some(
       ({ groupIndex }) => nodeGroups[groupIndex]!.isComponent,
     )
     const metadata = getOutputNodeMetadata({
       sourceNodes,
       isComponentTopologyNode,
     })
+    if (region.topologyMode === "free") {
+      metadata._isNarrowQfpPadGap = undefined
+    }
     const preservedSourceNode =
       preserveSourceIds && sourcePreparedNodes.length === 1
         ? sourcePreparedNodes[0]!.node

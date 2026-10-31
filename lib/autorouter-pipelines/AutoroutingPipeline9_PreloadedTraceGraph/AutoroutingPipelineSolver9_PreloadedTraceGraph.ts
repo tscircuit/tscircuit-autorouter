@@ -538,6 +538,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             preserveTerminalPcbPortIds: true,
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
+            minPortSpacing: cms.availableSegmentPointSolver!.minPortSpacing,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
