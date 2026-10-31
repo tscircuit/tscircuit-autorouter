@@ -183,8 +183,21 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
+  preferSameLayerTerminalEndpoints?: boolean
 }) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const sameLayerTerminals = params.terminals.filter(
+    (terminal) => terminal.z === params.islandEndpoint.z,
+  )
+  if (
+    params.preferSameLayerTerminalEndpoints &&
+    sameLayerTerminals.length === 0
+  ) {
+    return params.islandEndpoint
+  }
+  const candidates = params.preferSameLayerTerminalEndpoints
+    ? sameLayerTerminals
+    : params.terminals
+  const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
