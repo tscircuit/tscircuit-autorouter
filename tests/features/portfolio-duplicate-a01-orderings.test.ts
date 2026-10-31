@@ -21,9 +21,10 @@ test("adaptive A01 search retains one candidate per initial connection ordering"
   solver.initializeSolvers()
   const first = solver.supervisedSolvers!.find(
     ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A01,
-  )!.solver as unknown as HighDensitySolverA01
+  )!.solver
   // Expansion occurs after earlier candidates have already changed their queues.
-  first.unsolvedConnections.shift()
+  const firstA01 = first as unknown as HighDensitySolverA01
+  firstA01.unsolvedConnections.shift()
   const adaptiveSolver = solver as unknown as { expandAdaptiveSearch(): void }
   adaptiveSolver.expandAdaptiveSearch()
   const candidates = solver.supervisedSolvers!.filter(
