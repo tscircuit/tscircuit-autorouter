@@ -1053,7 +1053,9 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   return {
     type: "pcb_board",
     pcb_board_id: "__autorouting_board__",
-    ...(srj.clearanceRules?.length ? { clearance_rules: structuredClone(srj.clearanceRules) } : {}),
+    ...(srj.clearanceRules?.length
+      ? { clearance_rules: structuredClone(srj.clearanceRules) }
+      : {}),
     thickness: 1.6,
     num_layers: srj.layerCount,
     center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },

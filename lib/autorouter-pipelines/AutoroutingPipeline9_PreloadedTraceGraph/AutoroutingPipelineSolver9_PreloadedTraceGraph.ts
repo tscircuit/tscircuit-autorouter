@@ -1,5 +1,8 @@
 import { checkScopedCopperClearance } from "@tscircuit/checks"
-import { convertToCircuitJson, createPcbBoardElement } from "lib/utils/convertToCircuitJson"
+import {
+  convertToCircuitJson,
+  createPcbBoardElement,
+} from "lib/utils/convertToCircuitJson"
 import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
@@ -1095,9 +1098,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    if (this.originalSrj.clearanceRules?.some((rule) => rule.enabled) &&
-      this.originalSrj.connections.some((connection) => connection.sourceNetIds === undefined)) {
-      throw new Error("Scoped copper clearance requires original net identities on every connection")
+    if (
+      this.originalSrj.clearanceRules?.some((rule) => rule.enabled) &&
+      this.originalSrj.connections.some(
+        (connection) => connection.sourceNetIds === undefined,
+      )
+    ) {
+      throw new Error(
+        "Scoped copper clearance requires original net identities on every connection",
+      )
     }
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -1214,11 +1223,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       if (this.originalSrj.clearanceRules?.some((rule) => rule.enabled)) {
-        if (!this.powerTraceExpansionSolver) throw new Error("Scoped clearance validation requires final expanded traces")
-        const circuitJson = convertToCircuitJson(this.srjWithPointPairs!, [
-          ...this.getPowerTraceExpansionFixedTraces(),
-          ...this.powerTraceExpansionSolver.getOutput(),
-        ], { originalSrj: this.originalSrj, includeOriginalConnections: true })
+        if (!this.powerTraceExpansionSolver)
+          throw new Error(
+            "Scoped clearance validation requires final expanded traces",
+          )
+        const circuitJson = convertToCircuitJson(
+          this.srjWithPointPairs!,
+          [
+            ...this.getPowerTraceExpansionFixedTraces(),
+            ...this.powerTraceExpansionSolver.getOutput(),
+          ],
+          { originalSrj: this.originalSrj, includeOriginalConnections: true },
+        )
         circuitJson.push(createPcbBoardElement(this.originalSrj))
         const errors = checkScopedCopperClearance(circuitJson, {
           connMap: createDrcConnectivityMap(circuitJson),

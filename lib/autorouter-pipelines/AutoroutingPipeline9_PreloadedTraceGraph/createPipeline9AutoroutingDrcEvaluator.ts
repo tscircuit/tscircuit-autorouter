@@ -54,12 +54,13 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     includeOriginalConnections: true,
     connectivityMaps,
   }
-  const board = (includeBoardClearance || inputSrj.clearanceRules?.length)
-    ? createPcbBoardElement({
-        ...inputSrj,
-        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
-      })
-    : undefined
+  const board =
+    includeBoardClearance || inputSrj.clearanceRules?.length
+      ? createPcbBoardElement({
+          ...inputSrj,
+          minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
+        })
+      : undefined
   const staticCircuitJson = convertToCircuitJson(
     srjWithPointPairs,
     [],
@@ -96,8 +97,18 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const errors: DrcError[] = [
       ...checkScopedCopperClearance(circuitJson, { connMap }).map((error) => ({
         ...error,
-        pcb_trace_ids: error.pcb_element_ids.filter((id) => circuitJson.some((element) => element.type === "pcb_trace" && element.pcb_trace_id === id)),
-        pcb_via_ids: error.pcb_element_ids.filter((id) => circuitJson.some((element) => element.type === "pcb_via" && element.pcb_via_id === id)),
+        pcb_trace_ids: error.pcb_element_ids.filter((id) =>
+          circuitJson.some(
+            (element) =>
+              element.type === "pcb_trace" && element.pcb_trace_id === id,
+          ),
+        ),
+        pcb_via_ids: error.pcb_element_ids.filter((id) =>
+          circuitJson.some(
+            (element) =>
+              element.type === "pcb_via" && element.pcb_via_id === id,
+          ),
+        ),
       })),
       ...obstacleErrors.traceErrors,
       ...checkBoardTraceClearance(circuitJson, { board }),

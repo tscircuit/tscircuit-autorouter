@@ -13,14 +13,17 @@ test("Pipeline9 cannot publish final expanded copper that violates a scoped rule
     solver.currentPipelineStepIndex = solver.pipelineDef.length
     const expansionInput = { ...srj, fixedTraces: [], traces }
     solver.powerTraceExpansionSolver = new PowerTraceExpansionSolver(
-      expansionInput, { onlyConnectionNames: [] },
+      expansionInput,
+      { onlyConnectionNames: [] },
     )
     solver.step()
     expect(solver.solved).toBe(layer === "inner1")
     expect(solver.failed).toBe(layer === "top")
     if (layer === "top") {
       expect(solver.error).toContain("EARTH outer")
-      expect(() => solver.getOutputSimpleRouteJson()).toThrow("Cannot get output before solving is complete")
+      expect(() => solver.getOutputSimpleRouteJson()).toThrow(
+        "Cannot get output before solving is complete",
+      )
     }
   }
 })
