@@ -387,13 +387,15 @@ function createSourceTraces(
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
+  const resolvedSourceConnectivityMap =
+    sourceConnectivityMap ??
+    getConnectivityMapFromSimpleRouteJson(
+      sourceSrj === srj ? srj : { ...sourceSrj, connections },
+    )
   const circuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       connections,
-      sourceConnectivityMap ??
-        getConnectivityMapFromSimpleRouteJson(
-          sourceSrj === srj ? srj : { ...sourceSrj, connections },
-        ),
+      resolvedSourceConnectivityMap,
     )
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
     connections,
@@ -411,7 +413,9 @@ function createSourceTraces(
       matchingObstacles: Obstacle[],
     ) =>
       getObstacleConnectivityIds(matchingObstacles).filter(
-        (id) => !connectedPortIdSet.has(id),
+        (id) =>
+          !connectedPortIdSet.has(id) &&
+          resolvedSourceConnectivityMap.areIdsConnected(connection.name, id),
       )
     const connectedPointIds = connection.pointsToConnect
       .map((point) => point.pointId)

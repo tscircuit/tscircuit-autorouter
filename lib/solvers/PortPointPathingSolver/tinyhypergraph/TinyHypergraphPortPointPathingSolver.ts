@@ -303,6 +303,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  minPortSpacing?: number,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -320,6 +321,8 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      minPortSpacing,
+      ENFORCE_VIA_SPACE: minPortSpacing !== undefined,
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -331,10 +334,11 @@ const getTinyHyperGraphPipelineInput = (
             OUTSIDE_IN_ROUTING: false,
           }),
     },
-    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-      effort,
-      minViaPadDiameter,
-    ),
+    sectionSolverOptions: {
+      ...getTinyHyperGraphSectionSolverOptions(effort, minViaPadDiameter),
+      minPortSpacing,
+      ENFORCE_VIA_SPACE: minPortSpacing !== undefined,
+    },
   }
 }
 
@@ -1101,6 +1105,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         useSerializedPortPenalties: false,
         routeSolveOptions: {
           ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          ENFORCE_VIA_SPACE: params.minPortSpacing !== undefined,
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
@@ -1138,6 +1143,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.minPortSpacing,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
