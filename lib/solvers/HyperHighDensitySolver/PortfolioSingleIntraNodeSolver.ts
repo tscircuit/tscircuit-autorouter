@@ -1,7 +1,5 @@
-import {
-  HighDensitySolverA03 as HighDensityA03Solver,
-  HighDensitySolverA01,
-} from "@tscircuit/high-density-a01"
+import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
+import { HighDensitySolverA03 as HighDensityA03Solver } from "@tscircuit/high-density-a03"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
@@ -654,7 +652,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         traceMargin: 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
+        skipDominatedCandidates: true,
         hyperParameters: {
+          greedyMultiplier: 2,
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
