@@ -803,6 +803,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
+    if (params.obstacles.some((obstacle): boolean => obstacle.isNonPlatedHole === true)) {
+      // Repair constraints must use the same default as the hole DRC check.
+      const holeClearance = params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
+      params = {
+        ...params,
+        srj: { ...params.srj, minTraceToHoleEdgeClearance: holeClearance },
+        originalSrj: {
+          ...params.originalSrj,
+          minTraceToHoleEdgeClearance: holeClearance,
+        },
+      }
+    }
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
