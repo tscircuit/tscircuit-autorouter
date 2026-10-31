@@ -455,10 +455,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
+  private readonly initialA01Orderings = new Set<string>()
+
   override initializeSolvers() {
     super.initializeSolvers()
-    for (const { solver } of this.supervisedSolvers ?? []) {
+    for (const { solver, hyperParameters } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
+      if (hyperParameters.HIGH_DENSITY_A01) {
+        this.initialA01Orderings.add(
+          JSON.stringify(
+            (solver as unknown as HighDensitySolverA01).unsolvedConnections,
+          ),
+        )
+      }
     }
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
@@ -467,6 +476,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
     this.initializeCandidateBudget(solver)
+    if (hyperParameters.HIGH_DENSITY_A01) {
+      // The shuffle seed is used only to choose this initial ordering.
+      // Different seeds can produce exactly the same deterministic search.
+      const ordering = JSON.stringify(
+        (solver as unknown as HighDensitySolverA01).unsolvedConnections,
+      )
+      if (this.initialA01Orderings.has(ordering)) return
+      this.initialA01Orderings.add(ordering)
+    }
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,
