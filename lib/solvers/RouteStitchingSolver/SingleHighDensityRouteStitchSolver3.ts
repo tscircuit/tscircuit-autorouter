@@ -27,7 +27,8 @@ export {
 
 const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
-    const { toNextSegmentType, toNextSegmentCircuitJsonMetadata, ...rest } = point
+    const { toNextSegmentType, toNextSegmentCircuitJsonMetadata, ...rest } =
+      point
     return rest
   }) as RoutePoint[]
 
@@ -39,7 +40,8 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
       ...reversed[reversedStartIndex]!,
       toNextSegmentType: segmentType,
       ...(points[i]?.toNextSegmentCircuitJsonMetadata && {
-        toNextSegmentCircuitJsonMetadata: points[i]!.toNextSegmentCircuitJsonMetadata,
+        toNextSegmentCircuitJsonMetadata:
+          points[i]!.toNextSegmentCircuitJsonMetadata,
       }),
     }
   }
