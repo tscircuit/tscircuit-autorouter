@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scale: [0.125, 0.0625, 0.375]
+        scale: [0.5, 0.25, 0.125]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,6 +40,8 @@ jobs:
           from pathlib import Path
           p=Path('candidate/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts')
           p.write_text(p.read_text().replace('gridSearchWorkScale: layerCount > 2 ? 0.25 : 1', 'gridSearchWorkScale: layerCount > 2 ? ${{ matrix.scale }} : 1'))
+          p=Path('candidate/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts')
+          p.write_text(p.read_text().replace('const budgetScale = layerCount > 2 ? this.gridSearchWorkScale : 1', 'const budgetScale = this.gridSearchWorkScale'))
           PY2
       - name: Baseline and candidate on the same machine
         env:
