@@ -1,3 +1,4 @@
+import type { PcbClearanceRule } from "circuit-json"
 export type TraceId = string
 export type NetId = string
 export type BusId = string
@@ -62,6 +63,8 @@ export type Jumper = {
 export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
+  /** Ordered pair/layer copper constraints; preserve through all routing stages. */
+  clearanceRules?: PcbClearanceRule[]
   layerCount: number
   /** Whether autorouters may use vias that do not span the full board stack. */
   allowBlindAndBuriedVias?: boolean
@@ -168,6 +171,8 @@ export interface Obstacle {
 }
 
 export interface SimpleRouteConnection {
+  /** Original electrical net identities used by scoped clearance selectors. */
+  sourceNetIds?: string[]
   name: string
   routingPcbGroupId?: string
   source_trace_id?: string

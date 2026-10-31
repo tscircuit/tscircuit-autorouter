@@ -1,4 +1,5 @@
 import {
+  checkScopedCopperClearance,
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
   checkHoleTraceClearance,
@@ -11,6 +12,7 @@ import {
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbClearanceError,
   PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
@@ -31,6 +33,7 @@ type ViaPadDrcError = PcbPadPadClearanceError & {
 }
 
 type DrcError =
+  | PcbClearanceError
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
@@ -122,6 +125,7 @@ export const getDrcErrors = (
   ]
 
   const errors: DrcError[] = [
+    ...checkScopedCopperClearance(circuitJson, { connMap }),
     ...traceErrors,
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false

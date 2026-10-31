@@ -9,6 +9,9 @@ const pointHash = (point: { x: number; y: number }) =>
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
   for (const connection of srj.connections) {
+    if (connection.sourceNetIds?.length) {
+      connMap.addConnections([[connection.name, ...connection.sourceNetIds]])
+    }
     for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
       connMap.addConnections([[connection.name, rootConnectionName]])
     }
