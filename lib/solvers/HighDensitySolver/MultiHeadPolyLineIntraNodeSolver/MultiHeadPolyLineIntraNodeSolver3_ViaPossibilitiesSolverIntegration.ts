@@ -1,18 +1,28 @@
-import { Point3, distance } from "@tscircuit/math-utils"
-import { ViaPossibilitiesSolver2 } from "lib/solvers/ViaPossibilitiesSolver/ViaPossibilitiesSolver2"
+import { distance } from "@tscircuit/math-utils"
+import {
+  type PrecomputedViaPossibilitiesProblem,
+  ViaPossibilitiesSolver2,
+} from "lib/solvers/ViaPossibilitiesSolver/ViaPossibilitiesSolver2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 import { MHPoint, PolyLine, Candidate } from "./types1"
 import { PolyLine2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "./MultiHeadPolyLineIntraNodeSolver2_Optimized"
 
-const hashPolyLines = (polyLines: PolyLine2[]) => {
-  return polyLines
-    .flatMap(
-      (pl) =>
-        `${pl.connectionName}-${pl.mPoints.map((mp) => `${mp.x.toFixed(2)},${mp.y.toFixed(2)},${mp.z1},${mp.z2}`)}`,
-    )
-    .sort()
-    .join("|")
+const hashPolyLines = (polyLines: PolyLine2[]): string => {
+  const labels = new Array<string>(polyLines.length)
+  for (let i = 0; i < polyLines.length; i++) {
+    const pl = polyLines[i]!
+    const mPoints = pl.mPoints
+    let pointsStr = ""
+    for (let j = 0; j < mPoints.length; j++) {
+      const mp = mPoints[j]!
+      if (j > 0) pointsStr += ","
+      pointsStr += `${mp.x.toFixed(2)},${mp.y.toFixed(2)},${mp.z1},${mp.z2}`
+    }
+    labels[i] = `${pl.connectionName}-${pointsStr}`
+  }
+  labels.sort()
+  return labels.join("|")
 }
 
 function factorial(n: number) {
@@ -27,6 +37,10 @@ function factorial(n: number) {
 }
 
 export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNodeSolver2 {
+  private precomputedViaProblem?: PrecomputedViaPossibilitiesProblem
+  private cachedNodeWithPortPointsRef?: typeof this.nodeWithPortPoints
+  private lastCreatedPolylineHash?: string
+
   override getSolverName(): string {
     return "MultiHeadPolyLineIntraNodeSolver3"
   }
@@ -38,10 +52,25 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     this.MAX_ITERATIONS = 1000
   }
 
+  private getPrecomputedViaProblem(): PrecomputedViaPossibilitiesProblem {
+    if (
+      !this.precomputedViaProblem ||
+      this.cachedNodeWithPortPointsRef !== this.nodeWithPortPoints
+    ) {
+      this.precomputedViaProblem =
+        ViaPossibilitiesSolver2.createPrecomputedProblem(
+          this.nodeWithPortPoints,
+        )
+      this.cachedNodeWithPortPointsRef = this.nodeWithPortPoints
+    }
+    return this.precomputedViaProblem
+  }
+
   createInitialCandidateFromSeed(
     shuffleSeed: number,
     retainedPolylineHashes?: ReadonlySet<string>,
   ): Candidate | null {
+    this.lastCreatedPolylineHash = undefined
     // 1. Run ViaPossibilitiesSolver2 to get a valid path layout
     const viaSolver = new ViaPossibilitiesSolver2({
       nodeWithPortPoints: this.nodeWithPortPoints,
@@ -51,6 +80,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         SHUFFLE_SEED: shuffleSeed,
       },
       viaDiameter: this.viaDiameter,
+      precomputedProblem: this.getPrecomputedViaProblem(),
     })
 
     viaSolver.solve()
@@ -76,9 +106,9 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         continue // Should not happen with a valid solution
       }
 
-      const startPoint = pathPoints[0]
-      const endPoint = pathPoints[pathPoints.length - 1]
-      const middlePointsRaw = pathPoints.slice(1, -1)
+      const startPoint = pathPoints[0]!
+      const endPoint = pathPoints[pathPoints.length - 1]!
+      const middleEndIndex = pathPoints.length - 1
 
       const mPoints: MHPoint[] = []
       let currentViaCount = 0
@@ -87,13 +117,13 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       // The ViaPossibilitiesSolver2 path structure is [start, p1_z1, p1_z2, p2_z2, ..., end]
       // We need to map this to MHPoint structure { x, y, z1, z2 }
       let lastZ = startPoint.z
-      for (let i = 0; i < middlePointsRaw.length; i++) {
-        const currentRawPoint = middlePointsRaw[i]
+      for (let i = 1; i < middleEndIndex; i++) {
+        const currentRawPoint = pathPoints[i]!
         const nextRawPoint =
-          i + 1 < middlePointsRaw.length ? middlePointsRaw[i + 1] : endPoint // Look ahead to determine z2
+          i + 1 < middleEndIndex ? pathPoints[i + 1]! : endPoint // Look ahead to determine z2
 
         const isViaStart =
-          i + 1 < middlePointsRaw.length &&
+          i + 1 < middleEndIndex &&
           currentRawPoint.x === nextRawPoint.x &&
           currentRawPoint.y === nextRawPoint.y &&
           currentRawPoint.z !== nextRawPoint.z
@@ -126,22 +156,21 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       while (currentSegments < targetSegmentCount) {
         let longestSegmentLength = -1
         let longestSegmentIndex = -1 // Index of the point *before* the longest segment
-        let p1: MHPoint | null = null
-        let p2: MHPoint | null = null
-        const fullPathPoints = [
-          {
-            ...startPoint,
-            z1: startPoint.z,
-            z2: startPoint.z,
-            connectionName,
-          },
-          ...mPoints,
-          { ...endPoint, z1: endPoint.z, z2: endPoint.z, connectionName },
-        ]
+        let bestX1 = 0
+        let bestY1 = 0
+        let bestZ2 = startPoint.z
+        let bestX2 = 0
+        let bestY2 = 0
+        const totalPoints = mPoints.length + 2
 
-        for (let k = 0; k < fullPathPoints.length - 1; k++) {
-          const segP1 = fullPathPoints[k]
-          const segP2 = fullPathPoints[k + 1]
+        for (let k = 0; k < totalPoints - 1; k++) {
+          const segP1 =
+            k === 0
+              ? startPoint
+              : k - 1 < mPoints.length
+                ? mPoints[k - 1]!
+                : endPoint
+          const segP2 = k + 1 === totalPoints - 1 ? endPoint : mPoints[k]!
 
           // Skip via segments (where only Z changes)
           if (segP1.x === segP2.x && segP1.y === segP2.y) {
@@ -152,12 +181,15 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
           if (len > longestSegmentLength) {
             longestSegmentLength = len
             longestSegmentIndex = k
-            p1 = segP1
-            p2 = segP2
+            bestX1 = segP1.x
+            bestY1 = segP1.y
+            bestZ2 = k === 0 ? startPoint.z : mPoints[k - 1]!.z2
+            bestX2 = segP2.x
+            bestY2 = segP2.y
           }
         }
 
-        if (longestSegmentIndex === -1 || !p1 || !p2) {
+        if (longestSegmentIndex === -1) {
           // Should not happen if there are non-via segments and targetSegmentCount > currentSegments
           console.warn(
             `Could not find longest segment for ${connectionName} while trying to reach ${targetSegmentCount} segments.`,
@@ -166,11 +198,9 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         }
 
         // Calculate midpoint and determine segment layer
-        const midX = (p1.x + p2.x) / 2
-        const midY = (p1.y + p2.y) / 2
-        // The segment exists on the layer *after* p1's potential via, which is p1.z2
-        // This should also be the same as p2.z1 (layer *before* p2's potential via)
-        const segmentZ = p1.z2
+        const midX = (bestX1 + bestX2) / 2
+        const midY = (bestY1 + bestY2) / 2
+        const segmentZ = bestZ2
 
         const newMPoint: MHPoint = {
           x: midX,
@@ -179,10 +209,6 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
           z2: segmentZ,
         }
 
-        // Insert the new midpoint into the mPoints array
-        // longestSegmentIndex is the index of the point *before* the segment,
-        // so the new point goes at index `longestSegmentIndex` in mPoints
-        // (which corresponds to `longestSegmentIndex + 1` in fullPathPoints)
         mPoints.splice(longestSegmentIndex, 0, newMPoint)
         currentSegments++
       }
@@ -214,7 +240,11 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
 
     // Setup retains only the first candidate for each existing geometry hash.
     // Check completed geometry before computing scores for discarded seeds.
-    if (retainedPolylineHashes?.has(hashPolyLines(polyLines))) return null
+    if (retainedPolylineHashes) {
+      const preScoreHash = hashPolyLines(polyLines)
+      if (retainedPolylineHashes.has(preScoreHash)) return null
+      this.lastCreatedPolylineHash = preScoreHash
+    }
 
     const minGaps = this.computeMinGapBtwPolyLines(polyLines)
     const h = this.computeH({ minGaps, forces: [] }) // Initial forces are zero
@@ -251,7 +281,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         ? this.createInitialCandidateFromSeed(i, candidatePolylineHashes)
         : this.createInitialCandidateFromSeed(i)
       if (!newCandidate) continue
-      const newCandidatePolylineHash = hashPolyLines(newCandidate.polyLines)
+      const newCandidatePolylineHash =
+        canRejectBeforeScoring && this.lastCreatedPolylineHash !== undefined
+          ? this.lastCreatedPolylineHash
+          : hashPolyLines(newCandidate.polyLines)
       if (candidatePolylineHashes.has(newCandidatePolylineHash)) continue
       candidatePolylineHashes.add(newCandidatePolylineHash)
       this.candidates.push(newCandidate)
