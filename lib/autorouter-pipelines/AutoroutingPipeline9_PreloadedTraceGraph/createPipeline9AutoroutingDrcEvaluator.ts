@@ -1,3 +1,4 @@
+import { checkScopedCopperClearance } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   type CircuitJsonConnectivityMaps,
@@ -53,12 +54,13 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     includeOriginalConnections: true,
     connectivityMaps,
   }
-  const board = includeBoardClearance
-    ? createPcbBoardElement({
-        ...inputSrj,
-        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
-      })
-    : undefined
+  const board =
+    includeBoardClearance || inputSrj.clearanceRules?.length
+      ? createPcbBoardElement({
+          ...inputSrj,
+          minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
+        })
+      : undefined
   const staticCircuitJson = convertToCircuitJson(
     srjWithPointPairs,
     [],
@@ -92,7 +94,22 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const connMap = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
-    const errors = [
+    const errors: DrcError[] = [
+      ...checkScopedCopperClearance(circuitJson, { connMap }).map((error) => ({
+        ...error,
+        pcb_trace_ids: error.pcb_element_ids.filter((id) =>
+          circuitJson.some(
+            (element) =>
+              element.type === "pcb_trace" && element.pcb_trace_id === id,
+          ),
+        ),
+        pcb_via_ids: error.pcb_element_ids.filter((id) =>
+          circuitJson.some(
+            (element) =>
+              element.type === "pcb_via" && element.pcb_via_id === id,
+          ),
+        ),
+      })),
       ...obstacleErrors.traceErrors,
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??

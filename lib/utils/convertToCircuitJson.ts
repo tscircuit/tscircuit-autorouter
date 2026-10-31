@@ -474,6 +474,7 @@ function createSourceTraces(
       sourceTrace.connected_source_net_ids = [
         ...new Set([
           ...(sourceTrace.connected_source_net_ids ?? []),
+          ...(connection.sourceNetIds ?? []),
           ...connectedPointIds,
           ...getNonEndpointObstacleConnectivityIds(
             obstaclesContainingEndpoints,
@@ -488,7 +489,7 @@ function createSourceTraces(
         connected_source_port_ids: connectedPortIds,
         connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
           obstaclesContainingEndpoints,
-        ).concat(connectedPointIds),
+        ).concat(connectedPointIds, connection.sourceNetIds ?? []),
       })
     }
   })
@@ -1052,6 +1053,9 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   return {
     type: "pcb_board",
     pcb_board_id: "__autorouting_board__",
+    ...(srj.clearanceRules?.length
+      ? { clearance_rules: structuredClone(srj.clearanceRules) }
+      : {}),
     thickness: 1.6,
     num_layers: srj.layerCount,
     center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },

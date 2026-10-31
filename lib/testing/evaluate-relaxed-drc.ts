@@ -56,7 +56,7 @@ export const evaluateRelaxedDrc = ({
     connectivityMaps,
   })
 
-  if (includeBoardClearance) {
+  if (includeBoardClearance || inputSrj.clearanceRules?.length) {
     circuitJson.push(
       createPcbBoardElement({
         ...inputSrj,

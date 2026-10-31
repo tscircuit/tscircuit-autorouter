@@ -141,6 +141,19 @@ export function mergeConnections(
         .map((connection) => connection.name)
         .join("__"),
       pointsToConnect: Array.from(uniqueConnectionPoints.values()),
+      ...(simpleRouteConnectionGroup.some(
+        (connection) => connection.sourceNetIds !== undefined,
+      )
+        ? {
+            sourceNetIds: [
+              ...new Set(
+                simpleRouteConnectionGroup.flatMap(
+                  (connection) => connection.sourceNetIds ?? [],
+                ),
+              ),
+            ],
+          }
+        : {}),
       isOffBoard: isOffBoard,
       // Only include if there are any mergedExternallyConnectedPointIds
       externallyConnectedPointIds:
