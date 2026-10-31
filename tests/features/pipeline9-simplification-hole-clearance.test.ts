@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { segmentToCircleMinDistance } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getPipeline9SimplificationObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9SimplificationObstacles"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -44,7 +43,8 @@ test("simplification preserves default and explicit non-plated hole clearance", 
     }
     const solver = new TraceSimplificationSolver({
       hdRoutes: [route],
-      obstacles: getPipeline9SimplificationObstacles(input),
+      obstacles: input.obstacles,
+      minTraceToHoleEdgeClearance: holeClearance ?? 0.2,
       connMap: new ConnectivityMap({}),
       colorMap: {},
       defaultViaDiameter: 0.3,

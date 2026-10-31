@@ -1,4 +1,5 @@
 import {
+  getTraceSimplificationObstacles,
   TraceSimplificationSolver,
   UselessViaRemovalSolver,
 } from "@tscircuit/trace-simplification-solver"
@@ -57,7 +58,11 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     const solver = new UselessViaRemovalSolver({
       unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
       otherHdRoutes: config.otherHdRoutes,
-      obstacles: [...config.obstacles],
+      obstacles: getTraceSimplificationObstacles({
+        obstacles: config.obstacles,
+        minTraceToPadEdgeClearance: config.minTraceToPadEdgeClearance,
+        minTraceToHoleEdgeClearance: config.minTraceToHoleEdgeClearance,
+      }),
       colorMap: config.colorMap,
       layerCount: config.layerCount,
       connMap: config.connMap,
