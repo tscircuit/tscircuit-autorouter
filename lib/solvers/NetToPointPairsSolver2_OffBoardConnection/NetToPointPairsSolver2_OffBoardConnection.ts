@@ -5,7 +5,7 @@ import {
 } from "lib/types"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
-import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import { NetToPointPairsSolver, type NetToPointPairsSolverOptions } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
 
@@ -37,6 +37,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    options?: NetToPointPairsSolverOptions,
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -76,6 +77,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       { ...ogSrj, connections: onBoardConnections },
       colorMap,
       initiallyConnectedMap,
+      options,
     )
 
     this.connectionPointDsu = connectionPointDsu
@@ -121,6 +123,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
+      if (this.layerAwareMstStats) this.layerAwareMstStats.completed = true
       this.solved = true
       return
     }
@@ -135,6 +138,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     if (currentConnection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = currentConnection.pointsToConnect
+      this.recordLayerAwareMstCoverage(currentConnection, startPoint && endPoint ? [{ from: startPoint, to: endPoint }] : [])
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
@@ -155,9 +159,10 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+      { extraEdges: zeroWeightEdges, pointKey: this.mstPointKey },
     )
 
+    this.recordLayerAwareMstCoverage(currentConnection, minimumSpanningTreeEdges)
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
       if (arePointsConnected(mstEdge.from, mstEdge.to)) {

@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import { SimpleRouteConnection, SimpleRouteJson, ConnectionPoint, PointKey } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
@@ -8,6 +8,19 @@ import { getInitiallyConnectedStateForConnection } from "./get-initially-connect
 import { mergeConnections } from "./mergeConnections"
 
 type ConnectionName = SimpleRouteConnection["name"]
+export type NetToPointPairsSolverOptions = { pointKey?: (point: ConnectionPoint) => PointKey }
+export type LayerAwareMstStats = {
+  completed: boolean
+  connectionsProcessed: number
+  inputPointOccurrences: number
+  inputDistinctLayerKeys: number
+  mstCoveredLayerKeys: number
+  missingLayerKeys: number
+  coincidentCrossLayerGroups: number
+  zeroDistanceLayerEdges: number
+  mstSelectedEdges: number
+}
+
 
 /**
  * Converts a net containing many points to connect into an array of point pair
@@ -30,11 +43,14 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  declare protected mstPointKey?: (point: ConnectionPoint) => PointKey
+  declare readonly layerAwareMstStats?: LayerAwareMstStats
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    options?: NetToPointPairsSolverOptions,
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -70,10 +86,38 @@ export class NetToPointPairsSolver extends BaseSolver {
     )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
+    if (options?.pointKey !== undefined) {
+      this.mstPointKey = options.pointKey
+      this.layerAwareMstStats = { completed: false, connectionsProcessed: 0, inputPointOccurrences: 0, inputDistinctLayerKeys: 0, mstCoveredLayerKeys: 0, missingLayerKeys: 0, coincidentCrossLayerGroups: 0, zeroDistanceLayerEdges: 0, mstSelectedEdges: 0 }
+    }
+  }
+
+  protected recordLayerAwareMstCoverage(connection: SimpleRouteConnection, edges: { from: ConnectionPoint; to: ConnectionPoint }[]): void {
+    const key = this.mstPointKey
+    const stats = this.layerAwareMstStats
+    if (!key || !stats) return
+    const required = new Set(connection.pointsToConnect.map(key))
+    const covered = new Set(edges.flatMap((edge) => [key(edge.from), key(edge.to)]))
+    if (required.size === 1) for (const value of required) covered.add(value)
+    const locations = new Map<string, Set<string>>()
+    for (const point of connection.pointsToConnect) {
+      const xy = JSON.stringify([point.x, point.y])
+      const values = locations.get(xy) ?? new Set<string>()
+      values.add(key(point)); locations.set(xy, values)
+    }
+    stats.connectionsProcessed++
+    stats.inputPointOccurrences += connection.pointsToConnect.length
+    stats.inputDistinctLayerKeys += required.size
+    stats.mstCoveredLayerKeys += [...required].filter((value) => covered.has(value)).length
+    stats.missingLayerKeys += [...required].filter((value) => !covered.has(value)).length
+    stats.coincidentCrossLayerGroups += [...locations.values()].filter((values) => values.size > 1).length
+    stats.zeroDistanceLayerEdges += edges.filter((edge) => edge.from.x === edge.to.x && edge.from.y === edge.to.y && key(edge.from) !== key(edge.to)).length
+    stats.mstSelectedEdges += edges.length
   }
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
+      if (this.layerAwareMstStats) this.layerAwareMstStats.completed = true
       this.solved = true
       return
     }
@@ -87,6 +131,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
+      this.recordLayerAwareMstCoverage(connection, startPoint && endPoint ? [{ from: startPoint, to: endPoint }] : [])
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
@@ -101,8 +146,10 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
+      pointKey: this.mstPointKey,
     })
 
+    this.recordLayerAwareMstCoverage(connection, edges)
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
