@@ -424,7 +424,11 @@ function createSourceTraces(
         connection.name,
       ) ?? getCircuitJsonSourceTraceId(connection)
 
-    // Test for obstacles we're inside of
+    const connectionReferences = new Set<string>(
+      getSrjDeclaredConnectionReferences(connection),
+    )
+
+    // Geometric overlap with a fixed foreign pad must not join its net.
     const obstaclesContainingEndpoints: Obstacle[] = []
     const hdRoute = hdRoutes.find(
       (r) =>
@@ -449,7 +453,11 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+          if (
+            pointToBoxDistance(endpoint, obstacle) <= 0 &&
+            (obstacle.netIsAssignable ||
+              obstacle.connectedTo.some((id) => connectionReferences.has(id)))
+          ) {
             obstaclesContainingEndpoints.push(obstacle)
           }
         }
