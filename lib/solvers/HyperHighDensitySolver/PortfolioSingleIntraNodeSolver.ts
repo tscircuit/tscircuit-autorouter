@@ -181,7 +181,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       Math.floor(node.width / 0.1) * Math.floor(node.height / 0.1) * layerCount
     // Avoid the external solvers' two-million-iteration floor on small grids,
     // while retaining room for interacting connections on crowded nodes.
-    const budgetScale = layerCount > 2 ? this.gridSearchWorkScale : 1
+    const budgetScale = this.gridSearchWorkScale
     return Math.round(
       budgetScale *
         Math.max(

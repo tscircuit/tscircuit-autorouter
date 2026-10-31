@@ -162,6 +162,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacles: params.obstacles,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
+      gridSearchWorkScale: 0.125,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
