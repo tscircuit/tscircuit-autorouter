@@ -5,6 +5,7 @@ import { createTopologyMergingTestNode } from "tests/fixtures/topology-merging-t
 test("keeps clear space connected across component and global layer boundaries", () => {
   const solver = new TopologyMergingSolver({
     layerCount: 4,
+    allowBlindAndBuriedVias: true,
     nodeGroups: [
       {
         groupId: "global",

@@ -64,10 +64,12 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
   layerCount,
+  allowBlindAndBuriedVias = false,
 }: {
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): {
   layerTopologies: TopologyMergingLayerTopology[]
   overruledTargetSourceKeys: string[]
@@ -77,8 +79,8 @@ export function getLayerTopologiesForCoveredNodes({
     TopologyMergingLayerTopology
   >()
   const overruledTargetSourceKeys = new Set<string>()
-  let previousGlobalFreeLayer = -2
-  let globalFreeRunStart = 0
+  let previousFreeLayer = -2
+  let freeRunStart = 0
   for (let z = 0; z < layerCount; z++) {
     const nodesOnLayer = coveringNodes
       .filter(({ node }) => node.availableZ.includes(z))
@@ -118,14 +120,17 @@ export function getLayerTopologiesForCoveredNodes({
         }
       }
     }
-    const isGlobalFreeSpace =
-      nodesOnLayer.some(({ groupIndex }) => !nodeGroups[groupIndex]!.isComponent) &&
+    const isFreeSpace =
+      allowBlindAndBuriedVias &&
       nodesOnLayer.every(
-        ({ node }) => !node._containsObstacle && !node._containsTarget && !node._isVirtualOffboard,
+        ({ node }) =>
+          !node._containsObstacle &&
+          !node._containsTarget &&
+          !node._isVirtualOffboard,
       )
-    if (isGlobalFreeSpace) {
-      if (z !== previousGlobalFreeLayer + 1) globalFreeRunStart = z
-      previousGlobalFreeLayer = z
+    if (isFreeSpace) {
+      if (z !== previousFreeLayer + 1) freeRunStart = z
+      previousFreeLayer = z
     }
     const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
       topologyMode,
@@ -135,10 +140,10 @@ export function getLayerTopologiesForCoveredNodes({
     })
 
     for (const sourceKeys of sourceKeyGroups) {
-      // Clear global space has no source-node boundary. Join its adjacent
+      // Clear space has no source-node boundary. Join its adjacent
       // layers and cells while retaining every source for provenance.
-      const topologySignature = isGlobalFreeSpace
-        ? `global-free:${globalFreeRunStart}`
+      const topologySignature = isFreeSpace
+        ? `free:${freeRunStart}`
         : JSON.stringify({ mode: topologyMode, sourceKeys })
       const existingTopology = layerTopologyBySignature.get(topologySignature)
       if (existingTopology) {
@@ -152,7 +157,7 @@ export function getLayerTopologiesForCoveredNodes({
         layerTopologyBySignature.set(topologySignature, {
           availableZ: [z],
           sourceKeys,
-          topologyMode: isGlobalFreeSpace ? "free" : topologyMode,
+          topologyMode: isFreeSpace ? "free" : topologyMode,
           topologySignature,
         })
       }

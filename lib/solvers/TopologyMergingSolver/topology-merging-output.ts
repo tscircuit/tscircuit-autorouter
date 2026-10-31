@@ -59,9 +59,11 @@ export function createTopologyMergingOutputNodes({
       return preparedNode
     })
     const sourceNodes = sourcePreparedNodes.map(({ node }) => node)
-    const isComponentTopologyNode = region.topologyMode !== "free" && sourcePreparedNodes.some(
-      ({ groupIndex }) => nodeGroups[groupIndex]!.isComponent,
-    )
+    const isComponentTopologyNode =
+      region.topologyMode !== "free" &&
+      sourcePreparedNodes.some(
+        ({ groupIndex }) => nodeGroups[groupIndex]!.isComponent,
+      )
     const metadata = getOutputNodeMetadata({
       sourceNodes,
       isComponentTopologyNode,

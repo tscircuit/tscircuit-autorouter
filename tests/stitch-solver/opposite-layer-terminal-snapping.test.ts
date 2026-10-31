@@ -6,25 +6,31 @@ test("stitches nearly coincident pads on opposite layers to distinct PCB termina
     layerCount: 4,
     preserveTerminalPcbPortIds: true,
     preferSameLayerTerminalEndpoints: true,
-    connections: [{
-      name: "power",
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "bottom", pcb_port_id: "bottom-pad" },
-        { x: 0.0004, y: 0, layer: "top", pcb_port_id: "top-pad" },
-      ],
-    }],
-    hdRoutes: [{
-      connectionName: "power",
-      traceThickness: 0.15,
-      viaDiameter: 0.2,
-      route: [
-        { x: 0, y: 0, z: 3 },
-        { x: 1, y: 0, z: 3 },
-        { x: 1, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ],
-      vias: [{ x: 1, y: 0 }],
-    }],
+    connections: [
+      {
+        name: "power",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "bottom", pcb_port_id: "bottom-pad" },
+          { x: 0.0004, y: 0, layer: "top", pcb_port_id: "top-pad" },
+        ],
+      },
+    ],
+    hdRoutes: [
+      {
+        connectionName: "power",
+        startPcbPortId: "bottom-pad",
+        endPcbPortId: "top-pad",
+        traceThickness: 0.15,
+        viaDiameter: 0.2,
+        route: [
+          { x: 0, y: 0, z: 3 },
+          { x: 1, y: 0, z: 3 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+        vias: [{ x: 1, y: 0 }],
+      },
+    ],
   })
   solver.solve()
 

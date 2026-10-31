@@ -1,5 +1,6 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import {
   comparePoints,
   compareRoutes,
@@ -183,11 +184,16 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
+  preferSameLayerTerminalEndpoints?: boolean
 }) => {
-  const sortedTerminals = params.terminals
-    .filter((terminal) => terminal.z === params.islandEndpoint.z)
-    .sort(comparePoints)
-  if (sortedTerminals.length === 0) return params.islandEndpoint
+  const sameLayerTerminals = params.terminals.filter(
+    (terminal) => terminal.z === params.islandEndpoint.z,
+  )
+  const candidates =
+    params.preferSameLayerTerminalEndpoints && sameLayerTerminals.length > 0
+      ? sameLayerTerminals
+      : params.terminals
+  const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
@@ -220,6 +226,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
+  isStitchSegmentClear?: IsStitchSegmentClear
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -266,6 +273,9 @@ export const selectRoutesAlongEndpointPath = (params: {
   const sortedEndpointClusters = [
     ...params.endpointIndex.getClusters(params.connectionName),
   ].sort((a, b) => comparePoints(a.point, b.point))
+  const hasTerminalIds = canonicalHdRoutes.some(
+    (route) => route.startPcbPortId || route.endPcbPortId,
+  )
   for (let i = 0; i < sortedEndpointClusters.length; i++) {
     const endpointA = sortedEndpointClusters[i]!
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
@@ -273,6 +283,17 @@ export const selectRoutesAlongEndpointPath = (params: {
       if (endpointA.point.z !== endpointB.point.z) continue
       if (
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
+      )
+        continue
+      if (
+        hasTerminalIds &&
+        params.isStitchSegmentClear &&
+        !params.isStitchSegmentClear({
+          connectionName: params.connectionName,
+          start: endpointA.point,
+          end: endpointB.point,
+          traceThickness: canonicalHdRoutes[0]!.traceThickness,
+        })
       )
         continue
 
@@ -305,33 +326,29 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [{ hash: startHash, gaps: 0 }]
-  const gapCountByHash = new Map<string, number>([[startHash, 0]])
+  const queue = [startHash]
+  const visitedHashes = new Set<string>([startHash])
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
   >()
 
   while (queue.length > 0) {
-    const { hash: currentHash, gaps } = queue.shift()!
-    if (gaps !== gapCountByHash.get(currentHash)) continue
+    const currentHash = queue.shift()!
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
-      const nextGaps = gaps + (edge.routeIndex === null ? 1 : 0)
-      if (nextGaps >= (gapCountByHash.get(edge.nextHash) ?? Infinity)) continue
-      gapCountByHash.set(edge.nextHash, nextGaps)
+      if (visitedHashes.has(edge.nextHash)) continue
+      visitedHashes.add(edge.nextHash)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      const next = { hash: edge.nextHash, gaps: nextGaps }
-      if (edge.routeIndex === null) queue.push(next)
-      else queue.unshift(next)
+      queue.push(edge.nextHash)
     }
   }
 
-  if (!gapCountByHash.has(endHash)) return canonicalHdRoutes
+  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash
