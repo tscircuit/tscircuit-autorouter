@@ -13,7 +13,15 @@ const outputDirectory: string = resolve(
 mkdirSync(outputDirectory, { recursive: true })
 const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
   loadMotherboardPowerPhase(),
-  { effort: 1, cacheProvider: null },
+  {
+    effort: 1,
+    cacheProvider: null,
+    ...(process.env.POWER_EXPANSION_PASSES !== undefined && {
+      powerTraceExpansion: {
+        maxExpansionPasses: Number(process.env.POWER_EXPANSION_PASSES),
+      },
+    }),
+  },
 )
 // Optional original implementation for an otherwise identical pipeline.
 // Extract it from the reproduction revision as described in performance.md.
