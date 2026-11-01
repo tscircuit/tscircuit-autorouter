@@ -13,6 +13,7 @@ export interface TopologyMergingNodeGroup {
 export interface TopologyMergingSolverParams {
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }
 
 export type PreparedTopologyMergingNode = {
@@ -23,6 +24,7 @@ export type PreparedTopologyMergingNode = {
 }
 
 export type TopologyMergingMode =
+  | "free"
   | "passthrough"
   | "merged"
   | "target-passthrough"
