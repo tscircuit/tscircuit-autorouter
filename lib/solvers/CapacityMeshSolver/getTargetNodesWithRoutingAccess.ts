@@ -28,9 +28,11 @@ export function getTargetNodesWithRoutingAccess({
   const pending: CapacityMeshNode[] = []
   for (const node of nodes) {
     if (!node._containsTarget || !node._targetConnectionName) continue
-    const hasRoutingEdge = neighbors.get(node.capacityMeshNodeId)!.some(
-      (neighbor) => !neighbor._containsObstacle && !neighbor._containsTarget,
-    )
+    const hasRoutingEdge = neighbors
+      .get(node.capacityMeshNodeId)!
+      .some(
+        (neighbor) => !neighbor._containsObstacle && !neighbor._containsTarget,
+      )
     if (!hasRoutingEdge) continue
     reachable.add(node.capacityMeshNodeId)
     pending.push(node)
