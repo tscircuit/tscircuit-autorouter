@@ -838,6 +838,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
+      params.originalSrj.defaultObstacleMargin ??
       RELAXED_DRC_OPTIONS.traceClearance
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared

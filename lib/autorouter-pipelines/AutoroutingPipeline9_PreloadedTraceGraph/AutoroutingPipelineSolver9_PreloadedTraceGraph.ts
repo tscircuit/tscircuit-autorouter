@@ -904,7 +904,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           srjWithPointPairs: cms.srjWithPointPairs!,
           includeBoardClearance: true,
           drcOptions: {
-            traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            traceClearance:
+              cms.originalSrj.minTraceToPadEdgeClearance ??
+              cms.originalSrj.defaultObstacleMargin ??
+              0.1,
             viaClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
           },
