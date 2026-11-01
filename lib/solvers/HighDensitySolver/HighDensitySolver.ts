@@ -65,6 +65,7 @@ export class HighDensitySolver extends BaseSolver {
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
+  implicitEndpointConnectionNames?: readonly string[]
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
@@ -112,6 +113,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals = false,
     boardGeometry,
     preserveTerminalPcbPortIds,
+    implicitEndpointConnectionNames,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
@@ -138,6 +140,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
+    implicitEndpointConnectionNames?: readonly string[]
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
@@ -173,6 +176,7 @@ export class HighDensitySolver extends BaseSolver {
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
+    this.implicitEndpointConnectionNames = implicitEndpointConnectionNames
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
@@ -421,6 +425,7 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      implicitEndpointConnectionNames: this.implicitEndpointConnectionNames,
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
