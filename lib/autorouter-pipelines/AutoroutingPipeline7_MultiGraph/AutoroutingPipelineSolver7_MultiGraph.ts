@@ -358,6 +358,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             nodeGroups: [
               {
                 groupId: "global",

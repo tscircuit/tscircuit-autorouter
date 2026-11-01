@@ -64,10 +64,12 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
   layerCount,
+  allowBlindAndBuriedVias = false,
 }: {
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): {
   layerTopologies: TopologyMergingLayerTopology[]
   overruledTargetSourceKeys: string[]
@@ -77,6 +79,8 @@ export function getLayerTopologiesForCoveredNodes({
     TopologyMergingLayerTopology
   >()
   const overruledTargetSourceKeys = new Set<string>()
+  let previousFreeLayer = -2
+  let freeRunStart = 0
   for (let z = 0; z < layerCount; z++) {
     const nodesOnLayer = coveringNodes
       .filter(({ node }) => node.availableZ.includes(z))
@@ -116,6 +120,18 @@ export function getLayerTopologiesForCoveredNodes({
         }
       }
     }
+    const isFreeSpace =
+      allowBlindAndBuriedVias &&
+      nodesOnLayer.every(
+        ({ node }) =>
+          !node._containsObstacle &&
+          !node._containsTarget &&
+          !node._isVirtualOffboard,
+      )
+    if (isFreeSpace) {
+      if (z !== previousFreeLayer + 1) freeRunStart = z
+      previousFreeLayer = z
+    }
     const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
       topologyMode,
       nodesOnLayer,
@@ -124,18 +140,24 @@ export function getLayerTopologiesForCoveredNodes({
     })
 
     for (const sourceKeys of sourceKeyGroups) {
-      const topologySignature = JSON.stringify({
-        mode: topologyMode,
-        sourceKeys,
-      })
+      // Clear space has no source-node boundary. Join its adjacent
+      // layers and cells while retaining every source for provenance.
+      const topologySignature = isFreeSpace
+        ? `free:${freeRunStart}`
+        : JSON.stringify({ mode: topologyMode, sourceKeys })
       const existingTopology = layerTopologyBySignature.get(topologySignature)
       if (existingTopology) {
-        existingTopology.availableZ.push(z)
+        if (existingTopology.availableZ.at(-1) !== z) {
+          existingTopology.availableZ.push(z)
+        }
+        existingTopology.sourceKeys = [
+          ...new Set([...existingTopology.sourceKeys, ...sourceKeys]),
+        ].sort()
       } else {
         layerTopologyBySignature.set(topologySignature, {
           availableZ: [z],
           sourceKeys,
-          topologyMode,
+          topologyMode: isFreeSpace ? "free" : topologyMode,
           topologySignature,
         })
       }
@@ -282,6 +304,9 @@ function mergeRegionRun(
       continue
     }
 
+    previousRegion.sourceKeys = [
+      ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+    ].sort()
     if (direction === "horizontal") {
       previousRegion.bounds.maxX = region.bounds.maxX
     } else {
