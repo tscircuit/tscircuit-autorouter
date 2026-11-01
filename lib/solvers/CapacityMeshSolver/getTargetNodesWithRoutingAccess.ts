@@ -3,6 +3,11 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
 } from "../../types/capacity-mesh-types"
+import { areNodesBordering } from "../../utils/areNodesBordering"
+import {
+  getBoundsIntersection,
+  getCapacityMeshNodeBounds,
+} from "../TopologyPlanningSolver/capacity-node-geometry"
 
 /** A partition of one conductive target can reach free space through another
  * partition of that same target. Use existing shared-layer mesh edges only;
@@ -20,6 +25,14 @@ export function getTargetNodesWithRoutingAccess({
   for (const edge of edges) {
     const first = nodeById.get(edge.nodeIds[0])!
     const second = nodeById.get(edge.nodeIds[1])!
+    if (first._containsTarget && second._containsTarget) {
+      // Point contacts in the mesh cannot provide a physical exit between
+      // target pieces. Check access without changing the shared routing mesh.
+      const firstBounds = getCapacityMeshNodeBounds(first)
+      const secondBounds = getCapacityMeshNodeBounds(second)
+      const overlap = getBoundsIntersection(firstBounds, secondBounds)
+      if (!areNodesBordering(first, second) && !overlap) continue
+    }
     neighbors.get(first.capacityMeshNodeId)!.push(second)
     neighbors.get(second.capacityMeshNodeId)!.push(first)
   }

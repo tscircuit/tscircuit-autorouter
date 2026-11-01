@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { getTargetNodesWithRoutingAccess } from "lib/solvers/CapacityMeshSolver/getTargetNodesWithRoutingAccess"
 import type { CapacityMeshNode } from "lib/types"
 
 test("a corner contact cannot connect a target to its neighbor's routing exit", (): void => {
@@ -36,13 +37,12 @@ test("a corner contact cannot connect a target to its neighbor's routing exit", 
       const solver = new Solver(nodes)
       expect(() => solver.solve()).toThrow("no bordering routing edge")
       expect(solver.failed).toBe(true)
-      expect(
-        solver.edges.some(
-          (edge) =>
-            edge.nodeIds.includes("region_0") &&
-            edge.nodeIds.includes("region_1"),
-        ),
-      ).toBe(false)
+      const accessibleTargets = getTargetNodesWithRoutingAccess({
+        nodes,
+        edges: solver.edges,
+      })
+      expect(accessibleTargets.has("region_0")).toBe(false)
+      expect(accessibleTargets.has("region_1")).toBe(true)
     }
   }
 })
