@@ -84,7 +84,8 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      if (targetNodesWithRoutingAccess.has(targetNode.capacityMeshNodeId)) continue
+      if (targetNodesWithRoutingAccess.has(targetNode.capacityMeshNodeId))
+        continue
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,
