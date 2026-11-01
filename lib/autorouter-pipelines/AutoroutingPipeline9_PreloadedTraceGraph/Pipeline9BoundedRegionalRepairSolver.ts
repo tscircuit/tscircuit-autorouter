@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -9,8 +10,8 @@ import {
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -26,6 +27,7 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
+import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
@@ -295,9 +297,38 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.finish()
       return
     }
+    // Keep distant copper fixed while projecting a local clearance error.
+    // Nearby routes remain movable together even when the reference error
+    // identifies a via without identifying every route that owns it.
+    const movableRegions: {
+      center: { x: number; y: number }
+      radius: number
+    }[] = []
+    const centeredErrors = Array.isArray(reference)
+      ? reference
+      : (reference.errorsWithCenters ?? reference.errors)
+    for (const error of centeredErrors) {
+      const center = error.center ?? error.pcb_center
+      if (
+        center &&
+        typeof center === "object" &&
+        "x" in center &&
+        typeof center.x === "number" &&
+        Number.isFinite(center.x) &&
+        "y" in center &&
+        typeof center.y === "number" &&
+        Number.isFinite(center.y)
+      ) {
+        movableRegions.push({
+          center: { x: center.x, y: center.y },
+          radius: context.regionSizes[0]! / 2,
+        })
+      }
+    }
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: referenced.currentRoutes,
+      movableRegions,
       drcEvaluator: (input): DrcResult => {
         this.result.referenceValidationCount++
         return this.params.drcEvaluator(input)
@@ -375,7 +406,15 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const centeredErrors = Array.isArray(context.reference)
       ? context.reference
       : (context.reference.errorsWithCenters ?? context.reference.errors)
-    const centers = centeredErrors
+    // Match the portfolio's repair order. Via-pad centers can shift a trace's
+    // repair region into the fixed collar before its crossing is resolved.
+    // Candidate acceptance and publication still validate every error type.
+    const nonViaPadErrors = centeredErrors.filter(
+      (error) => !isViaPadDrcError(error),
+    )
+    const targetErrors =
+      nonViaPadErrors.length > 0 ? nonViaPadErrors : centeredErrors
+    const centers = targetErrors
       .map((error) => {
         // Crop around the physical pad when its display marker is far away.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
@@ -465,6 +504,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
+    // Center selection prioritizes trace crossings, but every violating route
+    // inside that region must enter negotiation, including via-pad contacts.
     const dirtyTraceIds = new Set(
       context.currentErrors.flatMap(getDrcErrorTraceIds),
     )
@@ -486,9 +527,34 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : allowance.maxCandidateAttempts),
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
+    const localRoutes: HighDensityRoute[] = region.routes
+    // Share approach locks with merge validation, not only the path search.
+    // Interpolated collar and junction points already have their own locks.
+    for (const [routeIndex, route] of localRoutes.entries()) {
+      const sourceRouteIndex =
+        region.routeMappings[routeIndex]!.sourceRouteIndex
+      const sourceRoute = context.currentRoutes[sourceRouteIndex]!
+      const approaches = sourceRoute.route.filter(
+        (point) => point.terminalApproach !== undefined,
+      )
+      if (approaches.length === 0) continue
+      for (const [pointIndex, point] of route.route.entries()) {
+        if (
+          approaches.some(
+            (original) =>
+              original.terminalApproach === point.terminalApproach &&
+              original.x === point.x &&
+              original.y === point.y &&
+              original.z === point.z,
+          )
+        ) {
+          region.lockedPointIndices[routeIndex]![pointIndex] = true
+        }
+      }
+    }
     const solver = new NegotiateTraceClearanceSolver({
       srj: region.srj,
-      routes: region.routes,
+      routes: localRoutes,
       bounds: region.mutableBounds,
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
@@ -498,13 +564,18 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
+      // Keep the coarse grid for the first repair region, including after an
+      // improvement. Expanding an exhausted region also refines its grid so
+      // narrow detours can be found within the same remaining work budget.
       pathGridSizeScale:
-        context.currentErrors.length > 10
-          ? this.budget.pathGridSizeScale
-          : undefined,
+        this.budget.pathGridSizeScale === undefined
+          ? undefined
+          : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
       allowLayerChanges: true,
-      traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
-      viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
+      traceClearance: RELAXED_DRC_OPTIONS.traceClearance,
+      viaClearance:
+        context.srj.minPadEdgeToPadEdgeClearance ??
+        RELAXED_DRC_OPTIONS.viaClearance,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
     })
@@ -558,11 +629,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "splice-region" }>,
   ): void {
     const { context, region } = state.negotiation
-    const negotiatedRoutes = mergeRepairRegion({
-      routes: context.currentRoutes,
-      region,
-      repairedRoutes: state.repair.routes,
-    })
+    // Preserve repair04's fragment metadata and source validation during merge;
+    // only afterward discard approach tags copied onto interpolated cut points.
+    const negotiatedRoutes = removeCopiedPipeline9TerminalApproaches(
+      context.currentRoutes,
+      mergeRepairRegion({
+        routes: context.currentRoutes,
+        region,
+        repairedRoutes: state.repair.routes,
+      }),
+    )
     if (
       negotiatedRoutes.every(
         (route, index): boolean => route === context.currentRoutes[index],

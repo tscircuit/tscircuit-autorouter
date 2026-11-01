@@ -6,6 +6,7 @@ import {
 } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   type ConvertPipeline7HdRoutesOptions,
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
@@ -35,9 +36,10 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
-  // DRC interactions cannot span farther than the widest copper feature plus
-  // clearance. Indexing at that physical scale avoids board-size-dependent
-  // cells that become increasingly coarse on large layouts.
+  const viaToPadClearance = getViaToPadClearance(conversionOptions.originalSrj)
+  // Size spatial cells near the widest copper feature and trace/via gaps,
+  // avoiding board-size-dependent cells that grow coarse on large layouts.
+  // The engine expands indexed obstacles by the configured pad clearance.
   const spatialCellSize =
     Math.max(
       getViaDimensions(conversionOptions.originalSrj).padDiameter,
@@ -48,6 +50,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     includeTraceViaOwnerMetadata: true,
     traceClearance: AUTOROUTING_TRACE_CLEARANCE,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
+    viaToPadClearance,
     spatialCellSize,
   })
   const convertCandidateRoutes =

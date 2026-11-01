@@ -39,12 +39,22 @@ test("bounded regional repair clears coupled contacts within its shared work bud
     syntheticConnectionNames: new Set(),
     drcEvaluator,
   })
+  const initialDrc = drcEvaluator({ traces: [], routes })
+  const initialErrors = Array.isArray(initialDrc)
+    ? initialDrc
+    : initialDrc.errors
+  expect(
+    initialErrors.filter(
+      (error) => error.type === "pcb_pad_pad_clearance_error",
+    ),
+  ).toHaveLength(2)
   while (!solver.solved && !solver.failed) solver.step()
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   const result = solver.getResult()
-  expect(result.initialDrcIssueCount).toBe(4)
+  // The reference evaluator now includes the two existing via-pad violations.
+  expect(result.initialDrcIssueCount).toBe(6)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeGreaterThan(0)

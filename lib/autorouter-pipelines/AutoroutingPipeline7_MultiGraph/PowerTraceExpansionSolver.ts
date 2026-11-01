@@ -6,6 +6,7 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
@@ -17,7 +18,10 @@ export class PowerTraceExpansionSolver extends BaseSolver {
   ) {
     super()
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
-      inputSrj as unknown as PowerTraceExpanderInput,
+      {
+        ...inputSrj,
+        minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
+      } as unknown as PowerTraceExpanderInput,
       options,
     )
     if (options.onlyConnectionNames?.length === 0) {

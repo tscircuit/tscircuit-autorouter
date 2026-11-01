@@ -155,7 +155,7 @@ export const parsePrBenchmarkCommand = (body) => {
       ? ["--concurrency", "8"]
       : []
   const isNetworkedPipeline9 = usesNetworkedPipeline9(parsedArgs)
-  let datasetName = isNetworkedPipeline9 ? "srj18" : "dataset01"
+  let datasetName = isNetworkedPipeline9 || isBenchmark ? "srj18" : "dataset01"
   let profileSolvers = false
   let sameMachineCompare = false
 
@@ -187,6 +187,16 @@ export const parsePrBenchmarkCommand = (body) => {
       if (parsedArgs[index + 1]) datasetName = parsedArgs[index + 1]
     }
     benchmarkArgs.push(arg)
+  }
+
+  // Plain /benchmark defaults to dataset18; benchmark.sh itself defaults to
+  // dataset01, so the dataset has to be passed explicitly.
+  if (
+    isBenchmark &&
+    !isNetworkedPipeline9 &&
+    !parsedArgs.includes("--dataset")
+  ) {
+    benchmarkArgs.push("--dataset", datasetName)
   }
 
   if (parsedArgs.includes("--threads") && profileSolvers) {

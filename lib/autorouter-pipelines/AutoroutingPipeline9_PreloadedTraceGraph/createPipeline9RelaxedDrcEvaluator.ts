@@ -1,6 +1,6 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { ConvertPipeline7HdRoutesOptions } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
@@ -19,6 +19,10 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
+  const evaluateAutoroutingDrc = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: options.originalSrj,
+    srjWithPointPairs: options.srjWithPointPairs,
+  })
   const evaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
@@ -30,15 +34,13 @@ export const createPipeline9RelaxedDrcEvaluator = (
       hdRoutes: evaluatedRoutes,
     })
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
-    const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
-      inputSrj: options.originalSrj,
-      srjWithPointPairs: options.srjWithPointPairs,
-      routedTraces: preparePipeline9DrcRoutedTraces({
+    const { errors, errorsWithCenters, circuitJson } = evaluateAutoroutingDrc(
+      preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],
         mutatedPreloadedTraces: options.mutatedPreloadedTraces,
         newTraces,
       }),
-    })
+    )
 
     return {
       errors: normalizePipeline9DrcErrorsForRepair({

@@ -32,6 +32,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   viaToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
+  captureSearchDebug?: boolean
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -149,6 +150,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       repairCandidateRejectionCount: 0,
     }
     this.highDensitySolver = new HighDensitySolver({
+      captureSearchDebug: params.captureSearchDebug,
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
       connMap: params.connMap,

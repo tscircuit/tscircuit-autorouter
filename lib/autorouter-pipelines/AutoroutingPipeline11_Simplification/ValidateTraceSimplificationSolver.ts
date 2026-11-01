@@ -6,6 +6,7 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import type { PreparedPipeline11Simplification } from "./PrepareTraceSimplificationSolver"
 
 export type ValidateTraceSimplificationSolverInput = {
@@ -43,6 +44,7 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
         connMap: preparedInput.connMap,
         traceClearance: preparedInput.srj.minTraceToPadEdgeClearance ?? 0.1,
         viaClearance: 0.1,
+        viaToPadClearance: getViaToPadClearance(preparedInput.originalSrj),
       },
     )
     this.MAX_ITERATIONS = 3

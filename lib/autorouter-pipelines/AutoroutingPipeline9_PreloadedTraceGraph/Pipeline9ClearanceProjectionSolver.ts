@@ -1,3 +1,4 @@
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
@@ -5,7 +6,6 @@ import {
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -15,6 +15,9 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
+
+// Finite relaxation sweeps can stop just below the requested via copper gap.
+const VIA_COPPER_PROJECTION_MARGIN = 1e-5
 
 export type Pipeline9ClearanceProjectionParams = {
   originalSrj: SimpleRouteJson
@@ -28,6 +31,9 @@ export type Pipeline9ClearanceProjectionParams = {
   subdivideSegments?: boolean
   /** Keep the same small clearance margin when validating a final coupled pass. */
   usePrecisionMargin?: boolean
+  /** Keep preloaded copper fixed during a local clearance repair. */
+  lockedConnectionNames?: ReadonlySet<string>
+  movableRegions?: { center: { x: number; y: number }; radius: number }[]
 }
 
 type ProjectionContext = {
@@ -93,18 +99,30 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
         lockedPointIndices: canonicalRoutes.map((route) =>
-          route.route.map(() => false),
+          route.route.map(
+            (point) =>
+              point.terminalApproach !== undefined ||
+              params.lockedConnectionNames?.has(route.connectionName) ===
+                true ||
+              (params.movableRegions !== undefined &&
+                !params.movableRegions.some(
+                  ({ center, radius }) =>
+                    Math.hypot(point.x - center.x, point.y - center.y) <=
+                    radius,
+                )),
+          ),
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
           (params.originalSrj.minTraceToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.traceClearance!) +
+            RELAXED_DRC_OPTIONS.traceClearance) +
           (params.allowPartialRepair || params.usePrecisionMargin
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
         viaClearance:
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.viaClearance!) +
+            RELAXED_DRC_OPTIONS.viaClearance) +
+          VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4

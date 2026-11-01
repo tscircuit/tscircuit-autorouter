@@ -2,6 +2,13 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { isViaPadClearanceError } from "./isViaPadClearanceError"
+import {
+  getPipeline9TracePairRepairOutput,
+  preparePipeline9TracePairRepair,
+  type Pipeline9TracePairRepair,
+} from "./preparePipeline9TracePairRepair"
+import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
   createFixedRouteCopperSpatialIndex,
   getPipeline9RegionalB01CandidateOutput,
@@ -27,11 +34,15 @@ import {
   isPipeline9DrcErrorOwnedByPreloadRepair,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
+import { restorePipeline9TerminalApproaches } from "./restorePipeline9TerminalApproaches"
 
 type RegionalB01RepairPhase =
   | "initialize"
   | "begin-pass"
   | "begin-error"
+  | "prepare-pair"
+  | "route-pair"
+  | "validate-pair"
   | "prepare-b01"
   | "route-b01"
   | "validate-b01"
@@ -41,6 +52,8 @@ type RegionalB01RepairPhase =
   | "commit-error"
   | "finish-pass"
   | "refine"
+  | "prepare-via-pad-projection"
+  | "project-via-pad"
   | "prepare-safe-layer"
   | "route-safe-layer"
   | "validate-safe-layer"
@@ -74,9 +87,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private candidateSearchBudgetExhausted = false
   private safeTraceLayerRepairSkippedForBudget = false
   private preloadEligibleDrcIssueCount = 0
+  private pairCandidate?: Pipeline9TracePairRepair
   private b01Candidate?: Pipeline9RegionalB01CandidateProblem
   private regularCandidate?: Pipeline9RegularRegionalCandidateProblem
   private safeTraceLayerSolver?: GlobalDrcForceImproveSolver
+  private viaPadProjectionSolver?: Pipeline9ClearanceProjectionSolver
 
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
@@ -146,7 +161,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
-          error.type === "pcb_via_clearance_error") &&
+          error.type === "pcb_via_clearance_error" ||
+          isViaPadClearanceError(error)) &&
         typeof error.pcb_trace_id === "string",
     )
     this.errorIndex = 0
@@ -176,7 +192,56 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.traceIndex = 0
     this.regionIndex = 0
     this.stopB01SearchForError = false
+    this.phase = isMovableTracePairError(error, this.routeIndexByTraceId)
+      ? "prepare-pair"
+      : "prepare-b01"
+  }
+
+  private preparePairCandidate(): void {
+    if (this.candidateSearchCount >= this.candidateSearchBudget) {
+      this.candidateSearchBudgetExhausted = true
+      this.phase = "commit-error"
+      return
+    }
+    const indexes = this.traceIds.map((id) => this.routeIndexByTraceId.get(id)!)
+    this.pairCandidate = preparePipeline9TracePairRepair({
+      ...this.params,
+      routes: this.currentRoutes,
+      routeIndexes: [indexes[0]!, indexes[1]!],
+    })
+    if (!this.pairCandidate) {
+      this.phase = "prepare-b01"
+      return
+    }
+    this.candidateSearchCount++
+    this.startChildSolver(this.pairCandidate.solver)
+    this.phase = "route-pair"
+  }
+
+  private stepPairCandidate(): void {
+    const candidate = this.pairCandidate
+    if (!candidate) throw new Error("Regional pair repair has no candidate")
+    candidate.solver.step()
+    if (!candidate.solver.solved && !candidate.solver.failed) return
+    this.activeSubSolver = null
+    this.phase = "validate-pair"
+  }
+
+  private validatePairCandidate(): void {
+    const candidate = this.pairCandidate
+    if (!candidate)
+      throw new Error("Regional pair repair has no completed candidate")
+    const routes = getPipeline9TracePairRepairOutput(candidate)
+    this.pairCandidate = undefined
     this.phase = "prepare-b01"
+    if (!routes) return
+    this.attemptedCandidateCount++
+    const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
+    if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+      this.bestRoutes = routes
+      this.bestErrors = errors
+      this.phase = "commit-error"
+    }
   }
 
   private startChildSolver(solver: BaseSolver): void {
@@ -354,14 +419,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private refineAcceptedRoutes(): void {
     if (this.acceptedCandidateCount > 0 && this.currentErrors.length > 0) {
-      const refinedRoutes = applyBroadRepulsionForces(
-        { ...this.params.srj, traces: undefined },
+      const refinedRoutes = restorePipeline9TerminalApproaches(
         this.currentRoutes,
-        this.params.effort,
-        1,
-        this.params.connMap,
+        applyBroadRepulsionForces(
+          { ...this.params.srj, traces: undefined },
+          this.currentRoutes,
+          this.params.effort,
+          1,
+          this.params.connMap,
+        ),
       )
-      if (refinedRoutes !== this.currentRoutes) {
+      if (refinedRoutes && refinedRoutes !== this.currentRoutes) {
         const errors = getPipeline9DrcErrors(
           this.params.drcEvaluator,
           refinedRoutes,
@@ -375,6 +443,64 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         }
       }
     }
+    this.phase = "prepare-via-pad-projection"
+  }
+
+  private prepareViaPadProjection(): void {
+    const movableRegions = this.currentErrors
+      .filter(isViaPadClearanceError)
+      .flatMap((error) => {
+        const center = getRepairCenter(error, this.params.srj)
+        return center
+          ? [{ center, radius: PIPELINE9_REGIONAL_B01_REGION_SIZES[0] / 2 }]
+          : []
+      })
+    if (movableRegions.length === 0) {
+      this.phase = "prepare-safe-layer"
+      return
+    }
+    const routeCount = this.currentRoutes.length
+    // A physical via can belong to multiple same-net route pieces. Project
+    // those pieces together with nearby wires, keeping all preload copper fixed.
+    this.viaPadProjectionSolver = new Pipeline9ClearanceProjectionSolver({
+      originalSrj: this.params.srj,
+      routes: [...this.currentRoutes, ...this.params.fixedObstacleRoutes],
+      lockedConnectionNames: new Set([
+        ...this.params.syntheticConnectionNames,
+        ...this.params.fixedObstacleRoutes.map((route) => route.connectionName),
+      ]),
+      movableRegions,
+      usePrecisionMargin: true,
+      drcEvaluator: ({ hdRoutes }) => {
+        if (!hdRoutes) throw new Error("Via-pad projection requires HD routes")
+        return this.params.drcEvaluator({
+          traces: [],
+          hdRoutes: hdRoutes.slice(0, routeCount),
+        })
+      },
+    })
+    this.startChildSolver(this.viaPadProjectionSolver)
+    this.phase = "project-via-pad"
+  }
+
+  private stepViaPadProjection(): void {
+    const solver = this.viaPadProjectionSolver
+    if (!solver) throw new Error("Regional B01 has no via-pad projection")
+    solver.step()
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + solver.MAX_ITERATIONS - solver.iterations + 16,
+    )
+    if (solver.failed) {
+      throw new Error(`Regional via-pad projection failed: ${solver.error}`)
+    }
+    if (!solver.solved) return
+    this.currentRoutes = solver.getOutput().slice(0, this.currentRoutes.length)
+    this.currentErrors = getPipeline9DrcErrors(
+      this.params.drcEvaluator,
+      this.currentRoutes,
+    )
+    this.activeSubSolver = null
     this.phase = "prepare-safe-layer"
   }
 
@@ -464,6 +590,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         return this.beginPass()
       case "begin-error":
         return this.beginError()
+      case "prepare-pair":
+        return this.preparePairCandidate()
+      case "route-pair":
+        return this.stepPairCandidate()
+      case "validate-pair":
+        return this.validatePairCandidate()
       case "prepare-b01":
         return this.prepareB01Candidate()
       case "route-b01":
@@ -482,6 +614,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         return this.finishPass()
       case "refine":
         return this.refineAcceptedRoutes()
+      case "prepare-via-pad-projection":
+        return this.prepareViaPadProjection()
+      case "project-via-pad":
+        return this.stepViaPadProjection()
       case "prepare-safe-layer":
         return this.prepareSafeLayerRepair()
       case "route-safe-layer":

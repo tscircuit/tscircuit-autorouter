@@ -33,6 +33,13 @@ test("thread budgets cap samples and validate commands", (): void => {
     parsePrBenchmarkCommand("/benchmark --threads 4 --profile-solvers"),
   ).toThrow("--threads")
   const command = parsePrBenchmarkCommand("/benchmark --pipeline 9 --threads 8")
-  expect(command.benchmarkArgs).toEqual(["--pipeline", "9", "--threads", "8"])
+  expect(command.benchmarkArgs).toEqual([
+    "--pipeline",
+    "9",
+    "--threads",
+    "8",
+    "--dataset",
+    "srj18",
+  ])
   expect(command.sameMachineCompare).toBe(true)
 })

@@ -6,27 +6,28 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
 } from "circuit-json"
-import {
-  type ConnectivityMap,
-  getFullConnectivityMapFromCircuitJson,
-} from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import type { GetDrcErrorsOptions } from "lib/types/drc-types"
+import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
+import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
-type PcbViaWithTraceId = CircuitJsonElement & {
-  type: "pcb_via"
-  pcb_via_id: string
-  pcb_trace_id: string
+
+type ViaPadDrcError = PcbPadPadClearanceError & {
+  pcb_via_ids: string[]
+  pcb_trace_id?: string
 }
 
 type DrcError =
@@ -34,13 +35,17 @@ type DrcError =
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | ViaPadDrcError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
 type LocationAwareDrcError = DrcError & { center: Point }
 
-export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
-export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
+export {
+  MIN_VIA_TO_VIA_CLEARANCE,
+  PREFERRED_VIA_TO_VIA_CLEARANCE,
+} from "lib/utils/drcPresets"
+export type { GetDrcErrorsOptions } from "lib/types/drc-types"
 
 export interface GetDrcErrorsResult {
   errors: DrcError[]
@@ -48,34 +53,22 @@ export interface GetDrcErrorsResult {
   locationAwareErrors: LocationAwareDrcError[]
 }
 
-export interface GetDrcErrorsOptions {
-  holeClearance?: number
-  viaClearance?: number
-  traceClearance?: number
-  includeTraceContinuity?: boolean
-  includeTypedTraceClearance?: boolean
-}
-
-const createDrcConnectivityMap = (
-  circuitJson: CircuitJson,
-): ConnectivityMap => {
-  const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-  const viaTraceConnections = circuitJson
-    .filter(
-      (element): element is PcbViaWithTraceId =>
-        element.type === "pcb_via" && typeof element.pcb_trace_id === "string",
-    )
-    .map((via) => [via.pcb_via_id, via.pcb_trace_id])
-
-  connMap.addConnections(viaTraceConnections)
-  return connMap
-}
-
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
+  const vias = circuitJson.filter(
+    (
+      element,
+    ): element is CircuitJsonElement & {
+      type: "pcb_via"
+      pcb_via_id: string
+      x: number
+      y: number
+    } => element.type === "pcb_via",
+  )
+  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
@@ -101,6 +94,22 @@ export const getDrcErrors = (
   const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
     minClearance: options.holeClearance,
   })
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap,
+    minClearance: options.viaToPadClearance,
+  }).map((error): ViaPadDrcError => {
+    const viaIds = error.pcb_pad_ids.filter((id) => viasById.has(id))
+    const via = viasById.get(viaIds[0])
+    // Preserve explicit ownership for evaluators that consume reference errors
+    // directly, as well as the Pipeline9 repair normalizer.
+    return {
+      ...error,
+      pcb_via_ids: viaIds,
+      ...(via && typeof via.pcb_trace_id === "string"
+        ? { pcb_trace_id: via.pcb_trace_id }
+        : {}),
+    }
+  })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
@@ -121,21 +130,9 @@ export const getDrcErrors = (
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,
+    ...viaPadErrors,
     ...viaErrors,
   ]
-
-  const vias = circuitJson.filter(
-    (
-      element,
-    ): element is CircuitJsonElement & {
-      type: "pcb_via"
-      pcb_via_id: string
-      x: number
-      y: number
-    } => element.type === "pcb_via",
-  )
-
-  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
     if (

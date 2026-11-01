@@ -1,0 +1,5 @@
+{"event":"start","bun":"1.4.2","platform":"darwin","arch":"arm64","connections":21,"obstacles":1280,"preloadedTraces":638,"workerCount":2,"effort":1}
+{"elapsedSeconds":5.81,"phase":"edgeSolver","progress":0.28,"iterations":30720,"solved":false,"failed":false,"error":null}
+{"elapsedSeconds":75.816,"phase":"portPointPathingSolver","progress":0.44,"iterations":46457,"solved":false,"failed":false,"error":null}
+{"elapsedSeconds":84.986,"phase":"uniformPortDistributionSolver","progress":0.48,"iterations":1772544,"solved":false,"failed":false,"error":null}
+{"event":"timeout","seconds":120}

@@ -15,7 +15,9 @@ concurrency:
 jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
-    runs-on: ubuntu-latest
+    # Native routing snapshots were recorded on Ubuntu 24.04. Keep the OS
+    # stable instead of changing geometry when ubuntu-latest moves forward.
+    runs-on: ubuntu-24.04
     # The full-board bugreport107 repro takes about sixteen minutes locally.
     # Allow its thirty-minute test budget plus checkout and installation.
     timeout-minutes: 35
@@ -66,7 +68,7 @@ jobs:
           full_board_tests=()
           for test_file in "${test_files[@]}"; do
             case "$test_file" in
-              tests/bugs/bugreport107-board-1726.test.ts)
+              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts)
                 full_board_tests+=("$test_file")
                 ;;
               tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts)
@@ -93,5 +95,6 @@ jobs:
           path: |
             **/*.diff.png
             **/*.received.svg
+            **/*.received.json.gz
             **/*-drc.received.json
             **/*.snap.svg
