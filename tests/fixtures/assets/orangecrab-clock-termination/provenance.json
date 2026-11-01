@@ -1,0 +1,28 @@
+{
+  "board": "OrangeCrab r0.2.1",
+  "sourcePcb": "https://github.com/orangecrab-fpga/orangecrab-hardware/blob/c511d569fe2af39467041f888bc231020f40c6ac/hardware/orangecrab_r0.2.1/OrangeCrab.kicad_pcb",
+  "tsxRepro": "https://github.com/tscircuit/core/blob/606151f0614eefe6a3811169f7854bd7c28065df/tests/fixtures/orangecrab-ddr-clock/board.tsx",
+  "publishedRuntime": {
+    "tscircuit": "0.0.3048",
+    "core": "0.0.2247",
+    "busLanesSolver": "0.0.40",
+    "capacityAutorouter": "0.0.1018"
+  },
+  "phase": "TERMINATION_TAPS, following the freshly routed CLOCK_TRUNKS phase",
+  "inputSha256": "2052a7d8ea89a189d83c9ab8372b0b1405336946ce0d445e7afbadad2239ae3b",
+  "requests": 4,
+  "nativePads": 387,
+  "scope": "Four termination connections with the two completed clock trunks represented as existing-copper obstacles. Other DDR signals remain pending.",
+  "baselineFailure": "A target partition has no direct free-space edge despite a same-connection target component with 22 existing free-space exits.",
+  "coreSnapshot": {
+    "renderer": "circuit-to-svg@0.0.454",
+    "source": "Actual Circuit JSON after both requested TSX/core phases settle",
+    "viewport": {
+      "minX": -7,
+      "minY": -8.5,
+      "maxX": 23,
+      "maxY": 10.5
+    },
+    "regeneration": "Use the linked core TSX fixture and the recorded published runtime. A core render containing all requested clock phases is required; never draw or replay routes."
+  }
+}
