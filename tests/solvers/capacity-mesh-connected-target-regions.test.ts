@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import type { CapacityMeshNode } from "lib/types"
 
-test.failing("a target partition reaches free space through its connected target neighbor", () => {
+test("a target partition reaches free space through its connected target neighbor", () => {
   const nodes: CapacityMeshNode[] = [0, 1, 2].map((x) => ({
     capacityMeshNodeId: `region_${x}`,
     center: { x, y: 0 },

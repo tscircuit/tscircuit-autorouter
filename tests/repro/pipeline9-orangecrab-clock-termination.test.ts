@@ -6,7 +6,7 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
-test.failing("routes OrangeCrab clock termination branches through partitioned existing copper", () => {
+test("routes OrangeCrab clock termination branches through partitioned existing copper", () => {
   const inputSrj: SimpleRouteJson = JSON.parse(
     gunzipSync(
       readFileSync(

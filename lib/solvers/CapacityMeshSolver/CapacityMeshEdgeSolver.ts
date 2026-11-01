@@ -6,6 +6,7 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { getTargetNodesWithRoutingAccess } from "./getTargetNodesWithRoutingAccess"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -58,9 +59,6 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
 
   handleTargetNodes() {
     const targetNodes = this.nodes.filter((node) => node._containsTarget)
-    const nodeById = new Map(
-      this.nodes.map((node) => [node.capacityMeshNodeId, node]),
-    )
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -77,27 +75,16 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
+    const targetNodesWithRoutingAccess = getTargetNodesWithRoutingAccess({
+      nodes: this.nodes,
+      edges: this.edges,
+    })
     for (const targetNode of targetNodes) {
       if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
-        const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
-
-        return (
-          !otherNode._containsObstacle &&
-          !otherNode._containsTarget &&
-          this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
-      if (hasRoutingEdge) continue
+      if (targetNodesWithRoutingAccess.has(targetNode.capacityMeshNodeId)) continue
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,
