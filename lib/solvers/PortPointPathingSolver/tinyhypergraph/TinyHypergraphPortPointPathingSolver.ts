@@ -277,7 +277,7 @@ const getTinyHyperGraphSolveGraphOptions = ({
 }): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   // A fixed budget can expire before large graphs settle congestion.
-  const graphScale = Math.max(1, Math.ceil(portCount / 125_000))
+  const graphScale = Math.max(1, portCount / 125_000)
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
