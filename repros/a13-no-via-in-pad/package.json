@@ -1,0 +1,11 @@
+{
+  "name": "a13-no-via-in-pad-repro",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "tscircuit": "0.0.3052"
+  },
+  "overrides": {
+    "@tscircuit/jscad": "0.0.3"
+  }
+}

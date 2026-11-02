@@ -1,4 +1,4 @@
-const runtimeUrl = import.meta.resolve("tscircuit-for-a13-fixtures")
+const runtimeUrl = import.meta.resolve("tscircuit")
 export const { RootCircuit } = await import(
   import.meta.resolve("@tscircuit/core", runtimeUrl)
 )
