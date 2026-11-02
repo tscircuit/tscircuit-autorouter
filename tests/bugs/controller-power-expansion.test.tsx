@@ -16,7 +16,12 @@ const SOLVER_STEPS_PER_YIELD = 256
 
 test("controller power expansion records uncached stepping and the full board", async (): Promise<void> => {
   // Exact solver input and full-board context from the controller's v0.0.9 JOINT_LV phase.
-  expect(fullBoardSrj.bounds).toEqual({ minX: -24, maxX: 24, minY: -25, maxY: 25 })
+  expect(fullBoardSrj.bounds).toEqual({
+    minX: -24,
+    maxX: 24,
+    minY: -25,
+    maxY: 25,
+  })
   expect(fullBoardSrj.obstacles).toHaveLength(71)
   expect(fullBoardSrj.traces).toHaveLength(5)
   expect(srj.bounds).toEqual({ minX: -24, maxX: 24, minY: -3, maxY: 25 })
@@ -49,8 +54,13 @@ test("controller power expansion records uncached stepping and the full board", 
   expect(routedTraces).toHaveLength(37)
   const physicalViaPadDiameter = fullBoardSrj.minViaPadDiameter
   const physicalViaHoleDiameter = fullBoardSrj.minViaHoleDiameter
-  if (physicalViaPadDiameter === undefined || physicalViaHoleDiameter === undefined) {
-    throw new Error("The captured board must declare its physical via dimensions")
+  if (
+    physicalViaPadDiameter === undefined ||
+    physicalViaHoleDiameter === undefined
+  ) {
+    throw new Error(
+      "The captured board must declare its physical via dimensions",
+    )
   }
   // Match the published adapter's 0.84 mm planning vias to its physical 0.6/0.3 mm vias.
   for (const trace of routedTraces) {
