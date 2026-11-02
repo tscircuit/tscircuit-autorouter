@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
+import { checkViasInPads } from "@tscircuit/checks"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 preserves regional repair for contacts left by a completed exact portfolio", async (): Promise<void> => {
@@ -28,4 +30,12 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     }
   }
   expect(viaCount).toBeLessThanOrEqual(114)
+  const output = solver.getOutputSimpleRouteJson()
+  const circuitJson = convertToCircuitJson(output, output.traces!, {
+    originalSrj: scenario,
+    includeOriginalConnections: true,
+    minTraceWidth: scenario.minTraceWidth,
+    minViaDiameter: scenario.minViaDiameter,
+  })
+  expect(checkViasInPads(circuitJson)).toEqual([])
 })
