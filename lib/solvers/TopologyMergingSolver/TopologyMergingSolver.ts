@@ -201,6 +201,7 @@ export class TopologyMergingSolver extends BaseSolver {
           coveringNodes,
           nodeGroups: this.inputProblem.nodeGroups,
           layerCount: this.inputProblem.layerCount,
+          allowBlindAndBuriedVias: this.inputProblem.allowBlindAndBuriedVias,
         })
       for (const sourceKey of overruledTargetSourceKeys) {
         this.overruledTargetSourceKeys.add(sourceKey)
