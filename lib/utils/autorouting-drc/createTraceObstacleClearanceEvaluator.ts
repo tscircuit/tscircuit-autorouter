@@ -768,27 +768,21 @@ export const createTraceObstacleClearanceEvaluator = (
           ("trace" in item && overlaps.has(`${otherId}_${trace.pcb_trace_id}`))
         )
           continue
-        const clearance =
-          "trace" in item
-            ? {
-                gap:
-                  segmentToSegmentMinDistance(
-                    start,
-                    end,
-                    item.start,
-                    item.end,
-                  ) -
-                  width / 2 -
-                  item.width / 2,
-                center: getTracePairCenter(segment, item),
-              }
-            : getTraceObstacleClearance(start, end, width, item)
-        if (
-          "trace" in item
-            ? clearance.gap > traceClearance - DRC_EPSILON
-            : clearance.gap > 0
-        )
-          continue
+        let gap: number
+        let center: Point
+        if ("trace" in item) {
+          gap =
+            segmentToSegmentMinDistance(start, end, item.start, item.end) -
+            width / 2 -
+            item.width / 2
+          if (gap > traceClearance - DRC_EPSILON) continue
+          center = getTracePairCenter(segment, item)
+        } else {
+          const clearance = getTraceObstacleClearance(start, end, width, item)
+          gap = clearance.gap
+          if (gap > 0) continue
+          center = clearance.center
+        }
         const traceName = getReadableNameForElement(
           circuitJson,
           trace.pcb_trace_id,
@@ -802,9 +796,9 @@ export const createTraceObstacleClearanceEvaluator = (
           type: "pcb_trace_error",
           error_type: "pcb_trace_error",
           message:
-            clearance.gap <= 0
+            gap <= 0
               ? `PCB trace ${traceName} overlaps with ${otherName} (accidental contact)`
-              : `PCB trace ${traceName} is too close to ${otherName} (gap: ${clearance.gap.toFixed(3)}mm)`,
+              : `PCB trace ${traceName} is too close to ${otherName} (gap: ${gap.toFixed(3)}mm)`,
           pcb_trace_id: trace.pcb_trace_id,
           source_trace_id: hole ? (trace.source_trace_id ?? "") : "",
           pcb_trace_error_id: `overlap_${pairId}`,
@@ -823,7 +817,7 @@ export const createTraceObstacleClearanceEvaluator = (
                     ? [item.element.pcb_port_id]
                     : []),
                 ],
-          center: clearance.center,
+          center,
         })
       }
     }
