@@ -1,8 +1,12 @@
 import { expect, spyOn, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { DrcEvaluator } from "high-density-repair03/lib"
+import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
+import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import type { SimpleRouteJson } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("Pipeline9 refuses to publish via-in-pad left after repair and cleanup", (): void => {
+test("regional repair cannot return forbidden vias from its regular candidate path", (): void => {
   const source: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -12,77 +16,106 @@ test("Pipeline9 refuses to publish via-in-pad left after repair and cleanup", ()
     obstacles: [
       {
         type: "rect",
-        center: { x: -2, y: 0 },
+        center: { x: 0, y: 0 },
         width: 0.6,
         height: 0.6,
         layers: ["top"],
-        connectedTo: ["signal", "start"],
-        circuitJsonMetadata: {
-          pcb_smtpad_id: "start_pad",
-          pcb_port_id: "start",
-        },
+        connectedTo: ["signal"],
+        circuitJsonMetadata: { pcb_smtpad_id: "same_net_pad" },
       },
     ],
     connections: [
       {
         name: "signal",
         pointsToConnect: [
-          { x: -2, y: 0, layer: "top", pcb_port_id: "start" },
-          { x: 2, y: 0, layer: "top", pcb_port_id: "end" },
+          { x: -2, y: 0, layer: "top" },
+          { x: 2, y: 0, layer: "top" },
         ],
       },
     ],
   }
-  for (const allowViaInPad of [false, undefined, true] as const) {
-    const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      {
-        ...structuredClone(source),
-        allowViaInPad,
-      },
-      { cacheProvider: null },
+  const routes: HighDensityRoute[] = [
+    {
+      connectionName: "signal",
+      rootConnectionName: "signal",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      vias: [],
+      route: [
+        { x: -2, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ],
+    },
+  ]
+  const errors = [
+    {
+      type: "pcb_trace_error",
+      pcb_trace_id: "signal_0",
+      center: { x: 0, y: 0 },
+    },
+  ]
+  // Electrical scoring omits same-net via-in-pad, so it prefers this candidate.
+  const drcEvaluator: DrcEvaluator = ({
+    hdRoutes,
+  }): ReturnType<DrcEvaluator> => {
+    const hasInjectedVia = hdRoutes?.some((route) =>
+      route.vias.some((via) => via.x === 0 && via.y === 0),
     )
-    pipeline.solveUntilPhase("powerTraceExpansionSolver")
-    pipeline.step()
-    const expansion = pipeline.powerTraceExpansionSolver!
-    expansion.solve()
-    const routes = structuredClone(expansion.getOutput())
-    const trace = routes[0]!
-    const start = trace.route[0]!
-    if (start.route_type !== "wire") throw new Error("Expected a wire start")
-    // Model an unresolved intermediate repair at a same-net terminal pad.
-    trace.route.splice(
-      1,
-      0,
-      {
-        route_type: "via",
-        x: start.x,
-        y: start.y,
-        from_layer: "top",
-        to_layer: "bottom",
-      },
-      {
-        route_type: "via",
-        x: start.x,
-        y: start.y,
-        from_layer: "bottom",
-        to_layer: "top",
-      },
-    )
-    const output = spyOn(expansion, "getOutput").mockReturnValue(routes)
-    try {
-      pipeline.solve()
+    const candidateErrors = hasInjectedVia ? [] : errors
+    return { errors: candidateErrors, errorsWithCenters: candidateErrors }
+  }
+  const getOutput = Pipeline9RegionalFallbackSolver.prototype.getOutput
+  const output = spyOn(
+    Pipeline9RegionalFallbackSolver.prototype,
+    "getOutput",
+  ).mockImplementation(function (
+    this: Pipeline9RegionalFallbackSolver,
+  ): HighDensityRoute[] {
+    return getOutput.call(this).map((route) => ({
+      ...route,
+      vias: [{ x: 0, y: 0 }],
+      route: [
+        route.route[0]!,
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 1 },
+        { x: 0, y: 0, z: 0 },
+        route.route.at(-1)!,
+      ],
+    }))
+  })
+  try {
+    for (const allowViaInPad of [false, undefined, true] as const) {
+      const srj = { ...structuredClone(source), allowViaInPad }
+      const solver = new Pipeline9RegionalB01RepairSolver({
+        srj,
+        routes: structuredClone(routes),
+        fixedObstacleRoutes: [],
+        newConnections: srj.connections,
+        syntheticConnectionNames: new Set(),
+        drcEvaluator,
+        preloadRepairTraceIds: new Set(["signal_0"]),
+        connMap: getConnectivityMapFromSimpleRouteJson(srj),
+        colorMap: {},
+        viaDiameter: 0.3,
+        traceWidth: 0.1,
+        obstacleMargin: 0.15,
+        effort: 1,
+      })
+      solver.solve()
       if (allowViaInPad === true) {
-        expect(pipeline.solved).toBe(true)
-        expect(pipeline.failed).toBe(false)
+        expect(solver.solved).toBeTrue()
+        expect(solver.failed).toBeFalse()
+        expect(solver.getResult().acceptedCandidateCount).toBe(1)
+        expect(solver.getResult().remainingDrcIssueCount).toBe(0)
       } else {
-        expect(pipeline.solved).toBe(false)
-        expect(pipeline.failed).toBe(true)
-        expect(pipeline.error).toContain("forbidden via-in-pad")
-        expect(() => pipeline.getOutputSimpleRouteJson()).toThrow()
-        expect(() => pipeline.getOutputSimplifiedPcbTraces()).toThrow()
+        expect(solver.solved).toBeFalse()
+        expect(solver.failed).toBeTrue()
+        expect(solver.error).toContain("forbidden via-in-pad")
+        expect(() => solver.getResult()).toThrow("not complete")
       }
-    } finally {
-      output.mockRestore()
     }
+    expect(output).toHaveBeenCalledTimes(3)
+  } finally {
+    output.mockRestore()
   }
 })

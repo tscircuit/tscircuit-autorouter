@@ -403,8 +403,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.attemptedCandidateCount++
       this.fallbackCandidateCount++
       const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-      // Regular candidates may need later repair. The pipeline validates
-      // final via placement after cleanup, before publishing its output.
+      // Regular candidates may need the remaining projection and layer repair.
+      // finishRepair validates their final via placement before returning them.
       if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
         this.bestRoutes = routes
         this.bestErrors = errors
@@ -585,6 +585,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private finishRepair(): void {
+    this.activeSubSolver = null
+    if (this.introducesViaInPad(this.currentRoutes)) {
+      this.error = "Pipeline9 regional repair introduced a forbidden via-in-pad"
+      this.failed = true
+      return
+    }
     this.result = {
       routes: this.currentRoutes,
       attemptedCandidateCount: this.attemptedCandidateCount,
@@ -599,7 +605,6 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       preloadEligibleDrcIssueCount: this.preloadEligibleDrcIssueCount,
       preloadRepairAttempted: this.preloadEligibleDrcIssueCount > 0,
     }
-    this.activeSubSolver = null
     this.stats = { ...this.result, routes: undefined }
     this.phase = "done"
     this.solved = true

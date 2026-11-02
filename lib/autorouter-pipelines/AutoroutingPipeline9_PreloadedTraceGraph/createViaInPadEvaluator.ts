@@ -37,9 +37,15 @@ function getViaElements({
   const { holeDiameter } = getViaDimensions(srj)
   return routes.flatMap((route, routeIndex): PcbVia[] => {
     if ("type" in route) {
-      return convertToCircuitJson({ ...srj, obstacles: [], connections: [] }, [
-        route,
-      ]).filter((element): element is PcbVia => element.type === "pcb_via")
+      // Manufacturing checks need via points, without unrelated copper or nets.
+      const viaTrace = {
+        ...route,
+        route: route.route.filter((point) => point.route_type === "via"),
+      }
+      return convertToCircuitJson(
+        { ...srj, obstacles: [], connections: [], traces: undefined },
+        [viaTrace],
+      ).filter((element): element is PcbVia => element.type === "pcb_via")
     }
     return getRepairViaGeometry(route, srj.layerCount).map(
       (via, viaIndex): PcbVia => {
