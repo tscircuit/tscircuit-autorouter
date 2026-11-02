@@ -1,3 +1,4 @@
+import { applyToPoint, rotateDEG } from "transformation-matrix"
 import { getConnectionPointLayers } from "./connection-point-utils"
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import {
@@ -87,7 +88,10 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
+const isPointInsideObstacle = (
+  point: ConnectionPoint,
+  obstacle: Obstacle,
+): boolean => {
   if (
     getConnectionPointLayers(point).length > 0 &&
     !getConnectionPointLayers(point).some((layer) =>
@@ -97,7 +101,15 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  const localOffset = applyToPoint(
+    rotateDEG(-(obstacle.ccwRotationDegrees ?? 0)),
+    { x: point.x - obstacle.center.x, y: point.y - obstacle.center.y },
+  )
+  const localPoint = {
+    x: obstacle.center.x + localOffset.x,
+    y: obstacle.center.y + localOffset.y,
+  }
+  return isPointInsideBounds(localPoint, getBoundFromCenteredRect(obstacle))
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
