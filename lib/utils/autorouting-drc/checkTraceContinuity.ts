@@ -2,6 +2,7 @@ import {
   circlePolygon,
   copperPolygonsTouch,
   getPlatedHolePolygon,
+  getPourPolygon,
   getTraceSegmentPolygon,
   getPrimaryId,
 } from "@tscircuit/circuit-json-util"
@@ -603,6 +604,15 @@ export const checkTraceContinuity = (
         pad.layers,
         getPlatedHolePolygon(pad),
         true,
+        true,
+      )
+    }
+    for (const element of circuitJson) {
+      if (element.type !== "pcb_copper_pour") continue
+      addConductor(
+        element.pcb_copper_pour_id,
+        [element.layer],
+        getPourPolygon(element),
         true,
       )
     }

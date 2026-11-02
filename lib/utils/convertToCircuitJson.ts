@@ -15,6 +15,7 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getSrjWithImportedPadPortIds } from "./getSrjWithImportedPadPortIds"
+import { createPcbCopperPourElements } from "./createPcbCopperPourElements"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -1123,6 +1124,11 @@ export function convertToCircuitJson(
 
   // Add PCB pads / plated holes represented by SRJ obstacles
   circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+
+  // Keep obstacle pads for clearance checks and retain pours as physical bridges.
+  circuitJson.push(
+    ...createPcbCopperPourElements(originalSrj ?? srjWithPointPairs),
+  )
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(

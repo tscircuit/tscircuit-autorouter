@@ -1,12 +1,15 @@
 import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { expect, test } from "bun:test"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import {
+  GlobalDrcForceImproveSolver,
+  type DrcEvaluator,
+} from "high-density-repair03/lib"
 import { getPipeline9RegionalRepairSearchBudget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("Pipeline9 bounds failed regional candidate searches by route complexity", () => {
+test("Pipeline9 bounds regional searches while retaining bounded layer cleanup", () => {
   const connection = {
     name: "route",
     pointsToConnect: [
@@ -60,7 +63,16 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     obstacleMargin: 0.15,
     effort: 1,
   })
-  repairSolver.solve()
+  let layerCleanup: GlobalDrcForceImproveSolver | undefined
+  while (!repairSolver.solved && !repairSolver.failed) {
+    if (
+      repairSolver.phase === "route-safe-layer" &&
+      repairSolver.activeSubSolver instanceof GlobalDrcForceImproveSolver
+    ) {
+      layerCleanup = repairSolver.activeSubSolver
+    }
+    repairSolver.step()
+  }
   const result = repairSolver.getResult()
 
   expect(getPipeline9RegionalRepairSearchBudget(70)).toBe(100)
@@ -72,7 +84,14 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     candidateSearchCount: 16,
     candidateSearchBudget: 16,
     candidateSearchBudgetExhausted: true,
-    safeTraceLayerRepairSkippedForBudget: true,
+    safeTraceLayerRepairSkippedForBudget: false,
     remainingDrcIssueCount: 3,
   })
+  expect(layerCleanup).toBeDefined()
+  expect(layerCleanup?.configuredMaxIterations).toBe(8)
+  expect(layerCleanup?.solved).toBeTrue()
+  expect(layerCleanup?.iterations).toBeGreaterThan(0)
+  expect(layerCleanup!.iterations).toBeLessThanOrEqual(
+    layerCleanup!.MAX_ITERATIONS,
+  )
 })
