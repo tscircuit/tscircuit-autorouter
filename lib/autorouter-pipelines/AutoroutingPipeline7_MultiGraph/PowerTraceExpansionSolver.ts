@@ -9,8 +9,6 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
-const POWER_TRACE_EXPANSION_STEPS_PER_ITERATION = 64
-
 export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
 
@@ -39,14 +37,7 @@ export class PowerTraceExpansionSolver extends BaseSolver {
 
   override _step(): void {
     const solver = this.powerTraceExpanderSolver
-    for (
-      let stepIndex = 0;
-      stepIndex < POWER_TRACE_EXPANSION_STEPS_PER_ITERATION;
-      stepIndex++
-    ) {
-      solver.step()
-      if (solver.solved || solver.failed) break
-    }
+    solver.step()
     this.progress = solver.progress
     this.stats = solver.stats
 

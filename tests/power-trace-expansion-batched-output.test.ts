@@ -3,7 +3,7 @@ import { PowerTraceExpanderSolver } from "@tscircuit/power-trace-expander"
 import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
-test("batched power expansion preserves the complete child output and iteration count", (): void => {
+test("power expansion delegates batching and preserves the complete child output", (): void => {
   const input: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -46,7 +46,7 @@ test("batched power expansion preserves the complete child output and iteration 
   expect(batched.failed).toBe(false)
   expect(direct.getOutput()).toEqual(batched.getOutput())
   expect(batched.powerTraceExpanderSolver.iterations).toBe(direct.iterations)
-  expect(batched.iterations).toBeLessThan(direct.iterations)
+  expect(batched.iterations).toBe(direct.iterations)
   expect(
     batched
       .getOutput()
