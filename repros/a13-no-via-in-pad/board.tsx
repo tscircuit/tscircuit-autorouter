@@ -10,10 +10,12 @@ import source from "./source-data.json"
 export function NativeA13DdrThermalPadBoard({
   dataBits = [0, 1, 2, 3],
 }: { dataBits?: number[] } = {}): ReactElement {
-  const selectedDataNets = new Map(dataBits.flatMap((bit) => [
-    [`/DDR3 Memory/d${String(bit).padStart(2, "0")}`, `CPU_D${bit}`] as const,
-    [`/DDR3 Memory/ddr-d${bit}`, `DRAM_D${bit}`] as const,
-  ]))
+  const selectedDataNets = new Map(
+    dataBits.flatMap((bit) => [
+      [`/DDR3 Memory/d${String(bit).padStart(2, "0")}`, `CPU_D${bit}`] as const,
+      [`/DDR3 Memory/ddr-d${bit}`, `DRAM_D${bit}`] as const,
+    ]),
+  )
   return (
     <board
       title="Native A13 DDR: exposed pad and thermal vias"

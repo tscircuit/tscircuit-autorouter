@@ -1,7 +1,11 @@
 /** @jsxImportSource react-for-pipeline9-fixtures */
 import { EventEmitter } from "node:events"
 import { mkdirSync, writeFileSync } from "node:fs"
-import { Children, cloneElement, isValidElement } from "react-for-pipeline9-fixtures"
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+} from "react-for-pipeline9-fixtures"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "../../lib/types"
 import { NativeA13DdrThermalPadBoard } from "./board"
@@ -69,7 +73,8 @@ const selectedNames = new Set(
   dataBits.flatMap((bit) => [`CPU_D${bit}`, `DRAM_D${bit}`]),
 )
 const selected = json.filter(
-  (element) => element.type !== "source_trace" || selectedNames.has(element.name),
+  (element) =>
+    element.type !== "source_trace" || selectedNames.has(element.name),
 )
 const physical = [
   ...checks.checkEachPcbTraceNonOverlapping(json, { minClearance: 0.2 }),
@@ -97,7 +102,10 @@ writeFileSync(
   `${directory}/output.srj.json`,
   JSON.stringify(solver.getOutputSimpleRouteJson()),
 )
-writeFileSync(`${directory}/result.json`, JSON.stringify(summary, null, 2) + "\n")
+writeFileSync(
+  `${directory}/result.json`,
+  JSON.stringify(summary, null, 2) + "\n",
+)
 for (const [name, viewport] of [
   ["board", { minX: -14, maxX: 40, minY: -21, maxY: 22 }],
   ["ram-detail", { minX: -8, maxX: 3, minY: -3, maxY: 5 }],
