@@ -7,7 +7,10 @@ import input from "../fixtures/bug-reports/usb-dp-phase-detour/input.json"
 
 test("routes the full MIDI keyboard with preloaded USB traces", async (): Promise<void> => {
   // This electrical routing fixture permits the via-in-pad escapes it requires.
-  const srj: SimpleRouteJson = { ...structuredClone(input), allowViaInPad: true }
+  const srj: SimpleRouteJson = {
+    ...structuredClone(input),
+    allowViaInPad: true,
+  }
   const usbDpConnectionName = "source_net_69"
   const originalUsbDp = srj.traces!.find(
     (trace) => trace.connection_name === usbDpConnectionName,
