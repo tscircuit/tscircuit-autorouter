@@ -14,7 +14,7 @@ const srj = srjJson as SimpleRouteJson
 const fullBoardSrj = fullBoardSrjJson as SimpleRouteJson
 const SOLVER_STEPS_PER_YIELD = 256
 
-test("controller power expansion records uncached stepping and the full board", async (): Promise<void> => {
+test("controller power expansion batches uncached steps and preserves the full board", async (): Promise<void> => {
   // Exact solver input and full-board context from the controller's v0.0.9 JOINT_LV phase.
   expect(fullBoardSrj.bounds).toEqual({ minX: -24, maxX: 24, minY: -25, maxY: 25 })
   expect(fullBoardSrj.obstacles).toHaveLength(71)
@@ -72,6 +72,9 @@ test("controller power expansion records uncached stepping and the full board", 
     throw new Error("Pipeline9 did not reach power expansion with point pairs")
   }
   expect(powerExpansion.powerTraceExpanderSolver.iterations).toBeGreaterThan(0)
+  expect(powerExpansion.iterations).toBeLessThan(
+    powerExpansion.powerTraceExpanderSolver.iterations,
+  )
   console.log({
     routingMs: performance.now() - startedAt,
     powerExpansionMs: solver.timeSpentOnPhase.powerTraceExpansionSolver,
