@@ -31,12 +31,16 @@ test("A13 legal data escapes retain eighteen connected clearance-clean paths", (
   expect(solver.failed).toBe(false)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   expect(routedTraces).toHaveLength(18)
-  const circuitJson = convertToCircuitJson(solver.srjWithPointPairs!, routedTraces, {
-    originalSrj: input,
-    includeOriginalConnections: true,
-    minTraceWidth: input.minTraceWidth,
-    minViaDiameter: input.minViaDiameter,
-  })
+  const circuitJson = convertToCircuitJson(
+    solver.srjWithPointPairs!,
+    routedTraces,
+    {
+      originalSrj: input,
+      includeOriginalConnections: true,
+      minTraceWidth: input.minTraceWidth,
+      minViaDiameter: input.minViaDiameter,
+    },
+  )
   expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
   expect(checkViasInPads(circuitJson)).toEqual([])
   expect(

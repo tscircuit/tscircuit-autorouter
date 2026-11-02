@@ -9,7 +9,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 
-test.failing("A13 regional repair respects no-via-in-pad unless explicitly allowed", (): void => {
+test.failing("A13 repairs require a via-in-pad opt-in", (): void => {
   const fixture: SimpleRouteJson = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -32,12 +32,16 @@ test.failing("A13 regional repair respects no-via-in-pad unless explicitly allow
     expect(solver.failed).toBe(false)
     const traces = solver.getOutputSimplifiedPcbTraces()
     expect(traces).toHaveLength(8)
-    const circuitJson = convertToCircuitJson(solver.srjWithPointPairs!, traces, {
-      originalSrj: input,
-      includeOriginalConnections: true,
-      minTraceWidth: input.minTraceWidth,
-      minViaDiameter: input.minViaDiameter,
-    })
+    const circuitJson = convertToCircuitJson(
+      solver.srjWithPointPairs!,
+      traces,
+      {
+        originalSrj: input,
+        includeOriginalConnections: true,
+        minTraceWidth: input.minTraceWidth,
+        minViaDiameter: input.minViaDiameter,
+      },
+    )
     expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
     const forbiddenVias = checkViasInPads(circuitJson)
     if (allowViaInPad === true) {
