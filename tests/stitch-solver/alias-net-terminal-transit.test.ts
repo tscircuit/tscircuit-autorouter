@@ -18,9 +18,7 @@ test("accepts intermediate terminals on aliased nets", (): void => {
       {
         name: "b-to-d",
         __rootConnectionNames:
-          alias === "additional-root"
-            ? ["root-b", "shared-alias"]
-            : ["root-b"],
+          alias === "additional-root" ? ["root-b", "shared-alias"] : ["root-b"],
         __netConnectionName: alias === "additional-root" ? undefined : "power",
         pointsToConnect: [
           { x: 1, y: 0, layer: "top", pcb_port_id: "b" },
