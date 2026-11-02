@@ -48,8 +48,12 @@ test("batched power expansion preserves the complete child output and iteration 
   expect(batched.powerTraceExpanderSolver.iterations).toBe(direct.iterations)
   expect(batched.iterations).toBeLessThan(direct.iterations)
   expect(
-    batched.getOutput().some((trace) =>
-      trace.route.some((point) => point.route_type === "wire" && point.width > 0.1),
-    ),
+    batched
+      .getOutput()
+      .some((trace) =>
+        trace.route.some(
+          (point) => point.route_type === "wire" && point.width > 0.1,
+        ),
+      ),
   ).toBe(true)
 })
