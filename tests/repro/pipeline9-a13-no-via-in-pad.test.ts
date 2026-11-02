@@ -9,7 +9,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 
-test.failing("A13 repairs require a via-in-pad opt-in", (): void => {
+test("A13 repairs require a via-in-pad opt-in", (): void => {
   const fixture: SimpleRouteJson = JSON.parse(
     gunzipSync(
       new Uint8Array(

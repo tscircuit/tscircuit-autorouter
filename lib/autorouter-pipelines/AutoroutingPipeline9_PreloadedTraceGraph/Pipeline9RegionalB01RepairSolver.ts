@@ -1,7 +1,9 @@
+import { createNewViaPadViolationEvaluator } from "@tscircuit/repair04"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import {
   getPipeline9TracePairRepairOutput,
@@ -61,6 +63,9 @@ type RegionalB01RepairPhase =
 
 /** Routes one regional candidate at a time through explicit child solver stages. */
 export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
+  private readonly evaluateNewViaPadViolations: ReturnType<
+    typeof createNewViaPadViolationEvaluator
+  >
   readonly params: Pipeline9RegionalB01RepairParams
   readonly candidateSearchBudget: number
   phase: RegionalB01RepairPhase = "initialize"
@@ -96,6 +101,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
     this.params = params
+    this.evaluateNewViaPadViolations = createNewViaPadViolationEvaluator({
+      srj: {
+        ...createSrjWithBoardValidObstacleLayers(params.srj),
+        traces: undefined,
+      },
+    })
     this.currentRoutes = params.routes
     this.bestRoutes = params.routes
     this.candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
@@ -104,6 +115,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     // Reserve finite overhead for candidate setup, validation, and pass stages.
     // Child iteration limits are added when each candidate is constructed.
     this.MAX_ITERATIONS = 64 + 8 * this.candidateSearchBudget
+  }
+
+  private introducesForbiddenViaPadViolations(
+    previousRoutes: HighDensityRoute[],
+    routes: HighDensityRoute[],
+  ): boolean {
+    if (this.params.srj.allowViaInPad === true) return false
+    return this.evaluateNewViaPadViolations({
+      previousRoutes,
+      routes,
+    }).length > 0
   }
 
   private initializeRepair(): void {
@@ -237,7 +259,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     if (!routes) return
     this.attemptedCandidateCount++
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-    if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+    if (
+      isPipeline9DrcCandidateBetter(errors, this.bestErrors) &&
+      !this.introducesForbiddenViaPadViolations(this.bestRoutes, routes)
+    ) {
       this.bestRoutes = routes
       this.bestErrors = errors
       this.phase = "commit-error"
@@ -322,7 +347,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         this.params.drcEvaluator,
         candidate.routes,
       )
-      if (isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors)) {
+      if (
+        isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors) &&
+        !this.introducesForbiddenViaPadViolations(this.bestRoutes, candidate.routes)
+      ) {
         this.bestRoutes = candidate.routes
         this.bestErrors = candidateErrors
       }
@@ -386,7 +414,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.attemptedCandidateCount++
       this.fallbackCandidateCount++
       const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-      if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+      if (
+        isPipeline9DrcCandidateBetter(errors, this.bestErrors) &&
+        !this.introducesForbiddenViaPadViolations(this.bestRoutes, routes)
+      ) {
         this.bestRoutes = routes
         this.bestErrors = errors
       }
@@ -436,7 +467,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         )
         if (
           getViaIssueCount(errors) <= getViaIssueCount(this.currentErrors) &&
-          isPipeline9DrcCandidateBetter(errors, this.currentErrors)
+          isPipeline9DrcCandidateBetter(errors, this.currentErrors) &&
+          !this.introducesForbiddenViaPadViolations(this.currentRoutes, refinedRoutes)
         ) {
           this.currentRoutes = refinedRoutes
           this.currentErrors = errors
@@ -553,7 +585,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       throw new Error("Regional B01 has no completed safe trace-layer solver")
     const routes = solver.getOutput()
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-    if (isPipeline9DrcCandidateBetter(errors, this.currentErrors)) {
+    if (
+      isPipeline9DrcCandidateBetter(errors, this.currentErrors) &&
+      !this.introducesForbiddenViaPadViolations(this.currentRoutes, routes)
+    ) {
       this.currentRoutes = routes
       this.currentErrors = errors
     }
