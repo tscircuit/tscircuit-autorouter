@@ -1,4 +1,4 @@
-import { createPcbPadElements } from "lib/testing/utils/convertToCircuitJson"
+import { createPcbPadElements } from "lib/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"

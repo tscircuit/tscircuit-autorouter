@@ -3,6 +3,11 @@ import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/Glo
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { isViaPadClearanceError } from "./isViaPadClearanceError"
+import {
+  getPipeline9TracePairRepairOutput,
+  preparePipeline9TracePairRepair,
+  type Pipeline9TracePairRepair,
+} from "./preparePipeline9TracePairRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
   createFixedRouteCopperSpatialIndex,
@@ -29,11 +34,15 @@ import {
   isPipeline9DrcErrorOwnedByPreloadRepair,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
+import { restorePipeline9TerminalApproaches } from "./restorePipeline9TerminalApproaches"
 
 type RegionalB01RepairPhase =
   | "initialize"
   | "begin-pass"
   | "begin-error"
+  | "prepare-pair"
+  | "route-pair"
+  | "validate-pair"
   | "prepare-b01"
   | "route-b01"
   | "validate-b01"
@@ -78,6 +87,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private candidateSearchBudgetExhausted = false
   private safeTraceLayerRepairSkippedForBudget = false
   private preloadEligibleDrcIssueCount = 0
+  private pairCandidate?: Pipeline9TracePairRepair
   private b01Candidate?: Pipeline9RegionalB01CandidateProblem
   private regularCandidate?: Pipeline9RegularRegionalCandidateProblem
   private safeTraceLayerSolver?: GlobalDrcForceImproveSolver
@@ -151,7 +161,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
-          error.type === "pcb_via_clearance_error") &&
+          error.type === "pcb_via_clearance_error" ||
+          isViaPadClearanceError(error)) &&
         typeof error.pcb_trace_id === "string",
     )
     this.errorIndex = 0
@@ -181,7 +192,56 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.traceIndex = 0
     this.regionIndex = 0
     this.stopB01SearchForError = false
+    this.phase = isMovableTracePairError(error, this.routeIndexByTraceId)
+      ? "prepare-pair"
+      : "prepare-b01"
+  }
+
+  private preparePairCandidate(): void {
+    if (this.candidateSearchCount >= this.candidateSearchBudget) {
+      this.candidateSearchBudgetExhausted = true
+      this.phase = "commit-error"
+      return
+    }
+    const indexes = this.traceIds.map((id) => this.routeIndexByTraceId.get(id)!)
+    this.pairCandidate = preparePipeline9TracePairRepair({
+      ...this.params,
+      routes: this.currentRoutes,
+      routeIndexes: [indexes[0]!, indexes[1]!],
+    })
+    if (!this.pairCandidate) {
+      this.phase = "prepare-b01"
+      return
+    }
+    this.candidateSearchCount++
+    this.startChildSolver(this.pairCandidate.solver)
+    this.phase = "route-pair"
+  }
+
+  private stepPairCandidate(): void {
+    const candidate = this.pairCandidate
+    if (!candidate) throw new Error("Regional pair repair has no candidate")
+    candidate.solver.step()
+    if (!candidate.solver.solved && !candidate.solver.failed) return
+    this.activeSubSolver = null
+    this.phase = "validate-pair"
+  }
+
+  private validatePairCandidate(): void {
+    const candidate = this.pairCandidate
+    if (!candidate)
+      throw new Error("Regional pair repair has no completed candidate")
+    const routes = getPipeline9TracePairRepairOutput(candidate)
+    this.pairCandidate = undefined
     this.phase = "prepare-b01"
+    if (!routes) return
+    this.attemptedCandidateCount++
+    const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
+    if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+      this.bestRoutes = routes
+      this.bestErrors = errors
+      this.phase = "commit-error"
+    }
   }
 
   private startChildSolver(solver: BaseSolver): void {
@@ -359,14 +419,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private refineAcceptedRoutes(): void {
     if (this.acceptedCandidateCount > 0 && this.currentErrors.length > 0) {
-      const refinedRoutes = applyBroadRepulsionForces(
-        { ...this.params.srj, traces: undefined },
+      const refinedRoutes = restorePipeline9TerminalApproaches(
         this.currentRoutes,
-        this.params.effort,
-        1,
-        this.params.connMap,
+        applyBroadRepulsionForces(
+          { ...this.params.srj, traces: undefined },
+          this.currentRoutes,
+          this.params.effort,
+          1,
+          this.params.connMap,
+        ),
       )
-      if (refinedRoutes !== this.currentRoutes) {
+      if (refinedRoutes && refinedRoutes !== this.currentRoutes) {
         const errors = getPipeline9DrcErrors(
           this.params.drcEvaluator,
           refinedRoutes,
@@ -527,6 +590,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         return this.beginPass()
       case "begin-error":
         return this.beginError()
+      case "prepare-pair":
+        return this.preparePairCandidate()
+      case "route-pair":
+        return this.stepPairCandidate()
+      case "validate-pair":
+        return this.validatePairCandidate()
       case "prepare-b01":
         return this.prepareB01Candidate()
       case "route-b01":

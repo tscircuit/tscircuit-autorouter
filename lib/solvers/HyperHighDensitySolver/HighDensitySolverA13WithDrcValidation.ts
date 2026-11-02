@@ -1,15 +1,20 @@
 import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
 import {
   convertToCircuitJson,
   createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
+} from "lib/utils/convertToCircuitJson"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
+import { checkBoardTraceClearance } from "lib/utils/autorouting-drc/checkBoardTraceClearance"
+import { checkViaPairClearance } from "lib/utils/autorouting-drc/checkViaPairClearance"
+import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
+import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { HighDensitySolverA13WithBoundaryClearance } from "./HighDensitySolverA13WithBoundaryClearance"
 import { getObstacleRouteConnectivity } from "./getObstacleRouteConnectivity"
 
@@ -113,11 +118,25 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
     if (this.validationParams.boardGeometry) {
       circuitJson.push(createPcbBoardElement(srj))
     }
-    const { errors } = getDrcErrors(circuitJson, {
+    const drcConnectivity = createDrcConnectivityMap(circuitJson)
+    annotateTraceEndpointPorts(circuitJson)
+    const clearanceErrors = createTraceObstacleClearanceEvaluator(circuitJson, {
       traceClearance: this.traceMargin,
-      viaClearance: this.traceMargin,
-      includeTraceContinuity: false,
-    })
+    })(circuitJson, drcConnectivity)
+    const errors = [
+      ...clearanceErrors.traceErrors,
+      ...checkBoardTraceClearance(circuitJson),
+      ...clearanceErrors.viaErrors,
+      ...clearanceErrors.padErrors,
+      ...clearanceErrors.holeErrors,
+      ...createViaPadClearanceEvaluator(circuitJson)(
+        circuitJson,
+        drcConnectivity,
+      ),
+      ...checkViaPairClearance(circuitJson, drcConnectivity, {
+        viaClearance: this.traceMargin,
+      }),
+    ]
     const fixedViolations = getFixedObstacleViolations({
       srj: { ...srj, traces: undefined },
       routes,

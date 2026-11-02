@@ -15,7 +15,9 @@ concurrency:
 jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
-    runs-on: ubuntu-latest
+    # Native routing snapshots were recorded on Ubuntu 24.04. Keep the OS
+    # stable instead of changing geometry when ubuntu-latest moves forward.
+    runs-on: ubuntu-24.04
     # The full-board bugreport107 repro takes about sixteen minutes locally.
     # Allow its thirty-minute test budget plus checkout and installation.
     timeout-minutes: 35

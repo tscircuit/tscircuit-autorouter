@@ -1,0 +1,25 @@
+{
+  "inputIdentical": true,
+  "inputSha256": "2052a7d8ea89a189d83c9ab8372b0b1405336946ce0d445e7afbadad2239ae3b",
+  "clockTrunksUnchanged": true,
+  "selectedLogicalConnections": 6,
+  "selectedEndpointReferences": 12,
+  "uniqueSelectedPorts": 9,
+  "publishedTraces": 6,
+  "vias": 6,
+  "connectivity": [],
+  "physical": [],
+  "matching": [],
+  "lengths": [
+    {
+      "name": "CK_P_TRUNK",
+      "lengthMm": 15.222602272596015
+    },
+    {
+      "name": "CK_N_TRUNK",
+      "lengthMm": 15.238091497309147
+    }
+  ],
+  "skewMm": 0.015489224713132188,
+  "valid": true
+}

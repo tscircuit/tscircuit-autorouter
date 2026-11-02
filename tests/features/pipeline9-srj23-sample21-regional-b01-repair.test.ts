@@ -5,7 +5,7 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 
-test("Pipeline9 finishes SRJ23 peer repair without increasing final DRC residue", async (): Promise<void> => {
+test("Pipeline9 repairs SRJ23 sample21 trace and via-pad conflicts without new peer shorts", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 21)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -25,11 +25,7 @@ test("Pipeline9 finishes SRJ23 peer repair without increasing final DRC residue"
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors).toHaveLength(2)
-  expect(errors.map((error) => error.type).sort()).toEqual([
-    "pcb_pad_pad_clearance_error",
-    "pcb_pad_pad_clearance_error",
-  ])
+  expect(errors).toEqual([])
   const jointRepair = solver.pipeline9JointDrcRepairSolver!
   const signal = solver
     ._getOutputHdRoutes()

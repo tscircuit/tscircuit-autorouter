@@ -58,6 +58,11 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  b01RepairOptions?: Pick<
+    ConstructorParameters<typeof HighDensitySolverB01>[0],
+    "lowResolutionCellSize" | "obstacleClearanceMargin"
+  >
+  captureSearchDebug?: boolean
 }
 
 type NodeBounds = {
@@ -332,6 +337,7 @@ export type Pipeline9RegularNodeSolverParams = {
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
+  captureSearchDebug?: boolean
   layerCount: number
 }
 
@@ -350,6 +356,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
+  captureSearchDebug = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -379,7 +386,7 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
-    captureSearchDebug: false,
+    captureSearchDebug,
     priorityDagSearch,
     priorityDiagnostics,
     viaHoleDiameter,
@@ -684,6 +691,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      captureSearchDebug: this.params.captureSearchDebug,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -746,6 +754,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -1192,7 +1201,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
+    if (fixedObstacles.length === 0 && !this.params.b01RepairOptions) {
       this.startRegularSolver(node)
       return
     }
@@ -1238,6 +1247,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
       obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      ...this.params.b01RepairOptions,
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {

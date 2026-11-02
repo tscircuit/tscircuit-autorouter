@@ -51,6 +51,8 @@ export type HighDensityIntraNodeRoute = {
     traceThickness?: number
     /** Keeps routed terminals fixed during post-route DRC optimization. */
     pcb_port_id?: string
+    /** Search anchor for a safe terminal stub; a validated reroute may replace it. */
+    terminalApproach?: "start" | "end"
     insideJumperPad?: boolean
     toNextSegmentType?: "through_obstacle"
     toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata

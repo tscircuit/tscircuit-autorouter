@@ -19,12 +19,13 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces,
   })
-  expect(errors.length).toBeLessThanOrEqual(7)
+  // Pair repair clears four more issues at the cost of two additional vias.
+  expect(errors.length).toBeLessThanOrEqual(3)
   let viaCount: number = 0
   for (const trace of routedTraces) {
     for (const point of trace.route) {
       if (point.route_type === "via") viaCount++
     }
   }
-  expect(viaCount).toBeLessThanOrEqual(112)
+  expect(viaCount).toBeLessThanOrEqual(114)
 })

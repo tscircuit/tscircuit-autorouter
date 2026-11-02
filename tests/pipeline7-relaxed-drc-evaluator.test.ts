@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { isDeepStrictEqual } from "node:util"
-import { createPipeline7RelaxedDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "lib/testing/createPipeline7RelaxedDrcEvaluator"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"

@@ -1,6 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -113,6 +113,8 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
+  /** Retain low-level high-density search history for visualization. */
+  captureSearchDebug?: boolean
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
@@ -534,6 +536,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -892,6 +895,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             cms.originalSrj.traces ?? [],
           )
+        const evaluateCleanupDrc = createPipeline9AutoroutingDrcEvaluator({
+          inputSrj,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          includeBoardClearance: true,
+          drcOptions: {
+            traceClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+            viaClearance:
+              cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+          },
+        })
         return [
           {
             effort: cms.effort,
@@ -947,18 +960,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               }
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateRelaxedDrc({
-                inputSrj,
-                srjWithPointPairs: cms.srjWithPointPairs!,
-                routedTraces: convert(routes),
-                includeBoardClearance: true,
-                drcOptions: {
-                  traceClearance:
-                    cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
-                  viaClearance:
-                    cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
-                },
-              }).errors.length === 0,
+              evaluateCleanupDrc(convert(routes)).errors.length === 0,
           },
         ]
       },
