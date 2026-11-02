@@ -7,6 +7,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { loadMotherboardPowerPhase } from "./repro"
 
 type FullRouteComparison = {
+  srjWithPointPairs: SimpleRouteJson
   output: SimpleRouteJson
   expansionInput: PowerTraceExpanderInput
   expansionOptions: PowerTraceExpanderOptions
@@ -23,12 +24,14 @@ export function solveForComparison(): FullRouteComparison {
   if (
     !pipeline.solved ||
     pipeline.failed ||
+    !pipeline.srjWithPointPairs ||
     !pipeline.powerTraceExpansionSolver
   ) {
     throw new Error(`Complete motherboard routing failed: ${pipeline.error}`)
   }
   const expander = pipeline.powerTraceExpansionSolver.powerTraceExpanderSolver
   return {
+    srjWithPointPairs: pipeline.srjWithPointPairs,
     output: pipeline.getOutputSimpleRouteJson(),
     expansionInput: expander.inputProblem,
     expansionOptions: expander.options,
