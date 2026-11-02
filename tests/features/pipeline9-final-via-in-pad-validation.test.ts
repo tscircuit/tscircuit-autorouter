@@ -6,7 +6,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("regional repair cannot return forbidden vias from its regular candidate path", (): void => {
+test("regional repair rejects a forbidden regular candidate and preserves its input", (): void => {
   const source: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -108,10 +108,12 @@ test("regional repair cannot return forbidden vias from its regular candidate pa
         expect(solver.getResult().acceptedCandidateCount).toBe(1)
         expect(solver.getResult().remainingDrcIssueCount).toBe(0)
       } else {
-        expect(solver.solved).toBeFalse()
-        expect(solver.failed).toBeTrue()
-        expect(solver.error).toContain("forbidden via-in-pad")
-        expect(() => solver.getResult()).toThrow("not complete")
+        expect(solver.solved).toBeTrue()
+        expect(solver.failed).toBeFalse()
+        expect(solver.error).toBeNull()
+        expect(solver.getResult().acceptedCandidateCount).toBe(0)
+        expect(solver.getResult().remainingDrcIssueCount).toBe(1)
+        expect(solver.getResult().routes).toEqual(routes)
       }
     }
     expect(output).toHaveBeenCalledTimes(3)
