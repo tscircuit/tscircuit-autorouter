@@ -43,6 +43,7 @@ type TaperRoutePointEntry = {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
+  otherHdRoutes?: HighDensityRoute[]
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -50,6 +51,7 @@ export interface TraceWidthSolverInput {
   minTraceWidth: number
   obstacleMargin?: number
   minTraceToHoleEdgeClearance?: number
+  viaHoleDiameter?: number
   layerCount: number
 }
 
@@ -78,6 +80,7 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceWidth: number
   obstacleMargin: number
   minTraceToHoleEdgeClearance?: number
+  viaHoleDiameter?: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
 
@@ -112,6 +115,7 @@ export class TraceWidthSolver extends BaseSolver {
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
+    this.viaHoleDiameter = input.viaHoleDiameter
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
 
@@ -142,7 +146,10 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.hdRoutes,
+      ...(input.otherHdRoutes ?? []),
+    ])
   }
 
   private getNominalTraceWidthForRoute(
@@ -433,10 +440,12 @@ export class TraceWidthSolver extends BaseSolver {
         this.lastCollidingObstacles.push(obstacle)
     }
 
+    const routeSearchClearance =
+      this.viaHoleDiameter !== undefined ? searchClearance : requiredClearance
     const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
       start,
       end,
-      requiredClearance,
+      routeSearchClearance,
     )
     for (const { conflictingRoute } of nearbyRoutes) {
       const route = conflictingRoute as HighDensityRoute
@@ -459,13 +468,28 @@ export class TraceWidthSolver extends BaseSolver {
       // The spatial index returns owning routes for both traces and vias.
       // Measure each via's copper radius, not its owner's trace half-width.
       for (const via of route.vias) {
-        clearance = Math.min(
-          clearance,
-          segmentToCircleMinDistance(start, end, {
-            ...via,
-            radius: route.viaDiameter / 2,
-          }),
-        )
+        const viaCopperClearance = segmentToCircleMinDistance(start, end, {
+          ...via,
+          radius: route.viaDiameter / 2,
+        })
+        let viaClearance = viaCopperClearance
+        if (
+          this.minTraceToHoleEdgeClearance !== undefined &&
+          this.viaHoleDiameter !== undefined
+        ) {
+          const viaHoleRadius = Math.min(
+            this.viaHoleDiameter / 2,
+            route.viaDiameter / 2,
+          )
+          const viaHoleClearance =
+            segmentToCircleMinDistance(start, end, {
+              ...via,
+              radius: viaHoleRadius,
+            }) -
+            (this.minTraceToHoleEdgeClearance - this.obstacleMargin)
+          viaClearance = Math.min(viaCopperClearance, viaHoleClearance)
+        }
+        clearance = Math.min(clearance, viaClearance)
       }
       minClearance = Math.min(minClearance, clearance)
       if (clearance < requiredClearance) {

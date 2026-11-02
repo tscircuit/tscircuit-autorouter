@@ -74,6 +74,7 @@ export class HighDensitySolver extends BaseSolver {
     priorityDagSearch: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    minTraceToHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
   }
 
@@ -120,6 +121,7 @@ export class HighDensitySolver extends BaseSolver {
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
+    minTraceToHoleEdgeClearance,
     allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
@@ -148,6 +150,7 @@ export class HighDensitySolver extends BaseSolver {
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    minTraceToHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
@@ -184,6 +187,7 @@ export class HighDensitySolver extends BaseSolver {
       priorityDagSearch,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
+      minTraceToHoleEdgeClearance,
       allowBlindAndBuriedVias,
     }
     this.MAX_ITERATIONS =

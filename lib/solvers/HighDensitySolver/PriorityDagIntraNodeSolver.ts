@@ -61,7 +61,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   private readyToValidate = false
   private readonly expectedNativeCandidateAllowance: number
   readonly nativeCandidateIterationLimit: number
-  private readonly viaHoleDiameter: number
+  override readonly viaHoleDiameter: number
   private readonly minimumHoleGap: number
   private readonly nativeBounds: {
     minX: number

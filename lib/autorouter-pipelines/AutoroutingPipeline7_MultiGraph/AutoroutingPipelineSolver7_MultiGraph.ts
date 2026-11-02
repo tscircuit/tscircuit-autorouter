@@ -554,6 +554,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           colorMap: cms.colorMap,
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
+          viaHoleDiameter: cms.viaHoleDiameter,
+          minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
           traceWidth: cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
@@ -618,21 +620,51 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "traceSimplificationSolver",
       TraceSimplificationSolver,
-      (cms) => [
-        {
-          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
-          obstacles: cms.srj.obstacles,
-          connMap: cms.connMap,
-          colorMap: cms.colorMap,
-          outline: cms.srj.outline,
-          defaultViaDiameter: cms.viaDiameter,
-          layerCount: cms.srj.layerCount,
-          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-          enableCrossingViaReduction: true,
-          iterations: 2,
+      (cms) => {
+        const minTraceToHoleEdgeClearance = cms.srj.minTraceToHoleEdgeClearance
+        const inflateViaDiameterForHoleClearance = (
+          route: HighDensityRoute,
+        ) => {
+          if (minTraceToHoleEdgeClearance === undefined) return route
+          const viaHoleDiameter = Math.min(
+            cms.viaHoleDiameter ?? route.viaDiameter * 0.5,
+            route.viaDiameter,
+          )
+          const effectiveViaDiameter = Math.max(
+            route.viaDiameter,
+            viaHoleDiameter +
+              2 * Math.max(0, minTraceToHoleEdgeClearance - 0.1),
+          )
+          return effectiveViaDiameter === route.viaDiameter
+            ? route
+            : { ...route, viaDiameter: effectiveViaDiameter }
+        }
+        return [
+          {
+            hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes.map(
+              inflateViaDiameterForHoleClearance,
+            ),
+            obstacles: cms.srj.obstacles,
+            connMap: cms.connMap,
+            colorMap: cms.colorMap,
+            outline: cms.srj.outline,
+            defaultViaDiameter: cms.viaDiameter,
+            layerCount: cms.srj.layerCount,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+            enableCrossingViaReduction: true,
+            iterations: 2,
+          },
+        ]
+      },
+      {
+        onSolved: (cms) => {
+          for (const route of cms.traceSimplificationSolver
+            ?.simplifiedHdRoutes ?? []) {
+            route.viaDiameter = cms.viaDiameter
+          }
         },
-      ],
+      },
     ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
@@ -643,6 +675,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srj.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+        viaHoleDiameter: cms.viaHoleDiameter,
         layerCount: cms.srj.layerCount,
       },
     ]),

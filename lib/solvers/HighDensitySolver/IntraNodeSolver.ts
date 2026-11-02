@@ -73,6 +73,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   hyperParameters: Partial<HighDensityHyperParameters>
   minDistBetweenEnteringPoints: number
   viaDiameter: number
+  viaHoleDiameter?: number
+  minTraceToHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
@@ -110,6 +112,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    minTraceToHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
@@ -122,6 +125,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.failedSubSolvers = []
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? 0.3
+    this.viaHoleDiameter = params.viaHoleDiameter
+    this.minTraceToHoleEdgeClearance = params.minTraceToHoleEdgeClearance
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
@@ -261,6 +266,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minTraceToHoleEdgeClearance: this.minTraceToHoleEdgeClearance,
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
@@ -353,7 +360,16 @@ export class IntraNodeRouteSolver extends BaseSolver {
     const availableZ = this.getAvailableZLayers()
 
     for (const route of this.solvedRoutes) {
-      const margin = route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE
+      const viaHoleRadius = Math.min(
+        (this.viaHoleDiameter ?? route.viaDiameter * 0.5) / 2,
+        route.viaDiameter / 2,
+      )
+      const margin = Math.max(
+        route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE,
+        this.minTraceToHoleEdgeClearance !== undefined
+          ? viaHoleRadius + this.minTraceToHoleEdgeClearance
+          : 0,
+      )
 
       for (const via of route.vias) {
         for (const z of availableZ) {
