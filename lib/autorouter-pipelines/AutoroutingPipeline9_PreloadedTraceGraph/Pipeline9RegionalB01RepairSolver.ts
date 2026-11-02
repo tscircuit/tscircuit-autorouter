@@ -85,6 +85,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private fallbackCandidateCount = 0
   private candidateSearchCount = 0
   private candidateSearchBudgetExhausted = false
+  private safeTraceLayerRepairSkippedForBudget = false
   private preloadEligibleDrcIssueCount = 0
   private pairCandidate?: Pipeline9TracePairRepair
   private b01Candidate?: Pipeline9RegionalB01CandidateProblem
@@ -509,8 +510,9 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         error.type === "pcb_trace_error" ||
         error.type === "pcb_pad_trace_clearance_error",
     )
-    // Regional search and this bounded cleanup have separate iteration limits.
-    if (!hasSafeLayerRepairableError) {
+    this.safeTraceLayerRepairSkippedForBudget =
+      hasSafeLayerRepairableError && this.candidateSearchBudgetExhausted
+    if (!hasSafeLayerRepairableError || this.candidateSearchBudgetExhausted) {
       this.finishRepair()
       return
     }
@@ -568,7 +570,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       candidateSearchCount: this.candidateSearchCount,
       candidateSearchBudget: this.candidateSearchBudget,
       candidateSearchBudgetExhausted: this.candidateSearchBudgetExhausted,
-      safeTraceLayerRepairSkippedForBudget: false,
+      safeTraceLayerRepairSkippedForBudget:
+        this.safeTraceLayerRepairSkippedForBudget,
       remainingDrcIssueCount: this.currentErrors.length,
       preloadEligibleDrcIssueCount: this.preloadEligibleDrcIssueCount,
       preloadRepairAttempted: this.preloadEligibleDrcIssueCount > 0,

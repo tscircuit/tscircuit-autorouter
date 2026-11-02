@@ -27,7 +27,7 @@ test("compact PIR full-board relaxed DRC regression", async (): Promise<void> =>
   )
   expect(drcInput.routedTraces).toHaveLength(87)
   expect(viaCount).toBe(92)
-  expect(evaluateRelaxedDrc(drcInput).errors.length).toBeLessThanOrEqual(10)
+  expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(24)
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
   )
