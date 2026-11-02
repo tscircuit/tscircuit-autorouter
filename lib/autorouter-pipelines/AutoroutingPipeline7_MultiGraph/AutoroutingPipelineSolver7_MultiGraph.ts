@@ -485,6 +485,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            minPortSpacing: cms.srj.allowBlindAndBuriedVias
+              ? cms.availableSegmentPointSolver!.minPortSpacing
+              : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
