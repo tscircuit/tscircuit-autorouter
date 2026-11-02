@@ -183,6 +183,24 @@ ownPadSolver.solve()
 expect(ownPadSolver.solved).toBeTrue()
 expect(ownPadSolver.failed).toBeFalse()
 expect(ownPadSolver.stats.boardDrcIssueCount).toBe(0)
+const { createViaInPadEvaluator } = await import(
+  "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createViaInPadEvaluator"
+)
+const evaluateViaInPad = createViaInPadEvaluator({ srj, previousRoutes: [] })
+expect(
+  evaluateViaInPad([
+    {
+      connectionName: "upper",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      vias: [{ x: -2, y: 1 }],
+      route: [
+        { x: -2, y: 1, z: 0 },
+        { x: -2, y: 1, z: 1 },
+      ],
+    },
+  ]),
+).toBe(true)
 expect(checkCalls).toEqual([])
 
 const results: EvaluateRelaxedDrcInput[] = [

@@ -1,5 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { createViaInPadEvaluator } from "./createViaInPadEvaluator"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -276,6 +277,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  private finalViaInPadEvaluator?: ReturnType<typeof createViaInPadEvaluator>
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -846,6 +848,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.getPreloadedTraceUpdatesAfterHighDensity()
         const srjWithMaterializedPreloadedTraces =
           cms.getSrjWithMaterializedPreloadedTraces()
+        if (cms.originalSrj.allowViaInPad !== true) {
+          // Capture drilled sites before joint repair can mutate its inputs.
+          cms.finalViaInPadEvaluator = createViaInPadEvaluator({
+            srj: cms.originalSrj,
+            previousRoutes: [
+              ...cms.globalDrcForceImproveSolver!.getOutput(),
+              ...preloadedTraceUpdates.updatedPreloadedTraces,
+            ],
+          })
+        }
         return [
           {
             srj: srjWithMaterializedPreloadedTraces,
@@ -1080,6 +1092,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             onlyConnectionNames,
           },
         ]
+      },
+      {
+        onSolved: (cms): void => {
+          if (cms.originalSrj.allowViaInPad === true) return
+          const evaluate = cms.finalViaInPadEvaluator
+          const expansion = cms.powerTraceExpansionSolver
+          if (!evaluate || !expansion) {
+            throw new Error(
+              "Final via-in-pad validation is missing routing output",
+            )
+          }
+          const introducesViaInPad = evaluate([
+            ...cms.getPowerTraceExpansionFixedTraces(),
+            ...expansion.getOutput(),
+          ])
+          if (introducesViaInPad) {
+            cms.error = "Pipeline9 repair introduced a forbidden via-in-pad"
+            cms.failed = true
+          }
+        },
       },
     ),
   ]

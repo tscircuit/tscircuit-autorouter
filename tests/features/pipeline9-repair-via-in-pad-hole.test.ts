@@ -52,35 +52,36 @@ test("regional repair checks the drilled hole and its physical layer span", (): 
       },
     ],
   }
-  const evaluate = createViaInPadEvaluator({ srj })
   const previousRoutes = [createViaRoute({ x: 2 })]
+  const evaluate = createViaInPadEvaluator({ srj, previousRoutes })
   // The copper annulus overlaps this same-net pad; the drill stays outside it.
   for (const x of [0.36, 0.31, 0.3]) {
-    const entersPad = evaluate({
-      previousRoutes,
-      routes: [createViaRoute({ x })],
-    })
+    const entersPad = evaluate([createViaRoute({ x })])
     expect(entersPad).toBe(false)
   }
-  const drillEntersPad = evaluate({
-    previousRoutes,
-    routes: [createViaRoute({ x: 0.29 })],
-  })
+  const drillEntersPad = evaluate([createViaRoute({ x: 0.29 })])
   expect(drillEntersPad).toBe(true)
-  const changesOnlyCopper = evaluate({
+  const evaluateExistingDrill = createViaInPadEvaluator({
+    srj,
     previousRoutes: [createViaRoute({ x: 0 })],
-    routes: [createViaRoute({ x: 0, viaDiameter: 0.8 })],
   })
+  const changesOnlyCopper = evaluateExistingDrill([
+    createViaRoute({ x: 0, viaDiameter: 0.8 }),
+  ])
   expect(changesOnlyCopper).toBe(false)
 
   const internalTransition = [createViaRoute({ x: 0, fromZ: 1, toZ: 2 })]
-  expect(evaluate({ previousRoutes, routes: internalTransition })).toBe(true)
+  expect(evaluate(internalTransition)).toBe(true)
   const evaluateBlindVias = createViaInPadEvaluator({
     srj: { ...srj, allowBlindAndBuriedVias: true },
-  })
-  const blindHoleEntersPad = evaluateBlindVias({
     previousRoutes,
-    routes: internalTransition,
   })
+  const blindHoleEntersPad = evaluateBlindVias(internalTransition)
   expect(blindHoleEntersPad).toBe(false)
+
+  // The baseline is a snapshot of drills, not a live reference to route points.
+  previousRoutes[0]!.route[1]!.x = 0
+  previousRoutes[0]!.route[2]!.x = 0
+  previousRoutes[0]!.vias[0]!.x = 0
+  expect(evaluate(previousRoutes)).toBe(true)
 })

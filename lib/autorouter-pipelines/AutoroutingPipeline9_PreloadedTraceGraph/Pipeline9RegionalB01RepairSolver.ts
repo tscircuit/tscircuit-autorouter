@@ -98,7 +98,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
     this.params = params
-    this.evaluateViaInPad = createViaInPadEvaluator({ srj: params.srj })
+    this.evaluateViaInPad = createViaInPadEvaluator({
+      srj: params.srj,
+      previousRoutes: params.routes,
+    })
     this.currentRoutes = params.routes
     this.bestRoutes = params.routes
     this.candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
@@ -109,15 +112,9 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.MAX_ITERATIONS = 64 + 8 * this.candidateSearchBudget
   }
 
-  private introducesViaInPad(
-    previousRoutes: HighDensityRoute[],
-    routes: HighDensityRoute[],
-  ): boolean {
+  private introducesViaInPad(routes: HighDensityRoute[]): boolean {
     if (this.params.srj.allowViaInPad === true) return false
-    return this.evaluateViaInPad({
-      previousRoutes,
-      routes,
-    })
+    return this.evaluateViaInPad(routes)
   }
 
   private initializeRepair(): void {
@@ -253,7 +250,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (
       isPipeline9DrcCandidateBetter(errors, this.bestErrors) &&
-      !this.introducesViaInPad(this.bestRoutes, routes)
+      !this.introducesViaInPad(routes)
     ) {
       this.bestRoutes = routes
       this.bestErrors = errors
@@ -341,7 +338,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       )
       if (
         isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors) &&
-        !this.introducesViaInPad(this.bestRoutes, candidate.routes)
+        !this.introducesViaInPad(candidate.routes)
       ) {
         this.bestRoutes = candidate.routes
         this.bestErrors = candidateErrors
@@ -406,7 +403,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.attemptedCandidateCount++
       this.fallbackCandidateCount++
       const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-      // Keep regular-search handoffs available to the later repair stages.
+      // Regular candidates may need later repair. The pipeline validates
+      // final via placement after cleanup, before publishing its output.
       if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
         this.bestRoutes = routes
         this.bestErrors = errors
@@ -458,7 +456,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         if (
           getViaIssueCount(errors) <= getViaIssueCount(this.currentErrors) &&
           isPipeline9DrcCandidateBetter(errors, this.currentErrors) &&
-          !this.introducesViaInPad(this.currentRoutes, refinedRoutes)
+          !this.introducesViaInPad(refinedRoutes)
         ) {
           this.currentRoutes = refinedRoutes
           this.currentErrors = errors
@@ -577,7 +575,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (
       isPipeline9DrcCandidateBetter(errors, this.currentErrors) &&
-      !this.introducesViaInPad(this.currentRoutes, routes)
+      !this.introducesViaInPad(routes)
     ) {
       this.currentRoutes = routes
       this.currentErrors = errors
