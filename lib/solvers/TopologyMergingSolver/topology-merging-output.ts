@@ -69,6 +69,7 @@ export function createTopologyMergingOutputNodes({
       isComponentTopologyNode,
     })
     if (region.topologyMode === "free") {
+      metadata._isComponentTopologyNode = undefined
       metadata._isNarrowQfpPadGap = undefined
     }
     const preservedSourceNode =

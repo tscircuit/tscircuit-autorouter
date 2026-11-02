@@ -1,9 +1,10 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import type { NetId, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
@@ -165,13 +166,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
-    const terminalPcbPortIdsByRoot = new Map<ConnectionName, Set<string>>()
+    const connMap = getConnectivityMapFromSimpleRouteJson({
+      connections: params.connections,
+      layerCount: params.layerCount,
+      obstacles: [],
+    })
+    const terminalPcbPortIdsByNet = new Map<NetId, Set<string>>()
     for (const connection of params.connections) {
-      const rootName = connection.__rootConnectionNames?.[0] ?? connection.name
-      let terminalIds = terminalPcbPortIdsByRoot.get(rootName)
+      const netId =
+        connMap.getNetConnectedToId(connection.name) ?? connection.name
+      let terminalIds = terminalPcbPortIdsByNet.get(netId)
       if (!terminalIds) {
         terminalIds = new Set<string>()
-        terminalPcbPortIdsByRoot.set(rootName, terminalIds)
+        terminalPcbPortIdsByNet.set(netId, terminalIds)
       }
       for (const point of connection.pointsToConnect) {
         if (point.pcb_port_id) terminalIds.add(point.pcb_port_id)
