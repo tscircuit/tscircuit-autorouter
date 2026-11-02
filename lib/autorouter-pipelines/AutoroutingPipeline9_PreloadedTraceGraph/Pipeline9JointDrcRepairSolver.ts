@@ -809,6 +809,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
+    if (params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)) {
+      const holeClearance =
+        params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
+      params = {
+        ...params,
+        srj: { ...params.srj, minTraceToHoleEdgeClearance: holeClearance },
+        originalSrj: {
+          ...params.originalSrj,
+          minTraceToHoleEdgeClearance: holeClearance,
+        },
+      }
+    }
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
@@ -838,6 +850,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
+      params.originalSrj.defaultObstacleMargin ??
       RELAXED_DRC_OPTIONS.traceClearance
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
