@@ -152,6 +152,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.highDensitySolver = new HighDensitySolver({
       captureSearchDebug: params.captureSearchDebug,
       nodePortPoints: [params.nodeWithPortPoints],
+      // The fixed-route splice restores these anchors after regional cleanup.
+      implicitEndpointConnectionNames: params.movablePreloadedConnectionNames
+        ? [...params.movablePreloadedConnectionNames]
+        : undefined,
       colorMap: params.colorMap,
       connMap: params.connMap,
       viaDiameter: params.viaDiameter,
