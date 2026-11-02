@@ -1,5 +1,5 @@
 circuit.json
 input.srj.json
 output.srj.json
-node_modules/
+node_modules
 bun.lock

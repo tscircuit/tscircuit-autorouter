@@ -1,10 +1,3 @@
-const runtimeUrl = import.meta.resolve("tscircuit")
-export const { RootCircuit } = await import(
-  import.meta.resolve("@tscircuit/core", runtimeUrl)
-)
-export const { convertCircuitJsonToPcbSvg } = await import(
-  import.meta.resolve("circuit-to-svg", runtimeUrl)
-)
-export const checks = await import(
-  import.meta.resolve("@tscircuit/checks", runtimeUrl)
-)
+export { RootCircuit } from "@tscircuit/core"
+export { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+export * as checks from "@tscircuit/checks"
