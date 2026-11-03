@@ -18,7 +18,13 @@ import { checkViaPairClearance } from "lib/utils/autorouting-drc/checkViaPairCle
 import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import {
+  getSimplifiedTracesViaPlacementViolations,
+  hasCustomViaKeepoutOrClearanceRules,
+} from "lib/utils/viaKeepoutUtils"
 
 type DrcError = Record<string, unknown>
 
@@ -109,6 +115,36 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
           drcOptions.viaClearance ?? RELAXED_DRC_OPTIONS.viaClearance,
       }),
     ]
+    if (hasCustomViaKeepoutOrClearanceRules(inputSrj, inputSrj.obstacles)) {
+      const routeConnMap =
+        connectivityMaps?.route ??
+        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs)
+      const defaultViaDiameter = getViaDimensions(inputSrj).padDiameter
+      const viaViolations = getSimplifiedTracesViaPlacementViolations({
+        traces,
+        srj: inputSrj,
+        connMap: routeConnMap,
+        defaultViaDiameter,
+      })
+      for (const violation of viaViolations) {
+        errors.push({
+          type: "pcb_pad_pad_clearance_error",
+          pcb_pad_pad_clearance_error_id: `via_placement_${violation.pcbTraceId ?? violation.connectionName}_${violation.viaCenter.x.toFixed(4)}_${violation.viaCenter.y.toFixed(4)}_${violation.obstacleId ?? violation.keepoutId ?? "keepout"}`,
+          error_type: "pcb_pad_pad_clearance_error",
+          message: violation.message,
+          pcb_trace_id: violation.pcbTraceId,
+          pcb_trace_ids: violation.pcbTraceId ? [violation.pcbTraceId] : [],
+          pcb_pad_ids: [
+            ...(violation.obstacleId ? [violation.obstacleId] : []),
+            ...(violation.keepoutId ? [violation.keepoutId] : []),
+          ],
+          minimum_clearance: violation.minimumClearance,
+          actual_clearance: violation.actualClearance,
+          center: violation.location,
+          reason: violation.reason,
+        })
+      }
+    }
     const viasById = new Map(
       circuitJson.flatMap((element) =>
         element.type === "pcb_via"
