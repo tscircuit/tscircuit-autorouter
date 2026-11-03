@@ -133,7 +133,12 @@ export const createViaPadClearanceEvaluator = (
           gap = getTraceObstacleClearance(via, via, viaDiameter, pad).gap
         }
         if (gap + tolerance >= requiredClearance) continue
-        let center = getTraceObstacleClearance(via, via, viaDiameter, pad).center
+        let center = getTraceObstacleClearance(
+          via,
+          via,
+          viaDiameter,
+          pad,
+        ).center
         if (sameNet) {
           center = {
             x: (pad.minX + pad.maxX) / 2,
