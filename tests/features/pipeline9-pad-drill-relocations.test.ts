@@ -15,6 +15,8 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     "movable",
     "overlapping-pads",
     "offset-transition",
+    "duplicate-via-vertex",
+    "locked-duplicate-via-vertex",
     "blocked",
     "locked",
     "shared",
@@ -81,6 +83,15 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     if (scenario === "offset-transition") {
       routes[0]!.route[2]!.x = 0.255
       routes[0]!.vias[0]!.x = 0.255
+    }
+    if (
+      scenario === "duplicate-via-vertex" ||
+      scenario === "locked-duplicate-via-vertex"
+    ) {
+      routes[0]!.route.splice(1, 0, { ...routes[0]!.route[1]! })
+      if (scenario === "locked-duplicate-via-vertex") {
+        routes[0]!.route[1]!.pcb_port_id = "fixed_attachment"
+      }
     }
     const fixedRoutes: HighDensityRoute[] = []
     if (scenario === "blocked") {
@@ -171,7 +182,8 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     if (
       scenario === "movable" ||
       scenario === "overlapping-pads" ||
-      scenario === "offset-transition"
+      scenario === "offset-transition" ||
+      scenario === "duplicate-via-vertex"
     ) {
       expect(result.acceptedCandidateCount).toBeGreaterThan(0)
       expect(result.attemptedCandidateCount).toBeLessThanOrEqual(64)

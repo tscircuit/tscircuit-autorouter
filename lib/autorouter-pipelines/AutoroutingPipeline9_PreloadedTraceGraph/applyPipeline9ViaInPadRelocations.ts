@@ -92,7 +92,12 @@ export function applyPipeline9ViaInPadRelocations({
     for (let viaIndex = 0; viaIndex < vias.length; viaIndex++) {
       const via = vias[viaIndex]!
       if (evaluatePadDrills([elements[viaIndex]!]).length === 0) continue
-      const hasLockedPoint = via.pointIndices.some((index): boolean => {
+      const pointIndices: number[] = []
+      for (let index = 0; index < route.route.length; index++) {
+        const point = route.route[index]!
+        if (point.x === via.x && point.y === via.y) pointIndices.push(index)
+      }
+      const hasLockedPoint = pointIndices.some((index): boolean => {
         const point = route.route[index]!
         return (
           index === 0 ||
@@ -109,7 +114,7 @@ export function applyPipeline9ViaInPadRelocations({
       )
       if (hasLockedPoint || isJunction) continue
       movableVias.push({ routeIndex, viaIndex })
-      for (const index of via.pointIndices) {
+      for (const index of pointIndices) {
         lockedPointIndices[routeIndex]![index] = false
       }
     }
