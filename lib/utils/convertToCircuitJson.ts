@@ -724,7 +724,7 @@ export function createPcbPadElements(
     }
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
-    if (circuitJsonMetadata.pcb_via_id) continue
+    if (circuitJsonMetadata.pcb_via_id || obstacle.isCopperPour) continue
 
     // An imported pad can belong to a net outside the current routing task.
     // Its source identity still describes copper that DRC must retain.
