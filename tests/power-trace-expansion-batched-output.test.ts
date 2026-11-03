@@ -51,9 +51,9 @@ test("power expansion preserves trace width and delegates upstream batches", ():
   expect(direct.getOutput()).toEqual(batched.getOutput())
   expect(batched.powerTraceExpanderSolver.iterations).toBe(direct.iterations)
   expect(batched.iterations).toBe(direct.iterations)
-  const wires = batched.getOutput()[0]!.route.filter(
-    (point) => point.route_type === "wire",
-  )
+  const wires = batched
+    .getOutput()[0]!
+    .route.filter((point) => point.route_type === "wire")
   expect(wires).toHaveLength(5)
   expect(wires.every((point) => point.width === 0.8)).toBe(true)
 })
