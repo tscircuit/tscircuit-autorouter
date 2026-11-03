@@ -92,6 +92,8 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
+      const tracePairClearance =
+        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance
       const solver = new RelaxTraceClearanceSolver({
         srj,
         routes: canonicalRoutes,
@@ -114,9 +116,9 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         ),
         allowViaMovement: !params.allowPartialRepair,
         differentNetTraceClearance:
-          params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance === undefined
+          tracePairClearance === undefined
             ? undefined
-            : params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance +
+            : tracePairClearance +
               (params.allowPartialRepair || params.usePrecisionMargin
                 ? CLEARANCE_PRECISION_MARGIN
                 : 0),
@@ -188,21 +190,24 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
     if (state.phase === "physical-validation") {
       // With separate wire rules, the guard must preserve the declared pad gap.
       // Leave the existing guard policy unchanged for legacy inputs.
+      const tracePairClearance =
+        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance
       const padTraceClearance =
-        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance === undefined
+        tracePairClearance === undefined
           ? undefined
-          : params.originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance
+          : (params.originalSrj.minTraceToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.traceClearance)
       const fixedViolations = new Map(
         getFixedObstacleViolations({
-          srj, routes: canonicalRoutes,
+          srj,
+          routes: canonicalRoutes,
           traceClearance: padTraceClearance,
-        }).map(
-          (violation) => [violation.key, violation.severity],
-        ),
+        }).map((violation) => [violation.key, violation.severity]),
       )
       if (
         getFixedObstacleViolations({
-          srj, routes: state.candidate,
+          srj,
+          routes: state.candidate,
           traceClearance: padTraceClearance,
         }).some(
           ({ key, severity }) =>

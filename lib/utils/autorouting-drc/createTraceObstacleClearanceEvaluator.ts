@@ -591,7 +591,11 @@ const getTracePairCenter = (left: TraceSegment, right: TraceSegment): Point => {
 /** Keeps candidate ordering and geometry identical to the full-board evaluator. */
 export const createTraceObstacleClearanceEvaluator = (
   staticCircuitJson: AnyCircuitElement[],
-  options: { traceClearance?: number; differentNetTraceClearance?: number; holeClearance?: number } = {},
+  options: {
+    traceClearance?: number
+    differentNetTraceClearance?: number
+    holeClearance?: number
+  } = {},
 ): ObstacleClearanceEvaluator => {
   const elements = staticCircuitJson
     .filter(
@@ -749,10 +753,11 @@ export const createTraceObstacleClearanceEvaluator = (
     for (const segment of segments) {
       const { start, end, trace, width, portIds } = segment
       if (start.x === end.x && start.y === end.y) continue
-      for (const item of getCandidates(segment, Math.max(traceClearance, tracePairClearance) + width / 2, [
-        dynamicIndex,
-        staticIndex,
-      ])) {
+      for (const item of getCandidates(
+        segment,
+        Math.max(traceClearance, tracePairClearance) + width / 2,
+        [dynamicIndex, staticIndex],
+      )) {
         const otherId = "trace" in item ? item.trace.pcb_trace_id : item.id
         if (
           !("trace" in item ? [item.layer] : item.layers).includes(
