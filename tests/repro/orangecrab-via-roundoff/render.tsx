@@ -1,5 +1,6 @@
 /** @jsxImportSource react */
 import { EventEmitter } from "node:events"
+import type { GenericLocalAutorouter } from "@tscircuit/core"
 import { Children, cloneElement, isValidElement } from "react"
 import { RootCircuit, checks, convertCircuitJsonToPcbSvg } from "./runtime.mjs"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
@@ -18,7 +19,7 @@ circuit.on("autorouting:end", (event) => {
 })
 const autorouter = {
   local: true,
-  async algorithmFn(input: SimpleRouteJson) {
+  async algorithmFn(input: SimpleRouteJson): Promise<GenericLocalAutorouter> {
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
       cacheProvider: null,
     })
