@@ -1,4 +1,4 @@
-/** @jsxImportSource react-for-pipeline9-fixtures */
+/** @jsxImportSource react */
 import source from "./source-data.json"
 import { NativePart } from "./native-part"
 

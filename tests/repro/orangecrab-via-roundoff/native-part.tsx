@@ -1,5 +1,5 @@
-/** @jsxImportSource react-for-pipeline9-fixtures */
-import { Fragment, type ReactElement } from "react-for-pipeline9-fixtures"
+/** @jsxImportSource react */
+import { Fragment, type ReactElement } from "react"
 import { applyToPoint, compose, rotateDEG, scale } from "transformation-matrix"
 
 type NativeDdrPad = {
