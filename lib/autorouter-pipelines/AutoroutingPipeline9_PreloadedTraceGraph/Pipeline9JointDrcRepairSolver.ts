@@ -2142,6 +2142,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       routes: this.combinedOutput,
       fixedRoutes: this.fixedPreloadedObstacleRoutes,
       lockedConnectionNames: this.syntheticConnectionNames,
+      connMap: this.params.connMap,
       drcEvaluator: this.cachedReferenceDrcEvaluator,
     })
     this.combinedOutput = result.routes

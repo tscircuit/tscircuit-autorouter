@@ -1,6 +1,7 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import {
@@ -31,6 +32,7 @@ type RelocationParams = {
   routes: HighDensityRoute[]
   fixedRoutes: readonly HighDensityRoute[]
   lockedConnectionNames: ReadonlySet<string>
+  connMap: ConnectivityMap
   drcEvaluator: DrcEvaluator
 }
 type RelocationResult = {
@@ -114,6 +116,7 @@ export function applyPipeline9ViaInPadRelocations({
   routes,
   fixedRoutes,
   lockedConnectionNames,
+  connMap,
   drcEvaluator,
 }: RelocationParams): RelocationResult {
   const result = {
@@ -196,9 +199,10 @@ export function applyPipeline9ViaInPadRelocations({
           other.route.some((point, index) => {
             if (point.x === center.x && point.y === center.y) return true
             const previous = other.route[index - 1]
-            const sharedNet =
-              (other.rootConnectionName ?? other.connectionName) ===
-              (route.rootConnectionName ?? route.connectionName)
+            const sharedNet = connMap.areIdsConnected(
+              other.rootConnectionName ?? other.connectionName,
+              route.rootConnectionName ?? route.connectionName,
+            )
             return (
               sharedNet &&
               previous !== undefined &&

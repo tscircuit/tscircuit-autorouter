@@ -18,6 +18,7 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     "shared",
     "junction",
     "fixed-junction",
+    "aliased-junction",
     "preloaded",
     "allowed",
   ]) {
@@ -103,10 +104,15 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
         ],
       })
     }
-    if (scenario === "fixed-junction") {
+    if (scenario === "fixed-junction" || scenario === "aliased-junction") {
+      let rootConnectionName = "signal"
+      if (scenario === "aliased-junction") {
+        rootConnectionName = "signal_alias"
+        srj.obstacles[0]!.connectedTo.push(rootConnectionName)
+      }
       fixedRoutes.push({
         connectionName: "fixed_branch",
-        rootConnectionName: "signal",
+        rootConnectionName,
         traceThickness: 0.1,
         viaDiameter: 0.6,
         vias: [],
@@ -136,6 +142,7 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
       lockedConnectionNames: new Set(
         scenario === "preloaded" ? ["signal"] : [],
       ),
+      connMap,
       drcEvaluator: createPipeline9RelaxedDrcEvaluator(options),
     })
     expect({ srj, routes }).toEqual(original)
