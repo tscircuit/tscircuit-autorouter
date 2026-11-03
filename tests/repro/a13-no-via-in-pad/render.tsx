@@ -6,8 +6,8 @@ import {
   cloneElement,
   isValidElement,
 } from "react-for-pipeline9-fixtures"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import type { SimpleRouteJson } from "../../lib/types"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { SimpleRouteJson } from "../../../lib/types"
 import { NativeA13DdrThermalPadBoard } from "./board"
 import { RootCircuit, checks, convertCircuitJsonToPcbSvg } from "./runtime.mjs"
 

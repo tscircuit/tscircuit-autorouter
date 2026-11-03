@@ -18,8 +18,8 @@ PCB SHA-256: `563b646fbd1f021c43a337798882e54ed024c39823280f8b93ddc59c9aa7cb33`.
 geometry in board-world millimetres (+X right, +Y top, +Z above).
 
 Install the standalone rendering dependencies with
-`bun install --cwd repros/a13-no-via-in-pad`, then run
-`bun repros/a13-no-via-in-pad/render.tsx` from the repository root.
+`bun install --cwd tests/repro/a13-no-via-in-pad`, then run
+`bun tests/repro/a13-no-via-in-pad/render.tsx` from the repository root.
 The standalone renderer pins the core, checks, and SVG packages from that
 published tscircuit release. It is isolated from the autorouter test/build
 dependency graph.
@@ -35,7 +35,7 @@ Seven ordinary clearance errors remain in the fixed eight-path output; this is
 not a complete or manufacturing-ready DDR route.
 
 For the control, run
-`bun repros/a13-no-via-in-pad/render.tsx 0,1,4,7,8,9,12,13,15 /tmp/a13-control`.
+`bun tests/repro/a13-no-via-in-pad/render.tsx 0,1,4,7,8,9,12,13,15 /tmp/a13-control`.
 
 The compressed test inputs are captured core routing inputs. The separate
 18-path control selects bits 0, 1, 4, 7, 8, 9, 12, 13, and 15 without changing
