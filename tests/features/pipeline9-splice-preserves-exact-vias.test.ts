@@ -50,7 +50,7 @@ function verifyExactViaAfterSplicing(): void {
   expect(getRepairViaGeometry(spliced.route, 6)).toHaveLength(1)
 }
 
-test.failing(
+test(
   "regional splicing retains exact via anchors beside roundoff-length wires",
   verifyExactViaAfterSplicing,
 )
