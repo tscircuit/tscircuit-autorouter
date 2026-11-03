@@ -75,6 +75,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     },
   )
   const evaluateViaPads = createViaPadClearanceEvaluator(staticCircuitJson, {
+    allowViaInPad: inputSrj.allowViaInPad,
     minClearance:
       drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
   })
