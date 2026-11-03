@@ -1,3 +1,3 @@
-export { RootCircuit } from "tscircuit-for-orangecrab-fixtures"
-export { convertCircuitJsonToPcbSvg } from "circuit-to-svg-for-orangecrab-fixtures"
-export * as checks from "checks-for-orangecrab-fixtures"
+export { RootCircuit } from "@tscircuit/core"
+export { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+export * as checks from "@tscircuit/checks"

@@ -28,7 +28,12 @@ without moving either completed data byte. It also records the remaining
 physical limitations: 32 findings, including four via-in-pad findings. Routing
 completion does not imply a DRC-clean or manufacturing-ready DDR interface.
 
-Run `bun tests/repro/orangecrab-via-roundoff/render.tsx` from the repository root.
+Install the isolated native runtime with
+`bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff`, then run
+`bun tests/repro/orangecrab-via-roundoff/render.tsx` from the repository root.
+The test shard containing this repro performs that installation in CI.
+Its explicit Circuit JSON pin keeps current core separate from the router
+repository’s older test-runtime dependencies.
 The renderer emits Circuit JSON, its SVG, captured byte routes and independent
 physical findings as JSON. The test snapshots that actual core-rendered SVG.
 The snapshot omits error overlays; the assertions retain the physical findings.

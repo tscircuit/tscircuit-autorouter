@@ -1,10 +1,6 @@
-/** @jsxImportSource react-for-pipeline9-fixtures */
+/** @jsxImportSource react */
 import { EventEmitter } from "node:events"
-import {
-  Children,
-  cloneElement,
-  isValidElement,
-} from "react-for-pipeline9-fixtures"
+import { Children, cloneElement, isValidElement } from "react"
 import { RootCircuit, checks, convertCircuitJsonToPcbSvg } from "./runtime.mjs"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../../lib/types"
