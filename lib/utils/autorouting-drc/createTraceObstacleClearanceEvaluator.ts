@@ -21,10 +21,7 @@ import { all_layers, type AnyCircuitElement, type PcbTrace } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import RBush from "rbush"
 import { formatMm } from "format-si-unit"
-import {
-  getDrcReadableElementName as getReadableNameForElement,
-  getDrcReadableTraceName,
-} from "./drcReadableNames"
+import { createDrcReadableNameResolver } from "./drcReadableNames"
 
 type PadOrVia = Extract<
   AnyCircuitElement,
@@ -619,6 +616,7 @@ export const createTraceObstacleClearanceEvaluator = (
   )
 
   return (circuitJson, connMap): TraceClearanceErrorGroups => {
+    const readableNames = createDrcReadableNameResolver(circuitJson)
     const board = circuitJson.find((element) => element.type === "pcb_board")
     const traceClearance =
       options.traceClearance ??
@@ -789,14 +787,11 @@ export const createTraceObstacleClearanceEvaluator = (
             : clearance.gap > 0
         )
           continue
-        const traceName = getReadableNameForElement(
-          circuitJson,
-          trace.pcb_trace_id,
-        )
+        const traceName = readableNames.getElementName(trace.pcb_trace_id)
         const otherName =
           "trace" in item
-            ? getReadableNameForElement(circuitJson, otherId)
-            : `${item.element.type} "${getReadableNameForElement(circuitJson, otherId)}"`
+            ? readableNames.getElementName(otherId)
+            : `${item.element.type} "${readableNames.getElementName(otherId)}"`
         const hole = !("trace" in item) && item.element.type === "pcb_hole"
         overlaps.set(pairId, {
           type: "pcb_trace_error",
@@ -873,7 +868,7 @@ export const createTraceObstacleClearanceEvaluator = (
           pcb_trace_id: segment.trace.pcb_trace_id,
           minimum_clearance: traceClearance,
           actual_clearance: gap,
-          message: `${isVia ? "Via" : "Pad"} ${getReadableNameForElement(circuitJson, obstacle.id)} and trace ${getReadableNameForElement(circuitJson, segment.trace.pcb_trace_id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(traceClearance)})`,
+          message: `${isVia ? "Via" : "Pad"} ${readableNames.getElementName(obstacle.id)} and trace ${readableNames.getElementName(segment.trace.pcb_trace_id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(traceClearance)})`,
           center,
         },
       })
@@ -942,7 +937,7 @@ export const createTraceObstacleClearanceEvaluator = (
               : [],
             pcb_port_ids: [],
             center,
-            message: `Trace ${getDrcReadableTraceName(circuitJson, segment.trace.pcb_trace_id)} is too close to non-plated hole ${getReadableNameForElement(circuitJson, obstacle.id)} (gap: ${gap.toFixed(6)}mm, required: ${holeClearance}mm)`,
+            message: `Trace ${readableNames.getTraceName(segment.trace.pcb_trace_id)} is too close to non-plated hole ${readableNames.getElementName(obstacle.id)} (gap: ${gap.toFixed(6)}mm, required: ${holeClearance}mm)`,
           },
         })
       }

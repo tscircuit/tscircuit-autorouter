@@ -12,7 +12,7 @@ import {
   compileTraceClearanceObstacle,
   getTraceObstacleClearance,
 } from "./createTraceObstacleClearanceEvaluator"
-import { getDrcReadableElementName } from "./drcReadableNames"
+import { createDrcReadableNameResolver } from "./drcReadableNames"
 
 type Pad = Extract<
   AnyCircuitElement,
@@ -53,6 +53,7 @@ export const createViaPadClearanceEvaluator = (
     }),
   )
   return (circuitJson, connMap): Record<string, unknown>[] => {
+    const readableNames = createDrcReadableNameResolver(circuitJson)
     const errors: Record<string, unknown>[] = []
     for (const via of circuitJson) {
       if (via.type !== "pcb_via") continue
@@ -149,7 +150,7 @@ export const createViaPadClearanceEvaluator = (
           type: errorType,
           error_type: errorType,
           [`${errorType}_id`]: `via_pad_clearance_${via.pcb_via_id}_${pad.id}`,
-          message: `Via ${getDrcReadableElementName(circuitJson, via.pcb_via_id)} and pad ${getDrcReadableElementName(circuitJson, pad.id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(requiredClearance)})`,
+          message: `Via ${readableNames.getElementName(via.pcb_via_id)} and pad ${readableNames.getElementName(pad.id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(requiredClearance)})`,
           pcb_pad_ids: [via.pcb_via_id, pad.id],
           minimum_clearance: requiredClearance,
           actual_clearance: gap,

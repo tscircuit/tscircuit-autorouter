@@ -23,10 +23,7 @@ import {
   ConnectivityMap,
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
-import {
-  getDrcReadablePortName,
-  getDrcReadableTraceName,
-} from "./drcReadableNames"
+import { createDrcReadableNameResolver } from "./drcReadableNames"
 import RBush from "rbush"
 
 type Pad = PcbSmtPad | PcbPlatedHole
@@ -283,6 +280,7 @@ export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
+  const readableNames = createDrcReadableNameResolver(circuitJson)
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
   const sourceTraces = circuitJson.filter(
@@ -439,7 +437,7 @@ export const checkTraceContinuity = (
             ? [port.pcb_component_id]
             : [],
           center: { x: point.x, y: point.y },
-          message: `Trace [${getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)}] on ${point.layer} is missing a via connection to port [${getDrcReadablePortName(circuitJson, port.pcb_port_id)}] on ${padLayers.join(", ")}.`,
+          message: `Trace [${readableNames.getTraceName(trace.pcb_trace_id)}] on ${point.layer} is missing a via connection to port [${readableNames.getPortName(port.pcb_port_id)}] on ${padLayers.join(", ")}.`,
         })
       }
     }
@@ -760,11 +758,6 @@ export const checkTraceContinuity = (
     const first = trace.route[0]!
     const last = trace.route.at(-1)!
     const sourceTrace = sourceTraceById.get(trace.source_trace_id!)
-    const expectedPorts = sourceTrace
-      ? ports.filter((port) =>
-          sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
-        )
-      : []
     let traceName: string | undefined
     const sourceTraceId =
       sourceTrace?.source_trace_id ||
@@ -818,7 +811,7 @@ export const checkTraceContinuity = (
         (outgoingAtVia || next.layer === current.to_layer)
       )
         continue
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+      traceName ??= readableNames.getTraceName(trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Via in trace [${traceName}] does not connect its adjacent wire layers at position {x: ${current.x}, y: ${current.y}}.`,
@@ -826,8 +819,14 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
+    if (sourceTrace && checkedSourceTraceIds.has(sourceTrace.source_trace_id))
+      continue
+    const expectedPorts = sourceTrace
+      ? ports.filter((port) =>
+          sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
+        )
+      : []
     if (sourceTrace && expectedPorts.length > 0) {
-      if (checkedSourceTraceIds.has(sourceTrace.source_trace_id)) continue
       checkedSourceTraceIds.add(sourceTrace.source_trace_id)
     }
     for (const port of expectedPorts) {
@@ -850,8 +849,8 @@ export const checkTraceContinuity = (
             touchedPortsByTrace.get(traceId)?.has(port.pcb_port_id),
           )
       if (connectedBySibling) continue
-      const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+      const portName = readableNames.getPortName(port.pcb_port_id)
+      traceName ??= readableNames.getTraceName(trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Trace [${traceName}] is missing a connection to ${portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"} ${portName}`,
@@ -886,7 +885,7 @@ export const checkTraceContinuity = (
         endpointTouchesCopper(trace, index === 0 ? "start" : "end")
       )
         continue
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+      traceName ??= readableNames.getTraceName(trace.pcb_trace_id)
       errors.push({
         ...commonError,
         message: `Trace [${traceName}] has disconnected endpoint at (${endpoint.x.toFixed(2)}, ${endpoint.y.toFixed(2)})`,
