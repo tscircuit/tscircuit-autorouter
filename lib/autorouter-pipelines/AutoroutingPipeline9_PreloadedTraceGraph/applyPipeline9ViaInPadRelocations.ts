@@ -136,7 +136,10 @@ export function applyPipeline9ViaInPadRelocations({
         (routeIndex): boolean[] => lockedPointIndices[routeIndex]!,
       ),
       movableVias: movableVias.map(
-        ({ routeIndex, viaIndex }): { routeIndex: number; viaIndex: number } => ({
+        ({
+          routeIndex,
+          viaIndex,
+        }): { routeIndex: number; viaIndex: number } => ({
           routeIndex: repairRouteIndices.indexOf(routeIndex),
           viaIndex,
         }),
