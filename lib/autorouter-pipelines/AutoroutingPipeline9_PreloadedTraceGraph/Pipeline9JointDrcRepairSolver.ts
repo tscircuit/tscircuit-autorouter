@@ -2140,6 +2140,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const result = applyPipeline9ViaInPadRelocations({
       srj: this.params.originalSrj,
       routes: this.combinedOutput,
+      fixedRoutes: this.fixedPreloadedObstacleRoutes,
+      lockedConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator,
     })
     this.combinedOutput = result.routes

@@ -29,6 +29,8 @@ type OwnedPadDrillError = ViaInPadDrcError & { routeIndex: number }
 type RelocationParams = {
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
+  fixedRoutes: readonly HighDensityRoute[]
+  lockedConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
 }
 type RelocationResult = {
@@ -110,6 +112,8 @@ function preservesResidualClearance({
 export function applyPipeline9ViaInPadRelocations({
   srj,
   routes,
+  fixedRoutes,
+  lockedConnectionNames,
   drcEvaluator,
 }: RelocationParams): RelocationResult {
   const result = {
@@ -169,6 +173,7 @@ export function applyPipeline9ViaInPadRelocations({
     const pad = pads.get(target.pcb_pad_id)
     if (!pad) throw new Error("Pipeline9 pad drill repair lost its pad")
     const route = result.routes[routeIndex]!
+    if (lockedConnectionNames.has(route.connectionName)) continue
     const indices = route.route.flatMap((point, index) =>
       point.x === center.x && point.y === center.y ? [index] : [],
     )
@@ -185,7 +190,7 @@ export function applyPipeline9ViaInPadRelocations({
           point.toNextSegmentType !== undefined
         )
       }) ||
-      result.routes.some(
+      [...result.routes, ...fixedRoutes].some(
         (other) =>
           other !== route &&
           other.route.some((point, index) => {

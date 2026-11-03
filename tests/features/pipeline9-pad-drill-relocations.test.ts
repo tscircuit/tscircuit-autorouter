@@ -17,6 +17,8 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     "locked",
     "shared",
     "junction",
+    "fixed-junction",
+    "preloaded",
     "allowed",
   ]) {
     const srj: SimpleRouteJson = {
@@ -63,6 +65,7 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
         ],
       },
     ]
+    const fixedRoutes: HighDensityRoute[] = []
     if (scenario === "blocked") {
       for (const [x, y] of [
         [0.65, 0],
@@ -100,6 +103,19 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
         ],
       })
     }
+    if (scenario === "fixed-junction") {
+      fixedRoutes.push({
+        connectionName: "fixed_branch",
+        rootConnectionName: "signal",
+        traceThickness: 0.1,
+        viaDiameter: 0.6,
+        vias: [],
+        route: [
+          { x: -0.75, y: 0, z: 1 },
+          { x: 2, y: 0, z: 1 },
+        ],
+      })
+    }
     const original = structuredClone({ srj, routes })
     const connMap = getConnectivityMapFromSimpleRouteJson(srj)
     const options = {
@@ -116,6 +132,10 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     const result = applyPipeline9ViaInPadRelocations({
       srj,
       routes,
+      fixedRoutes,
+      lockedConnectionNames: new Set(
+        scenario === "preloaded" ? ["signal"] : [],
+      ),
       drcEvaluator: createPipeline9RelaxedDrcEvaluator(options),
     })
     expect({ srj, routes }).toEqual(original)
