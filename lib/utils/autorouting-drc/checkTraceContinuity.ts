@@ -689,6 +689,7 @@ export const checkTraceContinuity = (
     physicalConnectivity = map
     return map
   }
+  let eligibleSegmentsByNet: Map<string, WireSegment[]> | undefined
   const endpointTouchesCopper = (
     trace: PcbTrace,
     endpoint: "start" | "end",
@@ -698,16 +699,27 @@ export const checkTraceContinuity = (
     if (point?.route_type !== "wire" || width === undefined) return false
     const net = fullConnectivity.getNetConnectedToId(trace.pcb_trace_id)
     if (!net) return false
-    const netSegments = segments.filter(
-      (segment) =>
-        segment.trace.route_thickness_mode !== "interpolated" &&
-        fullConnectivity.getNetConnectedToId(segment.trace.pcb_trace_id) ===
-          net &&
-        Math.hypot(
+    if (!eligibleSegmentsByNet) {
+      // Declared connectivity stays fixed during this evaluation.
+      eligibleSegmentsByNet = new Map<string, WireSegment[]>()
+      for (const segment of segments) {
+        if (segment.trace.route_thickness_mode === "interpolated") continue
+        const segmentNet = fullConnectivity.getNetConnectedToId(
+          segment.trace.pcb_trace_id,
+        )
+        if (!segmentNet) continue
+        const segmentLength = Math.hypot(
           segment.start.x - segment.end.x,
           segment.start.y - segment.end.y,
-        ) > 1e-9,
-    )
+        )
+        if (segmentLength > 1e-9) {
+          const netSegments = eligibleSegmentsByNet.get(segmentNet)
+          if (netSegments) netSegments.push(segment)
+          else eligibleSegmentsByNet.set(segmentNet, [segment])
+        }
+      }
+    }
+    const netSegments = eligibleSegmentsByNet.get(net) ?? []
     if (
       netSegments.some(
         (segment) =>
@@ -755,16 +767,30 @@ export const checkTraceContinuity = (
     })
   }
   const checkedSourceTraceIds = new Set<string>()
+  const expectedPortsBySourceTraceId = new Map<string, PcbPort[]>()
   for (const trace of traces) {
     if (trace.route.length === 0) continue
     const first = trace.route[0]!
     const last = trace.route.at(-1)!
     const sourceTrace = sourceTraceById.get(trace.source_trace_id!)
-    const expectedPorts = sourceTrace
-      ? ports.filter((port) =>
-          sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
+    let expectedPorts: PcbPort[] = []
+    if (sourceTrace) {
+      const sourceTracePorts = expectedPortsBySourceTraceId.get(
+        sourceTrace.source_trace_id,
+      )
+      if (sourceTracePorts) {
+        expectedPorts = sourceTracePorts
+      } else {
+        const sourcePortIds = new Set(sourceTrace.connected_source_port_ids)
+        expectedPorts = ports.filter((port) =>
+          sourcePortIds.has(port.source_port_id),
         )
-      : []
+        expectedPortsBySourceTraceId.set(
+          sourceTrace.source_trace_id,
+          expectedPorts,
+        )
+      }
+    }
     let traceName: string | undefined
     const sourceTraceId =
       sourceTrace?.source_trace_id ||
