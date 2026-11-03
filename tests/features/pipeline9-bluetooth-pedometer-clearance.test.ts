@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
+import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import fixture from "../fixtures/bluetooth-pedometer-clearance.srj.json"
 
-test("Bluetooth pedometer honors 0.1 mm trace gaps and 0.05 mm pad gaps with fixed terminals", (): void => {
+test("Bluetooth pedometer repairs all nine 0.1 mm trace gaps with fixed terminals", (): void => {
   // Automatic-routing input exported from techmannih/Bluetooth-pedometer
   // ebe6cfad63786434183a4ec6709409ade261dfff, with manual copper removed.
   // Adds the requested traceClearance that core previously omitted from SRJ.
@@ -26,11 +27,17 @@ test("Bluetooth pedometer honors 0.1 mm trace gaps and 0.05 mm pad gaps with fix
     includeBoardClearance: true,
     drcOptions: {
       traceClearance: 0.05,
-      differentNetTraceClearance: 0.1,
       viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
     },
   }
-  expect(evaluateRelaxedDrc(validation).errors).toEqual([])
+  const reported = evaluateRelaxedDrc(validation)
+  const requestedTraceErrors = checkEachPcbTraceNonOverlapping(
+    reported.circuitJson,
+    { minClearance: 0.1 },
+  )
+  // Verify both the full evaluator and the independently requested trace rule.
+  expect(reported.errors).toEqual([])
+  expect(requestedTraceErrors).toHaveLength(0)
   const outputCoordinates = new Set(
     routedTraces.flatMap((trace) =>
       trace.route.flatMap((point) =>
@@ -46,7 +53,9 @@ test("Bluetooth pedometer honors 0.1 mm trace gaps and 0.05 mm pad gaps with fix
     }
   }
   expect(input).toEqual(original)
-  expect(getBugReportSnapshotSvg(validation)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const color = requestedTraceErrors.length === 0 ? "#166534" : "#b91c1c"
+  const caption = `<g><rect x="12" y="62" width="540" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="90" font-family="Arial, sans-serif" font-size="18" fill="${color}">Bluetooth pedometer: 0.1 mm trace errors: ${requestedTraceErrors.length}</text></g>`
+  expect(
+    getBugReportSnapshotSvg(validation).replace("</svg>", `${caption}</svg>`),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
