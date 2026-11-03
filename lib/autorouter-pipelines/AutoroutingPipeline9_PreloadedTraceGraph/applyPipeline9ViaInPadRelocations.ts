@@ -1,32 +1,25 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { getFixedObstacleViolations } from "@tscircuit/repair04"
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import {
+  Repair04Solver,
+  getRepairJunctionAnchors,
+  getRepairViaGeometry,
+  preservesDrcClearances,
+} from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import {
-  compileTraceClearanceObstacle,
-  getTraceObstacleClearance,
-  type IndexedObstacle,
-} from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
-import {
-  createPcbPadElements,
-  extractViasFromRoutes,
-} from "lib/utils/convertToCircuitJson"
-import {
-  createViaInPadDrcEvaluator,
-  type ViaInPadDrcError,
-} from "lib/utils/autorouting-drc/createViaInPadDrcEvaluator"
+import { createPcbPadElements } from "lib/utils/convertToCircuitJson"
+import { createViaInPadDrcEvaluator } from "lib/utils/autorouting-drc/createViaInPadDrcEvaluator"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
+import { getViaElements } from "./createViaInPadEvaluator"
 import {
   getPipeline9DrcErrors,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
-type Point = { x: number; y: number }
-type OwnedPadDrillError = ViaInPadDrcError & { routeIndex: number }
 type RelocationParams = {
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
@@ -41,76 +34,7 @@ type RelocationResult = {
   acceptedCandidateCount: number
 }
 
-const MAX_CANDIDATE_EVALUATIONS = 64
-const HOLE_EDGE_MARGIN = 1e-4
-
-/** Locate the drill boundary using the same pad geometry as validation. */
-function getDrillBoundaryPoint({
-  pad,
-  holeDiameter,
-  angle,
-}: {
-  pad: IndexedObstacle
-  holeDiameter: number
-  angle: number
-}): Point {
-  const center = {
-    x: (pad.minX + pad.maxX) / 2,
-    y: (pad.minY + pad.maxY) / 2,
-  }
-  let lower = 0
-  let upper =
-    Math.hypot(pad.maxX - pad.minX, pad.maxY - pad.minY) / 2 +
-    holeDiameter / 2 +
-    HOLE_EDGE_MARGIN
-  for (let iteration = 0; iteration < 32; iteration++) {
-    const radius = (lower + upper) / 2
-    const point = {
-      x: center.x + radius * Math.cos(angle),
-      y: center.y + radius * Math.sin(angle),
-    }
-    const clearance = getTraceObstacleClearance(point, point, holeDiameter, pad)
-    if (clearance.gap < HOLE_EDGE_MARGIN) lower = radius
-    else upper = radius
-  }
-  return {
-    x: center.x + upper * Math.cos(angle),
-    y: center.y + upper * Math.sin(angle),
-  }
-}
-
-/** Preserve every residual pair and its measured gap while removing a drill. */
-function preservesResidualClearance({
-  errors,
-  candidateErrors,
-}: {
-  errors: Pipeline9DrcError[]
-  candidateErrors: Pipeline9DrcError[]
-}): boolean {
-  if (candidateErrors.length >= errors.length) return false
-  const unmatched = [...errors]
-  for (const error of candidateErrors) {
-    const id = error[`${error.type}_id`] ?? error.pcb_error_id
-    if (typeof id !== "string") return false
-    const index = unmatched.findIndex(
-      (previous) =>
-        previous.type === error.type &&
-        (previous[`${previous.type}_id`] ?? previous.pcb_error_id) === id,
-    )
-    if (index < 0) return false
-    const previous = unmatched.splice(index, 1)[0]!
-    if (
-      typeof previous.actual_clearance === "number" &&
-      (typeof error.actual_clearance !== "number" ||
-        error.actual_clearance < previous.actual_clearance - 1e-9)
-    ) {
-      return false
-    }
-  }
-  return true
-}
-
-/** Move existing drilled holes out of pads without moving ports or junctions. */
+/** Delegate drill relocation to repair04, retaining Pipeline9's output validation. */
 export function applyPipeline9ViaInPadRelocations({
   srj,
   routes,
@@ -119,163 +43,129 @@ export function applyPipeline9ViaInPadRelocations({
   connMap,
   drcEvaluator,
 }: RelocationParams): RelocationResult {
-  const result = {
+  const unchanged = {
     routes,
     attemptedCandidateCount: 0,
     acceptedCandidateCount: 0,
   }
-  if (srj.allowViaInPad === true) return result
-  const pads = new Map(
-    createPcbPadElements(srj)
-      .filter(
-        (element) =>
-          element.type === "pcb_smtpad" || element.type === "pcb_plated_hole",
-      )
-      .map(compileTraceClearanceObstacle)
-      .map((pad) => [pad.id, pad]),
-  )
-  const dimensions = getViaDimensions(srj)
-  const { holeDiameter } = dimensions
+  if (srj.allowViaInPad === true) return unchanged
   const evaluatePadDrills = createViaInPadDrcEvaluator(
-    [...pads.values()].map((pad) => pad.element),
+    createPcbPadElements(srj),
   )
-  const getPadDrillErrors = (
-    candidate: HighDensityRoute[],
-  ): OwnedPadDrillError[] => {
-    const owners = new Map<string, number>()
-    const vias = candidate.flatMap((route, routeIndex) =>
-      extractViasFromRoutes(
-        [route],
-        srj.layerCount,
-        dimensions.padDiameter,
-        holeDiameter,
-        srj.allowBlindAndBuriedVias === true,
-      ).map((via, viaIndex) => {
-        const id = `pad_drill_${routeIndex}_${viaIndex}`
-        owners.set(id, routeIndex)
-        return { ...via, pcb_via_id: id }
-      }),
-    )
-    return evaluatePadDrills(vias).map((error) => ({
-      ...error,
-      routeIndex: owners.get(error.pcb_via_id)!,
-    }))
+  const canonicalRoutes = canonicalizePipeline9HdRoutes(routes)
+  const targets = evaluatePadDrills(
+    getViaElements({ routes: canonicalRoutes, srj }),
+  )
+  if (targets.length === 0) return unchanged
+  const allRoutes = [
+    ...canonicalRoutes,
+    ...canonicalizePipeline9HdRoutes([...fixedRoutes]),
+  ]
+  const bounds = {
+    minX: srj.bounds.minX - 5,
+    maxX: srj.bounds.maxX + 5,
+    minY: srj.bounds.minY - 5,
+    maxY: srj.bounds.maxY + 5,
   }
-  const targets = getPadDrillErrors(routes)
-  if (targets.length === 0) return result
-  let errors = [...getPipeline9DrcErrors(drcEvaluator, routes), ...targets]
-  const traceClearance =
-    srj.minTraceToPadEdgeClearance ??
-    srj.defaultObstacleMargin ??
-    RELAXED_DRC_OPTIONS.traceClearance
-  const viaClearance = getViaToPadClearance(srj)
-  const obstacleSrj = { ...srj, traces: undefined }
-  for (const target of targets) {
-    const center = target.center
-    const routeIndex = target.routeIndex
-    const pad = pads.get(target.pcb_pad_id)
-    if (!pad) throw new Error("Pipeline9 pad drill repair lost its pad")
-    const route = result.routes[routeIndex]!
+  const junctions = getRepairJunctionAnchors(
+    { ...srj, traces: undefined },
+    allRoutes.map(
+      (route): HighDensityRoute => ({
+        ...route,
+        rootConnectionName:
+          connMap.getNetConnectedToId(
+            route.rootConnectionName ?? route.connectionName,
+          ) ?? route.rootConnectionName,
+      }),
+    ),
+    bounds,
+  )
+  const lockedPointIndices = allRoutes.map((route): boolean[] =>
+    route.route.map((): boolean => true),
+  )
+  const movableVias: { routeIndex: number; viaIndex: number }[] = []
+  for (let routeIndex = 0; routeIndex < canonicalRoutes.length; routeIndex++) {
+    const route = canonicalRoutes[routeIndex]!
     if (lockedConnectionNames.has(route.connectionName)) continue
-    const indices = route.route.flatMap((point, index) =>
-      point.x === center.x && point.y === center.y ? [index] : [],
-    )
-    if (
-      indices.length < 2 ||
-      indices.some((index) => {
+    const vias = getRepairViaGeometry(route, srj.layerCount)
+    const elements = getViaElements({ routes: [route], srj })
+    for (let viaIndex = 0; viaIndex < vias.length; viaIndex++) {
+      const via = vias[viaIndex]!
+      if (evaluatePadDrills([elements[viaIndex]!]).length === 0) continue
+      const hasLockedPoint = via.pointIndices.some((index): boolean => {
         const point = route.route[index]!
         return (
           index === 0 ||
           index === route.route.length - 1 ||
           point.pcb_port_id !== undefined ||
           point.terminalApproach !== undefined ||
-          point.insideJumperPad ||
+          point.insideJumperPad === true ||
           point.toNextSegmentType !== undefined
         )
-      }) ||
-      [...result.routes, ...fixedRoutes].some(
-        (other) =>
-          other !== route &&
-          other.route.some((point, index) => {
-            if (point.x === center.x && point.y === center.y) return true
-            const previous = other.route[index - 1]
-            const sharedNet = connMap.areIdsConnected(
-              other.rootConnectionName ?? other.connectionName,
-              route.rootConnectionName ?? route.connectionName,
-            )
-            return (
-              sharedNet &&
-              previous !== undefined &&
-              previous.z === point.z &&
-              pointToSegmentDistance(center, previous, point) <=
-                (route.viaDiameter + other.traceThickness) / 2
-            )
-          }),
-      )
-    ) {
-      continue
-    }
-    const angle = Math.atan2(
-      center.y - (pad.minY + pad.maxY) / 2,
-      center.x - (pad.minX + pad.maxX) / 2,
-    )
-    const fixedViolations = new Map(
-      getFixedObstacleViolations({
-        srj: obstacleSrj,
-        routes: [route],
-        traceClearance,
-        viaClearance,
-      }).map((violation) => [violation.key, violation.severity]),
-    )
-    for (let direction = 0; direction < 16; direction++) {
-      if (result.attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) {
-        return result
-      }
-      const point = getDrillBoundaryPoint({
-        pad,
-        holeDiameter,
-        angle: angle + (direction * Math.PI) / 8,
       })
-      const candidate = [...result.routes]
-      candidate[routeIndex] = {
-        ...route,
-        route: route.route.map((previous, index) =>
-          indices.includes(index) ? { ...previous, ...point } : previous,
-        ),
-        vias: route.vias.map((via) =>
-          via.x === center.x && via.y === center.y ? point : via,
-        ),
-      }
-      result.attemptedCandidateCount++
-      const worsensFixedCopper = getFixedObstacleViolations({
-        srj: obstacleSrj,
-        routes: [candidate[routeIndex]!],
-        traceClearance,
-        viaClearance,
-      }).some(
-        ({ key, severity }) =>
-          !fixedViolations.has(key) ||
-          severity > fixedViolations.get(key)! + 1e-8,
+      const isJunction = junctions[routeIndex]!.viaPositions.some(
+        (anchor): boolean =>
+          Math.hypot(anchor.x - via.x, anchor.y - via.y) < 1e-8,
       )
-      if (worsensFixedCopper) continue
-      const candidateErrors = [
-        ...getPipeline9DrcErrors(drcEvaluator, candidate),
-        ...getPadDrillErrors(candidate),
-      ]
-      if (
-        candidateErrors.some(
-          (error) =>
-            error.pcb_placement_error_id === target.pcb_placement_error_id,
-        ) ||
-        !preservesResidualClearance({ errors, candidateErrors })
-      ) {
-        continue
+      if (hasLockedPoint || isJunction) continue
+      movableVias.push({ routeIndex, viaIndex })
+      for (const index of via.pointIndices) {
+        lockedPointIndices[routeIndex]![index] = false
       }
-      result.routes = candidate
-      result.acceptedCandidateCount++
-      errors = candidateErrors
-      break
     }
   }
-  return result
+  if (movableVias.length === 0) return unchanged
+  const solver = new Repair04Solver(
+    {
+      srj: { ...srj, traces: undefined },
+      routes: allRoutes,
+      bounds,
+      boundaryMargin: 0.001,
+      lockedPointIndices,
+      movableVias,
+      padDrillRepair: { holeDiameter: getViaDimensions(srj).holeDiameter },
+      traceClearance:
+        srj.minTraceToPadEdgeClearance ??
+        srj.defaultObstacleMargin ??
+        RELAXED_DRC_OPTIONS.traceClearance,
+      viaClearance: getViaToPadClearance(srj),
+      maxCandidates: 64,
+      maxCandidateAttempts: 64,
+    },
+    ({ routes: candidateRoutes }): Pipeline9DrcError[] => {
+      if (!candidateRoutes) {
+        throw new Error("Pipeline9 pad drill evaluation requires routes")
+      }
+      return getPipeline9DrcErrors(
+        drcEvaluator,
+        candidateRoutes.slice(0, canonicalRoutes.length),
+      )
+    },
+  )
+  solver.solve()
+  if (solver.failed) {
+    throw new Error(`Pipeline9 pad drill repair failed: ${solver.error}`)
+  }
+  const acceptedCandidateCount = Number(solver.stats.accepted)
+  let repairedRoutes = routes
+  if (acceptedCandidateCount > 0) {
+    const candidate = solver.getOutput().slice(0, canonicalRoutes.length)
+    const errors = [
+      ...getPipeline9DrcErrors(drcEvaluator, canonicalRoutes),
+      ...targets,
+    ]
+    const candidateErrors = [
+      ...getPipeline9DrcErrors(drcEvaluator, candidate),
+      ...evaluatePadDrills(getViaElements({ routes: candidate, srj })),
+    ]
+    if (!preservesDrcClearances({ before: errors, after: candidateErrors })) {
+      throw new Error("Pipeline9 pad drill repair worsened existing clearances")
+    }
+    repairedRoutes = candidate
+  }
+  return {
+    routes: repairedRoutes,
+    attemptedCandidateCount: Number(solver.stats.candidates),
+    acceptedCandidateCount,
+  }
 }

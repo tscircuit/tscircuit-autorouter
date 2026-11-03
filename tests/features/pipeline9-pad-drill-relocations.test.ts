@@ -13,6 +13,8 @@ import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTr
 test("pad drill repair preserves connectivity and rejects blocked, locked and shared via movement", (): void => {
   for (const scenario of [
     "movable",
+    "overlapping-pads",
+    "offset-transition",
     "blocked",
     "locked",
     "shared",
@@ -66,6 +68,20 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
         ],
       },
     ]
+    if (scenario === "overlapping-pads") {
+      srj.obstacles.push({
+        ...srj.obstacles[0]!,
+        center: { x: 0.25, y: 0 },
+        circuitJsonMetadata: { pcb_smtpad_id: "second_signal_pad" },
+      })
+      routes[0]!.vias[0]!.x = 0.125
+      routes[0]!.route[1]!.x = 0.125
+      routes[0]!.route[2]!.x = 0.125
+    }
+    if (scenario === "offset-transition") {
+      routes[0]!.route[2]!.x = 0.255
+      routes[0]!.vias[0]!.x = 0.255
+    }
     const fixedRoutes: HighDensityRoute[] = []
     if (scenario === "blocked") {
       for (const [x, y] of [
@@ -152,8 +168,13 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     })
     const json = convertToCircuitJson(srj, traces)
     annotateTraceEndpointPorts(json)
-    if (scenario === "movable") {
-      expect(result.acceptedCandidateCount).toBe(1)
+    if (
+      scenario === "movable" ||
+      scenario === "overlapping-pads" ||
+      scenario === "offset-transition"
+    ) {
+      expect(result.acceptedCandidateCount).toBeGreaterThan(0)
+      expect(result.attemptedCandidateCount).toBeLessThanOrEqual(64)
       expect(checkViasInPads(json)).toEqual([])
       expect(checkTracesAreContiguous(json)).toEqual([])
       const connectivity = new PcbConnectivityMap(json)
@@ -162,8 +183,14 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
       )
       expect(result.routes[0]!.route[0]).toEqual(routes[0]!.route[0])
       expect(result.routes[0]!.route.at(-1)).toEqual(routes[0]!.route.at(-1))
-      expect(result.routes[0]!.route[1]!.x).toBe(result.routes[0]!.route[2]!.x)
-      expect(result.routes[0]!.route[1]!.y).toBe(result.routes[0]!.route[2]!.y)
+      expect(result.routes[0]!.vias).toHaveLength(1)
+      const transitionIndex = result.routes[0]!.route.findIndex(
+        (point, index, points) => index > 0 && point.z !== points[index - 1]!.z,
+      )
+      const before = result.routes[0]!.route[transitionIndex - 1]!
+      const after = result.routes[0]!.route[transitionIndex]!
+      expect(before.x).toBe(after.x)
+      expect(before.y).toBe(after.y)
     } else {
       expect(result.acceptedCandidateCount).toBe(0)
       expect(result.routes).toEqual(routes)

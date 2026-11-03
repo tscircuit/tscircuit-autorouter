@@ -15,7 +15,7 @@ type ViaInPadRoute = HighDensityRoute | SimplifiedPcbTrace
 
 type ViaInPadEvaluator = (routes: readonly ViaInPadRoute[]) => boolean
 
-function getViaElements({
+export function getViaElements({
   routes,
   srj,
 }: {

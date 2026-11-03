@@ -943,7 +943,7 @@ function getViaDrillLayers(
   return getViaLayers(drillSpan, layerCount) as LayerName[]
 }
 
-export function extractViasFromRoutes(
+function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
   minViaDiameter = 0.3,
