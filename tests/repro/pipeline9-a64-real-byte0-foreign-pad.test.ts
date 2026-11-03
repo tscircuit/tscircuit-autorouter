@@ -93,6 +93,13 @@ test("Pipeline9 routes the exact real A64 byte-zero input without drilling forei
   expect(solver.solved).toBeTrue()
   expect(inputSrj).toEqual(originalInput)
   expect(connectedSignals).toBe(11)
+  const viaCount = routedTraces.reduce(
+    (count, trace): number =>
+      count +
+      trace.route.filter((point): boolean => point.route_type === "via").length,
+    0,
+  )
+  expect(viaCount).toBeLessThanOrEqual(16)
   expect(drillOverlaps).toHaveLength(0)
   expect(reference.errors).toHaveLength(0)
 })
