@@ -21,7 +21,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing("plated-hole transitions stay inside their pads", (): void => {
+test("plated-hole transitions stay inside their pads", (): void => {
   const trace = solver
     .getOutputSimplifiedPcbTraces()
     .find(
