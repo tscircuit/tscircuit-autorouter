@@ -66,7 +66,7 @@ function verifyNativeOrangeCrabRouting(): void {
   })
 }
 
-test.failing(
+test(
   "native OrangeCrab completes all 50 DDR nets without losing via anchors",
   verifyNativeOrangeCrabRouting,
 )

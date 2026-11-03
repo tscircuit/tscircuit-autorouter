@@ -416,22 +416,15 @@ export const spliceFixedRouteSectionWithMutationMask = ({
       route.push(point)
       return
     }
-    if (pointsAreEqual(previousPoint, point)) return
-    if (
-      previousPoint.z !== point.z &&
-      (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||
-        Math.abs(previousPoint.y - point.y) > POINT_EPSILON)
-    ) {
+    const sameXY = previousPoint.x === point.x && previousPoint.y === point.y
+    if (sameXY && previousPoint.z === point.z) return
+    if (previousPoint.z !== point.z && !sameXY) {
       const impliedTransitionPoint = { ...point, z: previousPoint.z }
-      if (!pointsAreEqual(previousPoint, impliedTransitionPoint)) {
-        route.push(impliedTransitionPoint)
-        mutatedSegments.push(mutated)
-      }
-    }
-    if (!pointsAreEqual(route.at(-1)!, point)) {
-      route.push(point)
+      route.push(impliedTransitionPoint)
       mutatedSegments.push(mutated)
     }
+    route.push(point)
+    mutatedSegments.push(mutated)
   }
 
   appendPoint(firstSourceRoute.route[0]!, false)
