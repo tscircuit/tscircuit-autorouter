@@ -118,4 +118,7 @@ export {
   type Pipeline9HighDensitySolverParams,
 } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 
-export { getObstaclesFromSrjTraces, convertSrjTracesToObstacles } from "./utils/convertSrjTracesToObstacles"
+export {
+  getObstaclesFromSrjTraces,
+  convertSrjTracesToObstacles,
+} from "./utils/convertSrjTracesToObstacles"
