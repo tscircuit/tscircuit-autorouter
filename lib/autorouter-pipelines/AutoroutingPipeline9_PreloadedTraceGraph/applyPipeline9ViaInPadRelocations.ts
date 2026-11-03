@@ -120,14 +120,27 @@ export function applyPipeline9ViaInPadRelocations({
     }
   }
   if (movableVias.length === 0) return unchanged
+  const repairRouteIndices = [
+    ...new Set(movableVias.map(({ routeIndex }): number => routeIndex)),
+  ]
   const solver = new Repair04Solver(
     {
       srj: { ...srj, traces: undefined },
-      routes: allRoutes,
+      // Repair only the affected routes; reference DRC retains all copper.
+      routes: repairRouteIndices.map(
+        (routeIndex): HighDensityRoute => canonicalRoutes[routeIndex]!,
+      ),
       bounds,
       boundaryMargin: 0.001,
-      lockedPointIndices,
-      movableVias,
+      lockedPointIndices: repairRouteIndices.map(
+        (routeIndex): boolean[] => lockedPointIndices[routeIndex]!,
+      ),
+      movableVias: movableVias.map(
+        ({ routeIndex, viaIndex }): { routeIndex: number; viaIndex: number } => ({
+          routeIndex: repairRouteIndices.indexOf(routeIndex),
+          viaIndex,
+        }),
+      ),
       padDrillRepair: { holeDiameter: getViaDimensions(srj).holeDiameter },
       traceClearance:
         srj.minTraceToPadEdgeClearance ??
@@ -141,10 +154,11 @@ export function applyPipeline9ViaInPadRelocations({
       if (!candidateRoutes) {
         throw new Error("Pipeline9 pad drill evaluation requires routes")
       }
-      return getPipeline9DrcErrors(
-        drcEvaluator,
-        candidateRoutes.slice(0, canonicalRoutes.length),
-      )
+      const candidate = canonicalRoutes.slice()
+      for (const [repairIndex, routeIndex] of repairRouteIndices.entries()) {
+        candidate[routeIndex] = candidateRoutes[repairIndex]!
+      }
+      return getPipeline9DrcErrors(drcEvaluator, candidate)
     },
   )
   solver.solve()
@@ -154,7 +168,11 @@ export function applyPipeline9ViaInPadRelocations({
   const acceptedCandidateCount = Number(solver.stats.accepted)
   let repairedRoutes = routes
   if (acceptedCandidateCount > 0) {
-    const candidate = solver.getOutput().slice(0, canonicalRoutes.length)
+    const repaired = solver.getOutput()
+    const candidate = canonicalRoutes.slice()
+    for (const [repairIndex, routeIndex] of repairRouteIndices.entries()) {
+      candidate[routeIndex] = repaired[repairIndex]!
+    }
     const errors = [
       ...getPipeline9DrcErrors(drcEvaluator, canonicalRoutes),
       ...targets,

@@ -13,6 +13,7 @@ import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTr
 test("pad drill repair preserves connectivity and rejects blocked, locked and shared via movement", (): void => {
   for (const scenario of [
     "movable",
+    "foreign-route",
     "overlapping-pads",
     "offset-transition",
     "duplicate-via-vertex",
@@ -149,6 +150,51 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
         ],
       })
     }
+    if (scenario === "foreign-route") {
+      srj.connections.push({
+        name: "foreign",
+        pointsToConnect: [
+          {
+            x: 0.7,
+            y: -0.8,
+            layer: "bottom",
+            pcb_port_id: "foreign_start",
+          },
+          {
+            x: 0.7,
+            y: 0.8,
+            layer: "bottom",
+            pcb_port_id: "foreign_end",
+          },
+        ],
+      })
+      for (const [port, y] of [
+        ["foreign_start", -0.8],
+        ["foreign_end", 0.8],
+      ] as const) {
+        srj.obstacles.push({
+          type: "rect",
+          shape: "circle",
+          center: { x: 0.7, y },
+          width: 0.1,
+          height: 0.1,
+          layers: ["bottom"],
+          connectedTo: ["foreign", port],
+          circuitJsonMetadata: { pcb_smtpad_id: `${port}_pad` },
+        })
+      }
+      routes.push({
+        connectionName: "foreign",
+        rootConnectionName: "foreign",
+        traceThickness: 0.1,
+        viaDiameter: 0.6,
+        vias: [],
+        route: [
+          { x: 0.7, y: -0.8, z: 1, pcb_port_id: "foreign_start" },
+          { x: 0.7, y: 0.8, z: 1, pcb_port_id: "foreign_end" },
+        ],
+      })
+    }
     const original = structuredClone({ srj, routes })
     const connMap = getConnectivityMapFromSimpleRouteJson(srj)
     const options = {
@@ -181,6 +227,7 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
     annotateTraceEndpointPorts(json)
     if (
       scenario === "movable" ||
+      scenario === "foreign-route" ||
       scenario === "overlapping-pads" ||
       scenario === "offset-transition" ||
       scenario === "duplicate-via-vertex"
@@ -203,6 +250,10 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
       const after = result.routes[0]!.route[transitionIndex]!
       expect(before.x).toBe(after.x)
       expect(before.y).toBe(after.y)
+      if (scenario === "foreign-route") {
+        expect(result.routes[1]).toEqual(routes[1])
+        expect(result.routes[0]!.vias[0]!.x).toBeLessThan(0.25)
+      }
     } else {
       expect(result.acceptedCandidateCount).toBe(0)
       expect(result.routes).toEqual(routes)
