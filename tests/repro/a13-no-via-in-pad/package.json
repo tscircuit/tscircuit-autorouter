@@ -1,0 +1,18 @@
+{
+  "name": "a13-no-via-in-pad-repro",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tscircuit/alphabet": "0.0.25",
+    "@tscircuit/checks": "0.0.268",
+    "@tscircuit/copper-pour-solver": "0.0.67",
+    "@tscircuit/core": "0.0.2251",
+    "@tscircuit/infer-cable-insertion-point": "0.0.5",
+    "@tscircuit/miniflex": "0.0.4",
+    "@tscircuit/soup-util": "0.0.41",
+    "circuit-to-svg": "0.0.454",
+    "minicssgrid": "0.0.9",
+    "react": "19.2.8",
+    "spicey": "0.0.14"
+  }
+}

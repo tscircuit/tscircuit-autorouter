@@ -84,6 +84,7 @@ export type Pipeline9BoundedRegionalRepairParams = {
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget
+  prioritizeConflictedRoutes?: boolean
 }
 
 type RepairAllowance = {

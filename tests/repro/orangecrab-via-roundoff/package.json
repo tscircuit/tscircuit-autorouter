@@ -1,0 +1,15 @@
+{
+  "name": "orangecrab-via-roundoff-repro",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "tscircuit": "0.0.3060",
+    "@tscircuit/core": "0.0.2257",
+    "@tscircuit/checks": "0.0.268",
+    "@tscircuit/props": "0.0.716",
+    "circuit-json": "0.0.541",
+    "circuit-to-svg": "0.0.454",
+    "react": "19.3.1",
+    "transformation-matrix": "2.16.1"
+  }
+}
