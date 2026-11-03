@@ -2,8 +2,13 @@ import { expect, test } from "bun:test"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { DrcEvaluator } from "high-density-repair03/lib"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 
-test("reproduce Pipeline9 ignoring the independent trace clearance", (): void => {
+test("Pipeline9 checks independent trace clearance without rejecting valid pad gaps", (): void => {
   // Board-world XY positions in mm, +Y up. The middle copper gap is 0.075 mm.
   const routedTraces = [-1, 1].map((side, index) => ({
     type: "pcb_trace", pcb_trace_id: `trace_${index}`, connection_name: `net_${index}`,
@@ -12,7 +17,7 @@ test("reproduce Pipeline9 ignoring the independent trace clearance", (): void =>
       width: 0.1, layer: "top",
     })),
   })) satisfies SimplifiedPcbTrace[]
-  const input: SimpleRouteJson & { minDifferentNetTraceEdgeToTraceEdgeClearance: number } = {
+  const input: SimpleRouteJson = {
     layerCount: 2, minTraceWidth: 0.1,
     minTraceToPadEdgeClearance: 0.05,
     minDifferentNetTraceEdgeToTraceEdgeClearance: 0.1,
@@ -42,10 +47,37 @@ test("reproduce Pipeline9 ignoring the independent trace clearance", (): void =>
     inputSrj: input, srjWithPointPairs: input,
     drcOptions: { traceClearance: input.minTraceToPadEdgeClearance },
   })
-  // The declared trace-pair rule is ignored, so this records the current bug.
-  expect(evaluate(routedTraces).errors).toHaveLength(0)
+  expect(evaluate(routedTraces).errors).toHaveLength(1)
+  const routes: HighDensityRoute[] = routedTraces.map((trace) => ({
+    connectionName: trace.connection_name!, traceThickness: 0.1,
+    viaDiameter: 0.3, vias: [],
+    route: trace.route.map((point) => ({ x: point.x, y: point.y, z: 0 })),
+  }))
+  const drcEvaluator: DrcEvaluator = ({ routes: candidateRoutes }): ReturnType<DrcEvaluator> => {
+    if (!candidateRoutes) throw new Error("Expected projected wire routes")
+    const json = convertToCircuitJson(input, candidateRoutes)
+    return getDrcErrors(json, {
+      traceClearance: 0.05,
+      differentNetTraceClearance: 0.1,
+    }) as unknown as ReturnType<DrcEvaluator>
+  }
+  const solver = new Pipeline9ClearanceProjectionSolver({
+    originalSrj: input, routes, drcEvaluator, usePrecisionMargin: true,
+  })
+  solver.solve()
+  expect(solver.solved).toBe(true)
+  const repaired: SimplifiedPcbTrace[] = solver.getOutput().map((route, index) => ({
+    ...routedTraces[index]!,
+    route: route.route.map((point) => ({ route_type: "wire", x: point.x, y: point.y,
+      width: route.traceThickness, layer: "top" })),
+  }))
+  expect(evaluate(repaired).errors).toEqual([])
+  for (const [index, trace] of repaired.entries()) {
+    expect(trace.route[0]).toEqual(routedTraces[index]!.route[0])
+    expect(trace.route.at(-1)).toEqual(routedTraces[index]!.route.at(-1))
+  }
   expect(getBugReportSnapshotSvg({
-    inputSrj: input, srjWithPointPairs: input, routedTraces,
+    inputSrj: input, srjWithPointPairs: input, routedTraces: repaired,
     drcOptions: { traceClearance: input.minTraceToPadEdgeClearance },
   })).toMatchSvgSnapshot(import.meta.path)
 })

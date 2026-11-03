@@ -591,7 +591,7 @@ const getTracePairCenter = (left: TraceSegment, right: TraceSegment): Point => {
 /** Keeps candidate ordering and geometry identical to the full-board evaluator. */
 export const createTraceObstacleClearanceEvaluator = (
   staticCircuitJson: AnyCircuitElement[],
-  options: { traceClearance?: number; holeClearance?: number } = {},
+  options: { traceClearance?: number; differentNetTraceClearance?: number; holeClearance?: number } = {},
 ): ObstacleClearanceEvaluator => {
   const elements = staticCircuitJson
     .filter(
@@ -624,6 +624,11 @@ export const createTraceObstacleClearanceEvaluator = (
       options.traceClearance ??
       board?.min_trace_to_pad_edge_clearance ??
       TRACE_CLEARANCE
+    const tracePairClearance =
+      options.differentNetTraceClearance ??
+      options.traceClearance ??
+      board?.min_different_net_trace_edge_to_trace_edge_clearance ??
+      traceClearance
     const holeClearance =
       options.holeClearance ?? board?.min_trace_to_hole_edge_clearance ?? 0.2
     if (!Number.isFinite(holeClearance) || holeClearance < 0) {
@@ -744,7 +749,7 @@ export const createTraceObstacleClearanceEvaluator = (
     for (const segment of segments) {
       const { start, end, trace, width, portIds } = segment
       if (start.x === end.x && start.y === end.y) continue
-      for (const item of getCandidates(segment, traceClearance + width / 2, [
+      for (const item of getCandidates(segment, Math.max(traceClearance, tracePairClearance) + width / 2, [
         dynamicIndex,
         staticIndex,
       ])) {
@@ -785,7 +790,7 @@ export const createTraceObstacleClearanceEvaluator = (
             : getTraceObstacleClearance(start, end, width, item)
         if (
           "trace" in item
-            ? clearance.gap > traceClearance - DRC_EPSILON
+            ? clearance.gap > tracePairClearance - DRC_EPSILON
             : clearance.gap > 0
         )
           continue

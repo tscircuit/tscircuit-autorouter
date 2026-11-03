@@ -113,6 +113,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           ),
         ),
         allowViaMovement: !params.allowPartialRepair,
+        differentNetTraceClearance:
+          params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance === undefined
+            ? undefined
+            : params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance +
+              (params.allowPartialRepair || params.usePrecisionMargin
+                ? CLEARANCE_PRECISION_MARGIN
+                : 0),
         traceClearance:
           (params.originalSrj.minTraceToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.traceClearance) +
@@ -179,13 +186,25 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       return
     }
     if (state.phase === "physical-validation") {
+      // With separate wire rules, the guard must preserve the declared pad gap.
+      // Leave the existing guard policy unchanged for legacy inputs.
+      const padTraceClearance =
+        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance === undefined
+          ? undefined
+          : params.originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance
       const fixedViolations = new Map(
-        getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
+        getFixedObstacleViolations({
+          srj, routes: canonicalRoutes,
+          traceClearance: padTraceClearance,
+        }).map(
           (violation) => [violation.key, violation.severity],
         ),
       )
       if (
-        getFixedObstacleViolations({ srj, routes: state.candidate }).some(
+        getFixedObstacleViolations({
+          srj, routes: state.candidate,
+          traceClearance: padTraceClearance,
+        }).some(
           ({ key, severity }) =>
             !fixedViolations.has(key) ||
             severity > fixedViolations.get(key)! + 1e-8,

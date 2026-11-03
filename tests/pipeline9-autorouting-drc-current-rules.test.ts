@@ -107,6 +107,14 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
     { includeBoardClearance: false, drcOptions: {} },
     {
       includeBoardClearance: true,
+      drcOptions: { traceClearance: 0.04, differentNetTraceClearance: 0.25 },
+    },
+    {
+      includeBoardClearance: true,
+      drcOptions: { traceClearance: 0.18, differentNetTraceClearance: 0 },
+    },
+    {
+      includeBoardClearance: true,
       drcOptions: {
         traceClearance: 0.18,
         viaClearance: 0.25,
