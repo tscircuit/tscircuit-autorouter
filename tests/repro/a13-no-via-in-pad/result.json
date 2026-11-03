@@ -1,0 +1,30 @@
+{
+  "allowViaInPad": false,
+  "traces": 8,
+  "vias": 8,
+  "viaInPad": [
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_pcb_via_1_pcb_smtpad_90",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (-1.68mm, 1.03mm) overlaps SMD pad U200.BALL_F8 at (-1.60mm, 1.06mm)",
+      "subcircuit_id": "subcircuit_source_group_0"
+    },
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_pcb_via_3_pcb_smtpad_87",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (-6.41mm, 1.18mm) overlaps SMD pad U200.BALL_F2 at (-6.40mm, 1.06mm)",
+      "subcircuit_id": "subcircuit_source_group_0"
+    },
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_pcb_via_5_pcb_smtpad_89",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (-2.30mm, 0.89mm) overlaps SMD pad U200.BALL_F7 at (-2.40mm, 1.06mm)",
+      "subcircuit_id": "subcircuit_source_group_0"
+    }
+  ],
+  "otherPhysicalErrors": [],
+  "connectivity": []
+}
