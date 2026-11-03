@@ -38,8 +38,7 @@ const getLayersBetween = (
   )
 }
 
-/** Board-world copper in mm (+X right/+Y up, right-handed), with round end caps. */
-const createSegmentObstacles = ({
+const createSegmentObstacle = ({
   obstacleId,
   start,
   end,
@@ -53,25 +52,14 @@ const createSegmentObstacles = ({
   width: number
   layer: string
   connectedTo: string[]
-}): Obstacle[] => {
+}): Obstacle | null => {
   const dx = end.x - start.x
   const dy = end.y - start.y
   const length = Math.hypot(dx, dy)
 
-  const diameter = Math.max(width, MIN_OBSTACLE_DIMENSION)
-  const obstacles: Obstacle[] = [start, end].map((center, endpointIndex) => ({
-    obstacleId: `${obstacleId}_cap_${endpointIndex}`,
-    type: "rect",
-    shape: "circle",
-    layers: [layer],
-    center: { ...center },
-    width: diameter,
-    height: diameter,
-    connectedTo,
-  }))
-  if (length === 0) return obstacles.slice(0, 1)
+  if (length <= MIN_OBSTACLE_DIMENSION) return null
 
-  obstacles.unshift({
+  return {
     obstacleId,
     type: "rect",
     layers: [layer],
@@ -80,11 +68,10 @@ const createSegmentObstacles = ({
       y: (start.y + end.y) / 2,
     },
     width: length,
-    height: diameter,
+    height: Math.max(width, MIN_OBSTACLE_DIMENSION),
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
     connectedTo,
-  })
-  return obstacles
+  }
 }
 
 export const getObstaclesFromSrjTraces = (
@@ -96,13 +83,7 @@ export const getObstaclesFromSrjTraces = (
   const viaDimensions = getViaDimensions(srj)
 
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
-    const connectedTo = [
-      ...new Set([
-        trace.pcb_trace_id,
-        trace.connection_name,
-        ...(trace.connectsTo ?? []),
-      ]),
-    ]
+    const connectedTo = trace.connectsTo ?? []
 
     for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
       const routePoint = trace.route[pointIndex]!
@@ -112,14 +93,11 @@ export const getObstaclesFromSrjTraces = (
         traceObstacles.push({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_via`,
           type: "rect",
-          shape: "circle",
-          layers:
-            routePoint.layers ??
-            getLayersBetween(
-              routePoint.from_layer,
-              routePoint.to_layer,
-              srj.layerCount,
-            ),
+          layers: getLayersBetween(
+            routePoint.from_layer,
+            routePoint.to_layer,
+            srj.layerCount,
+          ),
           center: { x: routePoint.x, y: routePoint.y },
           width: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           height: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
@@ -129,7 +107,7 @@ export const getObstaclesFromSrjTraces = (
       }
 
       if (isThroughObstacleRoutePoint(routePoint)) {
-        const obstacles = createSegmentObstacles({
+        const obstacle = createSegmentObstacle({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_through`,
           start: routePoint.start,
           end: routePoint.end,
@@ -138,7 +116,7 @@ export const getObstaclesFromSrjTraces = (
           connectedTo,
         })
 
-        for (const obstacle of obstacles) {
+        if (obstacle) {
           obstacle.layers = getLayersBetween(
             routePoint.from_layer,
             routePoint.to_layer,
@@ -165,16 +143,30 @@ export const getObstaclesFromSrjTraces = (
         continue
       }
 
-      const obstacles = createSegmentObstacles({
+      const obstacle = createSegmentObstacle({
         obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_wire`,
         start: routePoint,
         end: nextRoutePoint,
-        width: Math.max(routePoint.width, nextRoutePoint.width),
+        width: routePoint.width,
         layer: routePoint.layer,
         connectedTo,
       })
 
-      traceObstacles.push(...obstacles)
+      if (obstacle) {
+        // Keep the oriented body and bound each physical end cap separately.
+        // Extending the rotated body would also add copper at its corners.
+        traceObstacles.push(
+          obstacle,
+          ...[routePoint, nextRoutePoint].map((endpoint, endpointIndex) => ({
+            ...obstacle,
+            obstacleId: `${obstacle.obstacleId}_cap_${endpointIndex}`,
+            center: { x: endpoint.x, y: endpoint.y },
+            width: obstacle.height,
+            height: obstacle.height,
+            ccwRotationDegrees: undefined,
+          })),
+        )
+      }
     }
   }
 
