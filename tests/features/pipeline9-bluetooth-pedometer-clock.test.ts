@@ -6,7 +6,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import fixture from "../fixtures/bluetooth-pedometer-clock.srj.json"
 
-test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): void => {
+test("real Bluetooth pedometer honors the X48_N zero-via and 6 mm limits", (): void => {
   // https://tscircuit.com/techmannih/Bluetooth-pedometer @ ebe6cfad63786434183a4ec6709409ade261dfff.
   // Complete board geometry, all 48 nets and 213 terminals; manual copper removed.
   // Restore only X48_N's lost rule to isolate the clock-routing defect.
@@ -27,8 +27,9 @@ test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): 
       if (a.route_type === "wire" && b.route_type === "wire" && a.layer === b.layer) length += Math.hypot(a.x - b.x, a.y - b.y)
     }
   }
-  expect(vias).toBe(2)
-  expect(length).toBeCloseTo(7.4106, 4)
+  expect(vias).toBe(0)
+  expect(length).toBeGreaterThan(0)
+  expect(length).toBeLessThanOrEqual(6)
   const outputCoordinates = new Set(traces.flatMap((trace) => trace.route.flatMap((point) => point.route_type === "wire" ? [JSON.stringify([point.x, point.y])] : [])))
   for (const connection of original.connections) {
     for (const point of connection.pointsToConnect) expect(outputCoordinates.has(JSON.stringify([point.x, point.y]))).toBe(true)
