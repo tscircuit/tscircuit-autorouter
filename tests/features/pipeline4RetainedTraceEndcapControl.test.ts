@@ -10,7 +10,9 @@ import {
 
 test("Pipeline 4 retains clearance beside the narrower wire control", async () => {
   const inputSrj = getRetainedTraceEndcapInput(0.4)
-  const solver = new AutoroutingPipelineSolver4(inputSrj, { cacheProvider: null })
+  const solver = new AutoroutingPipelineSolver4(inputSrj, {
+    cacheProvider: null,
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)

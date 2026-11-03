@@ -10,7 +10,9 @@ import {
 test("repro: Pipeline 4 routes through a retained wide wire end cap", async () => {
   const inputSrj = getRetainedTraceEndcapInput()
   const before = structuredClone(inputSrj)
-  const solver = new AutoroutingPipelineSolver4(inputSrj, { cacheProvider: null })
+  const solver = new AutoroutingPipelineSolver4(inputSrj, {
+    cacheProvider: null,
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
