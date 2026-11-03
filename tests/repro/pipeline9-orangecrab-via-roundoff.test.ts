@@ -61,8 +61,7 @@ function verifyNativeOrangeCrabRouting(): void {
     pcb_pad_trace_clearance_error: 5,
     pcb_via_trace_clearance_error: 6,
     pcb_pad_pad_clearance_error: 9,
-    pcb_via_clearance_error: 2,
-    pcb_placement_error: 4,
+    pcb_via_clearance_error: 1,
   })
 }
 

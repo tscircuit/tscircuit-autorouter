@@ -36,6 +36,8 @@ import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegional
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
+import { applyPipeline9ViaInPadRelocations } from "./applyPipeline9ViaInPadRelocations"
+import { createViaInPadEvaluator } from "./createViaInPadEvaluator"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
@@ -1152,7 +1154,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (
       currentDrc.errors.length === 0 &&
       this.traceContactGuard.getNewContactPairs(initialCombinedRoutes)
-        .length === 0
+        .length === 0 &&
+      (params.originalSrj.allowViaInPad === true ||
+        !createViaInPadEvaluator({
+          srj: params.originalSrj,
+          previousRoutes: params.originalSrj.traces ?? [],
+        })(initialCombinedRoutes))
     ) {
       this.solved = true
       return
@@ -1675,6 +1682,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         )
       if (!solver.solved) return
       this.combinedOutput = solver.getOutput()
+      this.relocatePadDrills()
       if (
         this.traceContactGuard.getNewContactPairs(this.combinedOutput).length >
         0
@@ -2107,6 +2115,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         "Pipeline9 final trace contact check is missing repair state",
       )
     }
+    this.relocatePadDrills()
     const contacts = this.traceContactGuard.getNewContactPairs(
       this.combinedOutput,
     )
@@ -2122,6 +2131,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     this.activeSubSolver = this.traceContactRepairSolver
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
+  }
+
+  private relocatePadDrills(): void {
+    if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
+      throw new Error("Pipeline9 pad drill repair is missing its route context")
+    }
+    const result = applyPipeline9ViaInPadRelocations({
+      srj: this.params.originalSrj,
+      routes: this.combinedOutput,
+      drcEvaluator: this.cachedReferenceDrcEvaluator,
+    })
+    this.combinedOutput = result.routes
+    this.stats = {
+      ...this.stats,
+      padDrillRelocationCandidateCount: result.attemptedCandidateCount,
+      padDrillRelocationAcceptedCount: result.acceptedCandidateCount,
+    }
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

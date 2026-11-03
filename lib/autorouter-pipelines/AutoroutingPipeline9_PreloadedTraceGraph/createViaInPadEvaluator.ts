@@ -1,31 +1,19 @@
 import { getRepairViaGeometry } from "@tscircuit/repair04"
-import type { AnyCircuitElement, PcbVia } from "circuit-json"
+import type { PcbVia } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import {
   createPcbPadElements,
   convertToCircuitJson,
 } from "lib/utils/convertToCircuitJson"
-import RBush from "rbush"
-import {
-  compileTraceClearanceObstacle,
-  getTraceObstacleClearance,
-  type IndexedObstacle,
-} from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
+import { createViaInPadDrcEvaluator } from "lib/utils/autorouting-drc/createViaInPadDrcEvaluator"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 type ViaInPadRoute = HighDensityRoute | SimplifiedPcbTrace
 
-type Pad = Extract<
-  AnyCircuitElement,
-  { type: "pcb_smtpad" | "pcb_plated_hole" }
->
-
 type ViaInPadEvaluator = (routes: readonly ViaInPadRoute[]) => boolean
-
-const VIA_HOLE_OVERLAP_EPSILON = 1e-6
 
 function getViaElements({
   routes,
@@ -82,12 +70,7 @@ export function createViaInPadEvaluator({
   const padElements = createPcbPadElements(
     createSrjWithBoardValidObstacleLayers(srj),
   )
-  const padIndex = new RBush<IndexedObstacle>()
-  const pads = padElements.filter(
-    (pad): pad is Pad =>
-      pad.type === "pcb_smtpad" || pad.type === "pcb_plated_hole",
-  )
-  padIndex.load(pads.map(compileTraceClearanceObstacle))
+  const evaluateViaInPad = createViaInPadDrcEvaluator(padElements)
   const existingDrills = new Set(
     getViaElements({ routes: previousRoutes, srj }).map((via) =>
       JSON.stringify([via.x, via.y, via.hole_diameter, via.layers]),
@@ -100,25 +83,6 @@ export function createViaInPadEvaluator({
           JSON.stringify([via.x, via.y, via.hole_diameter, via.layers]),
         ),
     )
-    for (const via of newVias) {
-      const radius = via.hole_diameter / 2
-      const pads = padIndex.search({
-        minX: via.x - radius,
-        minY: via.y - radius,
-        maxX: via.x + radius,
-        maxY: via.y + radius,
-      })
-      for (const pad of pads) {
-        if (!via.layers.some((layer) => pad.layers.includes(layer))) continue
-        const clearance = getTraceObstacleClearance(
-          via,
-          via,
-          via.hole_diameter,
-          pad,
-        )
-        if (clearance.gap < -VIA_HOLE_OVERLAP_EPSILON) return true
-      }
-    }
-    return false
+    return evaluateViaInPad(newVias).length > 0
   }
 }
