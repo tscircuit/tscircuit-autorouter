@@ -25,7 +25,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing("copper pours do not force extra escape vias", (): void => {
+test("copper pours do not force extra escape vias", (): void => {
   const traces = solver.getOutputSimplifiedPcbTraces()
   const vias = traces.flatMap((trace) =>
     trace.route.filter((point) => point.route_type === "via"),
