@@ -271,13 +271,32 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
+        const pcbPortIdByEndpoint = new Map<Point3, string>()
+        if (this.preserveTerminalPcbPortIds) {
+          // Match tagged ends to their pads without changing island orientation.
+          for (const route of hdRoutes) {
+            if (route.startPcbPortId)
+              pcbPortIdByEndpoint.set(route.route[0], route.startPcbPortId)
+            if (route.endPcbPortId)
+              pcbPortIdByEndpoint.set(
+                route.route[route.route.length - 1],
+                route.endPcbPortId,
+              )
+          }
+        }
+        const startPcbPortId = pcbPortIdByEndpoint.get(start)
+        const endPcbPortId = pcbPortIdByEndpoint.get(end)
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: [globalStart, globalEnd],
+          pcbPortId: startPcbPortId,
+          otherPcbPortId: endPcbPortId,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
           terminals: [globalStart, globalEnd],
+          pcbPortId: endPcbPortId,
+          otherPcbPortId: startPcbPortId,
         })
       } else {
         start = {

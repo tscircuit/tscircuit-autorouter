@@ -100,6 +100,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    this.atomicRegions.length = 0
     this.solved = true
   }
 
