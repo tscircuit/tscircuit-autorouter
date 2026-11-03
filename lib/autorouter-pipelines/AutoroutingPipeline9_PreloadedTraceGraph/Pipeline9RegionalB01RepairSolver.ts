@@ -2,6 +2,7 @@ import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { createViaInPadEvaluator } from "./createViaInPadEvaluator"
 import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import {
   getPipeline9TracePairRepairOutput,
@@ -59,8 +60,15 @@ type RegionalB01RepairPhase =
   | "validate-safe-layer"
   | "done"
 
+type RegionalCleanup = {
+  kind: "regular-candidate" | "accepted-routes"
+  routes: HighDensityRoute[]
+  errors: Pipeline9DrcError[]
+}
+
 /** Routes one regional candidate at a time through explicit child solver stages. */
 export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
+  private readonly evaluateViaInPad: ReturnType<typeof createViaInPadEvaluator>
   readonly params: Pipeline9RegionalB01RepairParams
   readonly candidateSearchBudget: number
   phase: RegionalB01RepairPhase = "initialize"
@@ -92,10 +100,15 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private regularCandidate?: Pipeline9RegularRegionalCandidateProblem
   private safeTraceLayerSolver?: GlobalDrcForceImproveSolver
   private viaPadProjectionSolver?: Pipeline9ClearanceProjectionSolver
+  private cleanup?: RegionalCleanup
 
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
     this.params = params
+    this.evaluateViaInPad = createViaInPadEvaluator({
+      srj: params.srj,
+      previousRoutes: params.routes,
+    })
     this.currentRoutes = params.routes
     this.bestRoutes = params.routes
     this.candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
@@ -104,6 +117,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     // Reserve finite overhead for candidate setup, validation, and pass stages.
     // Child iteration limits are added when each candidate is constructed.
     this.MAX_ITERATIONS = 64 + 8 * this.candidateSearchBudget
+  }
+
+  private introducesViaInPad(routes: HighDensityRoute[]): boolean {
+    if (this.params.srj.allowViaInPad === true) return false
+    return this.evaluateViaInPad(routes)
   }
 
   private initializeRepair(): void {
@@ -147,7 +165,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private beginPass(): void {
     if (this.candidateSearchBudgetExhausted || this.passIndex >= 2) {
-      this.phase = "refine"
+      this.beginCleanup({
+        kind: "accepted-routes",
+        routes: this.currentRoutes,
+        errors: this.currentErrors,
+      })
       return
     }
     this.acceptedOnPass = false
@@ -237,7 +259,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     if (!routes) return
     this.attemptedCandidateCount++
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-    if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+    if (
+      isPipeline9DrcCandidateBetter(errors, this.bestErrors) &&
+      !this.introducesViaInPad(routes)
+    ) {
       this.bestRoutes = routes
       this.bestErrors = errors
       this.phase = "commit-error"
@@ -322,7 +347,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         this.params.drcEvaluator,
         candidate.routes,
       )
-      if (isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors)) {
+      if (
+        isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors) &&
+        !this.introducesViaInPad(candidate.routes)
+      ) {
         this.bestRoutes = candidate.routes
         this.bestErrors = candidateErrors
       }
@@ -387,6 +415,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.fallbackCandidateCount++
       const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
       if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+        if (this.introducesViaInPad(routes)) {
+          // Clean the proposal without replacing the accepted routes yet.
+          this.beginCleanup({ kind: "regular-candidate", routes, errors })
+          return
+        }
         this.bestRoutes = routes
         this.bestErrors = errors
       }
@@ -409,37 +442,64 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private finishPass(): void {
     this.passIndex++
-    this.phase =
+    if (
       !this.acceptedOnPass ||
       this.currentErrors.length === 0 ||
       this.candidateSearchBudgetExhausted
-        ? "refine"
-        : "begin-pass"
+    ) {
+      this.beginCleanup({
+        kind: "accepted-routes",
+        routes: this.currentRoutes,
+        errors: this.currentErrors,
+      })
+      return
+    }
+    this.phase = "begin-pass"
   }
 
-  private refineAcceptedRoutes(): void {
-    if (this.acceptedCandidateCount > 0 && this.currentErrors.length > 0) {
+  private beginCleanup(cleanup: RegionalCleanup): void {
+    if (this.cleanup) {
+      throw new Error("Regional B01 cleanup is already active")
+    }
+    this.cleanup = cleanup
+    this.phase = "refine"
+  }
+
+  private getCleanupOrThrow(): RegionalCleanup {
+    const cleanup = this.cleanup
+    if (!cleanup) {
+      throw new Error("Regional B01 repair has no active cleanup")
+    }
+    return cleanup
+  }
+
+  private refineCleanupRoutes(): void {
+    const cleanup = this.getCleanupOrThrow()
+    const hasRepair =
+      cleanup.kind === "regular-candidate" || this.acceptedCandidateCount > 0
+    if (hasRepair && cleanup.errors.length > 0) {
       const refinedRoutes = restorePipeline9TerminalApproaches(
-        this.currentRoutes,
+        cleanup.routes,
         applyBroadRepulsionForces(
           { ...this.params.srj, traces: undefined },
-          this.currentRoutes,
+          cleanup.routes,
           this.params.effort,
           1,
           this.params.connMap,
         ),
       )
-      if (refinedRoutes && refinedRoutes !== this.currentRoutes) {
+      if (refinedRoutes && refinedRoutes !== cleanup.routes) {
         const errors = getPipeline9DrcErrors(
           this.params.drcEvaluator,
           refinedRoutes,
         )
         if (
-          getViaIssueCount(errors) <= getViaIssueCount(this.currentErrors) &&
-          isPipeline9DrcCandidateBetter(errors, this.currentErrors)
+          getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
+          isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+          !this.introducesViaInPad(refinedRoutes)
         ) {
-          this.currentRoutes = refinedRoutes
-          this.currentErrors = errors
+          cleanup.routes = refinedRoutes
+          cleanup.errors = errors
         }
       }
     }
@@ -447,7 +507,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private prepareViaPadProjection(): void {
-    const movableRegions = this.currentErrors
+    const cleanup = this.getCleanupOrThrow()
+    const movableRegions = cleanup.errors
       .filter(isViaPadClearanceError)
       .flatMap((error) => {
         const center = getRepairCenter(error, this.params.srj)
@@ -459,12 +520,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.phase = "prepare-safe-layer"
       return
     }
-    const routeCount = this.currentRoutes.length
+    const routeCount = cleanup.routes.length
     // A physical via can belong to multiple same-net route pieces. Project
     // those pieces together with nearby wires, keeping all preload copper fixed.
     this.viaPadProjectionSolver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.srj,
-      routes: [...this.currentRoutes, ...this.params.fixedObstacleRoutes],
+      routes: [...cleanup.routes, ...this.params.fixedObstacleRoutes],
       lockedConnectionNames: new Set([
         ...this.params.syntheticConnectionNames,
         ...this.params.fixedObstacleRoutes.map((route) => route.connectionName),
@@ -484,6 +545,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private stepViaPadProjection(): void {
+    const cleanup = this.getCleanupOrThrow()
     const solver = this.viaPadProjectionSolver
     if (!solver) throw new Error("Regional B01 has no via-pad projection")
     solver.step()
@@ -495,17 +557,18 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       throw new Error(`Regional via-pad projection failed: ${solver.error}`)
     }
     if (!solver.solved) return
-    this.currentRoutes = solver.getOutput().slice(0, this.currentRoutes.length)
-    this.currentErrors = getPipeline9DrcErrors(
+    cleanup.routes = solver.getOutput().slice(0, cleanup.routes.length)
+    cleanup.errors = getPipeline9DrcErrors(
       this.params.drcEvaluator,
-      this.currentRoutes,
+      cleanup.routes,
     )
     this.activeSubSolver = null
     this.phase = "prepare-safe-layer"
   }
 
   private prepareSafeLayerRepair(): void {
-    const hasSafeLayerRepairableError = this.currentErrors.some(
+    const cleanup = this.getCleanupOrThrow()
+    const hasSafeLayerRepairableError = cleanup.errors.some(
       (error): boolean =>
         error.type === "pcb_trace_error" ||
         error.type === "pcb_pad_trace_clearance_error",
@@ -513,12 +576,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.safeTraceLayerRepairSkippedForBudget =
       hasSafeLayerRepairableError && this.candidateSearchBudgetExhausted
     if (!hasSafeLayerRepairableError || this.candidateSearchBudgetExhausted) {
-      this.finishRepair()
+      this.finishCleanup()
       return
     }
     this.safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...this.params.srj, traces: undefined },
-      hdRoutes: this.currentRoutes,
+      hdRoutes: cleanup.routes,
       connMap: this.params.connMap,
       effort: this.params.effort,
       drcEvaluator: this.params.drcEvaluator,
@@ -548,20 +611,52 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private validateSafeLayerRepair(): void {
+    const cleanup = this.getCleanupOrThrow()
     const solver = this.safeTraceLayerSolver
     if (!solver)
       throw new Error("Regional B01 has no completed safe trace-layer solver")
     const routes = solver.getOutput()
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-    if (isPipeline9DrcCandidateBetter(errors, this.currentErrors)) {
-      this.currentRoutes = routes
-      this.currentErrors = errors
+    if (
+      isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+      !this.introducesViaInPad(routes)
+    ) {
+      cleanup.routes = routes
+      cleanup.errors = errors
     }
     this.safeTraceLayerSolver = undefined
+    this.finishCleanup()
+  }
+
+  private finishCleanup(): void {
+    const cleanup = this.getCleanupOrThrow()
+    this.cleanup = undefined
+    const hasForbiddenVia = this.introducesViaInPad(cleanup.routes)
+    if (cleanup.kind === "regular-candidate") {
+      if (
+        !hasForbiddenVia &&
+        isPipeline9DrcCandidateBetter(cleanup.errors, this.bestErrors)
+      ) {
+        this.bestRoutes = cleanup.routes
+        this.bestErrors = cleanup.errors
+      }
+      this.phase = "commit-error"
+      return
+    }
+    if (!hasForbiddenVia) {
+      this.currentRoutes = cleanup.routes
+      this.currentErrors = cleanup.errors
+    }
     this.finishRepair()
   }
 
   private finishRepair(): void {
+    this.activeSubSolver = null
+    if (this.introducesViaInPad(this.currentRoutes)) {
+      this.error = "Pipeline9 regional repair introduced a forbidden via-in-pad"
+      this.failed = true
+      return
+    }
     this.result = {
       routes: this.currentRoutes,
       attemptedCandidateCount: this.attemptedCandidateCount,
@@ -576,7 +671,6 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       preloadEligibleDrcIssueCount: this.preloadEligibleDrcIssueCount,
       preloadRepairAttempted: this.preloadEligibleDrcIssueCount > 0,
     }
-    this.activeSubSolver = null
     this.stats = { ...this.result, routes: undefined }
     this.phase = "done"
     this.solved = true
@@ -613,7 +707,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       case "finish-pass":
         return this.finishPass()
       case "refine":
-        return this.refineAcceptedRoutes()
+        return this.refineCleanupRoutes()
       case "prepare-via-pad-projection":
         return this.prepareViaPadProjection()
       case "project-via-pad":
