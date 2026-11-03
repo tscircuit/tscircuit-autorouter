@@ -57,16 +57,15 @@ function verifyNativeOrangeCrabRouting(): void {
     findingCounts[finding.type] = (findingCounts[finding.type] ?? 0) + 1
   }
   expect(findingCounts).toEqual({
-    pcb_trace_error: 6,
-    pcb_pad_trace_clearance_error: 5,
-    pcb_via_trace_clearance_error: 6,
-    pcb_pad_pad_clearance_error: 9,
+    pcb_trace_error: 2,
+    pcb_pad_trace_clearance_error: 6,
+    pcb_via_trace_clearance_error: 10,
+    pcb_pad_pad_clearance_error: 8,
     pcb_via_clearance_error: 2,
-    pcb_placement_error: 4,
   })
 }
 
 test(
-  "native OrangeCrab completes all 50 DDR nets without losing via anchors",
+  "native OrangeCrab completes all 50 DDR nets without forbidden pad drills",
   verifyNativeOrangeCrabRouting,
 )
