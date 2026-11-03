@@ -77,7 +77,10 @@ test("SRJ33 sample 36 retains safe repair quality within its DRC search budget",
   expect(
     output.reduce((count, route) => count + route.vias.length, 0),
   ).toBeLessThanOrEqual(
-    owner.params.hdRoutes.reduce((count, route) => count + route.vias.length, 0),
+    owner.params.hdRoutes.reduce(
+      (count, route) => count + route.vias.length,
+      0,
+    ),
   )
   for (let index = 0; index < output.length; index++) {
     expect(output[index]!.route[0]).toEqual(original.hdRoutes[index]!.route[0])
