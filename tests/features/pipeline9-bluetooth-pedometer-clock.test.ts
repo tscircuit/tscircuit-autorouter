@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
@@ -32,7 +34,14 @@ test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): 
     for (const point of connection.pointsToConnect) expect(outputCoordinates.has(JSON.stringify([point.x, point.y]))).toBe(true)
   }
   expect(input).toEqual(original)
+  const validation = { inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces, drcOptions: { traceClearance: 0.05 } }
+  const reported = evaluateRelaxedDrc(validation)
+  expect(reported.errors).toEqual([])
+  // Independently audit the board's requested 0.1 mm rule. Its export/enforcement
+  // bug belongs to the separate clearance PRs; this clock stack uses main only.
+  const requestedTraceErrors = checkEachPcbTraceNonOverlapping(reported.circuitJson, { minClearance: 0.1 })
+  expect(requestedTraceErrors).toHaveLength(9)
   const color = vias === 0 && length <= 6 ? "#166534" : "#b91c1c"
-  const caption = `<g><rect x="12" y="62" width="600" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="90" font-family="Arial, sans-serif" font-size="18" fill="${color}">X48_N: ${vias} vias / ${length.toFixed(2)} mm; allowed 0 vias / 6 mm</text></g>`
+  const caption = `<g><rect x="12" y="62" width="600" height="72" rx="6" fill="white" stroke="${color}"/><text x="24" y="90" font-family="Arial, sans-serif" font-size="18" fill="${color}">X48_N: ${vias} vias / ${length.toFixed(2)} mm; allowed 0 vias / 6 mm</text><text x="24" y="114" font-family="Arial, sans-serif" font-size="14" fill="#475569">0.1 mm trace-rule errors (separate issue): ${requestedTraceErrors.length}</text></g>`
   expect(getBugReportSnapshotSvg({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces, drcOptions: { traceClearance: 0.05 } }).replace("</svg>", `${caption}</svg>`)).toMatchSvgSnapshot(import.meta.path)
 })
