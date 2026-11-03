@@ -14,26 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dataset: srj33
-            samples: "32"
-            rounds: 3
-            label: srj33-sample32-repeated
           - dataset: dataset01
             samples: ""
-            rounds: 1
-            label: dataset01-full
-          - dataset: srj18
-            samples: ""
-            rounds: 1
-            label: srj18-full
-          - dataset: srj24
-            samples: ""
-            rounds: 1
-            label: srj24-full
-          - dataset: srj33
-            samples: ""
-            rounds: 1
-            label: srj33-full
+            rounds: 3
+            label: dataset01-repeats-with-control
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 60
     steps:
@@ -75,9 +59,15 @@ jobs:
           args=(--pipeline 9 --dataset "$BENCH_DATASET" --concurrency 3 --threads 1 --effort 1 --sample-timeout 360s)
           if [ -n "$BENCH_SAMPLES" ]; then args+=(--sample-numbers "$BENCH_SAMPLES"); fi
           for round in $(seq 1 "$BENCH_ROUNDS"); do
-            if (( round % 2 )); then variants=(base fix); else variants=(fix base); fi
+            case "$round" in
+              1) variants=(base fix control) ;;
+              2) variants=(control fix base) ;;
+              3) variants=(fix base control) ;;
+            esac
             for variant in "${variants[@]}"; do
-              ln -sfn "$PWD/work/repair-$variant" node_modules/high-density-repair03
+              source_variant="$variant"
+              if [ "$variant" = control ]; then source_variant=base; fi
+              ln -sfn "$PWD/work/repair-$source_variant" node_modules/high-density-repair03
               ./benchmark.sh "${args[@]}" 2>&1 | tee "work/results/round$round-$variant.log"
               cp benchmark-result.json "work/results/round$round-$variant.json"
               cp benchmark-result.txt "work/results/round$round-$variant.txt"
