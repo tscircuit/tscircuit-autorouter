@@ -38,7 +38,8 @@ const getLayersBetween = (
   )
 }
 
-const createSegmentObstacle = ({
+/** Board-world copper in mm (+X right/+Y up, right-handed), with round end caps. */
+const createSegmentObstacles = ({
   obstacleId,
   start,
   end,
@@ -52,14 +53,25 @@ const createSegmentObstacle = ({
   width: number
   layer: string
   connectedTo: string[]
-}): Obstacle | null => {
+}): Obstacle[] => {
   const dx = end.x - start.x
   const dy = end.y - start.y
   const length = Math.hypot(dx, dy)
 
-  if (length <= MIN_OBSTACLE_DIMENSION) return null
+  const diameter = Math.max(width, MIN_OBSTACLE_DIMENSION)
+  const obstacles: Obstacle[] = [start, end].map((center, endpointIndex) => ({
+    obstacleId: `${obstacleId}_cap_${endpointIndex}`,
+    type: "rect",
+    shape: "circle",
+    layers: [layer],
+    center: { ...center },
+    width: diameter,
+    height: diameter,
+    connectedTo,
+  }))
+  if (length === 0) return obstacles.slice(0, 1)
 
-  return {
+  obstacles.unshift({
     obstacleId,
     type: "rect",
     layers: [layer],
@@ -68,10 +80,11 @@ const createSegmentObstacle = ({
       y: (start.y + end.y) / 2,
     },
     width: length,
-    height: Math.max(width, MIN_OBSTACLE_DIMENSION),
+    height: diameter,
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
     connectedTo,
-  }
+  })
+  return obstacles
 }
 
 export const getObstaclesFromSrjTraces = (
@@ -83,7 +96,13 @@ export const getObstaclesFromSrjTraces = (
   const viaDimensions = getViaDimensions(srj)
 
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
-    const connectedTo = trace.connectsTo ?? []
+    const connectedTo = [
+      ...new Set([
+        trace.pcb_trace_id,
+        trace.connection_name,
+        ...(trace.connectsTo ?? []),
+      ]),
+    ]
 
     for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
       const routePoint = trace.route[pointIndex]!
@@ -93,11 +112,14 @@ export const getObstaclesFromSrjTraces = (
         traceObstacles.push({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_via`,
           type: "rect",
-          layers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
+          shape: "circle",
+          layers:
+            routePoint.layers ??
+            getLayersBetween(
+              routePoint.from_layer,
+              routePoint.to_layer,
+              srj.layerCount,
+            ),
           center: { x: routePoint.x, y: routePoint.y },
           width: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           height: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
@@ -107,7 +129,7 @@ export const getObstaclesFromSrjTraces = (
       }
 
       if (isThroughObstacleRoutePoint(routePoint)) {
-        const obstacle = createSegmentObstacle({
+        const obstacles = createSegmentObstacles({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_through`,
           start: routePoint.start,
           end: routePoint.end,
@@ -116,7 +138,7 @@ export const getObstaclesFromSrjTraces = (
           connectedTo,
         })
 
-        if (obstacle) {
+        for (const obstacle of obstacles) {
           obstacle.layers = getLayersBetween(
             routePoint.from_layer,
             routePoint.to_layer,
@@ -143,16 +165,16 @@ export const getObstaclesFromSrjTraces = (
         continue
       }
 
-      const obstacle = createSegmentObstacle({
+      const obstacles = createSegmentObstacles({
         obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_wire`,
         start: routePoint,
         end: nextRoutePoint,
-        width: routePoint.width,
+        width: Math.max(routePoint.width, nextRoutePoint.width),
         layer: routePoint.layer,
         connectedTo,
       })
 
-      if (obstacle) traceObstacles.push(obstacle)
+      traceObstacles.push(...obstacles)
     }
   }
 

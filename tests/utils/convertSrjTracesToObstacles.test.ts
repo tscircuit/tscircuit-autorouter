@@ -62,14 +62,14 @@ const baseSrj: SimpleRouteJson = {
 test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", () => {
   const traceObstacles = getObstaclesFromSrjTraces(baseSrj)
 
-  expect(traceObstacles).toHaveLength(2)
+  expect(traceObstacles).toHaveLength(4)
   expect(traceObstacles[0]).toMatchObject({
     type: "rect",
     layers: ["top", "inner1", "inner2"],
     center: { x: 2, y: 0 },
     width: 0.4,
     height: 0.4,
-    connectedTo: [],
+    connectedTo: ["trace_0", "net.GND"],
   })
   expect(traceObstacles[1]).toMatchObject({
     type: "rect",
@@ -78,6 +78,6 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     width: 2,
     height: 0.15,
     ccwRotationDegrees: 0,
-    connectedTo: [],
+    connectedTo: ["trace_0", "net.GND"],
   })
 })

@@ -246,7 +246,8 @@ const createClippedTraceSegmentObstacle = ({
       x: (start.x + end.x) / 2,
       y: (start.y + end.y) / 2,
     },
-    width: length,
+    // Bound the complete swept copper, including both round end caps.
+    width: length + width,
     height: width,
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
     connectedTo: [],
