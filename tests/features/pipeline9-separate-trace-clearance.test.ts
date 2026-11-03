@@ -5,13 +5,13 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 test("reproduce Pipeline9 ignoring the independent trace clearance", (): void => {
   // Board-world XY positions in mm, +Y up. The middle copper gap is 0.075 mm.
-  const routedTraces: SimplifiedPcbTrace[] = [-1, 1].map((side, index) => ({
+  const routedTraces = [-1, 1].map((side, index) => ({
     type: "pcb_trace", pcb_trace_id: `trace_${index}`, connection_name: `net_${index}`,
     route: [-2, -1, 1, 2].map((x) => ({
       route_type: "wire", x, y: (index === 0 ? 0 : 0.175) + (Math.abs(x) === 2 ? side * 0.5 : 0),
       width: 0.1, layer: "top",
     })),
-  }))
+  })) satisfies SimplifiedPcbTrace[]
   const input: SimpleRouteJson & { minDifferentNetTraceEdgeToTraceEdgeClearance: number } = {
     layerCount: 2, minTraceWidth: 0.1,
     minTraceToPadEdgeClearance: 0.05,
