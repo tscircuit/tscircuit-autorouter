@@ -15,9 +15,9 @@ jobs:
       matrix:
         include:
           - dataset: dataset01
-            samples: ""
-            rounds: 3
-            label: dataset01-repeats-with-control
+            samples: "8,16,31,48,79,81"
+            rounds: 6
+            label: dataset01-isolated-six-balanced-rounds
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 60
     steps:
@@ -45,7 +45,7 @@ jobs:
           const base = JSON.parse(fs.readFileSync('work/repair-base/package.json'))
           const fix = JSON.parse(fs.readFileSync('work/repair-fix-source/package.json'))
           if (JSON.stringify(base.dependencies) !== JSON.stringify(fix.dependencies)) throw new Error('Repair dependencies differ')
-          fs.writeFileSync('work/results/provenance.json', JSON.stringify({ consumer: '6d24fa9d61abc2526f677883c88bef62f4e88c41', repairBase: 'ea62b9ab6355cdbc2a603b779edc44940d81f5d0', repairFix: process.env.REPAIR_FIX, bun: '1.4.2', concurrency: 3, threads: 1, effort: 1, sampleTimeoutSeconds: 360, transitiveDependencies: 'identical copied installation' }, null, 2))
+          fs.writeFileSync('work/results/provenance.json', JSON.stringify({ consumer: '6d24fa9d61abc2526f677883c88bef62f4e88c41', repairBase: 'ea62b9ab6355cdbc2a603b779edc44940d81f5d0', repairFix: process.env.REPAIR_FIX, bun: '1.4.2', concurrency: 1, threads: 1, effort: 1, sampleTimeoutSeconds: 360, transitiveDependencies: 'identical copied installation' }, null, 2))
           NODE
           rm -rf work/repair-fix/lib
           cp -a work/repair-fix-source/lib work/repair-fix/lib
@@ -56,13 +56,16 @@ jobs:
           BENCH_ROUNDS: ${{ matrix.rounds }}
         run: |
           set -euo pipefail
-          args=(--pipeline 9 --dataset "$BENCH_DATASET" --concurrency 3 --threads 1 --effort 1 --sample-timeout 360s)
+          args=(--pipeline 9 --dataset "$BENCH_DATASET" --concurrency 1 --threads 1 --effort 1 --sample-timeout 360s)
           if [ -n "$BENCH_SAMPLES" ]; then args+=(--sample-numbers "$BENCH_SAMPLES"); fi
           for round in $(seq 1 "$BENCH_ROUNDS"); do
             case "$round" in
               1) variants=(base fix control) ;;
               2) variants=(control fix base) ;;
               3) variants=(fix base control) ;;
+              4) variants=(base control fix) ;;
+              5) variants=(control base fix) ;;
+              6) variants=(fix control base) ;;
             esac
             for variant in "${variants[@]}"; do
               source_variant="$variant"
