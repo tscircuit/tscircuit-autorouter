@@ -130,9 +130,9 @@ test("pad drill repair preserves connectivity and rejects blocked, locked and sh
       expect(checkViasInPads(json)).toEqual([])
       expect(checkTracesAreContiguous(json)).toEqual([])
       const connectivity = new PcbConnectivityMap(json)
-      expect(
-        connectivity.connMap.areAllIdsConnected(["start", "end"]),
-      ).toBe(true)
+      expect(connectivity.connMap.areAllIdsConnected(["start", "end"])).toBe(
+        true,
+      )
       expect(result.routes[0]!.route[0]).toEqual(routes[0]!.route[0])
       expect(result.routes[0]!.route.at(-1)).toEqual(routes[0]!.route.at(-1))
       expect(result.routes[0]!.route[1]!.x).toBe(result.routes[0]!.route[2]!.x)

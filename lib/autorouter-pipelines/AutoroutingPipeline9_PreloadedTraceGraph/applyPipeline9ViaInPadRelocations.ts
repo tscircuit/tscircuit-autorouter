@@ -65,12 +65,7 @@ function getDrillBoundaryPoint({
       x: center.x + radius * Math.cos(angle),
       y: center.y + radius * Math.sin(angle),
     }
-    const clearance = getTraceObstacleClearance(
-      point,
-      point,
-      holeDiameter,
-      pad,
-    )
+    const clearance = getTraceObstacleClearance(point, point, holeDiameter, pad)
     if (clearance.gap < HOLE_EDGE_MARGIN) lower = radius
     else upper = radius
   }
@@ -127,8 +122,7 @@ export function applyPipeline9ViaInPadRelocations({
     createPcbPadElements(srj)
       .filter(
         (element) =>
-          element.type === "pcb_smtpad" ||
-          element.type === "pcb_plated_hole",
+          element.type === "pcb_smtpad" || element.type === "pcb_plated_hole",
       )
       .map(compileTraceClearanceObstacle)
       .map((pad) => [pad.id, pad]),
