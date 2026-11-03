@@ -97,7 +97,6 @@ export class ConstrainedClearanceRepairSolver extends BaseSolver {
       srj: { ...this.srj, traces: undefined }, routes, bounds: this.srj.bounds,
       boundaryMargin: 0, boardEdgeClearance: this.srj.minBoardEdgeClearance ?? 0,
       allowViaMovement: true,
-      differentNetTraceClearance: (this.srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? this.srj.minTraceToPadEdgeClearance ?? 0.1) + 0.0001,
       traceClearance: (this.srj.minTraceToPadEdgeClearance ?? 0.1) + 0.0001,
       viaClearance: (this.srj.minPadEdgeToPadEdgeClearance ?? 0.1) + 0.0001,
       lockedPointIndices: routes.map((route, index) => route.route.map((point) => this.locked.has(this.traces[index]!.pcb_trace_id) || this.terminals.has(`${point.x.toFixed(7)},${point.y.toFixed(7)}`))),

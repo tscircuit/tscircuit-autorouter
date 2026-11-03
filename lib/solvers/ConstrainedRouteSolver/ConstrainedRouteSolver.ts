@@ -62,6 +62,13 @@ export class ConstrainedRouteSolver extends BaseSolver {
     if (existing.satisfied) return
     const connection = this.inputSrj.connections.find((candidate) => candidate.name === rule.connectionName)
     if (!connection) throw new Error("Route constraint references a missing connection")
+    const connectivity = getConnectivityMapFromSimpleRouteJson(this.outputSrj)
+    const net = connectivity.getNetConnectedToId(connection.name)
+    if (net && this.outputSrj.traces!.some((trace) => connectivity.getNetConnectedToId(trace.connection_name) === net)) {
+      // Existing constrained copper needs an explicit replacement at final repair,
+      // not a parallel path that leaves the original over-budget vias in place.
+      return
+    }
     const terminals = rule.pointIds.map((pointId) => {
       const terminal = connection.pointsToConnect.find((point) => point.pointId === pointId || point.pcb_port_id === pointId)
       if (!terminal) throw new Error("Route constraint references a missing terminal")
@@ -125,14 +132,14 @@ export class ConstrainedRouteSolver extends BaseSolver {
         const point = trace.route[index]!
         const next = trace.route[index + 1]
         if (point.route_type === "wire" && point.layer === layer && next?.route_type === "wire" && next.layer === layer) {
-          copper.push({ a: point, b: next, radius: (Math.max(point.width, next.width) + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+          copper.push({ a: point, b: next, radius: (Math.max(point.width, next.width) + width) / 2 + (srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
         } else if (point.route_type === "wire" && point.layer === layer && next?.route_type === "via" && [next.from_layer, next.to_layer].includes(layer)) {
-          copper.push({ a: point, b: next, radius: (point.width + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+          copper.push({ a: point, b: next, radius: (point.width + width) / 2 + (srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
         } else if (point.route_type === "via") {
           // Through-via barrels block every copper layer, including inner layers.
           copper.push({ a: point, b: point, radius: (point.via_diameter ?? srj.minViaPadDiameter ?? srj.minViaDiameter ?? 0.6) / 2 + padMargin })
           if (next?.route_type === "wire" && next.layer === layer && [point.from_layer, point.to_layer].includes(layer)) {
-            copper.push({ a: point, b: next, radius: (next.width + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+            copper.push({ a: point, b: next, radius: (next.width + width) / 2 + (srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
           }
         } else if (point.route_type === "through_obstacle") {
           // Conservatively reserve component-owned copper across the layer span.
