@@ -49,5 +49,11 @@
     "main.tsx",
     "vite.config.ts"
   ],
-  "exclude": ["dist", "fixtures", "examples/legacy/assets/**/*.json"]
+  // The standalone native renderer uses its own pinned core/runtime versions.
+  "exclude": [
+    "dist",
+    "fixtures",
+    "tests/repro/a13-no-via-in-pad",
+    "examples/legacy/assets/**/*.json"
+  ]
 }
