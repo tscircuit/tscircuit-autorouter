@@ -91,7 +91,7 @@ export class ConstrainedRouteSolver extends BaseSolver {
         type: "pcb_trace", pcb_trace_id: traceId, connection_name: connection.name,
         connectsTo: [connection.name, ...[start.pointId, best.target.pointId].filter((id): id is string => id !== undefined)],
         route: best.points.map((point, index) => ({
-          route_type: "wire", ...point, width, layer: best!.layer,
+          route_type: "wire", x: point.x, y: point.y, width, layer: best!.layer,
           ...(index === 0 && start.pcb_port_id ? { start_pcb_port_id: start.pcb_port_id } : {}),
           ...(index === best!.points.length - 1 && best!.target.pcb_port_id ? { end_pcb_port_id: best!.target.pcb_port_id } : {}),
         })),
@@ -125,10 +125,20 @@ export class ConstrainedRouteSolver extends BaseSolver {
         const point = trace.route[index]!
         const next = trace.route[index + 1]
         if (point.route_type === "wire" && point.layer === layer && next?.route_type === "wire" && next.layer === layer) {
-          copper.push({ a: point, b: next, radius: (Math.max(point.width, next.width) + width) / 2 + (srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+          copper.push({ a: point, b: next, radius: (Math.max(point.width, next.width) + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+        } else if (point.route_type === "wire" && point.layer === layer && next?.route_type === "via" && [next.from_layer, next.to_layer].includes(layer)) {
+          copper.push({ a: point, b: next, radius: (point.width + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
         } else if (point.route_type === "via") {
           // Through-via barrels block every copper layer, including inner layers.
-          copper.push({ a: point, b: point, radius: (point.via_diameter ?? srj.minViaPadDiameter ?? 0.6) / 2 + padMargin })
+          copper.push({ a: point, b: point, radius: (point.via_diameter ?? srj.minViaPadDiameter ?? srj.minViaDiameter ?? 0.6) / 2 + padMargin })
+          if (next?.route_type === "wire" && next.layer === layer && [point.from_layer, point.to_layer].includes(layer)) {
+            copper.push({ a: point, b: next, radius: (next.width + width) / 2 + (srj.minDifferentNetTraceEdgeToTraceEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1) + 1e-5 })
+          }
+        } else if (point.route_type === "through_obstacle") {
+          // Conservatively reserve component-owned copper across the layer span.
+          copper.push({ a: point.start, b: point.end, radius: point.width / 2 + padMargin })
+        } else if (point.route_type === "jumper" && point.layer === layer) {
+          copper.push({ a: point.start, b: point.end, radius: padMargin })
         }
       }
     }

@@ -37,7 +37,12 @@ export function measureRouteConstraint(
     adjacency.push([])
     return index
   }
-  const addEdge = (a: number, b: number, length: number, vias: number): void => {
+  const addEdge = (
+    a: number,
+    b: number,
+    length: number,
+    vias: number,
+  ): void => {
     adjacency[a]!.push({ to: b, length, vias })
     adjacency[b]!.push({ to: a, length, vias })
   }
@@ -56,6 +61,9 @@ export function measureRouteConstraint(
         addVertex(point)
         const next = trace.route[index + 1]
         if (next?.route_type === "wire" && point.layer === next.layer) segments.push([point, next])
+        if (next?.route_type === "via" && [next.from_layer, next.to_layer].includes(point.layer)) segments.push([point, { ...next, layer: point.layer }])
+        const previous = trace.route[index - 1]
+        if (previous?.route_type === "via" && [previous.from_layer, previous.to_layer].includes(point.layer)) segments.push([{ ...previous, layer: point.layer }, point])
       } else if (point.route_type === "through_obstacle") {
         const from = addVertex({ ...point.start, layer: point.from_layer })
         const to = addVertex({ ...point.end, layer: point.to_layer })

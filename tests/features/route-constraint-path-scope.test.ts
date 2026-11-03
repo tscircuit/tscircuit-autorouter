@@ -23,4 +23,8 @@ test("route limits measure the constrained path across fragments without countin
   expect(measureRouteConstraint(input, traces, { ...rule, maxViaCount: 0 }).satisfied).toBe(false)
   expect(measureRouteConstraint(input, traces, { ...rule, maxLength: 5 }).satisfied).toBe(false)
   expect(measureRouteConstraint(input, traces, { ...rule, pointIds: ["a"] }).satisfied).toBe(true)
+  // Via coordinates need not also appear as duplicated wire vertices.
+  const compact = [{ ...traces[0]!, route: [wire(0, 0, "top"), { route_type: "via" as const, x: 2, y: 0, from_layer: "top", to_layer: "bottom" }, wire(4, 0, "bottom")] }]
+  expect(measureRouteConstraint(input, compact, rule)).toEqual({ length: 5.6, vias: 1, satisfied: true })
+
 })

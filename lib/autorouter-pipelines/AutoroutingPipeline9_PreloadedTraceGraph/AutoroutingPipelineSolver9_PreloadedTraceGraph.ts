@@ -1121,6 +1121,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
+    if (!this.originalSrj.routeConstraints?.length) {
+      this.pipelineDef = this.pipelineDef.filter((step) =>
+        step.solverName !== "constrainedRouteSolver" &&
+        step.solverName !== "finalRouteConstraintsSolver",
+      )
+    }
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -1235,9 +1241,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      const traces = this.finalRouteConstraintsSolver!.traces
+      const traces = this.finalRouteConstraintsSolver?.traces
+      if (this.originalSrj.routeConstraints?.length && !traces) throw new Error("Constrained routing completed without final validation")
       for (const rule of this.originalSrj.routeConstraints ?? []) {
-        const measurement = measureRouteConstraint(this.originalSrj, traces, rule)
+        const measurement = measureRouteConstraint(this.originalSrj, traces!, rule)
         if (!measurement.satisfied) {
           this.failed = true
           this.error = `Route for ${rule.name ?? "constrained trace"} does not satisfy its via/length limits`
@@ -1730,6 +1737,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
+    if (!this.originalSrj.routeConstraints?.length) {
+      return [
+        ...this.getPowerTraceExpansionFixedTraces().filter(
+          (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        ),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ]
+    }
+    if (!this.finalRouteConstraintsSolver) throw new Error("Constrained routing completed without final validation")
     const originalPreloadedIds = new Set((this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id))
     return this.finalRouteConstraintsSolver!.traces.filter((trace) =>
       !originalPreloadedIds.has(trace.pcb_trace_id) ||
@@ -1748,7 +1764,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    const traces = this.finalRouteConstraintsSolver!.traces
+    if (this.originalSrj.routeConstraints?.length && !this.finalRouteConstraintsSolver) throw new Error("Constrained routing completed without final validation")
+    const traces = this.originalSrj.routeConstraints?.length
+      ? this.finalRouteConstraintsSolver!.traces
+      : [...this.getPowerTraceExpansionFixedTraces(), ...this.powerTraceExpansionSolver.getOutput()]
     return {
       ...this.originalSrj,
       traces,
