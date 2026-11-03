@@ -200,7 +200,7 @@ test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacl
       ),
     ) ?? []
 
-  expect(traceObstacles).toHaveLength(1)
+  expect(traceObstacles).toHaveLength(3)
   expect(
     traceObstacles.every((obstacle) => {
       const obstacleBounds = getBoundingBox(obstacle)

@@ -62,7 +62,7 @@ const baseSrj: SimpleRouteJson = {
 test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", () => {
   const traceObstacles = getObstaclesFromSrjTraces(baseSrj)
 
-  expect(traceObstacles).toHaveLength(2)
+  expect(traceObstacles).toHaveLength(4)
   expect(traceObstacles[0]).toMatchObject({
     type: "rect",
     layers: ["top", "inner1", "inner2"],

@@ -152,7 +152,21 @@ export const getObstaclesFromSrjTraces = (
         connectedTo,
       })
 
-      if (obstacle) traceObstacles.push(obstacle)
+      if (obstacle) {
+        // Keep the oriented body and bound each physical end cap separately.
+        // Extending the rotated body would also add copper at its corners.
+        traceObstacles.push(
+          obstacle,
+          ...[routePoint, nextRoutePoint].map((endpoint, endpointIndex) => ({
+            ...obstacle,
+            obstacleId: `${obstacle.obstacleId}_cap_${endpointIndex}`,
+            center: { x: endpoint.x, y: endpoint.y },
+            width: obstacle.height,
+            height: obstacle.height,
+            ccwRotationDegrees: undefined,
+          })),
+        )
+      }
     }
   }
 

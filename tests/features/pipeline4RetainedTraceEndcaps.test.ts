@@ -3,11 +3,12 @@ import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/Autorouting
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import {
+  endcapClearance,
   getRetainedTraceEndcapGap,
   getRetainedTraceEndcapInput,
 } from "tests/fixtures/retainedTraceEndcaps"
 
-test("repro: Pipeline 4 routes through a retained wide wire end cap", async () => {
+test("Pipeline 4 clears retained wire end caps with rectangular obstacles", async () => {
   const inputSrj = getRetainedTraceEndcapInput()
   const before = structuredClone(inputSrj)
   const solver = new AutoroutingPipelineSolver4(inputSrj, {
@@ -22,12 +23,11 @@ test("repro: Pipeline 4 routes through a retained wide wire end cap", async () =
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces,
   }
-  expect(getRetainedTraceEndcapGap(evaluation)).toBeCloseTo(-0.15, 8)
+  expect(getRetainedTraceEndcapGap(evaluation)).toBeGreaterThanOrEqual(
+    endcapClearance,
+  )
   const drc = evaluateRelaxedDrc(evaluation)
-  expect(drc.errors).toHaveLength(1)
-  expect(drc.errors[0]).toMatchObject({
-    pcb_trace_error_id: "overlap_fixed_SIGNAL_0",
-  })
+  expect(drc.errors).toEqual([])
   expect(inputSrj).toEqual(before)
   await expect(getBugReportSnapshotSvg(evaluation)).toMatchSvgSnapshot(
     import.meta.path,
