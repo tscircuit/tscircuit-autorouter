@@ -75,7 +75,7 @@ export const getDrcErrors = (
   )
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
-    minClearance: options.traceClearance,
+    minClearance: options.differentNetTraceClearance ?? options.traceClearance,
   }).filter((error) => error.type !== "pcb_keepout_overlap_warning")
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false

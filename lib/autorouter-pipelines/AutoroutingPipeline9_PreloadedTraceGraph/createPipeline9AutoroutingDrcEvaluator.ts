@@ -68,6 +68,9 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
     {
+      differentNetTraceClearance:
+        drcOptions.differentNetTraceClearance ??
+        inputSrj.minDifferentNetTraceEdgeToTraceEdgeClearance,
       traceClearance:
         drcOptions.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       holeClearance:

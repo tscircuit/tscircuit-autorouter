@@ -92,6 +92,8 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
+      const tracePairClearance =
+        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance
       const solver = new RelaxTraceClearanceSolver({
         srj,
         routes: canonicalRoutes,
@@ -113,6 +115,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           ),
         ),
         allowViaMovement: !params.allowPartialRepair,
+        differentNetTraceClearance:
+          tracePairClearance === undefined
+            ? undefined
+            : tracePairClearance +
+              (params.allowPartialRepair || params.usePrecisionMargin
+                ? CLEARANCE_PRECISION_MARGIN
+                : 0),
         traceClearance:
           (params.originalSrj.minTraceToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.traceClearance) +
@@ -179,13 +188,28 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       return
     }
     if (state.phase === "physical-validation") {
+      // With separate wire rules, the guard must preserve the declared pad gap.
+      // Leave the existing guard policy unchanged for legacy inputs.
+      const tracePairClearance =
+        params.originalSrj.minDifferentNetTraceEdgeToTraceEdgeClearance
+      const padTraceClearance =
+        tracePairClearance === undefined
+          ? undefined
+          : (params.originalSrj.minTraceToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.traceClearance)
       const fixedViolations = new Map(
-        getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
-          (violation) => [violation.key, violation.severity],
-        ),
+        getFixedObstacleViolations({
+          srj,
+          routes: canonicalRoutes,
+          traceClearance: padTraceClearance,
+        }).map((violation) => [violation.key, violation.severity]),
       )
       if (
-        getFixedObstacleViolations({ srj, routes: state.candidate }).some(
+        getFixedObstacleViolations({
+          srj,
+          routes: state.candidate,
+          traceClearance: padTraceClearance,
+        }).some(
           ({ key, severity }) =>
             !fixedViolations.has(key) ||
             severity > fixedViolations.get(key)! + 1e-8,

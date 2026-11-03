@@ -74,6 +74,8 @@ export interface SimpleRouteJson {
   min_via_hole_diameter?: number
   min_via_pad_diameter?: number
   defaultObstacleMargin?: number
+  /** Minimum copper edge gap between traces on different nets, in mm. */
+  minDifferentNetTraceEdgeToTraceEdgeClearance?: number
   minTraceToPadEdgeClearance?: number
   /** Minimum trace copper edge to non-plated hole edge distance in mm. */
   minTraceToHoleEdgeClearance?: number

@@ -6,7 +6,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import fixture from "../fixtures/bluetooth-pedometer-clearance.srj.json"
 
-test("Bluetooth pedometer reproduces nine missed 0.1 mm trace gaps with fixed terminals", (): void => {
+test("Bluetooth pedometer repairs all nine 0.1 mm trace gaps with fixed terminals", (): void => {
   // Automatic-routing input exported from techmannih/Bluetooth-pedometer
   // ebe6cfad63786434183a4ec6709409ade261dfff, with manual copper removed.
   // Adds the requested traceClearance that core previously omitted from SRJ.
@@ -35,10 +35,9 @@ test("Bluetooth pedometer reproduces nine missed 0.1 mm trace gaps with fixed te
     reported.circuitJson,
     { minClearance: 0.1 },
   )
-  // The existing evaluator reports a pass under the pad rule, but the
-  // explicitly requested trace rule exposes nine real copper-spacing errors.
+  // Verify both the full evaluator and the independently requested trace rule.
   expect(reported.errors).toEqual([])
-  expect(requestedTraceErrors).toHaveLength(9)
+  expect(requestedTraceErrors).toHaveLength(0)
   const outputCoordinates = new Set(
     routedTraces.flatMap((trace) =>
       trace.route.flatMap((point) =>
