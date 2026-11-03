@@ -504,11 +504,33 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
-    // Center selection prioritizes trace crossings, but every violating route
-    // inside that region must enter negotiation, including via-pad contacts.
-    const dirtyTraceIds = new Set(
-      context.currentErrors.flatMap(getDrcErrorTraceIds),
-    )
+    const errorTraceIds: string[][] =
+      context.currentErrors.map(getDrcErrorTraceIds)
+    if (this.params.prioritizeConflictedRoutes) {
+      // Reorder the initial fast pass without changing final cleanup's schedule.
+      const priorityTraceIds: string[][] = targetErrors.map(getDrcErrorTraceIds)
+      const routeErrorCounts: number[] = region.routes.map(
+        (route): number =>
+          priorityTraceIds.filter((traceIds): boolean =>
+            traceIds.some(
+              (traceId): boolean =>
+                traceId === route.connectionName ||
+                traceId.startsWith(`${route.connectionName}_`),
+            ),
+          ).length,
+      )
+      const routeOrder: number[] = region.routes
+        .map((_, index): number => index)
+        .sort((a, b): number => routeErrorCounts[b]! - routeErrorCounts[a]!)
+      region.routes = routeOrder.map((index) => region.routes[index]!)
+      region.lockedPointIndices = routeOrder.map(
+        (index) => region.lockedPointIndices[index]!,
+      )
+      region.routeMappings = routeOrder.map(
+        (index) => region.routeMappings[index]!,
+      )
+    }
+    const dirtyTraceIds = new Set(errorTraceIds.flat())
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(

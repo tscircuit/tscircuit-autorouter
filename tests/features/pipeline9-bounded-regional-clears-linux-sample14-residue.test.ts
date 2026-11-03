@@ -13,7 +13,8 @@ test("bounded repair clears the Linux sample 14 residue without restarting broad
   )
   const original = structuredClone(params.newHdRoutes)
   const solver = new Pipeline9JointDrcRepairSolver(params)
-  expect(solver.stats.initialJointDrcIssueCount).toBe(4)
+  // Net ownership reveals two additional initial cross-net contacts.
+  expect(solver.stats.initialJointDrcIssueCount).toBe(6)
   solver.solve()
   expect(solver.failed, solver.error ?? "").toBeFalse()
   expect(solver.solved).toBeTrue()

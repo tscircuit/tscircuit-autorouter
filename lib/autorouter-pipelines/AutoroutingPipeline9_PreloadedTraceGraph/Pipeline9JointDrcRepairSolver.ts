@@ -689,6 +689,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private initialBoundedRegionalRepairStartedAt?: number
+  private readonly prioritizeConflictedRoutes: boolean
   readonly pipelineDef = [
     {
       solverName: "clearanceProjectionSolver",
@@ -732,6 +733,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
             drcEvaluator: this.cachedReferenceDrcEvaluator,
+            prioritizeConflictedRoutes: this.prioritizeConflictedRoutes,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -809,6 +811,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
+    if (params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)) {
+      const holeClearance =
+        params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
+      params = {
+        ...params,
+        srj: { ...params.srj, minTraceToHoleEdgeClearance: holeClearance },
+        originalSrj: {
+          ...params.originalSrj,
+          minTraceToHoleEdgeClearance: holeClearance,
+        },
+      }
+    }
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
@@ -838,6 +852,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
+      params.originalSrj.defaultObstacleMargin ??
       RELAXED_DRC_OPTIONS.traceClearance
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
@@ -1099,6 +1114,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       currentDrc.errors.length >= 200 ? 1 : 4,
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
+    const traceErrorCount: number = currentDrc.errors.filter(
+      (error): boolean => error.type === "pcb_trace_error",
+    ).length
+    this.prioritizeConflictedRoutes =
+      traceErrorCount > currentDrc.errors.length / 2
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,

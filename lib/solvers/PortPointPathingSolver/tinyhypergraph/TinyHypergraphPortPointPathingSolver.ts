@@ -266,11 +266,18 @@ const getTinyViaSizeOptions = (
     ? { minViaPadDiameter: minViaPadDiameter }
     : {}
 
-const getTinyHyperGraphSolveGraphOptions = (
-  effort: number,
-  minViaPadDiameter?: number,
-): TinyHyperGraphSolverOptions => {
+const getTinyHyperGraphSolveGraphOptions = ({
+  effort,
+  portCount,
+  minViaPadDiameter,
+}: {
+  effort: number
+  portCount: number
+  minViaPadDiameter?: number
+}): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
+  // A fixed budget can expire before large graphs settle congestion.
+  const graphScale = Math.max(1, Math.floor(portCount / 125_000))
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
@@ -279,7 +286,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale * graphScale),
   }
 }
 
@@ -319,7 +326,11 @@ const getTinyHyperGraphPipelineInput = (
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
-      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...getTinyHyperGraphSolveGraphOptions({
+        effort,
+        portCount: serializedHyperGraph.ports.length,
+        minViaPadDiameter,
+      }),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -331,10 +342,9 @@ const getTinyHyperGraphPipelineInput = (
             OUTSIDE_IN_ROUTING: false,
           }),
     },
-    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-      effort,
-      minViaPadDiameter,
-    ),
+    sectionSolverOptions: {
+      ...getTinyHyperGraphSectionSolverOptions(effort, minViaPadDiameter),
+    },
   }
 }
 
