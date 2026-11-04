@@ -18,12 +18,12 @@ jobs:
             dataset: srj18
             sample: 15
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: 80591c6854a240fa728afcbe0ab3953fa4d63e4f
+            candidate: 312022331253a20a704190eb22a81770e0e410ba
           - cohort: final-srj33
             dataset: srj33
             sample: 36
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: 80591c6854a240fa728afcbe0ab3953fa4d63e4f
+            candidate: 312022331253a20a704190eb22a81770e0e410ba
     steps:
       - uses: actions/checkout@v4
         with:
