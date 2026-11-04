@@ -682,7 +682,11 @@ export const GenericSolverDebugger = ({
       )}
 
       <div className="border rounded-md p-4 mb-4">
-        {objectSelectionEnabled || renderer === "vector" ? (
+        {!Object.values(visualization).some(
+          (shapes) => Array.isArray(shapes) && shapes.length > 0,
+        ) ? (
+          <div>No graphics yet</div>
+        ) : objectSelectionEnabled || renderer === "vector" ? (
           <InteractiveGraphics graphics={visualization} />
         ) : (
           <InteractiveGraphicsCanvas

@@ -2,7 +2,11 @@
 
 import * as readline from "node:readline"
 import { runTask } from "./benchmark-run-task"
-import type { WorkerResultMessage, WorkerTaskMessage } from "./benchmark-types"
+import type {
+  HighDensityStageMeasurement,
+  WorkerResultMessage,
+  WorkerTaskMessage,
+} from "./benchmark-types"
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -26,15 +30,18 @@ for await (const line of rl) {
   }
 
   let peakRssBytes = process.resourceUsage().maxRSS * 1024
+  let highDensityStage: HighDensityStageMeasurement | undefined
   try {
     const result = await runTask(message.task, {
       onProgress: (progress) => {
         peakRssBytes = process.resourceUsage().maxRSS * 1024
+        highDensityStage ??= progress.highDensityStage
         const payload = {
           taskId: message.taskId,
           progress: {
             ...progress,
             peakRssBytes,
+            highDensityStage,
           },
         }
         process.stdout.write(`${JSON.stringify(payload)}\n`)
@@ -46,6 +53,7 @@ for await (const line of rl) {
       result: {
         ...result,
         peakRssBytes,
+        highDensityStage,
       },
     }
     process.stdout.write(`${JSON.stringify(payload)}\n`)
@@ -59,6 +67,7 @@ for await (const line of rl) {
         sampleNumber: message.task.sampleNumber,
         elapsedTimeMs: 0,
         peakRssBytes,
+        highDensityStage,
         didSolve: false,
         didTimeout: false,
         relaxedDrcPassed: false,

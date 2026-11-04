@@ -1,0 +1,131 @@
+{
+  "source": {
+    "repository": "hvwyl/allwinner-h3-ddr3-16x1-kicad",
+    "commit": "02e365b21363a17710e0f96072c0844940495567",
+    "path": "project/allwinner-h3.kicad_pcb",
+    "routerRevision": "637b6c581128238f6c61227a1c15be423d24baca",
+    "description": "Actual H3 DDR port-point assignments at the Pipeline 9 uniform distribution boundary; only the shared cmn_21/cmn_9 port family is retained."
+  },
+  "traceWidth": 0.1143,
+  "nodes": [
+    {
+      "capacityMeshNodeId": "cmn_9",
+      "center": {
+        "x": 132.66429999999997,
+        "y": -64.787375
+      },
+      "width": 2.1285999999999774,
+      "height": 7.394749999999988,
+      "portPoints": [
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup18",
+          "x": 131.56233416262646,
+          "y": -68.01403634083422,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SDQ7",
+          "rootConnectionName": "/DDR3 16x1/SDQ7",
+          "prevPortPointId": "ce7039_pp0_z0::0::dup2"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup19",
+          "x": 131.5602416161057,
+          "y": -68.01314947088058,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SBA2",
+          "rootConnectionName": "/DDR3 16x1/SBA2",
+          "prevPortPointId": "ce7039_pp0_z0::0::dup1"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup21",
+          "x": 131.5560565230642,
+          "y": -68.01137573097327,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA4",
+          "rootConnectionName": "/DDR3 16x1/SA4",
+          "prevPortPointId": "ce7059_pp0_z0::0::dup8"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup20",
+          "x": 131.55814906958497,
+          "y": -68.01226260092692,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA2",
+          "rootConnectionName": "/DDR3 16x1/SA2",
+          "prevPortPointId": "ce7039_pp0_z0::0"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0",
+          "x": 131.59999999999997,
+          "y": -68.03,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA1",
+          "rootConnectionName": "/DDR3 16x1/SA1",
+          "prevPortPointId": "ce7043_pp0_z0::0"
+        }
+      ],
+      "availableZ": [
+        0,
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_21",
+      "center": {
+        "x": 131.28999999999996,
+        "y": -68.03
+      },
+      "width": 0.620000000000033,
+      "height": 0.4000000000000057,
+      "portPoints": [
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup18",
+          "x": 131.56233416262646,
+          "y": -68.01403634083422,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SDQ7",
+          "rootConnectionName": "/DDR3 16x1/SDQ7",
+          "nextPortPointId": "ce6932_pp0_z0::0::dup4"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup19",
+          "x": 131.5602416161057,
+          "y": -68.01314947088058,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SBA2",
+          "rootConnectionName": "/DDR3 16x1/SBA2",
+          "nextPortPointId": "ce6932_pp0_z0::0::dup3"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup21",
+          "x": 131.5560565230642,
+          "y": -68.01137573097327,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA4",
+          "rootConnectionName": "/DDR3 16x1/SA4",
+          "nextPortPointId": "ce6932_pp0_z0::0::dup1"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0::dup20",
+          "x": 131.55814906958497,
+          "y": -68.01226260092692,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA2",
+          "rootConnectionName": "/DDR3 16x1/SA2",
+          "nextPortPointId": "ce6932_pp0_z0::0::dup2"
+        },
+        {
+          "portPointId": "ce6984_pp0_z0::0",
+          "x": 131.59999999999997,
+          "y": -68.03,
+          "z": 0,
+          "connectionName": "/DDR3 16x1/SA1",
+          "rootConnectionName": "/DDR3 16x1/SA1",
+          "nextPortPointId": "ce6932_pp0_z0::0"
+        }
+      ],
+      "availableZ": [
+        0
+      ]
+    }
+  ]
+}

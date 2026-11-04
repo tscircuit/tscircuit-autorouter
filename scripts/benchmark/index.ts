@@ -50,6 +50,7 @@ import {
   type LocalHighDensityClusterStats,
 } from "./startLocalHighDensityCluster"
 import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
+import { readProcessPeakRssBytes } from "./readProcessPeakRssBytes"
 
 type BenchmarkOptions = {
   solverName?: string
@@ -62,6 +63,7 @@ type BenchmarkOptions = {
   threads?: number
   effort?: number
   sampleTimeoutMs?: number
+  sampleMaxRssBytes?: number
   excludeAssignable: boolean
   datasetName: DatasetName
 }
@@ -93,6 +95,7 @@ type BenchmarkSnapshotWriter = {
 }
 
 type RunBenchmarkTasksOptions = {
+  sampleMaxRssBytes?: number
   onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
   cpuLanes?: number[][]
   signal?: AbortSignal
@@ -807,6 +810,15 @@ export const parseArgs = (
       i += 1
       continue
     }
+    if (arg === "--max-rss-mib") {
+      const mebibytes = Number(args[i + 1])
+      if (!Number.isFinite(mebibytes) || mebibytes <= 0) {
+        throw new Error("--max-rss-mib must be a positive number")
+      }
+      options.sampleMaxRssBytes = mebibytes * 1024 ** 2
+      i += 1
+      continue
+    }
     if (arg === "--sample-numbers") {
       options.sampleNumbers = parseSampleNumbersArg(args[i + 1] ?? "")
       i += 1
@@ -1224,6 +1236,7 @@ export const createFailedResult = (
   sampleNumber: task.sampleNumber,
   elapsedTimeMs,
   peakRssBytes: latestProgress?.peakRssBytes,
+  highDensityStage: latestProgress?.highDensityStage,
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
@@ -1316,17 +1329,29 @@ const executeTaskOnWorker = (
   request: WorkerTaskMessage,
   sampleTimeoutMs?: number,
   signal?: AbortSignal,
+  sampleMaxRssBytes?: number,
 ): Promise<WorkerExecutionResult> => {
   return new Promise((resolve) => {
     const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
     const startedAtMs = performance.now()
     let settled = false
+    let observedPeakRssBytes: number | undefined
+    let memoryPoll: ReturnType<typeof setInterval> | undefined
+
+    const sampleMemory = (): void => {
+      const peak = readProcessPeakRssBytes(slot.child.pid)
+      if (peak !== undefined) {
+        observedPeakRssBytes = Math.max(observedPeakRssBytes ?? 0, peak)
+      }
+    }
 
     const finish = (result: WorkerResultWithImage, restartWorker: boolean) => {
       if (settled) {
         return
       }
       settled = true
+      sampleMemory()
+      if (memoryPoll) clearInterval(memoryPoll)
       if (slot.currentTask) {
         clearTimeout(slot.currentTask.timeout)
         slot.currentTask = null
@@ -1336,8 +1361,28 @@ const executeTaskOnWorker = (
       slot.child.removeListener("error", onError)
       slot.child.removeListener("exit", onExit)
       signal?.removeEventListener("abort", onAbort)
+      const peakRssBytes =
+        observedPeakRssBytes === undefined
+          ? result.peakRssBytes
+          : Math.max(observedPeakRssBytes, result.peakRssBytes ?? 0)
+      const exceededMemoryBudget =
+        sampleMaxRssBytes !== undefined &&
+        peakRssBytes !== undefined &&
+        peakRssBytes > sampleMaxRssBytes
       resolve({
-        result: { ...result, sampleTimeoutMs: taskTimeoutMs },
+        result: {
+          ...result,
+          ...(exceededMemoryBudget && result.didSolve
+            ? {
+                didSolve: false,
+                relaxedDrcPassed: false,
+                error: `Exceeded RSS limit of ${formatMemory(sampleMaxRssBytes)}`,
+              }
+            : {}),
+          peakRssBytes,
+          sampleTimeoutMs: taskTimeoutMs,
+          sampleMaxRssBytes,
+        },
         restartWorker,
       })
     }
@@ -1359,6 +1404,15 @@ const executeTaskOnWorker = (
 
       if ("progress" in message) {
         if (slot.currentTask) {
+          if (
+            message.progress.highDensityStage &&
+            !slot.currentTask.latestProgress?.highDensityStage
+          ) {
+            const stage = message.progress.highDensityStage
+            console.log(
+              `[benchmark] ${request.task.scenarioName} high-density complete: ${formatTime(stage.elapsedTimeMs)}, peakRss=${formatMemory(stage.peakRssBytes)}`,
+            )
+          }
           slot.currentTask.latestProgress = message.progress
         }
         return
@@ -1438,6 +1492,27 @@ const executeTaskOnWorker = (
       return
     }
 
+    // This timer runs in the parent, so a CPU-bound child cannot starve it.
+    memoryPoll = setInterval((): void => {
+      sampleMemory()
+      if (
+        sampleMaxRssBytes !== undefined &&
+        observedPeakRssBytes !== undefined &&
+        observedPeakRssBytes > sampleMaxRssBytes
+      ) {
+        finish(
+          createFailedResult(
+            request.task,
+            getElapsedTimeMs(),
+            `Exceeded RSS limit of ${formatMemory(sampleMaxRssBytes)}${formatProgressDetails(slot.currentTask?.latestProgress)}`,
+            false,
+            slot.currentTask?.latestProgress,
+          ),
+          true,
+        )
+      }
+    }, 100)
+
     try {
       slot.child.stdin.write(`${JSON.stringify(request)}\n`)
     } catch (error) {
@@ -1459,6 +1534,9 @@ export const runBenchmarkTasks = async (
   sampleTimeoutMs?: number,
   options: RunBenchmarkTasksOptions = {},
 ): Promise<WorkerResult[]> => {
+  if (options.sampleMaxRssBytes !== undefined && process.platform !== "linux") {
+    throw new Error("--max-rss-mib requires Linux process memory accounting")
+  }
   const executionAbort = new AbortController()
   const signal = options.signal
     ? AbortSignal.any([options.signal, executionAbort.signal])
@@ -1553,6 +1631,7 @@ export const runBenchmarkTasks = async (
         request,
         sampleTimeoutMs,
         signal,
+        options.sampleMaxRssBytes,
       )
       signal.throwIfAborted()
       if (workerResult.benchmarkSnapshot) {
@@ -2240,6 +2319,7 @@ const main = async () => {
       }
       results.push(
         ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
+          sampleMaxRssBytes: options.sampleMaxRssBytes,
           onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
           cpuLanes: resourcePlan?.lanes
             .slice(0, concurrency)
