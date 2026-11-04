@@ -28,3 +28,9 @@ the mesh merger to finish. The stop is deterministic and is not a timeout or
 an alternative successful result. The SVG renders the native routing input
 with actual stage status/counts; it does not claim that the remaining nets
 have been routed or that timing/DRC has been satisfied.
+
+The mesh visual regression stops both versions after exactly 1,000 X slices,
+before final compaction. It renders the retained top-layer cells in a
+2 × 1.5 mm crop between the RAM chips using the native mesh conversion and
+graphics renderer. Only the drawing is cropped; the complete SRJ is processed.
+The memory assertion requires fewer than 100,000 retained cells at this point.
