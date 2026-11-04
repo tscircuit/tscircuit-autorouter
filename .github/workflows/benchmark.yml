@@ -1,4 +1,4 @@
-name: Diagnose SRJ18 memory
+name: Diagnose SRJ18 memory stages
 on:
   workflow_dispatch:
 permissions:
@@ -49,13 +49,19 @@ jobs:
           assert s.count(needle)==1
           s=s.replace(needle,'peakRssBytes = process.resourceUsage().maxRSS * 1024\n        appendFileSync(process.env.MEMORY_TRACE_PATH!, JSON.stringify({ phase: progress.phaseName, ms: progress.elapsedTimeMs, peakRssBytes, rss: process.memoryUsage().rss }) + "\\n")\n        const payload')
           p.write_text(s)
-          Path('work/results/provenance.json').write_text(json.dumps({'consumer':'9b5a12b9934a6138c1c7c95b3f3b8615b13e3a25','repairBase':'cbdd8facbee04699b7ac8347e57f601f28046496','repairFix':'483187739f20e4268ce4feabb2aada8976304c73','bun':'1.4.2','sample':14,'dataset':'srj18','transitiveDependencies':'one copied installation','rounds':[['base','fix','no-resume','no-dedup'],['no-dedup','no-resume','fix','base']]},indent=2))
+          p=Path('lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts')
+          s='import { appendFileSync } from "node:fs"\n'+p.read_text()
+          needle='        this.currentPipelineStepIndex++'
+          assert s.count(needle)==1
+          s=s.replace(needle, '        appendFileSync(process.env.MEMORY_TRACE_PATH!, JSON.stringify({ phase: pipelineStepDef.solverName, stageCompleted: true, peakRssBytes: process.resourceUsage().maxRSS * 1024, rss: process.memoryUsage().rss }) + "\\n")\n'+needle)
+          p.write_text(s)
+          Path('work/results/provenance.json').write_text(json.dumps({'consumer':'9b5a12b9934a6138c1c7c95b3f3b8615b13e3a25','repairBase':'cbdd8facbee04699b7ac8347e57f601f28046496','repairFix':'483187739f20e4268ce4feabb2aada8976304c73','bun':'1.4.2','sample':14,'dataset':'srj18','transitiveDependencies':'one copied installation','rounds':[['base','fix','no-resume'],['no-resume','fix','base']]},indent=2))
           PY
       - name: Run predefined forward and reverse ablations
         run: |
           set -euo pipefail
           for round in 1 2; do
-            if [ "$round" = 1 ]; then variants=(base fix no-resume no-dedup); else variants=(no-dedup no-resume fix base); fi
+            if [ "$round" = 1 ]; then variants=(base fix no-resume); else variants=(no-resume fix base); fi
             for variant in "${variants[@]}"; do
               ln -sfn "$PWD/work/repair-$variant" node_modules/high-density-repair03
               export MEMORY_TRACE_PATH="$PWD/work/results/r$round-$variant-phases.jsonl"
@@ -66,5 +72,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: srj18-memory-diagnosis
+          name: srj18-memory-phase-diagnosis
           path: work/results
