@@ -4,7 +4,9 @@ import { loadScenarioBySampleNumber } from "./scenarios"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 
-const { scenario } = await loadScenarioBySampleNumber("srj18", 15)
+const dataset = process.env.PROBE_DATASET ?? "srj18"
+const sample = Number(process.env.PROBE_SAMPLE ?? 15)
+const { scenario } = await loadScenarioBySampleNumber(dataset, sample)
 const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
   structuredClone(scenario),
   { cacheProvider: null, effort: 1 },
@@ -40,7 +42,7 @@ const drc = evaluateRelaxedDrc({
   routedTraces,
 })
 const report = {
-  dataset: "srj18", sample: 15, bun: Bun.version,
+  dataset, sample, bun: Bun.version,
   solved: solver.solved, failed: solver.failed, routingMs,
   peakRssBytes: process.resourceUsage().maxRSS * (process.platform === "darwin" ? 1 : 1024),
   drc: drc.errors.length,

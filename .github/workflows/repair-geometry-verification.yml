@@ -1,0 +1,41 @@
+name: Repair geometry verification
+on:
+  push:
+    branches: [techmannih/benchmark-repair-memory-20261105]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 80591c6854a240fa728afcbe0ab3953fa4d63e4f
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install
+      - name: Record exact revisions and board metrics
+        run: |
+          git rev-parse HEAD
+          bun --version
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          p = Path('tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts')
+          s = p.read_text().replace('  expect(viaCount).toBeLessThanOrEqual(144)', '  console.log(JSON.stringify({drc: errors.length, viaCount, contactStats: solver.pipeline9JointDrcRepairSolver?.traceContactRepairSolver?.stats}))\n  expect(viaCount).toBeLessThanOrEqual(144)')
+          p.write_text(s)
+          PYTHON
+      - name: Verify quality and record Linux geometry
+        env:
+          BUN_UPDATE_SNAPSHOTS: 1
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/features/pipeline9-gameboy-contact-refinement.test.ts tests/features/pipeline9-srj33-contact-repair-budget.test.ts tests/features/repair03-circular-smt-pad.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repair-gameboy-linux-geometry
+          path: |
+            tests/bugs/__snapshots__/bugreport96-full-gameboy-no-breakout-linux-routed.snap.svg
+            tests/bugs/__snapshots__/bugreport96-full-gameboy-no-breakout-linux-routed.diff.png

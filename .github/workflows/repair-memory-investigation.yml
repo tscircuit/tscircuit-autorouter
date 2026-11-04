@@ -14,12 +14,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: reviewed
-            base: a200c89061474a1c4f961b70397022bdecb64de9
-            candidate: f98765a5b8de43a201cd2d2f5592555909d833a7
-          - cohort: current
+          - cohort: final-srj18
+            dataset: srj18
+            sample: 15
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: bc759080e7df792bdf89c0762784fd6cbf255017
+            candidate: 80591c6854a240fa728afcbe0ab3953fa4d63e4f
+          - cohort: final-srj33
+            dataset: srj33
+            sample: 36
+            base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
+            candidate: 80591c6854a240fa728afcbe0ab3953fa4d63e4f
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,6 +72,9 @@ jobs:
             cp controller/scripts/benchmark/repair-memory-probe.ts "$revision/scripts/benchmark/repair-memory-probe.ts"
           done
       - name: Run three balanced sequential pairs
+        env:
+          PROBE_DATASET: ${{ matrix.dataset }}
+          PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
           for round in 1 2 3; do
             order="base candidate"
