@@ -20,12 +20,9 @@ function readOrangeCrabSrj(filename: string): SimpleRouteJson {
 async function verifyOrangeCrabRouting(): Promise<void> {
   const inputSrj = readOrangeCrabSrj("input")
   const originalInput = structuredClone(inputSrj)
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    inputSrj,
-    {
-      cacheProvider: null,
-    },
-  )
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
+    cacheProvider: null,
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
