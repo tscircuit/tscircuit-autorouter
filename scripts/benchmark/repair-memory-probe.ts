@@ -43,6 +43,7 @@ const drc = evaluateRelaxedDrc({
 })
 const report = {
   dataset, sample, bun: Bun.version,
+  contactStats: solver.pipeline9JointDrcRepairSolver?.traceContactRepairSolver?.stats ?? null,
   solved: solver.solved, failed: solver.failed, routingMs,
   peakRssBytes: process.resourceUsage().maxRSS * (process.platform === "darwin" ? 1 : 1024),
   drc: drc.errors.length,

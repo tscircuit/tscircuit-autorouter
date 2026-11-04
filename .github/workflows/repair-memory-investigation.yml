@@ -14,16 +14,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: final-srj18
+          - cohort: optimized-srj18
             dataset: srj18
             sample: 15
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: 312022331253a20a704190eb22a81770e0e410ba
-          - cohort: final-srj33
+            candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
+          - cohort: optimized-srj33
             dataset: srj33
             sample: 36
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: 312022331253a20a704190eb22a81770e0e410ba
+            candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,19 +64,19 @@ jobs:
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:3,orders:[['base','candidate'],['candidate','base'],['base','candidate']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:2,orders:[['base','candidate'],['candidate','base']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
           for revision in base candidate; do
             cp controller/scripts/benchmark/repair-memory-probe.ts "$revision/scripts/benchmark/repair-memory-probe.ts"
           done
-      - name: Run three balanced sequential pairs
+      - name: Run two balanced sequential pairs
         env:
           PROBE_DATASET: ${{ matrix.dataset }}
           PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
-          for round in 1 2 3; do
+          for round in 1 2; do
             order="base candidate"
             if [ "$round" = "2" ]; then order="candidate base"; fi
             for revision in $order; do

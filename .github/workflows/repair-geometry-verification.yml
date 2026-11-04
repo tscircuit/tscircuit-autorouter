@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 312022331253a20a704190eb22a81770e0e410ba
+          ref: aad05238493ade4d86dca08f0c7a19c69c11df95
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -29,8 +29,6 @@ jobs:
           p.write_text(s)
           PYTHON
       - name: Verify quality and record Linux geometry
-        env:
-          BUN_UPDATE_SNAPSHOTS: 1
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/features/pipeline9-gameboy-contact-refinement.test.ts tests/features/pipeline9-srj33-contact-repair-budget.test.ts tests/features/repair03-circular-smt-pad.test.ts
       - uses: actions/upload-artifact@v4
         if: always()
