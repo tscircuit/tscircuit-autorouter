@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test"
 import { AutoroutingDrcEngine } from "high-density-repair03/lib"
-import type { SimpleRouteJson, SimplifiedPcbTraces } from "high-density-repair03/lib/types"
+import type {
+  SimpleRouteJson,
+  SimplifiedPcbTraces,
+} from "high-density-repair03/lib/types"
 
-test("installed repair03 uses declared circular SMT pad edges for trace and via clearance", () => {
+test("installed repair03 preserves circular SMT pad geometry", () => {
   const srj: SimpleRouteJson = {
     bounds: { minX: -1, minY: -1, maxX: 1, maxY: 1 },
     layerCount: 2,
