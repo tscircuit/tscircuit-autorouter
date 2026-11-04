@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import type {
   ConnectionHgWithSimpleRouteConnection,
   RegionHg,
+  RegionId,
   RegionPortHg,
 } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createTinyRouteNetIndexer"
@@ -61,24 +62,28 @@ test("disconnected terminals recover same-pad contacts without changing reachabl
     },
     ports: [],
   }))
+  const regionById = new Map<RegionId, RegionHg>(
+    regions.map((region): [RegionId, RegionHg] => [region.regionId, region]),
+  )
+  const regionPairs: [RegionId, RegionId][] = [
+    ["start_a", "fragment_a"],
+    ["fragment_a", "outer_a"],
+    ["outer_a", "exit_a"],
+    ["exit_a", "end_a"],
+    ["start_a", "pocket_a"],
+    ["start_b", "exit_b"],
+    ["exit_b", "end_b"],
+    ["start_b", "fragment_b"],
+    ["start_a", "corner_a"],
+    ["start_a", "unknown"],
+    ["start_a", "foreign"],
+    ["fragment_a", "conflicting"],
+    ["outer_a", "free_tagged"],
+  ]
   const ports: RegionPortHg[] = []
-  for (const [firstIndex, secondIndex] of [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 4],
-    [0, 5],
-    [6, 7],
-    [7, 8],
-    [6, 9],
-    [0, 10],
-    [0, 11],
-    [0, 12],
-    [1, 13],
-    [2, 14],
-  ]) {
-    const first = regions[firstIndex!]!
-    const second = regions[secondIndex!]!
+  for (const [firstRegionId, secondRegionId] of regionPairs) {
+    const first = regionById.get(firstRegionId)!
+    const second = regionById.get(secondRegionId)!
     const portId = `port_${ports.length}`
     const port: RegionPortHg = {
       portId,
@@ -98,35 +103,47 @@ test("disconnected terminals recover same-pad contacts without changing reachabl
     ports.push(port)
   }
   const connections: ConnectionHgWithSimpleRouteConnection[] = [
-    { id: "clock_a", net: "net_a", start: 0, end: 4 },
-    { id: "clock_b", net: "net_b", start: 6, end: 8 },
-  ].map(({ id, net, start, end }): ConnectionHgWithSimpleRouteConnection => ({
-    connectionId: `${id}_mst0`,
-    mutuallyConnectedNetworkId: net,
-    startRegion: { ...regions[start]!, ports: [] },
-    endRegion: { ...regions[end]!, ports: [] },
-    simpleRouteConnection: {
-      name: `${id}_mst0`,
-      source_trace_id: id,
-      pointsToConnect: [regions[start]!, regions[end]!].map(
-        (region): { x: number; y: number; layer: string } => ({
-          ...region.d.center,
-          layer: "top",
-        }),
-      ),
-    },
-  }))
+    { id: "clock_a", net: "net_a", start: "start_a", end: "end_a" },
+    { id: "clock_b", net: "net_b", start: "start_b", end: "end_b" },
+  ].map(({ id, net, start, end }): ConnectionHgWithSimpleRouteConnection => {
+    const startRegion = regionById.get(start)!
+    const endRegion = regionById.get(end)!
+    return {
+      connectionId: `${id}_mst0`,
+      mutuallyConnectedNetworkId: net,
+      startRegion: { ...startRegion, ports: [] },
+      endRegion: { ...endRegion, ports: [] },
+      simpleRouteConnection: {
+        name: `${id}_mst0`,
+        source_trace_id: id,
+        pointsToConnect: [startRegion, endRegion].map(
+          (region): { x: number; y: number; layer: string } => ({
+            ...region.d.center,
+            layer: "top",
+          }),
+        ),
+      },
+    }
+  })
   const graph = { regions, ports }
   const originalGraph = structuredClone(graph)
-  const ownership = getRegionNetIdByRegionId({
+  const regionNetIdByRegionId = getRegionNetIdByRegionId({
     params: { graph, connections, layerCount: 2 },
     getNetIndex: createTinyRouteNetIndexer(),
   })
 
-  expect(ownership.get("fragment_a")).toBe(ownership.get("start_a"))
-  expect(ownership.get("outer_a")).toBe(ownership.get("start_a"))
-  expect(ownership.get("start_a")).not.toBe(ownership.get("start_b"))
-  expect(ownership.get("foreign")).toBe(ownership.get("start_b"))
+  expect(regionNetIdByRegionId.get("fragment_a")).toBe(
+    regionNetIdByRegionId.get("start_a"),
+  )
+  expect(regionNetIdByRegionId.get("outer_a")).toBe(
+    regionNetIdByRegionId.get("start_a"),
+  )
+  expect(regionNetIdByRegionId.get("start_a")).not.toBe(
+    regionNetIdByRegionId.get("start_b"),
+  )
+  expect(regionNetIdByRegionId.get("foreign")).toBe(
+    regionNetIdByRegionId.get("start_b"),
+  )
   for (const id of [
     "fragment_b",
     "corner_a",
@@ -136,7 +153,7 @@ test("disconnected terminals recover same-pad contacts without changing reachabl
     "exit_a",
     "free_tagged",
   ]) {
-    expect(ownership.has(id)).toBe(false)
+    expect(regionNetIdByRegionId.has(id)).toBe(false)
   }
   expect(graph).toEqual(originalGraph)
 })
