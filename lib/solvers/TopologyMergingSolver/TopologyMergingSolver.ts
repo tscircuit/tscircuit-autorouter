@@ -12,11 +12,13 @@ import {
   compactTopologyMergingRegions,
   doesBoundsContainPoint,
   getCanonicalCoordinates,
+  getHorizontalMergeBucketKey,
   getLayerTopologiesForCoveredNodes,
   restoreAuthoritativeTargetRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
+  HorizontalTopologyMergingBucketKey,
   PreparedTopologyMergingNode,
   TopologyMergingRegion,
   TopologyMergingSolverParams,
@@ -39,6 +41,10 @@ export class TopologyMergingSolver extends BaseSolver {
   }
   private readonly xCoordinates: number[]
   private readonly atomicRegions: TopologyMergingRegion[] = []
+  private horizontalRegionByBucket = new Map<
+    HorizontalTopologyMergingBucketKey,
+    TopologyMergingRegion
+  >()
   private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -184,6 +190,10 @@ export class TopologyMergingSolver extends BaseSolver {
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
     )
+    const nextHorizontalRegionByBucket = new Map<
+      HorizontalTopologyMergingBucketKey,
+      TopologyMergingRegion
+    >()
 
     for (let yIndex = 0; yIndex < yCoordinates.length - 1; yIndex++) {
       const minY = yCoordinates[yIndex]!
@@ -207,14 +217,35 @@ export class TopologyMergingSolver extends BaseSolver {
         this.overruledTargetSourceKeys.add(sourceKey)
       }
       for (const layerTopology of layerTopologies) {
-        this.atomicRegions.push({
+        const region: TopologyMergingRegion = {
           bounds: { minX, maxX, minY, maxY },
           availableZ: layerTopology.availableZ,
           sourceKeys: layerTopology.sourceKeys,
           topologyMode: layerTopology.topologyMode,
           topologySignature: layerTopology.topologySignature,
-        })
+        }
+        const bucketKey = getHorizontalMergeBucketKey(region)
+        const previousRegion =
+          nextHorizontalRegionByBucket.get(bucketKey) ??
+          this.horizontalRegionByBucket.get(bucketKey)
+        // Perform the existing first horizontal compaction as slabs arrive.
+        // Layer signatures must match; keep the same combined provenance.
+        if (
+          previousRegion &&
+          Math.abs(previousRegion.bounds.maxX - minX) <=
+            TOPOLOGY_MERGING_EPSILON
+        ) {
+          previousRegion.sourceKeys = [
+            ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+          ].sort()
+          previousRegion.bounds.maxX = maxX
+          nextHorizontalRegionByBucket.set(bucketKey, previousRegion)
+        } else {
+          this.atomicRegions.push(region)
+          nextHorizontalRegionByBucket.set(bucketKey, region)
+        }
       }
     }
+    this.horizontalRegionByBucket = nextHorizontalRegionByBucket
   }
 }

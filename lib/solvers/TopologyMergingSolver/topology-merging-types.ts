@@ -38,6 +38,8 @@ export type TopologyMergingRegion = {
   topologySignature: string
 }
 
+export type HorizontalTopologyMergingBucketKey = string
+
 export type TopologyMergingLayerTopology = {
   availableZ: number[]
   sourceKeys: string[]
