@@ -57,11 +57,10 @@ function verifyNativeOrangeCrabRouting(): void {
     findingCounts[finding.type] = (findingCounts[finding.type] ?? 0) + 1
   }
   expect(findingCounts).toEqual({
-    pcb_trace_error: 2,
-    pcb_pad_trace_clearance_error: 6,
-    pcb_via_trace_clearance_error: 10,
-    pcb_pad_pad_clearance_error: 8,
-    pcb_via_clearance_error: 2,
+    pcb_pad_trace_clearance_error: 3,
+    pcb_via_trace_clearance_error: 1,
+    pcb_pad_pad_clearance_error: 1,
+    pcb_via_clearance_error: 1,
   })
 }
 

@@ -56,7 +56,7 @@ async function verifyOrangeCrabRouting(): Promise<void> {
   ).toEqual([])
 }
 
-test.failing(
+test(
   "routes OrangeCrab remaining signals without shorting through-vias to another DDR net",
   verifyOrangeCrabRouting,
 )
