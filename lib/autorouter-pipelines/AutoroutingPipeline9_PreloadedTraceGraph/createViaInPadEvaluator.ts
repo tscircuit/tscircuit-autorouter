@@ -15,6 +15,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 
 type ViaInPadRoute = HighDensityRoute | SimplifiedPcbTrace
 
@@ -47,7 +48,8 @@ function getViaElements({
         [viaTrace],
       ).filter((element): element is PcbVia => element.type === "pcb_via")
     }
-    return getRepairViaGeometry(route, srj.layerCount).map(
+    const canonicalRoute = canonicalizePipeline9HdRoutes([route])[0]!
+    return getRepairViaGeometry(canonicalRoute, srj.layerCount).map(
       (via, viaIndex): PcbVia => {
         let minZ = 0
         let maxZ = srj.layerCount - 1

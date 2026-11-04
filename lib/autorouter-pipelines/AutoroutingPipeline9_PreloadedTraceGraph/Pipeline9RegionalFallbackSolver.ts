@@ -119,6 +119,8 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     }).viaSpans
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
+        // Copper pours regenerate antipads around relocated vias.
+        if (obstacle.isCopperPour) return false
         if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
           return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
