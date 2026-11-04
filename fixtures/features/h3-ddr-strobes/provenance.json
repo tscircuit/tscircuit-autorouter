@@ -80,18 +80,19 @@
   },
   "tsx": "https://github.com/tscircuit/bus-lanes-solver/blob/e41da8866af38bb7c710064d34f6988dc3385bf9/repros/preloaded-ddr/circuits/h3.tsx",
   "capture": {
-    "tscircuit": "0.0.3082",
-    "core": "0.0.2268",
-    "autorouter": "0.0.1038",
-    "busSolver": "0.0.42",
-    "phase": "remaining, after both eight-bit data phases"
+    "core": "0.0.2269",
+    "autorouter": "0.0.1039 (main 41673fb)",
+    "busSolver": "0.0.43",
+    "phase": "remaining, after the eight-bit byte0 data phase",
+    "runtime": "Unmodified published core bundle, with only capacity-autorouter imported from the compared source checkout."
   },
   "selection": [
     "N044_SDQS0N",
     "N045_SDQS0P"
   ],
-  "onlyInputChange": "Select these two connections from the captured 37-signal remaining phase. All 1957 obstacles, layers, rules and geometry are unchanged.",
-  "routedData": "Exact preceding core phase output: sixteen completed DQ routes and all 445 native pad primitives. The routes match the separate successful, committed DQ-only run. Used to draw existing copper, not passed to the routing solver a second time.",
-  "limits": "This repro tests connectivity and geometry for DQS0; differential skew, impedance and DDR timing are unqualified.",
-  "inputSha256": "c8d739c341d46ef632937e44b6d8e23bb8a1ff2505265606e0de00aa54901d2d"
+  "onlyInputChange": "No changes to the captured phase input. The real TSX board selects eight byte0 DQ signals and DQS0N/P; all source pad primitives and physical rules are preserved.",
+  "routedData": "Exact preceding core phase output: eight completed byte0 DQ routes and all 445 native pad primitives. Base and head phase outputs are byte-for-byte identical. Passed separately to physical DRC and visualization; not injected twice into the solver.",
+  "limits": "This repro tests connectivity and physical clearance for one eight-bit data byte plus DQS0. The 18-signal selection (both data bytes plus DQS0) connects after the fix but still has 9 physical findings; the full 53-signal board remains incomplete. Differential skew, impedance and DDR timing are unqualified.",
+  "inputSha256": "0f302b9b4e454943c23041799be895718be11e63c967ccfab025847383c70df0",
+  "routedDataSha256": "fc59555f1b98c9a4f0b9f0e97038f046308d28e11ee2658ac898e99d61989690"
 }
