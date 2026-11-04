@@ -1,0 +1,97 @@
+{
+  "board": {
+    "id": "h3",
+    "name": "Allwinner H3 DDR3 16x1",
+    "repo": "hvwyl/allwinner-h3-ddr3-16x1-kicad",
+    "commit": "02e365b21363a17710e0f96072c0844940495567",
+    "path": "project/allwinner-h3.kicad_pcb",
+    "sourceSha256": "4a1f99d157a4ed5dc15b2dff2fed9f3765226296c1da3930cdd00413254509bb",
+    "components": [
+      {
+        "ref": "DU1",
+        "value": "DDR3-FBGA96",
+        "footprint": "Package_BGA:Micron_FBGA-96_8x14mm_Layout9x16_P0.8mm",
+        "pads": 96,
+        "at": [
+          "139.9286",
+          "64.560806",
+          "90"
+        ]
+      },
+      {
+        "ref": "U1",
+        "value": "Allwinner-H3",
+        "footprint": "Allwinner:Allwinner-H3",
+        "pads": 347,
+        "at": [
+          "120.290565",
+          "63.925475"
+        ]
+      }
+    ],
+    "nativeLayers": [
+      [
+        "0",
+        "F.Cu",
+        "signal"
+      ],
+      [
+        "31",
+        "B.Cu",
+        "signal"
+      ]
+    ],
+    "signalLayers": [
+      "top",
+      "bottom"
+    ],
+    "nets": 53,
+    "terminals": 108,
+    "pads": 479,
+    "rules": {
+      "widths": [
+        0.1143
+      ],
+      "clearances": [
+        0.0889
+      ],
+      "appliedGlobalClearance": 0.0889,
+      "viaPad": 0.45,
+      "viaDrill": 0.2
+    },
+    "rectangularPadApproximations": {
+      "roundrect": 36
+    },
+    "scope": "All named DDR signal nets incident to CPU or RAM, including passive endpoints. Power, VREF, ZQ and unconnected nets excluded. Existing traces, vias and zones removed. Board uses edge bounding box. No timing or impedance constraints invented.",
+    "sample": "sample001",
+    "sampleSha256": "b4c5d5151c0bc0fb3032f230af12c6428e7148318b39f22d3d14c8803f4c7c1e",
+    "license": "NOASSERTION",
+    "sourceUrl": "https://github.com/hvwyl/allwinner-h3-ddr3-16x1-kicad/blob/02e365b21363a17710e0f96072c0844940495567/project/allwinner-h3.kicad_pcb",
+    "extractionRevision": "preserved-ddr-assessment-2026-10-27",
+    "notes": [
+      "These are the captured routing inputs, not newly simplified two-chip layouts.",
+      "KiCad pad primitives are retained as separate obstacles; some package footprints contain multiple primitives per ball.",
+      "Bus metadata restricts source signal layers only; no timing, skew, impedance or differential-pair constraints are invented."
+    ],
+    "projectSource": {
+      "path": "project/allwinner-h3.kicad_pro",
+      "sha256": "c1f9ac700475417b74f0c929ba20b9c1ccbd6db4928036a25bedc49263405f08"
+    }
+  },
+  "tsx": "https://github.com/tscircuit/bus-lanes-solver/blob/e41da8866af38bb7c710064d34f6988dc3385bf9/repros/preloaded-ddr/circuits/h3.tsx",
+  "capture": {
+    "tscircuit": "0.0.3082",
+    "core": "0.0.2268",
+    "autorouter": "0.0.1038",
+    "busSolver": "0.0.42",
+    "phase": "remaining, after both eight-bit data phases"
+  },
+  "selection": [
+    "N044_SDQS0N",
+    "N045_SDQS0P"
+  ],
+  "onlyInputChange": "Select these two connections from the captured 37-signal remaining phase. All 1957 obstacles, layers, rules and geometry are unchanged.",
+  "routedData": "Exact preceding core phase output: sixteen completed DQ routes and all 445 native pad primitives. The routes match the separate successful, committed DQ-only run. Used to draw existing copper, not passed to the routing solver a second time.",
+  "limits": "This repro tests connectivity and geometry for DQS0; differential skew, impedance and DDR timing are unqualified.",
+  "inputSha256": "c8d739c341d46ef632937e44b6d8e23bb8a1ff2505265606e0de00aa54901d2d"
+}
