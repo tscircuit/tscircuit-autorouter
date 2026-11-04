@@ -1,32 +1,30 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import { getSvgFromGraphicsObject } from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 test("H3 DDR3 DQS0 leaves fragmented terminal pads beside sixteen fixed data routes", (): void => {
+  const inputBytes = readFileSync(
+    new URL(
+      "../../fixtures/features/h3-ddr-strobes/input.srj.json.gz",
+      import.meta.url,
+    ),
+  )
+  const routedDataBytes = readFileSync(
+    new URL(
+      "../../fixtures/features/h3-ddr-strobes/routed-data.srj.json.gz",
+      import.meta.url,
+    ),
+  )
   const inputSrj: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../../fixtures/features/h3-ddr-strobes/input.srj.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString("utf8"),
+    gunzipSync(new Uint8Array(inputBytes)).toString("utf8"),
   )
   const routedDataSrj: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../../fixtures/features/h3-ddr-strobes/routed-data.srj.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString("utf8"),
+    gunzipSync(new Uint8Array(routedDataBytes)).toString("utf8"),
   )
   const originalInput = structuredClone(inputSrj)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj)
@@ -38,7 +36,7 @@ test("H3 DDR3 DQS0 leaves fragmented terminal pads beside sixteen fixed data rou
     routedTraces = solver.getOutputSimplifiedPcbTraces()
     statusColor = "#166534"
   }
-  const graphics = convertSrjToGraphicsObject({
+  const graphics: GraphicsObject = convertSrjToGraphicsObject({
     ...routedDataSrj,
     connections: inputSrj.connections,
     traces: [...(routedDataSrj.traces ?? []), ...routedTraces],
