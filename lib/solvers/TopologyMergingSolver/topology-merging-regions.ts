@@ -1,5 +1,6 @@
 import type { Bounds } from "@tscircuit/math-utils"
 import type {
+  HorizontalTopologyMergingBucketKey,
   PreparedTopologyMergingNode,
   TopologyMergingLayerTopology,
   TopologyMergingMode,
@@ -236,7 +237,9 @@ function getRegionMergeKey(region: TopologyMergingRegion): string {
   })
 }
 
-function getHorizontalMergeBucketKey(region: TopologyMergingRegion): string {
+export function getHorizontalMergeBucketKey(
+  region: TopologyMergingRegion,
+): HorizontalTopologyMergingBucketKey {
   return JSON.stringify({
     mergeKey: getRegionMergeKey(region),
     minY: region.bounds.minY.toPrecision(15),

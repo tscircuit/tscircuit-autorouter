@@ -50,22 +50,10 @@ function verifyNativeOrangeCrabRouting(): void {
       }),
     )
   }
-  // This proves routing completion, not manufacturing readiness. Preserve the
-  // independently measured limitations instead of calling this DRC-clean.
-  const findingCounts: Record<string, number> = {}
-  for (const finding of rendered.physicalErrors) {
-    findingCounts[finding.type] = (findingCounts[finding.type] ?? 0) + 1
-  }
-  expect(findingCounts).toEqual({
-    pcb_trace_error: 2,
-    pcb_pad_trace_clearance_error: 6,
-    pcb_via_trace_clearance_error: 10,
-    pcb_pad_pad_clearance_error: 8,
-    pcb_via_clearance_error: 2,
-  })
+  expect(rendered.physicalErrors).toEqual([])
 }
 
 test(
-  "native OrangeCrab completes all 50 DDR nets without forbidden pad drills",
+  "native OrangeCrab routes all 50 DDR nets without physical DRC errors",
   verifyNativeOrangeCrabRouting,
 )
