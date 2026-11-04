@@ -62,7 +62,7 @@ test("Game Boy contact refinement retains DRC improvements without new shorts", 
   expect(owner.failed).toBeFalse()
   expect(
     getDrcSnapshot(owner.params.srj, output, evaluate, connMap).count,
-  ).toBeLessThanOrEqual(22)
+  ).toBeLessThanOrEqual(21)
   // This input previously rejected the whole repair and retained 126 errors.
   expect(
     Number(owner.stats.traceContactRepairCandidateChecks),
