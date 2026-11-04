@@ -3,7 +3,7 @@ import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import RBush from "rbush"
-import { createDrcReadableNameResolver } from "./drcReadableNames"
+import { getDrcReadableElementName } from "./drcReadableNames"
 
 type IndexedVia = Bounds & {
   order: number
@@ -16,7 +16,6 @@ export const checkViaPairClearance = (
   connMap: ConnectivityMap,
   options: { viaClearance?: number } = {},
 ): Record<string, unknown>[] => {
-  const readableNames = createDrcReadableNameResolver(circuitJson)
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
@@ -77,7 +76,7 @@ export const checkViaPairClearance = (
         type: "pcb_via_clearance_error",
         error_type: "pcb_via_clearance_error",
         pcb_error_id: `${sameNet ? "same_net" : "different_net"}_vias_close_${pairId}`,
-        message: `Vias ${readableNames.getElementName(viaA.pcb_via_id)} and ${readableNames.getElementName(viaB.pcb_via_id)}${sameNet ? "" : " from different nets"} are too close together (gap: ${gap.toFixed(3)}mm)`,
+        message: `Vias ${getDrcReadableElementName(circuitJson, viaA.pcb_via_id)} and ${getDrcReadableElementName(circuitJson, viaB.pcb_via_id)}${sameNet ? "" : " from different nets"} are too close together (gap: ${gap.toFixed(3)}mm)`,
         pcb_via_ids: [viaA.pcb_via_id, viaB.pcb_via_id],
         minimum_clearance: minimumClearance,
         actual_clearance: gap,
