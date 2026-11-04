@@ -1,0 +1,84 @@
+name: Repair memory investigation
+on:
+  push:
+    branches: [techmannih/benchmark-repair-memory-20261105]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    if: github.ref_name == 'techmannih/benchmark-repair-memory-20261105'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cohort: reviewed
+            base: a200c89061474a1c4f961b70397022bdecb64de9
+            candidate: f98765a5b8de43a201cd2d2f5592555909d833a7
+          - cohort: current
+            base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
+            candidate: bc759080e7df792bdf89c0762784fd6cbf255017
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.base }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.candidate }}
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install identical dependencies
+        working-directory: base
+        run: bun install --no-save --ignore-scripts
+      - name: Install exact candidate repair archive
+        env:
+          BASE_SHA: ${{ matrix.base }}
+          CANDIDATE_SHA: ${{ matrix.candidate }}
+          COHORT: ${{ matrix.cohort }}
+          RUNNER_NAME: ${{ runner.name }}
+        run: |
+          cp -a base/node_modules candidate/node_modules
+          mkdir outputs
+          node <<'NODE'
+          const fs = require('fs');
+          const a = JSON.parse(fs.readFileSync('base/package.json'));
+          const b = JSON.parse(fs.readFileSync('candidate/package.json'));
+          const key = 'high-density-repair03';
+          const basePin = a.devDependencies[key];
+          const candidatePin = b.devDependencies[key];
+          delete a.devDependencies[key]; delete b.devDependencies[key];
+          if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
+          fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:3,orders:[['base','candidate'],['candidate','base'],['base','candidate']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          NODE
+          curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
+          tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
+          for revision in base candidate; do
+            cp controller/scripts/benchmark/repair-memory-probe.ts "$revision/scripts/benchmark/repair-memory-probe.ts"
+          done
+      - name: Run three balanced sequential pairs
+        run: |
+          for round in 1 2 3; do
+            order="base candidate"
+            if [ "$round" = "2" ]; then order="candidate base"; fi
+            for revision in $order; do
+              (cd "$revision" && timeout 600 bun scripts/benchmark/repair-memory-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
+              tail -1 "outputs/round-$round-$revision.log"
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repair-memory-${{ matrix.cohort }}
+          path: outputs
