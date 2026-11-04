@@ -12,7 +12,8 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import type { TinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 
-export type ConnectionAlias = ConnectionHgWithSimpleRouteConnection["connectionId"]
+export type ConnectionAlias =
+  ConnectionHgWithSimpleRouteConnection["connectionId"]
 
 export function assignDisconnectedTargetRegionNetIds(input: {
   regions: RegionHg[]
@@ -23,7 +24,10 @@ export function assignDisconnectedTargetRegionNetIds(input: {
   getNetIndex: TinyRouteNetIndexer
 }): void {
   const regionById = new Map<RegionId, RegionHg>(
-    input.regions.map((region): [RegionId, RegionHg] => [region.regionId, region]),
+    input.regions.map((region): [RegionId, RegionHg] => [
+      region.regionId,
+      region,
+    ]),
   )
   for (const connection of input.connections) {
     const startRegion = regionById.get(connection.startRegion.regionId)
@@ -59,7 +63,11 @@ export function assignDisconnectedTargetRegionNetIds(input: {
       while (pending.length > 0) {
         const region = pending.pop()!
         for (const port of region.ports) {
-          const neighbor = getNeighborRegionOrThrow({ region, port, regionById })
+          const neighbor = getNeighborRegionOrThrow({
+            region,
+            port,
+            regionById,
+          })
           if (visited.has(neighbor.regionId)) continue
           const isSameTargetPad =
             neighbor.d._containsObstacle &&
@@ -75,7 +83,9 @@ export function assignDisconnectedTargetRegionNetIds(input: {
           const candidates = input.regionNetCandidates.get(neighbor.regionId)
           const hasConflictingNetCandidates = candidates && candidates.size > 1
           if (hasConflictingNetCandidates) continue
-          const neighborNetId = input.regionNetIdByRegionId.get(neighbor.regionId)
+          const neighborNetId = input.regionNetIdByRegionId.get(
+            neighbor.regionId,
+          )
           const belongsToAnotherNet =
             neighborNetId !== undefined && neighborNetId !== netId
           if (belongsToAnotherNet) continue
@@ -117,7 +127,8 @@ function areConnectionRegionsConnected(input: {
       if (visited.has(neighbor.regionId)) continue
       const neighborNetId = input.regionNetIdByRegionId.get(neighbor.regionId)
       const hasAssignedNet = neighborNetId !== undefined && neighborNetId >= 0
-      const belongsToAnotherNet = hasAssignedNet && neighborNetId !== input.netId
+      const belongsToAnotherNet =
+        hasAssignedNet && neighborNetId !== input.netId
       if (belongsToAnotherNet) continue
       const isUnownedObstacle =
         neighbor.d._containsObstacle && neighborNetId !== input.netId

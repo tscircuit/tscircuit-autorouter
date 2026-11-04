@@ -46,22 +46,24 @@ test("disconnected terminals recover same-pad contacts without changing reachabl
       connectedTo: ["net_a", "net_b"],
     },
     { id: "free_tagged", x: 2, y: 1, target: "clock_a", obstacle: false },
-  ].map(({ id, x, y, target, obstacle, connectedTo }): RegionHg => ({
-    regionId: id,
-    d: {
-      capacityMeshNodeId: id,
-      center: { x, y },
-      width: 1,
-      height: 1,
-      availableZ: [0],
-      layer: "z0",
-      _containsObstacle: obstacle,
-      _containsTarget: target !== undefined,
-      _targetConnectionName: target,
-      _connectedTo: connectedTo,
-    },
-    ports: [],
-  }))
+  ].map(
+    ({ id, x, y, target, obstacle, connectedTo }): RegionHg => ({
+      regionId: id,
+      d: {
+        capacityMeshNodeId: id,
+        center: { x, y },
+        width: 1,
+        height: 1,
+        availableZ: [0],
+        layer: "z0",
+        _containsObstacle: obstacle,
+        _containsTarget: target !== undefined,
+        _targetConnectionName: target,
+        _connectedTo: connectedTo,
+      },
+      ports: [],
+    }),
+  )
   const regionById = new Map<RegionId, RegionHg>(
     regions.map((region): [RegionId, RegionHg] => [region.regionId, region]),
   )
