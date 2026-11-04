@@ -18,9 +18,9 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
       ),
     ),
   )
-  expect(createHash("sha256").update(rawInput).digest("hex")).toBe(
-    "783738f1ce719d1aa83faa4a5dccd7ba22cc0ed77768b9e081ff9be568e8d7ac",
-  )
+  expect(
+    createHash("sha256").update(Uint8Array.from(rawInput)).digest("hex"),
+  ).toBe("783738f1ce719d1aa83faa4a5dccd7ba22cc0ed77768b9e081ff9be568e8d7ac")
   const inputSrj: SimpleRouteJson = JSON.parse(rawInput.toString("utf8"))
   expect(inputSrj.layerCount).toBe(8)
   expect(inputSrj.obstacles).toHaveLength(3449)
@@ -50,10 +50,14 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
     ? "Mesh completed"
     : "Stopped at retained-cell cap"
   const minX = Math.min(
-    ...inputSrj.obstacles.map((obstacle) => obstacle.center.x - obstacle.width / 2),
+    ...inputSrj.obstacles.map(
+      (obstacle) => obstacle.center.x - obstacle.width / 2,
+    ),
   )
   const maxY = Math.max(
-    ...inputSrj.obstacles.map((obstacle) => obstacle.center.y + obstacle.height / 2),
+    ...inputSrj.obstacles.map(
+      (obstacle) => obstacle.center.y + obstacle.height / 2,
+    ),
   )
   graphics.texts = [
     {
