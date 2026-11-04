@@ -27,7 +27,9 @@ type ReadableNameContext = DrcReadableNameResolver & {
   getIndexes: () => ReadableNameIndexes
 }
 
-const memoizeReadableName = <T>(resolve: (key: T) => string): ((key: T) => string) => {
+const memoizeReadableName = <T>(
+  resolve: (key: T) => string,
+): ((key: T) => string) => {
   const names = new Map<T, string>()
   return (key): string => {
     const cached = names.get(key)
@@ -175,7 +177,8 @@ const resolveDrcReadableSourceTraceName = (
       ? context.getIndexes().pcbPortsBySourcePort.get(sourcePortId)
       : circuitJson.find(
           (element) =>
-            element.type === "pcb_port" && element.source_port_id === sourcePortId,
+            element.type === "pcb_port" &&
+            element.source_port_id === sourcePortId,
         )
     if (port?.type === "pcb_port") {
       const name = context
@@ -192,7 +195,9 @@ const resolveDrcReadableSourceTraceName = (
           )
       if (sourcePort?.type !== "source_port") continue
       const component = context
-        ? context.getIndexes().sourceComponents.get(sourcePort.source_component_id)
+        ? context
+            .getIndexes()
+            .sourceComponents.get(sourcePort.source_component_id)
         : circuitJson.find(
             (element) =>
               element.type === "source_component" &&
@@ -254,7 +259,9 @@ const resolveDrcReadableTraceName = (
   )
   const names = portIds
     .map((id) =>
-      context ? context.getPortName(id) : getDrcReadablePortName(circuitJson, id),
+      context
+        ? context.getPortName(id)
+        : getDrcReadablePortName(circuitJson, id),
     )
     .filter((name) => name !== "unnamed port")
   if (names.length >= 2) return `${names[0]} to ${names[1]}`

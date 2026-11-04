@@ -17,19 +17,28 @@ test("continuity still validates sibling vias after the net's ports are connecte
       layers: ["top"],
       connectedTo: [`pcb_port_${x}`, "net"],
     })),
-    connections: [{
-      name: "net",
-      pointsToConnect: [0, 4].map((x) => ({
-        x, y: 0, layer: "top", pcb_port_id: `pcb_port_${x}`,
-      })),
-    }],
+    connections: [
+      {
+        name: "net",
+        pointsToConnect: [0, 4].map((x) => ({
+          x,
+          y: 0,
+          layer: "top",
+          pcb_port_id: `pcb_port_${x}`,
+        })),
+      },
+    ],
   }
   const connected: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "connected",
     connection_name: "net",
     route: [0, 4].map((x) => ({
-      route_type: "wire", x, y: 0, width: 0.1, layer: "top",
+      route_type: "wire",
+      x,
+      y: 0,
+      width: 0.1,
+      layer: "top",
     })),
   }
   const sibling: SimplifiedPcbTrace = {
