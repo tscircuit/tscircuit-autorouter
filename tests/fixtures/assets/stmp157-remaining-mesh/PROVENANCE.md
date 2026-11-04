@@ -5,6 +5,10 @@ STMP157 CPU + DDR3 TSX board after all four data bytes (32 signals) route.
 It contains 40 remaining connections, 137 terminals, 710 original pad
 rectangles and 2,739 existing-copper rectangles on eight layers.
 
+Source: [OLIMEX STMP157-OLinuXino-LIME2 rev B1](https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/STMP157-OLinuXino-LIME2/1.%20Latest%20hardware%20revision/STMP157-OLinuXino-LIME2_Rev_B1/STMP157-OLinuXino-LIME2_Rev_B1.kicad_pcb).
+Layout revision `85eee9c17ee13af65617d73bdd94de7ec49cfb42`, license
+`CC-BY-SA-3.0-US`. CPU: STM32MP157CAA3x; RAM: two K4B4G1646D-BYK0.
+
 Captured with published `tscircuit@0.0.3071`, `@tscircuit/core@0.0.2264`,
 `@tscircuit/bus-lanes-solver@0.0.41` and
 `@tscircuit/capacity-autorouter@0.0.1035`. No pad, clearance, trace width,
