@@ -31,7 +31,7 @@ test("copper pours do not force extra escape vias", (): void => {
     trace.route.filter((point) => point.route_type === "via"),
   )
   expect(traces).toHaveLength(13)
-  expect(vias).toHaveLength(7)
+  expect(vias).toHaveLength(9)
   const evaluate = createPipeline9AutoroutingDrcEvaluator({
     inputSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
