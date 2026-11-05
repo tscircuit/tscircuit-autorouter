@@ -19,6 +19,7 @@ import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getExternallyConnectedPcbPortGroups } from "lib/utils/getExternallyConnectedPcbPortGroups"
 
 type DrcError = Record<string, unknown>
 
@@ -53,6 +54,8 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     includeOriginalConnections: true,
     connectivityMaps,
   }
+  const externallyConnectedPortIds =
+    getExternallyConnectedPcbPortGroups(inputSrj)
   const board = includeBoardClearance
     ? createPcbBoardElement({
         ...inputSrj,
@@ -99,7 +102,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []
-        : checkTraceContinuity(circuitJson)),
+        : checkTraceContinuity(circuitJson, { externallyConnectedPortIds })),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),

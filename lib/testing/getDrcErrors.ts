@@ -14,12 +14,14 @@ import type {
   PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
+  PcbTraceMissingError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
 } from "circuit-json"
 import { Point } from "graphics-debug"
 import type { GetDrcErrorsOptions } from "lib/types/drc-types"
 import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
+import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 
 type CircuitJson = AnyCircuitElement[]
@@ -32,6 +34,7 @@ type ViaPadDrcError = PcbPadPadClearanceError & {
 
 type DrcError =
   | PcbTraceError
+  | PcbTraceMissingError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
@@ -124,9 +127,15 @@ export const getDrcErrors = (
   const errors: DrcError[] = [
     ...traceErrors,
     ...checkPcbTracesOutOfBoard(circuitJson),
+    // The Circuit JSON-only checker cannot represent SRJ's retained copper
+    // groups. Validate those with the physical port graph used by repair.
     ...(options.includeTraceContinuity === false
       ? []
-      : checkTracesAreContiguous(circuitJson)),
+      : options.externallyConnectedPortIds?.length
+        ? checkTraceContinuity(circuitJson, {
+            externallyConnectedPortIds: options.externallyConnectedPortIds,
+          })
+        : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,
