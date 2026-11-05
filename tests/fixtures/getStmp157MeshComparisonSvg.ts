@@ -263,7 +263,11 @@ export function getStmp157MeshComparisonSvg({
     }))
     rows[1]!.push(
       renderPanel({
-        graphics: { ...copper, rects, lines: [...cellBoundaries, ...copper.lines!] },
+        graphics: {
+          ...copper,
+          rects,
+          lines: [...cellBoundaries, ...copper.lines!],
+        },
         view: crop,
         titles: [
           "Merged mesh · top layer · identical 4 × 4 mm crop",
@@ -274,7 +278,8 @@ export function getStmp157MeshComparisonSvg({
     )
 
     const nodeById = new Map<CapacityMeshNodeId, CapacityMeshNode>()
-    for (const node of capacityNodes) nodeById.set(node.capacityMeshNodeId, node)
+    for (const node of capacityNodes)
+      nodeById.set(node.capacityMeshNodeId, node)
     const lines: Line[] = []
     for (const edge of edges) {
       const start = nodeById.get(edge.nodeIds[0])
