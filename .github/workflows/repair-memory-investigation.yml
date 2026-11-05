@@ -14,12 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: board-cache-srj18-4
+          - cohort: board-pruning-srj18-4
             dataset: srj18
             sample: 4
             base: a5ba3d546d04b1d8d240074c77e61ffba78c962c
             candidate: a5ba3d546d04b1d8d240074c77e61ffba78c962c
-          - cohort: board-cache-srj18-14
+          - cohort: board-pruning-srj18-14
             dataset: srj18
             sample: 14
             base: a5ba3d546d04b1d8d240074c77e61ffba78c962c
@@ -60,7 +60,7 @@ jobs:
           const b = JSON.parse(fs.readFileSync('candidate/package.json'));
           const key = 'high-density-repair03';
           const basePin = a.devDependencies[key];
-          const candidatePin = 'https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/ceec5df51b70e140e83c8ecb48f12be407db54bc';
+          const candidatePin = 'https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/94fc55116df29f0ce33f0acd1a9ba7c793a1deea';
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
