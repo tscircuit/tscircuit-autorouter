@@ -47,10 +47,14 @@ test("STMP157 native DDR preloads carry their fixed policy into the graph", asyn
   if (fixedAssignmentCount === assignments.length) assignmentColor = "green"
   const graphics: GraphicsObject = convertSrjToGraphicsObject(input)
   const minX = Math.min(
-    ...input.obstacles.map((obstacle) => obstacle.center.x - obstacle.width / 2),
+    ...input.obstacles.map(
+      (obstacle) => obstacle.center.x - obstacle.width / 2,
+    ),
   )
   const maxY = Math.max(
-    ...input.obstacles.map((obstacle) => obstacle.center.y + obstacle.height / 2),
+    ...input.obstacles.map(
+      (obstacle) => obstacle.center.y + obstacle.height / 2,
+    ),
   )
   graphics.texts = [
     {
@@ -75,9 +79,9 @@ test("STMP157 native DDR preloads carry their fixed policy into the graph", asyn
   expect(input.obstacles).toHaveLength(710)
   expect(input.connections).toHaveLength(1)
   expect(input.traces).toHaveLength(32)
-  expect(new Set(assignments.map((assignment) => assignment.traceId)).size).toBe(
-    32,
-  )
+  expect(
+    new Set(assignments.map((assignment) => assignment.traceId)).size,
+  ).toBe(32)
   expect(solver.srj.traces).toEqual(input.traces)
   expect(input).toEqual(originalInput)
 })
