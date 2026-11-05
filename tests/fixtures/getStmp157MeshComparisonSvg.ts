@@ -29,7 +29,10 @@ type ComparisonSide = {
 
 const crop = { minX: -12, maxX: -8, minY: -4, maxY: 0 }
 
-function clipLine({ line, view }: {
+function clipLine({
+  line,
+  view,
+}: {
   line: Line
   view: Viewbox
 }): Line | undefined {
@@ -44,18 +47,24 @@ function clipLine({ line, view }: {
   ]
   const points = [start, end].filter(
     (point) =>
-      point.x >= view.minX && point.x <= view.maxX &&
-      point.y >= view.minY && point.y <= view.maxY,
+      point.x >= view.minX &&
+      point.x <= view.maxX &&
+      point.y >= view.minY &&
+      point.y <= view.maxY,
   )
   for (let index = 0; index < corners.length; index++) {
     const intersection = getSegmentIntersection(
-      start, end, corners[index]!, corners[(index + 1) % corners.length]!,
+      start,
+      end,
+      corners[index]!,
+      corners[(index + 1) % corners.length]!,
     )
     if (intersection) points.push(intersection)
   }
-  points.sort((a, b) =>
-    Math.hypot(a.x - start.x, a.y - start.y) -
-    Math.hypot(b.x - start.x, b.y - start.y),
+  points.sort(
+    (a, b) =>
+      Math.hypot(a.x - start.x, a.y - start.y) -
+      Math.hypot(b.x - start.x, b.y - start.y),
   )
   if (points.length < 2) return undefined
   return { ...line, points: [points[0]!, points.at(-1)!], label: undefined }
@@ -78,31 +87,40 @@ function getCopperGraphics(input: SimpleRouteJson): GraphicsObject {
     }),
   }))
   const graphics = convertSrjToGraphicsObject({
-    ...input, connections: [], obstacles: [], traces,
+    ...input,
+    connections: [],
+    obstacles: [],
+    traces,
   })
   return {
-    lines: graphics.lines.filter((line) =>
-      line.layer?.slice(1).split(",").includes("0"),
-    ).flatMap((line) =>
-      line.points.slice(1).flatMap((end, index) => {
-        const clipped = clipLine({
-          line: { ...line, points: [line.points[index]!, end] },
-          view: crop,
-        })
-        if (!clipped) return []
-        return [clipped]
-      }),
-    ),
+    lines: graphics.lines
+      .filter((line) => line.layer?.slice(1).split(",").includes("0"))
+      .flatMap((line) =>
+        line.points.slice(1).flatMap((end, index) => {
+          const clipped = clipLine({
+            line: { ...line, points: [line.points[index]!, end] },
+            view: crop,
+          })
+          if (!clipped) return []
+          return [clipped]
+        }),
+      ),
     circles: graphics.circles.filter(
       (circle) =>
         circle.layer?.slice(1).split(",").includes("0") &&
-        circle.center.x >= crop.minX && circle.center.x <= crop.maxX &&
-        circle.center.y >= crop.minY && circle.center.y <= crop.maxY,
+        circle.center.x >= crop.minX &&
+        circle.center.x <= crop.maxX &&
+        circle.center.y >= crop.minY &&
+        circle.center.y <= crop.maxY,
     ),
   }
 }
 
-function renderPanel({ graphics, view, titles }: {
+function renderPanel({
+  graphics,
+  view,
+  titles,
+}: {
   graphics: GraphicsObject
   view: Viewbox
   titles: string[]
@@ -112,28 +130,41 @@ function renderPanel({ graphics, view, titles }: {
     {
       ...graphics,
       coordinateSystem: "cartesian",
-      rects: [...(graphics.rects ?? []), {
-        center: {
-          x: (view.minX + view.maxX) / 2,
-          y: (view.minY + view.maxY) / 2,
+      rects: [
+        ...(graphics.rects ?? []),
+        {
+          center: {
+            x: (view.minX + view.maxX) / 2,
+            y: (view.minY + view.maxY) / 2,
+          },
+          width: view.maxX - view.minX,
+          height: view.maxY - view.minY,
+          fill: "none",
+          stroke: "#64748b",
         },
-        width: view.maxX - view.minX,
-        height: view.maxY - view.minY,
-        fill: "none",
-        stroke: "#64748b",
-      }],
+      ],
       texts: titles.map((text, index) => ({
         x: view.minX,
         y: view.maxY + fontSize * (titles.length - index) * 1.6,
-        text, fontSize, anchorSide: "center_left",
+        text,
+        fontSize,
+        anchorSide: "center_left",
       })),
     },
-    { backgroundColor: "white", svgWidth: 900, svgHeight: 720, includeTextLabels: false },
+    {
+      backgroundColor: "white",
+      svgWidth: 900,
+      svgHeight: 720,
+      includeTextLabels: false,
+    },
   )
 }
 
 /** Full solved stages; only the drawing is cropped to the same physical window. */
-export function getStmp157MeshComparisonSvg({ before, after }: {
+export function getStmp157MeshComparisonSvg({
+  before,
+  after,
+}: {
   before: ComparisonSide
   after: ComparisonSide
 }): string {
@@ -147,7 +178,10 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
           continue
         }
         point.from_layer = mapZToLayerName(0, drawing.layerCount)
-        point.to_layer = mapZToLayerName(drawing.layerCount - 1, drawing.layerCount)
+        point.to_layer = mapZToLayerName(
+          drawing.layerCount - 1,
+          drawing.layerCount,
+        )
       }
     }
     const graphics = convertSrjToGraphicsObject(drawing)
@@ -155,7 +189,8 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
       ...graphics,
       points: [],
       rects: graphics.rects.map((rect) => ({
-        ...rect, fill: "rgba(220,38,38,0.35)",
+        ...rect,
+        fill: "rgba(220,38,38,0.35)",
       })),
     }
   })
@@ -165,30 +200,37 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
     const { input, mergedNodes, capacityNodes, edges } = side
     let heading = "BEFORE: existing copper becomes rectangles"
     if (index === 1) heading = "AFTER: existing copper stays native traces"
-    rows[0]!.push(renderPanel({
-      graphics: {
-        ...inputGraphics[index],
-        lines: [...inputGraphics[index]!.lines, {
-          points: [
-            { x: crop.minX, y: crop.minY },
-            { x: crop.maxX, y: crop.minY },
-            { x: crop.maxX, y: crop.maxY },
-            { x: crop.minX, y: crop.maxY },
-            { x: crop.minX, y: crop.minY },
+    rows[0]!.push(
+      renderPanel({
+        graphics: {
+          ...inputGraphics[index],
+          lines: [
+            ...inputGraphics[index]!.lines,
+            {
+              points: [
+                { x: crop.minX, y: crop.minY },
+                { x: crop.maxX, y: crop.minY },
+                { x: crop.maxX, y: crop.maxY },
+                { x: crop.minX, y: crop.maxY },
+                { x: crop.minX, y: crop.minY },
+              ],
+              strokeColor: "#111827",
+              strokeWidth: 0.15,
+            },
           ],
-          strokeColor: "#111827", strokeWidth: 0.15,
-        }],
-      },
-      view: overview,
-      titles: [
-        heading,
-        `${input.obstacles.length.toLocaleString("en-US")} input obstacles; ${input.traces?.length ?? 0} native traces`,
-        "Same 710 pads and 32 completed DQ traces; 40 signals not routed",
-      ],
-    }))
+        },
+        view: overview,
+        titles: [
+          heading,
+          `${input.obstacles.length.toLocaleString("en-US")} input obstacles; ${input.traces?.length ?? 0} native traces`,
+          "Same 710 pads and 32 completed DQ traces; 40 signals not routed",
+        ],
+      }),
+    )
 
     const visibleCells = mergedNodes.filter(
-      (node) => node.availableZ.includes(0) &&
+      (node) =>
+        node.availableZ.includes(0) &&
         node.center.x + node.width / 2 > crop.minX &&
         node.center.x - node.width / 2 < crop.maxX &&
         node.center.y + node.height / 2 > crop.minY &&
@@ -202,8 +244,10 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
       return {
         ...createRectFromCapacityNode(node),
         center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
-        width: maxX - minX, height: maxY - minY,
-        stroke: "#55758c", label: undefined,
+        width: maxX - minX,
+        height: maxY - minY,
+        stroke: "#55758c",
+        label: undefined,
       }
     })
     const cellBoundaries: Line[] = rects.map(({ center, width, height }) => ({
@@ -217,15 +261,17 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
       strokeColor: "#55758c",
       strokeWidth: 0.0025,
     }))
-    rows[1]!.push(renderPanel({
-      graphics: { ...copper, rects, lines: [...cellBoundaries, ...copper.lines!] },
-      view: crop,
-      titles: [
-        "Merged mesh · top layer · identical 4 × 4 mm crop",
-        `${mergedNodes.length.toLocaleString("en-US")} cells across all board layers`,
-        `${visibleCells.length.toLocaleString("en-US")} cells intersect this crop; same physical copper shown`,
-      ],
-    }))
+    rows[1]!.push(
+      renderPanel({
+        graphics: { ...copper, rects, lines: [...cellBoundaries, ...copper.lines!] },
+        view: crop,
+        titles: [
+          "Merged mesh · top layer · identical 4 × 4 mm crop",
+          `${mergedNodes.length.toLocaleString("en-US")} cells across all board layers`,
+          `${visibleCells.length.toLocaleString("en-US")} cells intersect this crop; same physical copper shown`,
+        ],
+      }),
+    )
 
     const nodeById = new Map<CapacityMeshNodeId, CapacityMeshNode>()
     for (const node of capacityNodes) nodeById.set(node.capacityMeshNodeId, node)
@@ -234,7 +280,9 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
       const start = nodeById.get(edge.nodeIds[0])
       const end = nodeById.get(edge.nodeIds[1])
       if (!start || !end) {
-        throw new Error(`Missing comparison graph endpoint for ${edge.capacityMeshEdgeId}`)
+        throw new Error(
+          `Missing comparison graph endpoint for ${edge.capacityMeshEdgeId}`,
+        )
       }
       if (!start.availableZ.includes(0) || !end.availableZ.includes(0)) continue
       const clipped = clipLine({
@@ -243,20 +291,27 @@ export function getStmp157MeshComparisonSvg({ before, after }: {
       })
       if (clipped) lines.push(clipped)
     }
-    const points = capacityNodes.filter(
-      (node) => node.availableZ.includes(0) &&
-        node.center.x >= crop.minX && node.center.x <= crop.maxX &&
-        node.center.y >= crop.minY && node.center.y <= crop.maxY,
-    ).map((node) => ({ ...node.center, color: "#183b56" }))
-    rows[2]!.push(renderPanel({
-      graphics: { ...copper, lines: [...lines, ...copper.lines!], points },
-      view: crop,
-      titles: [
-        "Capacity graph after subdivision · same top-layer crop",
-        `${capacityNodes.length.toLocaleString("en-US")} nodes; ${edges.length.toLocaleString("en-US")} edges across all layers`,
-        `${lines.length.toLocaleString("en-US")} edge segments intersect this crop; not routed paths`,
-      ],
-    }))
+    const points = capacityNodes
+      .filter(
+        (node) =>
+          node.availableZ.includes(0) &&
+          node.center.x >= crop.minX &&
+          node.center.x <= crop.maxX &&
+          node.center.y >= crop.minY &&
+          node.center.y <= crop.maxY,
+      )
+      .map((node) => ({ ...node.center, color: "#183b56" }))
+    rows[2]!.push(
+      renderPanel({
+        graphics: { ...copper, lines: [...lines, ...copper.lines!], points },
+        view: crop,
+        titles: [
+          "Capacity graph after subdivision · same top-layer crop",
+          `${capacityNodes.length.toLocaleString("en-US")} nodes; ${edges.length.toLocaleString("en-US")} edges across all layers`,
+          `${lines.length.toLocaleString("en-US")} edge segments intersect this crop; not routed paths`,
+        ],
+      }),
+    )
   }
   const panels = rows.map((row) =>
     stackSvgsHorizontally(row, { gap: 20, normalizeSize: false }),
