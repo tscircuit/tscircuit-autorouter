@@ -29,6 +29,8 @@ export type {
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
 
+const WORKING_NODE_RELEASE_THRESHOLD = 50_000
+
 export class TopologyMergingSolver extends BaseSolver {
   private readonly preparedNodes: PreparedTopologyMergingNode[]
   private readonly preparedNodeBySourceKey: Map<
@@ -179,6 +181,11 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   private releaseWorkingData(): void {
+    // Keep small meshes on their existing garbage-collection schedule.
+    const workingNodeCount =
+      this.preparedNodes.length + this.atomicRegions.length
+    if (workingNodeCount < WORKING_NODE_RELEASE_THRESHOLD) return
+
     // Completed solvers remain attached to the pipeline. Only the validated
     // output and original constructor input are needed after this stage.
     this.preparedNodes.length = 0
