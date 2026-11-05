@@ -14,21 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: srj24-2-repair
+          - cohort: srj24-2-cpu
             dataset: srj24
             sample: 2
             base: d554979b6039f23092fef73fae3a95a0b48b40ea
             candidate: 3809a40231fa088dae570906831425ece9d11bee
-          - cohort: srj24-13-before-repair
-            dataset: srj24
-            sample: 13
-            base: d554979b6039f23092fef73fae3a95a0b48b40ea
-            candidate: 3809a40231fa088dae570906831425ece9d11bee
-          - cohort: srj24-13-control
-            dataset: srj24
-            sample: 13
-            base: d554979b6039f23092fef73fae3a95a0b48b40ea
-            candidate: d554979b6039f23092fef73fae3a95a0b48b40ea
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,7 +59,7 @@ jobs:
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:2,orders:[['base','candidate'],['candidate','base']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:1,cpuProfile:true,orders:[['base','candidate']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
@@ -78,15 +68,15 @@ jobs:
           done
       - name: Repeat profiled cases in both revision orders
         env:
-          PROBE_PROFILE: "1"
+          PROBE_PROFILE: "0"
           PROBE_DATASET: ${{ matrix.dataset }}
           PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
-          for round in 1 2; do
+          for round in 1; do
             order="base candidate"
             if [ "$round" = "2" ]; then order="candidate base"; fi
             for revision in $order; do
-              (cd "$revision" && timeout 600 bun scripts/benchmark/repair-memory-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
+              (cd "$revision" && timeout 600 bun --cpu-prof --cpu-prof-dir ../outputs --cpu-prof-name "$revision.cpuprofile" scripts/benchmark/repair-memory-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
               tail -1 "outputs/round-$round-$revision.log"
             done
           done
