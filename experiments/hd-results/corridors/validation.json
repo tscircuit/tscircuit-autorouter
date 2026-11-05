@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "variant": "corridors",
+  "measuredExperimentCommit": "c0404627d9f134302b1893e0930c8c4d6540d1d6",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "ciAuditObservedAt": "2026-10-28 06:35:41 UTC",
+  "ciAuditMethod": "Read-only completed GitHub Actions job logs and local unchanged assertion source. No reruns, source edits, snapshot updates, compilers or benchmarks.",
+  "completedCiAudit": {
+    "build": {
+      "run": 40643477827,
+      "job": 122666778398,
+      "conclusion": "success"
+    },
+    "bunTest": {
+      "run": 40643477874,
+      "conclusion": "failure",
+      "successfulShards": 0,
+      "failedShards": 9,
+      "totalShards": 9,
+      "totalFailedTests": 76,
+      "categories": {
+        "svg_snapshot": 73,
+        "drc_assertion": 1,
+        "solver_name_inline_snapshot": 1,
+        "segment_length_shape_assertion": 1
+      }
+    },
+    "nonSvgFailures": [
+      {
+        "file": "tests/bugs/usb-dp-phase-detour.test.ts",
+        "line": 36,
+        "job": 122666779374,
+        "expected": 0,
+        "received": 2,
+        "finding": "Relaxed final DRC reports two accidental trace contacts."
+      },
+      {
+        "file": "tests/bugs/repro01-highdensity-drc-failure.test.ts",
+        "line": 104,
+        "job": 122666779374,
+        "expected": "CachedIntraNodeRouteSolver",
+        "received": "SparseVisibilityIntraNodeSolver",
+        "finding": "Solver-name inline snapshot changed. Earlier existing four DRC errors and all pcb_trace_error assertions passed; this failure does not show a changed error count."
+      },
+      {
+        "file": "tests/bugs/bugreport44-0ec411-source-net-0-stitch.test.ts",
+        "line": 37,
+        "job": 122666779421,
+        "assertion": "Every stitched route's maximum same-layer segment length <2mm",
+        "expected": true,
+        "received": false,
+        "finding": "Existing segment-length shape proxy fails. Prior source investigation identified actual sparse edges rather than an invented stitch jump; no snapshot/proxy was weakened."
+      }
+    ],
+    "passedChecksObserved": "Native four-worker dataset18 sample01 completed full output, initial-HD routes, stats, HD and pipeline iteration parity, then failed only the comparison SVG. No terminal-stitch invariant or work-accounting failures were observed.",
+    "interpretation": "Corrected integration removes previously observed stitch/work failures; final broad CI still has genuine DRC and shape/identity failures plus many changed SVG expectations. Keep draft blocked."
+  },
+  "formatCheck": {
+    "conclusion": "failure",
+    "scope": "Separate Format Check remains failed in the final CI audit. No formatter or linter was run under AGENTS.md."
+  },
+  "ciLimitations": [
+    "These are observed completed CI jobs, not a claim that every check is green.",
+    "The CI audit did not run a full baseline BunTest comparison; assertion failures are not all individually attributed as inherited or introduced.",
+    "An SVG failure can mask later numerical assertions. Supplemental probes below do not change actual CI status."
+  ],
+  "source": "artifacts/ci-failure-audits/final-followup-summary.json",
+  "supplementalImageBypassedProbes": {
+    "method": "Six fresh-process supplemental image-bypassed numerical probes, serial CPU3, Bun1.4.3, CLI --timeout9999999 and external180-second GNU timeout per probe. Exactly two SVG-await expression statements removed per temporary file; every numerical assertion, input and solve remains unchanged. Control probes were conditional on experimental numerical failure. No files were committed, no snapshot or tracked source/test modified. These are correctness probes, not performance comparisons.",
+    "correctnessOnly": true,
+    "changesActualCiStatus": false,
+    "sourceProof": {
+      "variant": "corridors",
+      "measuredLocalSourceHead": "cfbfedcfc11ef552d2e5a11c5ab5c85d140220bb",
+      "measuredRemoteSourceHead": "c0404627d9f134302b1893e0930c8c4d6540d1d6",
+      "sourceTestScriptDiffToObservedProbeHead": ""
+    },
+    "cases": [
+      {
+        "variant": "control",
+        "label": "a64",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "637b6c581128238f6c61227a1c15be423d24baca",
+        "exitCode": 0,
+        "censored": false,
+        "outcome": "pass",
+        "originalSha256": "c658bf296e427296e17c0b49d658425becf8768204f4daa6b82c2a4fe5c84b1a",
+        "probeSha256": "45b2159c91f973f44dbda2e2cd0097638a12b3bcaab770b6e2b7b55f34c835f7",
+        "assertionSummary": [
+          "17 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "control",
+        "label": "usbshield",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "637b6c581128238f6c61227a1c15be423d24baca",
+        "exitCode": 0,
+        "censored": false,
+        "outcome": "pass",
+        "originalSha256": "16071d8ea4760b86c8dc409dd5aab3ae69c899363dc6057f339c736c0df9eb37",
+        "probeSha256": "b77c2db52c8e1b3e317bdca14e653a22f786b5511480f883e376212e80871af8",
+        "assertionSummary": [
+          "9 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "corridors",
+        "label": "a64",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "49b1ab0ff01fdc98689ea9a7ecb02ee50974c4e4",
+        "exitCode": 0,
+        "censored": false,
+        "outcome": "pass",
+        "originalSha256": "c658bf296e427296e17c0b49d658425becf8768204f4daa6b82c2a4fe5c84b1a",
+        "probeSha256": "45b2159c91f973f44dbda2e2cd0097638a12b3bcaab770b6e2b7b55f34c835f7",
+        "assertionSummary": [
+          "17 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "corridors",
+        "label": "usbshield",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "49b1ab0ff01fdc98689ea9a7ecb02ee50974c4e4",
+        "exitCode": 1,
+        "censored": false,
+        "outcome": "numerical-failure",
+        "originalSha256": "16071d8ea4760b86c8dc409dd5aab3ae69c899363dc6057f339c736c0df9eb37",
+        "probeSha256": "b77c2db52c8e1b3e317bdca14e653a22f786b5511480f883e376212e80871af8",
+        "assertionSummary": [
+          "error: expect(received).toEqual(expected)",
+          "at <anonymous> (/workspace/hd-experiments-2026-10-28/corridors/tests/bugs/usb-shield-phase-detour.image-bypassed-probe.test.ts:67:47)",
+          "9 expect() calls"
+        ],
+        "errorMessages": [
+          "\"PCB trace unnamed trace overlaps with unnamed trace (accidental contact)\"",
+          "\"Via unnamed via and trace unnamed trace are too close (clearance: 0.085mm, minimum: 0.1mm)\"",
+          "\"Pad unnamed SMD pad and trace unnamed trace are too close (clearance: 0.093mm, minimum: 0.1mm)\""
+        ]
+      }
+    ],
+    "guardResults": {
+      "a64": {
+        "control": "All17 assertions pass:11 signals connected, zero drill-pad overlaps, zero relaxed reference DRC.",
+        "corridors": "All17 assertions pass, including zero drill-pad overlaps and zero relaxed reference DRC."
+      },
+      "usbshield": {
+        "control": "All9 assertions pass: phase0 clean, phase1 solved, exact shield preserved, final relaxed DRC clean.",
+        "corridors": "Phase0 clean, phase1 solved and exact shield preserved; final relaxed DRC fails with3 errors:1 accidental contact, via/trace clearance0.085mm versus0.1mm and pad/trace0.093mm versus0.1mm."
+      }
+    },
+    "cleanup": [
+      {
+        "variant": "corridors",
+        "sourceHashesUnchanged": true,
+        "temporaryCopiesAbsent": true,
+        "statusAfter": ""
+      },
+      {
+        "variant": "control",
+        "sourceHashesUnchanged": true,
+        "temporaryCopiesAbsent": true,
+        "statusAfter": ""
+      }
+    ],
+    "scope": "Exactly two SVG-await expression statements were bypassed in temporary test copies; all numerical assertions, inputs and solves stayed unchanged. These probes reveal masked checks and do not make the original CI tests pass. No timing comparison is inferred.",
+    "source": "artifacts/validation/final-masked-checks/summary.json"
+  },
+  "promotionStatus": "Blocked: Build passed, but broad CI retains numerical DRC, shape/identity and SVG failures. Supplemental USB-shield numerical DRC also fails against a passing baseline."
+}

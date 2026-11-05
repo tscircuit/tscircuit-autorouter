@@ -16,6 +16,7 @@ import {
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import { SparseVisibilityIntraNodeSolver } from "../HyperHighDensitySolver/SparseVisibilityIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -263,6 +264,9 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private getConcreteSolverTypeName(solver: BaseSolver): string {
+    if (solver instanceof SparseVisibilityIntraNodeSolver) {
+      return solver.getSolverName()
+    }
     if (solver instanceof CachedIntraNodeRouteSolver) {
       const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
       return solver.cacheHit ? `${concreteName} [cached]` : concreteName
