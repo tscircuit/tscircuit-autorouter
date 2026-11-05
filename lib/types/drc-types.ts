@@ -5,5 +5,7 @@ export interface GetDrcErrorsOptions {
   viaToPadClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
+  /** Physical connections supplied by retained copper outside routed traces. */
+  externallyConnectedPortIds?: string[][]
   includeTypedTraceClearance?: boolean
 }

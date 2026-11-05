@@ -18,6 +18,8 @@ import type {
   PcbPort,
   PcbSmtPad,
   PcbTrace,
+  PcbTraceError,
+  PcbTraceMissingError,
 } from "circuit-json"
 import {
   ConnectivityMap,
@@ -34,6 +36,8 @@ type RoutePoint = PcbTrace["route"][number]
 type PadMap = Map<string, Pad[]>
 type Wire = Extract<RoutePoint, { route_type: "wire" }>
 type WireSegment = { trace: PcbTrace; start: Wire; end: Wire }
+type TraceContinuityError = (PcbTraceError | PcbTraceMissingError) &
+  Record<string, unknown>
 type ViaContact = Point & {
   id: string
   layers: string[]
@@ -281,8 +285,11 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
-): Record<string, unknown>[] => {
-  const errors: Record<string, unknown>[] = []
+  {
+    externallyConnectedPortIds = [],
+  }: { externallyConnectedPortIds?: string[][] } = {},
+): TraceContinuityError[] => {
+  const errors: TraceContinuityError[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
   const sourceTraces = circuitJson.filter(
@@ -496,6 +503,7 @@ export const checkTraceContinuity = (
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
     const map = new ConnectivityMap({})
+    map.addConnections(externallyConnectedPortIds)
     const connections: string[][] = []
     const indexedSegments = segments.map((segment, order) => ({
       ...segment,
@@ -546,7 +554,11 @@ export const checkTraceContinuity = (
         ])) {
           if (!portId) continue
           const port = portsById.get(portId)
-          if (port && canConnectToPort(point, port))
+          const portPads = padsByPort.get(portId)
+          const touchesPort = portPads?.length
+            ? portPads.some((pad) => pointIsInPad(point, pad))
+            : port && Math.hypot(point.x - port.x, point.y - port.y) <= 1e-9
+          if (port && touchesPort && canConnectToPort(point, port))
             connections.push([trace.pcb_trace_id, portId])
         }
       }
@@ -771,8 +783,8 @@ export const checkTraceContinuity = (
       trace.source_trace_id ||
       `!${trace.pcb_trace_id}`
     const commonError = {
-      type: "pcb_trace_error",
-      error_type: "pcb_trace_error",
+      type: "pcb_trace_error" as const,
+      error_type: "pcb_trace_error" as const,
       source_trace_id: sourceTraceId,
       pcb_trace_id: trace.pcb_trace_id,
       pcb_component_ids: [],
@@ -841,6 +853,11 @@ export const checkTraceContinuity = (
         continue
       if (connectsThroughPads(trace.pcb_trace_id, port.pcb_port_id)) continue
       const physical = getPhysicalConnectivity()
+      if (
+        externallyConnectedPortIds.length > 0 &&
+        physical.areIdsConnected(trace.pcb_trace_id, port.pcb_port_id)
+      )
+        continue
       const physicalNet = physical.getNetConnectedToId(trace.pcb_trace_id)
       const connectedBySibling =
         physicalNet !== undefined &&
@@ -893,6 +910,35 @@ export const checkTraceContinuity = (
         pcb_trace_error_id: `disconnected_endpoint_${trace.pcb_trace_id}_${index === 0 ? "start" : "end"}`,
         center: { x: endpoint.x, y: endpoint.y },
         pcb_port_ids: [],
+      })
+    }
+  }
+  // A copper-connected net may legitimately need no traces. It must still
+  // connect every terminal; removing its only bridge must not pass validation.
+  if (externallyConnectedPortIds.length > 0) {
+    const externalPorts = new Set(externallyConnectedPortIds.flat())
+    for (const sourceTrace of sourceTraces) {
+      if (checkedSourceTraceIds.has(sourceTrace.source_trace_id)) continue
+      const expectedPorts = ports.filter((port) =>
+        sourceTrace.connected_source_port_ids.includes(port.source_port_id),
+      )
+      if (!expectedPorts.some((port) => externalPorts.has(port.pcb_port_id)))
+        continue
+      const first = expectedPorts[0]!
+      const physical = getPhysicalConnectivity()
+      const disconnectedPorts = expectedPorts.slice(1).filter(
+        (port) => !physical.areIdsConnected(first.pcb_port_id, port.pcb_port_id),
+      )
+      if (disconnectedPorts.length === 0) continue
+      errors.push({
+        type: "pcb_trace_missing_error",
+        error_type: "pcb_trace_missing_error",
+        pcb_trace_missing_error_id: `missing_connection_${sourceTrace.source_trace_id}`,
+        source_trace_id: sourceTrace.source_trace_id,
+        pcb_component_ids: [],
+        pcb_port_ids: disconnectedPorts.map((port) => port.pcb_port_id),
+        center: { x: first.x, y: first.y },
+        message: `Source trace ${sourceTrace.source_trace_id} is missing a route between physically disconnected terminals`,
       })
     }
   }

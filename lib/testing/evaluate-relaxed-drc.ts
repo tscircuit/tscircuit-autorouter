@@ -2,6 +2,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getExternallyConnectedPcbPortGroups } from "lib/utils/getExternallyConnectedPcbPortGroups"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
   getDrcErrors,
@@ -73,6 +74,7 @@ export const evaluateRelaxedDrc = ({
       ...RELAXED_DRC_OPTIONS,
       holeClearance: inputSrj.minTraceToHoleEdgeClearance,
       viaToPadClearance: getViaToPadClearance(inputSrj),
+      externallyConnectedPortIds: getExternallyConnectedPcbPortGroups(inputSrj),
       ...drcOptions,
     }),
   }
