@@ -926,9 +926,12 @@ export const checkTraceContinuity = (
         continue
       const first = expectedPorts[0]!
       const physical = getPhysicalConnectivity()
-      const disconnectedPorts = expectedPorts.slice(1).filter(
-        (port) => !physical.areIdsConnected(first.pcb_port_id, port.pcb_port_id),
-      )
+      const disconnectedPorts = expectedPorts
+        .slice(1)
+        .filter(
+          (port) =>
+            !physical.areIdsConnected(first.pcb_port_id, port.pcb_port_id),
+        )
       if (disconnectedPorts.length === 0) continue
       errors.push({
         type: "pcb_trace_missing_error",

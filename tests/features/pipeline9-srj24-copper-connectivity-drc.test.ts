@@ -9,7 +9,13 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 
 test("SRJ24 copper-connected samples retain clean final routing and clearance", () => {
-  for (const sample of [sample021, sample022, sample023, sample025, sample026]) {
+  for (const sample of [
+    sample021,
+    sample022,
+    sample023,
+    sample025,
+    sample026,
+  ]) {
     const input = structuredClone(sample) as SimpleRouteJson
     const original = structuredClone(input)
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
