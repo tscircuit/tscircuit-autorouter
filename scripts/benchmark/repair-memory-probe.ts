@@ -58,20 +58,25 @@ while (!solver.solved && !solver.failed) {
     console.error(JSON.stringify(stages.at(-1)))
   }
 }
-if (solver.failed) throw new Error(solver.error ?? "Pipeline failed")
 const routingMs = performance.now() - started
-const routedTraces = solver.getOutputSimplifiedPcbTraces()
-const drc = evaluateRelaxedDrc({
+const routedTraces = solver.solved ? solver.getOutputSimplifiedPcbTraces() : []
+const drc = solver.solved ? evaluateRelaxedDrc({
   inputSrj: scenario,
   srjWithPointPairs: solver.srjWithPointPairs!,
   routedTraces,
-})
+}) : undefined
 const report = {
   dataset, sample, bun: Bun.version, guardProfile,
   contactStats: solver.pipeline9JointDrcRepairSolver?.traceContactRepairSolver?.stats ?? null,
-  solved: solver.solved, failed: solver.failed, routingMs,
+  solved: solver.solved, failed: solver.failed, error: solver.error, routingMs,
+  jointStats: solver.pipeline9JointDrcRepairSolver?.stats ?? null,
+  jointCache: (() => {
+    const cache = (solver.pipeline9JointDrcRepairSolver as any)?.indexedDrcCandidateCache as Map<string, unknown> | undefined
+    if (!cache) return null
+    return { entries: cache.size, keyCharacters: [...cache.keys()].reduce((sum, key) => sum + key.length, 0) }
+  })(),
   peakRssBytes: process.resourceUsage().maxRSS * (process.platform === "darwin" ? 1 : 1024),
-  drc: drc.errors.length,
+  drc: drc?.errors.length ?? null,
   vias: routedTraces.reduce((sum, trace) => sum + trace.route.filter(point => point.route_type === "via").length, 0),
   outputHash: createHash("sha256").update(JSON.stringify(routedTraces)).digest("hex"),
   inputHash: createHash("sha256").update(JSON.stringify(scenario)).digest("hex"),
