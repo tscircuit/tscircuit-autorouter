@@ -86,4 +86,7 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
   expect(merger.solved).toBe(true)
   expect(merger.stats.atomicRegionCount).toBeLessThan(retainedRegionLimit)
   expect(merger.getOutput().length).toBeGreaterThan(0)
+  expect(merger["atomicRegions"]).toHaveLength(0)
+  expect(merger["preparedNodes"]).toHaveLength(0)
+  expect(merger["outputProvenance"].sourceKeysByNodeId.size).toBe(0)
 })
