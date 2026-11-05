@@ -18,13 +18,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 892ddb1282881b343b318029901f296ae33de087
+          ref: 94fc55116df29f0ce33f0acd1a9ba7c793a1deea
           path: base
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 94fc55116df29f0ce33f0acd1a9ba7c793a1deea
+          ref: 234ee0de5e70411c982b42928eb518bccbcc9e1c
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -40,6 +40,17 @@ jobs:
             cp controller/scripts/benchmark/standalone-repair-probe.ts "$revision/standalone-repair-probe.ts"
             sed -i 's|"../|"./|g' "$revision/standalone-repair-probe.ts"
           done
+      - name: Repeat standalone cases in both orders
+        run: |
+          for sample in 6 12 13; do
+            for round in 1 2; do
+              order="base candidate"
+              if [ "$round" = 2 ]; then order="candidate base"; fi
+              for revision in $order; do
+                (cd "$revision" && COUNTERS=0 bun standalone-repair-probe.ts "$sample" "../outputs/$sample-round-$round-$revision.json")
+              done
+            done
+          done
       - name: Profile the three slow standalone cases
         run: |
           for sample in 6 12 13; do
@@ -51,5 +62,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-repair-profile
+          name: standalone-drc-copy-profile
           path: outputs
