@@ -88,7 +88,7 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (
+export const isPointInsideObstacle = (
   point: ConnectionPoint,
   obstacle: Obstacle,
 ): boolean => {

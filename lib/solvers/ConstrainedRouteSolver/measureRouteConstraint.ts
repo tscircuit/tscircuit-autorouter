@@ -6,6 +6,7 @@ import type {
 } from "lib/types"
 import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { isPointInsideObstacle } from "lib/utils/addApproximatingRectsToSrj"
 
 type Vertex = { x: number; y: number; layer: string }
 type Edge = { to: number; length: number; vias: number }
@@ -147,19 +148,36 @@ export function measureRouteConstraint(
     constrained.length > 1
       ? constrained.slice(1)
       : points.filter((point) => point !== startPoint)
-  if (targetPoints.length === 0)
-    return { length: Infinity, vias: Infinity, satisfied: false }
+  // A terminal-to-net path may end at actual copper on a same-net pour rather
+  // than another component terminal. Vertices are board-world points in mm,
+  // with +X right and +Y up; the containment helper handles rectangle rotation.
+  // Do not use planes to shorten an explicit terminal-to-terminal constraint.
+  const planeTargets = new Set<number>()
+  if (constrained.length === 1) {
+    const netPours = srj.obstacles.filter(
+      (obstacle) =>
+        obstacle.isCopperPour &&
+        obstacle.connectedTo.some(
+          (id) => net && connectivity.getNetConnectedToId(id) === net,
+        ),
+    )
+    vertices.forEach((vertex, index) => {
+      if (netPours.some((pour) => isPointInsideObstacle(vertex, pour)))
+        planeTargets.add(index)
+    })
+  }
   const targetSets =
     constrained.length > 1
       ? targetPoints.map(
           (point) => new Set(pointVertices[points.indexOf(point)]!),
         )
       : [
-          new Set(
-            targetPoints.flatMap(
+          new Set([
+            ...targetPoints.flatMap(
               (point) => pointVertices[points.indexOf(point)]!,
             ),
-          ),
+            ...planeTargets,
+          ]),
         ]
   const distance = new Map<string, number>()
   const queue = starts.map((vertex) => ({ vertex, vias: 0, length: 0 }))
