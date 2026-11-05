@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 65da43db2e6c42ea3536bf744ca5ee4b47f7059c
+          ref: 68813d58d1143eeb2f4e8adce9d6c4845eeeefc3
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -62,5 +62,49 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-single-copy-profile
+          name: standalone-selected-geometry-profile
+          path: outputs
+
+  full-standalone:
+    if: github.ref_name == 'techmannih/benchmark-repair-memory-20261105'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-repair03
+          ref: 892ddb1282881b343b318029901f296ae33de087
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-repair03
+          ref: 68813d58d1143eeb2f4e8adce9d6c4845eeeefc3
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install identical dependencies
+        run: |
+          (cd base && bun install --no-save --ignore-scripts)
+          cp -a base/node_modules candidate/node_modules
+          mkdir outputs
+          git -C base rev-parse HEAD > outputs/base-sha.txt
+          git -C candidate rev-parse HEAD > outputs/candidate-sha.txt
+      - name: Compare full standalone datasets in both orders
+        run: |
+          for dataset in srj18 drc14; do
+            for round in 1 2; do
+              order="base candidate"
+              if [ "$round" = 2 ]; then order="candidate base"; fi
+              for revision in $order; do
+                (cd "$revision" && bash benchmark.sh --dataset "$dataset" --concurrency 2 --effort 1 --max-iterations 16 --out "../outputs/$dataset-round-$round-$revision.json") > "outputs/$dataset-round-$round-$revision.log" 2>&1
+              done
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: standalone-selected-geometry-full
           path: outputs
