@@ -23,12 +23,31 @@ export class Pipeline4HighDensityRepairSampleSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const result = buildRepairFrames(
+    let result = buildRepairFrames(
       this.input.sample,
       this.input.margin,
       false,
       false,
     )
+    if (
+      (result.clearanceRepairStats?.nodeClearanceFinalConflictCount ?? 0) > 0 &&
+      (this.input.sample.adjacentObstacles?.length ?? 0) > 0
+    ) {
+      const boundaryResult = buildRepairFrames(
+        this.input.sample,
+        this.input.margin,
+        false,
+        true,
+      )
+      if (
+        (boundaryResult.clearanceRepairStats?.nodeClearanceFinalConflictCount ??
+          Infinity) <
+        (result.clearanceRepairStats?.nodeClearanceFinalConflictCount ??
+          Infinity)
+      ) {
+        result = boundaryResult
+      }
+    }
     if (result.frames.length !== 1) {
       throw new Error("Node repair must complete in one frame")
     }
