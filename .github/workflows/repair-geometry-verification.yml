@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3809a40231fa088dae570906831425ece9d11bee
+          ref: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
