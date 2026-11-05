@@ -14,12 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: repeat-srj24
-            dataset: srj24
+          - cohort: review-srj18
+            dataset: srj18
             base: d554979b6039f23092fef73fae3a95a0b48b40ea
             candidate: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
-          - cohort: control-srj24
-            dataset: srj24
+          - cohort: review-srj18-control
+            dataset: srj18
             base: d554979b6039f23092fef73fae3a95a0b48b40ea
             candidate: d554979b6039f23092fef73fae3a95a0b48b40ea
     steps:
@@ -62,20 +62,24 @@ jobs:
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:1,orders:[['candidate','base']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:4,orders:'alternating base-first and candidate-first',dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
-      - name: Compare full datasets with PR first
+      - name: Repeat full dataset with matched same-code control
         env:
           DATASET: ${{ matrix.dataset }}
         run: |
-          for revision in candidate base; do
-            output="outputs/round-1-$revision"
-            mkdir -p "$output"
-            (cd "$revision" && bash ./benchmark.sh --pipeline 9 --dataset "$DATASET" --concurrency 3 --threads 1 --effort 1) > "$output/run.log" 2>&1
-            cp "$revision/benchmark-result.json" "$revision/benchmark-result.txt" "$revision/benchmark-snapshots.html" "$output/"
-            tail -15 "$output/run.log"
+          for round in 1 2 3 4; do
+            order="base candidate"
+            if [ $((round % 2)) = 0 ]; then order="candidate base"; fi
+            for revision in $order; do
+              output="outputs/round-$round-$revision"
+              mkdir -p "$output"
+              (cd "$revision" && bash ./benchmark.sh --pipeline 9 --dataset "$DATASET" --concurrency 3 --threads 1 --effort 1) > "$output/run.log" 2>&1
+              cp "$revision/benchmark-result.json" "$revision/benchmark-result.txt" "$revision/benchmark-snapshots.html" "$output/"
+              tail -15 "$output/run.log"
+            done
           done
       - uses: actions/upload-artifact@v4
         if: always()
