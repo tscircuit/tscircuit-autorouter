@@ -14,16 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: profile-srj18
+          - cohort: full-srj18
             dataset: srj18
-            sample: 15
-            base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
-          - cohort: profile-srj33
+            base: d554979b6039f23092fef73fae3a95a0b48b40ea
+            candidate: 99414ef04e14162f8787f3568dc2213ee496ef39
+          - cohort: full-srj33
             dataset: srj33
-            sample: 32
-            base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
-            candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
+            base: d554979b6039f23092fef73fae3a95a0b48b40ea
+            candidate: 99414ef04e14162f8787f3568dc2213ee496ef39
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,25 +62,23 @@ jobs:
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:2,orders:[['base','candidate'],['candidate','base']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:2,orders:[['base','candidate'],['candidate','base']],dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
-          for revision in base candidate; do
-            cp controller/scripts/benchmark/repair-memory-probe.ts "$revision/scripts/benchmark/repair-memory-probe.ts"
-          done
-      - name: Run two balanced sequential pairs
+      - name: Run full datasets in both revision orders
         env:
-          PROBE_PROFILE: "1"
-          PROBE_DATASET: ${{ matrix.dataset }}
-          PROBE_SAMPLE: ${{ matrix.sample }}
+          DATASET: ${{ matrix.dataset }}
         run: |
-          for round in 1; do
+          for round in 1 2; do
             order="base candidate"
             if [ "$round" = "2" ]; then order="candidate base"; fi
             for revision in $order; do
-              (cd "$revision" && timeout 600 bun scripts/benchmark/repair-memory-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
-              tail -1 "outputs/round-$round-$revision.log"
+              output="outputs/round-$round-$revision"
+              mkdir -p "$output"
+              (cd "$revision" && bash ./benchmark.sh --pipeline 9 --dataset "$DATASET" --concurrency 3 --threads 1 --effort 1) > "$output/run.log" 2>&1
+              cp "$revision/benchmark-result.json" "$revision/benchmark-result.txt" "$output/"
+              tail -15 "$output/run.log"
             done
           done
       - uses: actions/upload-artifact@v4
