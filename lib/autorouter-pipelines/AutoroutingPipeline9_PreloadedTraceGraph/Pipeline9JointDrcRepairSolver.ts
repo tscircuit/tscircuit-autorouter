@@ -1259,9 +1259,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
     ): PreparedCandidateDrcInput => {
-      const evaluatedNewRoutes = evaluatedRoutes.filter(
-        (route) => !this.syntheticConnectionNames.has(route.connectionName),
-      )
+      const evaluatedNewRoutes: HighDensityRoute[] = []
+      const evaluatedPreloadedRouteByName = new Map<string, HighDensityRoute>()
+      for (const route of evaluatedRoutes) {
+        if (!this.syntheticConnectionNames.has(route.connectionName)) {
+          evaluatedNewRoutes.push(route)
+        } else if (!evaluatedPreloadedRouteByName.has(route.connectionName)) {
+          // Duplicate logical names must retain their first matching fragment.
+          evaluatedPreloadedRouteByName.set(route.connectionName, route)
+        }
+      }
       const evaluatedNewTraces = convertNewRoutes(evaluatedNewRoutes)
       const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
         evaluatedNewTraces,
@@ -1271,9 +1278,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const originalTraceIdByEvaluationTraceId = new Map<string, string>()
       const evaluatedMovablePreloadedTraces = this.movablePreloadedSections.map(
         (movableSection) => {
-          const evaluatedRoute = evaluatedRoutes.find(
-            (route) =>
-              route.connectionName === movableSection.syntheticConnectionName,
+          const evaluatedRoute = evaluatedPreloadedRouteByName.get(
+            movableSection.syntheticConnectionName,
           )
           if (!evaluatedRoute) {
             throw new Error(
