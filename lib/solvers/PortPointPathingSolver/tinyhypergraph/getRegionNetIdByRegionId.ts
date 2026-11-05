@@ -3,18 +3,23 @@ import { getConnectionPointZLayers } from "../hgportpointpathingsolver/get-conne
 import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
+  RegionId,
 } from "../hgportpointpathingsolver/types"
+import {
+  assignDisconnectedTargetRegionNetIds,
+  type ConnectionAlias,
+} from "./assignDisconnectedTargetRegionNetIds"
 import type { TinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 
 export function getRegionNetIdByRegionId(input: {
-  params: Omit<HgPortPointPathingSolverParams, "connections"> & {
+  params: Pick<HgPortPointPathingSolverParams, "graph" | "layerCount"> & {
     connections: ConnectionHgWithSimpleRouteConnection[]
   }
   getNetIndex: TinyRouteNetIndexer
-}): Map<string, number> {
-  const regionNetCandidates = new Map<string, Set<number>>()
-  const alreadyConnectedEndpointRegionIds = new Set<string>()
-  const netIndexByConnectionAlias = new Map<string, number>()
+}): Map<RegionId, number> {
+  const regionNetCandidates = new Map<RegionId, Set<number>>()
+  const alreadyConnectedEndpointRegionIds = new Set<RegionId>()
+  const netIndexByConnectionAlias = new Map<ConnectionAlias, number>()
   for (const connection of input.params.connections) {
     const netId = connection.mutuallyConnectedNetworkId
     const routeNetIndex = input.getNetIndex({
@@ -72,7 +77,7 @@ export function getRegionNetIdByRegionId(input: {
     }
   }
 
-  const regionNetIdByRegionId = new Map<string, number>()
+  const regionNetIdByRegionId = new Map<RegionId, number>()
   for (const regionId of alreadyConnectedEndpointRegionIds) {
     // An endpoint that is already connected to copper only marks where desired
     // routing resumes; it does not make the surrounding region exclusive.
@@ -85,5 +90,13 @@ export function getRegionNetIdByRegionId(input: {
     if (netCandidates.size !== 1) continue
     regionNetIdByRegionId.set(regionId, [...netCandidates][0]!)
   }
+  assignDisconnectedTargetRegionNetIds({
+    regions: input.params.graph.regions,
+    connections: input.params.connections,
+    regionNetIdByRegionId,
+    regionNetCandidates,
+    netIndexByConnectionAlias,
+    getNetIndex: input.getNetIndex,
+  })
   return regionNetIdByRegionId
 }
