@@ -1,7 +1,9 @@
+import type { Bounds } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import RBush from "rbush"
 import { prepareTopologyMergingInput } from "./topology-merging-input"
 import {
   createTopologyMergingOutputNodes,
@@ -10,7 +12,6 @@ import {
 } from "./topology-merging-output"
 import {
   compactTopologyMergingRegions,
-  doesBoundsContainPoint,
   getCanonicalCoordinates,
   getHorizontalMergeBucketKey,
   getLayerTopologiesForCoveredNodes,
@@ -31,12 +32,18 @@ export type {
 
 const WORKING_NODE_RELEASE_THRESHOLD = 50_000
 
+type IndexedTopologyMergingNode = Bounds & {
+  preparedNode: PreparedTopologyMergingNode
+  inputIndex: number
+}
+
 export class TopologyMergingSolver extends BaseSolver {
   private readonly preparedNodes: PreparedTopologyMergingNode[]
   private readonly preparedNodeBySourceKey: Map<
     string,
     PreparedTopologyMergingNode
   >
+  private readonly nodeIndex = new RBush<IndexedTopologyMergingNode>()
   private readonly outputProvenance: TopologyMergingOutputProvenance = {
     groupIndexesByNodeId: new Map<string, number[]>(),
     sourceKeysByNodeId: new Map<string, string[]>(),
@@ -59,6 +66,20 @@ export class TopologyMergingSolver extends BaseSolver {
       prepareTopologyMergingInput(inputProblem)
     this.preparedNodes = preparedNodes
     this.preparedNodeBySourceKey = preparedNodeBySourceKey
+    if (inputProblem.nodeGroups.length > 1) {
+      // Keep the original containment arithmetic at tolerance boundaries;
+      // expanding the query point instead can round to a different result.
+      this.nodeIndex.load(
+        preparedNodes.map((preparedNode, inputIndex) => ({
+          minX: preparedNode.bounds.minX - TOPOLOGY_MERGING_EPSILON,
+          maxX: preparedNode.bounds.maxX + TOPOLOGY_MERGING_EPSILON,
+          minY: preparedNode.bounds.minY - TOPOLOGY_MERGING_EPSILON,
+          maxY: preparedNode.bounds.maxY + TOPOLOGY_MERGING_EPSILON,
+          preparedNode,
+          inputIndex,
+        })),
+      )
+    }
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
@@ -181,6 +202,7 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   private releaseWorkingData(): void {
+    this.nodeIndex.clear()
     // Keep small meshes on their existing garbage-collection schedule.
     const workingNodeCount =
       this.preparedNodes.length + this.atomicRegions.length
@@ -198,17 +220,26 @@ export class TopologyMergingSolver extends BaseSolver {
     this.outputProvenance.sourceKeysByNodeId.clear()
   }
 
+  private getNodesWithinBounds(bounds: Bounds): PreparedTopologyMergingNode[] {
+    const matches = this.nodeIndex.search(bounds)
+    // R-tree traversal order differs from source order. Preserve source order
+    // for topology signatures, provenance and deterministic output node ids.
+    matches.sort((a, b) => a.inputIndex - b.inputIndex)
+    return matches.map(({ preparedNode }) => preparedNode)
+  }
+
   private processCurrentXSlab(): void {
     const minX = this.xCoordinates[this.currentXIndex]!
     const maxX = this.xCoordinates[this.currentXIndex + 1]!
     if (maxX - minX <= TOPOLOGY_MERGING_EPSILON) return
 
     const x = (minX + maxX) / 2
-    const nodesInXSlab = this.preparedNodes.filter(
-      ({ bounds }) =>
-        x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
-        x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON,
-    )
+    const nodesInXSlab = this.getNodesWithinBounds({
+      minX: x,
+      maxX: x,
+      minY: Number.NEGATIVE_INFINITY,
+      maxY: Number.POSITIVE_INFINITY,
+    })
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
     )
@@ -223,9 +254,12 @@ export class TopologyMergingSolver extends BaseSolver {
       if (maxY - minY <= TOPOLOGY_MERGING_EPSILON) continue
 
       const point = { x, y: (minY + maxY) / 2 }
-      const coveringNodes = nodesInXSlab.filter(({ bounds }) =>
-        doesBoundsContainPoint(bounds, point),
-      )
+      const coveringNodes = this.getNodesWithinBounds({
+        minX: point.x,
+        maxX: point.x,
+        minY: point.y,
+        maxY: point.y,
+      })
       if (coveringNodes.length === 0) continue
 
       const { layerTopologies, overruledTargetSourceKeys } =
