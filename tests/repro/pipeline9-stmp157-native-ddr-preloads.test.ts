@@ -79,6 +79,7 @@ test("STMP157 native DDR preloads carry their fixed policy into the graph", asyn
   expect(input.obstacles).toHaveLength(710)
   expect(input.connections).toHaveLength(1)
   expect(input.traces).toHaveLength(32)
+  expect(fixedAssignmentCount).toBe(assignments.length)
   expect(
     new Set(assignments.map((assignment) => assignment.traceId)).size,
   ).toBe(32)

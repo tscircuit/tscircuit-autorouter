@@ -44,12 +44,14 @@ import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
+  type PreloadedTraceConnectionMetadata,
   type PreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
 type RouteMetadata = {
   connectionId: string
+  isFixed?: boolean
   mutuallyConnectedNetworkId: string
   startRegionId?: string
   endRegionId?: string
@@ -776,23 +778,24 @@ const restorePreloadedTraceSectionMetadata = (
   loaded: LoadedTinyGraph,
   serializedHyperGraph: SerializedHyperGraph,
 ): void => {
-  const originalSectionByConnectionId = new Map<
+  const originalConnectionById = new Map<
     PreloadedTraceConnectionId,
-    PreloadedTraceSectionMetadata
+    PreloadedTraceConnectionMetadata
   >()
   for (const connection of serializedHyperGraph.connections ?? []) {
     if (!hasPreloadedTraceSectionMetadata(connection)) continue
-    originalSectionByConnectionId.set(
+    originalConnectionById.set(
       connection.connectionId,
-      connection.preloadedTraceSection,
+      connection,
     )
   }
   for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
-    const originalSection = originalSectionByConnectionId.get(
+    const originalConnection = originalConnectionById.get(
       routeMetadata.connectionId as PreloadedTraceConnectionId,
     )
-    if (!originalSection) continue
-    routeMetadata.preloadedTraceSection = originalSection
+    if (!originalConnection) continue
+    routeMetadata.preloadedTraceSection = originalConnection.preloadedTraceSection
+    routeMetadata.isFixed = originalConnection.isFixed
   }
 }
 
@@ -1266,6 +1269,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         initialKeys.size !== solvedKeys.size ||
         [...initialKeys].some((key) => !solvedKeys.has(key))
       ) {
+        const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+        if (routeMetadata?.isFixed) {
+          throw new Error(
+            `Tiny hypergraph changed fixed preloaded trace section "${connectionId}"`,
+          )
+        }
         changedPreloadedRouteIds.add(routeId)
       }
     }

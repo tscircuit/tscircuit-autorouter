@@ -972,6 +972,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
         )
       }
+      if (trace.isFixed) continue
       const traceIndex = params.updatedPreloadedTraces.findIndex(
         (updatedTrace) => updatedTrace.pcb_trace_id === traceId,
       )
