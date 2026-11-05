@@ -17,6 +17,7 @@ test("real Bluetooth pedometer honors the X48_N zero-via and 6 mm limits", (): v
     cacheProvider: null,
   })
   solver.solve()
+  expect(solver.error).toBeFalsy()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const traces = solver.getOutputSimplifiedPcbTraces()

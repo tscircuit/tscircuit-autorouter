@@ -1106,10 +1106,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "finalRouteConstraintsSolver",
       FinalRouteConstraintsSolver,
-      (cms) => [cms.originalSrj, [
-        ...cms.getPowerTraceExpansionFixedTraces(),
-        ...cms.powerTraceExpansionSolver!.getOutput(),
-      ]],
+      (cms) => [
+        cms.originalSrj,
+        [
+          ...cms.getPowerTraceExpansionFixedTraces(),
+          ...cms.powerTraceExpansionSolver!.getOutput(),
+        ],
+      ],
     ),
   ]
 
@@ -1122,9 +1125,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
     if (!this.originalSrj.routeConstraints?.length) {
-      this.pipelineDef = this.pipelineDef.filter((step) =>
-        step.solverName !== "constrainedRouteSolver" &&
-        step.solverName !== "finalRouteConstraintsSolver",
+      this.pipelineDef = this.pipelineDef.filter(
+        (step) =>
+          step.solverName !== "constrainedRouteSolver" &&
+          step.solverName !== "finalRouteConstraintsSolver",
       )
     }
     this.opts = { ...opts }
@@ -1242,9 +1246,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       const traces = this.finalRouteConstraintsSolver?.traces
-      if (this.originalSrj.routeConstraints?.length && !traces) throw new Error("Constrained routing completed without final validation")
+      if (this.originalSrj.routeConstraints?.length && !traces)
+        throw new Error(
+          "Constrained routing completed without final validation",
+        )
       for (const rule of this.originalSrj.routeConstraints ?? []) {
-        const measurement = measureRouteConstraint(this.originalSrj, traces!, rule)
+        const measurement = measureRouteConstraint(
+          this.originalSrj,
+          traces!,
+          rule,
+        )
         if (!measurement.satisfied) {
           this.failed = true
           this.error = `Route for ${rule.name ?? "constrained trace"} does not satisfy its via/length limits`
@@ -1745,13 +1756,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ...this.powerTraceExpansionSolver.getOutput(),
       ]
     }
-    if (!this.finalRouteConstraintsSolver) throw new Error("Constrained routing completed without final validation")
-    const originalPreloadedIds = new Set((this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id))
-    return this.finalRouteConstraintsSolver!.traces.filter((trace) =>
-      !originalPreloadedIds.has(trace.pcb_trace_id) ||
-      trace.__replaces_pcb_trace_id !== undefined ||
-      this.constrainedRouteSolver?.newTraceIds.has(trace.pcb_trace_id) ||
-      this.finalRouteConstraintsSolver!.replacedTraceIds.has(trace.pcb_trace_id),
+    if (!this.finalRouteConstraintsSolver)
+      throw new Error("Constrained routing completed without final validation")
+    const originalPreloadedIds = new Set(
+      (this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
+    )
+    return this.finalRouteConstraintsSolver!.traces.filter(
+      (trace) =>
+        !originalPreloadedIds.has(trace.pcb_trace_id) ||
+        trace.__replaces_pcb_trace_id !== undefined ||
+        this.constrainedRouteSolver?.newTraceIds.has(trace.pcb_trace_id) ||
+        this.finalRouteConstraintsSolver!.replacedTraceIds.has(
+          trace.pcb_trace_id,
+        ),
     )
   }
 
@@ -1764,10 +1781,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    if (this.originalSrj.routeConstraints?.length && !this.finalRouteConstraintsSolver) throw new Error("Constrained routing completed without final validation")
+    if (
+      this.originalSrj.routeConstraints?.length &&
+      !this.finalRouteConstraintsSolver
+    )
+      throw new Error("Constrained routing completed without final validation")
     const traces = this.originalSrj.routeConstraints?.length
       ? this.finalRouteConstraintsSolver!.traces
-      : [...this.getPowerTraceExpansionFixedTraces(), ...this.powerTraceExpansionSolver.getOutput()]
+      : [
+          ...this.getPowerTraceExpansionFixedTraces(),
+          ...this.powerTraceExpansionSolver.getOutput(),
+        ]
     return {
       ...this.originalSrj,
       traces,
