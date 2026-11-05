@@ -1,0 +1,278 @@
+{
+  "a64": {
+    "board": "OLIMEX A64-OLinuXino rev H",
+    "source": {
+      "id": "a64",
+      "name": "OLIMEX A64-OLinuXino rev H",
+      "repo": "OLIMEX/OLINUXINO",
+      "commit": "85eee9c17ee13af65617d73bdd94de7ec49cfb42",
+      "path": "HARDWARE/A64-OLinuXino/1. Latest hardware revision/A64-OLinuXino hardware revision H/A64-OlinuXino_Rev_H.kicad_pcb",
+      "sourceSha256": "3acf7af7d39d54ba87343845d78851b0245a6290841cb463c42c7e41696404f4",
+      "components": [
+        {
+          "ref": "U2",
+          "value": "K4B4G1646Q-HYK0(FBGA-96_256Mx16_DDR3-1600_11-11-11)",
+          "footprint": "OLIMEX_IC-FP:FBGA96(HYNIX_SAMSUNG_512MX16_DDR3)",
+          "pads": 196,
+          "at": [
+            "129",
+            "87",
+            "180"
+          ]
+        },
+        {
+          "ref": "U3",
+          "value": "K4B4G1646Q-HYK0(FBGA-96_256Mx16_DDR3-1600_11-11-11)",
+          "footprint": "OLIMEX_IC-FP:FBGA96(HYNIX_SAMSUNG_512MX16_DDR3)",
+          "pads": 196,
+          "at": [
+            "127",
+            "73",
+            "180"
+          ]
+        },
+        {
+          "ref": "U1",
+          "value": "AllWinner-A64(FBGA396)",
+          "footprint": "OLIMEX_IC-FP:FBGA396",
+          "pads": 795,
+          "at": [
+            "144.95",
+            "72.15"
+          ]
+        }
+      ],
+      "nativeLayers": [
+        [
+          "0",
+          "F.Cu",
+          "mixed"
+        ],
+        [
+          "1",
+          "In1.Cu",
+          "power"
+        ],
+        [
+          "2",
+          "In2.Cu",
+          "signal"
+        ],
+        [
+          "3",
+          "In3.Cu",
+          "signal"
+        ],
+        [
+          "4",
+          "In4.Cu",
+          "power"
+        ],
+        [
+          "31",
+          "B.Cu",
+          "mixed"
+        ]
+      ],
+      "signalLayers": [
+        "top",
+        "inner2",
+        "inner3",
+        "bottom"
+      ],
+      "nets": 75,
+      "terminals": 184,
+      "pads": 2122,
+      "rules": {
+        "widths": [
+          0.127
+        ],
+        "clearances": [
+          0.10668
+        ],
+        "appliedGlobalClearance": 0.10668,
+        "viaPad": 0.327,
+        "viaDrill": 0.2
+      },
+      "rectangularPadApproximations": {
+        "oval": 13
+      },
+      "scope": "All named DDR signal nets incident to CPU or RAM, including passive endpoints. Power, VREF, ZQ and unconnected nets excluded. Existing traces, vias and zones removed. Board uses edge bounding box. No timing or impedance constraints invented.",
+      "sample": "sample002",
+      "sampleSha256": "9d3e7417f6b1b1711ffc642c02fda5333cb33861d08bb1cc91228846bb751848",
+      "license": "CC-BY-SA-3.0-US",
+      "sourceUrl": "https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/A64-OLinuXino/1.%20Latest%20hardware%20revision/A64-OLinuXino%20hardware%20revision%20H/A64-OlinuXino_Rev_H.kicad_pcb",
+      "extractionRevision": "preserved-ddr-assessment-2026-10-27",
+      "notes": [
+        "These are the captured routing inputs, not newly simplified two-chip layouts.",
+        "KiCad pad primitives are retained as separate obstacles; some package footprints contain multiple primitives per ball.",
+        "Bus metadata restricts source signal layers only; no timing, skew, impedance or differential-pair constraints are invented."
+      ]
+    },
+    "capture": {
+      "tscircuit": "0.0.3095",
+      "core": "0.0.2277",
+      "autorouter": "0.0.1041",
+      "busLanesSolver": "0.0.45"
+    },
+    "inputSha256": "21fe43a1aec344b3c3ea8ea17159e5cc11c344fbae181f27199f8b101aafd840",
+    "preloadedCircuitSha256": "52ef9659c3a9cdba839a91e0fa856c4213cd726ad10532ca4b658b434df40f67",
+    "precedingDataSignals": 32,
+    "remainingSignals": 43,
+    "isolatedProfile": {
+      "baseMain": "997877375d0d45f6771320b81bfc7898e192ff62",
+      "runtime": "Bun1.4.3",
+      "baseSeconds": 139.800149164,
+      "indexedSeconds": 20.436628818,
+      "nodeCount": 98097,
+      "meshSha256": "87fba2d4517fb34b04ee878efdc6acf0556ebb7655f4ae27635cc5c75e2d6c70",
+      "outputIdentical": true,
+      "scope": "SamecapturedTopologyMergingSolverinput,localoneprocessatatime,CPUprofilingenabled. NotafullboardorpairedCIbenchmark."
+    }
+  },
+  "stmp157": {
+    "board": "OLIMEX STMP157-OLinuXino-LIME2 rev B1",
+    "source": {
+      "id": "stmp157",
+      "name": "OLIMEX STMP157-OLinuXino-LIME2 rev B1",
+      "repo": "OLIMEX/OLINUXINO",
+      "commit": "85eee9c17ee13af65617d73bdd94de7ec49cfb42",
+      "path": "HARDWARE/STMP157-OLinuXino-LIME2/1. Latest hardware revision/STMP157-OLinuXino-LIME2_Rev_B1/STMP157-OLinuXino-LIME2_Rev_B1.kicad_pcb",
+      "sourceSha256": "260a8c8429a14645014ab20f9ba4e3f04dadf3433453895dd43919bb65b0f79e",
+      "components": [
+        {
+          "ref": "U2",
+          "value": "K4B4G1646D-BYK0",
+          "footprint": "OLIMEX_IC-FP:FBGA96(HYNIX_SAMSUNG_512MX16_DDR3)",
+          "pads": 196,
+          "at": [
+            "123",
+            "71.5",
+            "180"
+          ]
+        },
+        {
+          "ref": "U1",
+          "value": "STM32MP157CAA3x",
+          "footprint": "OLIMEX_IC-FP:LFBGA-448(Pitch-0.8mm_Pad-0.4mm_18x18x1.27mm)",
+          "pads": 898,
+          "at": [
+            "142.7",
+            "73",
+            "270"
+          ]
+        },
+        {
+          "ref": "U3",
+          "value": "K4B4G1646D-BYK0",
+          "footprint": "OLIMEX_IC-FP:FBGA96(HYNIX_SAMSUNG_512MX16_DDR3)",
+          "pads": 196,
+          "at": [
+            "123",
+            "83.5",
+            "180"
+          ]
+        }
+      ],
+      "nativeLayers": [
+        [
+          "0",
+          "F.Cu",
+          "signal"
+        ],
+        [
+          "1",
+          "Ln1PWR.Cu",
+          "power"
+        ],
+        [
+          "2",
+          "Ln2.Cu",
+          "signal"
+        ],
+        [
+          "3",
+          "Ln3GND.Cu",
+          "power"
+        ],
+        [
+          "4",
+          "Ln4.Cu",
+          "mixed"
+        ],
+        [
+          "5",
+          "Ln5.Cu",
+          "signal"
+        ],
+        [
+          "6",
+          "Ln6GND.Cu",
+          "power"
+        ],
+        [
+          "31",
+          "B.Cu",
+          "signal"
+        ]
+      ],
+      "signalLayers": [
+        "top",
+        "inner2",
+        "inner4",
+        "inner5",
+        "bottom"
+      ],
+      "nets": 72,
+      "terminals": 201,
+      "pads": 2080,
+      "rules": {
+        "widths": [
+          0.127
+        ],
+        "clearances": [
+          0.127
+        ],
+        "appliedGlobalClearance": 0.127,
+        "viaPad": 0.327,
+        "viaDrill": 0.2
+      },
+      "rectangularPadApproximations": {
+        "oval": 14
+      },
+      "scope": "All named DDR signal nets incident to CPU or RAM, including passive endpoints. Power, VREF, ZQ and unconnected nets excluded. Existing traces, vias and zones removed. Board uses edge bounding box. No timing or impedance constraints invented.",
+      "sample": "sample003",
+      "sampleSha256": "7dd76a19656988ddd566ba768d71bbbef7a4f94558263b6bae85f86f9cd4f90b",
+      "license": "CC-BY-SA-3.0-US",
+      "sourceUrl": "https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/STMP157-OLinuXino-LIME2/1.%20Latest%20hardware%20revision/STMP157-OLinuXino-LIME2_Rev_B1/STMP157-OLinuXino-LIME2_Rev_B1.kicad_pcb",
+      "extractionRevision": "preserved-ddr-assessment-2026-10-27",
+      "notes": [
+        "These are the captured routing inputs, not newly simplified two-chip layouts.",
+        "KiCad pad primitives are retained as separate obstacles; some package footprints contain multiple primitives per ball.",
+        "Bus metadata restricts source signal layers only; no timing, skew, impedance or differential-pair constraints are invented."
+      ]
+    },
+    "capture": {
+      "tscircuit": "0.0.3095",
+      "core": "0.0.2277",
+      "autorouter": "0.0.1041",
+      "busLanesSolver": "0.0.45"
+    },
+    "inputSha256": "783738f1ce719d1aa83faa4a5dccd7ba22cc0ed77768b9e081ff9be568e8d7ac",
+    "preloadedCircuitSha256": "d0bf34fb6a4c1e93dae19d2e5d85b8c54e6ecbed6c879ea640ec628084804dc6",
+    "precedingDataSignals": 32,
+    "remainingSignals": 40,
+    "fixtureSha256": "783738f1ce719d1aa83faa4a5dccd7ba22cc0ed77768b9e081ff9be568e8d7ac",
+    "inputEqualsExistingFixture": true,
+    "isolatedProfile": {
+      "baseMain": "997877375d0d45f6771320b81bfc7898e192ff62",
+      "runtime": "Bun1.4.3",
+      "baseSeconds": 169.228289123,
+      "indexedSeconds": 20.650167835,
+      "nodeCount": 115881,
+      "meshSha256": "47d8fdefcebe030fe5155b4c2170bbdd23e7d154208f339d4b940b18285867fe",
+      "outputIdentical": true,
+      "scope": "SamecapturedTopologyMergingSolverinput,localoneprocessatatime,CPUprofilingenabled. NotafullboardorpairedCIbenchmark."
+    }
+  }
+}
