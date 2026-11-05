@@ -106,6 +106,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    this.releaseWorkingData()
     this.solved = true
   }
 
@@ -173,7 +174,21 @@ export class TopologyMergingSolver extends BaseSolver {
     this.stats.compactedRegionCount = 0
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.passthroughNodeCount = this.outputNodes.length
+    this.releaseWorkingData()
     this.solved = true
+  }
+
+  private releaseWorkingData(): void {
+    // Completed solvers remain attached to the pipeline. Only the validated
+    // output and original constructor input are needed after this stage.
+    this.preparedNodes.length = 0
+    this.preparedNodeBySourceKey.clear()
+    this.xCoordinates.length = 0
+    this.atomicRegions.length = 0
+    this.horizontalRegionByBucket.clear()
+    this.overruledTargetSourceKeys.clear()
+    this.outputProvenance.groupIndexesByNodeId.clear()
+    this.outputProvenance.sourceKeysByNodeId.clear()
   }
 
   private processCurrentXSlab(): void {
