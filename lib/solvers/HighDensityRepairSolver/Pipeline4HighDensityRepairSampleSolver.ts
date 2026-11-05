@@ -14,10 +14,15 @@ export const shouldRetryWithBoundaryDiagonalRepair = (
   if (!node?.center || node.width === undefined || node.height === undefined) {
     return false
   }
-  const unconnectedObstacles = (sample.clearanceObstacles ?? []).filter(
-    (obstacle) => (obstacle.connectedTo?.length ?? 0) === 0,
-  )
-  if (unconnectedObstacles.length === 0) return false
+  const clearanceObstacles = sample.clearanceObstacles ?? []
+  if (
+    clearanceObstacles.length === 0 ||
+    clearanceObstacles.some(
+      (obstacle) => (obstacle.connectedTo?.length ?? 0) > 0,
+    )
+  ) {
+    return false
+  }
 
   const minX = node.center.x - node.width / 2
   const maxX = node.center.x + node.width / 2
@@ -41,7 +46,7 @@ export const shouldRetryWithBoundaryDiagonalRepair = (
       (Math.abs(start.y - maxY) <= wallTolerance &&
         Math.abs(end.y - maxY) <= wallTolerance)
     if (!onSameWall) return false
-    return unconnectedObstacles.some(
+    return clearanceObstacles.some(
       (obstacle) => getRouteObstacleClearance(route, obstacle) < 0.1 - 1e-6,
     )
   })
