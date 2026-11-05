@@ -27,7 +27,9 @@ const preloadedCircuitPath = new URL(
   import.meta.url,
 )
 const preloadedCircuit: AnyCircuitElement[] = JSON.parse(
-  gunzipSync(Uint8Array.from(readFileSync(preloadedCircuitPath))).toString("utf8"),
+  gunzipSync(Uint8Array.from(readFileSync(preloadedCircuitPath))).toString(
+    "utf8",
+  ),
 )
 const outputDir =
   process.argv[3] ?? `debug-output/ddr-topology-validation/${board}`
@@ -62,5 +64,8 @@ const result = {
     .update(JSON.stringify(merger.getOutput()))
     .digest("hex"),
 }
-writeFileSync(path.join(outputDir, "result.json"), JSON.stringify(result, null, 2))
+writeFileSync(
+  path.join(outputDir, "result.json"),
+  JSON.stringify(result, null, 2),
+)
 console.log(JSON.stringify(result))
