@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "pr": 3327,
+  "headSha": "5b4c680c842eafe17e2830fc9a29d16d17d6a9b2",
+  "runtimeImplementationLocalSha": "9fedfe9a54be2ae0b10abdf732790e46e3b5e090",
+  "ciMergeSha": "41d3119457fbc5359b5dbed2f65c0e1b4bbd3391",
+  "ciBaseSha": "9e751e3c7650a1f21f52bad9160650d6aa388a14",
+  "benchmarkBaselineSha": "637b6c581128238f6c61227a1c15be423d24baca",
+  "provenanceScope": "Ordinary CI tests this PR merged into its current base. The standalone source, local QA and frozen confirmation benchmark are separate scopes. Historical pass/failure differences are not attributed solely to deferred setup.",
+  "typeCheck": {
+    "runId": 40757764464,
+    "jobId": 123061177599,
+    "conclusion": "success",
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-type-123061177599.log",
+    "sha256": "a79d863cffa47097e6dece628f5c8273708f8a2f8ff039394037c57fc76137d0",
+    "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14"
+  },
+  "build": {
+    "runId": 40757764348,
+    "jobId": 123061177133,
+    "conclusion": "success",
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-build-123061177133.log",
+    "sha256": "3701301f64b52d4838d5b00223103aa21589177359b1478af22e98e4d83efc65",
+    "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+    "packedRuntimeConsumers": "success"
+  },
+  "format": {
+    "runId": 40757764394,
+    "jobId": 123061177549,
+    "conclusion": "failure",
+    "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-format-123061177549.log",
+    "sha256": "929aa7f6f747d81fad97ba6610d41b850872295f1e4a3172801c1de645b4f03d",
+    "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+    "errorCount": 39,
+    "action": "No formatting or linting performed, per AGENTS.md."
+  },
+  "bun": {
+    "runId": 40757764409,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "jobId": 123061178501,
+        "name": "test (5)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178501.log",
+        "sha256": "342b9ac896c2552d00013cb555bc72e6d456da34ff424ea1a0a6f4dddeaffeeb",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": []
+      },
+      {
+        "jobId": 123061178596,
+        "name": "test (8)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178596.log",
+        "sha256": "791f75607bcfb1eece140793ee7a2b345ecee4df7555e1ab3c976623e079fc10",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": []
+      },
+      {
+        "jobId": 123061178616,
+        "name": "test (7)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178616.log",
+        "sha256": "a86a809c363e4a77708b89622c3d04e0ebd850827fd0a9238551d372d36e9edd",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": []
+      },
+      {
+        "jobId": 123061178723,
+        "name": "test (4)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178723.log",
+        "sha256": "6a7662ae2d93c5d2341f8115ddc73f463d78f798e8fa4a5011fd643e1ff761da",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": [
+          "2026-10-28T19:53:02.9099760Z (pass) repairs T113 HDMI 1.8 V same-net drill spacing [79395.53ms]"
+        ]
+      },
+      {
+        "jobId": 123061178739,
+        "name": "test (3)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178739.log",
+        "sha256": "88a777f108be0e8a439871596e3a9e970b405c7bff22d7dcbac662d2cec2088b",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": []
+      },
+      {
+        "jobId": 123061178763,
+        "name": "test (1)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178763.log",
+        "sha256": "a748e99f4b7f3d186ac696ec20ec2220bef3525c64ab20f88de63d0dd067da08",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": []
+      },
+      {
+        "jobId": 123061178786,
+        "name": "test (2)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178786.log",
+        "sha256": "8bfaccb30d2998bce12f48fe4b173c869243781543b2122800df9e71c5b6b705",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": [
+          "2026-10-28T19:50:10.6165148Z (pass) deferred inspection preserves native own-property shapes and restores native prototypes before search [8.56ms]",
+          "2026-10-28T19:52:45.9357196Z (pass) dataset18 sample01 matches exactly with four native Bun workers [13487.96ms]"
+        ]
+      },
+      {
+        "jobId": 123061178874,
+        "name": "test (9)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061178874.log",
+        "sha256": "7f9e3cbc42c99eccf9cae2d15369c6e9bf3712e0e6cae15e85105fb88239d711",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": [
+          "2026-10-28T19:55:31.2433634Z (pass) routes the USB shield through both MIDI keyboard phases [56473.42ms]"
+        ]
+      },
+      {
+        "jobId": 123061179041,
+        "name": "test (6)",
+        "conclusion": "success",
+        "log": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/logs/portfolio-round2-bun-123061179041.log",
+        "sha256": "a0020eb1bc25adf510ca9975561874299facd1bd777559db00c0a7372adecd07",
+        "checkout": "41d3119 Merge 5b4c680c842eafe17e2830fc9a29d16d17d6a9b2 into 9e751e3c7650a1f21f52bad9160650d6aa388a14",
+        "failures": [],
+        "originalFixturePasses": [
+          "2026-10-28T19:51:47.4989760Z (pass) routes the full MIDI keyboard with preloaded USB traces [50531.68ms]",
+          "2026-10-28T19:55:42.3650259Z (pass) Pipeline9 routes the exact real A64 byte-zero input without drilling foreign pads [57078.38ms]"
+        ]
+      }
+    ],
+    "uniqueFailures": [],
+    "uniqueFailureCount": 0,
+    "numericalOrOtherFailures": [],
+    "svgFailures": []
+  },
+  "previousRoundAudit": "/workspace/hd-refinements-2026-10-28/artifacts/ci-audits/portfolio.json",
+  "ordinaryWorkflowRuns": [
+    {
+      "id": 40757848844,
+      "name": "Autorouting Benchmark",
+      "status": "completed",
+      "conclusion": "skipped",
+      "run_number": 25056,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757848844/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757848844/logs",
+      "workflow_id": 233971741
+    },
+    {
+      "id": 40757764394,
+      "name": "Format Check",
+      "status": "completed",
+      "conclusion": "failure",
+      "run_number": 9901,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764394/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764394/logs",
+      "workflow_id": 146178406
+    },
+    {
+      "id": 40757764348,
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 9168,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764348/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764348/logs",
+      "workflow_id": 189194958
+    },
+    {
+      "id": 40757764464,
+      "name": "Type Check",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 9901,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764464/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764464/logs",
+      "workflow_id": 146178407
+    },
+    {
+      "id": 40757764479,
+      "name": "Autorouting Benchmark",
+      "status": "completed",
+      "conclusion": "skipped",
+      "run_number": 25055,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764479/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764479/logs",
+      "workflow_id": 233971741
+    },
+    {
+      "id": 40757764469,
+      "name": "No Dependency Patches",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 869,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764469/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764469/logs",
+      "workflow_id": 382649780
+    },
+    {
+      "id": 40757764381,
+      "name": "Vercel Build",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 9168,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764381/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764381/logs",
+      "workflow_id": 189194959
+    },
+    {
+      "id": 40757764441,
+      "name": "No String ID Hacks",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 3846,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764441/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764441/logs",
+      "workflow_id": 333054703
+    },
+    {
+      "id": 40757764409,
+      "name": "Bun Test",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 11194,
+      "jobs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764409/jobs",
+      "logs_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/40757764409/logs",
+      "workflow_id": 146178408
+    }
+  ],
+  "otherChecks": {
+    "No Dependency Patches": {
+      "runId": 40757764469,
+      "conclusion": "success"
+    },
+    "Vercel Build": {
+      "runId": 40757764381,
+      "conclusion": "success"
+    },
+    "No String ID Hacks": {
+      "runId": 40757764441,
+      "conclusion": "success"
+    }
+  },
+  "automaticBenchmarkScope": "Both associated ordinary Autorouting Benchmark runs were skipped. The custom confirmation benchmark is a separate source-pinned run.",
+  "measurementStatus": "No performance conclusion follows from CI. The shared confirmation benchmark measures the exact standalone head separately."
+}

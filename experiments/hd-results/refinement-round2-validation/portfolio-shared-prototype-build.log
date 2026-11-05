@@ -1,0 +1,29 @@
+$ bun scripts/build-solver-workers.ts && tsup --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap
+CLI Building entry: {"index":"lib/index.ts","runtime/bun":"lib/runtime/bun.ts","runtime/node":"lib/runtime/node.ts"}
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /workspace/hd-experiments-2026-10-28/portfolio/tsup.config.ts
+CLI Target: esnext
+ESM Build start
+DTS Build start
+TERSER Minifying with Terser
+TERSER Terser Minification success
+TERSER Minifying with Terser
+TERSER Terser Minification success
+TERSER Minifying with Terser
+TERSER Terser Minification success
+TERSER Minifying with Terser
+TERSER Terser Minification success
+ESM dist/chunk-G3PMV62Z.js     666.00 B
+ESM dist/runtime/bun.js        1.10 MB
+ESM dist/runtime/node.js       1.15 MB
+ESM dist/chunk-G3PMV62Z.js.map 71.00 B
+ESM dist/runtime/node.js.map   1.19 MB
+ESM dist/runtime/bun.js.map    1.14 MB
+ESM dist/index.js              3.13 MB
+ESM dist/index.js.map          16.11 MB
+ESM ⚡️ Build success in 28868ms
+DTS ⚡️ Build success in 29430ms
+DTS dist/index.d.ts        308.79 KB
+DTS dist/runtime/bun.d.ts  510.00 B
+DTS dist/runtime/node.d.ts 511.00 B

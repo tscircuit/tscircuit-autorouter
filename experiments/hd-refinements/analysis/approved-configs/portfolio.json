@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "name": "portfolio-source-ablation",
+  "baselineArm": "control",
+  "dependencyLockSha256": "261a3861619cd4aa6265d2c9b75825a49196002d59ad665dddd69c67378ed1ee",
+  "orderSeed": 2026102809,
+  "arms": [
+    {
+      "id": "control",
+      "commit": "637b6c581128238f6c61227a1c15be423d24baca",
+      "role": "Historical baseline Pipeline9"
+    },
+    {
+      "id": "old-clock",
+      "commit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+      "role": "Previously measured historical CPU-timed race (thread CPU preferred; process CPU/elapsed fallback)"
+    },
+    {
+      "id": "refined-eager",
+      "commit": "bf90a4eefbc2c444671861ddf59ec3f21ae12c70",
+      "role": "Corrected deterministic portfolio with eager grid setup; source-derived factory default"
+    },
+    {
+      "id": "refined-lazy",
+      "commit": "c879c9d5f4689502a279ed9d92a0299946eafcfb",
+      "role": "Corrected deterministic portfolio with lazy grid setup; published PR default"
+    }
+  ],
+  "contrasts": [
+    {
+      "id": "baseline-vs-old-clock",
+      "before": "control",
+      "after": "old-clock"
+    },
+    {
+      "id": "baseline-vs-eager",
+      "before": "control",
+      "after": "refined-eager"
+    },
+    {
+      "id": "baseline-vs-lazy",
+      "before": "control",
+      "after": "refined-lazy"
+    },
+    {
+      "id": "old-clock-vs-lazy",
+      "before": "old-clock",
+      "after": "refined-lazy"
+    },
+    {
+      "id": "eager-vs-lazy",
+      "before": "refined-eager",
+      "after": "refined-lazy"
+    }
+  ]
+}

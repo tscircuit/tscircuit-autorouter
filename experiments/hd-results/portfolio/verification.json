@@ -1,0 +1,886 @@
+{
+  "variant": "portfolio",
+  "expectedHead": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+  "expectedRun": 40643404125,
+  "verified": true,
+  "errors": [],
+  "notes": [
+    "Exact downloaded ZIP digest, dependency-lock bytes, protocol hashes,84 raw record identities and independently recomputed comparisons were verified; see artifact-verification.json.",
+    "Dependencies are resolved fresh once per CI pair; the earlier local install is not assumed identical."
+  ],
+  "ciComplete": true,
+  "uniqueRecordCount": 84,
+  "dependencyLockSha256": "261a3861619cd4aa6265d2c9b75825a49196002d59ad665dddd69c67378ed1ee",
+  "workerSha256": "a38701372b453e939ec3698703fec73a896b822214a957b8301e978088890858",
+  "resourceProfile": {
+    "MemTotal": 101049638912,
+    "MemAvailable": 88305213440,
+    "effectiveLimitBytes": 101049638912,
+    "profile": "blacksmith-large48GiB",
+    "reservationBudgetGiB": 48,
+    "observedRssGuardGiB": 48,
+    "allowHeavyOverlap": true
+  },
+  "datasets": [
+    {
+      "dataset": "srj18",
+      "countPerRevision": 16,
+      "control": {
+        "solved": 16,
+        "clean": 16,
+        "timeouts": 0,
+        "otherFailures": 0,
+        "failurePenalizedSecondsSum": 1008.191069154,
+        "maxRssBytes": 3040587776
+      },
+      "experiment": {
+        "solved": 16,
+        "clean": 16,
+        "timeouts": 0,
+        "otherFailures": 0,
+        "failurePenalizedSecondsSum": 989.59084949,
+        "maxRssBytes": 2933649408
+      },
+      "failurePenalizedSpeedup": 1.0187958686901621,
+      "pairedCleanCount": 16,
+      "pairedCleanSpeedup": 1.0187958686901621,
+      "pairedCleanBeforeSeconds": 1008.191069154,
+      "pairedCleanAfterSeconds": 989.59084949,
+      "pairedHdCompletedCount": 16,
+      "pairedHdSpeedup": 1.3360444319805944,
+      "pairedHdBeforeSeconds": 342.62112968300005,
+      "pairedHdAfterSeconds": 256.444412687,
+      "viaBefore": 3397,
+      "viaAfter": 3536,
+      "viaDelta": 139,
+      "wireBeforeMm": 30294.303832532565,
+      "wireAfterMm": 30136.985440987977,
+      "wireDeltaMm": -157.31839154458794,
+      "wireCoverage": {
+        "commonCleanCount": 16,
+        "finitePairCount": 13,
+        "missingPairs": [
+          {
+            "sampleNumber": 3,
+            "controlWireLengthMm": null,
+            "experimentWireLengthMm": null
+          },
+          {
+            "sampleNumber": 8,
+            "controlWireLengthMm": null,
+            "experimentWireLengthMm": null
+          },
+          {
+            "sampleNumber": 9,
+            "controlWireLengthMm": null,
+            "experimentWireLengthMm": null
+          }
+        ],
+        "exportedControlSumWithNullAsZeroMm": 30294.303832532565,
+        "exportedExperimentSumWithNullAsZeroMm": 30136.985440987977
+      },
+      "sameUpstreamFailureCount": 0,
+      "sameUpstreamFailurePhaseCount": 0,
+      "upstreamPairs": [],
+      "changedOutcomePairs": [],
+      "pairedCompletedStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 16,
+          "controlSeconds": 1.3392457609999997,
+          "experimentSeconds": 1.1339559870000004,
+          "speedup": 1.181038573236969
+        },
+        "componentDetectionSolver": {
+          "count": 16,
+          "controlSeconds": 0.24378744899999982,
+          "experimentSeconds": 0.1848865370000001,
+          "speedup": 1.3185786967279272
+        },
+        "edgeSolver": {
+          "count": 16,
+          "controlSeconds": 3.7038483959999997,
+          "experimentSeconds": 3.172113077000002,
+          "speedup": 1.1676281097466052
+        },
+        "effortCleanupSolver": {
+          "count": 16,
+          "controlSeconds": 30.09480251899999,
+          "experimentSeconds": 36.507284545999994,
+          "speedup": 0.8243506164113593
+        },
+        "escapeViaLocationSolver": {
+          "count": 16,
+          "controlSeconds": 0.7071055209999993,
+          "experimentSeconds": 0.5844933630000002,
+          "speedup": 1.2097751074035705
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 16,
+          "controlSeconds": 34.677747847000006,
+          "experimentSeconds": 43.53701707599998,
+          "speedup": 0.7965118002104997
+        },
+        "highDensityForceImproveSolver": {
+          "count": 16,
+          "controlSeconds": 56.38351159899998,
+          "experimentSeconds": 92.29042437000003,
+          "speedup": 0.6109356629779247
+        },
+        "highDensityRepairSolver": {
+          "count": 16,
+          "controlSeconds": 49.46688958500001,
+          "experimentSeconds": 72.37703594799999,
+          "speedup": 0.6834611135573443
+        },
+        "highDensityRouteSolver": {
+          "count": 16,
+          "controlSeconds": 342.62112968300005,
+          "experimentSeconds": 256.444412687,
+          "speedup": 1.3360444319805944
+        },
+        "highDensityStitchSolver": {
+          "count": 16,
+          "controlSeconds": 2.581145327000009,
+          "experimentSeconds": 3.744996329000005,
+          "speedup": 0.6892250619880396
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 16,
+          "controlSeconds": 0.6791751560000048,
+          "experimentSeconds": 0.6612352630000096,
+          "speedup": 1.0271308776222887
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 16,
+          "controlSeconds": 0.5661701239999911,
+          "experimentSeconds": 0.5918306970000194,
+          "speedup": 0.9566420377819175
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 16,
+          "controlSeconds": 4.438363824999999,
+          "experimentSeconds": 3.2930681519999996,
+          "speedup": 1.3477898482922133
+        },
+        "netToPointPairsSolver": {
+          "count": 16,
+          "controlSeconds": 1.0396465730000004,
+          "experimentSeconds": 0.9511660680000005,
+          "speedup": 1.0930231932958314
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 16,
+          "controlSeconds": 0.22999714499999982,
+          "experimentSeconds": 0.19112314800000035,
+          "speedup": 1.203397638678489
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 16,
+          "controlSeconds": 167.45277903000004,
+          "experimentSeconds": 169.771956313,
+          "speedup": 0.9863394559774983
+        },
+        "portPointPathingSolver": {
+          "count": 16,
+          "controlSeconds": 119.398408679,
+          "experimentSeconds": 106.016412631,
+          "speedup": 1.1262257014352794
+        },
+        "powerTraceExpansionSolver": {
+          "count": 16,
+          "controlSeconds": 0.0006066029999710735,
+          "experimentSeconds": 0.0004777430000322056,
+          "speedup": 1.2697266101861906
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 16,
+          "controlSeconds": 0.09460924700000078,
+          "experimentSeconds": 0.09274724700000092,
+          "speedup": 1.0200760675947593
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 16,
+          "controlSeconds": 3.232647901,
+          "experimentSeconds": 2.8809713429999997,
+          "speedup": 1.122068745617509
+        },
+        "topologyMergingSolver": {
+          "count": 16,
+          "controlSeconds": 8.842999164,
+          "experimentSeconds": 7.3601300929999995,
+          "speedup": 1.2014732147751455
+        },
+        "topologyPlanningSolver": {
+          "count": 16,
+          "controlSeconds": 20.28336346,
+          "experimentSeconds": 16.25311272,
+          "speedup": 1.2479679314006504
+        },
+        "traceSimplificationSolver": {
+          "count": 16,
+          "controlSeconds": 53.96939874899999,
+          "experimentSeconds": 68.81645529100001,
+          "speedup": 0.7842513614045193
+        },
+        "traceWidthSolver": {
+          "count": 16,
+          "controlSeconds": 9.972315085999991,
+          "experimentSeconds": 9.368471748,
+          "speedup": 1.0644548389793567
+        },
+        "uniformPortDistributionSolver": {
+          "count": 16,
+          "controlSeconds": 6.572747667999994,
+          "experimentSeconds": 6.359743557000005,
+          "speedup": 1.033492562882593
+        }
+      },
+      "pairedCleanStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 16,
+          "controlSeconds": 1.3392457609999997,
+          "experimentSeconds": 1.1339559870000004,
+          "speedup": 1.181038573236969
+        },
+        "componentDetectionSolver": {
+          "count": 16,
+          "controlSeconds": 0.24378744899999982,
+          "experimentSeconds": 0.1848865370000001,
+          "speedup": 1.3185786967279272
+        },
+        "edgeSolver": {
+          "count": 16,
+          "controlSeconds": 3.7038483959999997,
+          "experimentSeconds": 3.172113077000002,
+          "speedup": 1.1676281097466052
+        },
+        "effortCleanupSolver": {
+          "count": 16,
+          "controlSeconds": 30.09480251899999,
+          "experimentSeconds": 36.507284545999994,
+          "speedup": 0.8243506164113593
+        },
+        "escapeViaLocationSolver": {
+          "count": 16,
+          "controlSeconds": 0.7071055209999993,
+          "experimentSeconds": 0.5844933630000002,
+          "speedup": 1.2097751074035705
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 16,
+          "controlSeconds": 34.677747847000006,
+          "experimentSeconds": 43.53701707599998,
+          "speedup": 0.7965118002104997
+        },
+        "highDensityForceImproveSolver": {
+          "count": 16,
+          "controlSeconds": 56.38351159899998,
+          "experimentSeconds": 92.29042437000003,
+          "speedup": 0.6109356629779247
+        },
+        "highDensityRepairSolver": {
+          "count": 16,
+          "controlSeconds": 49.46688958500001,
+          "experimentSeconds": 72.37703594799999,
+          "speedup": 0.6834611135573443
+        },
+        "highDensityRouteSolver": {
+          "count": 16,
+          "controlSeconds": 342.62112968300005,
+          "experimentSeconds": 256.444412687,
+          "speedup": 1.3360444319805944
+        },
+        "highDensityStitchSolver": {
+          "count": 16,
+          "controlSeconds": 2.581145327000009,
+          "experimentSeconds": 3.744996329000005,
+          "speedup": 0.6892250619880396
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 16,
+          "controlSeconds": 0.6791751560000048,
+          "experimentSeconds": 0.6612352630000096,
+          "speedup": 1.0271308776222887
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 16,
+          "controlSeconds": 0.5661701239999911,
+          "experimentSeconds": 0.5918306970000194,
+          "speedup": 0.9566420377819175
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 16,
+          "controlSeconds": 4.438363824999999,
+          "experimentSeconds": 3.2930681519999996,
+          "speedup": 1.3477898482922133
+        },
+        "netToPointPairsSolver": {
+          "count": 16,
+          "controlSeconds": 1.0396465730000004,
+          "experimentSeconds": 0.9511660680000005,
+          "speedup": 1.0930231932958314
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 16,
+          "controlSeconds": 0.22999714499999982,
+          "experimentSeconds": 0.19112314800000035,
+          "speedup": 1.203397638678489
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 16,
+          "controlSeconds": 167.45277903000004,
+          "experimentSeconds": 169.771956313,
+          "speedup": 0.9863394559774983
+        },
+        "portPointPathingSolver": {
+          "count": 16,
+          "controlSeconds": 119.398408679,
+          "experimentSeconds": 106.016412631,
+          "speedup": 1.1262257014352794
+        },
+        "powerTraceExpansionSolver": {
+          "count": 16,
+          "controlSeconds": 0.0006066029999710735,
+          "experimentSeconds": 0.0004777430000322056,
+          "speedup": 1.2697266101861906
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 16,
+          "controlSeconds": 0.09460924700000078,
+          "experimentSeconds": 0.09274724700000092,
+          "speedup": 1.0200760675947593
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 16,
+          "controlSeconds": 3.232647901,
+          "experimentSeconds": 2.8809713429999997,
+          "speedup": 1.122068745617509
+        },
+        "topologyMergingSolver": {
+          "count": 16,
+          "controlSeconds": 8.842999164,
+          "experimentSeconds": 7.3601300929999995,
+          "speedup": 1.2014732147751455
+        },
+        "topologyPlanningSolver": {
+          "count": 16,
+          "controlSeconds": 20.28336346,
+          "experimentSeconds": 16.25311272,
+          "speedup": 1.2479679314006504
+        },
+        "traceSimplificationSolver": {
+          "count": 16,
+          "controlSeconds": 53.96939874899999,
+          "experimentSeconds": 68.81645529100001,
+          "speedup": 0.7842513614045193
+        },
+        "traceWidthSolver": {
+          "count": 16,
+          "controlSeconds": 9.972315085999991,
+          "experimentSeconds": 9.368471748,
+          "speedup": 1.0644548389793567
+        },
+        "uniformPortDistributionSolver": {
+          "count": 16,
+          "controlSeconds": 6.572747667999994,
+          "experimentSeconds": 6.359743557000005,
+          "speedup": 1.033492562882593
+        }
+      }
+    },
+    {
+      "dataset": "srj24",
+      "countPerRevision": 26,
+      "control": {
+        "solved": 19,
+        "clean": 17,
+        "timeouts": 6,
+        "otherFailures": 1,
+        "failurePenalizedSecondsSum": 4021.4643421200003,
+        "maxRssBytes": 8063025152
+      },
+      "experiment": {
+        "solved": 19,
+        "clean": 18,
+        "timeouts": 6,
+        "otherFailures": 1,
+        "failurePenalizedSecondsSum": 3921.591512455,
+        "maxRssBytes": 16848494592
+      },
+      "failurePenalizedSpeedup": 1.0254674229449456,
+      "pairedCleanCount": 17,
+      "pairedCleanSpeedup": 0.8799991518251664,
+      "pairedCleanBeforeSeconds": 781.4643421200001,
+      "pairedCleanAfterSeconds": 888.028517413,
+      "pairedHdCompletedCount": 21,
+      "pairedHdSpeedup": 1.3666194784079098,
+      "pairedHdBeforeSeconds": 606.397283803,
+      "pairedHdAfterSeconds": 443.720650396,
+      "viaBefore": 2740,
+      "viaAfter": 2821,
+      "viaDelta": 81,
+      "wireBeforeMm": 27372.256136221546,
+      "wireAfterMm": 27216.52321650336,
+      "wireDeltaMm": -155.73291971818617,
+      "wireCoverage": {
+        "commonCleanCount": 17,
+        "finitePairCount": 16,
+        "missingPairs": [
+          {
+            "sampleNumber": 21,
+            "controlWireLengthMm": 3058.870161389176,
+            "experimentWireLengthMm": null
+          }
+        ],
+        "exportedControlSumWithNullAsZeroMm": 30431.12629761072,
+        "exportedExperimentSumWithNullAsZeroMm": 27216.52321650336
+      },
+      "sameUpstreamFailureCount": 2,
+      "sameUpstreamFailurePhaseCount": 2,
+      "upstreamPairs": [
+        {
+          "dataset": "srj24",
+          "sampleNumber": 13,
+          "variant": "portfolio",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+          "controlSolved": false,
+          "experimentSolved": false,
+          "controlClean": false,
+          "experimentClean": false,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 103788.234664,
+          "experimentSolveMs": 106876.072792,
+          "controlFailurePhase": "portPointPathingSolver",
+          "experimentFailurePhase": "portPointPathingSolver",
+          "controlError": "PreparedPortPointRoutingSolver ran out of iterations",
+          "experimentError": "PreparedPortPointRoutingSolver ran out of iterations",
+          "sameHdInput": false,
+          "controlHdMs": null,
+          "experimentHdMs": null,
+          "controlHdCompleted": false,
+          "experimentHdCompleted": false,
+          "controlViaCount": 0,
+          "experimentViaCount": 0,
+          "controlWireLengthMm": 0,
+          "experimentWireLengthMm": 0,
+          "outputHashMatches": false
+        },
+        {
+          "dataset": "srj24",
+          "sampleNumber": 24,
+          "variant": "portfolio",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+          "controlSolved": false,
+          "experimentSolved": false,
+          "controlClean": false,
+          "experimentClean": false,
+          "controlTimeout": true,
+          "experimentTimeout": true,
+          "controlSolveMs": 360703.29718999995,
+          "experimentSolveMs": 360738.28590899985,
+          "controlFailurePhase": "edgeSolver",
+          "experimentFailurePhase": "edgeSolver",
+          "controlError": "timeout: parent stopped or observed an incomplete child",
+          "experimentError": "timeout: parent stopped or observed an incomplete child",
+          "sameHdInput": false,
+          "controlHdMs": null,
+          "experimentHdMs": null,
+          "controlHdCompleted": false,
+          "experimentHdCompleted": false,
+          "controlViaCount": null,
+          "experimentViaCount": null,
+          "controlWireLengthMm": null,
+          "experimentWireLengthMm": null,
+          "outputHashMatches": false
+        }
+      ],
+      "changedOutcomePairs": [
+        {
+          "dataset": "srj24",
+          "sampleNumber": 2,
+          "variant": "portfolio",
+          "controlCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+          "experimentCommit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+          "controlSolved": true,
+          "experimentSolved": true,
+          "controlClean": false,
+          "experimentClean": true,
+          "controlTimeout": false,
+          "experimentTimeout": false,
+          "controlSolveMs": 207576.277792,
+          "experimentSolveMs": 153562.995042,
+          "controlFailurePhase": null,
+          "experimentFailurePhase": null,
+          "controlError": null,
+          "experimentError": null,
+          "sameHdInput": true,
+          "controlHdMs": 56753.676751000006,
+          "experimentHdMs": 20202.574698999997,
+          "controlHdCompleted": true,
+          "experimentHdCompleted": true,
+          "controlViaCount": 322,
+          "experimentViaCount": 288,
+          "controlWireLengthMm": 2224.698518061933,
+          "experimentWireLengthMm": 1994.2923811579574,
+          "outputHashMatches": false
+        }
+      ],
+      "pairedCompletedStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 24,
+          "controlSeconds": 3.637093454,
+          "experimentSeconds": 3.781812689999999,
+          "speedup": 0.96173283875675
+        },
+        "componentDetectionSolver": {
+          "count": 24,
+          "controlSeconds": 0.3383143259999993,
+          "experimentSeconds": 0.3525570849999997,
+          "speedup": 0.9596015521855121
+        },
+        "edgeSolver": {
+          "count": 24,
+          "controlSeconds": 9.609407354,
+          "experimentSeconds": 9.393033526999998,
+          "speedup": 1.0230355642166125
+        },
+        "effortCleanupSolver": {
+          "count": 19,
+          "controlSeconds": 23.274842039000024,
+          "experimentSeconds": 26.132402239000015,
+          "speedup": 0.8906506882197243
+        },
+        "escapeViaLocationSolver": {
+          "count": 24,
+          "controlSeconds": 1.1936725110000002,
+          "experimentSeconds": 1.2082727399999988,
+          "speedup": 0.9879164459176671
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 19,
+          "controlSeconds": 21.142078995000006,
+          "experimentSeconds": 25.748463682999983,
+          "speedup": 0.821100600614037
+        },
+        "highDensityForceImproveSolver": {
+          "count": 19,
+          "controlSeconds": 53.87094633600002,
+          "experimentSeconds": 162.73299978,
+          "speedup": 0.3310388575693225
+        },
+        "highDensityRepairSolver": {
+          "count": 19,
+          "controlSeconds": 36.947740074000016,
+          "experimentSeconds": 62.04750525300001,
+          "speedup": 0.595475030355287
+        },
+        "highDensityRouteSolver": {
+          "count": 21,
+          "controlSeconds": 606.397283803,
+          "experimentSeconds": 443.720650396,
+          "speedup": 1.3666194784079098
+        },
+        "highDensityStitchSolver": {
+          "count": 19,
+          "controlSeconds": 2.1569817890000085,
+          "experimentSeconds": 4.082997043999995,
+          "speedup": 0.5282839457769666
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 19,
+          "controlSeconds": 0.668285331000006,
+          "experimentSeconds": 0.7451027070000205,
+          "speedup": 0.8969036412318223
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 19,
+          "controlSeconds": 0.5489382419999947,
+          "experimentSeconds": 0.5216330489999855,
+          "speedup": 1.0523455963006094
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 24,
+          "controlSeconds": 11.438633756000003,
+          "experimentSeconds": 10.140972512000001,
+          "speedup": 1.1279622089956813
+        },
+        "netToPointPairsSolver": {
+          "count": 24,
+          "controlSeconds": 1.6416375830000018,
+          "experimentSeconds": 1.616289735,
+          "speedup": 1.015682737724002
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 24,
+          "controlSeconds": 0.4186347260000032,
+          "experimentSeconds": 0.3879432770000026,
+          "speedup": 1.0791132385057427
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 19,
+          "controlSeconds": 235.26356225500004,
+          "experimentSeconds": 213.51163003099998,
+          "speedup": 1.1018770369597284
+        },
+        "portPointPathingSolver": {
+          "count": 24,
+          "controlSeconds": 433.000579458,
+          "experimentSeconds": 439.348786463,
+          "speedup": 0.9855508716523231
+        },
+        "powerTraceExpansionSolver": {
+          "count": 19,
+          "controlSeconds": 0.0005533439999958319,
+          "experimentSeconds": 0.0005753839999870252,
+          "speedup": 0.9616951462124593
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 24,
+          "controlSeconds": 0.21149621399999297,
+          "experimentSeconds": 0.22126116999999976,
+          "speedup": 0.9558668337512325
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 24,
+          "controlSeconds": 14.87813648,
+          "experimentSeconds": 13.731886398,
+          "speedup": 1.0834736065226223
+        },
+        "topologyMergingSolver": {
+          "count": 24,
+          "controlSeconds": 23.352371473999998,
+          "experimentSeconds": 22.280756516,
+          "speedup": 1.048095986203631
+        },
+        "topologyPlanningSolver": {
+          "count": 24,
+          "controlSeconds": 40.021376742,
+          "experimentSeconds": 40.041082024000005,
+          "speedup": 0.9995078733889311
+        },
+        "traceSimplificationSolver": {
+          "count": 19,
+          "controlSeconds": 40.91870678499999,
+          "experimentSeconds": 54.045362329000014,
+          "speedup": 0.7571178177307466
+        },
+        "traceWidthSolver": {
+          "count": 19,
+          "controlSeconds": 10.48900837699999,
+          "experimentSeconds": 10.19739689299999,
+          "speedup": 1.0285966592317475
+        },
+        "uniformPortDistributionSolver": {
+          "count": 24,
+          "controlSeconds": 77.70306232599998,
+          "experimentSeconds": 78.299003498,
+          "speedup": 0.9923889047704771
+        }
+      },
+      "pairedCleanStageTimes": {
+        "availableSegmentPointSolver": {
+          "count": 17,
+          "controlSeconds": 1.3879733620000005,
+          "experimentSeconds": 1.662109719000001,
+          "speedup": 0.8350672318040876
+        },
+        "componentDetectionSolver": {
+          "count": 17,
+          "controlSeconds": 0.20968133999999986,
+          "experimentSeconds": 0.21138306700000042,
+          "speedup": 0.9919495585708359
+        },
+        "edgeSolver": {
+          "count": 17,
+          "controlSeconds": 4.4707787460000015,
+          "experimentSeconds": 4.315521767999999,
+          "speedup": 1.0359764094231312
+        },
+        "effortCleanupSolver": {
+          "count": 17,
+          "controlSeconds": 20.677681945000018,
+          "experimentSeconds": 23.076059256000004,
+          "speedup": 0.89606642605685
+        },
+        "escapeViaLocationSolver": {
+          "count": 17,
+          "controlSeconds": 0.5417759870000002,
+          "experimentSeconds": 0.5644216169999997,
+          "speedup": 0.9598781667499465
+        },
+        "globalDrcForceImproveSolver": {
+          "count": 17,
+          "controlSeconds": 18.701547639000005,
+          "experimentSeconds": 22.836325041999984,
+          "speedup": 0.8189385816064798
+        },
+        "highDensityForceImproveSolver": {
+          "count": 17,
+          "controlSeconds": 45.98794178400001,
+          "experimentSeconds": 131.764380924,
+          "speedup": 0.3490164903558061
+        },
+        "highDensityRepairSolver": {
+          "count": 17,
+          "controlSeconds": 30.817018255000015,
+          "experimentSeconds": 54.877683798999996,
+          "speedup": 0.5615582896660367
+        },
+        "highDensityRouteSolver": {
+          "count": 17,
+          "controlSeconds": 243.226239538,
+          "experimentSeconds": 195.19163761500002,
+          "speedup": 1.2460894457873468
+        },
+        "highDensityStitchSolver": {
+          "count": 17,
+          "controlSeconds": 1.8822046979999978,
+          "experimentSeconds": 3.626747339999983,
+          "speedup": 0.5189787215781088
+        },
+        "lengthMatchingPostProcessingSolver": {
+          "count": 17,
+          "controlSeconds": 0.5779535050000191,
+          "experimentSeconds": 0.6679090300000248,
+          "speedup": 0.8653176990285601
+        },
+        "mutatedPreloadedTraceSimplificationSolver": {
+          "count": 17,
+          "controlSeconds": 0.4917274109999944,
+          "experimentSeconds": 0.44514787899998554,
+          "speedup": 1.1046383330066598
+        },
+        "necessaryCrampedPortPointSolver": {
+          "count": 17,
+          "controlSeconds": 4.714076577,
+          "experimentSeconds": 4.538018236,
+          "speedup": 1.0387963053130402
+        },
+        "netToPointPairsSolver": {
+          "count": 17,
+          "controlSeconds": 0.7411273430000004,
+          "experimentSeconds": 0.7570917379999998,
+          "speedup": 0.9789135263288271
+        },
+        "nodeDimensionSubdivisionSolver": {
+          "count": 17,
+          "controlSeconds": 0.23798227799999971,
+          "experimentSeconds": 0.22423833799999965,
+          "speedup": 1.0612916601263789
+        },
+        "pipeline9JointDrcRepairSolver": {
+          "count": 17,
+          "controlSeconds": 108.55250503100004,
+          "experimentSeconds": 125.18082130699997,
+          "speedup": 0.8671656240757537
+        },
+        "portPointPathingSolver": {
+          "count": 17,
+          "controlSeconds": 114.79721052200001,
+          "experimentSeconds": 116.12078984700001,
+          "speedup": 0.9886017023588632
+        },
+        "powerTraceExpansionSolver": {
+          "count": 17,
+          "controlSeconds": 0.00048692500000061044,
+          "experimentSeconds": 0.0004909639999877982,
+          "speedup": 0.9917733276018443
+        },
+        "preloadedTraceGraphSolver": {
+          "count": 17,
+          "controlSeconds": 0.11660146199999645,
+          "experimentSeconds": 0.11948792000000048,
+          "speedup": 0.975843097779223
+        },
+        "preprocessSimpleRouteJsonSolver": {
+          "count": 17,
+          "controlSeconds": 3.552400004,
+          "experimentSeconds": 3.61687446,
+          "speedup": 0.9821739856572186
+        },
+        "topologyMergingSolver": {
+          "count": 17,
+          "controlSeconds": 8.196578957000002,
+          "experimentSeconds": 8.466652710999998,
+          "speedup": 0.9681014725395417
+        },
+        "topologyPlanningSolver": {
+          "count": 17,
+          "controlSeconds": 21.097980005,
+          "experimentSeconds": 21.204301485000002,
+          "speedup": 0.9949858532206206
+        },
+        "traceSimplificationSolver": {
+          "count": 17,
+          "controlSeconds": 36.305458075999994,
+          "experimentSeconds": 48.65879433900002,
+          "speedup": 0.7461232562209454
+        },
+        "traceWidthSolver": {
+          "count": 17,
+          "controlSeconds": 9.309260518999995,
+          "experimentSeconds": 9.07326262099998,
+          "speedup": 1.0260102575950796
+        },
+        "uniformPortDistributionSolver": {
+          "count": 17,
+          "controlSeconds": 13.331067364000003,
+          "experimentSeconds": 13.439816831999993,
+          "speedup": 0.9919084114493986
+        }
+      }
+    }
+  ],
+  "experimentCounters": {
+    "srj18/portfolio": {
+      "portfolioSelectiveAttempts": 14864.0,
+      "portfolioSelectiveAdmitted": 70134.0,
+      "portfolioSelectiveUnconstructed": 714658.0,
+      "portfolioSelectiveElapsedMicros": 152284798.0,
+      "portfolioSelectiveUnknownAttempts": 177.0,
+      "portfolioSelectiveWallMicros": 204478977.0,
+      "portfolioSelectiveCpuMicros": 204475055.0,
+      "portfolioSelectiveThreadCpuMicros": 167408814.0,
+      "portfolioSelectiveThreadCpuAttempts": 14864.0,
+      "portfolioSelectiveA03ExcludedAttempts": 0.0
+    },
+    "srj24/portfolio": {
+      "portfolioSelectiveAttempts": 28551.0,
+      "portfolioSelectiveAdmitted": 143907.0,
+      "portfolioSelectiveUnconstructed": 1408466.0,
+      "portfolioSelectiveElapsedMicros": 500185932.0,
+      "portfolioSelectiveUnknownAttempts": 830.0,
+      "portfolioSelectiveWallMicros": 588283930.0,
+      "portfolioSelectiveCpuMicros": 588239204.0,
+      "portfolioSelectiveThreadCpuMicros": 531119037.0,
+      "portfolioSelectiveThreadCpuAttempts": 28551.0,
+      "portfolioSelectiveA03ExcludedAttempts": 0.0
+    }
+  },
+  "concurrency": 6,
+  "artifactVerification": {
+    "verified": true,
+    "errors": [],
+    "artifactZipSha256": "b709125f69871ff7e37ee2f2a362ca44a5ba51e8b7a368c08f22d3d62793c5ae",
+    "dependencyLockSha256": "261a3861619cd4aa6265d2c9b75825a49196002d59ad665dddd69c67378ed1ee",
+    "dependencyLockMatches": true,
+    "fullRecords": 84,
+    "uniqueFullRecords": 84,
+    "independentSummaryMatches": true,
+    "protocolFilesVerified": 12
+  },
+  "wallSeconds": 2269.458026017,
+  "sourceLimitations": [
+    "One measured run per board and variant; speed ratios are exploratory, not confidence intervals.",
+    "Shared CPU quota, GC and memory pressure can affect wall time despite fixed worker count and optional CPU affinity.",
+    "Clean means the repository's existing benchmark relaxed DRC, not every manufacturing constraint.",
+    "Unsuccessful full-pipeline boards receive their configured timeout as a quality-aware runtime score; raw early failure time is also retained.",
+    "HD stage timing comparisons require both HD stages completed AND identical captured HD-input hashes, independently of later-stage success. Downstream phase comparisons also require identical HD inputs. HD replays do not imply final DRC success.",
+    "Identical pre-HD inputs are verified by constructor-input hashes. Identical upstream failures are reported separately, not counted as HD algorithm evidence.",
+    "Capture serialization/disk overhead is included for all variants and reported separately per sample."
+  ],
+  "wireLengthLimitation": "The original worker emits null for some nonfinite wire-length calculations, and its summary treats null as zero. Corrected wire comparisons here use ONLY common DRC-clean boards with finite lengths on BOTH revisions; per-dataset coverage and missing samples are explicit. Original exports are preserved unchanged."
+}

@@ -1,0 +1,87 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/solvers/priority-dag-owned-setup-cap.test.ts:
+(pass) owned setup is charged before selection and stops as UNKNOWN when the original family allocation is exhausted [15.22ms]
+
+tests/solvers/priority-dag-retained-context.test.ts:
+(pass) retained witnesses require exact immutable ancestor route context, including canonical future complement [1.52ms]
+
+tests/solvers/priority-dag-factory-scope.test.ts:
+(pass) priority policy activates in ordinary local Pipeline9 while the shared network factory stays native by default [0.91ms]
+
+tests/solvers/selective-portfolio-thread-cpu-isolation.test.ts:
+(pass) thread-accounted candidates ignore CPU consumed by unrelated worker threads [20.94ms]
+
+tests/solvers/selective-portfolio-calibration-does-not-shrink.test.ts:
+(pass) later faster search cannot retroactively shrink an allocated physical attempt [63.44ms]
+
+tests/solvers/priority-dag-layer-owner-identity.test.ts:
+(pass) priority pair guards use full via span, exact registered owners, and strict route identities [2.24ms]
+
+tests/solvers/priority-dag-order-partition.test.ts:
+(pass) priority pair branches partition all small total orders without asserting routing completeness [14.60ms]
+
+tests/solvers/priority-dag-diagnostics-mode.test.ts:
+(pass) lean priority routing has identical work policy while detailed instrumentation stays opt-in [29.40ms]
+
+tests/solvers/selective-portfolio-clock-capabilities.test.ts:
+(pass) clock capability selection is explicit and unsupported requested thread timing throws [1.55ms]
+
+tests/solvers/priority-dag-budget-policy.test.ts:
+(pass) DAG setup, branching, native search and final validation share only the removed family's allowance [4.44ms]
+
+tests/solvers/selective-portfolio-a03-width-eligibility.test.ts:
+(pass) selective racing admits A03 only for its supported width and leaves legacy eligibility intact [13.57ms]
+
+tests/solvers/priority-dag-family-allocation.test.ts:
+(pass) native6/20 permutation families collapse to real DAG candidates within original summed allocation [10.30ms]
+
+tests/solvers/priority-dag-native-physical.test.ts:
+(pass) actual native plans branch on crossing copper and retain an unrelated exact-context witness [6.59ms]
+
+tests/solvers/selective-portfolio-a01-one-cell-endpoint.test.ts:
+(pass) selective A01 preserves distinct same-cell terminals without changing search identity or budgets [3.89ms]
+
+tests/solvers/selective-portfolio-retains-rare-winner.test.ts:
+(pass) stagnant 95-percent candidates do not starve the last ordering seed [2.13ms]
+
+tests/solvers/priority-dag-physical-hole-contract.test.ts:
+(pass) actual caller drill gap protects own-route and same-owner sites independently of copper ownership [0.52ms]
+
+tests/solvers/selective-portfolio-a01-multicell-parity.test.ts:
+(pass) the endpoint wrapper preserves existing multi-cell search and output exactly [2.99ms]
+
+tests/solvers/priority-dag-native-endpoint-via.test.ts:
+(pass) exact endpoint vias reuse unchanged native guards/context, and rejected checks continue to charged native Single [2.53ms]
+
+tests/solvers/selective-portfolio-lazy-fast-winner.test.ts:
+(pass) an immediate geometric winner never constructs grid or ordering candidates [0.27ms]
+
+tests/solvers/portfolio-tracked-candidate-work.test.ts:
+(pass) tracked candidate work retains scanning expansion policy and scheduling [50.33ms]
+
+tests/solvers/priority-dag-native-star.test.ts:
+(pass) multi-terminal tasks match the native star queue, six-decimal dedupe, identities and original group budget [0.78ms]
+
+tests/solvers/selective-portfolio-supervisor-budget-is-unknown.test.ts:
+(pass) the hard supervisor dispatch limit records UNKNOWN without failing paused candidates [2.58ms]
+
+tests/solvers/priority-dag-closure-oracle.test.ts:
+(pass) priority closure and descendant invalidation agree with an independent matrix oracle [32.73ms]
+
+tests/solvers/selective-portfolio-budget-is-unknown.test.ts:
+(pass) calibrated attempt exhaustion preserves paused candidates and reports UNKNOWN [29.77ms]
+
+tests/solvers/priority-dag-indexed-owner-namespace.test.ts:
+(pass) indexed owner membership is charged and canonical net names never alias unregistered literal connections [17.32ms]
+
+tests/solvers/selective-portfolio-cpu-clock-isolation.test.ts:
+(pass) CPU-accounted racing preserves its schedule across wall-clock descheduling [15.88ms]
+
+tests/features/lazy-portfolio-native-worker-parity.test.ts:
+(pass) deterministic lazy routing matches native Bun workers in complete routes, counters and work [841.79ms]
+
+ 27 pass
+ 0 fail
+ 35050 expect() calls
+Ran 27 tests across 27 files. [1.76s]

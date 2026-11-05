@@ -1,0 +1,11 @@
+{
+  "verified": true,
+  "errors": [],
+  "artifactZipSha256": "7f1c5dc0a8c22d8912f850d5092bde5a702d4e05aae59f486856e57f3b37939e",
+  "dependencyLockSha256": "62ee3213e32eb76d9dbec37933768663da7c47eea69e4c07cefcf9aa4c5bd041",
+  "dependencyLockMatches": true,
+  "fullRecords": 84,
+  "uniqueFullRecords": 84,
+  "independentSummaryMatches": true,
+  "protocolFilesVerified": 10
+}

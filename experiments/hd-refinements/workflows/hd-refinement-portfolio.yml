@@ -1,0 +1,87 @@
+name: HD refinement multi-arm datasets18 and24
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hd-refinement-portfolio-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+
+jobs:
+  multiarm-benchmark:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'codex/hd-exp-1-selective-portfolio'
+    name: Pipeline9 four-source-arm portfolio ablation on datasets18 and24
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 240
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      HD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      HD_EAGER_SHA: "REPLACE_WITH_EXACT_EAGER_COMMIT"
+      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-refinement-worktrees
+      HD_RESULTS: ${{ github.workspace }}/hd-refinement-results
+      HD_DEPS: ${{ github.workspace }}/hd-refinement-dependencies
+      HD_CONFIG: ${{ github.workspace }}/hd-refinement-config.json
+
+    steps:
+      - name: Checkout exact baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 637b6c581128238f6c61227a1c15be423d24baca
+          path: hd-refinement-worktrees/control
+          persist-credentials: false
+
+      - name: Checkout exact previously measured source
+        uses: actions/checkout@v4
+        with:
+          ref: c7f2715d98117a4b28dbe9fcaceab873a0cd72cd
+          path: hd-refinement-worktrees/old-clock
+          persist-credentials: false
+
+      - name: Checkout exact source-derived ablation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HD_EAGER_SHA }}
+          path: hd-refinement-worktrees/refined-eager
+          persist-credentials: false
+
+      - name: Checkout exact refined PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: hd-refinement-worktrees/refined-lazy
+          persist-credentials: false
+
+      - name: Setup Bun1.4.3
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Bind matrix to exact source commits
+        shell: bash
+        run: |
+          python3 "$HD_WORKTREE_ROOT/refined-lazy/experiments/hd-refinements/harness/configure_matrix.py" \
+            --profile portfolio --head-sha "$HD_HEAD_SHA" \
+            --derived-sha "$HD_EAGER_SHA" --out "$HD_CONFIG"
+
+      - name: Measure all168 source-arm samples with global admission
+        shell: bash
+        run: |
+          python3 "$HD_WORKTREE_ROOT/refined-lazy/experiments/hd-refinements/harness/multiarm_ci.py" \
+            --root "$HD_WORKTREE_ROOT" --out "$HD_RESULTS" \
+            --deps "$HD_DEPS" --config "$HD_CONFIG"
+
+      - name: Upload frozen protocol, dependency lock and every raw record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hd-refinement-portfolio-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: hd-refinement-results
+          if-no-files-found: warn
+          compression-level: 9
+          retention-days: 30

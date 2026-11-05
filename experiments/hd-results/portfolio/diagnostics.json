@@ -1,0 +1,181 @@
+{
+  "measurementKind": "measured-single-paired-pass",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "experimentCommit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+  "variant": "portfolio",
+  "concurrency": 6,
+  "resourceProfile": "6-lane resource followup",
+  "metricCoverage": [
+    {
+      "dataset": "srj18",
+      "metric": "vias",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 3397,
+      "matchedExperimentTotal": 3536,
+      "originalReportedControlTotal": 3397,
+      "originalReportedExperimentTotal": 3536,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30136.985440987977,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30136.985440987977,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8,
+        9
+      ],
+      "missingExperimentSamples": [
+        3,
+        8,
+        9
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "metric": "vias",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 17,
+      "matchedControlTotal": 2740,
+      "matchedExperimentTotal": 2821,
+      "originalReportedControlTotal": 2740,
+      "originalReportedExperimentTotal": 2821,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj24",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 27372.256136221546,
+      "matchedExperimentTotal": 27216.52321650336,
+      "originalReportedControlTotal": 30431.12629761072,
+      "originalReportedExperimentTotal": 27216.52321650336,
+      "originalAggregatesMatchMatchedFinitePairs": false,
+      "missingControlSamples": [],
+      "missingExperimentSamples": [
+        21
+      ]
+    }
+  ],
+  "metricLimitations": [
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30136.985440987977,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30136.985440987977,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8,
+        9
+      ],
+      "missingExperimentSamples": [
+        3,
+        8,
+        9
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 27372.256136221546,
+      "matchedExperimentTotal": 27216.52321650336,
+      "originalReportedControlTotal": 30431.12629761072,
+      "originalReportedExperimentTotal": 27216.52321650336,
+      "originalAggregatesMatchMatchedFinitePairs": false,
+      "missingControlSamples": [],
+      "missingExperimentSamples": [
+        21
+      ]
+    }
+  ],
+  "numericDiagnosticTotals": {
+    "srj18/control": {
+      "priorityInstances": 50704.0,
+      "priorityRemovedNativeCandidates": 392956.0,
+      "priorityAllocatedWorkUnits": 2467132222.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 53408.0,
+      "priorityScaledInstances": 1136.0,
+      "priorityCompletedCandidates": 1688.0,
+      "prioritySolvedCandidates": 35.0,
+      "priorityUnknownCandidates": 1653.0,
+      "priorityCompletedWorkUnits": 46523317.0
+    },
+    "srj24/control": {
+      "priorityInstances": 84928.0,
+      "priorityRemovedNativeCandidates": 658192.0,
+      "priorityAllocatedWorkUnits": 4601852176.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 183416.0,
+      "priorityScaledInstances": 6024.0,
+      "priorityCompletedCandidates": 6413.0,
+      "prioritySolvedCandidates": 74.0,
+      "priorityUnknownCandidates": 6339.0,
+      "priorityCompletedWorkUnits": 106449811.0
+    },
+    "srj18/portfolio": {
+      "portfolioSelectiveAttempts": 14864.0,
+      "portfolioSelectiveAdmitted": 70134.0,
+      "portfolioSelectiveUnconstructed": 714658.0,
+      "portfolioSelectiveElapsedMicros": 152284798.0,
+      "portfolioSelectiveUnknownAttempts": 177.0,
+      "portfolioSelectiveWallMicros": 204478977.0,
+      "portfolioSelectiveCpuMicros": 204475055.0,
+      "portfolioSelectiveThreadCpuMicros": 167408814.0,
+      "portfolioSelectiveThreadCpuAttempts": 14864.0,
+      "portfolioSelectiveA03ExcludedAttempts": 0.0,
+      "priorityInstances": 12010.0,
+      "priorityRemovedNativeCandidates": 75770.0,
+      "priorityAllocatedWorkUnits": 921681812.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 14009.0,
+      "priorityScaledInstances": 861.0,
+      "priorityCompletedCandidates": 8166.0,
+      "prioritySolvedCandidates": 4561.0,
+      "priorityUnknownCandidates": 3605.0,
+      "priorityCompletedWorkUnits": 40285062.0
+    },
+    "srj24/portfolio": {
+      "priorityInstances": 26077.0,
+      "priorityRemovedNativeCandidates": 171260.0,
+      "priorityAllocatedWorkUnits": 2509925257.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 96447.0,
+      "priorityScaledInstances": 5580.0,
+      "priorityCompletedCandidates": 17595.0,
+      "prioritySolvedCandidates": 7435.0,
+      "priorityUnknownCandidates": 10160.0,
+      "priorityCompletedWorkUnits": 63901390.0,
+      "portfolioSelectiveAttempts": 28551.0,
+      "portfolioSelectiveAdmitted": 143907.0,
+      "portfolioSelectiveUnconstructed": 1408466.0,
+      "portfolioSelectiveElapsedMicros": 500185932.0,
+      "portfolioSelectiveUnknownAttempts": 830.0,
+      "portfolioSelectiveWallMicros": 588283930.0,
+      "portfolioSelectiveCpuMicros": 588239204.0,
+      "portfolioSelectiveThreadCpuMicros": 531119037.0,
+      "portfolioSelectiveThreadCpuAttempts": 28551.0,
+      "portfolioSelectiveA03ExcludedAttempts": 0.0
+    }
+  },
+  "warnings": []
+}

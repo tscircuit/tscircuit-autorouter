@@ -1,0 +1,10 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/features/pipeline9-srj18-sample01-thread-parity.test.ts:
+{"connections":115,"obstacles":279,"threads":4,"dispatchCount":1143,"routedTraces":205,"serialHash":"f1404b10babf382867a0eb85cf5a8a3851130465cba7af4314c9f109d7a6561a","threadedHash":"f1404b10babf382867a0eb85cf5a8a3851130465cba7af4314c9f109d7a6561a"}
+(pass) dataset18 sample01 matches exactly with four native Bun workers [55479.94ms]
+
+ 1 pass
+ 0 fail
+ 8 expect() calls
+Ran 1 test across 1 file. [55.87s]

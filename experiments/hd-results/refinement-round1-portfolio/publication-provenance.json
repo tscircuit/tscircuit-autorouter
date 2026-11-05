@@ -1,0 +1,129 @@
+{
+  "profile": "portfolio",
+  "runId": 40744329967,
+  "runAttempt": 1,
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40744329967",
+  "measuredHostingHead": "c879c9d5f4689502a279ed9d92a0299946eafcfb",
+  "sourceArms": {
+    "control": {
+      "id": "control",
+      "commit": "637b6c581128238f6c61227a1c15be423d24baca",
+      "role": "Historical baseline Pipeline9",
+      "solverSourceTreeSha256": "a201b8512902f8958288069a90cecceda254207186a27df756174816fe031f37",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "87c1b2d871f1bbcb64ac482173262db6fe9884bdc0075739f93c9a7ded99e65f",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "old-clock": {
+      "id": "old-clock",
+      "commit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+      "role": "Previously measured historical CPU-timed race (thread CPU preferred; process CPU/elapsed fallback)",
+      "solverSourceTreeSha256": "ab57aa830340e90b24f36898328ac677f8e2851420ed54485189ae4704873d3e",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "557f4a670c2a957368041d3f927bf74aca8b4712b1643428337c545a77dab416",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "refined-eager": {
+      "id": "refined-eager",
+      "commit": "bf90a4eefbc2c444671861ddf59ec3f21ae12c70",
+      "role": "Corrected deterministic portfolio with eager grid setup; source-derived factory default",
+      "solverSourceTreeSha256": "696d0103be81168c74070bd11d3933a02ca97182eacd01346cf9421325134810",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "21ab2d9cbd0ae9aa6a37bdba947fc5c75d0da82c08256a2e1087005cc311a2bd",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "refined-lazy": {
+      "id": "refined-lazy",
+      "commit": "c879c9d5f4689502a279ed9d92a0299946eafcfb",
+      "role": "Corrected deterministic portfolio with lazy grid setup; published PR default",
+      "solverSourceTreeSha256": "9c7b42acc0ca1d220e922c86cb0e028f4e816ae7c75f7c6f9dd754158cf563c5",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "edcb227c3267890690a48e61f6bf9e50681d6ced042650d9d6d842567d55b6cb",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    }
+  },
+  "sourceRendererDirectoryName": "portfolio-40744329967",
+  "sourceRendererFiles": {
+    "arm-samples.csv": {
+      "sha256": "1939b1804c9bd2eebf52abe79091fe3471e34fa0d3cb5e0665b2aeeb6c16403f",
+      "bytes": 521416,
+      "csvRows": 168
+    },
+    "arms.csv": {
+      "sha256": "39cdb871609ab1b3def701b47450dc2d2b8f4550f6c61bde34cf003f17da9da8",
+      "bytes": 17258,
+      "csvRows": 8
+    },
+    "arms.json": {
+      "sha256": "55c0f5cbc8ef4b5c7d2d0240f38cb3ae317e2332d8445bb30072df30d77e1d48",
+      "bytes": 1016934
+    },
+    "contrast-samples.csv": {
+      "sha256": "eafcd1df84346ee89d528d983940d41ebe36c9dd0c6fd10d9401db1b7452efa1",
+      "bytes": 961617,
+      "csvRows": 210
+    },
+    "contrasts.csv": {
+      "sha256": "57b3ab300b8fac2b0e85ec2f4a37fac47c7cf4d183c1e9dba07dd90cfaaa281c",
+      "bytes": 27995,
+      "csvRows": 10
+    },
+    "contrasts.json": {
+      "sha256": "464b428679fe02e240ce52b42d5e70ee05ca7232e38ce8343f8adfc06f9276a7",
+      "bytes": 3612125
+    },
+    "counter-parity.csv": {
+      "sha256": "86febfd6409b0b9da20a65d09b06e7ee94aedaf4b24a3d48016f7dd568824121",
+      "bytes": 140855,
+      "csvRows": 880
+    },
+    "phase-costs.csv": {
+      "sha256": "2b90d8f36cd06278a6d07df5fe966b20551c07d5da3b744bc20d786e662ddc5e",
+      "bytes": 182044,
+      "csvRows": 1000
+    },
+    "phase-costs.json": {
+      "sha256": "001355c17e4b2caf03a404a1b4e60499ff8563fb1f5741a47c0a72b164a693c0",
+      "bytes": 793492
+    },
+    "report-verification.json": {
+      "sha256": "89d346ad6ea0a95d57f95e97a3c0b3e6884079be929b683d4371e843a8e56849",
+      "bytes": 48942
+    },
+    "results.md": {
+      "sha256": "f1c4e6ceb34acc7b26e53ed212db0d89a4fb91e42581b28dbad28a79034bb4c3",
+      "bytes": 8893
+    }
+  },
+  "measurementArtifact": {
+    "id": 12845003503,
+    "name": "hd-refinement-portfolio-3327-1",
+    "browserUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40744329967/artifacts/12845003503",
+    "apiUrl": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12845003503",
+    "archiveDownloadUrl": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/12845003503/zip",
+    "sha256": "eb4d32caefb202686c1d12746d45c008ef0b17747aa774e913d60cc146ec6d72",
+    "bytes": 12901906,
+    "recordedExpiresAt": "2026-11-27T19:32:42Z"
+  },
+  "measurementEvidence": {
+    "verified": true,
+    "measurementProtocolAuthenticated": true,
+    "independentSummaryMatches": true,
+    "measurementArchiveComplete": true,
+    "missingProtocolFiles": [],
+    "knownNonexecutingProtocolOmissions": [],
+    "artifactVerificationSha256": "645e77d681b5343dfc9c76737f85880b4c9db068e882f7ce806d0692d9cd2074",
+    "reportVerificationSha256": "89d346ad6ea0a95d57f95e97a3c0b3e6884079be929b683d4371e843a8e56849"
+  },
+  "publicationTransform": {
+    "metricsRecomputed": false,
+    "markdownNumericalTablesChanged": false,
+    "originalRendererArchiveComplete": true,
+    "originalRendererFileCount": 11,
+    "compactAllArmRows": 168,
+    "compactCoreValuesExactlyMatchOriginal": true,
+    "findingsCopiedByteForByte": true,
+    "findingsSha256": "f9ca090ccd28cac30e5603422d1f150c49b8d5bf4880fe673e8311f252cf7c2b",
+    "archiveManifestSha256": "0fae49e419e618051bbf3ffa8a56d0d859065d7581d6c80eb250dcdbe6beaadf"
+  }
+}

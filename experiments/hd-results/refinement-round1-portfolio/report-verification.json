@@ -1,0 +1,1009 @@
+{
+  "expectedRecords": 168,
+  "configSha256": "ac88bf59b5f13b58475c6b2cc6cf1d6c793fb3d4c98b1a99a90e2b3170c52ec7",
+  "concurrency": 6,
+  "memoryPolicy": {
+    "profile": "refinement-64GiB",
+    "reservationBudgetGiB": 64,
+    "observedRssGuardGiB": 64,
+    "allowHeavyOverlap": true,
+    "minimumEffectiveAndAvailableGiB": 80
+  },
+  "profile": "portfolio",
+  "actualComplete": true,
+  "artifactRoot": "/workspace/hd-refinements-2026-10-28/artifacts/remote/portfolio/verified/artifact",
+  "frozenManifestSha256": "276cf78920e1909f29e8cdc6ddfe752f61837b631440cea10ad4f6e65a626f39",
+  "workerSha256": "1a2e2bf44ffb46d2bb52f0926b2af4c96684dca348d96acd79c5ed8da53a80f3",
+  "dependencyLockSha256": "261a3861619cd4aa6265d2c9b75825a49196002d59ad665dddd69c67378ed1ee",
+  "decodedPayloadSha256": "5385cc2603f59f7cc0338bcff51c96ff2198e3d5a001fe652d497e4695585a91",
+  "rawRecordsIndependentlyVerified": {
+    "expectedCount": 168,
+    "observedCount": 168,
+    "missing": [],
+    "unexpected": [],
+    "errors": [],
+    "sourceProblemComparisons": {
+      "srj18:1": {
+        "arms": {
+          "control": {
+            "srjSha256": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+            "scenarioSha256": "ea26ea9df500d3d122eeca1c7321e38902cd13e611f0454a9f38b84af8132d1b"
+          },
+          "old-clock": {
+            "srjSha256": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+            "scenarioSha256": "ea26ea9df500d3d122eeca1c7321e38902cd13e611f0454a9f38b84af8132d1b"
+          },
+          "refined-eager": {
+            "srjSha256": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+            "scenarioSha256": "ea26ea9df500d3d122eeca1c7321e38902cd13e611f0454a9f38b84af8132d1b"
+          },
+          "refined-lazy": {
+            "srjSha256": "7a6b0dfdcfa682031220962474ded26238bb52b881776965db861f741be20547",
+            "scenarioSha256": "ea26ea9df500d3d122eeca1c7321e38902cd13e611f0454a9f38b84af8132d1b"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:10": {
+        "arms": {
+          "control": {
+            "srjSha256": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+            "scenarioSha256": "a30f44a56970b8a59c3b13b68b1f1a1e5b8bcd7d7d1ea9588060f199a8e90c2c"
+          },
+          "old-clock": {
+            "srjSha256": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+            "scenarioSha256": "a30f44a56970b8a59c3b13b68b1f1a1e5b8bcd7d7d1ea9588060f199a8e90c2c"
+          },
+          "refined-eager": {
+            "srjSha256": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+            "scenarioSha256": "a30f44a56970b8a59c3b13b68b1f1a1e5b8bcd7d7d1ea9588060f199a8e90c2c"
+          },
+          "refined-lazy": {
+            "srjSha256": "d8f72e0fb23a64ef4d328c29d6c69c8f5911396e888fe42488b6e630f6f06b3d",
+            "scenarioSha256": "a30f44a56970b8a59c3b13b68b1f1a1e5b8bcd7d7d1ea9588060f199a8e90c2c"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:11": {
+        "arms": {
+          "control": {
+            "srjSha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+            "scenarioSha256": "9581facf169775d9fe0613dc9a135ad1461502004ff3542057c9fda5ba257fd1"
+          },
+          "old-clock": {
+            "srjSha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+            "scenarioSha256": "9581facf169775d9fe0613dc9a135ad1461502004ff3542057c9fda5ba257fd1"
+          },
+          "refined-eager": {
+            "srjSha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+            "scenarioSha256": "9581facf169775d9fe0613dc9a135ad1461502004ff3542057c9fda5ba257fd1"
+          },
+          "refined-lazy": {
+            "srjSha256": "cd9924beb5b920ef32079e11945de2719d5514bf0d40f443c2ad677aa3ac53e2",
+            "scenarioSha256": "9581facf169775d9fe0613dc9a135ad1461502004ff3542057c9fda5ba257fd1"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:12": {
+        "arms": {
+          "control": {
+            "srjSha256": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+            "scenarioSha256": "7a09058bf99394bd580fcc7c27908f78707cf360169d50418f762d6cdff8349e"
+          },
+          "old-clock": {
+            "srjSha256": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+            "scenarioSha256": "7a09058bf99394bd580fcc7c27908f78707cf360169d50418f762d6cdff8349e"
+          },
+          "refined-eager": {
+            "srjSha256": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+            "scenarioSha256": "7a09058bf99394bd580fcc7c27908f78707cf360169d50418f762d6cdff8349e"
+          },
+          "refined-lazy": {
+            "srjSha256": "fd97012b3cca8ea6bac989561baf6c71361c02f33b5803cc6dcee2e4b7f16251",
+            "scenarioSha256": "7a09058bf99394bd580fcc7c27908f78707cf360169d50418f762d6cdff8349e"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:13": {
+        "arms": {
+          "control": {
+            "srjSha256": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+            "scenarioSha256": "315e42a136247268a1d88c8377ec43a38a0368532417b27ef3c9bb9ffc253951"
+          },
+          "old-clock": {
+            "srjSha256": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+            "scenarioSha256": "315e42a136247268a1d88c8377ec43a38a0368532417b27ef3c9bb9ffc253951"
+          },
+          "refined-eager": {
+            "srjSha256": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+            "scenarioSha256": "315e42a136247268a1d88c8377ec43a38a0368532417b27ef3c9bb9ffc253951"
+          },
+          "refined-lazy": {
+            "srjSha256": "186860e8cc8fa087c2de8cc4d566f9cd75b1b0d1eaeba08855e83111b7fb0ca0",
+            "scenarioSha256": "315e42a136247268a1d88c8377ec43a38a0368532417b27ef3c9bb9ffc253951"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:14": {
+        "arms": {
+          "control": {
+            "srjSha256": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+            "scenarioSha256": "bfbf3899e170ec2d721604c6fa872362468b3fd39409aa16150b56e21e61b076"
+          },
+          "old-clock": {
+            "srjSha256": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+            "scenarioSha256": "bfbf3899e170ec2d721604c6fa872362468b3fd39409aa16150b56e21e61b076"
+          },
+          "refined-eager": {
+            "srjSha256": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+            "scenarioSha256": "bfbf3899e170ec2d721604c6fa872362468b3fd39409aa16150b56e21e61b076"
+          },
+          "refined-lazy": {
+            "srjSha256": "4a513349694b8558e159dfc88eda8344f1b6158c63f89f558a9cc8c2fa0bf71e",
+            "scenarioSha256": "bfbf3899e170ec2d721604c6fa872362468b3fd39409aa16150b56e21e61b076"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:15": {
+        "arms": {
+          "control": {
+            "srjSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+            "scenarioSha256": "b21c9d6cacfae9e47f8b109f87ea7b7bb3d520db1884de6c8b7721e10c99c8ce"
+          },
+          "old-clock": {
+            "srjSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+            "scenarioSha256": "b21c9d6cacfae9e47f8b109f87ea7b7bb3d520db1884de6c8b7721e10c99c8ce"
+          },
+          "refined-eager": {
+            "srjSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+            "scenarioSha256": "b21c9d6cacfae9e47f8b109f87ea7b7bb3d520db1884de6c8b7721e10c99c8ce"
+          },
+          "refined-lazy": {
+            "srjSha256": "29888a7ecc6fa589e1ff0bfb24187c086cfceb2246756ec5bdf69d4bc4d5f6df",
+            "scenarioSha256": "b21c9d6cacfae9e47f8b109f87ea7b7bb3d520db1884de6c8b7721e10c99c8ce"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:16": {
+        "arms": {
+          "control": {
+            "srjSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+            "scenarioSha256": "4d98c4d420801cdf1616c0add22794dd268eeba6332de7583d31348daddb97f8"
+          },
+          "old-clock": {
+            "srjSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+            "scenarioSha256": "4d98c4d420801cdf1616c0add22794dd268eeba6332de7583d31348daddb97f8"
+          },
+          "refined-eager": {
+            "srjSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+            "scenarioSha256": "4d98c4d420801cdf1616c0add22794dd268eeba6332de7583d31348daddb97f8"
+          },
+          "refined-lazy": {
+            "srjSha256": "1da76797d2a979c051bce8bc9fbb33c76fcd036cb2353a19905bf6b56775c5b9",
+            "scenarioSha256": "4d98c4d420801cdf1616c0add22794dd268eeba6332de7583d31348daddb97f8"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:2": {
+        "arms": {
+          "control": {
+            "srjSha256": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+            "scenarioSha256": "a27730a0603c6637c2e9d0bd6e511763d81ef158fd86cf0fafb9e801b6f3ed23"
+          },
+          "old-clock": {
+            "srjSha256": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+            "scenarioSha256": "a27730a0603c6637c2e9d0bd6e511763d81ef158fd86cf0fafb9e801b6f3ed23"
+          },
+          "refined-eager": {
+            "srjSha256": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+            "scenarioSha256": "a27730a0603c6637c2e9d0bd6e511763d81ef158fd86cf0fafb9e801b6f3ed23"
+          },
+          "refined-lazy": {
+            "srjSha256": "de05c25d0cea96ebb6d33865cefc8e9235763a6a9b2ab6e27928eca77c43e5f3",
+            "scenarioSha256": "a27730a0603c6637c2e9d0bd6e511763d81ef158fd86cf0fafb9e801b6f3ed23"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:3": {
+        "arms": {
+          "control": {
+            "srjSha256": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+            "scenarioSha256": "4492b751d4d6a39801c1b87b785886ff16f18164434597fd186ebc160d55f91f"
+          },
+          "old-clock": {
+            "srjSha256": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+            "scenarioSha256": "4492b751d4d6a39801c1b87b785886ff16f18164434597fd186ebc160d55f91f"
+          },
+          "refined-eager": {
+            "srjSha256": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+            "scenarioSha256": "4492b751d4d6a39801c1b87b785886ff16f18164434597fd186ebc160d55f91f"
+          },
+          "refined-lazy": {
+            "srjSha256": "653e37ec672ac2d749ddfa3a23403258eef4506890549f74e5817440479dbf2c",
+            "scenarioSha256": "4492b751d4d6a39801c1b87b785886ff16f18164434597fd186ebc160d55f91f"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:4": {
+        "arms": {
+          "control": {
+            "srjSha256": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+            "scenarioSha256": "efbcdfcecf7ad34f861d471d2a77dfe3b465baad53224f9b232c65f538480e0a"
+          },
+          "old-clock": {
+            "srjSha256": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+            "scenarioSha256": "efbcdfcecf7ad34f861d471d2a77dfe3b465baad53224f9b232c65f538480e0a"
+          },
+          "refined-eager": {
+            "srjSha256": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+            "scenarioSha256": "efbcdfcecf7ad34f861d471d2a77dfe3b465baad53224f9b232c65f538480e0a"
+          },
+          "refined-lazy": {
+            "srjSha256": "9c2b9d84ced755cb4842140646394dc5c4ae66fb044272f9b717c2119aade3e3",
+            "scenarioSha256": "efbcdfcecf7ad34f861d471d2a77dfe3b465baad53224f9b232c65f538480e0a"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:5": {
+        "arms": {
+          "control": {
+            "srjSha256": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+            "scenarioSha256": "9cec8d02fab29e3a513d21c2f4c92c1f987a98990fcc6ef93d1611ae7304e554"
+          },
+          "old-clock": {
+            "srjSha256": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+            "scenarioSha256": "9cec8d02fab29e3a513d21c2f4c92c1f987a98990fcc6ef93d1611ae7304e554"
+          },
+          "refined-eager": {
+            "srjSha256": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+            "scenarioSha256": "9cec8d02fab29e3a513d21c2f4c92c1f987a98990fcc6ef93d1611ae7304e554"
+          },
+          "refined-lazy": {
+            "srjSha256": "065d547567bb2b36749ae8b92340cb50e1dbc6aa8fad7458a9b97ea41a27e9d5",
+            "scenarioSha256": "9cec8d02fab29e3a513d21c2f4c92c1f987a98990fcc6ef93d1611ae7304e554"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:6": {
+        "arms": {
+          "control": {
+            "srjSha256": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+            "scenarioSha256": "e13ee26a53b40bf515f9673680c17e2484e4b22d038d1dcc19f9e19c29a2af47"
+          },
+          "old-clock": {
+            "srjSha256": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+            "scenarioSha256": "e13ee26a53b40bf515f9673680c17e2484e4b22d038d1dcc19f9e19c29a2af47"
+          },
+          "refined-eager": {
+            "srjSha256": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+            "scenarioSha256": "e13ee26a53b40bf515f9673680c17e2484e4b22d038d1dcc19f9e19c29a2af47"
+          },
+          "refined-lazy": {
+            "srjSha256": "0c658738fe9add72c81d6e5db701eb30ec7917f3049aecc4f0580c95e7f97d07",
+            "scenarioSha256": "e13ee26a53b40bf515f9673680c17e2484e4b22d038d1dcc19f9e19c29a2af47"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:7": {
+        "arms": {
+          "control": {
+            "srjSha256": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+            "scenarioSha256": "fb81e1c9453ca029744f89c7e8d47d93d80c6f491969fde069dac2adb81eb1a2"
+          },
+          "old-clock": {
+            "srjSha256": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+            "scenarioSha256": "fb81e1c9453ca029744f89c7e8d47d93d80c6f491969fde069dac2adb81eb1a2"
+          },
+          "refined-eager": {
+            "srjSha256": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+            "scenarioSha256": "fb81e1c9453ca029744f89c7e8d47d93d80c6f491969fde069dac2adb81eb1a2"
+          },
+          "refined-lazy": {
+            "srjSha256": "152da1db243ff6bda8e17ba84577f897716b08f9de3d530c6a7abed54d66bcb1",
+            "scenarioSha256": "fb81e1c9453ca029744f89c7e8d47d93d80c6f491969fde069dac2adb81eb1a2"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:8": {
+        "arms": {
+          "control": {
+            "srjSha256": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+            "scenarioSha256": "d6eea84c34e152f1f2a694a4468c189127941eec709000a0a16b6e3b41f9dbe6"
+          },
+          "old-clock": {
+            "srjSha256": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+            "scenarioSha256": "d6eea84c34e152f1f2a694a4468c189127941eec709000a0a16b6e3b41f9dbe6"
+          },
+          "refined-eager": {
+            "srjSha256": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+            "scenarioSha256": "d6eea84c34e152f1f2a694a4468c189127941eec709000a0a16b6e3b41f9dbe6"
+          },
+          "refined-lazy": {
+            "srjSha256": "ffa874d2ec58a6cfc735f031d738b6ecb21614b31348594c4297f161eff21ea0",
+            "scenarioSha256": "d6eea84c34e152f1f2a694a4468c189127941eec709000a0a16b6e3b41f9dbe6"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj18:9": {
+        "arms": {
+          "control": {
+            "srjSha256": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+            "scenarioSha256": "60ab8870478122350e8b64fdc21bf3e78c41e189813da8436def178847727714"
+          },
+          "old-clock": {
+            "srjSha256": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+            "scenarioSha256": "60ab8870478122350e8b64fdc21bf3e78c41e189813da8436def178847727714"
+          },
+          "refined-eager": {
+            "srjSha256": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+            "scenarioSha256": "60ab8870478122350e8b64fdc21bf3e78c41e189813da8436def178847727714"
+          },
+          "refined-lazy": {
+            "srjSha256": "f36b8a9b6faee895edaee9b6d4c8200927e9a7d4fe02533d416d4c08dadcd9c4",
+            "scenarioSha256": "60ab8870478122350e8b64fdc21bf3e78c41e189813da8436def178847727714"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:1": {
+        "arms": {
+          "control": {
+            "srjSha256": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+            "scenarioSha256": "a1f85c9c3b6cb81ef996c4a4fd2b7099d8ff688f59b718b083ff802d4639e424"
+          },
+          "old-clock": {
+            "srjSha256": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+            "scenarioSha256": "a1f85c9c3b6cb81ef996c4a4fd2b7099d8ff688f59b718b083ff802d4639e424"
+          },
+          "refined-eager": {
+            "srjSha256": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+            "scenarioSha256": "a1f85c9c3b6cb81ef996c4a4fd2b7099d8ff688f59b718b083ff802d4639e424"
+          },
+          "refined-lazy": {
+            "srjSha256": "2e28025d5a016254c1a1e8629065481110d82d6588155b047ff8ccd31b1cabb9",
+            "scenarioSha256": "a1f85c9c3b6cb81ef996c4a4fd2b7099d8ff688f59b718b083ff802d4639e424"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:10": {
+        "arms": {
+          "control": {
+            "srjSha256": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+            "scenarioSha256": "f95a0ee65b6dd2d67d0497900a6141a962bbcefbed346b3192f6adf8e49e51da"
+          },
+          "old-clock": {
+            "srjSha256": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+            "scenarioSha256": "f95a0ee65b6dd2d67d0497900a6141a962bbcefbed346b3192f6adf8e49e51da"
+          },
+          "refined-eager": {
+            "srjSha256": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+            "scenarioSha256": "f95a0ee65b6dd2d67d0497900a6141a962bbcefbed346b3192f6adf8e49e51da"
+          },
+          "refined-lazy": {
+            "srjSha256": "6e4d70329192b32a436bbd587a3b23caa2b3f5b82a39ca846ca80c3bd1cb24b0",
+            "scenarioSha256": "f95a0ee65b6dd2d67d0497900a6141a962bbcefbed346b3192f6adf8e49e51da"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:11": {
+        "arms": {
+          "control": {
+            "srjSha256": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+            "scenarioSha256": "1e9a242c7860fe81d4c06a984cb865bc9269b9c938c71eab8a129902d9cdf98e"
+          },
+          "old-clock": {
+            "srjSha256": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+            "scenarioSha256": "1e9a242c7860fe81d4c06a984cb865bc9269b9c938c71eab8a129902d9cdf98e"
+          },
+          "refined-eager": {
+            "srjSha256": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+            "scenarioSha256": "1e9a242c7860fe81d4c06a984cb865bc9269b9c938c71eab8a129902d9cdf98e"
+          },
+          "refined-lazy": {
+            "srjSha256": "37d7ad7c17b5c01f8b51d77138d1b38538bca25b21470d317750a5ef5d17ab80",
+            "scenarioSha256": "1e9a242c7860fe81d4c06a984cb865bc9269b9c938c71eab8a129902d9cdf98e"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:12": {
+        "arms": {
+          "control": {
+            "srjSha256": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+            "scenarioSha256": "664542888d2a23a7cafc713dc04964998f006513a40dc7ff3e2ccf6c3bef10e4"
+          },
+          "old-clock": {
+            "srjSha256": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+            "scenarioSha256": "664542888d2a23a7cafc713dc04964998f006513a40dc7ff3e2ccf6c3bef10e4"
+          },
+          "refined-eager": {
+            "srjSha256": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+            "scenarioSha256": "664542888d2a23a7cafc713dc04964998f006513a40dc7ff3e2ccf6c3bef10e4"
+          },
+          "refined-lazy": {
+            "srjSha256": "6d6a82f0dc70a67c855e82389563b91dcf2b82ad29cd72d9a7429ec2ab03a57e",
+            "scenarioSha256": "664542888d2a23a7cafc713dc04964998f006513a40dc7ff3e2ccf6c3bef10e4"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:13": {
+        "arms": {
+          "control": {
+            "srjSha256": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+            "scenarioSha256": "a578331d5f3db0472d20acefbbc693101556b564f29c307ef8aa1d7f1eb5a577"
+          },
+          "old-clock": {
+            "srjSha256": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+            "scenarioSha256": "a578331d5f3db0472d20acefbbc693101556b564f29c307ef8aa1d7f1eb5a577"
+          },
+          "refined-eager": {
+            "srjSha256": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+            "scenarioSha256": "a578331d5f3db0472d20acefbbc693101556b564f29c307ef8aa1d7f1eb5a577"
+          },
+          "refined-lazy": {
+            "srjSha256": "6b70be081c6c0a1a17dd2da34a3494afd8cbc6768cbb918b8e6590ed571d2d10",
+            "scenarioSha256": "a578331d5f3db0472d20acefbbc693101556b564f29c307ef8aa1d7f1eb5a577"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:14": {
+        "arms": {
+          "control": {
+            "srjSha256": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+            "scenarioSha256": "6aeaa4c26504564cd99ed5451d918318a7032b3ac516148297328e902f60143b"
+          },
+          "old-clock": {
+            "srjSha256": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+            "scenarioSha256": "6aeaa4c26504564cd99ed5451d918318a7032b3ac516148297328e902f60143b"
+          },
+          "refined-eager": {
+            "srjSha256": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+            "scenarioSha256": "6aeaa4c26504564cd99ed5451d918318a7032b3ac516148297328e902f60143b"
+          },
+          "refined-lazy": {
+            "srjSha256": "17a0903023ae45ce1bb852cca87b9865a13c4f1704b6d38937cf74a19596cb6e",
+            "scenarioSha256": "6aeaa4c26504564cd99ed5451d918318a7032b3ac516148297328e902f60143b"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:15": {
+        "arms": {
+          "control": {
+            "srjSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+            "scenarioSha256": "b2ef2498abd654aca2261333f577c54838710cd24d741878747c06ad6176370b"
+          },
+          "old-clock": {
+            "srjSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+            "scenarioSha256": "b2ef2498abd654aca2261333f577c54838710cd24d741878747c06ad6176370b"
+          },
+          "refined-eager": {
+            "srjSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+            "scenarioSha256": "b2ef2498abd654aca2261333f577c54838710cd24d741878747c06ad6176370b"
+          },
+          "refined-lazy": {
+            "srjSha256": "760ee4ee82a17f176133de1140c673d4eb4dd4df0c812b8863d8b0e2916bb6f3",
+            "scenarioSha256": "b2ef2498abd654aca2261333f577c54838710cd24d741878747c06ad6176370b"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:16": {
+        "arms": {
+          "control": {
+            "srjSha256": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+            "scenarioSha256": "26b4b1344680d8b4d7699a8dd95109f2a18351ed6ac10ebedc28d0f34f58c4ac"
+          },
+          "old-clock": {
+            "srjSha256": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+            "scenarioSha256": "26b4b1344680d8b4d7699a8dd95109f2a18351ed6ac10ebedc28d0f34f58c4ac"
+          },
+          "refined-eager": {
+            "srjSha256": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+            "scenarioSha256": "26b4b1344680d8b4d7699a8dd95109f2a18351ed6ac10ebedc28d0f34f58c4ac"
+          },
+          "refined-lazy": {
+            "srjSha256": "4430ef600b9edb9731e3f8abfb88037d29a2cb8b7b68fea6edd0f73f85663557",
+            "scenarioSha256": "26b4b1344680d8b4d7699a8dd95109f2a18351ed6ac10ebedc28d0f34f58c4ac"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:17": {
+        "arms": {
+          "control": {
+            "srjSha256": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+            "scenarioSha256": "752731435f88066721cb53221621a83174b9e9c7db03c45dd652bb33e1cb0c25"
+          },
+          "old-clock": {
+            "srjSha256": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+            "scenarioSha256": "752731435f88066721cb53221621a83174b9e9c7db03c45dd652bb33e1cb0c25"
+          },
+          "refined-eager": {
+            "srjSha256": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+            "scenarioSha256": "752731435f88066721cb53221621a83174b9e9c7db03c45dd652bb33e1cb0c25"
+          },
+          "refined-lazy": {
+            "srjSha256": "6a0012fc1462ff8f8a4c29becb0a6e2b811cc0a19056ad3226799c10f0f32d11",
+            "scenarioSha256": "752731435f88066721cb53221621a83174b9e9c7db03c45dd652bb33e1cb0c25"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:18": {
+        "arms": {
+          "control": {
+            "srjSha256": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+            "scenarioSha256": "3b7e39deba8cab1e84ed917072a2cac8f52624feea76ef28891b2c849782b4b4"
+          },
+          "old-clock": {
+            "srjSha256": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+            "scenarioSha256": "3b7e39deba8cab1e84ed917072a2cac8f52624feea76ef28891b2c849782b4b4"
+          },
+          "refined-eager": {
+            "srjSha256": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+            "scenarioSha256": "3b7e39deba8cab1e84ed917072a2cac8f52624feea76ef28891b2c849782b4b4"
+          },
+          "refined-lazy": {
+            "srjSha256": "2636b02475ad31c8177104945aa74b346680817e9d32f874621ee1351b5da1c8",
+            "scenarioSha256": "3b7e39deba8cab1e84ed917072a2cac8f52624feea76ef28891b2c849782b4b4"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:19": {
+        "arms": {
+          "control": {
+            "srjSha256": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+            "scenarioSha256": "97b813f45693a2eef01bf1873230c8435396799b1e43da22a8b170155981c119"
+          },
+          "old-clock": {
+            "srjSha256": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+            "scenarioSha256": "97b813f45693a2eef01bf1873230c8435396799b1e43da22a8b170155981c119"
+          },
+          "refined-eager": {
+            "srjSha256": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+            "scenarioSha256": "97b813f45693a2eef01bf1873230c8435396799b1e43da22a8b170155981c119"
+          },
+          "refined-lazy": {
+            "srjSha256": "61280514136c8948294326928fa1b509755cd02cdbadd7f90fc1bf57ab8ca459",
+            "scenarioSha256": "97b813f45693a2eef01bf1873230c8435396799b1e43da22a8b170155981c119"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:2": {
+        "arms": {
+          "control": {
+            "srjSha256": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+            "scenarioSha256": "c92e3d13d20cbca75a4d6c961e6015a812919fa894a30f1b7ecd7895f02df0b1"
+          },
+          "old-clock": {
+            "srjSha256": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+            "scenarioSha256": "c92e3d13d20cbca75a4d6c961e6015a812919fa894a30f1b7ecd7895f02df0b1"
+          },
+          "refined-eager": {
+            "srjSha256": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+            "scenarioSha256": "c92e3d13d20cbca75a4d6c961e6015a812919fa894a30f1b7ecd7895f02df0b1"
+          },
+          "refined-lazy": {
+            "srjSha256": "27ec1e4851023b07e507d28e38a08c95a00beb93f42232fcc8dd629170731673",
+            "scenarioSha256": "c92e3d13d20cbca75a4d6c961e6015a812919fa894a30f1b7ecd7895f02df0b1"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:20": {
+        "arms": {
+          "control": {
+            "srjSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+            "scenarioSha256": "cc1935bf8b047f2da77f3384068b8711c6e5b8f09ba1c0e1d6b577453185c45f"
+          },
+          "old-clock": {
+            "srjSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+            "scenarioSha256": "cc1935bf8b047f2da77f3384068b8711c6e5b8f09ba1c0e1d6b577453185c45f"
+          },
+          "refined-eager": {
+            "srjSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+            "scenarioSha256": "cc1935bf8b047f2da77f3384068b8711c6e5b8f09ba1c0e1d6b577453185c45f"
+          },
+          "refined-lazy": {
+            "srjSha256": "6fe64636e9e921cc09f18b259bc54510e11824ad9e026a97f33e0cc1b3785a7f",
+            "scenarioSha256": "cc1935bf8b047f2da77f3384068b8711c6e5b8f09ba1c0e1d6b577453185c45f"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:21": {
+        "arms": {
+          "control": {
+            "srjSha256": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+            "scenarioSha256": "5c26e02ee3c6fb666b95429ce24fa7b389f11964250c1ee834c85a36dfd6a16a"
+          },
+          "old-clock": {
+            "srjSha256": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+            "scenarioSha256": "5c26e02ee3c6fb666b95429ce24fa7b389f11964250c1ee834c85a36dfd6a16a"
+          },
+          "refined-eager": {
+            "srjSha256": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+            "scenarioSha256": "5c26e02ee3c6fb666b95429ce24fa7b389f11964250c1ee834c85a36dfd6a16a"
+          },
+          "refined-lazy": {
+            "srjSha256": "f084df916ee620a9fd5ae62a5ac8eaf4c3b3198c52bec1ea7709441b734705bc",
+            "scenarioSha256": "5c26e02ee3c6fb666b95429ce24fa7b389f11964250c1ee834c85a36dfd6a16a"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:22": {
+        "arms": {
+          "control": {
+            "srjSha256": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+            "scenarioSha256": "f45d315e8b1fa3d6b28ccf7eae9b75d76a459d76063486a8f4ab6f566152310a"
+          },
+          "old-clock": {
+            "srjSha256": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+            "scenarioSha256": "f45d315e8b1fa3d6b28ccf7eae9b75d76a459d76063486a8f4ab6f566152310a"
+          },
+          "refined-eager": {
+            "srjSha256": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+            "scenarioSha256": "f45d315e8b1fa3d6b28ccf7eae9b75d76a459d76063486a8f4ab6f566152310a"
+          },
+          "refined-lazy": {
+            "srjSha256": "a62d7bb9496c060725a1d2fd99e9e5cd28481116e9c0c4dc80cc11bc84510464",
+            "scenarioSha256": "f45d315e8b1fa3d6b28ccf7eae9b75d76a459d76063486a8f4ab6f566152310a"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:23": {
+        "arms": {
+          "control": {
+            "srjSha256": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+            "scenarioSha256": "eec9029846675cb9ff3f5498c37a9b3e00c1e75949bc3210fb96b0d503307d34"
+          },
+          "old-clock": {
+            "srjSha256": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+            "scenarioSha256": "eec9029846675cb9ff3f5498c37a9b3e00c1e75949bc3210fb96b0d503307d34"
+          },
+          "refined-eager": {
+            "srjSha256": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+            "scenarioSha256": "eec9029846675cb9ff3f5498c37a9b3e00c1e75949bc3210fb96b0d503307d34"
+          },
+          "refined-lazy": {
+            "srjSha256": "9763e411c01cd1758e70398e2edb5391ff6b1a2f1789090851a75fc88f83e22b",
+            "scenarioSha256": "eec9029846675cb9ff3f5498c37a9b3e00c1e75949bc3210fb96b0d503307d34"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:24": {
+        "arms": {
+          "control": {
+            "srjSha256": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+            "scenarioSha256": "829ddee69b439758f3e1f9e57056f0b92ab0a966cc1257a73dc261a6675aa8ce"
+          },
+          "old-clock": {
+            "srjSha256": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+            "scenarioSha256": "829ddee69b439758f3e1f9e57056f0b92ab0a966cc1257a73dc261a6675aa8ce"
+          },
+          "refined-eager": {
+            "srjSha256": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+            "scenarioSha256": "829ddee69b439758f3e1f9e57056f0b92ab0a966cc1257a73dc261a6675aa8ce"
+          },
+          "refined-lazy": {
+            "srjSha256": "96fca406264b3c666566c37e827286a012c72f393df8902b8d47ef9992b6f458",
+            "scenarioSha256": "829ddee69b439758f3e1f9e57056f0b92ab0a966cc1257a73dc261a6675aa8ce"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:25": {
+        "arms": {
+          "control": {
+            "srjSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+            "scenarioSha256": "49ef0ef850e1487151662ac5222a882f0b6e87db77b0049161106e85eab6355f"
+          },
+          "old-clock": {
+            "srjSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+            "scenarioSha256": "49ef0ef850e1487151662ac5222a882f0b6e87db77b0049161106e85eab6355f"
+          },
+          "refined-eager": {
+            "srjSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+            "scenarioSha256": "49ef0ef850e1487151662ac5222a882f0b6e87db77b0049161106e85eab6355f"
+          },
+          "refined-lazy": {
+            "srjSha256": "f543518a9cb23b53a52c036cc7fdb3f1f568aa513139cf33eaa18077078c2798",
+            "scenarioSha256": "49ef0ef850e1487151662ac5222a882f0b6e87db77b0049161106e85eab6355f"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:26": {
+        "arms": {
+          "control": {
+            "srjSha256": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+            "scenarioSha256": "9bea762c83df4af1e93f877f75a76574e5784e06274561b5311b636728e90637"
+          },
+          "old-clock": {
+            "srjSha256": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+            "scenarioSha256": "9bea762c83df4af1e93f877f75a76574e5784e06274561b5311b636728e90637"
+          },
+          "refined-eager": {
+            "srjSha256": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+            "scenarioSha256": "9bea762c83df4af1e93f877f75a76574e5784e06274561b5311b636728e90637"
+          },
+          "refined-lazy": {
+            "srjSha256": "fd5d7791d6a143b1d3b9dcb324694be8b442afb12c756cda1dec97106cc4d113",
+            "scenarioSha256": "9bea762c83df4af1e93f877f75a76574e5784e06274561b5311b636728e90637"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:3": {
+        "arms": {
+          "control": {
+            "srjSha256": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+            "scenarioSha256": "8e80490e5c750cf3f9347a29273523e0648bccc81288fa3c1666a7929e258c72"
+          },
+          "old-clock": {
+            "srjSha256": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+            "scenarioSha256": "8e80490e5c750cf3f9347a29273523e0648bccc81288fa3c1666a7929e258c72"
+          },
+          "refined-eager": {
+            "srjSha256": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+            "scenarioSha256": "8e80490e5c750cf3f9347a29273523e0648bccc81288fa3c1666a7929e258c72"
+          },
+          "refined-lazy": {
+            "srjSha256": "c0b7d15be19000099aa896504372b7c3dd8d4a71b83bad3c775f2d0cacdb8559",
+            "scenarioSha256": "8e80490e5c750cf3f9347a29273523e0648bccc81288fa3c1666a7929e258c72"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:4": {
+        "arms": {
+          "control": {
+            "srjSha256": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+            "scenarioSha256": "c9e4a2ba8afbc71719aa3f715036c53fae520edef7c056612cc92569bd629aa3"
+          },
+          "old-clock": {
+            "srjSha256": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+            "scenarioSha256": "c9e4a2ba8afbc71719aa3f715036c53fae520edef7c056612cc92569bd629aa3"
+          },
+          "refined-eager": {
+            "srjSha256": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+            "scenarioSha256": "c9e4a2ba8afbc71719aa3f715036c53fae520edef7c056612cc92569bd629aa3"
+          },
+          "refined-lazy": {
+            "srjSha256": "c6b1b093a5bc39aae4d4020e58d37afd753642b0edbde2026409dbbe335fc37a",
+            "scenarioSha256": "c9e4a2ba8afbc71719aa3f715036c53fae520edef7c056612cc92569bd629aa3"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:5": {
+        "arms": {
+          "control": {
+            "srjSha256": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+            "scenarioSha256": "377092a19bc6f79f8c3ef680082923ed4cb03072cdd9e30500c74677754a1561"
+          },
+          "old-clock": {
+            "srjSha256": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+            "scenarioSha256": "377092a19bc6f79f8c3ef680082923ed4cb03072cdd9e30500c74677754a1561"
+          },
+          "refined-eager": {
+            "srjSha256": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+            "scenarioSha256": "377092a19bc6f79f8c3ef680082923ed4cb03072cdd9e30500c74677754a1561"
+          },
+          "refined-lazy": {
+            "srjSha256": "8b1316c6f2e4c00ebe0f2fc67dc6f43587e78be5f97ebbe06188958e0e650c90",
+            "scenarioSha256": "377092a19bc6f79f8c3ef680082923ed4cb03072cdd9e30500c74677754a1561"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:6": {
+        "arms": {
+          "control": {
+            "srjSha256": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+            "scenarioSha256": "dd46b8b22b6c3a377ddddc285a90f7692f5bbf6ac176a3b92bad0569e49fc947"
+          },
+          "old-clock": {
+            "srjSha256": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+            "scenarioSha256": "dd46b8b22b6c3a377ddddc285a90f7692f5bbf6ac176a3b92bad0569e49fc947"
+          },
+          "refined-eager": {
+            "srjSha256": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+            "scenarioSha256": "dd46b8b22b6c3a377ddddc285a90f7692f5bbf6ac176a3b92bad0569e49fc947"
+          },
+          "refined-lazy": {
+            "srjSha256": "6442373c933e6655ae1b56c2cb50413c4c7a7e77779ea13c91b7935282a5d0a2",
+            "scenarioSha256": "dd46b8b22b6c3a377ddddc285a90f7692f5bbf6ac176a3b92bad0569e49fc947"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:7": {
+        "arms": {
+          "control": {
+            "srjSha256": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+            "scenarioSha256": "8a60bafec3b1d98fb6ef8c518c2c5435771f5101ff6a8dcabaca4094db3fc192"
+          },
+          "old-clock": {
+            "srjSha256": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+            "scenarioSha256": "8a60bafec3b1d98fb6ef8c518c2c5435771f5101ff6a8dcabaca4094db3fc192"
+          },
+          "refined-eager": {
+            "srjSha256": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+            "scenarioSha256": "8a60bafec3b1d98fb6ef8c518c2c5435771f5101ff6a8dcabaca4094db3fc192"
+          },
+          "refined-lazy": {
+            "srjSha256": "df11572aa1cf24f422d3ab2a2aff2e15268e0de8def21e7427769795bf20b082",
+            "scenarioSha256": "8a60bafec3b1d98fb6ef8c518c2c5435771f5101ff6a8dcabaca4094db3fc192"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:8": {
+        "arms": {
+          "control": {
+            "srjSha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+            "scenarioSha256": "72154ce304ee5c488262d651c2a69767fae9f9f85c5f0f4843f0d8b3a7eb330e"
+          },
+          "old-clock": {
+            "srjSha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+            "scenarioSha256": "72154ce304ee5c488262d651c2a69767fae9f9f85c5f0f4843f0d8b3a7eb330e"
+          },
+          "refined-eager": {
+            "srjSha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+            "scenarioSha256": "72154ce304ee5c488262d651c2a69767fae9f9f85c5f0f4843f0d8b3a7eb330e"
+          },
+          "refined-lazy": {
+            "srjSha256": "c4a7a647da44ac3bdf3bef3b9b53e924a17303349a9d0dcfefdc3a411c3507ed",
+            "scenarioSha256": "72154ce304ee5c488262d651c2a69767fae9f9f85c5f0f4843f0d8b3a7eb330e"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      },
+      "srj24:9": {
+        "arms": {
+          "control": {
+            "srjSha256": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+            "scenarioSha256": "5db981381f55a1654bf056fb5402fb057b78b9330fcad749894330fb5ea33de2"
+          },
+          "old-clock": {
+            "srjSha256": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+            "scenarioSha256": "5db981381f55a1654bf056fb5402fb057b78b9330fcad749894330fb5ea33de2"
+          },
+          "refined-eager": {
+            "srjSha256": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+            "scenarioSha256": "5db981381f55a1654bf056fb5402fb057b78b9330fcad749894330fb5ea33de2"
+          },
+          "refined-lazy": {
+            "srjSha256": "0198278bea86cb4534ca553d33f8b4d9f21d8a7c0b809c309b77f2f1ab561cfb",
+            "scenarioSha256": "5db981381f55a1654bf056fb5402fb057b78b9330fcad749894330fb5ea33de2"
+          }
+        },
+        "allArmsSameSourceSrj": true,
+        "allArmsSameSourceScenario": true
+      }
+    },
+    "complete": true
+  },
+  "independentSummaryMatches": true,
+  "archiveComplete": true,
+  "missingProtocolFiles": [],
+  "knownNonexecutingProtocolOmissions": [],
+  "unexpectedProtocolFiles": [],
+  "mismatchedProtocolFiles": [],
+  "expectedProtocolFileCount": 28,
+  "archivedProtocolFileCount": 28,
+  "measurementFilesAuthenticated": true,
+  "scope": "Trusted frozen helpers independently verified raw records and rebuilt all measured summary math. Only summary.root was omitted from equality comparison because the archive was extracted to a different local path. No source/constructor hashes, fields, rules or numerical outcomes were normalized. No solver execution or publishing occurred.",
+  "sourceArms": {
+    "control": {
+      "id": "control",
+      "commit": "637b6c581128238f6c61227a1c15be423d24baca",
+      "role": "Historical baseline Pipeline9",
+      "solverSourceTreeSha256": "a201b8512902f8958288069a90cecceda254207186a27df756174816fe031f37",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "87c1b2d871f1bbcb64ac482173262db6fe9884bdc0075739f93c9a7ded99e65f",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "old-clock": {
+      "id": "old-clock",
+      "commit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+      "role": "Previously measured historical CPU-timed race (thread CPU preferred; process CPU/elapsed fallback)",
+      "solverSourceTreeSha256": "ab57aa830340e90b24f36898328ac677f8e2851420ed54485189ae4704873d3e",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "557f4a670c2a957368041d3f927bf74aca8b4712b1643428337c545a77dab416",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "refined-eager": {
+      "id": "refined-eager",
+      "commit": "bf90a4eefbc2c444671861ddf59ec3f21ae12c70",
+      "role": "Corrected deterministic portfolio with eager grid setup; source-derived factory default",
+      "solverSourceTreeSha256": "696d0103be81168c74070bd11d3933a02ca97182eacd01346cf9421325134810",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "21ab2d9cbd0ae9aa6a37bdba947fc5c75d0da82c08256a2e1087005cc311a2bd",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    },
+    "refined-lazy": {
+      "id": "refined-lazy",
+      "commit": "c879c9d5f4689502a279ed9d92a0299946eafcfb",
+      "role": "Corrected deterministic portfolio with lazy grid setup; published PR default",
+      "solverSourceTreeSha256": "9c7b42acc0ca1d220e922c86cb0e028f4e816ae7c75f7c6f9dd754158cf563c5",
+      "benchmarkSourceTreeSha256": "c58a6c5cb2925b072d67b075f4abfc9b42645393a38a4133e1232a5733c7ce82",
+      "routingSourceTreeSha256": "edcb227c3267890690a48e61f6bf9e50681d6ced042650d9d6d842567d55b6cb",
+      "sourceHashMethod": "SHA256 of git ls-tree -rz HEAD entries (path,mode,blob ID); lib hash excludes benchmark,docs,tests and workflow files"
+    }
+  },
+  "measurementProtocolSha256": "a9ae4e036651773873278f9000604b1dc647aa0d9e5f16db3b3134af253c574b",
+  "plannedQueueSha256": "f58170bf02f188b3f330e9e9d4e0b71f5ec86415d685533461f13b75afe4ddc2",
+  "exportCounts": {
+    "armSamples": 168,
+    "armSummaryRows": 8,
+    "contrastRows": 10,
+    "contrastSamples": 210
+  }
+}

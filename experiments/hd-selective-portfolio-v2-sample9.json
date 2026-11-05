@@ -1,0 +1,150 @@
+{
+  "commit": "770361dc8aea701c766dc5e745555b4afe2dc049",
+  "test": "tests/features/pipeline9-srj18-sample9-reference-clean-exact-output.test.ts",
+  "scope": "Single observed numerical regression run with output/acceptance observation hooks. Hooks do not alter solver policy or returned geometry. This is not a latency benchmark or evidence for other fixtures.",
+  "solved": true,
+  "failed": false,
+  "error": null,
+  "finalRepairDrcIssueCount": 0,
+  "relaxedDrcErrors": [],
+  "acceptedSelectiveNodes": 840,
+  "familyCounts": {
+    "CachedIntraNodeRouteSolver": 506,
+    "IntraNodeRouteSolver": 251,
+    "HighDensitySolverA03": 26,
+    "SingleTransitionThroughObstacleIntraNodeSolver": 1,
+    "HighDensitySolverA01": 49,
+    "SingleTransitionIntraNodeSolver": 6,
+    "HighDensitySolverA13": 1
+  },
+  "scaleCounts": {
+    "1": 837,
+    "2": 3
+  },
+  "sameCellEndpointRepairCount": 2,
+  "testResult": {
+    "passed": 1,
+    "failed": 0,
+    "assertions": 7,
+    "reportedTestSeconds": 34.6,
+    "latencyBenchmark": false
+  },
+  "grownSelectiveNodes": [
+    {
+      "stage": "highDensityRouteSolver",
+      "nodeId": "cmn_137",
+      "scaleFactor": 2,
+      "growthAttempts": 1,
+      "winner": "HighDensitySolverA01",
+      "seed": 0,
+      "winnerIterations": 5915,
+      "winnerMaxIterations": 37500,
+      "clock": "threadCpu",
+      "routeCount": 2,
+      "endpointRepairs": []
+    },
+    {
+      "stage": "highDensityRouteSolver",
+      "nodeId": "cmn_110",
+      "scaleFactor": 2,
+      "growthAttempts": 1,
+      "winner": "IntraNodeRouteSolver",
+      "seed": 0,
+      "winnerIterations": 4856,
+      "winnerMaxIterations": 48005,
+      "clock": "threadCpu",
+      "routeCount": 4,
+      "endpointRepairs": []
+    },
+    {
+      "stage": "highDensityRouteSolver",
+      "nodeId": "cmn_20",
+      "scaleFactor": 2,
+      "growthAttempts": 1,
+      "winner": "HighDensitySolverA03",
+      "seed": 0,
+      "winnerIterations": 16951,
+      "winnerMaxIterations": 37500,
+      "clock": "threadCpu",
+      "routeCount": 3,
+      "endpointRepairs": []
+    }
+  ],
+  "restoredEndpointNodes": [
+    {
+      "stage": "highDensityRouteSolver",
+      "nodeId": "cmn_1366",
+      "scaleFactor": 1,
+      "growthAttempts": 0,
+      "winner": "HighDensitySolverA01",
+      "seed": 0,
+      "winnerIterations": 12,
+      "winnerMaxIterations": 160000,
+      "clock": "threadCpu",
+      "routeCount": 4,
+      "endpointRepairs": [
+        {
+          "connectionName": "source_trace_36__source_net_36_mst17",
+          "start": {
+            "portPointId": "tiny-terminal:start-port:source_trace_36__source_net_36_mst17",
+            "x": 7.200589,
+            "y": -3.640589,
+            "z": 0,
+            "connectionName": "source_trace_36__source_net_36_mst17",
+            "rootConnectionName": "connectivity_net35",
+            "pcb_port_id": "pcb_port_330",
+            "nextPortPointId": "ce9998_pp0_z0::0"
+          },
+          "end": {
+            "portPointId": "ce9998_pp0_z0::0",
+            "x": 7.218266669529664,
+            "y": -3.495632109856757,
+            "z": 0,
+            "connectionName": "source_trace_36__source_net_36_mst17",
+            "rootConnectionName": "connectivity_net35",
+            "prevPortPointId": "tiny-terminal:start-port:source_trace_36__source_net_36_mst17"
+          },
+          "outputPointCount": 2
+        }
+      ]
+    },
+    {
+      "stage": "highDensityRouteSolver",
+      "nodeId": "cmn_1342",
+      "scaleFactor": 1,
+      "growthAttempts": 0,
+      "winner": "HighDensitySolverA01",
+      "seed": 0,
+      "winnerIterations": 9,
+      "winnerMaxIterations": 150000,
+      "clock": "threadCpu",
+      "routeCount": 2,
+      "endpointRepairs": [
+        {
+          "connectionName": "source_trace_36__source_net_36_mst35",
+          "start": {
+            "portPointId": "tiny-terminal:start-port:source_trace_36__source_net_36_mst35",
+            "x": 1.730589,
+            "y": 3.229411,
+            "z": 0,
+            "connectionName": "source_trace_36__source_net_36_mst35",
+            "rootConnectionName": "connectivity_net35",
+            "pcb_port_id": "pcb_port_309",
+            "nextPortPointId": "ce9931_pp0_z0::0"
+          },
+          "end": {
+            "portPointId": "ce9931_pp0_z0::0",
+            "x": 1.875545890143242,
+            "y": 3.2470886695296635,
+            "z": 0,
+            "connectionName": "source_trace_36__source_net_36_mst35",
+            "rootConnectionName": "connectivity_net35",
+            "prevPortPointId": "tiny-terminal:start-port:source_trace_36__source_net_36_mst35"
+          },
+          "outputPointCount": 2
+        }
+      ]
+    }
+  ],
+  "limitations": "One observed numerical regression case. Family labels use getSolverName(), not constructor class names. Endpoint restorations are observed in accepted winners; their isolated effect on final DRC is not established. Does not establish correctness for USB-DP, bug94, T113, worker parity, or full datasets."
+}

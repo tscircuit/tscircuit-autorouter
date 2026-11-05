@@ -15,7 +15,7 @@ import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver, type PortfolioMode } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -60,6 +60,8 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
+  selectivePortfolio: boolean
+  portfolioMode?: PortfolioMode
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
@@ -107,6 +109,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
+    selectivePortfolio = false,
+    portfolioMode,
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
@@ -133,6 +137,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
+    selectivePortfolio?: boolean
+    portfolioMode?: PortfolioMode
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
@@ -166,6 +172,8 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.selectivePortfolio = selectivePortfolio
+    this.portfolioMode = portfolioMode
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
@@ -424,6 +432,8 @@ export class HighDensitySolver extends BaseSolver {
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
+      selectivePortfolio: this.selectivePortfolio,
+      portfolioMode: this.portfolioMode,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,

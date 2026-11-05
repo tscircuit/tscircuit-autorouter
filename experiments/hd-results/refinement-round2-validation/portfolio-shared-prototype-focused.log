@@ -1,0 +1,48 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/solvers/lazy-portfolio-priority-budget-parity.test.ts:
+(pass) lazy allocation preserves charged priority-family setup, initial fitness and aggregate work limits [22.47ms]
+
+tests/solvers/portfolio-mode-setup-callback-exception.test.ts:
+(pass) custom penalty callbacks execute eagerly and their exceptions cannot be hidden by lazy allocation [3.48ms]
+
+tests/solvers/lazy-portfolio-native-shape.test.ts:
+(pass) deferred inspection preserves native own-property shapes and restores native prototypes before search [24.94ms]
+
+tests/solvers/portfolio-mode-explicit-inspection.test.ts:
+(pass) explicit inspection materializes one deferred grid and preserves the eager public state [36.00ms]
+
+tests/solvers/lazy-portfolio-constructor-parity.test.ts:
+(pass) constructor success and ineligibility preserve the immediate eager winner before any grid search [6.17ms]
+
+tests/solvers/lazy-portfolio-a03-topology-width-parity.test.ts:
+(pass) deterministic modes retain legacy A03 proposals and nominal-covered final copper widths [30.76ms]
+
+tests/solvers/portfolio-mode-cache-boundaries.test.ts:
+(pass) portfolio cache entries cannot cross legacy, eager, lazy or research policy boundaries [12.39ms]
+
+tests/solvers/portfolio-mode-eager-failure-state.test.ts:
+(pass) unsupported grid restrictions retain eager setup failure states before an immediate winner [2.14ms]
+
+tests/solvers/portfolio-mode-method-descriptor-eligibility.test.ts:
+(pass) own or accessor grid methods retain eager behavior without shadowing shared deferred methods [12.36ms]
+
+tests/solvers/lazy-portfolio-route-parity.test.ts:
+(pass) real multilayer routes retain exact legacy geometry, winner and work in eager and lazy modes [61.75ms]
+
+tests/solvers/portfolio-mode-no-clock-decisions.test.ts:
+(pass) deterministic eager and lazy routing do not read elapsed, process or thread CPU clocks [4.83ms]
+
+tests/solvers/lazy-portfolio-schedule-parity.test.ts:
+(pass) lazy setup preserves every legacy scheduling decision and the rare last A01 ordering winner [52.22ms]
+
+tests/solvers/lazy-portfolio-setup-exception.test.ts:
+(pass) an unrecognized throwing setup is exposed before a constructor-solved alternative can hide it [2.13ms]
+
+tests/solvers/lazy-portfolio-budget-parity.test.ts:
+(pass) lazy candidates advertise exact eager caps and preserve them when setup materializes [29.73ms]
+
+ 14 pass
+ 0 fail
+ 552 expect() calls
+Ran 14 tests across 14 files. [777.00ms]

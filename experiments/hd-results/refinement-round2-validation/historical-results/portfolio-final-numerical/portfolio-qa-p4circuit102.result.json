@@ -1,0 +1,28 @@
+{
+  "variant": "portfolio-qa",
+  "label": "p4circuit102",
+  "existingUnchangedNumericalTest": true,
+  "localHead": "fbf95287d98e067e314eae1c47999664f3305fb6",
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=5s",
+    "180s",
+    "taskset",
+    "-c",
+    "3",
+    "bun",
+    "test",
+    "--timeout",
+    "9999999",
+    "tests/features/pipeline4-dataset01-circuit102.test.ts"
+  ],
+  "exitCode": 0,
+  "censored": false,
+  "elapsedSeconds": 36.66627319299732,
+  "maxChildRssBytes": 643952640,
+  "testFileSha256": "708b57f3ea0bab4b5a900235c2b5c79b3c8e525e19681f772b1e1692bb0f09ae",
+  "testFileSha256After": "708b57f3ea0bab4b5a900235c2b5c79b3c8e525e19681f772b1e1692bb0f09ae",
+  "originalUnchanged": true,
+  "statusAfter": ""
+}

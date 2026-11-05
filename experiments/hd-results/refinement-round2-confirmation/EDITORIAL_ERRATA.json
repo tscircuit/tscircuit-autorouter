@@ -1,0 +1,51 @@
+{
+  "kind": "Editorial corrections to explanatory findings; no measurement changes",
+  "runId": 40760310372,
+  "supersededPublicationManifestSha256": "6cd9069d15f4cc5d0a0aaed85851531e2d92a2384266ce4c7e8913ac9df2f9d9",
+  "changes": [
+    {
+      "subject": "Portfolio heading",
+      "before": "overhead fixed, breakthrough not demonstrated",
+      "after": "near-flat timing, no breakthrough demonstrated",
+      "reason": "Prior lazy source is absent from this job; across-job timing cannot establish causal overhead removal."
+    },
+    {
+      "subject": "Dataset24#11 timeout phase",
+      "before": "later cleanup timeout",
+      "after": "highDensityForceImproveSolver in this current cohort",
+      "reason": "Earlier refinement cohort had a different later cleanup timeout; source/job cohorts cannot be conflated."
+    },
+    {
+      "subject": "RSS scope",
+      "after": "Control global maximum6.047GiB is dataset24#4 initial-HD timeout; optimized maximum8.634GiB is dataset24#24 pre-HD edgeSolver timeout. Matched#24 is4.748 versus8.634GiB, both pre-HD. No lazy-HD causal memory claim."
+    },
+    {
+      "subject": "Subsequent local candidate validation",
+      "after": "Conservative2f777 is not a measured source in this matrix and has an uncensored unchanged Bug107 correctness failure with92DRC errors; the proven junction fix does not establish whole-board regression freedom."
+    }
+  ],
+  "fileChanges": {
+    "findings.md": {
+      "beforeSha256": "afb6aa368baceb1ec9c384a74b23465a381f269ba29ae0ecb7b6cbe70bd32752",
+      "afterSha256": "499a9fbc401b2c2153e0912fcd8ab127c8c640375a4a640ba70dce5addaa955d"
+    },
+    "publication-provenance.json": {
+      "beforeSha256": "4b8c11da4d0771453f2f4f1525d5d2e021d3171fcafe850e1f899a4b9e65e44d",
+      "afterSha256": "955ba9a85b2885a3b78270450dfa0108fcb480b960b400bfbb806555d895d97f"
+    }
+  },
+  "measurementPreservation": {
+    "allElevenOriginalRendererFilesUnchanged": true,
+    "allPublishedMeasuredTablesAndCompactRowsUnchanged": true,
+    "archiveBase64Sha256": "b8bec0e00513c6e6c1c7c4291216a1c48540abc9d24bfb424798211dc746a5f4",
+    "archiveManifestSha256": "414b23a4f419aaa48145614c7b8a84318c3f6a1083a01d6bf3023214bbc92cfa",
+    "compactCsvSha256": "47f68b905308bbf1752dce2291419a0cfcb7b783dbec1c743159637a26d71c25",
+    "all168RawRecordsAndSourceZipUnchanged": true,
+    "noSolverOrFrozenProtocolChange": true
+  },
+  "independentCriticalReview": {
+    "file": "confirmation-critical-review.json",
+    "sha256": "f81429a732cbb8ab69dc00624a3875c78564a028fb6d3f19c3d5159d3700b3f9",
+    "scope": "Separate local independent reconstruction of all168 authenticated raw records; not a measured renderer archive member."
+  }
+}

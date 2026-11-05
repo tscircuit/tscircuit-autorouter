@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "variant": "portfolio",
+  "measuredExperimentCommit": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "ciAuditObservedAt": "2026-10-28 06:35:41 UTC",
+  "ciAuditMethod": "Read-only completed GitHub Actions job logs and local unchanged assertion source. No reruns, source edits, snapshot updates, compilers or benchmarks.",
+  "completedCiAudit": {
+    "build": {
+      "run": 40643404157,
+      "job": 122666541092,
+      "conclusion": "failure",
+      "compilation": "success",
+      "failingStep": "Check packed solver runtime consumers",
+      "error": "AssertionError:1901 !==1902",
+      "assertion": "scripts/check-solver-runtime-packaging.ts: assert.equal(solver.iterations, serial.iterations)",
+      "precedingCheck": "Exact final routed SRJ equality passed on the small packed Bun fixture.",
+      "maskedCheck": "highDensityRouteSolver.stats equality was later and not reached."
+    },
+    "bunTest": {
+      "run": 40643404215,
+      "conclusion": "failure",
+      "successfulShards": 1,
+      "failedShards": 8,
+      "totalShards": 9,
+      "totalFailedTests": 15,
+      "categories": {
+        "svg_snapshot": 12,
+        "worker_output_parity": 1,
+        "drc_assertion": 2
+      }
+    },
+    "substantiveFailures": [
+      {
+        "file": "tests/features/pipeline9-srj18-sample01-thread-parity.test.ts",
+        "job": 122666541842,
+        "assertion": "tests/fixtures/pipeline9Sample01ThreadParity.ts:79 Complete routed SRJ must match exactly",
+        "finding": "Four native Bun workers differ from serial full output on dataset18 sample01; both solve. Exact initial-HD routes, HD stats, HD iterations and pipeline iteration assertions are later and were not reached."
+      },
+      {
+        "file": "tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts",
+        "line": 86,
+        "job": 122666541989,
+        "assertion": "expect(viaErrors).toHaveLength(0)",
+        "expected": 0,
+        "received": 2,
+        "finding": "Two pcb_via_clearance_error entries remain."
+      },
+      {
+        "file": "tests/bugs/usb-dp-phase-detour.test.ts",
+        "line": 36,
+        "job": 122666541996,
+        "assertion": "expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])",
+        "expected": 0,
+        "received": 4,
+        "finding": "Two accidental trace contacts and two NPTH clearance errors; measured gaps0.114999mm/0.151025mm versus0.2mm requested."
+      }
+    ],
+    "improvedChecksObserved": "Bug94 and bug88 reach SVG comparisons after completion, full expected connections and zero DRC assertions. No final-head work-budget or terminal-stitch invariant failure was observed.",
+    "interpretation": "Timing-based scheduling remains incompatible with required exact serial/worker parity on tested fixtures. Compilation success is not broad CI success; keep draft blocked."
+  },
+  "formatCheck": {
+    "conclusion": "failure",
+    "scope": "Separate Format Check remains failed in the final CI audit. No formatter or linter was run under AGENTS.md."
+  },
+  "ciLimitations": [
+    "These are observed completed CI jobs, not a claim that every check is green.",
+    "The CI audit did not run a full baseline BunTest comparison; assertion failures are not all individually attributed as inherited or introduced.",
+    "An SVG failure can mask later numerical assertions. Supplemental probes below do not change actual CI status."
+  ],
+  "source": "artifacts/ci-failure-audits/final-followup-summary.json",
+  "supplementalImageBypassedProbes": {
+    "method": "Six fresh-process supplemental image-bypassed numerical probes, serial CPU3, Bun1.4.3, CLI --timeout9999999 and external180-second GNU timeout per probe. Exactly two SVG-await expression statements removed per temporary file; every numerical assertion, input and solve remains unchanged. Control probes were conditional on experimental numerical failure. No files were committed, no snapshot or tracked source/test modified. These are correctness probes, not performance comparisons.",
+    "correctnessOnly": true,
+    "changesActualCiStatus": false,
+    "sourceProof": {
+      "variant": "portfolio",
+      "measuredLocalSourceHead": "281ffa6c665c6d90ccb3fc893ebb144440695d39",
+      "measuredRemoteSourceHead": "c7f2715d98117a4b28dbe9fcaceab873a0cd72cd",
+      "sourceTestScriptDiffToObservedProbeHead": ""
+    },
+    "cases": [
+      {
+        "variant": "control",
+        "label": "a64",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "637b6c581128238f6c61227a1c15be423d24baca",
+        "exitCode": 0,
+        "censored": false,
+        "outcome": "pass",
+        "originalSha256": "c658bf296e427296e17c0b49d658425becf8768204f4daa6b82c2a4fe5c84b1a",
+        "probeSha256": "45b2159c91f973f44dbda2e2cd0097638a12b3bcaab770b6e2b7b55f34c835f7",
+        "assertionSummary": [
+          "17 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "control",
+        "label": "usbshield",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "637b6c581128238f6c61227a1c15be423d24baca",
+        "exitCode": 0,
+        "censored": false,
+        "outcome": "pass",
+        "originalSha256": "16071d8ea4760b86c8dc409dd5aab3ae69c899363dc6057f339c736c0df9eb37",
+        "probeSha256": "b77c2db52c8e1b3e317bdca14e653a22f786b5511480f883e376212e80871af8",
+        "assertionSummary": [
+          "9 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "portfolio",
+        "label": "a64",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "ec182871cdc3c17aacd472ce50c60c8e5f440b16",
+        "exitCode": 1,
+        "censored": false,
+        "outcome": "numerical-failure",
+        "originalSha256": "c658bf296e427296e17c0b49d658425becf8768204f4daa6b82c2a4fe5c84b1a",
+        "probeSha256": "45b2159c91f973f44dbda2e2cd0097638a12b3bcaab770b6e2b7b55f34c835f7",
+        "assertionSummary": [
+          "error: expect(received).toHaveLength(expected)",
+          "Expected length: 0",
+          "Received length: 2",
+          "at <anonymous> (/workspace/hd-experiments-2026-10-28/portfolio/tests/repro/pipeline9-a64-real-byte0-foreign-pad.image-bypassed-probe.test.ts:85:28)",
+          "17 expect() calls"
+        ],
+        "errorMessages": []
+      },
+      {
+        "variant": "portfolio",
+        "label": "usbshield",
+        "supplementalImageBypassedProbe": true,
+        "localHead": "ec182871cdc3c17aacd472ce50c60c8e5f440b16",
+        "exitCode": 1,
+        "censored": false,
+        "outcome": "numerical-failure",
+        "originalSha256": "16071d8ea4760b86c8dc409dd5aab3ae69c899363dc6057f339c736c0df9eb37",
+        "probeSha256": "b77c2db52c8e1b3e317bdca14e653a22f786b5511480f883e376212e80871af8",
+        "assertionSummary": [
+          "error: expect(received).toEqual(expected)",
+          "at <anonymous> (/workspace/hd-experiments-2026-10-28/portfolio/tests/bugs/usb-shield-phase-detour.image-bypassed-probe.test.ts:67:47)",
+          "9 expect() calls"
+        ],
+        "errorMessages": [
+          "\"PCB trace unnamed trace is too close to unnamed trace (gap: 0.060mm)\"",
+          "\"PCB trace unnamed trace overlaps with unnamed trace (accidental contact)\"",
+          "\"PCB trace unnamed trace overlaps with unnamed trace (accidental contact)\"",
+          "\"Trace unnamed trace is too close to non-plated hole unnamed hole (gap: 0.151025mm, required: 0.2mm)\""
+        ]
+      }
+    ],
+    "guardResults": {
+      "a64": {
+        "control": "All17 assertions pass:11 signals connected, zero drill-pad overlaps, zero relaxed reference DRC.",
+        "portfolio": "Completion, immutable input,11 signals and zero drill-pad overlaps pass; final reference relaxed DRC fails with2 errors."
+      },
+      "usbshield": {
+        "control": "All9 assertions pass: phase0 clean, phase1 solved, exact shield preserved, final relaxed DRC clean.",
+        "portfolio": "Phase0 clean, phase1 solved and exact shield preserved; final relaxed DRC fails with4 errors:2 accidental contacts, one trace gap0.060mm and one NPTH gap0.151025mm versus0.2mm."
+      }
+    },
+    "cleanup": [
+      {
+        "variant": "portfolio",
+        "sourceHashesUnchanged": true,
+        "temporaryCopiesAbsent": true,
+        "statusAfter": ""
+      },
+      {
+        "variant": "control",
+        "sourceHashesUnchanged": true,
+        "temporaryCopiesAbsent": true,
+        "statusAfter": ""
+      }
+    ],
+    "scope": "Exactly two SVG-await expression statements were bypassed in temporary test copies; all numerical assertions, inputs and solves stayed unchanged. These probes reveal masked checks and do not make the original CI tests pass. No timing comparison is inferred.",
+    "source": "artifacts/validation/final-masked-checks/summary.json"
+  },
+  "promotionStatus": "Blocked: observed packed-runtime/serial-worker exact parity failures and numerical DRC regressions require resolution. Keep independent dataset performance evidence separate."
+}

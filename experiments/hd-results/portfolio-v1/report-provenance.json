@@ -1,0 +1,11 @@
+{
+  "measurementVersion": "portfolio-v1",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "experimentCommit": "69f911acf376cef278780f307184aee151d64741",
+  "pairedRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/40634267642",
+  "payloadSha256": "b4a02d9e49bf657c1049f5cb80a7717596469bd2aca05ea099ecb7be920807fa",
+  "rendererSha256": "b4729524ca1818945655e240e82f58751b6160ae5cbb8f2cb9475b51033e32b7",
+  "validation": "Strict final renderer mode, all84record identities, exact refs, arithmetic and artifact verification. No synthetic preview or pooled revision results.",
+  "counterPresentationPrefix": "portfolioSelective",
+  "clockScopeNote": "V1 uses process.cpuUsage() for scheduling. Process-clock per-attempt costs can include CPU from other threads; this benchmark uses one routing thread per sample. V2 uses threadCpu when supported, and its pending measurements are separate evidence."
+}
