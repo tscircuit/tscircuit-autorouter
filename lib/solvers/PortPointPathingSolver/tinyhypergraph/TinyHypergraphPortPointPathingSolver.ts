@@ -784,17 +784,15 @@ const restorePreloadedTraceSectionMetadata = (
   >()
   for (const connection of serializedHyperGraph.connections ?? []) {
     if (!hasPreloadedTraceSectionMetadata(connection)) continue
-    originalConnectionById.set(
-      connection.connectionId,
-      connection,
-    )
+    originalConnectionById.set(connection.connectionId, connection)
   }
   for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
     const originalConnection = originalConnectionById.get(
       routeMetadata.connectionId as PreloadedTraceConnectionId,
     )
     if (!originalConnection) continue
-    routeMetadata.preloadedTraceSection = originalConnection.preloadedTraceSection
+    routeMetadata.preloadedTraceSection =
+      originalConnection.preloadedTraceSection
     routeMetadata.isFixed = originalConnection.isFixed
   }
 }
