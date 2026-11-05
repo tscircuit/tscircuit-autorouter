@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: full-srj18
-            dataset: srj18
+          - cohort: full-dataset01
+            dataset: dataset01
             base: d554979b6039f23092fef73fae3a95a0b48b40ea
-            candidate: 99414ef04e14162f8787f3568dc2213ee496ef39
-          - cohort: full-srj33
-            dataset: srj33
+            candidate: 3809a40231fa088dae570906831425ece9d11bee
+          - cohort: full-srj24
+            dataset: srj24
             base: d554979b6039f23092fef73fae3a95a0b48b40ea
-            candidate: 99414ef04e14162f8787f3568dc2213ee496ef39
+            candidate: 3809a40231fa088dae570906831425ece9d11bee
     steps:
       - uses: actions/checkout@v4
         with:
