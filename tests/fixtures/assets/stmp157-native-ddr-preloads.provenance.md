@@ -49,3 +49,41 @@ Run from the repository root:
 ```sh
 bun test tests/repro/pipeline9-stmp157-native-ddr-preloads.test.ts --timeout 9999999
 ```
+
+## Copper, mesh and capacity-graph comparison
+
+`pipeline9-stmp157-native-ddr-mesh-comparison.test.ts` compares the original
+rasterized input with the native fixture after restoring the original array of
+40 remaining connections. Both inputs retain the same 137 terminals, all 710
+pads, board bounds, eight layers, clearances and via rules. The 32 completed
+DQ routes have the same coordinates, widths and vias. Only the `obstacles` and
+`traces` representations differ.
+
+Both pipelines complete topology merging, node subdivision and edge
+construction. The test stops before trace preloading or routing search. Counts
+come from those completed stages; only their drawings are cropped.
+
+| Complete problem | Rasterized copper | Native traces |
+| --- | ---: | ---: |
+| Input obstacles | 3,449 | 710 |
+| Native traces | 0 | 32 |
+| Merged mesh regions | 115,881 | 26,645 |
+| Subdivided graph nodes | 144,839 | 28,363 |
+| Capacity graph edges | 396,704 | 78,283 |
+
+The overview marks the identical top-layer detail window: X -12 to -8 mm,
+Y -4 to 0 mm. That 4 by 4 mm crop contains 1,179 versus 22 merged regions and
+4,446 versus 63 intersecting graph edges. Board-wide counts include all layers;
+crop counts include only the top layer. Graph lines connect actual node centers
+and are clipped at the drawing window, including edges whose endpoints lie
+outside it.
+
+Both detail columns overlay the same physical copper. The drawing expands
+through-via copper over its full physical drill span while leaving solver input,
+signal entry/exit layers and wire geometry unchanged. The capacity graph is
+shown before trace preloading; its edges are not routed paths. These snapshots
+do not establish completion or DRC clearance for the remaining 40 signals.
+
+```sh
+bun test tests/repro/pipeline9-stmp157-native-ddr-mesh-comparison.test.ts --timeout 9999999
+```
