@@ -47,9 +47,12 @@ test("STMP157 retains its native DDR copper with fewer mesh cells and graph edge
     expect(solver.edgeSolver?.solved).toBeTrue()
     return solver
   })
-  expect({ ...before, obstacles: after.obstacles, traces: after.traces }).toEqual(
-    after,
-  )
+  const inputWithNativeCopper: SimpleRouteJson = {
+    ...before,
+    obstacles: after.obstacles,
+    traces: after.traces,
+  }
+  expect(inputWithNativeCopper).toEqual(after)
   expect(before.obstacles).toHaveLength(3449)
   expect(after.obstacles).toHaveLength(710)
   expect(after.traces).toHaveLength(32)
