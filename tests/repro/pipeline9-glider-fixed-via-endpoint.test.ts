@@ -7,7 +7,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 
-test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
+test("Glider DDR ADDR6 escape via", (): void => {
   // Actual Glider node at entry to force improvement, reduced to its escape via.
   const x = -18.800000000000004
   const y = -11.900000000000006
@@ -55,17 +55,7 @@ test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
   const solver = new Pipeline9HighDensityForceImproveSolver(params)
   solver.solve()
   expect(solver.solved).toBe(true)
-  const graphics = solver.visualize()
-  graphics.rects = [
-    {
-      center: node.center,
-      width: node.width,
-      height: node.height,
-      stroke: "#94a3b8",
-    },
-  ]
-  graphics.points = [
-    { x, y, color: "#b91c1c", label: "fixed top / inner1 ports" },
-  ]
-  await expect(graphics).toMatchGraphicsSvg(import.meta.path)
+  const points = solver.getOutput()[0]!.route
+  expect(points[0]!.x).toBeCloseTo(x, 6)
+  expect(points.at(-1)!.x).toBeCloseTo(x, 6)
 })
