@@ -16,11 +16,21 @@ test("SRJ24 sample024 retains every required net connection", (): void => {
   solver.solve()
 
   expect(solver.solved).toBe(true)
-  expect(solver.newConnections).toHaveLength(1934)
+  expect(solver.newConnections).toHaveLength(1029)
   expect(input).toEqual(original)
   for (const connection of input.connections) {
     const points = connection.pointsToConnect
     const connected = new DisjointSet(points)
+    const pointsById = new Map(points.map((point) => [point.pointId, point]))
+    for (const group of connection.externallyConnectedPointIds ?? []) {
+      const first = pointsById.get(group[0]!)
+      expect(first).toBeDefined()
+      for (const pointId of group.slice(1)) {
+        const point = pointsById.get(pointId)
+        expect(point).toBeDefined()
+        connected.union(first!, point!)
+      }
+    }
     for (const pair of solver.newConnections) {
       if (!pair.__rootConnectionNames?.includes(connection.name)) continue
       connected.union(pair.pointsToConnect[0]!, pair.pointsToConnect[1]!)

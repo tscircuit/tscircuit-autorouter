@@ -34,11 +34,22 @@ test("visualize the two affected sample024 nets with their real pads", async ():
 
     const points = connection.pointsToConnect
     const connected = new DisjointSet(points)
+    const pointsById = new Map(points.map((point) => [point.pointId, point]))
+    for (const group of connection.externallyConnectedPointIds ?? []) {
+      const first = pointsById.get(group[0]!)
+      expect(first).toBeDefined()
+      for (const pointId of group.slice(1)) {
+        const point = pointsById.get(pointId)
+        expect(point).toBeDefined()
+        connected.union(first!, point!)
+      }
+    }
     for (const pair of solver.newConnections) {
       connected.union(pair.pointsToConnect[0]!, pair.pointsToConnect[1]!)
     }
     const groupCount = new Set(points.map((point) => connected.find(point)))
       .size
+    expect(groupCount).toBe(1)
     const groupLabel = groupCount === 1 ? "group" : "groups"
     const minX = Math.min(...points.map((point) => point.x))
     const maxX = Math.max(...points.map((point) => point.x))
