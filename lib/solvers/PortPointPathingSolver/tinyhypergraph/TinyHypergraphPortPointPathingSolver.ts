@@ -1149,7 +1149,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     // Ripping cannot reconnect a disconnected graph without preloaded occupancy.
-    if (!hasPreloadedTraceOccupancy) {
+    if (
+      params.flags.USE_PREPARED_PORT_POINT_ROUTING === true &&
+      !hasPreloadedTraceOccupancy
+    ) {
       tinyPipelineInput.solveGraphOptions!.STATIC_REACHABILITY_PRECHECK_MAX_HOPS =
         Number.POSITIVE_INFINITY
     }
