@@ -6,6 +6,7 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { getNodeEdgeMap } from "./getNodeEdgeMap"
 import { getTargetNodesWithRoutingAccess } from "./getTargetNodesWithRoutingAccess"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
@@ -59,6 +60,7 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
 
   handleTargetNodes() {
     const targetNodes = this.nodes.filter((node) => node._containsTarget)
+    const nodeEdgeMap = getNodeEdgeMap(this.edges)
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -66,12 +68,19 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        const hasExistingEdge = nodeEdgeMap
+          .get(nodeA.capacityMeshNodeId)
+          ?.some((edge) => edge.nodeIds.includes(nodeB.capacityMeshNodeId))
+        if (hasExistingEdge) continue
 
-        this.edges.push({
+        const edge: CapacityMeshEdge = {
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
-        })
+        }
+        this.edges.push(edge)
+        for (const nodeId of edge.nodeIds) {
+          nodeEdgeMap.set(nodeId, [...(nodeEdgeMap.get(nodeId) ?? []), edge])
+        }
       }
     }
 
@@ -98,14 +107,6 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     node2: CapacityMeshNode,
   ): boolean {
     return node1.availableZ.some((z) => node2.availableZ.includes(z))
-  }
-
-  hasEdgeBetween(node1: CapacityMeshNode, node2: CapacityMeshNode): boolean {
-    return this.edges.some(
-      (edge) =>
-        edge.nodeIds.includes(node1.capacityMeshNodeId) &&
-        edge.nodeIds.includes(node2.capacityMeshNodeId),
-    )
   }
 
   doNodesTouchOrOverlap(
