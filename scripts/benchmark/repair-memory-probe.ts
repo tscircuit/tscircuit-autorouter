@@ -4,6 +4,31 @@ import { loadScenarioBySampleNumber } from "./scenarios"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 
+import { TraceContactGuard } from "high-density-repair03"
+
+const guardProfile: Record<string, {calls: number; ms: number}> = {}
+if (process.env.PROBE_PROFILE === "1") {
+  const prototype = TraceContactGuard.prototype as any
+  for (const name of Object.getOwnPropertyNames(prototype)) {
+    if (name === "constructor" || typeof prototype[name] !== "function") continue
+    const original = prototype[name]
+    prototype[name] = function (...args: unknown[]) {
+      const start = performance.now()
+      const result = original.apply(this, args)
+      const row = guardProfile[name] ??= { calls: 0, ms: 0 }
+      row.calls++; row.ms += performance.now() - start
+      if (name !== "prepareCandidateCheck") return result
+      return (...candidateArgs: unknown[]) => {
+        const start = performance.now()
+        const contacts = result(...candidateArgs)
+        const row = guardProfile.candidateCheck ??= { calls: 0, ms: 0 }
+        row.calls++; row.ms += performance.now() - start
+        return contacts
+      }
+    }
+  }
+}
+
 const dataset = process.env.PROBE_DATASET ?? "srj18"
 const sample = Number(process.env.PROBE_SAMPLE ?? 15)
 const { scenario } = await loadScenarioBySampleNumber(dataset, sample)
@@ -42,7 +67,7 @@ const drc = evaluateRelaxedDrc({
   routedTraces,
 })
 const report = {
-  dataset, sample, bun: Bun.version,
+  dataset, sample, bun: Bun.version, guardProfile,
   contactStats: solver.pipeline9JointDrcRepairSolver?.traceContactRepairSolver?.stats ?? null,
   solved: solver.solved, failed: solver.failed, routingMs,
   peakRssBytes: process.resourceUsage().maxRSS * (process.platform === "darwin" ? 1 : 1024),

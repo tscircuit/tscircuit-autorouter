@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: optimized-srj18
+          - cohort: profile-srj18
             dataset: srj18
             sample: 15
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
             candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
-          - cohort: optimized-srj33
+          - cohort: profile-srj33
             dataset: srj33
-            sample: 36
+            sample: 32
             base: 41673fb0cd159303cc68796e9fe4d04692b92a8e
             candidate: aad05238493ade4d86dca08f0c7a19c69c11df95
     steps:
@@ -73,10 +73,11 @@ jobs:
           done
       - name: Run two balanced sequential pairs
         env:
+          PROBE_PROFILE: "1"
           PROBE_DATASET: ${{ matrix.dataset }}
           PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
-          for round in 1 2; do
+          for round in 1; do
             order="base candidate"
             if [ "$round" = "2" ]; then order="candidate base"; fi
             for revision in $order; do
