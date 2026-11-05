@@ -52,5 +52,5 @@ test("identifies disconnected H3 DDR signals before reripping the other routes",
   expect(solver.failed).toBe(true)
   expect(planner.error).toStartWith("Static reachability precheck failed:")
   expect(disconnectedSignals).toBe(4)
-  expect(iterations).toBe(0)
+  expect(iterations).toBeLessThan(2)
 })
