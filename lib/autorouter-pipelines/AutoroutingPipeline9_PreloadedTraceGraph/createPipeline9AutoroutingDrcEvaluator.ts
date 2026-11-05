@@ -19,6 +19,7 @@ import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
 
 type DrcError = Record<string, unknown>
 
@@ -79,6 +80,11 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     minClearance:
       drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
   })
+  const evaluateFixedCopper = createPipeline9FixedCopperDrcEvaluator({
+    inputSrj,
+    srjWithPointPairs,
+    viaClearance: drcOptions.viaToPadClearance,
+  })
   return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
       inputSrj.traces ?? [],
@@ -95,6 +101,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [
       ...obstacleErrors.traceErrors,
+      ...evaluateFixedCopper(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
