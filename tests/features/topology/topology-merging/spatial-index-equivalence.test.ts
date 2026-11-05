@@ -59,7 +59,9 @@ test("indexes mesh coverage with the same tolerance and source order as a full s
   }
 
   const scanSolver = new TopologyMergingSolver(structuredClone(original))
-  scanSolver["getNodesWithinBounds"] = (bounds): PreparedTopologyMergingNode[] =>
+  scanSolver["getNodesWithinBounds"] = (
+    bounds,
+  ): PreparedTopologyMergingNode[] =>
     scanSolver["preparedNodes"].filter((preparedNode) =>
       bounds.minY === Number.NEGATIVE_INFINITY
         ? bounds.minX >= preparedNode.bounds.minX - TOPOLOGY_MERGING_EPSILON &&
