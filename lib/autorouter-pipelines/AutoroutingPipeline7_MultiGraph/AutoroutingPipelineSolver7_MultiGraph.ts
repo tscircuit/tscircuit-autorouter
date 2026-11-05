@@ -11,6 +11,7 @@ import {
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { measureRouteConstraint } from "lib/solvers/ConstrainedRouteSolver/measureRouteConstraint"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
@@ -31,6 +32,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
+import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
   type TraceColorMode,
@@ -887,6 +889,21 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      if (this.originalSrj.routeConstraints?.length) {
+        const traces = combinePreloadedAndRoutedTraces(
+          this.originalSrj.traces ?? [],
+          this.powerTraceExpansionSolver!.getOutput(),
+        )
+        for (const rule of this.originalSrj.routeConstraints) {
+          if (
+            !measureRouteConstraint(this.originalSrj, traces, rule).satisfied
+          ) {
+            this.failed = true
+            this.error = `Route for ${rule.name ?? "constrained trace"} does not satisfy its via/length limits`
+            return
+          }
+        }
+      }
       this.solved = true
       return
     }

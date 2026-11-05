@@ -5,7 +5,7 @@ import {
   getPipeline7LengthSnapshot,
 } from "tests/fixtures/pipeline7-max-length"
 
-test("Pipeline7 accepts preloaded copper that exceeds maxLength", async (): Promise<void> => {
+test("Pipeline7 includes preserved copper when enforcing maxLength", async (): Promise<void> => {
   const input = createPipeline7LengthInput(3)
   input.traces = [
     {
@@ -25,8 +25,8 @@ test("Pipeline7 accepts preloaded copper that exceeds maxLength", async (): Prom
     effort: 0.1,
   })
   solver.solve()
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
   expect(input).toEqual(original)
   const feasible = createPipeline7LengthInput(5)
   feasible.traces = structuredClone(input.traces)
