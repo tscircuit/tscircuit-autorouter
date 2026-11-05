@@ -13,6 +13,7 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
@@ -1228,6 +1229,32 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // Projection can reject B and return to A. Retain both exact evaluations
     // without keeping a portfolio's worth of full-board keys and errors.
     const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
+    const multilayerObstacles = params.obstacles.filter(
+      (obstacle) =>
+        (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+    )
+    const connectedObstaclesByConnectionName = new Map<
+      string,
+      Map<string | undefined, ReadonlyArray<Obstacle>>
+    >()
+    const getConnectedMultilayerObstacles = (
+      route: HighDensityRoute,
+    ): ReadonlyArray<Obstacle> => {
+      let byRoot = connectedObstaclesByConnectionName.get(route.connectionName)
+      if (!byRoot) {
+        byRoot = new Map()
+        connectedObstaclesByConnectionName.set(route.connectionName, byRoot)
+      }
+      const cached = byRoot.get(route.rootConnectionName)
+      if (cached) return cached
+      // Candidate geometry changes, but the board's net connectivity does not.
+      // Avoid rescanning every pad for every segment of every DRC proposal.
+      const connected = multilayerObstacles.filter((obstacle) =>
+        isObstacleConnectedToRoute(obstacle, route, params.connMap),
+      )
+      byRoot.set(route.rootConnectionName, connected)
+      return connected
+    }
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1272,7 +1299,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               params.layerCount,
               {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-                obstacles: params.obstacles,
+                connectedMultilayerObstacles:
+                  getConnectedMultilayerObstacles(evaluatedRoute),
                 connMap: params.connMap,
               },
             ),
