@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "variant": "kernel",
+  "measuredExperimentCommit": "2f5eb0b7a4602c86df32c2554c68abc7f4554eb3",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "ciAuditObservedAt": "2026-10-28 06:35:41 UTC",
+  "ciAuditMethod": "Read-only completed GitHub Actions job logs and local unchanged assertion source. No reruns, source edits, snapshot updates, compilers or benchmarks.",
+  "completedCiAudit": {
+    "build": {
+      "run": 40643347599,
+      "job": 122666359630,
+      "conclusion": "success"
+    },
+    "bunTest": {
+      "run": 40643347685,
+      "conclusion": "success",
+      "successfulShards": 9,
+      "failedShards": 0,
+      "totalShards": 9,
+      "totalFailedTests": 0
+    },
+    "interpretation": "Normal storage-only policy passes all nine full BunTest shards and packed runtime consumers in this run. This removes earlier pruned-policy winner/snapshot failures in the observed final run, not a CPU-performance claim. Format Check still fails separately."
+  },
+  "formatCheck": {
+    "conclusion": "failure",
+    "scope": "Separate Format Check remains failed in the final CI audit. No formatter or linter was run under AGENTS.md."
+  },
+  "ciLimitations": [
+    "These are observed completed CI jobs, not a claim that every check is green.",
+    "The CI audit did not run a full baseline BunTest comparison; assertion failures are not all individually attributed as inherited or introduced.",
+    "An SVG failure can mask later numerical assertions. Supplemental probes below do not change actual CI status."
+  ],
+  "source": "artifacts/ci-failure-audits/final-followup-summary.json",
+  "promotionStatus": "Build and all nine BunTest shards passed on this storage-only source; the separate Format Check remains failed. This is correctness evidence, not a speed claim."
+}

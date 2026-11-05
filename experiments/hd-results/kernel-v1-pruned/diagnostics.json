@@ -1,0 +1,166 @@
+{
+  "measurementKind": "measured-single-paired-pass",
+  "baselineCommit": "637b6c581128238f6c61227a1c15be423d24baca",
+  "experimentCommit": "dde0df8db1a5bf30ec080d61de71309e2ceffd32",
+  "variant": "kernel",
+  "concurrency": 3,
+  "resourceProfile": "3-lane original",
+  "metricCoverage": [
+    {
+      "dataset": "srj18",
+      "metric": "vias",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 16,
+      "matchedControlTotal": 3397,
+      "matchedExperimentTotal": 3426,
+      "originalReportedControlTotal": 3397,
+      "originalReportedExperimentTotal": 3426,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30328.183816794055,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30328.183816794055,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8,
+        9
+      ],
+      "missingExperimentSamples": [
+        3,
+        8,
+        9
+      ]
+    },
+    {
+      "dataset": "srj24",
+      "metric": "vias",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 17,
+      "matchedControlTotal": 2740,
+      "matchedExperimentTotal": 2800,
+      "originalReportedControlTotal": 2740,
+      "originalReportedExperimentTotal": 2800,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    },
+    {
+      "dataset": "srj24",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 17,
+      "matchedFinitePairCount": 17,
+      "matchedControlTotal": 30431.12629761072,
+      "matchedExperimentTotal": 30512.985048151135,
+      "originalReportedControlTotal": 30431.12629761072,
+      "originalReportedExperimentTotal": 30512.985048151135,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [],
+      "missingExperimentSamples": []
+    }
+  ],
+  "metricLimitations": [
+    {
+      "dataset": "srj18",
+      "metric": "wire length (mm)",
+      "commonCleanCount": 16,
+      "matchedFinitePairCount": 13,
+      "matchedControlTotal": 30294.303832532565,
+      "matchedExperimentTotal": 30328.183816794055,
+      "originalReportedControlTotal": 30294.303832532565,
+      "originalReportedExperimentTotal": 30328.183816794055,
+      "originalAggregatesMatchMatchedFinitePairs": true,
+      "missingControlSamples": [
+        3,
+        8,
+        9
+      ],
+      "missingExperimentSamples": [
+        3,
+        8,
+        9
+      ]
+    }
+  ],
+  "numericDiagnosticTotals": {
+    "srj18/control": {
+      "priorityInstances": 50704.0,
+      "priorityRemovedNativeCandidates": 392956.0,
+      "priorityAllocatedWorkUnits": 2467132222.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 53408.0,
+      "priorityScaledInstances": 1136.0,
+      "priorityCompletedCandidates": 1688.0,
+      "prioritySolvedCandidates": 35.0,
+      "priorityUnknownCandidates": 1653.0,
+      "priorityCompletedWorkUnits": 46523329.0
+    },
+    "srj24/control": {
+      "priorityInstances": 85320.0,
+      "priorityRemovedNativeCandidates": 661230.0,
+      "priorityAllocatedWorkUnits": 4628624500.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 184408.0,
+      "priorityScaledInstances": 6144.0,
+      "priorityCompletedCandidates": 6578.0,
+      "prioritySolvedCandidates": 77.0,
+      "priorityUnknownCandidates": 6501.0,
+      "priorityCompletedWorkUnits": 106820592.0
+    },
+    "srj18/kernel": {
+      "compactA01Candidates": 15603.0,
+      "priorityInstances": 50672.0,
+      "priorityRemovedNativeCandidates": 392708.0,
+      "priorityAllocatedWorkUnits": 2457885574.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 53344.0,
+      "priorityScaledInstances": 1104.0,
+      "compactA01Enqueued": 80247006.0,
+      "compactA01PrunedEquivalent": 120177670.0,
+      "compactA01Popped": 65221242.0,
+      "compactA01AlreadyVisited": 21255581.0,
+      "compactA01Expanded": 43892334.0,
+      "compactA01Searches": 75199.0,
+      "compactA01PeakLabels": 595507.0,
+      "compactA01PeakOpen": 87856.0,
+      "compactA01MaterializedPathLabels": 1072358.0,
+      "compactA01UnsupportedCandidates": 222.0,
+      "priorityCompletedCandidates": 1638.0,
+      "prioritySolvedCandidates": 33.0,
+      "priorityUnknownCandidates": 1605.0,
+      "priorityCompletedWorkUnits": 40385379.0
+    },
+    "srj24/kernel": {
+      "priorityInstances": 88056.0,
+      "priorityRemovedNativeCandidates": 682434.0,
+      "priorityAllocatedWorkUnits": 4832166834.0,
+      "priorityDetailedInstances": 0.0,
+      "priorityCoordinateScaleSum": 192720.0,
+      "priorityScaledInstances": 6472.0,
+      "compactA01Candidates": 29018.0,
+      "compactA01UnsupportedCandidates": 2933.0,
+      "compactA01Enqueued": 185453735.0,
+      "compactA01PrunedEquivalent": 309581658.0,
+      "compactA01Popped": 142501672.0,
+      "compactA01AlreadyVisited": 49521752.0,
+      "compactA01Expanded": 92738874.0,
+      "compactA01Searches": 246525.0,
+      "compactA01PeakLabels": 2850379.0,
+      "compactA01PeakOpen": 314704.0,
+      "compactA01MaterializedPathLabels": 2800063.0,
+      "priorityCompletedCandidates": 6857.0,
+      "prioritySolvedCandidates": 69.0,
+      "priorityUnknownCandidates": 6788.0,
+      "priorityCompletedWorkUnits": 89153793.0
+    }
+  },
+  "warnings": []
+}

@@ -1,0 +1,91 @@
+name: HD experiment paired datasets18 and24
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hd-experiment-paired-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  paired-benchmark:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'codex/hd-exp-')
+    name: Pipeline9 baseline and experiment on datasets18 and24
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 240
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      HD_HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+      HD_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      HD_BASE_SHA: 637b6c581128238f6c61227a1c15be423d24baca
+      HD_WORKTREE_ROOT: ${{ github.workspace }}/hd-worktrees
+      HD_RESULTS: ${{ github.workspace }}/hd-paired-results
+      HD_DEPS: ${{ github.workspace }}/hd-paired-dependencies
+
+    steps:
+      - name: Resolve the authorized experiment branch
+        id: refs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          variants = {
+              "codex/hd-exp-1-selective-portfolio": "portfolio",
+              "codex/hd-exp-2-compact-frontier": "kernel",
+              "codex/hd-exp-3-physical-legalization": "legalization",
+              "codex/hd-exp-4-sparse-corridors": "corridors",
+              "codex/hd-exp-5-witness-compatibility": "compatibility",
+          }
+          branch = os.environ["HD_HEAD_BRANCH"]
+          if branch not in variants:
+              raise SystemExit("No configured experiment for " + branch)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as stream:
+              stream.write("variant=" + variants[branch] + "\n")
+          PY
+
+      - name: Checkout exact baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 637b6c581128238f6c61227a1c15be423d24baca
+          path: hd-worktrees/control
+          persist-credentials: false
+
+      - name: Checkout exact experiment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: hd-worktrees/${{ steps.refs.outputs.variant }}
+          persist-credentials: false
+
+      - name: Setup Bun1.4.3
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Measure both complete datasets sequentially on this runner
+        shell: bash
+        env:
+          HD_VARIANT: ${{ steps.refs.outputs.variant }}
+        run: |
+          python3 "$HD_WORKTREE_ROOT/$HD_VARIANT/experiments/hd-research/harness/paired_ci.py" \
+            --root "$HD_WORKTREE_ROOT" \
+            --out "$HD_RESULTS" \
+            --deps "$HD_DEPS" \
+            --head-sha "$HD_HEAD_SHA" \
+            --variant "$HD_VARIANT"
+
+      - name: Upload exact protocols, dependency lock and all measurement records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hd-paired-${{ steps.refs.outputs.variant }}-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: hd-paired-results
+          if-no-files-found: warn
+          compression-level: 9
+          retention-days: 30
