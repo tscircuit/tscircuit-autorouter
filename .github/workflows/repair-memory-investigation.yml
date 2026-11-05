@@ -6,10 +6,24 @@ on:
 permissions:
   contents: read
 jobs:
-  standalone:
+  compare:
     if: github.ref_name == 'techmannih/benchmark-repair-memory-20261105'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 20
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cohort: geometry-reuse-srj33-36
+            dataset: srj33
+            sample: 36
+            base: 997877375d0d45f6771320b81bfc7898e192ff62
+            candidate: be554f2139ae11d9a64cdda520492163e35fc65c
+          - cohort: geometry-reuse-srj33-30
+            dataset: srj33
+            sample: 30
+            base: 997877375d0d45f6771320b81bfc7898e192ff62
+            candidate: be554f2139ae11d9a64cdda520492163e35fc65c
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,94 +31,74 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          repository: tscircuit/high-density-repair03
-          ref: 6ec16dcf29e07a9c5e93af7bc1c572e99e43960c
+          ref: ${{ matrix.base }}
           path: base
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          repository: tscircuit/high-density-repair03
-          ref: 8ec1f3acf1c5f2b228e6f6d8c8972d4ee2045962
+          ref: ${{ matrix.candidate }}
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
       - name: Install identical dependencies
+        working-directory: base
+        run: bun install --no-save --ignore-scripts
+      - name: Install exact candidate repair archive
+        env:
+          BASE_SHA: ${{ matrix.base }}
+          CANDIDATE_SHA: ${{ matrix.candidate }}
+          COHORT: ${{ matrix.cohort }}
+          RUNNER_NAME: ${{ runner.name }}
         run: |
-          (cd base && bun install --no-save --ignore-scripts)
           cp -a base/node_modules candidate/node_modules
-          cp candidate/benchmarks/srj18Fixtures.ts base/benchmarks/srj18Fixtures.ts
           mkdir outputs
+          node <<'NODE'
+          const fs = require('fs');
+          const a = JSON.parse(fs.readFileSync('base/package.json'));
+          const b = JSON.parse(fs.readFileSync('candidate/package.json'));
+          const key = 'high-density-repair03';
+          const basePin = a.devDependencies[key];
+          const candidatePin = 'https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/8ec1f3acf1c5f2b228e6f6d8c8972d4ee2045962';
+          delete a.devDependencies[key]; delete b.devDependencies[key];
+          if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
+          fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:2,orders:'alternating base-first and candidate-first',dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          NODE
+          curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
+          tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
           for revision in base candidate; do
-            cp controller/scripts/benchmark/standalone-repair-probe.ts "$revision/standalone-repair-probe.ts"
-            sed -i 's|"../|"./|g' "$revision/standalone-repair-probe.ts"
+            cp controller/scripts/benchmark/benchmark-harness-probe.ts "$revision/scripts/benchmark/benchmark-harness-probe.ts"
           done
-      - name: Repeat standalone cases in both orders
+      - name: Repeat profiled cases in both revision orders
+        env:
+          PROBE_PROFILE: "0"
+          PROBE_MEMORY: "1"
+          PROBE_DATASET: ${{ matrix.dataset }}
+          PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
-          for sample in 6 12 13; do
-            for round in 1 2; do
-              order="base candidate"
-              if [ "$round" = 2 ]; then order="candidate base"; fi
-              for revision in $order; do
-                (cd "$revision" && COUNTERS=0 bun standalone-repair-probe.ts "$sample" "../outputs/$sample-round-$round-$revision.json")
-              done
+          for round in 1 2; do
+            order="base candidate"
+            if [ $((round % 2)) = 0 ]; then order="candidate base"; fi
+            for revision in $order; do
+              (cd "$revision" && timeout 600 bun scripts/benchmark/benchmark-harness-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
+              tail -1 "outputs/round-$round-$revision.log"
             done
           done
-      - name: Profile the three slow standalone cases
+      - name: Sample repair CPU stacks separately
+        if: matrix.sample == 36
+        env:
+          PROBE_PROFILE: "0"
+          PROBE_MEMORY: "0"
+          PROBE_DATASET: ${{ matrix.dataset }}
+          PROBE_SAMPLE: ${{ matrix.sample }}
         run: |
-          for sample in 6 12 13; do
-            for revision in base candidate; do
-              (cd "$revision" && COUNTERS=1 bun standalone-repair-probe.ts "$sample" "../outputs/$sample-$revision-counters.json")
-              (cd "$revision" && COUNTERS=0 bun --cpu-prof --cpu-prof-dir ../outputs --cpu-prof-name "$sample-$revision.cpuprofile" standalone-repair-probe.ts "$sample" "../outputs/$sample-$revision.json")
-            done
+          for revision in base candidate; do
+            (cd "$revision" && timeout 600 bun --cpu-prof --cpu-prof-dir ../outputs --cpu-prof-name "$revision.cpuprofile" scripts/benchmark/benchmark-harness-probe.ts "../outputs/cpu-$revision.json") > "outputs/cpu-$revision.log" 2>&1
           done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-reused-geometry-profile
-          path: outputs
-
-  full-standalone:
-    if: github.ref_name == 'techmannih/benchmark-repair-memory-20261105'
-    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: tscircuit/high-density-repair03
-          ref: 892ddb1282881b343b318029901f296ae33de087
-          path: base
-          persist-credentials: false
-      - uses: actions/checkout@v4
-        with:
-          repository: tscircuit/high-density-repair03
-          ref: 8ec1f3acf1c5f2b228e6f6d8c8972d4ee2045962
-          path: candidate
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-      - name: Install identical dependencies
-        run: |
-          (cd base && bun install --no-save --ignore-scripts)
-          cp -a base/node_modules candidate/node_modules
-          mkdir outputs
-          git -C base rev-parse HEAD > outputs/base-sha.txt
-          git -C candidate rev-parse HEAD > outputs/candidate-sha.txt
-      - name: Compare full standalone datasets in both orders
-        run: |
-          for dataset in srj18 drc14; do
-            for round in 1 2; do
-              order="base candidate"
-              if [ "$round" = 2 ]; then order="candidate base"; fi
-              for revision in $order; do
-                (cd "$revision" && bash benchmark.sh --dataset "$dataset" --concurrency 2 --effort 1 --out "../outputs/$dataset-round-$round-$revision.json") > "outputs/$dataset-round-$round-$revision.log" 2>&1
-              done
-            done
-          done
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: standalone-reused-geometry-full
+          name: repair-memory-${{ matrix.cohort }}
           path: outputs
