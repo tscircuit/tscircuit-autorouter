@@ -14,24 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cohort: reuse-main-srj18
+          - cohort: calibration-srj18
             dataset: srj18
             base: 997877375d0d45f6771320b81bfc7898e192ff62
             candidate: a613b05bd2dc579865b09c55c665214efb631dfc
-          - cohort: reuse-previous-srj18
-            dataset: srj18
-            base: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
-            candidate: a613b05bd2dc579865b09c55c665214efb631dfc
-          - cohort: reuse-main-dataset01
+          - cohort: calibration-dataset01
             dataset: dataset01
-            base: 997877375d0d45f6771320b81bfc7898e192ff62
-            candidate: a613b05bd2dc579865b09c55c665214efb631dfc
-          - cohort: reuse-previous-dataset01
-            dataset: dataset01
-            base: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
-            candidate: a613b05bd2dc579865b09c55c665214efb631dfc
-          - cohort: reuse-main-srj33
-            dataset: srj33
             base: 997877375d0d45f6771320b81bfc7898e192ff62
             candidate: a613b05bd2dc579865b09c55c665214efb631dfc
     steps:
@@ -63,6 +51,7 @@ jobs:
           RUNNER_NAME: ${{ runner.name }}
         run: |
           cp -a base/node_modules candidate/node_modules
+          cp -a base control
           mkdir outputs
           node <<'NODE'
           const fs = require('fs');
@@ -74,17 +63,17 @@ jobs:
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:2,orders:'alternating base-first and candidate-first',dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:2,orders:'base candidate control / control candidate base',control:process.env.BASE_SHA,dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
-      - name: Repeat full dataset with matched same-code control
+      - name: Compare fixed PR between identical main controls
         env:
           DATASET: ${{ matrix.dataset }}
         run: |
           for round in 1 2; do
-            order="base candidate"
-            if [ $((round % 2)) = 0 ]; then order="candidate base"; fi
+            order="base candidate control"
+            if [ $((round % 2)) = 0 ]; then order="control candidate base"; fi
             for revision in $order; do
               output="outputs/round-$round-$revision"
               mkdir -p "$output"
