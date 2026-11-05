@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import Flatbush from "flatbush"
 import type { CapacityMeshNode } from "lib/types"
 import {
   getBoundsIntersection,
@@ -167,19 +168,24 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  if (nodes.length < 2) return
+
+  const boundsByNodeIndex = nodes.map(getCapacityMeshNodeBounds)
+  const nodeIndex = new Flatbush(nodes.length)
+  for (const bounds of boundsByNodeIndex) {
+    nodeIndex.add(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+  }
+  nodeIndex.finish()
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    const boundsA = getCapacityMeshNodeBounds(nodeA)
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
+    const boundsA = boundsByNodeIndex[aIndex]!
+    const candidateNodeIndexes = nodeIndex
+      .search(boundsA.minX, boundsA.minY, boundsA.maxX, boundsA.maxY)
+      .filter((bIndex) => bIndex > aIndex)
+      .sort((a, b) => a - b)
+    for (const bIndex of candidateNodeIndexes) {
       const nodeB = nodes[bIndex]!
-      if (
-        nodeB.center.x - nodeB.width / 2 > boundsA.maxX ||
-        nodeB.center.x + nodeB.width / 2 < boundsA.minX ||
-        nodeB.center.y - nodeB.height / 2 > boundsA.maxY ||
-        nodeB.center.y + nodeB.height / 2 < boundsA.minY
-      ) {
-        continue
-      }
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
       )
@@ -187,7 +193,7 @@ export function validateTopologyMergingOutput({
 
       const intersection = getBoundsIntersection(
         boundsA,
-        getCapacityMeshNodeBounds(nodeB),
+        boundsByNodeIndex[bIndex]!,
       )
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX
