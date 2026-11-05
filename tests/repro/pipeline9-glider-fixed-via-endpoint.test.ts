@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensityForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver"
 import type { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 
 test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
   // Actual Glider node at entry to force improvement, reduced to its escape via.
@@ -15,7 +18,10 @@ test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
     height: 0.6000000000000014,
     availableZ: [0, 1, 2, 3],
     portPoints: [0, 1].map((z) => ({
-      x, y, z, connectionName: "source_trace_11",
+      x,
+      y,
+      z,
+      connectionName: "source_trace_11",
     })),
   }
   const route: HighDensityRoute = {
@@ -24,7 +30,8 @@ test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
     traceThickness: 0.15,
     viaDiameter: 0.45,
     route: node.portPoints.flatMap(({ x, y, z }) => [
-      { x, y, z }, { x, y, z },
+      { x, y, z },
+      { x, y, z },
     ]),
     vias: [{ x, y }],
   }
@@ -36,7 +43,9 @@ test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
     connections: [],
   })
   pipeline.highDensityNodePortPoints = [node]
-  pipeline.highDensityRouteSolver = { routes: [route] } as Pipeline9HighDensitySolver
+  pipeline.highDensityRouteSolver = {
+    routes: [route],
+  } as Pipeline9HighDensitySolver
   const step = pipeline.pipelineDef.find(
     (entry) => entry.solverName === "highDensityForceImproveSolver",
   )!
@@ -47,9 +56,16 @@ test("Glider DDR ADDR6 escape via", async (): Promise<void> => {
   solver.solve()
   expect(solver.solved).toBe(true)
   const graphics = solver.visualize()
-  graphics.rects = [{
-    center: node.center, width: node.width, height: node.height, stroke: "#94a3b8",
-  }]
-  graphics.points = [{ x, y, color: "#b91c1c", label: "fixed top / inner1 ports" }]
+  graphics.rects = [
+    {
+      center: node.center,
+      width: node.width,
+      height: node.height,
+      stroke: "#94a3b8",
+    },
+  ]
+  graphics.points = [
+    { x, y, color: "#b91c1c", label: "fixed top / inner1 ports" },
+  ]
   await expect(graphics).toMatchGraphicsSvg(import.meta.path)
 })
