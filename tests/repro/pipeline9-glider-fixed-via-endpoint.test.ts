@@ -16,7 +16,9 @@ function readGliderSrj(name: string): SimpleRouteJson {
     `../../fixtures/repro/glider-ddr-addr6/${name}.srj.json.gz`,
     import.meta.url,
   )
-  return JSON.parse(gunzipSync(readFileSync(path)).toString("utf8"))
+  return JSON.parse(
+    gunzipSync(Uint8Array.from(readFileSync(path))).toString("utf8"),
+  )
 }
 
 test("routes Glider ADDR6 through its fixed escape via beside sixteen data signals", async (): Promise<void> => {
@@ -45,9 +47,6 @@ test("routes Glider ADDR6 through its fixed escape via beside sixteen data signa
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
     drcOptions: { traceClearance: 0.11, viaToPadClearance: 0.11 },
   }
-  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
   const { circuitJson } = evaluateRelaxedDrc(snapshotInput)
   expect(referenceSrj.connections).toHaveLength(49)
   expect(referenceSrj.traces).toHaveLength(16)
@@ -55,4 +54,7 @@ test("routes Glider ADDR6 through its fixed escape via beside sixteen data signa
   expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
   expect(checkSourceTracesHavePcbTraces(circuitJson)).toEqual([])
   expect(inputSrj).toEqual(originalInput)
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
