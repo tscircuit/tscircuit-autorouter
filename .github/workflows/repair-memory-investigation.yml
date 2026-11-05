@@ -9,21 +9,27 @@ jobs:
   compare:
     if: github.ref_name == 'techmannih/benchmark-repair-memory-20261105'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
-          - cohort: board-pruning-srj18-4
+          - cohort: pruning-main-srj18
             dataset: srj18
-            sample: 4
-            base: a5ba3d546d04b1d8d240074c77e61ffba78c962c
-            candidate: a5ba3d546d04b1d8d240074c77e61ffba78c962c
-          - cohort: board-pruning-srj18-14
+            base: 997877375d0d45f6771320b81bfc7898e192ff62
+            candidate: 0341e67d6f2321c3027d3cc044a8b8def0752217
+          - cohort: pruning-previous-srj18
             dataset: srj18
-            sample: 14
-            base: a5ba3d546d04b1d8d240074c77e61ffba78c962c
-            candidate: a5ba3d546d04b1d8d240074c77e61ffba78c962c
+            base: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
+            candidate: 0341e67d6f2321c3027d3cc044a8b8def0752217
+          - cohort: pruning-main-dataset01
+            dataset: dataset01
+            base: 997877375d0d45f6771320b81bfc7898e192ff62
+            candidate: 0341e67d6f2321c3027d3cc044a8b8def0752217
+          - cohort: pruning-previous-dataset01
+            dataset: dataset01
+            base: e674cc8b4a36a9c0b70d546c86c3438b49bcd471
+            candidate: 0341e67d6f2321c3027d3cc044a8b8def0752217
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,42 +66,28 @@ jobs:
           const b = JSON.parse(fs.readFileSync('candidate/package.json'));
           const key = 'high-density-repair03';
           const basePin = a.devDependencies[key];
-          const candidatePin = 'https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/94fc55116df29f0ce33f0acd1a9ba7c793a1deea';
+          const candidatePin = b.devDependencies[key];
           delete a.devDependencies[key]; delete b.devDependencies[key];
           if (JSON.stringify(a.dependencies) !== JSON.stringify(b.dependencies) || JSON.stringify(a.devDependencies) !== JSON.stringify(b.devDependencies)) throw Error('Unexpected non-repair dependency difference');
           fs.writeFileSync('outputs/candidate-url.txt', candidatePin);
-          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:1,effort:1,rounds:2,orders:'alternating base-first and candidate-first',dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
+          fs.writeFileSync('outputs/provenance.json', JSON.stringify({base:process.env.BASE_SHA,candidate:process.env.CANDIDATE_SHA,cohort:process.env.COHORT,runner:process.env.RUNNER_NAME,basePin,candidatePin,bun:'1.4.2',threads:1,concurrency:3,effort:1,rounds:2,orders:'alternating base-first and candidate-first',dependencies:'copied from one baseline install',forcedGC:false}, null, 2));
           NODE
           curl --fail --location --silent --show-error "$(cat outputs/candidate-url.txt)" -o outputs/candidate.tar.gz
           tar -xzf outputs/candidate.tar.gz --strip-components=1 -C candidate/node_modules/high-density-repair03
-          for revision in base candidate; do
-            cp controller/scripts/benchmark/benchmark-harness-probe.ts "$revision/scripts/benchmark/benchmark-harness-probe.ts"
-          done
-      - name: Repeat profiled cases in both revision orders
+      - name: Repeat full dataset with matched same-code control
         env:
-          PROBE_PROFILE: "0"
-          PROBE_MEMORY: "1"
-          PROBE_DATASET: ${{ matrix.dataset }}
-          PROBE_SAMPLE: ${{ matrix.sample }}
+          DATASET: ${{ matrix.dataset }}
         run: |
           for round in 1 2; do
             order="base candidate"
             if [ $((round % 2)) = 0 ]; then order="candidate base"; fi
             for revision in $order; do
-              (cd "$revision" && timeout 600 bun scripts/benchmark/benchmark-harness-probe.ts "../outputs/round-$round-$revision.json") > "outputs/round-$round-$revision.log" 2>&1
-              tail -1 "outputs/round-$round-$revision.log"
+              output="outputs/round-$round-$revision"
+              mkdir -p "$output"
+              (cd "$revision" && bash ./benchmark.sh --pipeline 9 --dataset "$DATASET" --concurrency 3 --threads 1 --effort 1) > "$output/run.log" 2>&1
+              cp "$revision/benchmark-result.json" "$revision/benchmark-result.txt" "$revision/benchmark-snapshots.html" "$output/"
+              tail -15 "$output/run.log"
             done
-          done
-      - name: Sample repair CPU stacks separately
-        if: matrix.sample == 4
-        env:
-          PROBE_PROFILE: "0"
-          PROBE_MEMORY: "0"
-          PROBE_DATASET: ${{ matrix.dataset }}
-          PROBE_SAMPLE: ${{ matrix.sample }}
-        run: |
-          for revision in base candidate; do
-            (cd "$revision" && timeout 600 bun --cpu-prof --cpu-prof-dir ../outputs --cpu-prof-name "$revision.cpuprofile" scripts/benchmark/benchmark-harness-probe.ts "../outputs/cpu-$revision.json") > "outputs/cpu-$revision.log" 2>&1
           done
       - uses: actions/upload-artifact@v4
         if: always()
