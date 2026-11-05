@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 234ee0de5e70411c982b42928eb518bccbcc9e1c
+          ref: 28ba6fb58322f8b0bc6df98f5a7566a5bfd47868
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -62,5 +62,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-drc-copy-profile
+          name: standalone-obstacle-prefilter-profile
           path: outputs
