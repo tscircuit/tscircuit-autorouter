@@ -1148,6 +1148,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
+    // Ripping cannot reconnect a disconnected graph without preloaded occupancy.
+    if (!hasPreloadedTraceOccupancy) {
+      tinyPipelineInput.solveGraphOptions!.STATIC_REACHABILITY_PRECHECK_MAX_HOPS =
+        Number.POSITIVE_INFINITY
+    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
