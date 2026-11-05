@@ -17,7 +17,6 @@ import type {
 } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { stackSvgsHorizontally, stackSvgsVertically } from "stack-svgs"
 
 type ComparisonSide = {
@@ -70,52 +69,6 @@ function clipLine({
   return { ...line, points: [points[0]!, points.at(-1)!], label: undefined }
 }
 
-function getCopperGraphics(input: SimpleRouteJson): GraphicsObject {
-  // Drawing only: through-via copper spans the board, independently of the
-  // signal's entry/exit layers. Solver input and wire coordinates stay intact.
-  const traces = input.traces!.map((trace) => ({
-    ...trace,
-    route: trace.route.map((point) => {
-      if (point.route_type !== "via" || input.allowBlindAndBuriedVias) {
-        return point
-      }
-      return {
-        ...point,
-        from_layer: mapZToLayerName(0, input.layerCount),
-        to_layer: mapZToLayerName(input.layerCount - 1, input.layerCount),
-      }
-    }),
-  }))
-  const graphics = convertSrjToGraphicsObject({
-    ...input,
-    connections: [],
-    obstacles: [],
-    traces,
-  })
-  return {
-    lines: graphics.lines
-      .filter((line) => line.layer?.slice(1).split(",").includes("0"))
-      .flatMap((line) =>
-        line.points.slice(1).flatMap((end, index) => {
-          const clipped = clipLine({
-            line: { ...line, points: [line.points[index]!, end] },
-            view: crop,
-          })
-          if (!clipped) return []
-          return [clipped]
-        }),
-      ),
-    circles: graphics.circles.filter(
-      (circle) =>
-        circle.layer?.slice(1).split(",").includes("0") &&
-        circle.center.x >= crop.minX &&
-        circle.center.x <= crop.maxX &&
-        circle.center.y >= crop.minY &&
-        circle.center.y <= crop.maxY,
-    ),
-  }
-}
-
 function renderPanel({
   graphics,
   view,
@@ -160,7 +113,7 @@ function renderPanel({
   )
 }
 
-/** Full solved stages; only the drawing is cropped to the same physical window. */
+/** Completed preparation stages; only their drawings are cropped. */
 export function getStmp157MeshComparisonSvg({
   before,
   after,
@@ -168,23 +121,8 @@ export function getStmp157MeshComparisonSvg({
   before: ComparisonSide
   after: ComparisonSide
 }): string {
-  const copper = getCopperGraphics(after.input)
   const inputGraphics = [before, after].map(({ input }) => {
-    // Use native copper rendering for the AFTER overview, including through vias.
-    const drawing = structuredClone(input)
-    for (const trace of drawing.traces ?? []) {
-      for (const point of trace.route) {
-        if (point.route_type !== "via" || drawing.allowBlindAndBuriedVias) {
-          continue
-        }
-        point.from_layer = mapZToLayerName(0, drawing.layerCount)
-        point.to_layer = mapZToLayerName(
-          drawing.layerCount - 1,
-          drawing.layerCount,
-        )
-      }
-    }
-    const graphics = convertSrjToGraphicsObject(drawing)
+    const graphics = convertSrjToGraphicsObject(input)
     return {
       ...graphics,
       points: [],
@@ -264,15 +202,14 @@ export function getStmp157MeshComparisonSvg({
     rows[1]!.push(
       renderPanel({
         graphics: {
-          ...copper,
           rects,
-          lines: [...cellBoundaries, ...copper.lines!],
+          lines: cellBoundaries,
         },
         view: crop,
         titles: [
           "Merged mesh · top layer · identical 4 × 4 mm crop",
           `${mergedNodes.length.toLocaleString("en-US")} cells across all board layers`,
-          `${visibleCells.length.toLocaleString("en-US")} cells intersect this crop; same physical copper shown`,
+          `${visibleCells.length.toLocaleString("en-US")} cells intersect this crop; mesh output only`,
         ],
       }),
     )
@@ -308,10 +245,10 @@ export function getStmp157MeshComparisonSvg({
       .map((node) => ({ ...node.center, color: "#183b56" }))
     rows[2]!.push(
       renderPanel({
-        graphics: { ...copper, lines: [...lines, ...copper.lines!], points },
+        graphics: { lines, points },
         view: crop,
         titles: [
-          "Capacity graph after subdivision · same top-layer crop",
+          "Capacity graph before trace preloading · same top-layer crop",
           `${capacityNodes.length.toLocaleString("en-US")} nodes; ${edges.length.toLocaleString("en-US")} edges across all layers`,
           `${lines.length.toLocaleString("en-US")} edge segments intersect this crop; not routed paths`,
         ],

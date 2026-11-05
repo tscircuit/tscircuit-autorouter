@@ -78,11 +78,12 @@ crop counts include only the top layer. Graph lines connect actual node centers
 and are clipped at the drawing window, including edges whose endpoints lie
 outside it.
 
-Both detail columns overlay the same physical copper. The drawing expands
-through-via copper over its full physical drill span while leaving solver input,
-signal entry/exit layers and wire geometry unchanged. The capacity graph is
-shown before trace preloading; its edges are not routed paths. These snapshots
-do not establish completion or DRC clearance for the remaining 40 signals.
+Copper appears only in the input overview, rendered directly from each SRJ.
+The mesh detail contains only actual merged cells and their boundaries. The
+capacity-graph detail contains only actual subdivided node centers and edges,
+before trace preloading. No input traces or via circles are overlaid on those
+stage outputs. Graph edges are not routed paths, and these snapshots do not
+establish completion or DRC clearance for the remaining 40 signals.
 
 ```sh
 bun test tests/repro/pipeline9-stmp157-native-ddr-mesh-comparison.test.ts --timeout 9999999
