@@ -21,6 +21,7 @@ import { getConnectedPadSides } from "./getConnectedPadSides"
 import {
   Pipeline4HighDensityRepairSampleSolver,
   type Pipeline4HighDensityRepairSampleOutput,
+  shouldRetryWithBoundaryDiagonalRepair,
 } from "./Pipeline4HighDensityRepairSampleSolver"
 
 type RepairSampleEntry = {
@@ -568,8 +569,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           this.activeSubSolver.stats.nodeClearanceCandidateCount,
       }
       if (
-        Number(clearanceStats.nodeClearanceFinalConflictCount ?? 0) > 0 &&
-        (sampleEntry.sample.adjacentObstacles?.length ?? 0) > 0
+        shouldRetryWithBoundaryDiagonalRepair(
+          sampleEntry.sample,
+          repairedRoutes,
+          Number(clearanceStats.nodeClearanceFinalConflictCount ?? 0),
+        )
       ) {
         const boundaryRepairSolver = new HighDensityRepairSolver({
           repairBoundaryDiagonals: true,
