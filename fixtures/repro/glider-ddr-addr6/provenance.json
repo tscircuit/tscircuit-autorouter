@@ -1,0 +1,27 @@
+{
+  "board": "Glider mainboard DDR3",
+  "sourceRepository": "https://github.com/Modos-Labs/Glider",
+  "sourceCommit": "ed94ef7fd95a42cfdcdaf5e5da1dcdd709122763",
+  "sourcePath": "pcb/mainboard/pcb.kicad_pcb",
+  "capture": "Native TSX/core remaining-phase autorouting:start event after both DQ byte phases",
+  "runtime": {
+    "tscircuit": "0.0.3095",
+    "core": "0.0.2277",
+    "bus-lanes-solver": "0.0.45",
+    "capacity-autorouter": "0.0.1041"
+  },
+  "inputSha256": "384206b0f2d07e9858d2349e4833ded52fd211d2c852a52d68cc6f050c473219",
+  "nativePads": 360,
+  "layerCount": 4,
+  "requestedSignals": 33,
+  "obstacles": 1057,
+  "priorBusSignals": 16,
+  "failingSignal": "/fpga_ddr/DRAM_ADDR6",
+  "failingConnection": "source_trace_11",
+  "failingPort": "pcb_port_210",
+  "failingPad": "U1.BALL_H3",
+  "failure": "Top-only terminal is reached on inner1 without a terminal via.",
+  "normalizations": "Same frozen native DDR section as board reruns; conservative rectangular pad obstacles, board-edge bounding box, original copper removed, prior bus copper represented in the exact captured SRJ obstacles.",
+  "physicalReference": "All 49 native signal connections and 16 exact preceding DQ routes, with all 360 original pad obstacles. The router input remains the captured 33-signal phase with 1057 projected obstacles.",
+  "physicalReferenceGzipSha256": "a42878b5dc9b468629a73ccf7492030ff1f3d1b08ec9790f8473f0ce5adfce87"
+}
