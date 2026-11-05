@@ -4,10 +4,17 @@ import {
   getPipeline9RouteCopperGeometry,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { extendPriorityDag, type PriorityDagState } from "./priorityDagState"
+import {
+  RouteWitnessCompatibilityCatalog,
+  type RouteCompatibilityWitness,
+  type RouteWitnessCompatibilitySession,
+} from "./RouteWitnessCompatibilityCatalog"
+import { validateRouteWitnessBoardCopper } from "./validateRouteWitnessBoardCopper"
 
 import {
   decomposePriorityTasks,
@@ -25,6 +32,8 @@ type Params = ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   allowBlindAndBuriedVias?: boolean
+  witnessCompatibilitySession?: RouteWitnessCompatibilitySession
+  boardGeometry?: HighDensityBoardGeometry
 }
 class PriorityWorkLimitReached extends Error {}
 
@@ -71,9 +80,17 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   } = { minX: 0, maxX: 0, minY: 0, maxY: 0 }
   private readonly allowedLayers: number[] = []
   private readonly regionId: string = ""
+  private compatibilityCatalog?: RouteWitnessCompatibilityCatalog
+  private compatibilitySelection?: {
+    witnesses: RouteCompatibilityWitness[]
+    state: State
+    nextTask: number
+  }
+  private readonly compatibilityParams: Params
 
   constructor(params: Params) {
     super(params)
+    this.compatibilityParams = params
     this.aggregate = params.priorityDiagnostics
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
@@ -192,6 +209,33 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         ancestors: this.tasks.map(() => new Set()),
         witnesses: this.tasks.map(() => undefined),
       })
+      // Board obstacles and outline are physical coordinates. Grown native
+      // proposals intentionally stay with the existing DAG policy; comparing
+      // their virtual coordinates to the physical board would be invalid.
+      if (params.witnessCompatibilitySession && this.coordinateScale === 1) {
+        const catalogParams = {
+          tasks: this.tasks,
+          owners: this.owner,
+          ...this.board,
+          clearance: this.obstacleMargin,
+          viaHoleDiameter: this.viaHoleDiameter,
+          minimumHoleGap: this.minimumHoleGap,
+          traceWidth: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+          regionId: this.regionId,
+          diagnostics: this.aggregate,
+        }
+        this.charge("witnessCompatibilityContextEntries", this.tasks.length * 4 + 1)
+        const session = params.witnessCompatibilitySession
+        if (session.catalog) {
+          if (session.catalog.contextKey !== RouteWitnessCompatibilityCatalog.getContextKey(catalogParams))
+            throw new Error("Mismatched shared route compatibility scene")
+        } else session.catalog = new RouteWitnessCompatibilityCatalog(catalogParams)
+        this.compatibilityCatalog = session.catalog
+      } else if (params.witnessCompatibilitySession && this.aggregate) {
+        this.aggregate.witnessCompatibilitySkippedVirtualCandidates =
+          (this.aggregate.witnessCompatibilitySkippedVirtualCandidates ?? 0) + 1
+      }
     } catch (error) {
       if (!(error instanceof PriorityWorkLimitReached)) throw error
       this.unknown("owned setup exhausted aggregate family work allowance")
@@ -409,6 +453,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         return [i, witness]
       }),
     }
+    this.compatibilityCatalog?.add(task, copy, this.charge, state)
   }
 
   private pairConflict(left: number, right: number, state: State): boolean {
@@ -416,6 +461,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     const a = state.witnesses[left]?.route,
       b = state.witnesses[right]?.route
     if (!a || !b) throw new Error("Missing priority pair witness")
+    if (this.compatibilityCatalog)
+      return this.compatibilityCatalog.conflictRoutes(left, a, right, b, this.charge)
     // Drill clearance is owner-independent; only an identical same-net site
     // denotes reuse. Never replace the actual drill gap by annulus clearance.
     for (const va of a.vias)
@@ -545,12 +592,83 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     return true
   }
 
+  private advanceCompatibilitySelection(): boolean {
+    const catalog = this.compatibilityCatalog
+    if (!catalog) return false
+    if (!this.compatibilitySelection) {
+      const selection = catalog.select(this.charge)
+      if (!selection) return false
+      // Native costs/future lists may differ from the contexts that produced
+      // these paths. They are reused as geometric proposals only. Validate
+      // each path against ALL other selected copper before accepting it.
+      const witnesses: Witness[] = selection.map((w) => ({ route: w.route, ancestors: [] }))
+      this.compatibilitySelection = {
+        witnesses: selection,
+        state: {
+          witnesses,
+          ancestors: this.tasks.map((_, task) => new Set(this.tasks.map((_, i) => i).filter((i) => i !== task))),
+        },
+        nextTask: 0,
+      }
+      this.charge("witnessCompatibilityFinalStateSlots", this.tasks.length ** 2 + this.tasks.length)
+    }
+    const pending = this.compatibilitySelection
+    if (pending.nextTask < this.tasks.length) {
+      if (!this.validateRoute(pending.nextTask++, pending.state)) {
+        catalog.rejectSelection(pending.witnesses)
+        this.compatibilitySelection = undefined
+      }
+      return true
+    }
+    const routes = pending.witnesses.map((w) => w.route)
+    const started = performance.now()
+    this.charge("witnessCompatibilityBoardValidationWork", routes.reduce((n, route) => n + route.route.length + route.vias.length + 1, 0) + (this.compatibilityParams.obstacles?.length ?? 0) * routes.length)
+    const validation = validateRouteWitnessBoardCopper({
+      routes,
+      obstacles: this.compatibilityParams.obstacles ?? [],
+      node: this.nodeWithPortPoints,
+      connMap: this.connMap,
+      layerCount: this.board.layerCount,
+      traceWidth: this.traceWidth,
+      viaDiameter: this.viaDiameter,
+      clearance: this.obstacleMargin,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minimumHoleGap: this.minimumHoleGap,
+      allowBlindAndBuriedVias: this.board.allowBlindAndBuriedVias,
+      boardGeometry: this.compatibilityParams.boardGeometry,
+    })
+    for (const [key, value] of Object.entries({
+      witnessCompatibilityBoardValidations: 1,
+      witnessCompatibilityBoardValidationMicroseconds: Math.round((performance.now() - started) * 1000),
+      witnessCompatibilityBoardValidationIssues: validation.issues,
+      witnessCompatibilityBoardObstaclesChecked: validation.obstacles,
+    })) catalog.stats[key] = (catalog.stats[key] ?? 0) + value
+    if (!validation.valid) {
+      catalog.rejectSelection(pending.witnesses)
+      this.compatibilitySelection = undefined
+      return true
+    }
+    this.charge("witnessCompatibilityOutputCopies", routes.reduce((n, route) => n + route.route.length + route.vias.length + 1, 0))
+    this.solvedRoutes = routes.map((route) => ({
+      ...route,
+      route: route.route.map((p) => ({ ...p })),
+      vias: route.vias.map((v) => ({ ...v })),
+    }))
+    catalog.stats.witnessCompatibilityAcceptedAssignments = (catalog.stats.witnessCompatibilityAcceptedAssignments ?? 0) + 1
+    if (new Set(pending.witnesses.map((w) => w.contextId)).size > 1)
+      catalog.stats.witnessCompatibilityCrossContextAssignments = (catalog.stats.witnessCompatibilityCrossContextAssignments ?? 0) + 1
+    this.solved = true
+    this.recordTerminal(true)
+    return true
+  }
+
   override _step(): void {
     // Replace BaseSolver's one-call clock with the explicit aggregate work
     // clock below, bounded by exactly the removed native family allowance.
     this.iterations--
     try {
       this.charge("priorityDispatches")
+      if (!this.activeSubSolver && this.advanceCompatibilitySelection()) return
       if (this.activeSubSolver) {
         this.charge("priorityNativeSteps")
         this.activeSubSolver.step()
