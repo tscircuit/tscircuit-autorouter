@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 68813d58d1143eeb2f4e8adce9d6c4845eeeefc3
+          ref: 8ec1f3acf1c5f2b228e6f6d8c8972d4ee2045962
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-selected-geometry-profile
+          name: standalone-reused-geometry-profile
           path: outputs
 
   full-standalone:
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/high-density-repair03
-          ref: 68813d58d1143eeb2f4e8adce9d6c4845eeeefc3
+          ref: 8ec1f3acf1c5f2b228e6f6d8c8972d4ee2045962
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -99,12 +99,12 @@ jobs:
               order="base candidate"
               if [ "$round" = 2 ]; then order="candidate base"; fi
               for revision in $order; do
-                (cd "$revision" && bash benchmark.sh --dataset "$dataset" --concurrency 2 --effort 1 --max-iterations 16 --out "../outputs/$dataset-round-$round-$revision.json") > "outputs/$dataset-round-$round-$revision.log" 2>&1
+                (cd "$revision" && bash benchmark.sh --dataset "$dataset" --concurrency 2 --effort 1 --out "../outputs/$dataset-round-$round-$revision.json") > "outputs/$dataset-round-$round-$revision.log" 2>&1
               done
             done
           done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: standalone-selected-geometry-full
+          name: standalone-reused-geometry-full
           path: outputs
