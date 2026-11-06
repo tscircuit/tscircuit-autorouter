@@ -1100,11 +1100,26 @@ export function convertToCircuitJson(
   const originalSrj = inputOriginalSrj
     ? getSrjWithImportedPadPortIds(inputOriginalSrj)
     : undefined
-  const viaDimensions = getViaDimensions(srjWithPointPairs)
+  const viaDimensions = getViaDimensions({
+    minViaDiameter:
+      srjWithPointPairs.minViaDiameter ?? originalSrj?.minViaDiameter,
+    minViaHoleDiameter:
+      srjWithPointPairs.minViaHoleDiameter ?? originalSrj?.minViaHoleDiameter,
+    minViaPadDiameter:
+      srjWithPointPairs.minViaPadDiameter ?? originalSrj?.minViaPadDiameter,
+    min_via_hole_diameter:
+      srjWithPointPairs.min_via_hole_diameter ??
+      originalSrj?.min_via_hole_diameter,
+    min_via_pad_diameter:
+      srjWithPointPairs.min_via_pad_diameter ??
+      originalSrj?.min_via_pad_diameter,
+  })
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
   const requestedMinViaHoleDiameter =
     srjWithPointPairs.min_via_hole_diameter ??
-    srjWithPointPairs.minViaHoleDiameter
+    srjWithPointPairs.minViaHoleDiameter ??
+    originalSrj?.min_via_hole_diameter ??
+    originalSrj?.minViaHoleDiameter
   const resolvedMinViaHoleDiameter =
     minViaHoleDiameter ??
     requestedMinViaHoleDiameter ??
