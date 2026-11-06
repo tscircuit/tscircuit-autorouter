@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -31,19 +32,21 @@ test("routes the i.MX6 DDR board beside completed data-byte copper", async (): P
     connections: [...preloadedConnections, ...inputSrj.connections],
     traces: preloadedTraces,
   }
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: referenceSrj,
-      srjWithPointPairs: {
-        ...solver.srjWithPointPairs!,
-        connections: [
-          ...preloadedConnections,
-          ...solver.srjWithPointPairs!.connections,
-        ],
-      },
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-      // Retain the captured i.MX6 board's 0.119 mm copper-clearance rule.
-      drcOptions: { traceClearance: 0.119, viaToPadClearance: 0.119 },
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const snapshotInput = {
+    inputSrj: referenceSrj,
+    srjWithPointPairs: {
+      ...solver.srjWithPointPairs!,
+      connections: [
+        ...preloadedConnections,
+        ...solver.srjWithPointPairs!.connections,
+      ],
+    },
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    // Retain the captured i.MX6 board's 0.119 mm copper-clearance rule.
+    drcOptions: { traceClearance: 0.119, viaToPadClearance: 0.119 },
+  }
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
+  expect(evaluateRelaxedDrc(snapshotInput).errors).toEqual([])
 })
