@@ -29,6 +29,8 @@ export type {
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
 
+const WORKING_NODE_RELEASE_THRESHOLD = 50_000
+
 export class TopologyMergingSolver extends BaseSolver {
   private readonly preparedNodes: PreparedTopologyMergingNode[]
   private readonly preparedNodeBySourceKey: Map<
@@ -106,6 +108,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    this.releaseTopologyScratch()
     this.solved = true
   }
 
@@ -173,7 +176,26 @@ export class TopologyMergingSolver extends BaseSolver {
     this.stats.compactedRegionCount = 0
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.passthroughNodeCount = this.outputNodes.length
+    this.releaseTopologyScratch()
     this.solved = true
+  }
+
+  private releaseTopologyScratch(): void {
+    // Keep small meshes on their existing garbage-collection schedule.
+    const workingNodeCount =
+      this.preparedNodes.length + this.atomicRegions.length
+    if (workingNodeCount < WORKING_NODE_RELEASE_THRESHOLD) return
+
+    // Completed solvers stay attached to the pipeline. Keep the validated
+    // output, original constructor input and stats; release temporary indexes.
+    this.preparedNodes.length = 0
+    this.preparedNodeBySourceKey.clear()
+    this.xCoordinates.length = 0
+    this.atomicRegions.length = 0
+    this.horizontalRegionByBucket.clear()
+    this.overruledTargetSourceKeys.clear()
+    this.outputProvenance.groupIndexesByNodeId.clear()
+    this.outputProvenance.sourceKeysByNodeId.clear()
   }
 
   private processCurrentXSlab(): void {
