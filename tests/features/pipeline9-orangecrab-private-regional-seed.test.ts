@@ -97,13 +97,15 @@ test("the existing exact stage finishes OrangeCrab's private one-error regional 
   expect(
     traces.reduce(
       (count, trace) =>
-        count + trace.route.filter((point) => point.route_type === "via").length,
+        count +
+        trace.route.filter((point) => point.route_type === "via").length,
       0,
     ),
   ).toBe(81)
   const seed =
     solver.initialBoundedRegionalRepairSolver!.getUnpublishedRepairSeed()
-  if (seed === undefined) throw new Error("Missing actual private OrangeCrab seed")
+  if (seed === undefined)
+    throw new Error("Missing actual private OrangeCrab seed")
   // Replay next-stage selection with real equal and reference-clean geometry.
   // Neither case may be replaced by the retained one-error candidate.
   for (const existingRoutes of [

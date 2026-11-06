@@ -771,7 +771,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             ? seedReference
             : seedReference.errors
           if (seedErrors.length !== seed.drcIssueCount) {
-            throw new Error("Pipeline9 private repair seed lost its DRC validation")
+            throw new Error(
+              "Pipeline9 private repair seed lost its DRC validation",
+            )
           }
           const existingReference = this.cachedReferenceDrcEvaluator({
             traces: [],

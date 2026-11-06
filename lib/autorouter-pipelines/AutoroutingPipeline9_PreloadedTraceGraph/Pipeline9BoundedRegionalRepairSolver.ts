@@ -1096,7 +1096,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     if (this.result.publishedDrcIssueCount === undefined) {
       throw new Error("Pipeline9 repair seed has no published reference count")
     }
-    if (seed.drcIssueCount >= this.result.publishedDrcIssueCount) return undefined
+    if (seed.drcIssueCount >= this.result.publishedDrcIssueCount)
+      return undefined
     return seed
   }
 }
