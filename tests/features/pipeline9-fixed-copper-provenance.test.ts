@@ -75,10 +75,9 @@ test("Pipeline9 retains fixed copper until it is represented by a Circuit JSON p
       route: trace.route.map((point) => ({ ...point, x: 1.5 })),
     }
     expect(
-      evaluate.evaluateFixedCopper([trace, secondTrace]).map((error) => [
-        error.pcb_trace_id,
-        error.pcb_via_id,
-      ]),
+      evaluate
+        .evaluateFixedCopper([trace, secondTrace])
+        .map((error) => [error.pcb_trace_id, error.pcb_via_id]),
     ).toEqual(
       isPadRepresented
         ? []
@@ -89,10 +88,9 @@ test("Pipeline9 retains fixed copper until it is represented by a Circuit JSON p
     )
     // The unchanged second via becomes via_1 after the first one moves.
     expect(
-      evaluate.evaluateFixedCopper([movedTrace, secondTrace]).map((error) => [
-        error.pcb_trace_id,
-        error.pcb_via_id,
-      ]),
+      evaluate
+        .evaluateFixedCopper([movedTrace, secondTrace])
+        .map((error) => [error.pcb_trace_id, error.pcb_via_id]),
     ).toEqual(isPadRepresented ? [] : [["trace_LDQSP", "via_1"]])
     expect(
       evaluate.evaluateFixedCopper([
