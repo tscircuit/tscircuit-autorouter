@@ -129,7 +129,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
-    this.releaseWorkingData()
+    this.releaseTopologyScratch()
     this.solved = true
   }
 
@@ -197,11 +197,11 @@ export class TopologyMergingSolver extends BaseSolver {
     this.stats.compactedRegionCount = 0
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.passthroughNodeCount = this.outputNodes.length
-    this.releaseWorkingData()
+    this.releaseTopologyScratch()
     this.solved = true
   }
 
-  private releaseWorkingData(): void {
+  private releaseTopologyScratch(): void {
     this.nodeIndex.clear()
     // Keep small meshes on their existing garbage-collection schedule.
     const workingNodeCount =

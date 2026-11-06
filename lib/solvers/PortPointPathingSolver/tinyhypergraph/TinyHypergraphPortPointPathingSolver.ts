@@ -487,7 +487,7 @@ export const getOmittedUnoccupiedPorts = (
     return segment.portPoints
       .filter((point) => point.cramped)
       .flatMap((point) =>
-        createSegmentPointPorts(point, region1, region2)
+        createSegmentPointPorts({ spp: point, region1, region2 })
           .filter((port) => !existing.has(port.d.portId))
           .map((port) => ({
             portId: port.d.portId,
@@ -1100,7 +1100,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
-  private restoredUnoccupiedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1131,11 +1130,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
-    this.restoredUnoccupiedPortCount = params.unprunedUnoccupiedSegments
-      ? serializedGraph.ports.length -
-        params.graph.ports.length -
-        2 * connections.length
-      : 0
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =

@@ -152,11 +152,15 @@ const addAssignableViaRegions = (params: {
 }
 
 /** One projection for ordinary ports and restored existing interfaces. */
-export function createSegmentPointPorts(
-  spp: SegmentPortPoint,
-  region1: RegionHg,
-  region2: RegionHg,
-): RegionPortHg[] {
+export function createSegmentPointPorts({
+  spp,
+  region1,
+  region2,
+}: {
+  spp: SegmentPortPoint
+  region1: RegionHg
+  region2: RegionHg
+}): RegionPortHg[] {
   return spp.availableZ.map((z): RegionPortHg => {
     const preloadedTracePortAssignments =
       spp._preloadedTracePortAssignments?.filter(
@@ -249,7 +253,7 @@ export function buildHyperGraph(params: {
       `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
     )
 
-    for (const hgPort of createSegmentPointPorts(spp, region1, region2)) {
+    for (const hgPort of createSegmentPointPorts({ spp, region1, region2 })) {
       graph.ports.push(hgPort)
       region1.ports.push(hgPort)
       region2.ports.push(hgPort)

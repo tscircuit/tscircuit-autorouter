@@ -1,10 +1,21 @@
 import { expect, test } from "bun:test"
 import { getHorizontalMergeBucketKey } from "lib/solvers/TopologyMergingSolver/topology-merging-regions"
-import type { TopologyMergingRegion } from "lib/solvers/TopologyMergingSolver/topology-merging-types"
+import type {
+  HorizontalTopologyMergingBucketKey,
+  TopologyMergingRegion,
+} from "lib/solvers/TopologyMergingSolver/topology-merging-types"
+
+type LegacyHorizontalBucketKey = string
 
 test("keeps bucket identity through encoding and rounding", (): void => {
-  const oldToNew = new Map<string, string>()
-  const newToOld = new Map<string, string>()
+  const oldToNew = new Map<
+    LegacyHorizontalBucketKey,
+    HorizontalTopologyMergingBucketKey
+  >()
+  const newToOld = new Map<
+    HorizontalTopologyMergingBucketKey,
+    LegacyHorizontalBucketKey
+  >()
   const signatures = [
     "free:0",
     "free:1",
