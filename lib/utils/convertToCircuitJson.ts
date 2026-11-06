@@ -682,18 +682,6 @@ function getPadFragmentId(
   return id
 }
 
-const isCircularPadGeometry = (obstacle: {
-  type: string
-  shape?: string
-  width: number
-  height: number
-  ccwRotationDegrees?: number
-}): boolean =>
-  obstacle.shape === "circle" ||
-  (obstacle.type === "oval" &&
-    obstacle.width === obstacle.height &&
-    obstacle.ccwRotationDegrees === undefined)
-
 export function createPcbPadElements(
   srj: SimpleRouteJson,
 ): AnyCircuitElement[] {
@@ -883,7 +871,7 @@ export function createPcbPadElements(
     )
     if (id === undefined) continue
 
-    if (isCircularPadGeometry(obstacle)) {
+    if (obstacle.shape === "circle") {
       pads.push({
         type: "pcb_smtpad",
         pcb_smtpad_id: id,
