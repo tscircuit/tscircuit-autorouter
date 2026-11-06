@@ -13,6 +13,7 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
@@ -972,6 +973,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
         )
       }
+      if (trace.isFixed) continue
       const traceIndex = params.updatedPreloadedTraces.findIndex(
         (updatedTrace) => updatedTrace.pcb_trace_id === traceId,
       )
@@ -1228,13 +1230,46 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // Projection can reject B and return to A. Retain both exact evaluations
     // without keeping a portfolio's worth of full-board keys and errors.
     const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
+    const multilayerObstacles = params.obstacles.filter(
+      (obstacle) =>
+        (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+    )
+    const connectedObstaclesByConnectionName = new Map<
+      string,
+      Map<string | undefined, ReadonlyArray<Obstacle>>
+    >()
+    const getConnectedMultilayerObstacles = (
+      route: HighDensityRoute,
+    ): ReadonlyArray<Obstacle> => {
+      let byRoot = connectedObstaclesByConnectionName.get(route.connectionName)
+      if (!byRoot) {
+        byRoot = new Map()
+        connectedObstaclesByConnectionName.set(route.connectionName, byRoot)
+      }
+      const cached = byRoot.get(route.rootConnectionName)
+      if (cached) return cached
+      // Candidate geometry changes, but the board's net connectivity does not.
+      // Avoid rescanning every pad for every segment of every DRC proposal.
+      const connected = multilayerObstacles.filter((obstacle) =>
+        isObstacleConnectedToRoute(obstacle, route, params.connMap),
+      )
+      byRoot.set(route.rootConnectionName, connected)
+      return connected
+    }
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
     ): PreparedCandidateDrcInput => {
-      const evaluatedNewRoutes = evaluatedRoutes.filter(
-        (route) => !this.syntheticConnectionNames.has(route.connectionName),
-      )
+      const evaluatedNewRoutes: HighDensityRoute[] = []
+      const evaluatedPreloadedRouteByName = new Map<string, HighDensityRoute>()
+      for (const route of evaluatedRoutes) {
+        if (!this.syntheticConnectionNames.has(route.connectionName)) {
+          evaluatedNewRoutes.push(route)
+        } else if (!evaluatedPreloadedRouteByName.has(route.connectionName)) {
+          // Duplicate logical names must retain their first matching fragment.
+          evaluatedPreloadedRouteByName.set(route.connectionName, route)
+        }
+      }
       const evaluatedNewTraces = convertNewRoutes(evaluatedNewRoutes)
       const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
         evaluatedNewTraces,
@@ -1244,9 +1279,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const originalTraceIdByEvaluationTraceId = new Map<string, string>()
       const evaluatedMovablePreloadedTraces = this.movablePreloadedSections.map(
         (movableSection) => {
-          const evaluatedRoute = evaluatedRoutes.find(
-            (route) =>
-              route.connectionName === movableSection.syntheticConnectionName,
+          const evaluatedRoute = evaluatedPreloadedRouteByName.get(
+            movableSection.syntheticConnectionName,
           )
           if (!evaluatedRoute) {
             throw new Error(
@@ -1272,7 +1306,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               params.layerCount,
               {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-                obstacles: params.obstacles,
+                connectedMultilayerObstacles:
+                  getConnectedMultilayerObstacles(evaluatedRoute),
                 connMap: params.connMap,
               },
             ),

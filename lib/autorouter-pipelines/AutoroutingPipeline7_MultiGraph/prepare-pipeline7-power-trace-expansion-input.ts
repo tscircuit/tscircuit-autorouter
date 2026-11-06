@@ -38,6 +38,9 @@ export const preparePipeline7PowerTraceExpansionInput = ({
           expandedConnectionNames.includes(trace.connection_name),
         ),
       )
+  for (const trace of preloadedTraces) {
+    if (trace.isFixed) mutablePreloadedTraceSet.delete(trace)
+  }
   const fixedTraces = preloadedTraces.filter(
     (trace) => !mutablePreloadedTraceSet.has(trace),
   )
