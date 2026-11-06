@@ -6,15 +6,18 @@ import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
 
 type DrcError = Record<string, unknown>
+type ViaLocationKey = string
 
 /** Retains earlier copper that has no pad identity in Circuit JSON. */
 export const createPipeline9FixedCopperDrcEvaluator = ({
   inputSrj,
   srjWithPointPairs,
+  representedPadObstacleIndexes,
   viaClearance,
 }: {
   inputSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
+  representedPadObstacleIndexes: ReadonlySet<number>
   viaClearance?: number
 }): ((traces: SimplifiedPcbTrace[]) => DrcError[]) => {
   const fixedCopperSrj = {
@@ -31,7 +34,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   return (traces): DrcError[] => {
-    const viaIds = new Map<string, string>()
+    const viaIds = new Map<ViaLocationKey, string>()
     const routes = traces.flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
         trace,
@@ -46,7 +49,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           if (point.route_type !== "via") {
             throw new Error("Fixed copper via evaluation requires a via point")
           }
-          const key = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
+          const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
           if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
           return {
             ...route,
@@ -63,7 +66,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       .filter(({ obstacleIndex }) => {
         const obstacle = inputSrj.obstacles[obstacleIndex]!
         return (
-          !obstacle.circuitJsonMetadata &&
+          !representedPadObstacleIndexes.has(obstacleIndex) &&
           obstacle.connectedTo.length > 0 &&
           !obstacle.isCopperPour &&
           !obstacle.isNonPlatedHole

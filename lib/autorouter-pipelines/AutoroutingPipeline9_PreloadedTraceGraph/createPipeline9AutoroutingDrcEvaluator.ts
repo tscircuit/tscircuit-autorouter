@@ -60,11 +60,11 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
         minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
       })
     : undefined
-  const staticCircuitJson = convertToCircuitJson(
-    srjWithPointPairs,
-    [],
-    conversionOptions,
-  )
+  const representedPadObstacleIndexes = new Set<number>()
+  const staticCircuitJson = convertToCircuitJson(srjWithPointPairs, [], {
+    ...conversionOptions,
+    representedPadObstacleIndexes,
+  })
   if (board) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
@@ -83,6 +83,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   const evaluateFixedCopper = createPipeline9FixedCopperDrcEvaluator({
     inputSrj,
     srjWithPointPairs,
+    representedPadObstacleIndexes,
     viaClearance: drcOptions.viaToPadClearance,
   })
   return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
