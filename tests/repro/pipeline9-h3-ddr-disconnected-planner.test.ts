@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import { getSvgFromGraphicsObject } from "graphics-debug"
+import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -28,7 +28,7 @@ test("identifies disconnected H3 DDR signals before reripping the other routes",
   const planner = solver.portPointPathingSolver!
   const iterations = planner.stats.stageStats.solveGraph.iterations
   const disconnectedSignals = planner.stats.staticallyUnroutableRouteCount ?? 0
-  const graphics = convertSrjToGraphicsObject(inputSrj)
+  const graphics: GraphicsObject = convertSrjToGraphicsObject(inputSrj)
   graphics.texts = [
     {
       x: inputSrj.bounds.minX,
