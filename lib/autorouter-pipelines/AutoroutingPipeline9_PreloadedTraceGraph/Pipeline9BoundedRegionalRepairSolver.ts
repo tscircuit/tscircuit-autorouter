@@ -784,8 +784,15 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     if (this.budget.revisitChangedRegions) context.attemptedRegions.length = 0
     this.result.finalDrcIssueCount = candidateErrors.length
     if (candidateErrors.length === 0) {
+      this.unpublishedRepairSeed = undefined
       this.publish(context, true)
       return
+    }
+    // Only accepted regional routing is retained as a later search seed.
+    // Preliminary projection belongs to the existing preparation path.
+    this.unpublishedRepairSeed = {
+      routes: context.currentRoutes,
+      drcIssueCount: context.currentErrors.length,
     }
     this.state = { phase: "select-region", context }
   }
@@ -800,14 +807,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     ) {
       this.publish(context, false)
       return
-    }
-    if (context.currentErrors.length < context.initialErrors.length) {
-      // Coupled improvements remain private while peer errors remain. Preserve
-      // their validated geometry for the next repair stage's search input.
-      this.unpublishedRepairSeed = {
-        routes: context.currentRoutes,
-        drcIssueCount: context.currentErrors.length,
-      }
     }
     this.state = { phase: "prepare-independent-projection", context }
   }
