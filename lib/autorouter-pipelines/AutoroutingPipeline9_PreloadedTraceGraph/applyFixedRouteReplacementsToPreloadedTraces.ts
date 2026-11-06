@@ -325,6 +325,11 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
       replacedConnectionNames.has(route.connectionName),
     )
     if (!traceWasMutated) return trace
+    if (trace.isFixed) {
+      throw new Error(
+        `Pipeline9 cannot replace fixed preloaded trace "${trace.pcb_trace_id}"`,
+      )
+    }
     const updatedTraceRoutes = (
       updatedFixedRoutesByTraceIndex.get(traceIndex) ?? []
     ).sort(comparePreloadedRouteOrder)
