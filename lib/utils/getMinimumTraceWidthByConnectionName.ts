@@ -19,6 +19,9 @@ export const getMinimumTraceWidthByConnectionName = (
       ...(connection.mergedConnectionNames ?? []),
     ]
     if (connection.rootConnectionName) names.push(connection.rootConnectionName)
+    if (connection.__netConnectionName !== undefined) {
+      names.push(connection.__netConnectionName)
+    }
     for (const name of names) {
       widths.set(name, Math.max(widths.get(name) ?? 0, width))
     }
