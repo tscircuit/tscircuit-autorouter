@@ -19,7 +19,10 @@ test("SRJ18 sample006 legacy oval circles preserve native pad geometry beside a 
     }>
   } = JSON.parse(
     readFileSync(
-      new URL("../fixtures/srj18-sample006-circle-via-pad.json", import.meta.url),
+      new URL(
+        "../fixtures/srj18-sample006-circle-via-pad.json",
+        import.meta.url,
+      ),
       "utf8",
     ),
   )
@@ -51,11 +54,14 @@ test("SRJ18 sample006 legacy oval circles preserve native pad geometry beside a 
       x: fixture.srj.obstacles[index]!.center.x,
       y: fixture.srj.obstacles[index]!.center.y,
     })
-    if (pad.shape !== "circle") throw new Error("Expected a native circular pad")
+    if (pad.shape !== "circle")
+      throw new Error("Expected a native circular pad")
     expect(pad.x).toBeCloseTo(sourcePad.x, 9)
     expect(pad.y).toBeCloseTo(sourcePad.y, 9)
   }
-  const vias = actual.circuitJson.filter((element) => element.type === "pcb_via")
+  const vias = actual.circuitJson.filter(
+    (element) => element.type === "pcb_via",
+  )
   expect(vias).toEqual([
     expect.objectContaining({
       pcb_trace_id: fixture.traces[0]!.pcb_trace_id,
