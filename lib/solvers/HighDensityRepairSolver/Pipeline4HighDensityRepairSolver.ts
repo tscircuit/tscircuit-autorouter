@@ -21,6 +21,7 @@ import { getConnectedPadSides } from "./getConnectedPadSides"
 import {
   Pipeline4HighDensityRepairSampleSolver,
   type Pipeline4HighDensityRepairSampleOutput,
+  shouldRetryWithBoundaryDiagonalRepair,
 } from "./Pipeline4HighDensityRepairSampleSolver"
 
 type RepairSampleEntry = {
@@ -558,16 +559,51 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         return
       }
 
+      let repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+      let clearanceStats = {
+        nodeClearanceInitialConflictCount:
+          this.activeSubSolver.stats.nodeClearanceInitialConflictCount,
+        nodeClearanceFinalConflictCount:
+          this.activeSubSolver.stats.nodeClearanceFinalConflictCount,
+        nodeClearanceCandidateCount:
+          this.activeSubSolver.stats.nodeClearanceCandidateCount,
+      }
+      if (
+        shouldRetryWithBoundaryDiagonalRepair(
+          sampleEntry.sample,
+          repairedRoutes,
+          Number(clearanceStats.nodeClearanceFinalConflictCount ?? 0),
+        )
+      ) {
+        const boundaryRepairSolver = new HighDensityRepairSolver({
+          repairBoundaryDiagonals: true,
+          sample: sampleEntry.sample,
+          margin: this.repairMargin,
+        })
+        boundaryRepairSolver.solve()
+        if (
+          !boundaryRepairSolver.failed &&
+          Number(
+            boundaryRepairSolver.stats.nodeClearanceFinalConflictCount ??
+              Infinity,
+          ) < Number(clearanceStats.nodeClearanceFinalConflictCount ?? Infinity)
+        ) {
+          repairedRoutes = boundaryRepairSolver.getOutput().repairedRoutes
+          clearanceStats = {
+            nodeClearanceInitialConflictCount:
+              boundaryRepairSolver.stats.nodeClearanceInitialConflictCount,
+            nodeClearanceFinalConflictCount:
+              boundaryRepairSolver.stats.nodeClearanceFinalConflictCount,
+            nodeClearanceCandidateCount:
+              boundaryRepairSolver.stats.nodeClearanceCandidateCount,
+          }
+          this.latestVisualization = boundaryRepairSolver.visualize()
+        }
+      }
+
       this.consumeRepairSample({
-        repairedRoutes: this.activeSubSolver.getOutput().repairedRoutes,
-        clearanceStats: {
-          nodeClearanceInitialConflictCount:
-            this.activeSubSolver.stats.nodeClearanceInitialConflictCount,
-          nodeClearanceFinalConflictCount:
-            this.activeSubSolver.stats.nodeClearanceFinalConflictCount,
-          nodeClearanceCandidateCount:
-            this.activeSubSolver.stats.nodeClearanceCandidateCount,
-        },
+        repairedRoutes,
+        clearanceStats,
       })
       return
     }
