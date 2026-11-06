@@ -1621,25 +1621,7 @@ jobs:
                   ref: requestedRef,
                 })).data.sha
               : pr.data.head.sha
-            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
-            const statusComment = await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: [
-                '## Same Machine Benchmark Results',
-                '',
-                `Queued \`${dataset}\` on PR base \`${baseSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
-                '',
-                'Both revisions will run sequentially in one Blacksmith job. With --threads above one, each revision runs inline and again with the requested routing workers.',
-                '',
-                ...(networkedRemote ? [
-                  'Remote mode validates every cold response and requires a fully cached hot pass; incompatible responses or local transport fallbacks fail the run.',
-                  '',
-                ] : []),
-                `Workflow: [View run](${runUrl})`,
-              ].join('\n'),
-            })
+            // Keep this diagnostic run independent of rate-limited bot comments.
 
             core.setOutput('dataset', dataset)
             core.setOutput('benchmark_args_json', JSON.stringify(benchmarkArgs))
@@ -1647,7 +1629,7 @@ jobs:
             core.setOutput('networked_remote', networkedRemote ? 'true' : 'false')
             core.setOutput('base_sha', baseSha)
             core.setOutput('pr_sha', prSha)
-            core.setOutput('status_comment_id', String(statusComment.data.id))
+            core.setOutput('status_comment_id', '')
 
       - name: Checkout benchmark controller
         uses: actions/checkout@v4
@@ -1727,6 +1709,7 @@ jobs:
             --runner-name "$RUNNER_NAME" \
             "${threaded_args[@]}" \
             --output ../same-machine-results/comment.md
+          cat ../same-machine-results/comment.md
 
       - name: Preserve interrupted comparison diagnostics
         if: always()
