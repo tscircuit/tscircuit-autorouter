@@ -1,4 +1,7 @@
-import { getFixedObstacleViolations } from "@tscircuit/repair04"
+import {
+  createFixedObstacleViolationEvaluator,
+  type FixedObstacleViolation,
+} from "@tscircuit/repair04"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
@@ -49,10 +52,12 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   const errorsByViaGeometry = new Map<ViaGeometryKey, DrcError[]>()
-  const violationsByVia = new Map<
-    ViaCheckKey,
-    ReturnType<typeof getFixedObstacleViolations>
-  >()
+  const evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
+    srj: fixedCopperSrj,
+    routes: [],
+    viaClearance: clearance,
+  })
+  const violationsByVia = new Map<ViaCheckKey, FixedObstacleViolation[]>()
   return (traces): DrcError[] => {
     // Wire-only candidates leave this via-only check unchanged. Include trace
     // identity, ownership, diameter and layer span so moved vias are rechecked.
@@ -108,15 +113,9 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       return [{ ...route, connectionName: route.rootConnectionName }]
     })
     if (uncachedViaIndexes.length > 0) {
-      const uncheckedViolations: Array<
-        ReturnType<typeof getFixedObstacleViolations>
-      > = uncachedViaIndexes.map(() => [])
-      // Prepare static geometry once for all misses in this candidate.
-      for (const violation of getFixedObstacleViolations({
-        srj: fixedCopperSrj,
-        routes: uncheckedRoutes,
-        viaClearance: clearance,
-      })) {
+      const uncheckedViolations: FixedObstacleViolation[][] =
+        uncachedViaIndexes.map(() => [])
+      for (const violation of evaluateFixedObstacles(uncheckedRoutes)) {
         uncheckedViolations[violation.routeIndex]!.push(violation)
       }
       for (let index = 0; index < uncachedViaIndexes.length; index++) {
