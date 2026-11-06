@@ -7,6 +7,7 @@ import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRout
 
 type DrcError = Record<string, unknown>
 type ViaLocationKey = string
+type ViaGeometryKey = string
 
 /** Retains earlier copper that has no pad identity in Circuit JSON. */
 export const createPipeline9FixedCopperDrcEvaluator = ({
@@ -29,7 +30,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         !obstacle.isNonPlatedHole,
     )
   ) {
-    return () => []
+    return (): DrcError[] => []
   }
   const fixedCopperSrj = {
     ...inputSrj,
@@ -44,7 +45,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.defaultObstacleMargin ?? 0,
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
-  let previousEvaluation: { key: string; errors: DrcError[] } | undefined
+  const errorsByViaGeometry = new Map<ViaGeometryKey, DrcError[]>()
   return (traces): DrcError[] => {
     // Wire-only candidates leave this via-only check unchanged. Include trace
     // identity, ownership, diameter and layer span so moved vias are rechecked.
@@ -54,8 +55,9 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         trace.connection_name,
         trace.route.filter((point) => point.route_type === "via"),
       ]),
-    )
-    if (previousEvaluation?.key === key) return previousEvaluation.errors
+    ) as ViaGeometryKey
+    const cachedErrors = errorsByViaGeometry.get(key)
+    if (cachedErrors !== undefined) return cachedErrors
     const viaIds = new Map<ViaLocationKey, string>()
     const routes = traces.flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
@@ -109,7 +111,10 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           message: "Via is too close to fixed copper on a drilled layer",
         }
       })
-    previousEvaluation = { key, errors }
+    if (errorsByViaGeometry.size >= 64) {
+      errorsByViaGeometry.delete(errorsByViaGeometry.keys().next().value!)
+    }
+    errorsByViaGeometry.set(key, errors)
     return errors
   }
 }
