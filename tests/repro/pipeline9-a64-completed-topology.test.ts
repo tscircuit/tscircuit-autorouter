@@ -43,7 +43,7 @@ test("shows the completed A64 topology and retained mesh working data", async ()
       .digest("hex"),
   ).toBe("87fba2d4517fb34b04ee878efdc6acf0556ebb7655f4ae27635cc5c75e2d6c70")
   const views = [
-    { name: "top-layer", bounds: inputSrj.bounds, outlineRegions: false },
+    { name: "top-layer", bounds: inputSrj.bounds },
     {
       name: "detail",
       bounds: { minX: -14, maxX: -12, minY: -16.5, maxY: -15 },

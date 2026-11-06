@@ -7,7 +7,7 @@ type CompletedDdrMeshView = {
   solver: TopologyMergingSolver
   boardName: string
   view: Bounds
-  outlineRegions: boolean
+  outlineRegions?: boolean
 }
 
 export function getCompletedDdrMeshSnapshotSvg({
