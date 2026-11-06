@@ -5,7 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsVertically } from "stack-svgs"
 import { getConnectionMinimumTraceWidthInput } from "../fixtures/connectionMinimumTraceWidthInput"
 
-test("repro: Pipeline9 ignores an explicit connection minimum while a legal detour exists", async (): Promise<void> => {
+test("Pipeline9 finds a legal detour for an explicit connection minimum", async (): Promise<void> => {
   const input = getConnectionMinimumTraceWidthInput()
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -20,8 +20,7 @@ test("repro: Pipeline9 ignores an explicit connection minimum while a legal deto
     ),
   )
   expect(widths.length).toBeGreaterThan(0)
-  // Capture the ignored proposed constraint; the fix layer changes this.
-  expect(Math.min(...widths)).toBeLessThan(0.4)
+  expect(Math.min(...widths)).toBeGreaterThanOrEqual(0.4 - 1e-6)
 
   const controlInput: SimpleRouteJson = { ...input, minTraceWidth: 0.4 }
   const control = new AutoroutingPipelineSolver9_PreloadedTraceGraph(

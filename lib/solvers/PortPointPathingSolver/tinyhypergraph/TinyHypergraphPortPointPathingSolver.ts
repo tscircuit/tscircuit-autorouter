@@ -1,3 +1,4 @@
+import { MinimumTraceWidthTinyHyperGraphSolver } from "./MinimumTraceWidthTinyHyperGraphSolver"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -13,6 +14,7 @@ import {
   type CapacityMeshNodeId,
   getConnectionPointLayers,
   type SimpleRouteConnection,
+  type SimpleRouteJson,
 } from "lib/types"
 import type {
   NodeWithPortPoints,
@@ -933,6 +935,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
+    minimumTraceWidthSrj?: SimpleRouteJson,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -954,6 +957,17 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solveGraphStep.solverClass = usePreparedPortPointRouting
         ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+    }
+    if (minimumTraceWidthSrj?.connections.some((connection) => connection.minTraceWidth !== undefined)) {
+      const solveGraphStep = this.pipelineDef.find((step) => step.solverName === "solveGraph")!
+      const srj = minimumTraceWidthSrj
+      solveGraphStep.solverClass = class extends MinimumTraceWidthTinyHyperGraphSolver {
+        constructor(...args: ConstructorParameters<typeof TinyHyperGraphSolver>) {
+          super(...args, srj)
+        }
+      }
+      // Section optimization creates solvers without per-route eligibility.
+      this.pipelineDef = this.pipelineDef.filter((step) => step.solverName !== "optimizeSection")
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1154,6 +1168,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
         params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        params.minimumTraceWidthSrj,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1470,6 +1485,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
             this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+            this.params.minimumTraceWidthSrj,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
