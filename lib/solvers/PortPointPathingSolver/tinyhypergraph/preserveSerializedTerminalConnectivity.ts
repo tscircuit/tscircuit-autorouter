@@ -183,10 +183,7 @@ export function preserveSerializedTerminalConnectivity(
           throw new Error(
             "Unoccupied candidate contains a preloaded assignment",
           )
-        if (
-          port.d?.cramped &&
-          isPortOnSharedLayer(port, regionConnectivity)
-        )
+        if (port.d?.cramped && isPortOnSharedLayer(port, regionConnectivity))
           addPortAdjacency(port, allPortAdjacency)
       }
     }
