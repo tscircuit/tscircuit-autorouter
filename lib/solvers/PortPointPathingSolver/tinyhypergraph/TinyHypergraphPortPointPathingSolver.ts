@@ -637,7 +637,7 @@ const buildSerializedTinyGraph = (
     connections,
     solvedRoutes,
   } satisfies SerializedHyperGraph
-  serializePreloadedTraceAssignments(serializedHyperGraph)
+  serializePreloadedTraceAssignments(serializedHyperGraph, params.layerCount)
   return serializedHyperGraph
 }
 
