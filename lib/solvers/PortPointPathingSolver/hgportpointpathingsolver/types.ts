@@ -97,6 +97,8 @@ export interface HgPortPointPathingSolverParams {
   layerCount: number
   effort: number
   preserveTerminalPcbPortIds?: boolean
+  /** Reconnect existing multilayer copper after via-keepout layer separation. */
+  preserveMultilayerTerminalAccess?: boolean
   minViaPadDiameter?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
