@@ -89,29 +89,50 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           }
         }),
     )
-    const errors = routes
-      .flatMap((route, routeIndex) => {
-        const viaKey = JSON.stringify([
+    const viaKeys = routes.map(
+      (route): ViaCheckKey =>
+        JSON.stringify([
           route.rootConnectionName,
           route.viaDiameter,
           route.route,
-        ]) as ViaCheckKey
-        let violations = violationsByVia.get(viaKey)
-        if (violations === undefined) {
-          violations = getFixedObstacleViolations({
-            srj: fixedCopperSrj,
-            // Use declared ownership, rather than a section name that changes
-            // when wire points are inserted before an otherwise unchanged via.
-            routes: [{ ...route, connectionName: route.rootConnectionName }],
-            viaClearance: clearance,
-          })
-          if (violationsByVia.size >= VIA_CHECK_CACHE_CAPACITY) {
-            violationsByVia.delete(violationsByVia.keys().next().value!)
-          }
-          violationsByVia.set(viaKey, violations)
+        ]) as ViaCheckKey,
+    )
+    const violationsByRoute = viaKeys.map((viaKey) =>
+      violationsByVia.get(viaKey),
+    )
+    const uncachedViaIndexes: number[] = []
+    const uncheckedRoutes = routes.flatMap((route, routeIndex) => {
+      if (violationsByRoute[routeIndex] !== undefined) return []
+      uncachedViaIndexes.push(routeIndex)
+      // Section names change with wire points; electrical ownership does not.
+      return [{ ...route, connectionName: route.rootConnectionName }]
+    })
+    if (uncachedViaIndexes.length > 0) {
+      const uncheckedViolations: Array<
+        ReturnType<typeof getFixedObstacleViolations>
+      > = uncachedViaIndexes.map(() => [])
+      // Prepare static geometry once for all misses in this candidate.
+      for (const violation of getFixedObstacleViolations({
+        srj: fixedCopperSrj,
+        routes: uncheckedRoutes,
+        viaClearance: clearance,
+      })) {
+        uncheckedViolations[violation.routeIndex]!.push(violation)
+      }
+      for (let index = 0; index < uncachedViaIndexes.length; index++) {
+        const routeIndex = uncachedViaIndexes[index]!
+        const violations = uncheckedViolations[index]!
+        violationsByRoute[routeIndex] = violations
+        if (violationsByVia.size >= VIA_CHECK_CACHE_CAPACITY) {
+          violationsByVia.delete(violationsByVia.keys().next().value!)
         }
-        return violations.map((violation) => ({ ...violation, routeIndex }))
-      })
+        violationsByVia.set(viaKeys[routeIndex]!, violations)
+      }
+    }
+    const errors = violationsByRoute
+      .flatMap((violations, routeIndex) =>
+        violations!.map((violation) => ({ ...violation, routeIndex })),
+      )
       // Preserve the checker's obstacle-first order and current candidate IDs.
       .sort(
         (left, right) =>
