@@ -36,8 +36,22 @@ export class FinalRouteConstraintsSolver extends BaseSolver {
       }
       if (this.clearance.solved) {
         this.traces = this.clearance.traces
-        this.solved = true
         this.activeSubSolver = null
+        // Clearance repair is the last stage that can change routed copper.
+        // Validate its output here before the final constraint stage succeeds.
+        for (const rule of this.srj.routeConstraints ?? []) {
+          const measurement = measureRouteConstraint(
+            this.srj,
+            this.traces,
+            rule,
+          )
+          if (!measurement.satisfied) {
+            this.failed = true
+            this.error = `Route for ${rule.name ?? "constrained trace"} does not satisfy its via/length limits`
+            return
+          }
+        }
+        this.solved = true
       }
       return
     }

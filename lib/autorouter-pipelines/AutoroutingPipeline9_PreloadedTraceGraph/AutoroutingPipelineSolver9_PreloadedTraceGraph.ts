@@ -1,6 +1,5 @@
 import { FinalRouteConstraintsSolver } from "lib/solvers/ConstrainedRouteSolver/FinalRouteConstraintsSolver"
 import { ConstrainedRouteSolver } from "lib/solvers/ConstrainedRouteSolver/ConstrainedRouteSolver"
-import { measureRouteConstraint } from "lib/solvers/ConstrainedRouteSolver/measureRouteConstraint"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -313,21 +312,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  finalRouteConstraintsSolver?: FinalRouteConstraintsSolver
-  constrainedRouteSolver?: ConstrainedRouteSolver
+  declare finalRouteConstraintsSolver?: FinalRouteConstraintsSolver
+  declare constrainedRouteSolver?: ConstrainedRouteSolver
 
-  pipelineDef = [
-    definePipelineStep(
-      "constrainedRouteSolver",
-      ConstrainedRouteSolver,
-      (cms) => [cms.originalSrj],
-      {
-        onSolved: (cms) => {
-          cms.originalSrj = cms.constrainedRouteSolver!.outputSrj
-          cms.setSimpleRouteJson(cms.originalSrj)
-        },
-      },
-    ),
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -1103,17 +1091,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep(
-      "finalRouteConstraintsSolver",
-      FinalRouteConstraintsSolver,
-      (cms) => [
-        cms.originalSrj,
-        [
-          ...cms.getPowerTraceExpansionFixedTraces(),
-          ...cms.powerTraceExpansionSolver!.getOutput(),
-        ],
-      ],
-    ),
   ]
 
   constructor(
@@ -1124,11 +1101,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    if (!this.originalSrj.routeConstraints?.length) {
-      this.pipelineDef = this.pipelineDef.filter(
-        (step) =>
-          step.solverName !== "constrainedRouteSolver" &&
-          step.solverName !== "finalRouteConstraintsSolver",
+    if (this.originalSrj.routeConstraints?.length) {
+      this.pipelineDef.unshift(
+        definePipelineStep(
+          "constrainedRouteSolver",
+          ConstrainedRouteSolver,
+          (cms) => [cms.originalSrj],
+          {
+            onSolved: (cms) => {
+              cms.originalSrj = cms.constrainedRouteSolver!.outputSrj
+              cms.setSimpleRouteJson(cms.originalSrj)
+            },
+          },
+        ),
+      )
+      this.pipelineDef.push(
+        definePipelineStep(
+          "finalRouteConstraintsSolver",
+          FinalRouteConstraintsSolver,
+          (cms) => [
+            cms.originalSrj,
+            [
+              ...cms.getPowerTraceExpansionFixedTraces(),
+              ...cms.powerTraceExpansionSolver!.getOutput(),
+            ],
+          ],
+        ),
       )
     }
     this.opts = { ...opts }
@@ -1245,23 +1243,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      const traces = this.finalRouteConstraintsSolver?.traces
-      if (this.originalSrj.routeConstraints?.length && !traces)
-        throw new Error(
-          "Constrained routing completed without final validation",
-        )
-      for (const rule of this.originalSrj.routeConstraints ?? []) {
-        const measurement = measureRouteConstraint(
-          this.originalSrj,
-          traces!,
-          rule,
-        )
-        if (!measurement.satisfied) {
-          this.failed = true
-          this.error = `Route for ${rule.name ?? "constrained trace"} does not satisfy its via/length limits`
-          return
-        }
-      }
       this.solved = true
       return
     }

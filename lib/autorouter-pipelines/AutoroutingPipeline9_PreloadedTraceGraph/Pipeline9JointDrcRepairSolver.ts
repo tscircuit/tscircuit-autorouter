@@ -966,11 +966,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // the ordinary copper sections anchored on either side of it.
     // Generic DRC repair has no route-budget objective. Keep constrained
     // preloads fixed here so it cannot spend the reserved length/via budget.
-    const constrainedNetIds = new Set(
-      (params.originalSrj.routeConstraints ?? []).map((rule) =>
-        params.connMap.getNetConnectedToId(rule.connectionName),
-      ),
-    )
+    const constrainedNetIds = params.originalSrj.routeConstraints?.length
+      ? new Set(
+          params.originalSrj.routeConstraints.map((rule) =>
+            params.connMap.getNetConnectedToId(rule.connectionName),
+          ),
+        )
+      : undefined
     this.movablePreloadedSections = []
     for (const traceId of candidateMovablePreloadedTraceIds) {
       const trace = updatedPreloadedTraceById.get(traceId)
@@ -979,8 +981,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
         )
       }
-      const netId = params.connMap.getNetConnectedToId(trace.connection_name)
-      if (netId && constrainedNetIds.has(netId)) continue
+      if (constrainedNetIds) {
+        const netId = params.connMap.getNetConnectedToId(trace.connection_name)
+        if (netId && constrainedNetIds.has(netId)) continue
+      }
       const traceIndex = params.updatedPreloadedTraces.findIndex(
         (updatedTrace) => updatedTrace.pcb_trace_id === traceId,
       )
