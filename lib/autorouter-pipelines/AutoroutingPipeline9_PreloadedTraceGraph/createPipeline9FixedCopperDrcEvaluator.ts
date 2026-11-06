@@ -8,6 +8,9 @@ import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRout
 type DrcError = Record<string, unknown>
 type ViaLocationKey = string
 type ViaGeometryKey = string
+type ViaCheckKey = string & { readonly __brand: "ViaCheckKey" }
+
+const VIA_CHECK_CACHE_CAPACITY = 512
 
 /** Retains earlier copper that has no pad identity in Circuit JSON. */
 export const createPipeline9FixedCopperDrcEvaluator = ({
@@ -46,6 +49,10 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   const errorsByViaGeometry = new Map<ViaGeometryKey, DrcError[]>()
+  const violationsByVia = new Map<
+    ViaCheckKey,
+    ReturnType<typeof getFixedObstacleViolations>
+  >()
   return (traces): DrcError[] => {
     // Wire-only candidates leave this via-only check unchanged. Include trace
     // identity, ownership, diameter and layer span so moved vias are rechecked.
@@ -82,11 +89,35 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           }
         }),
     )
-    const errors = getFixedObstacleViolations({
-      srj: fixedCopperSrj,
-      routes,
-      viaClearance: clearance,
-    })
+    const errors = routes
+      .flatMap((route, routeIndex) => {
+        const viaKey = JSON.stringify([
+          route.rootConnectionName,
+          route.viaDiameter,
+          route.route,
+        ]) as ViaCheckKey
+        let violations = violationsByVia.get(viaKey)
+        if (violations === undefined) {
+          violations = getFixedObstacleViolations({
+            srj: fixedCopperSrj,
+            // Use declared ownership, rather than a section name that changes
+            // when wire points are inserted before an otherwise unchanged via.
+            routes: [{ ...route, connectionName: route.rootConnectionName }],
+            viaClearance: clearance,
+          })
+          if (violationsByVia.size >= VIA_CHECK_CACHE_CAPACITY) {
+            violationsByVia.delete(violationsByVia.keys().next().value!)
+          }
+          violationsByVia.set(viaKey, violations)
+        }
+        return violations.map((violation) => ({ ...violation, routeIndex }))
+      })
+      // Preserve the checker's obstacle-first order and current candidate IDs.
+      .sort(
+        (left, right) =>
+          left.obstacleIndex - right.obstacleIndex ||
+          left.routeIndex - right.routeIndex,
+      )
       .filter(({ obstacleIndex }) => {
         const obstacle = inputSrj.obstacles[obstacleIndex]!
         return (

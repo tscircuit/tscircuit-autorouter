@@ -57,15 +57,61 @@ test("Pipeline9 retains fixed copper until it is represented by a Circuit JSON p
         },
       ],
     }
-    const result = createPipeline9AutoroutingDrcEvaluator({
+    const evaluate = createPipeline9AutoroutingDrcEvaluator({
       inputSrj: srj,
       srjWithPointPairs: srj,
       drcOptions: { includeTraceContinuity: false },
-    })([trace])
+    })
+    const result = evaluate([trace])
 
     expect(result.errors).toHaveLength(1)
     expect(
       result.errors.filter((error) => error.drc_source === "fixed_copper"),
     ).toHaveLength(isPadRepresented ? 0 : 1)
+
+    const secondTrace = { ...trace, pcb_trace_id: "trace_LDQSP" }
+    const movedTrace: SimplifiedPcbTrace = {
+      ...trace,
+      route: trace.route.map((point) => ({ ...point, x: 1.5 })),
+    }
+    expect(
+      evaluate.evaluateFixedCopper([trace, secondTrace]).map((error) => [
+        error.pcb_trace_id,
+        error.pcb_via_id,
+      ]),
+    ).toEqual(
+      isPadRepresented
+        ? []
+        : [
+            ["trace_LDQSN", "via_0"],
+            ["trace_LDQSP", "via_0"],
+          ],
+    )
+    // The unchanged second via becomes via_1 after the first one moves.
+    expect(
+      evaluate.evaluateFixedCopper([movedTrace, secondTrace]).map((error) => [
+        error.pcb_trace_id,
+        error.pcb_via_id,
+      ]),
+    ).toEqual(isPadRepresented ? [] : [["trace_LDQSP", "via_1"]])
+    expect(
+      evaluate.evaluateFixedCopper([
+        movedTrace,
+        { ...secondTrace, connection_name: "DATA4" },
+      ]),
+    ).toEqual([])
+    expect(
+      evaluate.evaluateFixedCopper([
+        movedTrace,
+        {
+          ...secondTrace,
+          route: secondTrace.route.map((point) =>
+            point.route_type === "via"
+              ? { ...point, via_diameter: 0.01 }
+              : point,
+          ),
+        },
+      ]),
+    ).toEqual([])
   }
 })
