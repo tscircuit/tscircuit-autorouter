@@ -30,7 +30,10 @@ const autorouter = {
       start() {
         solver.solve()
         if (solver.failed) {
-          events.emit("error", { type: "error", error: new Error(solver.error) })
+          events.emit("error", {
+            type: "error",
+            error: new Error(solver.error),
+          })
           return
         }
         events.emit("complete", {
@@ -64,10 +67,9 @@ await circuit.renderUntilSettled()
 const circuitJson = circuit.getCircuitJson()
 const connectivity = new PcbConnectivityMap(circuitJson)
 const ports = new Map(
-  circuit.db.pcb_port.list().map((port) => [
-    port.source_port_id,
-    port.pcb_port_id,
-  ]),
+  circuit.db.pcb_port
+    .list()
+    .map((port) => [port.source_port_id, port.pcb_port_id]),
 )
 const requestedNames = new Set(source.requestedNames)
 const requestedTraces = circuit.db.source_trace
@@ -143,10 +145,15 @@ writeFileSync(
 )
 writeFileSync(
   `${output}/routed-data.srj.json.gz`,
-  gzipSync(JSON.stringify({
-    ...phaseInputs.byte0,
-    connections: [...phaseInputs.byte0.connections, ...phaseInputs.byte1.connections],
-    traces: routedDqSrj.traces,
-  })),
+  gzipSync(
+    JSON.stringify({
+      ...phaseInputs.byte0,
+      connections: [
+        ...phaseInputs.byte0.connections,
+        ...phaseInputs.byte1.connections,
+      ],
+      traces: routedDqSrj.traces,
+    }),
+  ),
 )
 console.log(JSON.stringify(result))
