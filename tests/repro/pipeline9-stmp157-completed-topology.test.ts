@@ -43,7 +43,7 @@ test("shows the completed STM32MP157 topology and retained mesh working data", a
       .digest("hex"),
   ).toBe("47d8fdefcebe030fe5155b4c2170bbdd23e7d154208f339d4b940b18285867fe")
   const views = [
-    { name: "top-layer", bounds: inputSrj.bounds, outlineRegions: false },
+    { name: "top-layer", bounds: inputSrj.bounds },
     {
       name: "detail",
       bounds: { minX: -18, maxX: -16, minY: -9, maxY: -7.5 },
