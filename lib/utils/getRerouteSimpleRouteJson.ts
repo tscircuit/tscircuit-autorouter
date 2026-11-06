@@ -56,26 +56,52 @@ const isThroughObstacleRoutePoint = (
   point: RoutePoint,
 ): point is ThroughObstacleRoutePoint => point.route_type === "through_obstacle"
 
-const getRoutePointLocation = (
-  point: RoutePoint,
-): LocatableRoutePoint | null => {
-  if (isWireRoutePoint(point) || isViaRoutePoint(point)) return point
-  if (
-    isThroughObstacleRoutePoint(point) &&
-    Math.hypot(point.end.x - point.start.x, point.end.y - point.start.y) <=
-      EPSILON
-  ) {
-    return {
-      route_type: point.route_type,
-      x: point.start.x,
-      y: point.start.y,
-      from_layer: point.from_layer,
-      to_layer: point.to_layer,
-      width: point.width,
+const getLocatableRoutePoints = (
+  route: RoutePoint[],
+): LocatableRoutePoint[] | null => {
+  const points: LocatableRoutePoint[] = []
+  for (const point of route) {
+    if (isWireRoutePoint(point) || isViaRoutePoint(point)) {
+      points.push(point)
+      continue
     }
+    if (isThroughObstacleRoutePoint(point)) {
+      points.push({
+        route_type: point.route_type,
+        x: point.start.x,
+        y: point.start.y,
+        from_layer: point.from_layer,
+        to_layer: point.to_layer,
+        width: point.width,
+      })
+      if (
+        Math.hypot(point.end.x - point.start.x, point.end.y - point.start.y) >
+        EPSILON
+      ) {
+        points.push({
+          route_type: point.route_type,
+          x: point.end.x,
+          y: point.end.y,
+          from_layer: point.from_layer,
+          to_layer: point.to_layer,
+          width: point.width,
+        })
+      }
+      continue
+    }
+    return null
   }
-  return null
+  return points
 }
+
+const isPointInsideOrOnRegion = (
+  point: { x: number; y: number },
+  region: RerouteRectRegion,
+) =>
+  point.x >= region.minX - EPSILON &&
+  point.x <= region.maxX + EPSILON &&
+  point.y >= region.minY - EPSILON &&
+  point.y <= region.maxY + EPSILON
 
 const getSegmentLayer = (
   start: LocatableRoutePoint,
@@ -212,6 +238,7 @@ const appendClippedTraceSegment = (
     type: "pcb_trace",
     pcb_trace_id: `${trace.pcb_trace_id}_keep_${segmentIndex}`,
     connection_name: trace.connection_name,
+    ...(trace.connectsTo ? { connectsTo: [...trace.connectsTo] } : {}),
     route: [
       locatedPointToWireRoutePoint(start),
       locatedPointToWireRoutePoint(end),
@@ -361,6 +388,11 @@ const getClippedTracePieces = (
   region: RerouteRectRegion,
   fallbackWidth: number,
 ) => {
+  const locatablePoints = getLocatableRoutePoints(trace.route)
+  if (!locatablePoints) {
+    return null
+  }
+
   const keptTraces: SimplifiedPcbTrace[] = []
   const rerouteConnections: SimpleRouteConnection[] = []
   const rerouteEndpointObstacles: Obstacle[] = []
@@ -370,13 +402,9 @@ const getClippedTracePieces = (
   let keptSegmentIndex = 0
   let hadIntersection = false
 
-  for (let i = 0; i < trace.route.length - 1; i++) {
-    const start = getRoutePointLocation(trace.route[i]!)
-    const end = getRoutePointLocation(trace.route[i + 1]!)
-
-    if (!start || !end) {
-      return null
-    }
+  for (let i = 0; i < locatablePoints.length - 1; i++) {
+    const start = locatablePoints[i]!
+    const end = locatablePoints[i + 1]!
 
     const layer = getSegmentLayer(start, end)
     const width = getSegmentWidth(start, end, fallbackWidth)
@@ -482,11 +510,7 @@ const getClippedTracePieces = (
   }
 
   if (activeRipStart) {
-    const finalPoint = trace.route
-      .slice()
-      .reverse()
-      .map(getRoutePointLocation)
-      .find((point): point is LocatableRoutePoint => Boolean(point))
+    const finalPoint = locatablePoints[locatablePoints.length - 1]
 
     if (finalPoint) {
       const rerouteConnection = maybeCreateRerouteConnection({
@@ -497,8 +521,11 @@ const getClippedTracePieces = (
           x: finalPoint.x,
           y: finalPoint.y,
           layer:
-            finalPoint.layer ?? finalPoint.from_layer ?? activeRipStart.layer,
-          width: activeRipStart.width,
+            finalPoint.layer ??
+            finalPoint.to_layer ??
+            finalPoint.from_layer ??
+            activeRipStart.layer,
+          width: finalPoint.width ?? activeRipStart.width,
         },
         region,
         allowInteriorStart: activeRipStartAllowsInterior,
@@ -508,6 +535,46 @@ const getClippedTracePieces = (
         rerouteConnections.push(rerouteConnection.connection)
         rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles)
       }
+    }
+  }
+
+  if (hadIntersection) {
+    for (const point of trace.route) {
+      if (!isViaRoutePoint(point) || isPointInsideOrOnRegion(point, region)) {
+        continue
+      }
+      const viaClone = structuredClone(point)
+      const matchingEndTrace = keptTraces.find((keptTrace) => {
+        const last = keptTrace.route[keptTrace.route.length - 1]
+        return (
+          last &&
+          "x" in last &&
+          Math.hypot(last.x - point.x, last.y - point.y) <= EPSILON
+        )
+      })
+      if (matchingEndTrace) {
+        matchingEndTrace.route.push(viaClone)
+        continue
+      }
+      const matchingStartTrace = keptTraces.find((keptTrace) => {
+        const first = keptTrace.route[0]
+        return (
+          first &&
+          "x" in first &&
+          Math.hypot(first.x - point.x, first.y - point.y) <= EPSILON
+        )
+      })
+      if (matchingStartTrace) {
+        matchingStartTrace.route.unshift(viaClone)
+        continue
+      }
+      keptTraces.push({
+        type: "pcb_trace",
+        pcb_trace_id: `${trace.pcb_trace_id}_keep_${keptSegmentIndex++}`,
+        connection_name: trace.connection_name,
+        ...(trace.connectsTo ? { connectsTo: [...trace.connectsTo] } : {}),
+        route: [viaClone],
+      })
     }
   }
 

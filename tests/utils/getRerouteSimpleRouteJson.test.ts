@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import { getBoundingBox } from "@tscircuit/math-utils"
+import type { SimpleRouteJson } from "lib/types"
+import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import {
   getRerouteSimpleRouteJson,
   reconnectReroutedSimpleRouteJsonRegion,
 } from "lib/utils/getRerouteSimpleRouteJson"
-import type { SimpleRouteJson } from "lib/types"
-import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 
 const srj: SimpleRouteJson = {
   layerCount: 2,
@@ -240,4 +240,96 @@ test("reconnectReroutedSimpleRouteJsonRegion restores original connections", () 
       (trace) => trace.pcb_trace_id === "rerouted_trace_0",
     )?.connection_name,
   ).toBe("source_net_0")
+})
+
+test("getRerouteSimpleRouteJson preserves kept vias, connectsTo metadata, non-zero through_obstacle segments, and terminal via layers", () => {
+  const rerouted = getRerouteSimpleRouteJson(
+    {
+      ...srj,
+      traces: [
+        {
+          type: "pcb_trace",
+          pcb_trace_id: "trace_with_kept_via_and_through",
+          connection_name: "source_net_0",
+          connectsTo: ["source_net_0", "pcb_port_0"],
+          route: [
+            {
+              route_type: "through_obstacle",
+              start: { x: -6, y: 0 },
+              end: { x: -5, y: 0 },
+              from_layer: "top",
+              to_layer: "top",
+              width: 0.2,
+            },
+            { route_type: "wire", x: -3, y: 0, width: 0.15, layer: "top" },
+            {
+              route_type: "via",
+              x: -3,
+              y: 0,
+              from_layer: "top",
+              to_layer: "bottom",
+              via_diameter: 0.4,
+            },
+            { route_type: "wire", x: -3, y: 0, width: 0.15, layer: "bottom" },
+            { route_type: "wire", x: 0, y: 0, width: 0.25, layer: "bottom" },
+            {
+              route_type: "via",
+              x: 0,
+              y: 0,
+              from_layer: "bottom",
+              to_layer: "top",
+              via_diameter: 0.4,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      shape: "rect",
+      minX: -1,
+      maxX: 1,
+      minY: -1,
+      maxY: 1,
+    },
+  )
+
+  expect(rerouted.connections).toHaveLength(1)
+  expect(rerouted.connections[0]?.pointsToConnect).toEqual([
+    { x: -1, y: 0, layer: "bottom" },
+    { x: 0, y: 0, layer: "top" },
+  ])
+
+  const keptVias =
+    rerouted.traces?.flatMap((t) =>
+      t.route.filter((pt) => pt.route_type === "via"),
+    ) ?? []
+  expect(keptVias).toEqual([
+    {
+      route_type: "via",
+      x: -3,
+      y: 0,
+      from_layer: "top",
+      to_layer: "bottom",
+      via_diameter: 0.4,
+    },
+  ])
+  expect(
+    rerouted.traces?.every(
+      (t) =>
+        JSON.stringify(t.connectsTo) ===
+        JSON.stringify(["source_net_0", "pcb_port_0"]),
+    ),
+  ).toBe(true)
+
+  const withObstacles = convertSrjTracesToObstacles(rerouted)
+  const viaObstacle = withObstacles?.obstacles.find((o) =>
+    o.obstacleId?.endsWith("_via"),
+  )
+  expect(viaObstacle).toMatchObject({
+    center: { x: -3, y: 0 },
+    width: 0.4,
+    height: 0.4,
+    layers: ["top", "bottom"],
+    connectedTo: ["source_net_0", "pcb_port_0"],
+  })
 })
