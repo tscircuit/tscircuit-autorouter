@@ -17,6 +17,8 @@ export type FutureConnection = {
   points: { x: number; y: number; z: number }[]
 }
 
+const VIA_OBSTACLE_CACHE_SLOTS = 1024
+
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -88,6 +90,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
+  private readonly viaObstacleCacheCoordinates = new Float64Array(
+    VIA_OBSTACLE_CACHE_SLOTS * 2,
+  )
+  private readonly viaObstacleCacheStates = new Uint8Array(
+    VIA_OBSTACLE_CACHE_SLOTS,
+  )
+  private cachedViaTraceProximity: number | undefined
+  private cachedViaObstacleProximity: number | undefined
+  private cachedViaSegmentIndex: Flatbush | null = null
+  private cachedViaObstacleIndex: Flatbush | null = null
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -295,6 +307,36 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const traceProximity = this.traceThickness + margin
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    let viaCacheSlot = -1
+    if (isVia && !planarObstacleQuery && this.gridWidth !== undefined) {
+      if (
+        this.cachedViaTraceProximity !== traceProximity ||
+        this.cachedViaObstacleProximity !== viaProximity ||
+        this.cachedViaSegmentIndex !== this.obstacleSegmentIndex ||
+        this.cachedViaObstacleIndex !== this.obstacleViaIndex
+      ) {
+        this.viaObstacleCacheStates.fill(0)
+        this.cachedViaTraceProximity = traceProximity
+        this.cachedViaObstacleProximity = viaProximity
+        this.cachedViaSegmentIndex = this.obstacleSegmentIndex
+        this.cachedViaObstacleIndex = this.obstacleViaIndex
+      }
+      const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+      const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+      const columnKey = yIndex * this.gridWidth + xIndex
+      if (Number.isSafeInteger(columnKey)) {
+        viaCacheSlot = Math.abs(columnKey % VIA_OBSTACLE_CACHE_SLOTS)
+        const coordinateOffset = viaCacheSlot * 2
+        const cachedState = this.viaObstacleCacheStates[viaCacheSlot]
+        if (
+          cachedState !== 0 &&
+          this.viaObstacleCacheCoordinates[coordinateOffset] === node.x &&
+          this.viaObstacleCacheCoordinates[coordinateOffset + 1] === node.y
+        ) {
+          return cachedState === 2
+        }
+      }
+    }
     // Planar point clearance is independent of the parent. Supplied queries
     // must cover the full point rectangle before their result can be reused.
     const canCachePlanarPoint =
@@ -379,6 +421,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             ),
           ) < traceProximity
         ) {
+          if (viaCacheSlot >= 0) {
+            const coordinateOffset = viaCacheSlot * 2
+            this.viaObstacleCacheCoordinates[coordinateOffset] = node.x
+            this.viaObstacleCacheCoordinates[coordinateOffset + 1] = node.y
+            this.viaObstacleCacheStates[viaCacheSlot] = 2
+          }
           return true
         }
       }
@@ -394,11 +442,23 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
         if (via && distance(node, via) < viaProximity) {
+          if (viaCacheSlot >= 0) {
+            const coordinateOffset = viaCacheSlot * 2
+            this.viaObstacleCacheCoordinates[coordinateOffset] = node.x
+            this.viaObstacleCacheCoordinates[coordinateOffset + 1] = node.y
+            this.viaObstacleCacheStates[viaCacheSlot] = 2
+          }
           return true
         }
       }
     }
 
+    if (viaCacheSlot >= 0) {
+      const coordinateOffset = viaCacheSlot * 2
+      this.viaObstacleCacheCoordinates[coordinateOffset] = node.x
+      this.viaObstacleCacheCoordinates[coordinateOffset + 1] = node.y
+      this.viaObstacleCacheStates[viaCacheSlot] = 1
+    }
     if (pointKey !== undefined) {
       this.freePlanarObstaclePoints.set(pointKey, {
         x: node.x,
@@ -581,6 +641,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   buildObstacleIndexes() {
     this.freePlanarObstaclePoints.clear()
+    this.viaObstacleCacheStates.fill(0)
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -780,31 +841,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
-    for (const newZ of this.availableZ) {
-      if (newZ === node.z) continue
+    if (this.availableZ.length > 1 && !this.isNodeTooCloseToEdge(node, true)) {
+      const viaObstacleMargin = this.viaDiameter / 2 + this.obstacleMargin / 2
+      const viaXIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+      const viaYIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+      for (const newZ of this.availableZ) {
+        if (newZ === node.z) continue
+        const viaNeighborKey =
+          (newZ * this.gridHeight + viaYIndex) * this.gridWidth + viaXIndex
+        if (this.exploredNodes.has(viaNeighborKey)) continue
 
-      const viaNeighbor: Node = {
-        x: node.x,
-        y: node.y,
-        z: newZ,
-        g: node.g,
-        h: node.h,
-        f: node.f,
-        parent: node,
-      }
+        const viaNeighbor: Node = {
+          x: node.x,
+          y: node.y,
+          z: newZ,
+          g: node.g,
+          h: node.h,
+          f: node.f,
+          parent: node,
+        }
 
-      if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
-        !this.isNodeTooCloseToEdge(viaNeighbor, true) &&
-        !this.isNodeTooCloseToObstacle(
-          viaNeighbor,
-          this.viaDiameter / 2 + this.obstacleMargin / 2,
-          true,
-        )
-      ) {
-        this.setNodeCosts(viaNeighbor)
+        if (
+          !this.isNodeTooCloseToObstacle(viaNeighbor, viaObstacleMargin, true)
+        ) {
+          this.setNodeCosts(viaNeighbor)
 
-        neighbors.push(viaNeighbor)
+          neighbors.push(viaNeighbor)
+        }
       }
     }
 

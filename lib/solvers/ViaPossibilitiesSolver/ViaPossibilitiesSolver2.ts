@@ -28,6 +28,13 @@ export interface Segment {
 
 export interface ViaPossibilities2HyperParameters {
   SHUFFLE_SEED?: number
+}
+
+export type PrecomputedViaPossibilitiesProblem = {
+  bounds: Bounds
+  portPairMap: PortPairMap
+  sortedConnectionNames: ConnectionName[]
+  initialPlaceholderPaths: ReadonlyMap<ConnectionName, Point3[]>
 } /**
 This solver uses an intersection-based approach. Here's how it works:
 0. Prepare placeholderPaths
@@ -78,20 +85,25 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     colorMap,
     hyperParameters,
     viaDiameter,
+    precomputedProblem,
   }: {
     nodeWithPortPoints: NodeWithPortPoints
     colorMap?: Record<string, string>
     hyperParameters?: ViaPossibilities2HyperParameters
     viaDiameter?: number
+    precomputedProblem?: PrecomputedViaPossibilitiesProblem
   }) {
     super()
     this.MAX_ITERATIONS = 100e3
     this.colorMap =
       colorMap ?? generateColorMapFromNodeWithPortPoints(nodeWithPortPoints)
     this.maxViaCount = 5
-    this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+    this.bounds =
+      precomputedProblem?.bounds ??
+      getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
-    this.portPairMap = getPortPairMap(nodeWithPortPoints)
+    this.portPairMap =
+      precomputedProblem?.portPairMap ?? getPortPairMap(nodeWithPortPoints)
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
     this.hyperParameters = hyperParameters ?? {
@@ -99,55 +111,66 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
     this.viaDiameter = viaDiameter ?? 0.3
 
-    this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
-    if (hyperParameters?.SHUFFLE_SEED) {
-      this.unprocessedConnections = cloneAndShuffleArray(
-        this.unprocessedConnections,
-        hyperParameters.SHUFFLE_SEED,
+    const baseSortedConnections =
+      precomputedProblem?.sortedConnectionNames ??
+      Array.from(this.portPairMap.keys()).sort()
+    this.unprocessedConnections = hyperParameters?.SHUFFLE_SEED
+      ? cloneAndShuffleArray(
+          baseSortedConnections,
+          hyperParameters.SHUFFLE_SEED,
+        )
+      : baseSortedConnections.slice()
+
+    if (precomputedProblem) {
+      this.placeholderPaths = new Map(
+        precomputedProblem.initialPlaceholderPaths,
       )
-    }
+    } else {
+      // Generate placeholder paths
+      for (const [
+        connectionName,
+        { start, end },
+      ] of this.portPairMap.entries()) {
+        if (start.z === end.z) {
+          const isVertical = Math.abs(start.x - end.x) < 1e-9 // Use tolerance for float comparison
+          const isHorizontal = Math.abs(start.y - end.y) < 1e-9
 
-    // Generate placeholder paths
-    for (const [connectionName, { start, end }] of this.portPairMap.entries()) {
-      if (start.z === end.z) {
-        const isVertical = Math.abs(start.x - end.x) < 1e-9 // Use tolerance for float comparison
-        const isHorizontal = Math.abs(start.y - end.y) < 1e-9
+          if (isVertical || isHorizontal) {
+            this.placeholderPaths.set(connectionName, [
+              start,
+              this._padByPlaceholderWallBuffer(start),
+              this._padByPlaceholderWallBuffer(end),
+              end,
+            ])
+          } else {
+            // Diagonal line on the same Z plane
+            this.placeholderPaths.set(connectionName, [start, end])
+          }
+        } else {
+          // Create a path with a Z change at the midpoint for different Z levels
+          const midX = (start.x + end.x) / 2
+          const midY = (start.y + end.y) / 2
 
-        if (isVertical || isHorizontal) {
+          // Use the (potentially offset) midpoint XY for the Z change points
+          const midStart: Point3 = this._padByPlaceholderWallBuffer({
+            x: midX,
+            y: midY,
+            z: start.z,
+          })
+          const midEnd: Point3 = this._padByPlaceholderWallBuffer({
+            x: midX,
+            y: midY,
+            z: end.z,
+          })
           this.placeholderPaths.set(connectionName, [
             start,
             this._padByPlaceholderWallBuffer(start),
+            midStart,
+            midEnd,
             this._padByPlaceholderWallBuffer(end),
             end,
           ])
-        } else {
-          // Diagonal line on the same Z plane
-          this.placeholderPaths.set(connectionName, [start, end])
         }
-      } else {
-        // Create a path with a Z change at the midpoint for different Z levels
-        const midX = (start.x + end.x) / 2
-        const midY = (start.y + end.y) / 2
-
-        // Use the (potentially offset) midpoint XY for the Z change points
-        const midStart: Point3 = this._padByPlaceholderWallBuffer({
-          x: midX,
-          y: midY,
-          z: start.z,
-        })
-        const midEnd: Point3 = this._padByPlaceholderWallBuffer({
-          x: midX,
-          y: midY,
-          z: end.z,
-        })
-        this.placeholderPaths.set(connectionName, [
-          start,
-          this._padByPlaceholderWallBuffer(start),
-          midStart,
-          midEnd,
-          this._padByPlaceholderWallBuffer(end),
-          end,
-        ])
       }
     }
 
@@ -157,6 +180,71 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.currentPath = [start, this.currentHead]
     this.currentViaCount = 0
     this.placeholderPaths.delete(this.currentConnectionName) // Delete placeholder when we start processing
+  }
+
+  static createPrecomputedProblem(
+    nodeWithPortPoints: NodeWithPortPoints,
+    placeholderWallBufferDistance = 0.1,
+  ): PrecomputedViaPossibilitiesProblem {
+    const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+    const portPairMap = getPortPairMap(nodeWithPortPoints)
+    const sortedConnectionNames = Array.from(portPairMap.keys()).sort()
+    const padMinX = bounds.minX + placeholderWallBufferDistance
+    const padMaxX = bounds.maxX - placeholderWallBufferDistance
+    const padMinY = bounds.minY + placeholderWallBufferDistance
+    const padMaxY = bounds.maxY - placeholderWallBufferDistance
+    const initialPlaceholderPaths = new Map<ConnectionName, Point3[]>()
+    for (const [connectionName, { start, end }] of portPairMap.entries()) {
+      if (start.z === end.z) {
+        const isVertical = Math.abs(start.x - end.x) < 1e-9
+        const isHorizontal = Math.abs(start.y - end.y) < 1e-9
+        if (isVertical || isHorizontal) {
+          initialPlaceholderPaths.set(connectionName, [
+            start,
+            {
+              x: clamp(start.x, padMinX, padMaxX),
+              y: clamp(start.y, padMinY, padMaxY),
+              z: start.z,
+            },
+            {
+              x: clamp(end.x, padMinX, padMaxX),
+              y: clamp(end.y, padMinY, padMaxY),
+              z: end.z,
+            },
+            end,
+          ])
+        } else {
+          initialPlaceholderPaths.set(connectionName, [start, end])
+        }
+      } else {
+        const midX = (start.x + end.x) / 2
+        const midY = (start.y + end.y) / 2
+        const clampedMidX = clamp(midX, padMinX, padMaxX)
+        const clampedMidY = clamp(midY, padMinY, padMaxY)
+        initialPlaceholderPaths.set(connectionName, [
+          start,
+          {
+            x: clamp(start.x, padMinX, padMaxX),
+            y: clamp(start.y, padMinY, padMaxY),
+            z: start.z,
+          },
+          { x: clampedMidX, y: clampedMidY, z: start.z },
+          { x: clampedMidX, y: clampedMidY, z: end.z },
+          {
+            x: clamp(end.x, padMinX, padMaxX),
+            y: clamp(end.y, padMinY, padMaxY),
+            z: end.z,
+          },
+          end,
+        ])
+      }
+    }
+    return {
+      bounds,
+      portPairMap,
+      sortedConnectionNames,
+      initialPlaceholderPaths,
+    }
   }
 
   _padByNewHeadWallBuffer(point: Point3) {
@@ -195,36 +283,45 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     if (this.solved) return
 
     const targetEnd = this.portPairMap.get(this.currentConnectionName)!.end
-    const proposedSegment: [Point3, Point3] = [this.currentHead, targetEnd]
+    const head = this.currentHead
+    const headZ = head.z
+    const proposedMinX = Math.min(head.x, targetEnd.x) - 1e-6
+    const proposedMaxX = Math.max(head.x, targetEnd.x) + 1e-6
+    const proposedMinY = Math.min(head.y, targetEnd.y) - 1e-6
+    const proposedMaxY = Math.max(head.y, targetEnd.y) + 1e-6
 
     let closestIntersection: any = null
     let intersectedSegmentZ: number | null = null
 
     const checkIntersectionsWithPathMap = (
       pathMap: Map<ConnectionName, Point3[]>,
-    ) => {
+    ): void => {
       for (const path of pathMap.values()) {
         for (let i = 0; i < path.length - 1; i++) {
-          const segment: [Point3, Point3] = [path[i], path[i + 1]]
+          const p1 = path[i]!
+          const p2 = path[i + 1]!
           // Skip checking intersection if segment is just a via (z change)
-          if (segment[0].x === segment[1].x && segment[0].y === segment[1].y) {
+          if (p1.x === p2.x && p1.y === p2.y) {
             continue
           }
           // Only check intersections on the same Z plane as the proposed move start
           // Or if the proposed move itself involves a Z change (handled later)
-          if (segment[0].z !== this.currentHead.z) {
+          if (p1.z !== headZ) {
+            continue
+          }
+          if (
+            Math.max(p1.x, p2.x) < proposedMinX ||
+            Math.min(p1.x, p2.x) > proposedMaxX ||
+            Math.max(p1.y, p2.y) < proposedMinY ||
+            Math.min(p1.y, p2.y) > proposedMaxY
+          ) {
             continue
           }
 
-          const intersection = getSegmentIntersection(
-            proposedSegment[0],
-            proposedSegment[1],
-            segment[0],
-            segment[1],
-          )
+          const intersection = getSegmentIntersection(head, targetEnd, p1, p2)
           if (intersection) {
             // Ignore intersection if it's exactly at the start point (currentHead)
-            const distToIntersection = distance(this.currentHead, intersection)
+            const distToIntersection = distance(head, intersection)
             if (distToIntersection < 1e-6) continue // Tolerance for floating point
 
             if (
@@ -235,7 +332,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
                 point: intersection,
                 dist: distToIntersection,
               }
-              intersectedSegmentZ = segment[0].z // Z level of the segment we hit
+              intersectedSegmentZ = p1.z // Z level of the segment we hit
             }
           }
         }
