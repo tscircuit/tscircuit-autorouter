@@ -6,7 +6,7 @@ import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escap
 import type { SimpleRouteJson } from "lib/types"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getLastStepGraphicsObject } from "../../fixtures/getLastStepGraphicsObject"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -70,7 +70,5 @@ test("pour-via-escape03.json", () => {
     lastStepGraphics.lines?.filter((line) => line.layer === "z3") ?? [],
   ).not.toHaveLength(0)
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
 })
