@@ -59,7 +59,9 @@ circuit.on("autorouting:start", (event) => {
   phaseInputs[event.phaseName] = event.simpleRouteJson
 })
 circuit.on("autorouting:end", (event) => {
-  if (event.phaseName === "byte1") routedDqSrj = event.simpleRouteJson
+  if (event.phaseName === "byte1") {
+    routedDqSrj = structuredClone(event.simpleRouteJson)
+  }
 })
 circuit.add(cloneElement(board, {}, children))
 await circuit.renderUntilSettled()
