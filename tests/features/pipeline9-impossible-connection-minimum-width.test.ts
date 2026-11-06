@@ -8,7 +8,9 @@ test("an impossible connection minimum fails during planning instead of emitting
   for (const obstacle of input.obstacles) {
     if (obstacle.connectedTo.length === 0) obstacle.width = 30
   }
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { cacheProvider: null })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+    cacheProvider: null,
+  })
   solver.solve()
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)

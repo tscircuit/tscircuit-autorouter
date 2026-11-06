@@ -958,16 +958,28 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
-    if (minimumTraceWidthSrj?.connections.some((connection) => connection.minTraceWidth !== undefined)) {
-      const solveGraphStep = this.pipelineDef.find((step) => step.solverName === "solveGraph")!
+    if (
+      minimumTraceWidthSrj?.connections.some(
+        (connection) => connection.minTraceWidth !== undefined,
+      )
+    ) {
+      const solveGraphStep = this.pipelineDef.find(
+        (step) => step.solverName === "solveGraph",
+      )!
       const srj = minimumTraceWidthSrj
-      solveGraphStep.solverClass = class extends MinimumTraceWidthTinyHyperGraphSolver {
-        constructor(...args: ConstructorParameters<typeof TinyHyperGraphSolver>) {
+      solveGraphStep.solverClass = class extends (
+        MinimumTraceWidthTinyHyperGraphSolver
+      ) {
+        constructor(
+          ...args: ConstructorParameters<typeof TinyHyperGraphSolver>
+        ) {
           super(...args, srj)
         }
       }
       // Section optimization creates solvers without per-route eligibility.
-      this.pipelineDef = this.pipelineDef.filter((step) => step.solverName !== "optimizeSection")
+      this.pipelineDef = this.pipelineDef.filter(
+        (step) => step.solverName !== "optimizeSection",
+      )
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }

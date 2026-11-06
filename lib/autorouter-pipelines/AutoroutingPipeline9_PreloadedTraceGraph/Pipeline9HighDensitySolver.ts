@@ -17,7 +17,11 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types/srj-types"
+import type {
+  Obstacle,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
@@ -676,9 +680,16 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     let width = this.traceWidth
     for (const connection of this.params.connections ?? []) {
       if (connection.minTraceWidth === undefined) continue
-      if (node.portPoints.some((point) => point.connectionName === connection.name ||
-          point.rootConnectionName === connection.name ||
-          connection.__rootConnectionNames?.includes(point.rootConnectionName ?? point.connectionName))) {
+      if (
+        node.portPoints.some(
+          (point) =>
+            point.connectionName === connection.name ||
+            point.rootConnectionName === connection.name ||
+            connection.__rootConnectionNames?.includes(
+              point.rootConnectionName ?? point.connectionName,
+            ),
+        )
+      ) {
         width = Math.max(width, connection.minTraceWidth)
       }
     }

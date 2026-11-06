@@ -114,7 +114,9 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
     this.currentMinimumTraceWidth = input.minTraceWidth
-    this.connectionMinimumTraceWidths = getMinimumTraceWidthByConnectionName(input.connection)
+    this.connectionMinimumTraceWidths = getMinimumTraceWidthByConnectionName(
+      input.connection,
+    )
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
     this.nominalTraceWidth = 0
@@ -163,11 +165,14 @@ export class TraceWidthSolver extends BaseSolver {
     return undefined
   }
 
-  private getExplicitMinimumForRoute(route: HighDensityRoute): number | undefined {
+  private getExplicitMinimumForRoute(
+    route: HighDensityRoute,
+  ): number | undefined {
     const byName = this.connectionMinimumTraceWidths.get(route.connectionName)
-    const byRoot = route.rootConnectionName === undefined
-      ? undefined
-      : this.connectionMinimumTraceWidths.get(route.rootConnectionName)
+    const byRoot =
+      route.rootConnectionName === undefined
+        ? undefined
+        : this.connectionMinimumTraceWidths.get(route.rootConnectionName)
     if (byName === undefined && byRoot === undefined) return undefined
     return Math.max(byName ?? 0, byRoot ?? 0)
   }
@@ -186,10 +191,15 @@ export class TraceWidthSolver extends BaseSolver {
 
       // Initialize the new trace processing
       const explicitMinimum = this.getExplicitMinimumForRoute(nextTrace)
-      this.currentMinimumTraceWidth = Math.max(this.minTraceWidth, explicitMinimum ?? 0)
+      this.currentMinimumTraceWidth = Math.max(
+        this.minTraceWidth,
+        explicitMinimum ?? 0,
+      )
       const requestedNominal = this.getNominalTraceWidthForRoute(nextTrace)
-      const nominalTraceWidth = explicitMinimum === undefined ? requestedNominal
-        : Math.max(this.currentMinimumTraceWidth, requestedNominal ?? 0)
+      const nominalTraceWidth =
+        explicitMinimum === undefined
+          ? requestedNominal
+          : Math.max(this.currentMinimumTraceWidth, requestedNominal ?? 0)
       if (nominalTraceWidth === undefined) {
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
@@ -201,14 +211,25 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.currentMinimumTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = explicitMinimum === undefined
-        ? [this.nominalTraceWidth, midWidth]
-        : [...new Set([this.nominalTraceWidth, midWidth, this.currentMinimumTraceWidth])]
+      const midWidth =
+        (this.nominalTraceWidth + this.currentMinimumTraceWidth) / 2
+      this.TRACE_WIDTH_SCHEDULE =
+        explicitMinimum === undefined
+          ? [this.nominalTraceWidth, midWidth]
+          : [
+              ...new Set([
+                this.nominalTraceWidth,
+                midWidth,
+                this.currentMinimumTraceWidth,
+              ]),
+            ]
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(
-          this.createRouteWithWidth(this.currentTrace, this.currentMinimumTraceWidth),
+          this.createRouteWithWidth(
+            this.currentTrace,
+            this.currentMinimumTraceWidth,
+          ),
         )
         this.currentTrace = null
         return
@@ -710,7 +731,10 @@ export class TraceWidthSolver extends BaseSolver {
     if (this.getExplicitMinimumForRoute(route) !== undefined) {
       // Hard minima include terminal escapes. Nominal-only traces retain their
       // existing pad tapers; an opt-in minimum is never silently necked down.
-      return route.route.map((point) => ({ ...point, traceThickness: traceWidth }))
+      return route.route.map((point) => ({
+        ...point,
+        traceThickness: traceWidth,
+      }))
     }
     if (route.route.length < 2) {
       return route.route.map((point) => ({

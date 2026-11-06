@@ -9,10 +9,15 @@ export const getMinimumTraceWidthByConnectionName = (
     const width = connection.minTraceWidth
     if (width === undefined) continue
     if (!Number.isFinite(width) || width <= 0) {
-      throw new Error(`Connection "${connection.name}" minimum trace width must be finite and positive`)
+      throw new Error(
+        `Connection "${connection.name}" minimum trace width must be finite and positive`,
+      )
     }
-    const names = [connection.name, ...connection.__rootConnectionNames ?? [],
-      ...connection.mergedConnectionNames ?? []]
+    const names = [
+      connection.name,
+      ...(connection.__rootConnectionNames ?? []),
+      ...(connection.mergedConnectionNames ?? []),
+    ]
     if (connection.rootConnectionName) names.push(connection.rootConnectionName)
     for (const name of names) {
       widths.set(name, Math.max(widths.get(name) ?? 0, width))

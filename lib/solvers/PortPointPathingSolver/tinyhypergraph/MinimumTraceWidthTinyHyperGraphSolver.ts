@@ -1,6 +1,13 @@
-import { segmentToBoxMinDistance, segmentToCircleMinDistance } from "@tscircuit/math-utils"
+import {
+  segmentToBoxMinDistance,
+  segmentToCircleMinDistance,
+} from "@tscircuit/math-utils"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
-import type { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type {
+  Obstacle,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -11,9 +18,16 @@ type TinyParams = ConstructorParameters<typeof TinyHyperGraphSolver>
 export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver {
   private readonly allowedPorts = new Map<number, Uint8Array>()
   private readonly obstacles: Array<Obstacle & { __zLayers: number[] }>
-  private readonly connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
+  private readonly connMap: ReturnType<
+    typeof getConnectivityMapFromSimpleRouteJson
+  >
 
-  constructor(topology: TinyParams[0], problem: TinyParams[1], options: TinyParams[2], private readonly srj: SimpleRouteJson) {
+  constructor(
+    topology: TinyParams[0],
+    problem: TinyParams[1],
+    options: TinyParams[2],
+    private readonly srj: SimpleRouteJson,
+  ) {
     super(topology, problem, {
       ...options,
       // Prepared and section-polishing solvers do not yet consult per-route
@@ -26,8 +40,13 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
     this.obstacles = createObjectsWithZLayers(srj.obstacles, srj.layerCount)
     this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
     for (let routeId = 0; routeId < problem.routeCount; routeId++) {
-      const connection: SimpleRouteConnection | undefined = problem.routeMetadata?.[routeId]?.simpleRouteConnection
-      if (connection?.minTraceWidth === undefined || problem.routeIsFixed?.[routeId] === 1) continue
+      const connection: SimpleRouteConnection | undefined =
+        problem.routeMetadata?.[routeId]?.simpleRouteConnection
+      if (
+        connection?.minTraceWidth === undefined ||
+        problem.routeIsFixed?.[routeId] === 1
+      )
+        continue
       if (!this.hasWidthCompliantPath(routeId)) {
         this.failed = true
         this.error = `Connection "${connection.name}" has no path for minimum trace width ${connection.minTraceWidth}mm`
@@ -37,7 +56,8 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
   }
 
   private isWidthCompliantPort(portId: number, routeId: number): boolean {
-    const connection: SimpleRouteConnection | undefined = this.problem.routeMetadata?.[routeId]?.simpleRouteConnection
+    const connection: SimpleRouteConnection | undefined =
+      this.problem.routeMetadata?.[routeId]?.simpleRouteConnection
     if (connection?.minTraceWidth === undefined) return true
     let allowed = this.allowedPorts.get(routeId)
     if (!allowed) {
@@ -45,11 +65,16 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
       this.allowedPorts.set(routeId, allowed)
     }
     if (allowed[portId] !== 0) return allowed[portId] === 1
-    const point = { x: this.topology.portX[portId]!, y: this.topology.portY[portId]! }
+    const point = {
+      x: this.topology.portX[portId]!,
+      y: this.topology.portY[portId]!,
+    }
     const z = this.topology.portZ[portId]!
-    const radius = Math.max(this.srj.minTraceWidth, connection.minTraceWidth) / 2
+    const radius =
+      Math.max(this.srj.minTraceWidth, connection.minTraceWidth) / 2
     const edgeClearance = this.srj.minBoardEdgeClearance ?? 0
-    let valid = point.x - radius >= this.srj.bounds.minX + edgeClearance - 1e-6 &&
+    let valid =
+      point.x - radius >= this.srj.bounds.minX + edgeClearance - 1e-6 &&
       point.x + radius <= this.srj.bounds.maxX - edgeClearance + 1e-6 &&
       point.y - radius >= this.srj.bounds.minY + edgeClearance - 1e-6 &&
       point.y + radius <= this.srj.bounds.maxY - edgeClearance + 1e-6
@@ -61,7 +86,11 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
   private hasWidthCompliantPath(routeId: number): boolean {
     const start = this.problem.routeStartPort[routeId]!
     const end = this.problem.routeEndPort[routeId]!
-    if (!this.isWidthCompliantPort(start, routeId) || !this.isWidthCompliantPort(end, routeId)) return false
+    if (
+      !this.isWidthCompliantPort(start, routeId) ||
+      !this.isWidthCompliantPort(end, routeId)
+    )
+      return false
     const visited = new Uint8Array(this.topology.portCount)
     const queue: number[] = [start]
     visited[start] = 1
@@ -72,7 +101,12 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
         const net = this.problem.regionNetId[regionId]!
         if (net !== -1 && net !== this.problem.routeNet[routeId]) continue
         for (const nextPort of this.topology.regionIncidentPorts[regionId]!) {
-          if (visited[nextPort] || !this.isWidthCompliantPort(nextPort, routeId) || !this.isWidthCompliantSegment(portId, nextPort, routeId)) continue
+          if (
+            visited[nextPort] ||
+            !this.isWidthCompliantPort(nextPort, routeId) ||
+            !this.isWidthCompliantSegment(portId, nextPort, routeId)
+          )
+            continue
           visited[nextPort] = 1
           queue.push(nextPort)
         }
@@ -81,45 +115,105 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
     return false
   }
 
-  private isWidthCompliantSegment(from: number, to: number, routeId: number): boolean {
-    const connection: SimpleRouteConnection | undefined = this.problem.routeMetadata?.[routeId]?.simpleRouteConnection
+  private isWidthCompliantSegment(
+    from: number,
+    to: number,
+    routeId: number,
+  ): boolean {
+    const connection: SimpleRouteConnection | undefined =
+      this.problem.routeMetadata?.[routeId]?.simpleRouteConnection
     if (connection?.minTraceWidth === undefined) return true
-    const start = { x: this.topology.portX[from]!, y: this.topology.portY[from]! }
+    const start = {
+      x: this.topology.portX[from]!,
+      y: this.topology.portY[from]!,
+    }
     const end = { x: this.topology.portX[to]!, y: this.topology.portY[to]! }
     const startZ = this.topology.portZ[from]!
     const endZ = this.topology.portZ[to]!
-    const radius = Math.max(this.srj.minTraceWidth, connection.minTraceWidth) / 2
+    const radius =
+      Math.max(this.srj.minTraceWidth, connection.minTraceWidth) / 2
     for (const obstacle of this.obstacles) {
-      if (!obstacle.__zLayers?.includes(startZ) && !obstacle.__zLayers?.includes(endZ)) continue
-      if (isObstacleConnectedToRoute(obstacle, { connectionName: connection.name, rootConnectionName: connection.rootConnectionName }, this.connMap)) continue
+      if (
+        !obstacle.__zLayers?.includes(startZ) &&
+        !obstacle.__zLayers?.includes(endZ)
+      )
+        continue
+      if (
+        isObstacleConnectedToRoute(
+          obstacle,
+          {
+            connectionName: connection.name,
+            rootConnectionName: connection.rootConnectionName,
+          },
+          this.connMap,
+        )
+      )
+        continue
       const clearance = obstacle.isNonPlatedHole
-        ? this.srj.minTraceToHoleEdgeClearance ?? this.srj.minTraceToPadEdgeClearance ?? 0.15
-        : this.srj.minTraceToPadEdgeClearance ?? 0.15
+        ? (this.srj.minTraceToHoleEdgeClearance ??
+          this.srj.minTraceToPadEdgeClearance ??
+          0.15)
+        : (this.srj.minTraceToPadEdgeClearance ?? 0.15)
       // Match TraceWidthSolver's board-to-pad frame for rotated copper.
-      const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
-      const cos = Math.cos(angle), sin = Math.sin(angle)
-      const localStart = { x: (start.x - obstacle.center.x) * cos - (start.y - obstacle.center.y) * sin,
-        y: (start.x - obstacle.center.x) * sin + (start.y - obstacle.center.y) * cos }
-      const localEnd = { x: (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
-        y: (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos }
-      const distance = obstacle.shape === "circle"
-        ? segmentToCircleMinDistance(start, end, { ...obstacle.center, radius: obstacle.width / 2 })
-        : segmentToBoxMinDistance(localStart, localEnd, { center: { x: 0, y: 0 }, width: obstacle.width, height: obstacle.height })
+      const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+      const cos = Math.cos(angle),
+        sin = Math.sin(angle)
+      const localStart = {
+        x:
+          (start.x - obstacle.center.x) * cos -
+          (start.y - obstacle.center.y) * sin,
+        y:
+          (start.x - obstacle.center.x) * sin +
+          (start.y - obstacle.center.y) * cos,
+      }
+      const localEnd = {
+        x:
+          (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
+        y:
+          (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
+      }
+      const distance =
+        obstacle.shape === "circle"
+          ? segmentToCircleMinDistance(start, end, {
+              ...obstacle.center,
+              radius: obstacle.width / 2,
+            })
+          : segmentToBoxMinDistance(localStart, localEnd, {
+              center: { x: 0, y: 0 },
+              width: obstacle.width,
+              height: obstacle.height,
+            })
       if (distance + 1e-6 < radius + clearance) return false
     }
     return true
   }
 
-  override computeG(...args: Parameters<TinyHyperGraphSolver["computeG"]>): number {
+  override computeG(
+    ...args: Parameters<TinyHyperGraphSolver["computeG"]>
+  ): number {
     const [candidate, neighbor] = args
     const routeId = this.state.currentRouteId
-    if (routeId !== undefined && !this.isWidthCompliantSegment(candidate.portId, neighbor, routeId)) return Infinity
+    if (
+      routeId !== undefined &&
+      !this.isWidthCompliantSegment(candidate.portId, neighbor, routeId)
+    )
+      return Infinity
     return super.computeG(...args)
   }
 
-  override onPathFound(candidate: Parameters<TinyHyperGraphSolver["onPathFound"]>[0]): void {
+  override onPathFound(
+    candidate: Parameters<TinyHyperGraphSolver["onPathFound"]>[0],
+  ): void {
     const routeId = this.state.currentRouteId
-    if (routeId !== undefined && !this.isWidthCompliantSegment(candidate.portId, this.problem.routeEndPort[routeId]!, routeId)) return
+    if (
+      routeId !== undefined &&
+      !this.isWidthCompliantSegment(
+        candidate.portId,
+        this.problem.routeEndPort[routeId]!,
+        routeId,
+      )
+    )
+      return
     super.onPathFound(candidate)
   }
 

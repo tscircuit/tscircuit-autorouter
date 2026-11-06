@@ -127,7 +127,10 @@ export function mergeConnections(
       }
 
       if (simpleRouteConnection.minTraceWidth !== undefined) {
-        minTraceWidth = Math.max(minTraceWidth ?? 0, simpleRouteConnection.minTraceWidth)
+        minTraceWidth = Math.max(
+          minTraceWidth ?? 0,
+          simpleRouteConnection.minTraceWidth,
+        )
       }
 
       // Take the nominalTraceWidth from the first connection for now

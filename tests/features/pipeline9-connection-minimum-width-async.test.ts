@@ -3,12 +3,20 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getConnectionMinimumTraceWidthInput } from "../fixtures/connectionMinimumTraceWidthInput"
 
 test("asynchronous Pipeline9 preserves the width-constrained routing result", async (): Promise<void> => {
-  const sync = new AutoroutingPipelineSolver9_PreloadedTraceGraph(getConnectionMinimumTraceWidthInput(), { cacheProvider: null })
+  const sync = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    getConnectionMinimumTraceWidthInput(),
+    { cacheProvider: null },
+  )
   sync.solve()
-  const asyncSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(getConnectionMinimumTraceWidthInput(), { cacheProvider: null })
+  const asyncSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    getConnectionMinimumTraceWidthInput(),
+    { cacheProvider: null },
+  )
   await asyncSolver.solveAsync()
   expect(sync.solved).toBe(true)
   expect(asyncSolver.solved).toBe(true)
   expect(asyncSolver.failed).toBe(false)
-  expect(asyncSolver.getOutputSimplifiedPcbTraces()).toEqual(sync.getOutputSimplifiedPcbTraces())
+  expect(asyncSolver.getOutputSimplifiedPcbTraces()).toEqual(
+    sync.getOutputSimplifiedPcbTraces(),
+  )
 })
