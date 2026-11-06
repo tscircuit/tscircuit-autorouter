@@ -1,0 +1,1034 @@
+{
+  "provenance": {
+    "board": "Allwinner A64 original captured global input",
+    "sourceRequest": "fixtures/bug-reports/ddr-topology-validation/a64.input.srj.json.gz",
+    "nodeSource": "A64 merged mesh at 75a16da1366eb538c0bbc3030b02bcade0b262af; 98097 merged nodes",
+    "note": "Actual final11interfaces on a legal source_trace_24_mst1 path; start cropped to the center of the original free region immediately before four pruned interfaces. All node/port geometry unchanged."
+  },
+  "input": {
+    "capacityMeshNodes": [
+      {
+        "capacityMeshNodeId": "new-cmn_61-429",
+        "center": {
+          "x": -3.8097500000000064,
+          "y": -8.813909500000001
+        },
+        "width": 0.7194999999999894,
+        "height": 0.5721810000000058,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "cmn_61",
+        "center": {
+          "x": -3.8097500000000064,
+          "y": -8.0461595
+        },
+        "width": 0.7194999999999894,
+        "height": 0.9633189999999994,
+        "layer": "z0,1,2,3,4,5",
+        "availableZ": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_826-1081",
+        "center": {
+          "x": -4.217449359697334,
+          "y": -9.250000000000005
+        },
+        "width": 0.23489871939464635,
+        "height": 0.3000000000000007,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-new-cmn_807-1056-483",
+        "center": {
+          "x": -4.275000000000011,
+          "y": -9.575000000000006
+        },
+        "width": 0.35000000000000053,
+        "height": 0.3500000000000014,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_807-1056",
+        "center": {
+          "x": -4.600000000000012,
+          "y": -9.575000000000006
+        },
+        "width": 0.3000000000000007,
+        "height": 0.3500000000000014,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-new-cmn_806-1054-482",
+        "center": {
+          "x": -4.925000000000012,
+          "y": -9.575000000000006
+        },
+        "width": 0.34999999999999964,
+        "height": 0.3500000000000014,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_806-1055",
+        "center": {
+          "x": -5.250000000000012,
+          "y": -9.575000000000006
+        },
+        "width": 0.3000000000000007,
+        "height": 0.3500000000000014,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_274-800__sub_0_0",
+        "center": {
+          "x": -5.575000000000012,
+          "y": -9.460374999999999
+        },
+        "width": 0.34999999999999787,
+        "height": 1.1792499999999997,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_824-1080",
+        "center": {
+          "x": -5.250000000000012,
+          "y": -8.600000000000005
+        },
+        "width": 0.3000000000000007,
+        "height": 1,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-new-cmn_824-1080-513",
+        "center": {
+          "x": -4.925000000000012,
+          "y": -8.275000000000006
+        },
+        "width": 0.34999999999999964,
+        "height": 0.3500000000000014,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "new-cmn_858-1114",
+        "center": {
+          "x": -4.925000000000012,
+          "y": -7.950000000000005
+        },
+        "width": 0.34999999999999964,
+        "height": 0.3000000000000007,
+        "availableZ": [
+          0
+        ],
+        "layer": "z0"
+      },
+      {
+        "capacityMeshNodeId": "cmn_859",
+        "center": {
+          "x": -4.600000000000012,
+          "y": -7.950000000000005
+        },
+        "width": 0.3000000000000007,
+        "height": 0.3000000000000007,
+        "layer": "z0",
+        "availableZ": [
+          0
+        ],
+        "_containsObstacle": true,
+        "_containsTarget": true,
+        "_connectedTo": [
+          "pcb_smtpad_430",
+          "connectivity_net98",
+          "source_trace_24",
+          "source_port_35",
+          "source_port_136",
+          "source_port_433",
+          "pcb_smtpad_34",
+          "pcb_port_34",
+          "pcb_smtpad_134",
+          "pcb_port_134",
+          "pcb_port_430"
+        ]
+      }
+    ],
+    "sharedEdgeSegments": [
+      {
+        "edgeId": "ce270603",
+        "nodeIds": [
+          "new-cmn_61-429",
+          "cmn_61"
+        ],
+        "start": {
+          "x": -4.169500000000001,
+          "y": -8.527818999999997
+        },
+        "end": {
+          "x": -3.4500000000000117,
+          "y": -8.527818999999997
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce270603_pp0_z0",
+            "x": -3.961750000000001,
+            "y": -8.527818999999997,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_61-429",
+              "cmn_61"
+            ],
+            "edgeId": "ce270603",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": false
+          },
+          {
+            "segmentPortPointId": "ce270603_pp1_z0",
+            "x": -3.6577500000000116,
+            "y": -8.527818999999997,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_61-429",
+              "cmn_61"
+            ],
+            "edgeId": "ce270603",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0.3039999999999896,
+            "cramped": false
+          }
+        ]
+      },
+      {
+        "edgeId": "ce268662",
+        "nodeIds": [
+          "new-cmn_826-1081",
+          "new-cmn_61-429"
+        ],
+        "start": {
+          "x": -4.169500000000001,
+          "y": -9.100000000000005
+        },
+        "end": {
+          "x": -4.100000000000011,
+          "y": -9.100000000000005
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce268662_pp0_z0_cramped",
+            "x": -4.134750000000006,
+            "y": -9.100000000000005,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_826-1081",
+              "new-cmn_61-429"
+            ],
+            "edgeId": "ce268662",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce266045",
+        "nodeIds": [
+          "new-new-cmn_807-1056-483",
+          "new-cmn_826-1081"
+        ],
+        "start": {
+          "x": -4.3348987193946575,
+          "y": -9.400000000000006
+        },
+        "end": {
+          "x": -4.100000000000011,
+          "y": -9.400000000000006
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce266045_pp0_z0_cramped",
+            "x": -4.217449359697334,
+            "y": -9.400000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-new-cmn_807-1056-483",
+              "new-cmn_826-1081"
+            ],
+            "edgeId": "ce266045",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce261505",
+        "nodeIds": [
+          "new-cmn_807-1056",
+          "new-new-cmn_807-1056-483"
+        ],
+        "start": {
+          "x": -4.450000000000012,
+          "y": -9.750000000000007
+        },
+        "end": {
+          "x": -4.450000000000012,
+          "y": -9.400000000000006
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce261505_pp0_z0_cramped",
+            "x": -4.450000000000012,
+            "y": -9.575000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_807-1056",
+              "new-new-cmn_807-1056-483"
+            ],
+            "edgeId": "ce261505",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce257405",
+        "nodeIds": [
+          "new-new-cmn_806-1054-482",
+          "new-cmn_807-1056"
+        ],
+        "start": {
+          "x": -4.750000000000012,
+          "y": -9.750000000000007
+        },
+        "end": {
+          "x": -4.750000000000012,
+          "y": -9.400000000000006
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce257405_pp0_z0_cramped",
+            "x": -4.750000000000012,
+            "y": -9.575000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-new-cmn_806-1054-482",
+              "new-cmn_807-1056"
+            ],
+            "edgeId": "ce257405",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce254285",
+        "nodeIds": [
+          "new-cmn_806-1055",
+          "new-new-cmn_806-1054-482"
+        ],
+        "start": {
+          "x": -5.100000000000012,
+          "y": -9.750000000000007
+        },
+        "end": {
+          "x": -5.100000000000012,
+          "y": -9.400000000000006
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce254285_pp0_z0_cramped",
+            "x": -5.100000000000012,
+            "y": -9.575000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_806-1055",
+              "new-new-cmn_806-1054-482"
+            ],
+            "edgeId": "ce254285",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce251600",
+        "nodeIds": [
+          "new-cmn_274-800__sub_0_0",
+          "new-cmn_806-1055"
+        ],
+        "start": {
+          "x": -5.400000000000013,
+          "y": -9.750000000000007
+        },
+        "end": {
+          "x": -5.400000000000013,
+          "y": -9.400000000000006
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce251600_pp0_z0_cramped",
+            "x": -5.400000000000013,
+            "y": -9.575000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_274-800__sub_0_0",
+              "new-cmn_806-1055"
+            ],
+            "edgeId": "ce251600",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce251602",
+        "nodeIds": [
+          "new-cmn_274-800__sub_0_0",
+          "new-cmn_824-1080"
+        ],
+        "start": {
+          "x": -5.400000000000013,
+          "y": -9.100000000000005
+        },
+        "end": {
+          "x": -5.400000000000013,
+          "y": -8.87075
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce251602_pp0_z0_cramped",
+            "x": -5.400000000000013,
+            "y": -8.985375000000001,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_274-800__sub_0_0",
+              "new-cmn_824-1080"
+            ],
+            "edgeId": "ce251602",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce254370",
+        "nodeIds": [
+          "new-cmn_824-1080",
+          "new-new-cmn_824-1080-513"
+        ],
+        "start": {
+          "x": -5.100000000000012,
+          "y": -8.450000000000006
+        },
+        "end": {
+          "x": -5.100000000000012,
+          "y": -8.100000000000005
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce254370_pp0_z0_cramped",
+            "x": -5.100000000000012,
+            "y": -8.275000000000006,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_824-1080",
+              "new-new-cmn_824-1080-513"
+            ],
+            "edgeId": "ce254370",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce257471",
+        "nodeIds": [
+          "new-new-cmn_824-1080-513",
+          "new-cmn_858-1114"
+        ],
+        "start": {
+          "x": -5.100000000000012,
+          "y": -8.100000000000005
+        },
+        "end": {
+          "x": -4.750000000000012,
+          "y": -8.100000000000005
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce257471_pp0_z0_cramped",
+            "x": -4.925000000000012,
+            "y": -8.100000000000005,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-new-cmn_824-1080-513",
+              "new-cmn_858-1114"
+            ],
+            "edgeId": "ce257471",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": true
+          }
+        ]
+      },
+      {
+        "edgeId": "ce257474",
+        "nodeIds": [
+          "new-cmn_858-1114",
+          "cmn_859"
+        ],
+        "start": {
+          "x": -4.750000000000012,
+          "y": -8.100000000000005
+        },
+        "end": {
+          "x": -4.750000000000012,
+          "y": -7.800000000000004
+        },
+        "availableZ": [
+          0
+        ],
+        "portPoints": [
+          {
+            "segmentPortPointId": "ce257474_pp0_z0",
+            "x": -4.750000000000012,
+            "y": -7.950000000000005,
+            "availableZ": [
+              0
+            ],
+            "nodeIds": [
+              "new-cmn_858-1114",
+              "cmn_859"
+            ],
+            "edgeId": "ce257474",
+            "connectionName": null,
+            "distToCentermostPortOnZ": 0,
+            "cramped": false
+          }
+        ]
+      }
+    ],
+    "simpleRouteJson": {
+      "bounds": {
+        "minX": -45,
+        "maxX": 45,
+        "minY": -31.25,
+        "maxY": 31.25
+      },
+      "layerCount": 6,
+      "allowBlindAndBuriedVias": false,
+      "allowViaInPad": false,
+      "minTraceWidth": 0.127,
+      "minViaDiameter": 0.327,
+      "minViaHoleDiameter": 0.2,
+      "minViaPadDiameter": 0.327,
+      "min_via_hole_diameter": 0.2,
+      "min_via_pad_diameter": 0.327,
+      "minTraceToPadEdgeClearance": 0.10668,
+      "minTraceToHoleEdgeClearance": 0.2,
+      "minViaEdgeToPadEdgeClearance": 0.10668,
+      "minViaHoleEdgeToViaHoleEdgeClearance": 0.1,
+      "minPlatedHoleDrillEdgeToDrillEdgeClearance": 0.15,
+      "minPadEdgeToPadEdgeClearance": 0.1,
+      "minBoardEdgeClearance": 0.2,
+      "nominalTraceWidth": 0.127,
+      "obstacles": [
+        {
+          "circuitJsonMetadata": {
+            "pcb_smtpad_id": "pcb_smtpad_430",
+            "pcb_port_id": "pcb_port_430",
+            "source_port_name": "BALL_E5"
+          },
+          "componentId": "pcb_component_2",
+          "type": "rect",
+          "shape": "circle",
+          "layers": [
+            "top"
+          ],
+          "center": {
+            "x": -4.600000000000011,
+            "y": -7.9500000000000055
+          },
+          "width": 0.3,
+          "height": 0.3,
+          "connectedTo": [
+            "pcb_smtpad_430",
+            "connectivity_net98",
+            "source_trace_24",
+            "source_port_35",
+            "source_port_136",
+            "source_port_433",
+            "pcb_smtpad_34",
+            "pcb_port_34",
+            "pcb_smtpad_134",
+            "pcb_port_134",
+            "pcb_port_430"
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "name": "source_trace_24_mst1",
+          "source_trace_id": "source_trace_24",
+          "nominalTraceWidth": 0.127,
+          "width": 0.127,
+          "pointsToConnect": [
+            {
+              "x": -3.8097500000000064,
+              "y": -8.0461595,
+              "layer": "top"
+            },
+            {
+              "x": -4.600000000000011,
+              "y": -7.9500000000000055,
+              "layer": "top",
+              "pointId": "pcb_port_430",
+              "pcb_port_id": "pcb_port_430"
+            }
+          ],
+          "__rootConnectionNames": [
+            "source_trace_24"
+          ]
+        }
+      ]
+    }
+  },
+  "filteredSegments": [
+    {
+      "edgeId": "ce270603",
+      "nodeIds": [
+        "new-cmn_61-429",
+        "cmn_61"
+      ],
+      "start": {
+        "x": -4.169500000000001,
+        "y": -8.527818999999997
+      },
+      "end": {
+        "x": -3.4500000000000117,
+        "y": -8.527818999999997
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce270603_pp0_z0",
+          "x": -3.961750000000001,
+          "y": -8.527818999999997,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_61-429",
+            "cmn_61"
+          ],
+          "edgeId": "ce270603",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": false
+        },
+        {
+          "segmentPortPointId": "ce270603_pp1_z0",
+          "x": -3.6577500000000116,
+          "y": -8.527818999999997,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_61-429",
+            "cmn_61"
+          ],
+          "edgeId": "ce270603",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0.3039999999999896,
+          "cramped": false
+        }
+      ]
+    },
+    {
+      "edgeId": "ce268662",
+      "nodeIds": [
+        "new-cmn_826-1081",
+        "new-cmn_61-429"
+      ],
+      "start": {
+        "x": -4.169500000000001,
+        "y": -9.100000000000005
+      },
+      "end": {
+        "x": -4.100000000000011,
+        "y": -9.100000000000005
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": []
+    },
+    {
+      "edgeId": "ce266045",
+      "nodeIds": [
+        "new-new-cmn_807-1056-483",
+        "new-cmn_826-1081"
+      ],
+      "start": {
+        "x": -4.3348987193946575,
+        "y": -9.400000000000006
+      },
+      "end": {
+        "x": -4.100000000000011,
+        "y": -9.400000000000006
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": []
+    },
+    {
+      "edgeId": "ce261505",
+      "nodeIds": [
+        "new-cmn_807-1056",
+        "new-new-cmn_807-1056-483"
+      ],
+      "start": {
+        "x": -4.450000000000012,
+        "y": -9.750000000000007
+      },
+      "end": {
+        "x": -4.450000000000012,
+        "y": -9.400000000000006
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": []
+    },
+    {
+      "edgeId": "ce257405",
+      "nodeIds": [
+        "new-new-cmn_806-1054-482",
+        "new-cmn_807-1056"
+      ],
+      "start": {
+        "x": -4.750000000000012,
+        "y": -9.750000000000007
+      },
+      "end": {
+        "x": -4.750000000000012,
+        "y": -9.400000000000006
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": []
+    },
+    {
+      "edgeId": "ce254285",
+      "nodeIds": [
+        "new-cmn_806-1055",
+        "new-new-cmn_806-1054-482"
+      ],
+      "start": {
+        "x": -5.100000000000012,
+        "y": -9.750000000000007
+      },
+      "end": {
+        "x": -5.100000000000012,
+        "y": -9.400000000000006
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce254285_pp0_z0_cramped",
+          "x": -5.100000000000012,
+          "y": -9.575000000000006,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_806-1055",
+            "new-new-cmn_806-1054-482"
+          ],
+          "edgeId": "ce254285",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": true
+        }
+      ]
+    },
+    {
+      "edgeId": "ce251600",
+      "nodeIds": [
+        "new-cmn_274-800__sub_0_0",
+        "new-cmn_806-1055"
+      ],
+      "start": {
+        "x": -5.400000000000013,
+        "y": -9.750000000000007
+      },
+      "end": {
+        "x": -5.400000000000013,
+        "y": -9.400000000000006
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce251600_pp0_z0_cramped",
+          "x": -5.400000000000013,
+          "y": -9.575000000000006,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_274-800__sub_0_0",
+            "new-cmn_806-1055"
+          ],
+          "edgeId": "ce251600",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": true
+        }
+      ]
+    },
+    {
+      "edgeId": "ce251602",
+      "nodeIds": [
+        "new-cmn_274-800__sub_0_0",
+        "new-cmn_824-1080"
+      ],
+      "start": {
+        "x": -5.400000000000013,
+        "y": -9.100000000000005
+      },
+      "end": {
+        "x": -5.400000000000013,
+        "y": -8.87075
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce251602_pp0_z0_cramped",
+          "x": -5.400000000000013,
+          "y": -8.985375000000001,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_274-800__sub_0_0",
+            "new-cmn_824-1080"
+          ],
+          "edgeId": "ce251602",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": true
+        }
+      ]
+    },
+    {
+      "edgeId": "ce254370",
+      "nodeIds": [
+        "new-cmn_824-1080",
+        "new-new-cmn_824-1080-513"
+      ],
+      "start": {
+        "x": -5.100000000000012,
+        "y": -8.450000000000006
+      },
+      "end": {
+        "x": -5.100000000000012,
+        "y": -8.100000000000005
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce254370_pp0_z0_cramped",
+          "x": -5.100000000000012,
+          "y": -8.275000000000006,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_824-1080",
+            "new-new-cmn_824-1080-513"
+          ],
+          "edgeId": "ce254370",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": true
+        }
+      ]
+    },
+    {
+      "edgeId": "ce257471",
+      "nodeIds": [
+        "new-new-cmn_824-1080-513",
+        "new-cmn_858-1114"
+      ],
+      "start": {
+        "x": -5.100000000000012,
+        "y": -8.100000000000005
+      },
+      "end": {
+        "x": -4.750000000000012,
+        "y": -8.100000000000005
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce257471_pp0_z0_cramped",
+          "x": -4.925000000000012,
+          "y": -8.100000000000005,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-new-cmn_824-1080-513",
+            "new-cmn_858-1114"
+          ],
+          "edgeId": "ce257471",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": true
+        }
+      ]
+    },
+    {
+      "edgeId": "ce257474",
+      "nodeIds": [
+        "new-cmn_858-1114",
+        "cmn_859"
+      ],
+      "start": {
+        "x": -4.750000000000012,
+        "y": -8.100000000000005
+      },
+      "end": {
+        "x": -4.750000000000012,
+        "y": -7.800000000000004
+      },
+      "availableZ": [
+        0
+      ],
+      "portPoints": [
+        {
+          "segmentPortPointId": "ce257474_pp0_z0",
+          "x": -4.750000000000012,
+          "y": -7.950000000000005,
+          "availableZ": [
+            0
+          ],
+          "nodeIds": [
+            "new-cmn_858-1114",
+            "cmn_859"
+          ],
+          "edgeId": "ce257474",
+          "connectionName": null,
+          "distToCentermostPortOnZ": 0,
+          "cramped": false
+        }
+      ]
+    }
+  ],
+  "startNodeId": "cmn_61",
+  "endNodeId": "cmn_859"
+}

@@ -1,3 +1,5 @@
+import { createSegmentPointPorts } from "../hgportpointpathingsolver/buildHyperGraph"
+import { preserveSerializedTerminalConnectivity } from "./preserveSerializedTerminalConnectivity"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -465,8 +467,43 @@ const getTinyRouteConnectionsOrThrow = (
   })
 }
 
-const buildSerializedTinyGraph = (
-  params: TinyHypergraphInput,
+export const getOmittedUnoccupiedPorts = (
+  params: Pick<TinyHypergraphInput, "graph" | "unprunedUnoccupiedSegments">,
+  serializedHyperGraph: SerializedHyperGraph,
+): SerializedHyperGraph["ports"] => {
+  if (!params.unprunedUnoccupiedSegments)
+    throw new Error("Unoccupied candidate source is required")
+  const regions = new Map(
+    params.graph.regions.map((region) => [region.regionId, region]),
+  )
+  const existing = new Set(serializedHyperGraph.ports.map((port) => port.portId))
+  return params.unprunedUnoccupiedSegments.flatMap((segment) => {
+    const region1 = regions.get(segment.nodeIds[0])
+    const region2 = regions.get(segment.nodeIds[1])
+    if (!region1 || !region2)
+      throw new Error(`Missing unpruned boundary region for ${segment.edgeId}`)
+    return segment.portPoints.filter((point) => point.cramped).flatMap((point) =>
+      createSegmentPointPorts(point, region1, region2)
+        .filter((port) => !existing.has(port.d.portId))
+        .map((port) => ({
+          portId: port.d.portId,
+          region1Id: port.region1.regionId,
+          region2Id: port.region2.regionId,
+          d: toSerializedPortData(port),
+        })),
+    )
+  })
+}
+
+export const buildSerializedTinyGraph = (
+  params: Pick<
+    TinyHypergraphInput,
+    | "graph"
+    | "connections"
+    | "layerCount"
+    | "preserveTerminalPcbPortIds"
+    | "unprunedUnoccupiedSegments"
+  >,
 ): SerializedHyperGraph => {
   const getNetIndex = createTinyRouteNetIndexer()
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
@@ -636,7 +673,11 @@ const buildSerializedTinyGraph = (
     solvedRoutes,
   } satisfies SerializedHyperGraph
   serializePreloadedTraceAssignments(serializedHyperGraph)
-  return serializedHyperGraph
+  return params.unprunedUnoccupiedSegments
+    ? preserveSerializedTerminalConnectivity(serializedHyperGraph, () =>
+        getOmittedUnoccupiedPorts(params, serializedHyperGraph),
+      )
+    : serializedHyperGraph
 }
 
 const capturePreloadedTraceSegmentBaseline = (
@@ -1055,6 +1096,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private restoredUnoccupiedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1085,6 +1127,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    this.restoredUnoccupiedPortCount = params.unprunedUnoccupiedSegments
+      ? serializedGraph.ports.length -
+        params.graph.ports.length -
+        2 * connections.length
+      : 0
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =

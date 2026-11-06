@@ -151,6 +151,49 @@ const addAssignableViaRegions = (params: {
   }
 }
 
+/** One projection for ordinary ports and restored existing interfaces. */
+export function createSegmentPointPorts(
+  spp: SegmentPortPoint,
+  region1: RegionHg,
+  region2: RegionHg,
+): RegionPortHg[] {
+  return spp.availableZ.map((z): RegionPortHg => {
+    const preloadedTracePortAssignments =
+      spp._preloadedTracePortAssignments?.filter(
+        (assignment) => assignment.z === z,
+      )
+    const port: RawPort = {
+      portId: `${spp.segmentPortPointId}::${z}`,
+      x: spp.x,
+      y: spp.y,
+      z,
+      distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
+      cramped: spp.cramped,
+      regions: [region1, region2],
+      tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
+      _preloadedFixedNetIds:
+        preloadedTracePortAssignments &&
+        preloadedTracePortAssignments.length > 0
+          ? [
+              ...new Set(
+                preloadedTracePortAssignments.map(
+                  (assignment) => assignment.fixedNetId,
+                ),
+              ),
+            ].sort()
+          : undefined,
+      _preloadedTracePortAssignments: preloadedTracePortAssignments,
+    }
+    const hgPort: RegionPortHg = {
+      portId: spp.segmentPortPointId,
+      d: port,
+      region1,
+      region2,
+    }
+    return hgPort
+  })
+}
+
 /**
  * Builds the hypergraph and connection list consumed by the HG pathing solver.
  */
@@ -206,39 +249,7 @@ export function buildHyperGraph(params: {
       `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
     )
 
-    for (const z of spp.availableZ) {
-      const preloadedTracePortAssignments =
-        spp._preloadedTracePortAssignments?.filter(
-          (assignment) => assignment.z === z,
-        )
-      const port: RawPort = {
-        portId: `${spp.segmentPortPointId}::${z}`,
-        x: spp.x,
-        y: spp.y,
-        z,
-        distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
-        cramped: spp.cramped,
-        regions: [region1, region2],
-        tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
-        _preloadedFixedNetIds:
-          preloadedTracePortAssignments &&
-          preloadedTracePortAssignments.length > 0
-            ? [
-                ...new Set(
-                  preloadedTracePortAssignments.map(
-                    (assignment) => assignment.fixedNetId,
-                  ),
-                ),
-              ].sort()
-            : undefined,
-        _preloadedTracePortAssignments: preloadedTracePortAssignments,
-      }
-      const hgPort: RegionPortHg = {
-        portId: spp.segmentPortPointId,
-        d: port,
-        region1,
-        region2,
-      }
+    for (const hgPort of createSegmentPointPorts(spp, region1, region2)) {
       graph.ports.push(hgPort)
       region1.ports.push(hgPort)
       region2.ports.push(hgPort)

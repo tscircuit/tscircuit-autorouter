@@ -13,7 +13,10 @@ import type {
   CapacityMeshNodeId,
   SimpleRouteConnection,
 } from "lib/types"
-import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type {
+  PreloadedTracePortAssignment,
+  SharedEdgeSegment,
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 export type RawPort = {
   portId: string
@@ -98,6 +101,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Original boundaries; producers may supply only without native preloaded copper. */
+  unprunedUnoccupiedSegments?: readonly SharedEdgeSegment[]
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
