@@ -35,9 +35,9 @@ test("final minimum-width validation covers the net alias and original name", ()
       }
       expect(solver.failed).toBe(false)
       expect(solver.solved).toBe(false)
-      expect(solver.srjWithPointPairs!.connections[0]!.__netConnectionName).toBe(
-        "SUPPLY_5V",
-      )
+      expect(
+        solver.srjWithPointPairs!.connections[0]!.__netConnectionName,
+      ).toBe("SUPPLY_5V")
       const expansion = solver.powerTraceExpansionSolver!
       const output = expansion.getOutput()
       expect(output.length).toBeGreaterThan(0)
