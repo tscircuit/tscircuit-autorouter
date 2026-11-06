@@ -684,6 +684,7 @@ function getPadFragmentId(
 
 export function createPcbPadElements(
   srj: SimpleRouteJson,
+  representedPadObstacleIndexes?: Set<number>,
 ): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Map<string, Set<string>>()
@@ -783,6 +784,9 @@ export function createPcbPadElements(
 
     const layers = obstacle.layers.filter(isLayerName)
     if (layers.length === 0) continue
+
+    // Identical pad fragments are already represented by the first element.
+    representedPadObstacleIndexes?.add(obstacleIndex)
 
     const width = obstacle.width
     const height = obstacle.height
@@ -1053,6 +1057,8 @@ export type ConvertToCircuitJsonOptions = {
   includeOriginalConnections?: boolean
   /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Collect obstacles represented by pads, including deduplicated fragments. */
+  representedPadObstacleIndexes?: Set<number>
 }
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
@@ -1131,7 +1137,12 @@ export function convertToCircuitJson(
   )
 
   // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  circuitJson.push(
+    ...createPcbPadElements(
+      originalSrj ?? srjWithPointPairs,
+      options.representedPadObstacleIndexes,
+    ),
+  )
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(

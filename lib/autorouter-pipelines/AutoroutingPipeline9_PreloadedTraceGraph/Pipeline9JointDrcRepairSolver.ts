@@ -56,6 +56,17 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
+// Finish Circuit JSON repairs before targeting projected earlier copper.
+// The reference score can be zero only when both groups are clear.
+const prioritizeCircuitJsonDrcErrors = <T extends Record<string, unknown>>(
+  errors: T[],
+): T[] => {
+  const circuitJsonErrors = errors.filter(
+    (error) => error.drc_source !== "fixed_copper",
+  )
+  return circuitJsonErrors.length > 0 ? circuitJsonErrors : errors
+}
+
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
@@ -923,6 +934,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
     }
+    currentDrc.errors = prioritizeCircuitJsonDrcErrors(currentDrc.errors)
+    currentDrc.errorsWithCenters = prioritizeCircuitJsonDrcErrors(
+      currentDrc.errorsWithCenters,
+    )
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
       errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
@@ -1458,8 +1473,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       return normalizeCandidateDrcResult({
-        errors: evaluatedNewErrors,
-        errorsWithCenters: evaluatedNewErrorsWithCenters,
+        errors: prioritizeCircuitJsonDrcErrors(evaluatedNewErrors),
+        errorsWithCenters: prioritizeCircuitJsonDrcErrors(
+          evaluatedNewErrorsWithCenters,
+        ),
         circuitJson: evaluatedDrc.circuitJson,
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:

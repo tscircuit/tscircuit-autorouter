@@ -19,6 +19,7 @@ import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
 
 type DrcError = Record<string, unknown>
 
@@ -59,11 +60,11 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
         minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
       })
     : undefined
-  const staticCircuitJson = convertToCircuitJson(
-    srjWithPointPairs,
-    [],
-    conversionOptions,
-  )
+  const representedPadObstacleIndexes = new Set<number>()
+  const staticCircuitJson = convertToCircuitJson(srjWithPointPairs, [], {
+    ...conversionOptions,
+    representedPadObstacleIndexes,
+  })
   if (board) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
@@ -78,6 +79,12 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     allowViaInPad: inputSrj.allowViaInPad,
     minClearance:
       drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
+  })
+  const evaluateFixedCopper = createPipeline9FixedCopperDrcEvaluator({
+    inputSrj,
+    srjWithPointPairs,
+    representedPadObstacleIndexes,
+    viaClearance: drcOptions.viaToPadClearance,
   })
   return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
@@ -95,6 +102,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [
       ...obstacleErrors.traceErrors,
+      ...evaluateFixedCopper(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
