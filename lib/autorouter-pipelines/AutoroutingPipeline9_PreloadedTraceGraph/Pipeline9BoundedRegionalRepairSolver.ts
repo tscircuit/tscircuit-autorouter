@@ -34,6 +34,11 @@ type DrcErrors = Array<Record<string, unknown>>
 type FixedViolations = ReturnType<typeof getFixedObstacleViolations>
 type RepairAllowance = ReturnType<typeof getPipeline9BoundedRepairAllowance>
 
+export type Pipeline9UnpublishedRepairSeed = {
+  routes: HighDensityRoute[]
+  drcIssueCount: number
+}
+
 type InitialContext = {
   boundaryMargin: number
   regionSizes: number[]
@@ -142,6 +147,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   readonly budget: Pipeline9BoundedRepairBudget
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
+  private unpublishedRepairSeed?: Pipeline9UnpublishedRepairSeed
   private reservedChildMaximum = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
@@ -795,6 +801,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.publish(context, false)
       return
     }
+    if (context.currentErrors.length < context.initialErrors.length) {
+      // Coupled improvements remain private while peer errors remain. Preserve
+      // their validated geometry for the next repair stage's search input.
+      this.unpublishedRepairSeed = {
+        routes: context.currentRoutes,
+        drcIssueCount: context.currentErrors.length,
+      }
+    }
     this.state = { phase: "prepare-independent-projection", context }
   }
 
@@ -1069,5 +1083,20 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       )
     }
     return this.result
+  }
+
+  getUnpublishedRepairSeed(): Pipeline9UnpublishedRepairSeed | undefined {
+    if (!this.solved || this.failed) {
+      throw new Error(
+        "Pipeline9 unpublished repair seed requested before completion",
+      )
+    }
+    const seed = this.unpublishedRepairSeed
+    if (seed === undefined) return undefined
+    if (this.result.publishedDrcIssueCount === undefined) {
+      throw new Error("Pipeline9 repair seed has no published reference count")
+    }
+    if (seed.drcIssueCount >= this.result.publishedDrcIssueCount) return undefined
+    return seed
   }
 }

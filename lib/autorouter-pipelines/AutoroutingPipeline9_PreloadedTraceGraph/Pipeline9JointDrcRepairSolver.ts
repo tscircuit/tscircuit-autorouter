@@ -34,7 +34,10 @@ import {
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
-import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
+import {
+  Pipeline9BoundedRegionalRepairSolver,
+  type Pipeline9UnpublishedRepairSeed,
+} from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -688,6 +691,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >[0]
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
+  private initialBoundedRepairSeed?: Pipeline9UnpublishedRepairSeed
   private initialBoundedRegionalRepairStartedAt?: number
   private readonly prioritizeConflictedRoutes: boolean
   readonly pipelineDef = [
@@ -750,11 +754,44 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         if (!this.exactRepairParams) {
           throw new Error("Pipeline9 exact repair stage is missing its input")
         }
+        let hdRoutes =
+          this.clearanceProjectionSolver?.getOutput() ??
+          this.exactRepairParams.hdRoutes
+        const seed = this.initialBoundedRepairSeed
+        if (seed !== undefined) {
+          if (!this.cachedReferenceDrcEvaluator) {
+            throw new Error("Pipeline9 repair seed has no reference evaluator")
+          }
+          const seedReference = this.cachedReferenceDrcEvaluator({
+            traces: [],
+            routes: seed.routes,
+            hdRoutes: seed.routes,
+          })
+          const seedErrors = Array.isArray(seedReference)
+            ? seedReference
+            : seedReference.errors
+          if (seedErrors.length !== seed.drcIssueCount) {
+            throw new Error("Pipeline9 private repair seed lost its DRC validation")
+          }
+          const existingReference = this.cachedReferenceDrcEvaluator({
+            traces: [],
+            routes: hdRoutes,
+            hdRoutes,
+          })
+          const existingErrors = Array.isArray(existingReference)
+            ? existingReference
+            : existingReference.errors
+          // Match regional acceptance: fewer reference errors is progress;
+          // equal counts retain the existing stage input and its geometry.
+          if (seedErrors.length < existingErrors.length) {
+            hdRoutes = seed.routes
+            this.stats.initialBoundedRegionalRepairSeedDrcIssueCount =
+              seedErrors.length
+          }
+        }
         this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
           ...this.exactRepairParams,
-          hdRoutes:
-            this.clearanceProjectionSolver?.getOutput() ??
-            this.exactRepairParams.hdRoutes,
+          hdRoutes,
         })
         return this.exactRepairSolver
       },
@@ -1760,10 +1797,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
-    // A complete bounded repair can avoid the much broader portfolio search.
-    // Keep incomplete candidates private so the existing stages see their
-    // original input, including all preload ownership and candidate budgets.
-    if (result.publishedDrcIssueCount !== 0) return
+    // Incomplete coupled geometry is a search seed, never a published result.
+    // The existing portfolio keeps its budgets and final publication guards.
+    if (result.publishedDrcIssueCount !== 0) {
+      this.initialBoundedRepairSeed =
+        this.initialBoundedRegionalRepairSolver.getUnpublishedRepairSeed()
+      return
+    }
+    // A complete bounded repair avoids the broader portfolio search.
     const reference = this.cachedReferenceDrcEvaluator({
       traces: [],
       routes: result.routes,
