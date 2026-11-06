@@ -46,6 +46,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
               ),
               totalStepsPerNode: this.totalStepsPerNode,
               nodeAssignmentMargin: this.nodeAssignmentMargin,
+              preserveTopologyPortAnchors: this.preserveTopologyPortAnchors,
               colorMap: Object.fromEntries(
                 entry.routeIndexes.map((routeIndex) => {
                   const name = this.originalHdRoutes[routeIndex].connectionName

@@ -137,6 +137,11 @@ const getSectionRangesByTraceIndex = ({
         `Pipeline9 hypergraph changed missing preloaded trace "${section.traceId}"`,
       )
     }
+    if (traces[traceIndex]!.isFixed) {
+      throw new Error(
+        `Pipeline9 hypergraph changed fixed preloaded trace "${section.traceId}"`,
+      )
+    }
     const ranges = rangesByTraceIndex.get(traceIndex) ?? []
     ranges.push({
       start: Math.min(section.startRoutePosition, section.endRoutePosition),
