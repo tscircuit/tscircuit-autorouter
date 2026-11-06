@@ -897,13 +897,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ]
       const reconstructableConnectionNames = [
         ...conflictingFixedRoutesByConnectionName,
-      ].flatMap(([connectionName, fixedRoute]) =>
-        fixedRoute.isThroughObstacle === true ? [] : [connectionName],
-      )
+      ]
+        .filter(
+          ([, fixedRoute]) =>
+            fixedRoute.isFixed !== true &&
+            fixedRoute.isThroughObstacle !== true,
+        )
+        .map(([connectionName]) => connectionName)
       // Moving one proven blocker can expose another. Grow only by exact
       // conflicts from the latest candidate, so the retry stays finite and
-      // every other preload remains immutable. Component-owned through-
-      // obstacle primitives are never movable.
+      // every other preload remains immutable. Fixed native traces and
+      // component-owned through-obstacle primitives are never movable.
       const promotedConnectionNames = new Set(
         this.activeFallbackPromotedFixedRouteConnectionNames,
       )

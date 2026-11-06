@@ -11,6 +11,7 @@ import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
 export interface PreloadedTracePortAssignment {
   traceId: string
   fixedNetId: string
+  isFixed?: boolean
   routePosition: number
   tracePoint: { x: number; y: number }
   z: number

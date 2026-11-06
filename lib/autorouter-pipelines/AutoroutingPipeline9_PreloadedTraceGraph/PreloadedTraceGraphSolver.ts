@@ -14,10 +14,12 @@ import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetween
 type Point = { x: number; y: number }
 type RoutePoint = SimplifiedPcbTrace["route"][number]
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
+type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
 
 type PreloadedTracePrimitive = {
   traceId: string
   fixedNetId: string
+  isFixed?: boolean
   connectionName: string
   routePositionStart: number
   routePositionEnd: number
@@ -44,6 +46,22 @@ const getLayersBetween = (
 const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
   point.route_type === "wire"
 
+const getPreloadedViaLayers = ({
+  via,
+  srj,
+}: {
+  via: ViaRoutePoint
+  srj: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">
+}): number[] => {
+  if (srj.allowBlindAndBuriedVias !== true) {
+    return Array.from({ length: srj.layerCount }, (_, z) => z)
+  }
+  if (via.layers !== undefined) {
+    return via.layers.map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+  }
+  return getLayersBetween(via.from_layer, via.to_layer, srj.layerCount)
+}
+
 const getPreloadedTracePrimitives = (
   srj: SimpleRouteJson,
 ): PreloadedTracePrimitive[] => {
@@ -65,14 +83,11 @@ const getPreloadedTracePrimitives = (
         primitives.push({
           traceId: trace.pcb_trace_id,
           fixedNetId,
+          isFixed: trace.isFixed,
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition,
-          zLayers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
+          zLayers: getPreloadedViaLayers({ via: routePoint, srj }),
           start: routePoint,
           end: routePoint,
         })
@@ -80,6 +95,7 @@ const getPreloadedTracePrimitives = (
         primitives.push({
           traceId: trace.pcb_trace_id,
           fixedNetId,
+          isFixed: trace.isFixed,
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition + 1,
@@ -100,6 +116,7 @@ const getPreloadedTracePrimitives = (
           primitives.push({
             traceId: trace.pcb_trace_id,
             fixedNetId,
+            isFixed: trace.isFixed,
             connectionName: trace.connection_name,
             routePositionStart: routePosition + padIndex,
             routePositionEnd: routePosition + padIndex,
@@ -128,6 +145,7 @@ const getPreloadedTracePrimitives = (
       primitives.push({
         traceId: trace.pcb_trace_id,
         fixedNetId,
+        isFixed: trace.isFixed,
         connectionName: trace.connection_name,
         routePositionStart: pointIndex,
         routePositionEnd: pointIndex + 1,
@@ -213,6 +231,7 @@ const preloadPort = (
     },
     z,
   }
+  if (primitive.isFixed === true) assignment.isFixed = true
   const existingAssignments = portPoint._preloadedTracePortAssignments ?? []
   if (
     !existingAssignments.some(
