@@ -36,6 +36,7 @@ import { PolyHypergraphPortPointPathingSolver } from "./PolyHypergraphPortPointP
 import { PreprocessSimpleRouteJsonSolver } from "./PreprocessSimpleRouteJsonSolver"
 import { ProjectHighDensityToPolygonSolver } from "./ProjectHighDensityToPolygonSolver"
 import type { PolyNodeWithPortPoints } from "./types"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -629,6 +630,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
             defaultViaHoleDiameter: this.viaHoleDiameter,
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
           }),
         }
 
@@ -636,7 +638,10 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

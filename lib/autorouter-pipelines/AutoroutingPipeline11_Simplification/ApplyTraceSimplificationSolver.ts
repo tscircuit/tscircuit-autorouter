@@ -100,6 +100,8 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
         defaultViaHoleDiameter: preparedTrace.viaHoleDiameter,
         obstacles: this.inputProblem.preparedInput.srj.obstacles,
         connMap: this.inputProblem.preparedInput.connMap,
+        allowBlindAndBuriedVias:
+          this.inputProblem.preparedInput.srj.allowBlindAndBuriedVias,
       },
     )
     const jumpers = convertedRoute.filter(
