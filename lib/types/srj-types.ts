@@ -61,6 +61,40 @@ export type Jumper = {
 
 export type JumperType = "1206x4" | "0603"
 
+export type RejectClearanceViolationsMode = boolean | "unroute" | "error"
+
+export interface ViaKeepoutRegion {
+  keepoutId?: string
+  type?: "rect" | "circle"
+  shape?: "rect" | "circle"
+  center: { x: number; y: number }
+  width?: number
+  height?: number
+  radius?: number
+  ccwRotationDegrees?: number
+  /** Physical layers where vias are forbidden. Defaults to all layers if omitted. */
+  layers?: string[]
+  /** Z-layer indices where vias are forbidden. */
+  zLayers?: number[]
+  /** Extra copper edge-to-edge margin around the keepout region in mm. Defaults to 0. */
+  clearance?: number
+  /** Alias for `clearance` on a via keepout region in mm. */
+  viaClearance?: number
+}
+
+export interface UnroutedConnectionIssue {
+  connectionName: string
+  rootConnectionName?: RootConnectionName
+  sourceTraceId?: string
+  pcbTraceId?: TraceId
+  reason: "clearance_violation" | "via_keepout_violation"
+  errorType: string
+  location: { x: number; y: number }
+  actualClearance?: number
+  minimumClearance?: number
+  message: string
+}
+
 export interface SimpleRouteJson {
   layerCount: number
   /** Whether autorouters may use vias that do not span the full board stack. */
@@ -82,6 +116,17 @@ export interface SimpleRouteJson {
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   minPlatedHoleDrillEdgeToDrillEdgeClearance?: number
   minPadEdgeToPadEdgeClearance?: number
+  /** Per-region via keep-outs where vias cannot be placed. */
+  viaKeepouts?: ViaKeepoutRegion[]
+  /**
+   * Controls how connections that cannot be routed within clearance are handled:
+   * - `true` or `"unroute"`: omit clearance-violating routes from output traces and report them in `unroutedConnections`
+   * - `"error"`: fail the solver when any connection cannot be routed within clearance
+   * - `false` (default): retain legacy behavior while still populating `unroutedConnections`
+   */
+  rejectClearanceViolations?: RejectClearanceViolationsMode
+  /** Connections that could not be routed within the required clearance, with violation locations. */
+  unroutedConnections?: UnroutedConnectionIssue[]
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
@@ -142,6 +187,12 @@ export interface Obstacle {
   componentId?: string
   /** True when this obstacle replaces one completed fanout source footprint. */
   isFanoutSourceKeepout?: boolean
+  /** True when this obstacle forbids vias (with optional `viaClearance`) without blocking traces. */
+  isViaKeepout?: boolean
+  /** Minimum via copper edge to obstacle edge clearance in mm (e.g. "no vias within X of this pad"). */
+  viaClearance?: number
+  /** Alias for `viaClearance` specifying per-obstacle via edge to pad edge clearance in mm. */
+  minViaEdgeToPadEdgeClearance?: number
   /** Non-plated hole geometry. Must have no electrical connections. */
   isNonPlatedHole?: boolean
   shape?: "circle"

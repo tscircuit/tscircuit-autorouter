@@ -17,10 +17,34 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
       return
     }
     const { traces, ...inputSrjWithoutTraces } = this.inputSrj
+    const viaKeepoutObstacles = inputSrjWithoutTraces.obstacles.filter(
+      (obs) => obs.isViaKeepout,
+    )
+    const nonViaKeepoutObstacles = inputSrjWithoutTraces.obstacles.filter(
+      (obs) => !obs.isViaKeepout,
+    )
+    const mergedViaKeepouts = [
+      ...(inputSrjWithoutTraces.viaKeepouts ?? []),
+      ...viaKeepoutObstacles.map((obs) => ({
+        center: obs.center,
+        width: obs.width,
+        height: obs.height,
+        layers: obs.layers,
+        connectedTo: [
+          ...(obs.connectedTo ?? []),
+          ...(obs.offBoardConnectsTo ?? []),
+        ],
+        viaClearance: obs.viaClearance ?? obs.minViaEdgeToPadEdgeClearance,
+      })),
+    ]
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(
-        inputSrjWithoutTraces as SimpleRouteJson,
-      )
+      createSrjWithBoardValidObstacleLayers({
+        ...(inputSrjWithoutTraces as SimpleRouteJson),
+        obstacles: nonViaKeepoutObstacles,
+        ...(mergedViaKeepouts.length > 0
+          ? { viaKeepouts: mergedViaKeepouts }
+          : {}),
+      })
     const srjWithApproximatingRects = addApproximatingRectsToSrj(
       filterObstaclesOutsideBoard(srjWithBoardValidObstacleLayers),
     )

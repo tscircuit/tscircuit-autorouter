@@ -22,6 +22,10 @@ import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
 } from "lib/utils/polygonContainment"
+import {
+  getPointToViaKeepoutRegionEdgeDistance,
+  getViaKeepoutZLayers,
+} from "lib/utils/viaKeepoutUtils"
 import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
@@ -260,23 +264,48 @@ export class EscapeViaLocationSolver extends BaseSolver {
       ])
     }
 
+    const obstacleSpecificViaClearance =
+      sourceObstacle.viaClearance ??
+      sourceObstacle.minViaEdgeToPadEdgeClearance ??
+      0
+    const baseOffset = Math.max(
+      this.escapeOffset,
+      this.viaRadius + obstacleSpecificViaClearance,
+    )
+    const offsets = [baseOffset]
+    if ((this.ogSrj.viaKeepouts?.length ?? 0) > 0) {
+      for (const keepout of this.ogSrj.viaKeepouts ?? []) {
+        const keepoutSpan =
+          keepout.radius ??
+          Math.max(keepout.width ?? 0, keepout.height ?? 0) / 2
+        const pushedOffset =
+          keepoutSpan + (keepout.clearance ?? 0) + this.viaRadius
+        if (pushedOffset > baseOffset + GEOMETRIC_TOLERANCE) {
+          offsets.push(pushedOffset)
+        }
+      }
+    }
+
     const minX = sourceObstacle.center.x - sourceObstacle.width / 2
     const maxX = sourceObstacle.center.x + sourceObstacle.width / 2
     const minY = sourceObstacle.center.y - sourceObstacle.height / 2
     const maxY = sourceObstacle.center.y + sourceObstacle.height / 2
-    const leftX = minX - this.escapeOffset
-    const rightX = maxX + this.escapeOffset
-    const bottomY = minY - this.escapeOffset
-    const topY = maxY + this.escapeOffset
     const ySamples = this.getEdgeSamples(minY, maxY, point.y)
     const xSamples = this.getEdgeSamples(minX, maxX, point.x)
     const candidates: Point2D[] = []
 
-    for (const y of ySamples) {
-      candidates.push({ x: leftX, y }, { x: rightX, y })
-    }
-    for (const x of xSamples) {
-      candidates.push({ x, y: bottomY }, { x, y: topY })
+    for (const offset of offsets) {
+      const leftX = minX - offset
+      const rightX = maxX + offset
+      const bottomY = minY - offset
+      const topY = maxY + offset
+
+      for (const y of ySamples) {
+        candidates.push({ x: leftX, y }, { x: rightX, y })
+      }
+      for (const x of xSamples) {
+        candidates.push({ x, y: bottomY }, { x, y: topY })
+      }
     }
 
     return this.dedupeCandidatePositions(candidates)
@@ -380,6 +409,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
+      if (obstacle.isViaKeepout) continue
       if (!obstacle.layers.includes(sourceLayer)) continue
 
       if (isPointInRect(candidate, obstacle)) {
@@ -557,6 +587,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
+      if (obstacle.isViaKeepout) continue
       if (!obstacle.layers.includes(sourceLayer)) continue
 
       for (const segment of obstacleToSegments(obstacle)) {
@@ -597,10 +628,29 @@ export class EscapeViaLocationSolver extends BaseSolver {
     sourceZ: number
     targetZ: number
   }): number {
-    const { candidate, connectionNetIds, sourceZ, targetZ } = params
+    const { candidate, sourceZ, targetZ } = params
     const spanMinZ = Math.min(sourceZ, targetZ)
     const spanMaxZ = Math.max(sourceZ, targetZ)
     let minClearance = Number.POSITIVE_INFINITY
+
+    for (const keepout of this.ogSrj.viaKeepouts ?? []) {
+      const keepoutZs = getViaKeepoutZLayers(keepout, this.ogSrj.layerCount)
+      if (!keepoutZs.some((z) => z >= spanMinZ && z <= spanMaxZ)) {
+        continue
+      }
+      const requiredKeepoutClearance =
+        keepout.clearance ?? keepout.viaClearance ?? 0
+      const clearance =
+        getPointToViaKeepoutRegionEdgeDistance(candidate, keepout) -
+        this.viaRadius
+      if (clearance + GEOMETRIC_TOLERANCE < requiredKeepoutClearance) {
+        return Number.NEGATIVE_INFINITY
+      }
+      minClearance = Math.min(
+        minClearance,
+        clearance - requiredKeepoutClearance + this.requiredViaToPadClearance,
+      )
+    }
 
     for (const obstacle of this.ogSrj.obstacles) {
       const obstacleZs = this.getObstacleZs(obstacle)
@@ -612,8 +662,23 @@ export class EscapeViaLocationSolver extends BaseSolver {
         continue
       }
 
+      const obstacleSpecificClearance =
+        obstacle.viaClearance ?? obstacle.minViaEdgeToPadEdgeClearance
+      const requiredClearanceForObstacle = obstacle.isViaKeepout
+        ? (obstacleSpecificClearance ?? 0)
+        : Math.max(
+            this.requiredViaToPadClearance,
+            obstacleSpecificClearance ?? 0,
+          )
       const clearance = pointToBoxDistance(candidate, obstacle) - this.viaRadius
-      minClearance = Math.min(minClearance, clearance)
+      if (clearance + GEOMETRIC_TOLERANCE < requiredClearanceForObstacle) {
+        return Number.NEGATIVE_INFINITY
+      }
+      const normalizedClearance =
+        clearance -
+        requiredClearanceForObstacle +
+        this.requiredViaToPadClearance
+      minClearance = Math.min(minClearance, normalizedClearance)
 
       if (minClearance + GEOMETRIC_TOLERANCE < this.requiredViaToPadClearance) {
         return minClearance
