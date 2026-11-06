@@ -230,29 +230,24 @@ export function restoreAuthoritativeTargetRegions({
   return [...retainedRegions, ...restoredRegions]
 }
 
-function getRegionMergeKey(region: TopologyMergingRegion): string {
-  return JSON.stringify({
-    availableZ: region.availableZ,
-    topologySignature: region.topologySignature,
-  })
-}
-
 export function getHorizontalMergeBucketKey(
   region: TopologyMergingRegion,
 ): HorizontalTopologyMergingBucketKey {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minY: region.bounds.minY.toPrecision(15),
-    maxY: region.bounds.maxY.toPrecision(15),
-  })
+  return JSON.stringify([
+    region.availableZ,
+    region.topologySignature,
+    region.bounds.minY.toPrecision(15),
+    region.bounds.maxY.toPrecision(15),
+  ])
 }
 
 function getVerticalMergeBucketKey(region: TopologyMergingRegion): string {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minX: region.bounds.minX.toPrecision(15),
-    maxX: region.bounds.maxX.toPrecision(15),
-  })
+  return JSON.stringify([
+    region.availableZ,
+    region.topologySignature,
+    region.bounds.minX.toPrecision(15),
+    region.bounds.maxX.toPrecision(15),
+  ])
 }
 
 function compactRegionsInDirection(
