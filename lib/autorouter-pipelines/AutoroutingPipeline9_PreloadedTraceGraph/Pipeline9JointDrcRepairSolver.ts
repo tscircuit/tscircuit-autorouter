@@ -16,7 +16,6 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
-import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type {
   Obstacle,
@@ -1210,18 +1209,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const representedPadObstacleIndexes = new Set<number>()
-    convertToCircuitJson(params.srjWithPointPairs, [], {
-      originalSrj: params.originalSrj,
-      includeOriginalConnections: true,
-      representedPadObstacleIndexes,
-    })
-    const evaluateFixedCopper = createPipeline9FixedCopperDrcEvaluator({
-      inputSrj: params.originalSrj,
-      srjWithPointPairs: extendedSrjWithPointPairs,
-      representedPadObstacleIndexes,
-      viaClearance: viaToPadClearance,
-    })
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
@@ -1264,7 +1251,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     // Projection can reject B and return to A. Retain both exact evaluations
     // without keeping a portfolio's worth of full-board keys and errors.
-    const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
+    const referenceDrcCache = new Map<
+      DrcCandidateKey,
+      {
+        result: NormalizedCandidateDrcResult
+        prioritizeCircuitJsonErrors: boolean
+      }
+    >()
     const multilayerObstacles = params.obstacles.filter(
       (obstacle) =>
         (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
@@ -1452,7 +1445,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
-    ): ReturnType<DrcEvaluator> => {
+    ): NormalizedCandidateDrcResult => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
@@ -1516,13 +1509,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
-      const candidateKey = JSON.stringify([
-        this.initialBoundedRegionalRepairSolver?.solved === true,
-        evaluatedRoutes,
-      ])
+      const candidateKey = JSON.stringify(evaluatedRoutes) as DrcCandidateKey
+      const prioritizeCircuitJsonErrors =
+        hasNativePreloadedTraces ||
+        !this.initialBoundedRegionalRepairSolver?.solved
       const cachedResult = referenceDrcCache.get(candidateKey)
-      if (cachedResult !== undefined) {
-        return cachedResult
+      if (
+        cachedResult !== undefined &&
+        (cachedResult.prioritizeCircuitJsonErrors ===
+          prioritizeCircuitJsonErrors ||
+          cachedResult.result.errors.length === 0)
+      ) {
+        // Zero means both Circuit JSON and fixed copper are clear, so it
+        // remains valid when continuation starts considering both together.
+        return cachedResult.result
       }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
@@ -1530,11 +1530,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCache.size >= 2) {
+      if (cachedResult === undefined && referenceDrcCache.size >= 2) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
       }
-      referenceDrcCache.set(candidateKey, result)
+      referenceDrcCache.set(candidateKey, {
+        result,
+        prioritizeCircuitJsonErrors,
+      })
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
@@ -1656,7 +1659,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.initialBoundedRegionalRepairSolver?.solved
       ) {
         const fixedCopperErrors = filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluateFixedCopper(candidateDrcInput.evaluatedTraces),
+          errors: evaluateCandidateDrc.evaluateFixedCopper(
+            candidateDrcInput.evaluatedTraces,
+          ),
           baselineErrors,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,

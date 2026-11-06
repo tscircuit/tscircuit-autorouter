@@ -30,6 +30,13 @@ export type Pipeline9AutoroutingDrcResult = {
   locationAwareErrors: DrcError[]
 }
 
+export type Pipeline9AutoroutingDrcEvaluator = ((
+  routedTraces: SimplifiedPcbTrace[],
+  options?: { includeTraceContinuity?: boolean },
+) => Pipeline9AutoroutingDrcResult) & {
+  readonly evaluateFixedCopper: (traces: SimplifiedPcbTrace[]) => DrcError[]
+}
+
 /** Reuses static pad geometry while evaluating joint repair candidates. */
 export const createPipeline9AutoroutingDrcEvaluator = ({
   inputSrj,
@@ -43,10 +50,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   drcOptions?: GetDrcErrorsOptions
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
-}): ((
-  routedTraces: SimplifiedPcbTrace[],
-  options?: { includeTraceContinuity?: boolean },
-) => Pipeline9AutoroutingDrcResult) => {
+}): Pipeline9AutoroutingDrcEvaluator => {
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
@@ -86,7 +90,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     representedPadObstacleIndexes,
     viaClearance: drcOptions.viaToPadClearance,
   })
-  return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
+  const evaluate = (
+    routedTraces: SimplifiedPcbTrace[],
+    options: { includeTraceContinuity?: boolean } = {},
+  ): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
       inputSrj.traces ?? [],
       routedTraces,
@@ -143,4 +150,5 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ),
     }
   }
+  return Object.assign(evaluate, { evaluateFixedCopper })
 }
