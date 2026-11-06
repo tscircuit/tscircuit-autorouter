@@ -621,6 +621,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
+        const hasImmutablePreloadedCopper = fixedHdRoutes.some(
+          (route) => route.isFixed === true,
+        )
+        let obstacleMargin = cms.srj.defaultObstacleMargin ?? 0.15
+        if (
+          hasImmutablePreloadedCopper &&
+          cms.srj.minTraceToPadEdgeClearance !== undefined
+        ) {
+          obstacleMargin = cms.srj.minTraceToPadEdgeClearance
+        }
 
         return [
           {
@@ -641,7 +651,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
-            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            obstacleMargin,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
