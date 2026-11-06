@@ -671,6 +671,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          preserveTopologyPortAnchors: true,
         },
       ],
     ),

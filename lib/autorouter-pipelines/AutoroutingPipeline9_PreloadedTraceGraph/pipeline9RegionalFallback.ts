@@ -245,6 +245,7 @@ export const createRegionalFallbackProblem = (
   const slices = localSlices
     .filter(
       (slice) =>
+        slice.sourceRoute.isFixed !== true &&
         slice.sourceRoute.isThroughObstacle !== true &&
         (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
           promotedFixedRouteConnectionNames.has(
@@ -391,6 +392,14 @@ export const spliceFixedRouteSectionWithMutationMask = ({
   sourceMutationMasks: ReadonlyMap<string, readonly boolean[]>
   replacementIsMutated: boolean
 }): SplicedFixedRouteWithMutationMask => {
+  const immutableSourceRoute = section.sourceRoutes.find(
+    (sourceRoute) => sourceRoute.isFixed === true,
+  )
+  if (immutableSourceRoute) {
+    throw new Error(
+      `Pipeline9 cannot splice fixed native trace "${immutableSourceRoute.connectionName}"`,
+    )
+  }
   const firstSourceRoute = section.sourceRoutes[0]!
   const lastSourceRoute = section.sourceRoutes.at(-1)!
   const replacementPoints = orientReplacementPoints(replacement, section)

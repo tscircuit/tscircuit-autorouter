@@ -82,6 +82,11 @@ export class FinalRouteConstraintsSolver extends BaseSolver {
           net &&
           connectivity.getNetConnectedToId(trace.connection_name) === net,
       )
+      if (oldClock.some((trace) => trace.isFixed)) {
+        this.failed = true
+        this.error = `Cannot replace fixed copper for ${rule.name ?? "constrained trace"} to satisfy its via/length limits`
+        return
+      }
       const otherCopper = this.traces.filter(
         (trace) => !oldClock.includes(trace),
       )
