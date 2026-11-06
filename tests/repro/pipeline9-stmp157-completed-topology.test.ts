@@ -19,10 +19,13 @@ test("shows the completed STM32MP157 topology and retained mesh working data", a
       ),
     ).toString("utf8"),
   )
-  const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-    effort: 1,
-    cacheProvider: null,
-  })
+  const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    inputSrj,
+    {
+      effort: 1,
+      cacheProvider: null,
+    },
+  )
   while (
     !pipeline.solved &&
     !pipeline.failed &&
