@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { LengthMatchingNoSolutionError } from "@tscircuit/length-matching-solver"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
@@ -7,7 +8,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsHorizontally } from "stack-svgs"
 
-test("reproduces RAM byte-zero routing failure in the full SO-DIMM context", async (): Promise<void> => {
+test("routes the full SO-DIMM RAM byte to its remaining length-matching failure", async (): Promise<void> => {
   const rawInput = gunzipSync(
     Uint8Array.from(
       readFileSync(
@@ -35,25 +36,41 @@ test("reproduces RAM byte-zero routing failure in the full SO-DIMM context", asy
   })
   const inputGraphics = solver.visualize()
   inputGraphics.points = []
-  solver.solve()
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    solver.getCurrentPhase() !== "lengthMatchingPostProcessingSolver"
+  ) {
+    solver.step()
+  }
+  expect(solver.highDensityRouteSolver?.solved).toBe(true)
+  expect(solver.getCurrentPhase()).toBe("lengthMatchingPostProcessingSolver")
+  expect(solver.lengthMatchingPostProcessingSolver).toBeUndefined()
+  const newTraces = solver.getNewTracesBeforePowerExpansion()
+  const preloadedTraces = solver.getUpdatedPreloadedTraces()
+  expect(newTraces).toHaveLength(11)
+  expect(preloadedTraces).toHaveLength(404)
+  expect(new Set(newTraces.map((trace) => trace.connection_name))).toEqual(
+    new Set(input.connections.map((connection) => connection.name)),
+  )
+  const candidateGraphics = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    { ...input, traces: [...preloadedTraces, ...newTraces] },
+    { cacheProvider: null },
+  ).visualize()
+  candidateGraphics.points = []
+  expect(() => solver.solve()).toThrow(LengthMatchingNoSolutionError)
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
-  expect(solver.getCurrentPhase()).toBe("highDensityRouteSolver")
-  expect(solver.highDensityRouteSolver?.failed).toBe(true)
-  expect(solver.error).toContain("No path found for source_trace_17")
-  expect(solver.highDensityRouteSolver?.failedSolvers).toHaveLength(1)
-  const failedAttempt = solver.highDensityRouteSolver!.failedSolvers[0]!
-  expect(failedAttempt.failed).toBe(true)
 
-  // The failure view is solver state, not accepted RAM copper.
+  // These are native checkpoint routes; timing acceptance is still blocked.
   const views = [
     {
       graphics: inputGraphics,
       title: "SO-DIMM input: 404 fixed routes, 11 pending RAM connections",
     },
     {
-      graphics: solver.visualizeStage(failedAttempt),
-      title: "Failed B01 RAM routing attempt: rejected copper",
+      graphics: candidateGraphics,
+      title: "SO-DIMM: 11 candidate RAM routes; clearance and timing unfinished",
     },
   ]
   const svgs = views.map(({ graphics, title }) => {
