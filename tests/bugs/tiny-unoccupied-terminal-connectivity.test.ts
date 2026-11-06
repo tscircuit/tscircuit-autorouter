@@ -35,9 +35,9 @@ test("restores existing A64 interfaces without changing owners or virtual termin
   const built = buildHyperGraph({
     simpleRouteJsonConnections: srj.connections,
     capacityMeshNodes: fixture.input.capacityMeshNodes as CapacityMeshNode[],
-    segmentPortPoints: (fixture.filteredSegments as SharedEdgeSegment[]).flatMap(
-      (segment) => segment.portPoints,
-    ),
+    segmentPortPoints: (
+      fixture.filteredSegments as SharedEdgeSegment[]
+    ).flatMap((segment) => segment.portPoints),
     layerCount: srj.layerCount,
     connectivityMap: getConnectivityMapFromSimpleRouteJson(srj),
   })
@@ -84,7 +84,9 @@ test("restores existing A64 interfaces without changing owners or virtual termin
       penalty: undefined,
     })
   }
-  expect(preserveSerializedTerminalConnectivity(original, () => [])).toBe(original)
+  expect(preserveSerializedTerminalConnectivity(original, () => [])).toBe(
+    original,
+  )
   expect(
     preserveSerializedTerminalConnectivity(output, () => {
       throw new Error("Healthy graph must not prepare candidates")

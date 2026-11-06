@@ -26,16 +26,17 @@ test("keeps H3 identity after actual target-fragment ownership propagation", ():
   const step = pipeline.pipelineDef.find(
     (step) => step.solverName === "portPointPathingSolver",
   )!
-  const params = step.getConstructorParams(pipeline)[0] as unknown as Parameters<
-    typeof buildSerializedTinyGraph
-  >[0]
+  const params = step.getConstructorParams(
+    pipeline,
+  )[0] as unknown as Parameters<typeof buildSerializedTinyGraph>[0]
   const serialized = buildSerializedTinyGraph({
     ...params,
     unprunedUnoccupiedSegments: undefined,
   })
   expect(
-    serialized.regions.find((region) => region.regionId === "topology_merge_3837")!
-      .d.netId,
+    serialized.regions.find(
+      (region) => region.regionId === "topology_merge_3837",
+    )!.d.netId,
   ).toBeDefined()
   const before = JSON.stringify(serialized)
   expect(

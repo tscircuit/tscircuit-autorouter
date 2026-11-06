@@ -38,7 +38,8 @@ export function preserveSerializedTerminalConnectivity(
       : undefined,
   )
   const unrestricted = regions.map(
-    (region, index) => !region.d?._containsObstacle && owner[index] === undefined,
+    (region, index) =>
+      !region.d?._containsObstacle && owner[index] === undefined,
   )
   const find = (index: number): number => {
     while (parents[index] !== index) {
@@ -81,8 +82,7 @@ export function preserveSerializedTerminalConnectivity(
     adjacency.set(right, to)
   }
   const kept: Adjacency = new Map()
-  for (const port of graph.ports)
-    if (sharesLayer(port)) addEdge(kept, port)
+  for (const port of graph.ports) if (sharesLayer(port)) addEdge(kept, port)
   const solvedByConnection = new Map(
     graph.solvedRoutes?.map((route) => [route.connection.connectionId, route]),
   )
@@ -93,9 +93,10 @@ export function preserveSerializedTerminalConnectivity(
 
   for (const connection of graph.connections ?? []) {
     const anchorPath = solvedByConnection.get(connection.connectionId)?.path
-    const terminalPorts = [anchorPath?.[0]?.portId, anchorPath?.at(-1)?.portId].map(
-      (id) => (typeof id === "string" ? portById.get(id) : undefined),
-    )
+    const terminalPorts = [
+      anchorPath?.[0]?.portId,
+      anchorPath?.at(-1)?.portId,
+    ].map((id) => (typeof id === "string" ? portById.get(id) : undefined))
     const endpoints = terminalPorts.map(
       (port) =>
         port &&
@@ -105,7 +106,9 @@ export function preserveSerializedTerminalConnectivity(
     )
     const [startNode, endNode] = endpoints
     if (startNode === undefined || endNode === undefined)
-      throw new Error(`Missing virtual terminals for ${connection.connectionId}`)
+      throw new Error(
+        `Missing virtual terminals for ${connection.connectionId}`,
+      )
     const net = owner[startNode]
     if (net === undefined || owner[endNode] !== net)
       throw new Error(
@@ -137,7 +140,9 @@ export function preserveSerializedTerminalConnectivity(
           (port.d?._preloadedFixedNetIds?.length ?? 0) > 0 ||
           (port.d?._preloadedTracePortAssignments?.length ?? 0) > 0
         )
-          throw new Error("Unoccupied candidate contains a preloaded assignment")
+          throw new Error(
+            "Unoccupied candidate contains a preloaded assignment",
+          )
         if (port.d?.cramped && sharesLayer(port)) addEdge(all, port)
       }
     }
@@ -192,7 +197,9 @@ export function preserveSerializedTerminalConnectivity(
     ports: [...graph.ports, ...additions],
     regions: regions.map((region) => {
       const ids = addedByRegion.get(region.regionId)
-      return ids ? { ...region, pointIds: [...region.pointIds, ...ids] } : region
+      return ids
+        ? { ...region, pointIds: [...region.pointIds, ...ids] }
+        : region
     }),
   }
 }

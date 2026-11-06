@@ -476,22 +476,26 @@ export const getOmittedUnoccupiedPorts = (
   const regions = new Map(
     params.graph.regions.map((region) => [region.regionId, region]),
   )
-  const existing = new Set(serializedHyperGraph.ports.map((port) => port.portId))
+  const existing = new Set(
+    serializedHyperGraph.ports.map((port) => port.portId),
+  )
   return params.unprunedUnoccupiedSegments.flatMap((segment) => {
     const region1 = regions.get(segment.nodeIds[0])
     const region2 = regions.get(segment.nodeIds[1])
     if (!region1 || !region2)
       throw new Error(`Missing unpruned boundary region for ${segment.edgeId}`)
-    return segment.portPoints.filter((point) => point.cramped).flatMap((point) =>
-      createSegmentPointPorts(point, region1, region2)
-        .filter((port) => !existing.has(port.d.portId))
-        .map((port) => ({
-          portId: port.d.portId,
-          region1Id: port.region1.regionId,
-          region2Id: port.region2.regionId,
-          d: toSerializedPortData(port),
-        })),
-    )
+    return segment.portPoints
+      .filter((point) => point.cramped)
+      .flatMap((point) =>
+        createSegmentPointPorts(point, region1, region2)
+          .filter((port) => !existing.has(port.d.portId))
+          .map((port) => ({
+            portId: port.d.portId,
+            region1Id: port.region1.regionId,
+            region2Id: port.region2.regionId,
+            d: toSerializedPortData(port),
+          })),
+      )
   })
 }
 
