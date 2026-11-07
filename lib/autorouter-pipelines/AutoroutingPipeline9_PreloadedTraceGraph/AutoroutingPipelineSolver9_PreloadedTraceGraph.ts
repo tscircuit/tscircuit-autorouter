@@ -1,4 +1,5 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { Pipeline9NegotiatedClearanceSolver } from "./Pipeline9NegotiatedClearanceSolver"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -289,6 +290,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   minTraceWidth!: number
   effort: number
   effortCleanupSolver?: Pipeline9EffortCleanupSolver
+  negotiatedClearanceSolver?: Pipeline9NegotiatedClearanceSolver
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -888,13 +890,71 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "negotiatedClearanceSolver",
+      Pipeline9NegotiatedClearanceSolver,
+      (cms) => {
+        const preloadedTraces = cms.getUpdatedPreloadedTraces()
+        const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
+        const hdRoutes = canonicalizePipeline9HdRoutes(
+          cms.pipeline9JointDrcRepairSolver!.getOutput(),
+        )
+        const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
+          assignUniquePcbTraceIdsToNewTraces(
+            convertPipeline7HdRoutesToSimplifiedPcbTraces({
+              connections: cms.netToPointPairsSolver!.newConnections,
+              originalConnections: cms.originalSrj.connections,
+              hdRoutes: canonicalizePipeline9HdRoutes(routes),
+              layerCount: cms.srj.layerCount,
+              obstacles: cms.srj.obstacles,
+              defaultViaHoleDiameter: cms.viaHoleDiameter,
+              connMap: cms.connMap,
+            }),
+            cms.originalSrj.traces ?? [],
+          )
+        let evaluate: ReturnType<typeof createPipeline9AutoroutingDrcEvaluator>
+        const countErrors = (routes: HighDensityRoute[]): number => {
+          evaluate ??= createPipeline9AutoroutingDrcEvaluator({
+            inputSrj,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            includeBoardClearance: true,
+            drcOptions: {
+              traceClearance:
+                cms.originalSrj.minTraceToPadEdgeClearance ??
+                cms.originalSrj.defaultObstacleMargin ??
+                0.1,
+              viaClearance:
+                cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+            },
+          })
+          return evaluate(convert(routes)).errors.length
+        }
+        return [
+          {
+            srj: cms.srjWithPointPairs!,
+            routes: hdRoutes,
+            fixedRoutes: preloadedTraces.flatMap((trace, index) =>
+              convertPreloadedTraceToHdRoutes(
+                trace,
+                index,
+                cms.srj.layerCount,
+                cms.viaDiameter,
+                cms.connMap,
+              ),
+            ),
+            effort: cms.effort,
+            countErrors,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "effortCleanupSolver",
       Pipeline9EffortCleanupSolver,
       (cms) => {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = canonicalizePipeline9HdRoutes(
-          cms.pipeline9JointDrcRepairSolver!.getOutput(),
+          cms.negotiatedClearanceSolver!.getOutput(),
         )
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
@@ -1257,7 +1317,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
-      pipelineStepDef.solverName === "effortCleanupSolver"
+      pipelineStepDef.solverName === "effortCleanupSolver" ||
+      pipelineStepDef.solverName === "negotiatedClearanceSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1529,6 +1590,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return (
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
+        : undefined) ??
+      (this.negotiatedClearanceSolver?.solved
+        ? this.negotiatedClearanceSolver.getOutput()
         : undefined) ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
