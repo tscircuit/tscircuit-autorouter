@@ -186,7 +186,9 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     const viaDiameter =
       this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
     const viaClearance =
-      srj.minViaEdgeToPadEdgeClearance ?? this.inputProblem.obstacleMargin ?? 0.15
+      srj.minViaEdgeToPadEdgeClearance ??
+      this.inputProblem.obstacleMargin ??
+      0.15
     const minimumViaRegionDimension = viaDiameter + viaClearance * 2
     const viaRegions = this.freeSpaceTopology
       .getOutput()

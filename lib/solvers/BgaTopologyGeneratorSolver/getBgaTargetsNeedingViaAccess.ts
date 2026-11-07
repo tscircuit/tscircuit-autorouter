@@ -91,8 +91,8 @@ export function getBgaTargetsNeedingViaAccess({
     if (!target._containsTarget || touchesBgaBoundary(target, bounds)) {
       return false
     }
-    return !getFreeNeighbors(target, freeSpace.tree).some(
-      (neighbor) => canReachBgaExit(neighbor, freeSpace),
+    return !getFreeNeighbors(target, freeSpace.tree).some((neighbor) =>
+      canReachBgaExit(neighbor, freeSpace),
     )
   })
 }
