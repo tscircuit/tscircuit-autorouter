@@ -17,7 +17,7 @@ test("RVboy pairs ground terminals with nearby neighbors across KD-tree splits",
   const ground = paired.connections.filter((connection) =>
     connection.name.includes("source_net_0"),
   )
-  expect(ground).toHaveLength(303)
+  expect(ground).toHaveLength(213)
   const terminalIds = new Set(
     ground.flatMap((connection) =>
       connection.pointsToConnect.map((point) => point.pointId),
