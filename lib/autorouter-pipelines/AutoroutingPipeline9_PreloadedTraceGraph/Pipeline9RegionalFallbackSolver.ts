@@ -8,7 +8,6 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
   HighDensityRoute,
@@ -19,7 +18,12 @@ import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geom
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+  getPipeline9RouteCopperGeometry,
+} from "./pipeline9FixedRouteCopper"
+import { preparePipeline9RepairConnectivity } from "./preparePipeline9RepairConnectivity"
 import { getFullyCoveredNodeLayers } from "./getFullyCoveredNodeLayers"
 
 type Pipeline9RegionalFallbackSolverParams = {
@@ -38,6 +42,7 @@ type Pipeline9RegionalFallbackSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
+  fixedRoutes?: HighDensityRoute[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   traceToPadClearance?: number
@@ -89,15 +94,14 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
   connMap: ConnectivityMap
 }): boolean => {
-  if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
-  if (!route.rootConnectionName) return false
-
+  // A route root names an internal net, while obstacle IDs are aliases.
+  // Resolve the route's connection first: internal IDs can collide with aliases.
   const routeNetId =
     connMap.getNetConnectedToId(route.connectionName) ??
-    connMap.getNetConnectedToId(route.rootConnectionName) ??
-    (connMap.netMap[route.rootConnectionName]
-      ? route.rootConnectionName
-      : undefined)
+    (route.rootConnectionName &&
+      (connMap.netMap[route.rootConnectionName]
+        ? route.rootConnectionName
+        : connMap.getNetConnectedToId(route.rootConnectionName)))
   if (!routeNetId) return false
 
   return obstacle.connectedTo.some((connectedId) => {
@@ -160,6 +164,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   repairSolver?: Pipeline4HighDensityRepairSolver
   viaClearanceSolver?: NegotiateTraceClearanceSolver
   private validatedRoutes?: HighDensityRoute[]
+  private clearanceInputRoutes?: HighDensityRoute[]
   private phase: RegionalFallbackPhase = "route"
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
@@ -235,6 +240,30 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       movablePreloadedConnectionNames,
       viaToPadClearance,
     } = this.params
+    if (
+      routes.some((route) =>
+        (this.params.fixedRoutes ?? []).some(
+          (fixedRoute) =>
+            !arePipeline9RoutesOnSameNet(
+              route,
+              fixedRoute,
+              this.params.connMap,
+            ) &&
+            doPipeline9RoutesHaveCopperConflict({
+              left: route,
+              right: fixedRoute,
+              clearance:
+                this.params.traceToPadClearance ?? this.params.obstacleMargin,
+              layerCount: this.params.layerCount,
+              allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+            }),
+        ),
+      )
+    ) {
+      this.stats.fixedCopperCandidateRejectionCount =
+        Number(this.stats.fixedCopperCandidateRejectionCount ?? 0) + 1
+      return false
+    }
     const pourObstacles = this.params.obstacles
       .filter((obstacle) => obstacle.isCopperPour)
       .map((obstacle) => ({
@@ -364,13 +393,33 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         ),
       })),
     }
+    this.clearanceInputRoutes = routes
+    const fixedRoutes = params.fixedRoutes ?? []
+    const prepared =
+      fixedRoutes.length > 0
+        ? preparePipeline9RepairConnectivity({
+            // Regional roots are internal net IDs, which may also be aliases
+            // of a different net. Supply the true aliases from connMap instead.
+            srj: {
+              ...srj,
+              connections: srj.connections.map(
+                ({ rootConnectionName, ...connection }) => connection,
+              ),
+            },
+            routes: [...routes, ...fixedRoutes],
+            connMap: params.connMap,
+          })
+        : { srj, routes }
     this.viaClearanceSolver = new NegotiateTraceClearanceSolver({
-      srj: { ...srj, traces: undefined },
-      routes,
+      srj: { ...prepared.srj, traces: undefined },
+      routes: prepared.routes,
+      fixedRouteIndices: fixedRoutes.map((_, index) => routes.length + index),
       bounds,
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
-        pointIndex === 0 || pointIndex === routes[routeIndex]!.route.length - 1,
+        routeIndex >= routes.length ||
+        pointIndex === 0 ||
+        pointIndex === routes[routeIndex]!.route.length - 1,
       allowLayerChanges: true,
       // The topology's planning margin can exceed the board's clearance rule.
       // Keep already legal regional endpoints available to clearance repair.
@@ -468,7 +517,16 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         return
       }
       if (!solver.solved) return
-      const routes = solver.getOutput().routes
+      const routes = solver
+        .getOutput()
+        .routes.slice(0, this.clearanceInputRoutes!.length)
+        .map(
+          (route, index): HighDensityRoute => ({
+            ...route,
+            rootConnectionName:
+              this.clearanceInputRoutes![index]!.rootConnectionName,
+          }),
+        )
       if (!this.validateCandidateRoutes(routes)) {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1

@@ -1,0 +1,44 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: preserve the short bypass</text><text x="24" y="59" font-family="sans-serif" font-size="16">Before: regional signals cross the fixed bypass</text><svg x="0" y="80" width="1000" height="600" viewBox="270.0000000000001 40 459.9999999999998 520" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="7.02,14.825 7.02,14.85 7.055,14.728 7.064,14.633 7.068,14.538 7.073,14.441 7.078,14.342 7.082,14.245 7.1,14.15 7.02,14.085" data-type="line" data-label="" points="534,235 534,230 541,254.4000000000001 542.8000000000002,273.4000000000001 543.6000000000001,292.39999999999964 544.6000000000001,311.7999999999997 545.6000000000001,331.5999999999999 546.4000000000001,351 550,369.99999999999955 534,382.99999999999955" fill="none" stroke="red" stroke-linejoin="round" stroke-width="19.99999999999999"/></g><g><polyline data-points="7.02,15.063 7.12,15.063 7.229,15.028 7.282,14.515910151369578 7.314,13.913704519645247 7.325,13.764191640780743 7.333,13.830565501534723 7.337,13.93213149445627 7.342,14.080724472563153 7.349,14.187761207136534 7.356,14.143 7.327,14.029 7.29,13.949 7.264,13.862 7.212,13.763 7.155,13.66 7.12,13.563 7.02,13.544" data-type="line" data-label="" points="534,187.39999999999964 554.0000000000002,187.39999999999964 575.8000000000002,194.39999999999964 586.4000000000001,296.81796972608436 592.8000000000002,417.25909607095036 595,447.1616718438513 596.6000000000001,433.88689969305506 597.4000000000001,413.5737011087458 598.4000000000001,383.8551054873692 599.8000000000002,362.44775857269315 601.2,371.39999999999964 595.4000000000001,394.1999999999998 588,410.1999999999998 582.8000000000002,427.5999999999999 572.4000000000001,447.39999999999964 561.0000000000002,467.99999999999955 554.0000000000002,487.39999999999964 534,491.1999999999998" fill="none" stroke="red" stroke-linejoin="round" stroke-width="19.99999999999999"/></g><g><polyline data-points="6,14.625 7.69,14.625" data-type="line" data-label="" points="330.0000000000002,275 668,275" fill="none" stroke="red" stroke-linejoin="round" stroke-width="19.99999999999999"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="6.85" data-y="14.5" x="270.0000000000001" y="40" width="459.9999999999998" height="520" fill="none" stroke="none" stroke-width="0.005000000000000003"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":199.9999999999999,"c":0,"e":-869.9999999999991,"b":0,"d":-199.9999999999999,"f":3199.999999999998};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

@@ -748,7 +748,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       promotedFixedRouteConnectionNames,
     )
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-      fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
+      fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+        (route) => route.isFixed !== true,
+      ),
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
@@ -768,6 +770,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
       boardObstacles: this.obstacles,
+      fixedRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+        (route) => route.isFixed === true,
+      ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       traceToPadClearance: this.params.traceToPadClearance,

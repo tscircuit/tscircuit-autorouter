@@ -311,7 +311,8 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftWire.end,
           rightWire.start,
           rightWire.end,
-        ) < requiredClearance
+        ) <
+        requiredClearance - 1e-9
       ) {
         return true
       }
@@ -326,7 +327,8 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftWire.end,
           rightVia.center,
           rightVia.center,
-        ) < requiredClearance
+        ) <
+        requiredClearance - 1e-9
       ) {
         return true
       }
@@ -343,7 +345,8 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftVia.center,
           rightWire.start,
           rightWire.end,
-        ) < requiredClearance
+        ) <
+        requiredClearance - 1e-9
       ) {
         return true
       }
@@ -356,7 +359,8 @@ export const doPipeline9RoutesHaveCopperConflict = ({
         Math.hypot(
           leftVia.center.x - rightVia.center.x,
           leftVia.center.y - rightVia.center.y,
-        ) < requiredClearance
+        ) <
+        requiredClearance - 1e-9
       ) {
         return true
       }
