@@ -5,7 +5,7 @@ import {
   getPipeline7LengthSnapshot,
 } from "tests/fixtures/pipeline7-max-length"
 
-test("Pipeline7 accepts an over-budget route even when maxLength reaches the solver", async (): Promise<void> => {
+test("Pipeline7 rejects an over-budget route and accepts a feasible budget", async (): Promise<void> => {
   const input = createPipeline7LengthInput(3)
   const original = structuredClone(input)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(input, {
@@ -13,8 +13,10 @@ test("Pipeline7 accepts an over-budget route even when maxLength reaches the sol
     effort: 0.1,
   })
   solver.solve()
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.error).toContain("signal connection")
+  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow()
   const traces = solver.powerTraceExpansionSolver!.getOutput()
   expect(traces).toHaveLength(1)
   const route = traces[0]!.route

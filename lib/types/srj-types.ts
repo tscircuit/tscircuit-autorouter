@@ -61,7 +61,20 @@ export type Jumper = {
 
 export type JumperType = "1206x4" | "0603"
 
+/** A source trace path, scoped to original terminals rather than a whole net. */
+export interface SimpleRouteConstraint {
+  connectionName: string
+  sourceTraceId: string
+  name?: string
+  pointIds: PointId[]
+  /** Routed copper length in mm, including via travel. */
+  maxLength?: number
+  maxViaCount?: number
+}
+
 export interface SimpleRouteJson {
+  routeConstraints?: SimpleRouteConstraint[]
+  boardThickness?: number
   layerCount: number
   /** Whether autorouters may use vias that do not span the full board stack. */
   allowBlindAndBuriedVias?: boolean
