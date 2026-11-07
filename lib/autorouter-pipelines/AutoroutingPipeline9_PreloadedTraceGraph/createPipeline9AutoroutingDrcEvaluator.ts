@@ -19,6 +19,7 @@ import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
 
 type DrcError = Record<string, unknown>
@@ -58,6 +59,16 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     includeOriginalConnections: true,
     connectivityMaps,
   }
+  // Completed routing phases can leave only preloaded traces and pad aliases.
+  // Preserve those declared logical nets when checking the converted geometry.
+  const declaredConnectivity = getConnectivityMapFromSimpleRouteJson({
+    ...srjWithPointPairs,
+    traces: inputSrj.traces,
+  })
+  const declaredNetGroups = Array.from(
+    new Set(Object.values(declaredConnectivity.idToNetMap)),
+    (netId) => declaredConnectivity.getIdsConnectedToNet(netId),
+  )
   const board = includeBoardClearance
     ? createPcbBoardElement({
         ...inputSrj,
@@ -105,6 +116,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     )
     if (board) circuitJson.push(board)
     const connMap = createDrcConnectivityMap(circuitJson)
+    connMap.addConnections(declaredNetGroups)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [

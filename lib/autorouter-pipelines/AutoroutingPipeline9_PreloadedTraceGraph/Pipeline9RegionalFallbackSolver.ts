@@ -167,12 +167,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
@@ -223,12 +217,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       const routedCandidate = materializePipeline9HdRouteVias(
         this.highDensitySolver.routes,
       )
-      if (!this.validateCandidateRoutes(routedCandidate)) {
-        this.error =
-          "Pipeline9 regional route output failed its candidate validator"
-        this.failed = true
-        return
-      }
+      // Grow/shrink produces provisional geometry. Keep it private until the
+      // existing force-improve and obstacle-repair stages have placed its vias.
       this.forceImproveSolver = new HighDensityForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
@@ -250,14 +240,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.forceImproveSolver!.solved) return
       const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
-      if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
-        this.stats.forceImproveCandidateRejectionCount =
-          Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional force-improve output failed its candidate validator"
-        this.failed = true
-        return
-      }
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: forceImprovedRoutes,
@@ -297,11 +279,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
-    return (
-      this.repairSolver?.getOutput() ??
-      this.forceImproveSolver?.getOutput() ??
-      this.highDensitySolver.routes
-    )
+    if (!this.solved || !this.repairSolver) {
+      throw new Error("Cannot publish regional routes before final validation")
+    }
+    return this.repairSolver.getOutput()
   }
 
   override visualize(): GraphicsObject {

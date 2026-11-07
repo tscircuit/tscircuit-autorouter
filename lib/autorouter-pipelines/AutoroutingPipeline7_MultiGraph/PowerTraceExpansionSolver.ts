@@ -20,9 +20,17 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
       {
         ...inputSrj,
+        // The board renderer regenerates pours around final wire and via copper.
+        // Their preliminary outlines must not prevent widening those wires.
+        obstacles: inputSrj.obstacles.filter(
+          (obstacle) => !obstacle.isCopperPour,
+        ),
         minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
       } as unknown as PowerTraceExpanderInput,
-      options,
+      {
+        powerTraceToPadClearance: inputSrj.minTraceToPadEdgeClearance,
+        ...options,
+      },
     )
     if (options.onlyConnectionNames?.length === 0) {
       this.MAX_ITERATIONS = 1
