@@ -826,8 +826,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
-        // Reserve pad bounding boxes while repair can still move the routes.
-        usePadBoundingBoxes: true,
       },
     ]),
     definePipelineStep(
@@ -1012,6 +1010,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
         // Recover requested widths on settled geometry without shrinking copper.
+        usePadBoundingBoxes: false,
         onlyWiden: true,
       },
     ]),

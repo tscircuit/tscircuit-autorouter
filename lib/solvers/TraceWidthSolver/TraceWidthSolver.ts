@@ -122,7 +122,7 @@ export class TraceWidthSolver extends BaseSolver {
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
-    this.usePadBoundingBoxes = input.usePadBoundingBoxes ?? false
+    this.usePadBoundingBoxes = input.usePadBoundingBoxes ?? true
     this.onlyWiden = input.onlyWiden ?? false
     this.boardEdgeMargin = input.board?.minBoardEdgeClearance ?? 0
     const bounds = input.board?.bounds
