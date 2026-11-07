@@ -11,7 +11,9 @@ import type { Obstacle } from "lib/types"
 test("Pipeline9 preserves RVboy's plated-hole layer connection through cleanup", () => {
   // Unmodified force-improve sample and obstacle from RVboy's native input.
   const force = new Pipeline9HighDensityForceImproveSampleSolver(
-    structuredClone(fixture.forceInput) as Pipeline9HighDensityForceImproveSampleInput,
+    structuredClone(
+      fixture.forceInput,
+    ) as Pipeline9HighDensityForceImproveSampleInput,
   )
   force.solve()
   expect(force.solved).toBe(true)
