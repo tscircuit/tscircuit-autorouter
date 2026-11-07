@@ -220,7 +220,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
     )
     const { minTraceWidth, traceClearance, connMap, preloadedRoutes } =
       this.input
+    // Legacy edges are inferred from port extents, not physical node bounds.
+    // They cannot define a hard copper-clearance interval (SRJ23 sample 44).
     const spacedPorts =
+      this.input.useLayerAwareGeometry &&
       minTraceWidth !== undefined &&
       traceClearance !== undefined &&
       connMap &&
