@@ -998,7 +998,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.srj.layerCount,
               cms.viaDiameter,
               cms.connMap,
-            ),
+            ).map((route) => ({
+              ...route,
+              rootConnectionName: trace.connection_name,
+            })),
           ),
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
