@@ -7,7 +7,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { renderRvboyRoutingView } from "../../fixtures/bug-reports/rvboy-escape-via-span/renderRvboyRoutingView"
 
-test("RVboy regional via repair uses physical clearance at legal fixed endpoints", async (): Promise<void> => {
+test("RVboy regional via repair clears foreign copper using physical board clearance", async (): Promise<void> => {
   const { params } = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -20,17 +20,6 @@ test("RVboy regional via repair uses physical clearance at legal fixed endpoints
       ),
     ).toString(),
   )
-  const planningMarginSolver = new Pipeline9RegionalFallbackSolver({
-    ...params,
-    connMap: new ConnectivityMap(params.connMap),
-    movablePreloadedConnectionNames: new Set(
-      params.movablePreloadedConnectionNames,
-    ),
-  })
-  planningMarginSolver.solve()
-  expect(planningMarginSolver.failed).toBe(true)
-  expect(planningMarginSolver.viaClearanceSolver?.stats.pathSearchNodes).toBe(0)
-
   const solver = new Pipeline9RegionalFallbackSolver({
     ...params,
     traceToPadClearance: 0.1,
@@ -44,6 +33,14 @@ test("RVboy regional via repair uses physical clearance at legal fixed endpoints
   expect(solver.failed).toBe(false)
   expect(solver.viaClearanceSolver?.stats.pathSearchNodes).toBeGreaterThan(0)
   expect(solver.viaClearanceSolver?.getOutput().unresolvedSpanCount).toBe(0)
+  const beforeRoutes = solver.repairSolver!.getOutput()
+  const outputRoutes = solver.getOutput()
+  expect(beforeRoutes.flatMap((route) => route.vias).length).toBeGreaterThan(0)
+  expect(outputRoutes.flatMap((route) => route.vias)).toEqual([])
+  for (const [index, route] of outputRoutes.entries()) {
+    expect(route.route[0]).toEqual(beforeRoutes[index]!.route[0])
+    expect(route.route.at(-1)).toEqual(beforeRoutes[index]!.route.at(-1))
+  }
   const viaObstacle = params.boardObstacles.find(
     (obstacle: { obstacleId?: string }) =>
       obstacle.obstacleId?.startsWith("escape-via-obstacle:"),
@@ -67,8 +64,8 @@ test("RVboy regional via repair uses physical clearance at legal fixed endpoints
   }
   const viewbox = { minX: -32.25, maxX: -30.75, minY: -34, maxY: -32.5 }
   for (const [name, routes] of [
-    ["before", planningMarginSolver.viaClearanceSolver!.getOutput().routes],
-    ["after", solver.getOutput()],
+    ["before", beforeRoutes],
+    ["after", outputRoutes],
   ] as const) {
     const graphics = convertSrjToGraphicsObject({
       ...params.boardGeometry,
@@ -104,7 +101,7 @@ test("RVboy regional via repair uses physical clearance at legal fixed endpoints
         viewbox,
         "RVboy: regional repair at the battery regulator",
         name === "before"
-          ? "Before: planning margin blocks the endpoint; conflicting vias remain"
+          ? "Before clearance repair: conflicting vias remain"
           : "After: physical clearance permits repair; both routes stay on top",
       ),
     ).toMatchSvgSnapshot(import.meta.path, { svgName: name })

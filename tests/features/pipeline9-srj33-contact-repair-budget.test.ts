@@ -63,7 +63,7 @@ test("SRJ33 sample 36 retains safe repair quality within its DRC search budget",
   expect(
     getDrcSnapshot(owner.params.srj, output, evaluate, connMap).count,
   ).toBeLessThanOrEqual(25)
-  // This captured input previously consumed 638 full-board evaluations.
+  // Bound the final contact repair's full-board evaluation cost.
   expect(
     Number(owner.stats.traceContactRepairCandidateChecks),
   ).toBeLessThanOrEqual(320)
@@ -77,7 +77,9 @@ test("SRJ33 sample 36 retains safe repair quality within its DRC search budget",
   expect(
     output.reduce((count, route) => count + route.vias.length, 0),
   ).toBeLessThanOrEqual(
-    owner.params.hdRoutes.reduce(
+    // Contact repair may restore original copper to undo a newly introduced
+    // short. Compare vias with that original input, before the exact stage.
+    owner.params.inputHdRoutes.reduce(
       (count, route) => count + route.vias.length,
       0,
     ),

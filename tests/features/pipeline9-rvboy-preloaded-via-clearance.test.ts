@@ -4,7 +4,7 @@ import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 
-test("RVboy regional clearance repair moves a preloaded via away from a solid ground pad", (): void => {
+test("RVboy regional clearance repair rejects a signal terminal inside the ground plane", (): void => {
   const { params } = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -27,23 +27,16 @@ test("RVboy regional clearance repair moves a preloaded via away from a solid gr
     ),
   })
   solver.solve()
-  expect(solver.solved, solver.error ?? "").toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.viaClearanceSolver?.stats.pathSearchNodes).toBeGreaterThan(0)
-  const route = solver
-    .getOutput()
-    .find((route) => route.connectionName === "source_trace_122_fixed_30_8")!
-  const pad = params.boardObstacles.find(
-    (obstacle: { circuitJsonMetadata?: { pcb_smtpad_id?: string } }) =>
-      obstacle.circuitJsonMetadata?.pcb_smtpad_id === "pcb_smtpad_58",
+  // This older capture has a signal terminal on inner1, inside the ground
+  // pour. Moving its via away from the top pad cannot make that terminal legal.
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.error).toBe(
+    "Pipeline9 regional repair output failed its candidate validator",
   )
-  for (const via of route.vias) {
-    const gap =
-      Math.hypot(
-        Math.max(Math.abs(via.x - pad.center.x) - pad.width / 2, 0),
-        Math.max(Math.abs(via.y - pad.center.y) - pad.height / 2, 0),
-      ) -
-      route.viaDiameter / 2
-    expect(gap).toBeGreaterThanOrEqual(params.viaToPadClearance)
-  }
+  expect(solver.stats.pourWireCandidateRejectionCount).toBeGreaterThan(0)
+  expect(solver.viaClearanceSolver?.stats.pathSearchNodes).toBeGreaterThan(0)
+  expect(() => solver.getOutput()).toThrow(
+    "Cannot publish regional routes before final validation",
+  )
 })
