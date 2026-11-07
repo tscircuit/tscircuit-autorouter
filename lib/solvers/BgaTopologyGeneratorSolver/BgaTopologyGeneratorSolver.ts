@@ -31,7 +31,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
   removeMeshNodeOverlappingWithUnmarkedObstacle!: RemoveMeshNodeOverlappingWithUnmarkedObstacle
   gapfillDueToNodeRemoval!: GapFill
   mergeMeshNodes!: MergeMeshNodes
-  freeSpaceTopology?: RectDiffPipeline
+  freeSpaceTopology!: RectDiffPipeline
   targetsNeedingViaAccess: CapacityMeshNode[] = []
   markedComponentObstacles: Obstacle[] = []
   unmarkedComponentObstacles: Obstacle[] = []
@@ -95,10 +95,25 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
         },
       ],
       {
-        onSolved: (solver: BgaTopologyGeneratorSolver): void => {
-          solver.addMissingViaSpace()
+        onSolved: (
+          bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver,
+        ): void => {
+          bgaTopologyGeneratorSolver.findTargetsNeedingViaAccess()
         },
       },
+    ),
+    definePipelineStep(
+      "freeSpaceTopology",
+      RectDiffPipeline,
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
+        {
+          simpleRouteJson: {
+            ...bgaTopologyGeneratorSolver.inputProblem.inputSrj,
+            connections: [],
+          },
+          maxGapFillPasses: 4,
+        },
+      ],
     ),
   ]
 
@@ -131,7 +146,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     this.unmarkedComponentObstacles = unmarkedComponentObstacles
   }
 
-  private addMissingViaSpace(): void {
+  private findTargetsNeedingViaAccess(): void {
     if (this.unmarkedComponentObstacles.length === 0) return
 
     const bgaGrid = BgaGrid.fromObstacles(this.markedComponentObstacles)
@@ -148,25 +163,6 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       routingRegions: this.mergeMeshNodes.getOutput(),
       bounds: getBoundsForObstacles(this.markedComponentObstacles),
     })
-    if (this.targetsNeedingViaAccess.length === 0) return
-
-    // Earlier copper can close a surface escape. Preserve complete empty ball
-    // sites where a through via fits beyond the individual pad-gap cells.
-    this.pipelineDef.push(
-      definePipelineStep(
-        "freeSpaceTopology",
-        RectDiffPipeline,
-        (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
-          {
-            simpleRouteJson: {
-              ...bgaTopologyGeneratorSolver.inputProblem.inputSrj,
-              connections: [],
-            },
-            maxGapFillPasses: 4,
-          },
-        ],
-      ),
-    )
   }
 
   override getConstructorParams(): readonly [TopologyGeneratorSolverParams] {
@@ -180,7 +176,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       this.removeMeshNodeOverlappingWithUnmarkedObstacle?.getOutput() ??
       []
 
-    if (!this.freeSpaceTopology) return { routingRegions }
+    if (this.targetsNeedingViaAccess.length === 0) return { routingRegions }
 
     const srj = this.inputProblem.inputSrj
     const viaDiameter =
