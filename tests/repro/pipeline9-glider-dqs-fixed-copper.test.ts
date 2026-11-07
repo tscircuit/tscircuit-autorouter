@@ -24,6 +24,26 @@ test("routes the Glider DDR board with completed data-byte copper", async (): Pr
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  // ADDR1, BA1, CSB and WEB pass beside the memory's circular BGA pads.
+  // Their 0.127 mm request is reduced because width selection uses square pads.
+  const roundPadTraceWidths = routedTraces
+    .filter((trace) =>
+      [
+        "source_trace_1",
+        "source_trace_16",
+        "source_trace_22",
+        "source_trace_48",
+      ].includes(trace.connection_name),
+    )
+    .map((trace) =>
+      Math.min(
+        ...trace.route.flatMap((point) =>
+          point.route_type === "wire" ? [point.width] : [],
+        ),
+      ),
+    )
+  expect(roundPadTraceWidths).toEqual([0.11, 0.11, 0.11, 0.11])
 
   // Render and check the actual completed bytes alongside the remaining routes.
   // The solver receives the original remaining-phase input without these traces.
@@ -35,7 +55,7 @@ test("routes the Glider DDR board with completed data-byte copper", async (): Pr
   const snapshotInput = {
     inputSrj: referenceSrj,
     srjWithPointPairs: referenceSrj,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces,
     // Glider's captured board rules use 0.11 mm copper clearance.
     drcOptions: { traceClearance: 0.11, viaToPadClearance: 0.11 },
   }
