@@ -2,6 +2,7 @@ import {
   ConnectionNameResolver,
   type PowerTraceExpanderInput,
 } from "@tscircuit/power-trace-expander"
+import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -68,9 +69,29 @@ export const preparePipeline7PowerTraceExpansionInput = ({
 
   return {
     ...originalSrj,
+    // Expansion matches the original aliases, so give each alias the width
+    // required by the merged tree instead of selecting the first narrow feed.
+    connections: preserveMergedPowerWidths(originalSrj),
     traces: [...newlyRoutedTraces, ...mutablePreloadedTraces],
     fixedTraces,
   }
+}
+
+const preserveMergedPowerWidths = (
+  srj: SimpleRouteJson,
+): SimpleRouteJson["connections"] => {
+  const widthByName = new Map<string, number>()
+  for (const connection of mergeConnections(srj.connections)) {
+    if (connection.nominalTraceWidth === undefined) continue
+    for (const name of connection.__rootConnectionNames ?? [connection.name]) {
+      widthByName.set(name, connection.nominalTraceWidth)
+    }
+  }
+  return srj.connections.map((connection) => ({
+    ...connection,
+    nominalTraceWidth:
+      widthByName.get(connection.name) ?? connection.nominalTraceWidth,
+  }))
 }
 
 const getConnectedMutablePreloadedTraces = ({

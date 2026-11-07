@@ -125,13 +125,13 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
 
-      // Take the nominalTraceWidth from the first connection for now
-      // A more robust solution might average or pick the max/min based on context
-      if (
-        nominalTraceWidth === undefined &&
-        simpleRouteConnection.nominalTraceWidth !== undefined
-      ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+      // The merged tree can carry any original connection. Preserve its
+      // strongest width requirement regardless of input ordering.
+      if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+        nominalTraceWidth = Math.max(
+          nominalTraceWidth ?? 0,
+          simpleRouteConnection.nominalTraceWidth,
+        )
       }
     })
 
@@ -152,7 +152,7 @@ export function mergeConnections(
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      nominalTraceWidth,
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)
