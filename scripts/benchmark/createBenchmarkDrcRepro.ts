@@ -33,6 +33,10 @@ export const createBenchmarkDrcRepro = ({
         srjWithPointPairs: solver.srjWithPointPairs,
         routedTraces,
         jointParams,
+        jointStats: joint?.stats,
+        jointOutput: joint?.solved ? joint.getOutput() : undefined,
+        contactRepairInput: joint?.traceContactRepairSolver?.params.hdRoutes,
+        contactRepairStats: joint?.traceContactRepairSolver?.stats,
       }),
     ).toString("base64"),
   }
