@@ -26,7 +26,8 @@ test("RVboy exact phase input loses LCD pad escapes before port-point pathing", 
     !solver.failed &&
     !solver.solved &&
     !solver.portPointPathingSolver?.solved
-  ) solver.step()
+  )
+    solver.step()
   expect(solver.failed).toBe(true)
   expect(solver.portPointPathingSolver?.failed).toBe(true)
   expect(solver.error).toContain("No path")

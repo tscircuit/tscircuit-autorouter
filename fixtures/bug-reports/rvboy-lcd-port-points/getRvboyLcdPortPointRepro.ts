@@ -64,7 +64,8 @@ function getLcdView(
   )
   if (!pad) throw new Error(`Missing LCD pad ${portId}`)
   const target = nodes.find(
-    (node) => node._containsTarget &&
+    (node) =>
+      node._containsTarget &&
       Math.abs(node.center.x - pad.center.x) < 1e-7 &&
       Math.abs(node.center.y - pad.center.y) < 1e-7,
   )
@@ -76,17 +77,20 @@ function getLcdView(
     maxY: target.center.y + 1.14,
   }
   const visibleNodes = nodes.filter(
-    (node) => node.availableZ.includes(0) &&
+    (node) =>
+      node.availableZ.includes(0) &&
       node.center.x + node.width / 2 >= viewbox.minX &&
       node.center.x - node.width / 2 <= viewbox.maxX &&
       node.center.y + node.height / 2 >= viewbox.minY &&
       node.center.y - node.height / 2 <= viewbox.maxY,
   )
   const visible = (point: { x: number; y: number }): boolean => {
-    return point.x >= viewbox.minX &&
+    return (
+      point.x >= viewbox.minX &&
       point.x <= viewbox.maxX &&
       point.y >= viewbox.minY &&
       point.y <= viewbox.maxY
+    )
   }
   const nativeGraphics = ports.visualize()
   const graphics: GraphicsObject = {
@@ -100,36 +104,43 @@ function getLcdView(
       height: node.height,
     })),
     lines: [],
-    texts: [{
-      x: target.center.x,
-      y: target.center.y,
-      text: `LCD pin ${pin}`,
-      fontSize: 0.13,
-      anchorSide: "center",
-      color: "#111",
-    }],
+    texts: [
+      {
+        x: target.center.x,
+        y: target.center.y,
+        text: `LCD pin ${pin}`,
+        fontSize: 0.13,
+        anchorSide: "center",
+        color: "#111",
+      },
+    ],
   }
   const nodeById = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
   let sideEdgeCount = 0
   let usableSideEdgeCount = 0
   for (const edge of solver.capacityEdges!) {
     if (!edge.nodeIds.includes(target.capacityMeshNodeId)) continue
-    const neighborId = edge.nodeIds.find((id) => id !== target.capacityMeshNodeId)!
+    const neighborId = edge.nodeIds.find(
+      (id) => id !== target.capacityMeshNodeId,
+    )!
     const neighbor: CapacityMeshNode = nodeById.get(neighborId)!
     if (neighbor._containsObstacle || !neighbor.availableZ.includes(0)) continue
-    if (Math.abs(neighbor.center.x - target.center.x) < target.width / 2) continue
+    if (Math.abs(neighbor.center.x - target.center.x) < target.width / 2)
+      continue
     sideEdgeCount++
-    const topPorts = ports.getAvailablePortPointsBetweenNodes(
-      target.capacityMeshNodeId,
-      neighborId,
-    ).filter((port) => port.availableZ.includes(0))
+    const topPorts = ports
+      .getAvailablePortPointsBetweenNodes(target.capacityMeshNodeId, neighborId)
+      .filter((port) => port.availableZ.includes(0))
     const usable = topPorts.length > 0
     if (usable) usableSideEdgeCount++
-    const boundary = usable ? topPorts[0]! : {
-      x: target.center.x +
-        (neighbor.center.x < target.center.x ? -1 : 1) * target.width / 2,
-      y: target.center.y,
-    }
+    const boundary = usable
+      ? topPorts[0]!
+      : {
+          x:
+            target.center.x +
+            ((neighbor.center.x < target.center.x ? -1 : 1) * target.width) / 2,
+          y: target.center.y,
+        }
     graphics.lines!.push({
       points: [neighbor.center, boundary],
       strokeColor: usable ? "#15803d" : "#dc2626",
@@ -160,12 +171,16 @@ export function getRvboyLcdPortPointRepro(): {
     !solver.failed &&
     !solver.solved &&
     !solver.availableSegmentPointSolver?.solved
-  ) solver.step()
+  )
+    solver.step()
   if (solver.failed || !solver.availableSegmentPointSolver?.solved) {
     throw new Error(solver.error ?? "Port-point generation did not complete")
   }
   return {
     solver,
-    views: [getLcdView(solver, "pcb_port_704", 30), getLcdView(solver, "pcb_port_717", 43)],
+    views: [
+      getLcdView(solver, "pcb_port_704", 30),
+      getLcdView(solver, "pcb_port_717", 43),
+    ],
   }
 }
