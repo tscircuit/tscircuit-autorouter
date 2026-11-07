@@ -701,18 +701,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return new SingleTransitionCrossingRouteSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -727,6 +730,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
       return new MultiHeadPolyLineIntraNodeSolver3({
+        traceWidth: this.constructorParams.traceWidth,
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
         hyperParameters: hyperParameters,

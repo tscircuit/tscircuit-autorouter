@@ -1,0 +1,44 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: regional trace width</text><text x="24" y="59" font-family="sans-serif" font-size="16">After: requested 0.10 mm; no wires on the ground plane</text><svg x="0" y="80" width="1000" height="600" viewBox="391.38055222088826 40 217.23889555822348 520" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="7.02,14.825 6.919999999999999,14.873333333333335 6.919999999999999,14.823333333333334 6.819999999999999,14.723333333333334 6.819999999999999,14.523333333333333 7.02,14.085" data-type="line" data-label="" points="466.2905162064826,194.50180072028797 447.5630252100839,185.45018007202862 447.5630252100839,194.81392557022764 428.8355342136854,213.54141656662614 428.8355342136854,250.9963985594236 466.2905162064826,333.08523409363715" fill="none" stroke="red" stroke-linejoin="round" stroke-width="18.727490996398554"/></g><g><polyline data-points="7.02,13.544 7.42,13.973333333333334" data-type="line" data-label="" points="466.2905162064826,434.4009603841532 541.2004801920768,353.9975990396156" fill="none" stroke="red" stroke-linejoin="round" stroke-width="18.727490996398554"/></g><g><polyline data-points="7.42,13.973333333333334 7.069999999999999,15.223333333333334" data-type="line" data-label="" points="541.2004801920768,353.9975990396156 475.65426170468186,119.90396158463363" fill="none" stroke="rgba(0,0,255,0.5)" stroke-linejoin="round" stroke-width="18.727490996398554" stroke-dasharray="0.2 0.2"/></g><g><polyline data-points="7.069999999999999,15.223333333333334 7.02,15.063" data-type="line" data-label="" points="475.65426170468186,119.90396158463363 466.2905162064826,149.93037214885953" fill="none" stroke="red" stroke-linejoin="round" stroke-width="18.727490996398554"/></g><g><polyline data-points="7.02,14.625 7.38,14.473 7.38,14.454 7.38,14.458 7.38,14.441 7.38,14.348 7.38,14.625" data-type="line" data-label="" points="466.2905162064826,231.95678271308498 533.7094837935174,260.42256902761073 533.7094837935174,263.98079231692645 533.7094837935174,263.2316926770709 533.7094837935174,266.4153661464584 533.7094837935174,283.8319327731092 533.7094837935174,231.95678271308498" fill="none" stroke="red" stroke-linejoin="round" stroke-width="18.727490996398554"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="7.199999999999999" data-y="14.261666666666667" x="391.38055222088826" y="40" width="217.23889555822348" height="520" fill="none" stroke="none" stroke-width="0.005339743589743591"/></g><circle data-type="circle" data-label="" data-x="7.42" data-y="13.973333333333334" cx="541.2004801920768" cy="353.9975990396156" r="42.13685474189675" fill="blue" stroke="none" stroke-width="0.005339743589743591"/><circle data-type="circle" data-label="" data-x="7.069999999999999" data-y="15.223333333333334" cx="475.65426170468186" cy="119.90396158463363" r="42.13685474189675" fill="blue" stroke="none" stroke-width="0.005339743589743591"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":187.27490996398555,"c":0,"e":-848.3793517406959,"b":0,"d":-187.27490996398555,"f":2970.852340936374};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>
