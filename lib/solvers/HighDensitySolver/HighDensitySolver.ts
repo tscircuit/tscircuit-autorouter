@@ -162,7 +162,7 @@ export class HighDensitySolver extends BaseSolver {
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
-    this.obstacleMargin = obstacleMargin ?? 0.15
+    this.obstacleMargin = obstacleMargin ?? 0.2
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
