@@ -8,6 +8,12 @@ import type {
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
 import { NODE_BORDER_EPSILON } from "lib/utils/areNodesBordering"
+import { retainActiveNumericalGapSegments } from "./retainActiveNumericalGapSegments"
+
+const SEGMENT_OVERLAP_EPSILON = 0.0001
+// Prefer geometrically continuous shared boundaries while retaining numerical
+// bridges for pad escapes, like the existing nonessential cramped-port policy.
+const NUMERICAL_GAP_PORT_PENALTY = 1_000
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -31,8 +37,8 @@ export interface SegmentPortPoint {
   /** XY distance to the centermost port on this Z level (centermost port has distance 0) */
   distToCentermostPortOnZ: number
   /**
-   * This is special port point that is created in narrow gaps, and only kept when otherwise reaching the obstacle is impossible
-   * ideally this port points should be discarded but we need them in some cases
+   * Special port points in narrow passages or across numerical boundary gaps.
+   * The necessary-port stage decides which of these constrained crossings to retain.
    */
   cramped: boolean
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
@@ -44,6 +50,7 @@ export interface SegmentPortPoint {
 }
 
 export interface SharedEdgeSegment {
+  crossesNumericalGap?: boolean
   edgeId: string
   nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   start: { x: number; y: number }
@@ -61,6 +68,9 @@ export interface SharedEdgeSegment {
  * 1. Computes the shared edge segment
  * 2. Determines how many port points can fit based on traceWidth
  * 3. Creates port points evenly spaced along the segment
+ *
+ * Numerical-gap crossings are constrained ports. Supplying connections limits
+ * those bridges to components that serve an active terminal escape.
  *
  * Port points start as unused (connectionName = null) and are assigned
  * as paths are routed through them.
@@ -90,6 +100,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
+  connections?: SimpleRouteJson["connections"]
 
   // edgeMargin = 0.25
 
@@ -100,6 +111,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    connections,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -107,9 +119,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    connections?: SimpleRouteJson["connections"]
   }) {
     super()
     this.nodes = nodes
+    this.connections = connections
     this.edges = edges
     this.traceWidth = traceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
@@ -128,6 +142,21 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   _step() {
     this.computeAllSharedEdgeSegments()
+    if (this.connections) {
+      this.sharedEdgeSegments = retainActiveNumericalGapSegments({
+        segments: this.sharedEdgeSegments,
+        nodes: this.nodes,
+        connections: this.connections,
+      })
+      this.edgeSegmentMap.clear()
+      this.portPointMap.clear()
+      for (const segment of this.sharedEdgeSegments) {
+        this.edgeSegmentMap.set(segment.edgeId, segment)
+        for (const port of segment.portPoints) {
+          this.portPointMap.set(port.segmentPortPointId, port)
+        }
+      }
+    }
     this.solved = true
   }
 
@@ -158,6 +187,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   ): SharedEdgeSegment | null {
     const overlap = this.findOverlappingSegment(node1, node2)
     if (!overlap) return null
+    const isNumericalGap = overlap.gap > SEGMENT_OVERLAP_EPSILON
+    if (isNumericalGap && !this.shouldReturnCrampedPortPoints) return null
+    const tinyHypergraphPortPenalty = isNumericalGap
+      ? NUMERICAL_GAP_PORT_PENALTY
+      : undefined
 
     // Compute mutually available Z layers
     const availableZ = node1.availableZ.filter((z) =>
@@ -199,9 +233,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           connectionName: null,
           distToCentermostPortOnZ: 0,
           cramped: true,
+          tinyHypergraphPortPenalty,
         })
       }
       return {
+        ...(isNumericalGap ? { crossesNumericalGap: true } : {}),
         edgeId: edge.capacityMeshEdgeId,
         nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
         start: overlap.start,
@@ -290,13 +326,15 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ,
-          cramped: edgeTouchesNarrowQfpPadGap,
+          cramped: edgeTouchesNarrowQfpPadGap || isNumericalGap,
+          tinyHypergraphPortPenalty,
         }
         portPoints.push(portPoint)
       }
     }
 
     return {
+      ...(isNumericalGap ? { crossesNumericalGap: true } : {}),
       edgeId: edge.capacityMeshEdgeId,
       nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
       start: overlap.start,
@@ -355,7 +393,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   private findOverlappingSegment(
     node: CapacityMeshNode,
     adjNode: CapacityMeshNode,
-  ): { start: { x: number; y: number }; end: { x: number; y: number } } | null {
+  ): {
+    start: { x: number; y: number }
+    end: { x: number; y: number }
+    gap: number
+  } | null {
     // Find overlapping ranges in x and y dimensions
     const xOverlap = {
       start: Math.max(
@@ -381,9 +423,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     const xRange = xOverlap.end - xOverlap.start
     const yRange = yOverlap.end - yOverlap.start
+    const gap = Math.max(0, -xRange, -yRange)
 
     // Mesh cleanup removes tiny coordinate slivers. Keep the same tolerance as
-    // capacity-edge adjacency so an accepted edge does not lose its port points.
+    // capacity-edge adjacency when generating numerical escape candidates.
     const epsilon = NODE_BORDER_EPSILON
     if (xRange < -epsilon || yRange < -epsilon) return null
 
@@ -394,6 +437,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       return {
         start: { x, y: yOverlap.start },
         end: { x, y: yOverlap.end },
+        gap,
       }
     } else {
       // Otherwise, they are vertically adjacent: shared horizontal edge.
@@ -401,6 +445,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       return {
         start: { x: xOverlap.start, y },
         end: { x: xOverlap.end, y },
+        gap,
       }
     }
   }

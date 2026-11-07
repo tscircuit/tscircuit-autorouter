@@ -13,6 +13,7 @@ test("accepted capacity edges retain ports across sub-micron mesh gaps", () => {
     { gap: 0.0011, expectedEdges: 0 },
   ]
   for (const axis of ["x", "y"] as const) {
+    let continuousPortCount = 0
     for (const { gap, expectedEdges } of cases) {
       const first: CapacityMeshNode = {
         capacityMeshNodeId: "first",
@@ -39,8 +40,22 @@ test("accepted capacity edges retain ports across sub-micron mesh gaps", () => {
       })
       ports.solve()
       expect(ports.getOutput()).toHaveLength(expectedEdges)
-      expect(ports.getAvailablePortCountForEdge("first", "second") > 0).toBe(
-        expectedEdges > 0,
+      const portCount = ports.getAvailablePortCountForEdge("first", "second")
+      if (gap === 0) {
+        continuousPortCount = portCount
+        expect(continuousPortCount).toBeGreaterThan(1)
+      }
+      // A numerical sliver must not collapse a long boundary to one crossing.
+      expect(portCount).toBe(expectedEdges ? continuousPortCount : 0)
+      const unconstrainedPorts = new AvailableSegmentPointSolver({
+        nodes,
+        edges: edges.edges,
+        traceWidth: 0.1,
+        shouldReturnCrampedPortPoints: false,
+      })
+      unconstrainedPorts.solve()
+      expect(unconstrainedPorts.getOutput()).toHaveLength(
+        gap <= 0.0001 ? expectedEdges : 0,
       )
 
       // Numerical adjacency must not create a connection between disjoint layers.
