@@ -132,7 +132,8 @@ class KDTree {
       return
     }
 
-    const axis = depth % 2 ? "x" : "y"
+    // Pruning must use the same split axis as buildTree at this depth.
+    const axis = depth % 2 === 0 ? "x" : "y"
     const currentDistance = this.distance(queryPoint, node.point)
 
     // Add current node to neighbors
