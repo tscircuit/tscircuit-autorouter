@@ -44,5 +44,5 @@ export function getRvboyPourPairingView(
     viewbox,
     "RVboy GND island planning — identical full input",
     `Unrouted airwires: ${pairs.length} pairs; ${joinsEscapeVias.filter(Boolean).length} links between vias on the same ground plane (red)`,
-  )
+  ).replace(/[ \t]+$/gm, "")
 }
