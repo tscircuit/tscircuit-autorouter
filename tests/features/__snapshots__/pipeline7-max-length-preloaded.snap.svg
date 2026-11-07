@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-2,0 0,1 2,0" data-type="line" data-label="" points="40,376.98 320,236.98000000000002 600,376.98" fill="none" stroke="red" stroke-linejoin="round" stroke-width="21"/></g><g><polyline data-points="-2,0 -1.667,-0.067 -1.447,-0.164 -1.15,-0.184 0.9300839158351087,-0.184 0.9320839158351087,-0.186 1.15,-0.186 1.35,-0.185 1.55,-0.178 1.65,-0.167 1.667,-0.067 2,0" data-type="line" data-label="" points="40,376.98 86.62,386.36 117.41999999999999,399.94 159,402.74 450.2117482169152,402.74 450.4917482169152,403.02000000000004 481,403.02000000000004 509,402.88 537,401.90000000000003 551,400.36 553.38,386.36 600,376.98" fill="none" stroke="red" stroke-linejoin="round" stroke-width="21"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":140,"c":0,"e":320,"b":0,"d":-140,"f":376.98};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#166534">Relaxed DRC errors: 0</text></g><g><rect x="12" y="64" width="616" height="40" fill="white" stroke="#334155"/><text x="24" y="91" font-family="Arial, sans-serif" font-size="16" fill="#334155">Preloaded signal: 4.47 mm / 3 mm limit; ACCEPTED</text></g></svg>
