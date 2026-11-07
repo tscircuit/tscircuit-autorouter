@@ -459,7 +459,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
-          connections: cms.originalSrj.connections,
+          connections: cms.srjWithPointPairs!.connections,
         },
       ],
     ),
@@ -485,6 +485,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            preserveConnectionReachability: true,
           },
         ]
       },

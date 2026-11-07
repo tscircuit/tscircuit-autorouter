@@ -51,6 +51,8 @@ export interface SegmentPortPoint {
 
 export interface SharedEdgeSegment {
   crossesNumericalGap?: boolean
+  /** Selected by the active-terminal connectivity check, not just geometry. */
+  isActiveTerminalEscape?: boolean
   edgeId: string
   nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
   start: { x: number; y: number }
