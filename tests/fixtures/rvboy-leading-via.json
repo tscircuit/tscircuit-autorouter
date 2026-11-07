@@ -1,0 +1,41 @@
+{
+  "type": "pcb_trace",
+  "pcb_trace_id": "source_trace_30_mst0_0",
+  "connection_name": "source_trace_30",
+  "connectsTo": [
+    "pcb_port_34",
+    "escape-via:source_trace_30:pcb_port_34:inner1:2"
+  ],
+  "route": [
+    {
+      "route_type": "via",
+      "x": -30.7000589,
+      "y": -32.4475968,
+      "from_layer": "top",
+      "to_layer": "inner1",
+      "via_diameter": 0.45,
+      "via_hole_diameter": 0.2
+    },
+    {
+      "route_type": "wire",
+      "x": -30.7000589,
+      "y": -32.4475968,
+      "width": 0.4,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": -30.950403200000004,
+      "y": -32.4475968,
+      "width": 0.4,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": -31.250065,
+      "y": -32.1475974,
+      "width": 0.4,
+      "layer": "top"
+    }
+  ]
+}

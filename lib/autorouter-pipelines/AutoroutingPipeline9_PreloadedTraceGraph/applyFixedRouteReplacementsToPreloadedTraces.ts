@@ -119,10 +119,32 @@ const convertUpdatedTraceRoutes = ({
   let traceThickness = 0
   let viaDiameter = 0
   let rootConnectionName: string | undefined
-  for (const updatedTraceRoute of [...updatedTraceRoutes].sort(
-    comparePreloadedRouteOrder,
-  )) {
-    appendConnectedRoute(combinedPoints, updatedTraceRoute)
+  const orderedRoutes = [...updatedTraceRoutes].sort(comparePreloadedRouteOrder)
+  for (const [index, updatedTraceRoute] of orderedRoutes.entries()) {
+    const nextRoute = orderedRoutes[index + 1]
+    let orientedRoute = updatedTraceRoute
+    if (index === 0 && nextRoute && updatedTraceRoute.route.length > 0) {
+      const nextEndpoints = [nextRoute.route[0], nextRoute.route.at(-1)].filter(
+        (point): point is HighDensityRoute["route"][number] =>
+          point !== undefined,
+      )
+      const first = updatedTraceRoute.route[0]!
+      const last = updatedTraceRoute.route.at(-1)!
+      // A leading via may be serialized from the wire layer toward the plane.
+      // Orient the first section toward its neighbor before joining the chain.
+      if (!nextEndpoints.some((point) => pointsAreEqual(last, point))) {
+        if (!nextEndpoints.some((point) => pointsAreEqual(first, point))) {
+          throw new Error(
+            `Pipeline9 could not reconnect mutated preloaded segment "${nextRoute.connectionName}"`,
+          )
+        }
+        orientedRoute = {
+          ...updatedTraceRoute,
+          route: [...updatedTraceRoute.route].reverse(),
+        }
+      }
+    }
+    appendConnectedRoute(combinedPoints, orientedRoute)
     traceThickness = Math.max(traceThickness, updatedTraceRoute.traceThickness)
     viaDiameter = Math.max(viaDiameter, updatedTraceRoute.viaDiameter)
     rootConnectionName ??= updatedTraceRoute.rootConnectionName
