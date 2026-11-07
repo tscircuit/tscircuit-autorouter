@@ -45,9 +45,9 @@ test("the real desk-fidget VSSA phase routes 0.15mm copper with all board obstac
   const title =
     '<svg width="640" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="12" y="26" font-family="Arial, sans-serif" font-size="12" fill="black">Scoped VSSA phase: hard minimum 0.15 mm; emitted 0.15 mm</text></svg>'
   await expect(
-    stackSvgsVertically(
-      [title, getBugReportSnapshotSvg(result)],
-      { normalizeSize: false, gap: 0 },
-    ),
+    stackSvgsVertically([title, getBugReportSnapshotSvg(result)], {
+      normalizeSize: false,
+      gap: 0,
+    }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
