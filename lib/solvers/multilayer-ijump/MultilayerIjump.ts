@@ -181,7 +181,11 @@ function appendWallStopCandidates(
   if (travelDir.wallDistance <= params.largestMargin) {
     return
   }
-  for (const { margin, enterCost, travelCostFactor } of params.marginsWithCosts) {
+  for (const {
+    margin,
+    enterCost,
+    travelCostFactor,
+  } of params.marginsWithCosts) {
     out.push({
       ...travelDir,
       travelDistance: travelDir.wallDistance - margin,
