@@ -414,7 +414,7 @@ export class TraceWidthSolver extends BaseSolver {
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
       const physicalClearance =
-        obstacle.isNonPlatedHole && obstacle.shape === "circle"
+        obstacle.shape === "circle"
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,

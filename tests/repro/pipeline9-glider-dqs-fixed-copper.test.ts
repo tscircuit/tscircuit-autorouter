@@ -26,7 +26,7 @@ test("routes the Glider DDR board with completed data-byte copper", async (): Pr
   expect(solver.failed).toBeFalse()
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   // ADDR1, BA1, CSB and WEB pass beside the memory's circular BGA pads.
-  // Their 0.127 mm request is reduced because width selection uses square pads.
+  // Use the pads' circular copper when checking their requested 0.127 mm width.
   const roundPadTraceWidths = routedTraces
     .filter((trace) =>
       [
@@ -43,7 +43,7 @@ test("routes the Glider DDR board with completed data-byte copper", async (): Pr
         ),
       ),
     )
-  expect(roundPadTraceWidths).toEqual([0.11, 0.11, 0.11, 0.11])
+  expect(roundPadTraceWidths).toEqual([0.127, 0.127, 0.127, 0.127])
 
   // Render and check the actual completed bytes alongside the remaining routes.
   // The solver receives the original remaining-phase input without these traces.
