@@ -60,11 +60,6 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     viaClearance: 0.1,
   })
 
-  // Routing is unchanged; reference DRC now exposes the existing via-pad gap.
-  expect(errors).toHaveLength(1)
-  expect(errors[0]).toMatchObject({
-    type: "pcb_pad_pad_clearance_error",
-    pcb_pad_ids: [expect.any(String), "pcb_smtpad_1.000_-2.925"],
-    minimum_clearance: 0.1,
-  })
+  // Correct nearest-neighbor pairing also avoids the former via-pad gap.
+  expect(errors).toHaveLength(0)
 })
