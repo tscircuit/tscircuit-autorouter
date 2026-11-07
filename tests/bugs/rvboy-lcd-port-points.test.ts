@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { getRvboyLcdPortPointRepro } from "../../fixtures/bug-reports/rvboy-lcd-port-points/getRvboyLcdPortPointRepro"
 
-test("RVboy exact phase input loses LCD pad escapes before port-point pathing", async () => {
+test("RVboy exact phase input retains LCD pad escapes and solves port-point pathing", async () => {
   const inputPath = new URL(
     "../../fixtures/bug-reports/rvboy-lcd-port-points/rvboy-phase1.srj.json",
     import.meta.url,
@@ -17,7 +17,7 @@ test("RVboy exact phase input loses LCD pad escapes before port-point pathing", 
   expect(solver.originalSrj.traces).toHaveLength(28)
   for (const view of views) {
     expect(view.sideEdgeCount).toBeGreaterThan(0)
-    expect(view.usableSideEdgeCount).toBe(0)
+    expect(view.usableSideEdgeCount).toBe(view.sideEdgeCount)
     await expect(view.svg).toMatchSvgSnapshot(import.meta.path, {
       svgName: view.name,
     })
@@ -28,7 +28,9 @@ test("RVboy exact phase input loses LCD pad escapes before port-point pathing", 
     !solver.portPointPathingSolver?.solved
   )
     solver.step()
-  expect(solver.failed).toBe(true)
-  expect(solver.portPointPathingSolver?.failed).toBe(true)
-  expect(solver.error).toContain("No path")
+  expect(solver.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(
+    solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()?.routeCount,
+  ).toBe(581)
 })

@@ -7,6 +7,7 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import { NODE_BORDER_EPSILON } from "lib/utils/areNodesBordering"
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -381,9 +382,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     const xRange = xOverlap.end - xOverlap.start
     const yRange = yOverlap.end - yOverlap.start
 
-    // If there's no overlap, return null
-    // Use small epsilon to handle floating-point precision issues at node boundaries
-    const epsilon = 0.0001
+    // Mesh cleanup removes tiny coordinate slivers. Keep the same tolerance as
+    // capacity-edge adjacency so an accepted edge does not lose its port points.
+    const epsilon = NODE_BORDER_EPSILON
     if (xRange < -epsilon || yRange < -epsilon) return null
 
     // If the x-range is smaller then the nodes touch vertically (common vertical edge).
