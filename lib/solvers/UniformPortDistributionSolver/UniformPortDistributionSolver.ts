@@ -181,9 +181,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    const originalById = new Map(
-      family.map((port) => [port.portPointId, port]),
-    )
+    const originalById = new Map(family.map((port) => [port.portPointId, port]))
     const layersWithReversedCrossings = new Set<number>()
     for (const port of redistributed) {
       const original = originalById.get(port.portPointId)!

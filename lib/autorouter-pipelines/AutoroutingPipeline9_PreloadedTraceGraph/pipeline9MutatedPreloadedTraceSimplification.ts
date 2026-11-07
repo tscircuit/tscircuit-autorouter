@@ -318,7 +318,8 @@ const createRegionalMutationSections = (
     if (
       currentSection &&
       previousRoute &&
-      routesAreContiguous(previousRoute, route)
+      routesAreContiguous(previousRoute, route) &&
+      previousRoute.traceThickness === route.traceThickness
     ) {
       currentSection.sourceRoutes.push(route)
       currentSection.end = {

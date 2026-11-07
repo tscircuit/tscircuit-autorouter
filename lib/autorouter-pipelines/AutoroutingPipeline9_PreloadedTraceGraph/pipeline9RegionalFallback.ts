@@ -270,7 +270,12 @@ export const createRegionalFallbackProblem = (
     if (
       previousSlice &&
       currentSection &&
-      fixedRouteSlicesAreContiguous(previousSlice, slice)
+      fixedRouteSlicesAreContiguous(previousSlice, slice) &&
+      // A regional replacement has one wire width. Preserve transitions to
+      // narrow pad escapes as section anchors instead of widening them to
+      // the maximum width of a neighboring power-rail section.
+      previousSlice.sourceRoute.traceThickness ===
+        slice.sourceRoute.traceThickness
     ) {
       currentSection.sourceRoutes.push(slice.sourceRoute)
       currentSection.end = slice.end

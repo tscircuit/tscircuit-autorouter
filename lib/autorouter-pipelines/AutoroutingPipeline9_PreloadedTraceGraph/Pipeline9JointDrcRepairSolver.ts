@@ -373,7 +373,38 @@ const getPreloadedTraceSectionGroups = ({
     sectionGroups.set(sectionIndex, sectionGroup)
   }
 
-  return [...sectionGroups.values()]
+  // Exact repair assumes one width per route. Keep width transitions as fixed
+  // section anchors instead of widening every pad escape to a rail's maximum.
+  return [...sectionGroups.values()].flatMap((group) => {
+    const result: PreloadedTraceSectionGroup[] = []
+    let current: PreloadedTraceSectionGroup | undefined
+    let currentWidth: number | undefined
+    for (const primitive of group.routes) {
+      const hasPlanarWire = primitive.route.some((point, pointIndex) => {
+        const next = primitive.route[pointIndex + 1]
+        return next && point.z === next.z && !pointsAreEqual(point, next)
+      })
+      const width = hasPlanarWire ? primitive.traceThickness : undefined
+      if (
+        !current ||
+        (width !== undefined &&
+          currentWidth !== undefined &&
+          width !== currentWidth)
+      ) {
+        current = {
+          routePositionStart: primitive.preloadedRoutePositionStart!,
+          routePositionEnd: primitive.preloadedRoutePositionEnd!,
+          routes: [],
+        }
+        result.push(current)
+        currentWidth = width
+      }
+      if (width !== undefined) currentWidth = width
+      current.routes.push(primitive)
+      current.routePositionEnd = primitive.preloadedRoutePositionEnd!
+    }
+    return result
+  })
 }
 
 const getTraceIdsFromDrcErrors = ({
@@ -590,9 +621,22 @@ const rebuildPreloadedTraceFromSections = ({
     (left, right) => left.routePositionStart - right.routePositionStart,
   )) {
     if (repairedSection.routePositionStart < originalRoutePosition) {
-      throw new Error(
-        `Pipeline9 found overlapping repaired sections for preloaded trace "${originalTrace.pcb_trace_id}"`,
-      )
+      const previousEnd = rebuiltRoute.at(-1)
+      const nextStart = repairedSection.route[0]
+      const sharesWidthBoundary =
+        repairedSection.routePositionStart === originalRoutePosition - 1 &&
+        previousEnd?.route_type === "wire" &&
+        nextStart?.route_type === "wire" &&
+        previousEnd.layer === nextStart.layer &&
+        Math.abs(previousEnd.x - nextStart.x) <= POINT_EPSILON &&
+        Math.abs(previousEnd.y - nextStart.y) <= POINT_EPSILON
+      if (!sharesWidthBoundary) {
+        throw new Error(
+          `Pipeline9 found overlapping repaired sections for preloaded trace "${originalTrace.pcb_trace_id}"`,
+        )
+      }
+      // A shared vertex carries the next section's outgoing width.
+      rebuiltRoute.pop()
     }
     rebuiltRoute.push(
       ...originalTrace.route.slice(

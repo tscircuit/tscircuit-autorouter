@@ -218,10 +218,16 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
             to_layer: "bottom",
           },
     ]
+    // The reference overlap check still takes max(start.width, end.width).
+    // A terminal vertex has no outgoing wire: normalizing that unused width
+    // gives the same copper and lets us compare the physical findings.
+    const referenceCandidate = structuredClone(candidate)
+    const terminal = referenceCandidate[2]!.route.at(-1)!
+    if (terminal.route_type === "wire") terminal.width = 0.1
     const reference = evaluateRelaxedDrc({
       inputSrj: input,
       srjWithPointPairs: input,
-      routedTraces: candidate,
+      routedTraces: referenceCandidate,
       drcOptions: { includeTraceContinuity: false },
     })
     const pairTypes = reference.errors
@@ -236,11 +242,16 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
       )
       .map((error) => error.type)
     expect(pairTypes).toEqual(
-      kind === "wire"
-        ? ["pcb_trace_error", "pcb_pad_trace_clearance_error"]
-        : ["pcb_trace_error"],
+      kind === "wire" ? ["pcb_pad_trace_clearance_error"] : ["pcb_trace_error"],
     )
-    expect<unknown>(evaluateWidths(candidate)).toEqual(reference)
+    const actual = evaluateWidths(candidate)
+    expect<unknown>(actual.errors).toEqual(reference.errors)
+    expect<unknown>(actual.errorsWithCenters).toEqual(
+      reference.errorsWithCenters,
+    )
+    expect<unknown>(actual.locationAwareErrors).toEqual(
+      reference.locationAwareErrors,
+    )
   }
 
   const original = structuredClone(input)

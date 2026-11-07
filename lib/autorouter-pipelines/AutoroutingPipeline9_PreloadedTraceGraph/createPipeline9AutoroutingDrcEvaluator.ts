@@ -133,6 +133,9 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
         drcOptions.includeTraceContinuity) === false
         ? []
         : checkTraceContinuity(circuitJson, {
+            retainedViaObstacles: srjWithPointPairs.obstacles.filter(
+              (obstacle) => obstacle.circuitJsonMetadata?.pcb_via_id,
+            ),
             copperPours: srjWithPointPairs.obstacles.filter(
               (obstacle) => obstacle.isCopperPour,
             ),

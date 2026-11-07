@@ -283,7 +283,10 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
-  options: { copperPours?: readonly Obstacle[] } = {},
+  options: {
+    copperPours?: readonly Obstacle[]
+    retainedViaObstacles?: readonly Obstacle[]
+  } = {},
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -329,6 +332,21 @@ export const checkTraceContinuity = (
       layers: via.layers,
       ownerTraceId: via.pcb_trace_id,
     }))
+  for (const obstacle of options.retainedViaObstacles ?? []) {
+    const id = obstacle.circuitJsonMetadata?.pcb_via_id
+    if (!id) continue
+    if (viaContacts.some((via) => via.id === id)) continue
+    // Pre-existing vias are kept as fixed SRJ copper, not emitted again as
+    // routed vias. Their annuli still bridge layers and terminate traces.
+    viaContacts.push({
+      id,
+      x: obstacle.center.x,
+      y: obstacle.center.y,
+      radius: Math.min(obstacle.width, obstacle.height) / 2,
+      layers: obstacle.layers,
+    })
+    fullConnectivity.addConnections([[id, ...obstacle.connectedTo]])
+  }
   const portBridges = [...viaContacts]
   const segments: WireSegment[] = []
   for (const trace of traces) {

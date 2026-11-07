@@ -667,10 +667,9 @@ export const createTraceObstacleClearanceEvaluator = (
           trace,
           traceOrder,
           portIds,
-          width: Math.max(
-            start.route_type === "wire" ? (start.width ?? 0.1) : 0,
-            end.route_type === "wire" ? (end.width ?? 0.1) : 0,
-          ),
+          // Circuit JSON stores the width of the outgoing segment. The next
+          // vertex can begin a wider rail without widening this pad escape.
+          width: wire.width ?? 0.1,
           typedWidth:
             start.route_type === "wire" && end.route_type === "wire"
               ? (start.width ?? end.width ?? 0.1)
