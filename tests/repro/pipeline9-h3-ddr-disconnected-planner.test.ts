@@ -50,6 +50,6 @@ test("identifies disconnected H3 DDR signals before reripping the other routes",
 
   expect(solver.failed).toBe(true)
   expect(planner.error).toBe(
-    "No path for 9 (source_trace_47) after allowing movable routes to be rerouted",
+    "No path for 10 (source_trace_46) after allowing movable routes to be rerouted",
   )
 })
