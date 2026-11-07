@@ -29,11 +29,19 @@ export class MultilayerIjump {
     this.goal = goal
   }
 
-  getWallDistance(_node: IjumpNode, _travelDir: Point2D): { wallDistance: number; obstacleHit: ObstacleHit | null } {
+  getWallDistance(
+    _node: IjumpNode,
+    _travelDir: Point2D,
+  ): { wallDistance: number; obstacleHit: ObstacleHit | null } {
     return { wallDistance: Infinity, obstacleHit: null }
   }
 
-  createNeighbor(node: IjumpNode, travelDir: Point2D, travelDistance: number, obstacleHit: ObstacleHit | null): IjumpNode {
+  createNeighbor(
+    node: IjumpNode,
+    travelDir: Point2D,
+    travelDistance: number,
+    obstacleHit: ObstacleHit | null,
+  ): IjumpNode {
     return {
       x: node.x + travelDir.x * travelDistance,
       y: node.y + travelDir.y * travelDistance,
@@ -56,7 +64,10 @@ export class MultilayerIjump {
         continue
       }
 
-      const { wallDistance, obstacleHit } = this.getWallDistance(node, travelDir)
+      const { wallDistance, obstacleHit } = this.getWallDistance(
+        node,
+        travelDir,
+      )
       const goalDistAlongTravelDir =
         (this.goal.x - node.x) * travelDir.x +
         (this.goal.y - node.y) * travelDir.y
@@ -65,18 +76,18 @@ export class MultilayerIjump {
         if (goalDistAlongTravelDir <= 0) continue
 
         neighbors.push(
-          this.createNeighbor(node, travelDir, goalDistAlongTravelDir, null)
+          this.createNeighbor(node, travelDir, goalDistAlongTravelDir, null),
         )
         continue
       }
 
       if (goalDistAlongTravelDir > 0 && goalDistAlongTravelDir < wallDistance) {
         neighbors.push(
-          this.createNeighbor(node, travelDir, goalDistAlongTravelDir, null)
+          this.createNeighbor(node, travelDir, goalDistAlongTravelDir, null),
         )
       } else if (wallDistance > 0) {
         neighbors.push(
-          this.createNeighbor(node, travelDir, wallDistance, obstacleHit)
+          this.createNeighbor(node, travelDir, wallDistance, obstacleHit),
         )
       }
     }
