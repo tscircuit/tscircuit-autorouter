@@ -148,6 +148,8 @@ export type WorkerResult<
   stageTiming?: BenchmarkStageTimingBreakdown
   routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
+  /** Exact input, output and joint-repair input for failed DRC outcomes. */
+  drcRepro?: { encoding: "gzip-base64"; data: string }
 }
 
 export type WorkerResultWithImage = WorkerResult<BenchmarkSnapshotWithImage>

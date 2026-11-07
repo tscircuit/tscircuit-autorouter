@@ -23,6 +23,7 @@ import {
   type PipelineStageTimingSource,
 } from "./benchmark-stage-timing"
 import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
+import { createBenchmarkDrcRepro } from "./createBenchmarkDrcRepro"
 
 type SubSolverInstance = {
   progress?: number
@@ -739,6 +740,13 @@ export const runTask = async (
       stageTiming,
       routingMetrics,
       benchmarkSnapshot,
+      drcRepro: relaxedDrcPassed
+        ? undefined
+        : createBenchmarkDrcRepro({
+            inputSrj: task.scenario,
+            solver,
+            routedTraces: traces,
+          }),
       ...drcSummary,
     }
   } catch (error) {
