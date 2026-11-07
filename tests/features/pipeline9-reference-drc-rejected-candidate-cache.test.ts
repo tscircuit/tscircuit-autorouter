@@ -95,4 +95,19 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
   expect(reference.referenceDrcValidationCount).toBe(
     validationsBeforeReturn + 2,
   )
+
+  // Clean results stay valid when fixed copper joins the score. Nonzero
+  // results must be rechecked without evicting the other cached geometry.
+  expect(evaluate(cleanProposal)).toHaveLength(0)
+  expect(evaluate(proposal)).toEqual(changed)
+  const validationsBeforeContinuation = reference.referenceDrcValidationCount
+  solver.initialBoundedRegionalRepairSolver!.solved = true
+  expect(evaluate(proposal)).toEqual(changed)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeContinuation + 1,
+  )
+  expect(evaluate(cleanProposal)).toHaveLength(0)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeContinuation + 1,
+  )
 })

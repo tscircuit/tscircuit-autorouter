@@ -77,8 +77,6 @@ type NodeBounds = {
   maxY: number
 }
 
-const PRELOADED_TRACE_CLEARANCE = 0.15
-
 const getNodeBounds = (
   node: NodeWithPortPoints,
   margin: number,
@@ -1264,6 +1262,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
+    let obstacleClearanceMargin = 0.15
+    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
+      obstacleClearanceMargin = this.obstacleMargin
+    }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
@@ -1276,7 +1278,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin,
       ...this.params.b01RepairOptions,
       effort: this.effort,
     })

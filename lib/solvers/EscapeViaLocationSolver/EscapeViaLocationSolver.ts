@@ -164,8 +164,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
   } {
     const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-    const minZ = Math.min(sourceZ, targetZ)
-    const maxZ = Math.max(sourceZ, targetZ)
+    // A through-hole via occupies every copper layer, even when its logical
+    // connection ends at an inner plane.
+    const minZ = this.ogSrj.allowBlindAndBuriedVias
+      ? Math.min(sourceZ, targetZ)
+      : 0
+    const maxZ = this.ogSrj.allowBlindAndBuriedVias
+      ? Math.max(sourceZ, targetZ)
+      : this.ogSrj.layerCount - 1
     const zLayers = Array.from(
       { length: maxZ - minZ + 1 },
       (_, index) => minZ + index,
@@ -598,8 +604,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
     targetZ: number
   }): number {
     const { candidate, connectionNetIds, sourceZ, targetZ } = params
-    const spanMinZ = Math.min(sourceZ, targetZ)
-    const spanMaxZ = Math.max(sourceZ, targetZ)
+    const spanMinZ = this.ogSrj.allowBlindAndBuriedVias
+      ? Math.min(sourceZ, targetZ)
+      : 0
+    const spanMaxZ = this.ogSrj.allowBlindAndBuriedVias
+      ? Math.max(sourceZ, targetZ)
+      : this.ogSrj.layerCount - 1
     let minClearance = Number.POSITIVE_INFINITY
 
     for (const obstacle of this.ogSrj.obstacles) {

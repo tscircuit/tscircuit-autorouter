@@ -15,7 +15,7 @@ import {
   type GraphicsSvgFrame,
 } from "./fixtures/solver-svg-frames"
 
-test("repairs dataset 18 sample 10's trace clearance and reports its via-pad residue", async () => {
+test("keeps dataset 18 sample 10 free of exact DRC residue", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
   const pipeline = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     cacheProvider: null,
@@ -90,21 +90,8 @@ test("repairs dataset 18 sample 10's trace clearance and reports its via-pad res
 
   // Node-local repair may clear all errors before the exact stage.
   expect(outputDrc.errors.length).toBeLessThanOrEqual(inputDrc.errors.length)
-  // The same routed geometry has two via-pad violations that the old
-  // reference evaluator omitted. No other DRC errors may remain.
-  expect(outputDrc.errors).toHaveLength(2)
-  expect(outputDrc.errors).toMatchObject([
-    {
-      type: "pcb_pad_pad_clearance_error",
-      pcb_pad_ids: [expect.any(String), "pcb_smtpad_283"],
-      minimum_clearance: 0.1,
-    },
-    {
-      type: "pcb_pad_pad_clearance_error",
-      pcb_pad_ids: [expect.any(String), "pcb_plated_hole_10"],
-      minimum_clearance: 0.1,
-    },
-  ])
+  // Necessary numerical-gap ports avoid the two previous via-pad violations.
+  expect(outputDrc.errors).toEqual([])
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
