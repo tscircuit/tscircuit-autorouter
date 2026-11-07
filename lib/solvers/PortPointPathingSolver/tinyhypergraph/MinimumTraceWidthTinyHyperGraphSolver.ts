@@ -11,13 +11,16 @@ import type {
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { RbushIndex } from "lib/data-structures/RbushIndex"
 
 type TinyParams = ConstructorParameters<typeof TinyHyperGraphSolver>
 
 /** Opt-in width-aware port eligibility, in board-world mm (+X right, +Y up, +Z above). */
 export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver {
   private readonly allowedPorts = new Map<number, Uint8Array>()
-  private readonly obstacles: Array<Obstacle & { __zLayers: number[] }>
+  private readonly obstacleIndex = new RbushIndex<
+    Obstacle & { __zLayers: number[] }
+  >()
   private readonly connMap: ReturnType<
     typeof getConnectivityMapFromSimpleRouteJson
   >
@@ -37,7 +40,36 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
       PARTIAL_RIP_ENABLED: false,
       ACCEPT_BEST_SOLUTION_ON_TIMEOUT: false,
     })
-    this.obstacles = createObjectsWithZLayers(srj.obstacles, srj.layerCount)
+    for (const obstacle of createObjectsWithZLayers(
+      srj.obstacles,
+      srj.layerCount,
+    )) {
+      const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+      const cos = Math.abs(Math.cos(angle))
+      const sin = Math.abs(Math.sin(angle))
+      const halfWidth =
+        obstacle.shape === "circle"
+          ? obstacle.width / 2
+          : (obstacle.width * cos + obstacle.height * sin) / 2
+      const halfHeight =
+        obstacle.shape === "circle"
+          ? obstacle.width / 2
+          : (obstacle.width * sin + obstacle.height * cos) / 2
+      const clearance = obstacle.isNonPlatedHole
+        ? (srj.minTraceToHoleEdgeClearance ??
+          srj.minTraceToPadEdgeClearance ??
+          0.15)
+        : (srj.minTraceToPadEdgeClearance ?? 0.15)
+      // Index the rotated physical envelope plus clearance. Exact shape,
+      // layer and connectivity checks still run on every nearby obstacle.
+      this.obstacleIndex.insert(
+        obstacle,
+        obstacle.center.x - halfWidth - clearance,
+        obstacle.center.y - halfHeight - clearance,
+        obstacle.center.x + halfWidth + clearance,
+        obstacle.center.y + halfHeight + clearance,
+      )
+    }
     this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
     for (let routeId = 0; routeId < problem.routeCount; routeId++) {
       const connection: SimpleRouteConnection | undefined =
@@ -132,7 +164,13 @@ export class MinimumTraceWidthTinyHyperGraphSolver extends TinyHyperGraphSolver 
     const endZ = this.topology.portZ[to]!
     const radius =
       Math.max(this.srj.minTraceWidth, connection.minTraceWidth) / 2
-    for (const obstacle of this.obstacles) {
+    const obstacles = this.obstacleIndex.search(
+      Math.min(start.x, end.x) - radius - 1e-6,
+      Math.min(start.y, end.y) - radius - 1e-6,
+      Math.max(start.x, end.x) + radius + 1e-6,
+      Math.max(start.y, end.y) + radius + 1e-6,
+    )
+    for (const obstacle of obstacles) {
       if (
         !obstacle.__zLayers?.includes(startZ) &&
         !obstacle.__zLayers?.includes(endZ)
