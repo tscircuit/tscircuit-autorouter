@@ -16,6 +16,7 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
+import { createPipeline9CopperPourWireDrcEvaluator } from "./createPipeline9CopperPourWireDrcEvaluator"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type {
   Obstacle,
@@ -1599,6 +1600,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       )
     }
 
+    const evaluatePourWires = createPipeline9CopperPourWireDrcEvaluator(
+      params.originalSrj,
+      params.srjWithPointPairs,
+    )
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1613,9 +1618,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = autoroutingDrcEngine.evaluate(
+      const indexedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
+      // The indexed engine has no pour-layer geometry. Include these physical
+      // constraints on every candidate, not just when its pad/trace score is zero.
+      const pourErrors = evaluatePourWires(candidateDrcInput.evaluatedTraces)
+      const evaluatedDrc = {
+        ...indexedDrc,
+        errors: [...indexedDrc.errors, ...pourErrors],
+        errorsWithCenters: [...indexedDrc.errorsWithCenters, ...pourErrors],
+      }
       const viaCircuitJson = getAutoroutingViaElements(
         candidateDrcInput.evaluatedTraces,
       )
