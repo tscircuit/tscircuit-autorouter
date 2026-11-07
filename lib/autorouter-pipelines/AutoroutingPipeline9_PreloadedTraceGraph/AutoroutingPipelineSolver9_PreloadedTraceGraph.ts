@@ -281,6 +281,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
+  finalTraceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   preloadedTraceGraphSolver?: PreloadedTraceGraphSolver
   componentDetectionSolver?: ComponentDetectionSolver
@@ -825,6 +826,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
+        // Reserve pad bounding boxes while repair can still move the routes.
+        usePadBoundingBoxes: true,
       },
     ]),
     definePipelineStep(
@@ -982,6 +985,33 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep("finalTraceWidthSolver", TraceWidthSolver, (cms) => [
+      {
+        hdRoutes: cms.effortCleanupSolver!.getOutput(),
+        board: cms.originalSrj,
+        otherHdRoutes: cms
+          .getUpdatedPreloadedTraces()
+          .flatMap((trace, traceIndex) =>
+            convertPreloadedTraceToHdRoutes(
+              trace,
+              traceIndex,
+              cms.srj.layerCount,
+              cms.viaDiameter,
+              cms.connMap,
+            ),
+          ),
+        obstacles: cms.srj.obstacles,
+        connMap: cms.connMap,
+        colorMap: cms.colorMap,
+        minTraceWidth: cms.minTraceWidth,
+        connection: cms.srjWithPointPairs!.connections,
+        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+        layerCount: cms.srj.layerCount,
+        // Recover requested widths on settled geometry without shrinking copper.
+        onlyWiden: true,
+      },
+    ]),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
@@ -1011,7 +1041,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
+        const hdRoutes = cms.finalTraceWidthSolver!.getHdRoutesWithWidths()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1527,6 +1557,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.finalTraceWidthSolver?.solved
+        ? this.finalTraceWidthSolver.getHdRoutesWithWidths()
+        : undefined) ??
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
         : undefined) ??

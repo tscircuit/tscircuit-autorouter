@@ -43,6 +43,7 @@ type TaperRoutePointEntry = {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
+  otherHdRoutes?: HighDensityRoute[]
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -51,6 +52,11 @@ export interface TraceWidthSolverInput {
   obstacleMargin?: number
   minTraceToHoleEdgeClearance?: number
   layerCount: number
+  /** Reserve conservative pad envelopes before geometric repair. */
+  usePadBoundingBoxes?: boolean
+  /** Keep routes already at nominal width and retain copper if widening fails. */
+  onlyWiden?: boolean
+  board?: Pick<SimpleRouteJson, "bounds" | "outline" | "minBoardEdgeClearance">
 }
 
 /**
@@ -103,6 +109,10 @@ export class TraceWidthSolver extends BaseSolver {
   hdRouteSHI: HighDensityRouteSpatialIndex
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
+  readonly usePadBoundingBoxes: boolean
+  readonly onlyWiden: boolean
+  private readonly boardEdges: { start: Point2D; end: Point2D }[]
+  private readonly boardEdgeMargin: number
 
   constructor(input: TraceWidthSolverInput) {
     super()
@@ -112,6 +122,24 @@ export class TraceWidthSolver extends BaseSolver {
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
+    this.usePadBoundingBoxes = input.usePadBoundingBoxes ?? false
+    this.onlyWiden = input.onlyWiden ?? false
+    this.boardEdgeMargin = input.board?.minBoardEdgeClearance ?? 0
+    const bounds = input.board?.bounds
+    const outline = input.board?.outline?.length
+      ? input.board.outline
+      : bounds
+        ? [
+            { x: bounds.minX, y: bounds.minY },
+            { x: bounds.maxX, y: bounds.minY },
+            { x: bounds.maxX, y: bounds.maxY },
+            { x: bounds.minX, y: bounds.maxY },
+          ]
+        : []
+    this.boardEdges = outline.map((start, index) => ({
+      start,
+      end: outline[(index + 1) % outline.length]!,
+    }))
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
 
@@ -142,7 +170,10 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.hdRoutes,
+      ...(input.otherHdRoutes ?? []),
+    ])
   }
 
   private getNominalTraceWidthForRoute(
@@ -172,6 +203,14 @@ export class TraceWidthSolver extends BaseSolver {
 
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
+      if (
+        this.onlyWiden &&
+        (nominalTraceWidth === undefined ||
+          nextTrace.traceThickness >= nominalTraceWidth)
+      ) {
+        this.processedRoutes.push(nextTrace)
+        return
+      }
       if (nominalTraceWidth === undefined) {
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
@@ -188,7 +227,9 @@ export class TraceWidthSolver extends BaseSolver {
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(
-          this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
+          this.onlyWiden
+            ? this.currentTrace
+            : this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
         )
         this.currentTrace = null
         return
@@ -365,6 +406,13 @@ export class TraceWidthSolver extends BaseSolver {
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
+    for (const edge of this.boardEdges) {
+      minClearance = Math.min(
+        minClearance,
+        segmentToSegmentMinDistance(start, end, edge.start, edge.end) -
+          (this.boardEdgeMargin - this.obstacleMargin),
+      )
+    }
     this.lastCollidingObstacles = []
     this.lastCollidingRoutes = []
 
@@ -414,7 +462,8 @@ export class TraceWidthSolver extends BaseSolver {
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
       const physicalClearance =
-        obstacle.shape === "circle"
+        obstacle.shape === "circle" &&
+        (!this.usePadBoundingBoxes || obstacle.isNonPlatedHole)
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,
@@ -812,10 +861,10 @@ export class TraceWidthSolver extends BaseSolver {
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
 
-    const routeWithWidth = this.createRouteWithWidth(
-      this.currentTrace,
-      traceWidth,
-    )
+    const routeWithWidth =
+      this.onlyWiden && traceWidth <= this.currentTrace.traceThickness
+        ? this.currentTrace
+        : this.createRouteWithWidth(this.currentTrace, traceWidth)
 
     this.processedRoutes.push(routeWithWidth)
     this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)

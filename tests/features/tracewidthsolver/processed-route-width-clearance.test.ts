@@ -30,4 +30,49 @@ test("later width choices respect copper already widened by the solver", (): voi
     .map((route) => route.traceThickness)
   expect(widths).toEqual([0.15, 0.1])
   expect(0.23 - (widths[0]! + widths[1]!) / 2).toBeGreaterThanOrEqual(0.1)
+
+  const remainingRoute = hdRoutes[1]!
+  const fixedNeighbor = solver.getHdRoutesWithWidths()[0]!
+  const refinement = new TraceWidthSolver({
+    hdRoutes: [remainingRoute],
+    otherHdRoutes: [fixedNeighbor],
+    minTraceWidth: 0.1,
+    obstacleMargin: 0.1,
+    layerCount: 2,
+    connection: [
+      {
+        name: remainingRoute.connectionName,
+        nominalTraceWidth: 0.15,
+        pointsToConnect: [],
+      },
+    ],
+    onlyWiden: true,
+  })
+  refinement.solve()
+  expect(refinement.getHdRoutesWithWidths()).toEqual([remainingRoute])
+
+  const edgeRoute: HighDensityRoute = {
+    ...remainingRoute,
+    route: remainingRoute.route.map((point) => ({ ...point, y: 0.151 })),
+  }
+  const edgeRefinement = new TraceWidthSolver({
+    hdRoutes: [edgeRoute],
+    minTraceWidth: 0.1,
+    obstacleMargin: 0.1,
+    layerCount: 2,
+    connection: [
+      {
+        name: edgeRoute.connectionName,
+        nominalTraceWidth: 0.15,
+        pointsToConnect: [],
+      },
+    ],
+    board: {
+      bounds: { minX: -2, maxX: 2, minY: 0, maxY: 2 },
+      minBoardEdgeClearance: 0.1,
+    },
+    onlyWiden: true,
+  })
+  edgeRefinement.solve()
+  expect(edgeRefinement.getHdRoutesWithWidths()).toEqual([edgeRoute])
 })
