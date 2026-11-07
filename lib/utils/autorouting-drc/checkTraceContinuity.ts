@@ -4,6 +4,7 @@ import {
   getPlatedHolePolygon,
   getTraceSegmentPolygon,
   getPrimaryId,
+  roundedRectangle,
 } from "@tscircuit/circuit-json-util"
 import {
   type Point,
@@ -28,6 +29,7 @@ import {
   getDrcReadableTraceName,
 } from "./drcReadableNames"
 import RBush from "rbush"
+import type { Obstacle } from "lib/types"
 
 type Pad = PcbSmtPad | PcbPlatedHole
 type RoutePoint = PcbTrace["route"][number]
@@ -281,6 +283,7 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
+  options: { copperPours?: readonly Obstacle[] } = {},
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -563,6 +566,7 @@ export const checkTraceContinuity = (
           }
       bridge: boolean
       platedPort: boolean
+      pour?: Obstacle
       minX: number
       minY: number
       maxX: number
@@ -590,6 +594,24 @@ export const checkTraceContinuity = (
         maxX: box.xmax,
         maxY: box.ymax,
       })
+    }
+    for (const [index, pour] of (options.copperPours ?? []).entries()) {
+      if (!pour.isCopperPour) continue
+      addConductor(
+        `continuity-pour-${index}`,
+        pour.layers,
+        pour.shape === "circle"
+          ? circlePolygon(pour.center, pour.width / 2)
+          : roundedRectangle(
+              pour.center,
+              pour.width,
+              pour.height,
+              0,
+              pour.ccwRotationDegrees ?? 0,
+            ),
+        true,
+      )
+      conductors[conductors.length - 1]!.pour = pour
     }
     for (const via of viaContacts) {
       if (via.radius === undefined) continue
@@ -670,6 +692,37 @@ export const checkTraceContinuity = (
           !candidate.layers.some((layer) => conductor.layers.includes(layer))
         )
           continue
+        // Pours open antipads around foreign-net copper. Only their own
+        // net can use the plane as a physical bridge.
+        if (conductor.pour || candidate.pour) {
+          const pour = conductor.pour ?? candidate.pour!
+          const other = conductor.pour ? candidate : conductor
+          const connected = other.pour
+            ? pour.connectedTo.some((id) =>
+                other.pour!.connectedTo.includes(id),
+              )
+            : pour.connectedTo.some((id) =>
+                fullConnectivity.areIdsConnected(id, other.id),
+              )
+          if (!connected) continue
+          // Two axis-aligned pour tiles need a shared edge or area. A
+          // single touching corner has no conductive width.
+          if (
+            conductor.pour &&
+            candidate.pour &&
+            (conductor.pour.ccwRotationDegrees ?? 0) === 0 &&
+            (candidate.pour.ccwRotationDegrees ?? 0) === 0 &&
+            conductor.pour.shape !== "circle" &&
+            candidate.pour.shape !== "circle" &&
+            Math.min(conductor.maxX, candidate.maxX) -
+              Math.max(conductor.minX, candidate.minX) <=
+              0.01 &&
+            Math.min(conductor.maxY, candidate.maxY) -
+              Math.max(conductor.minY, candidate.minY) <=
+              0.01
+          )
+            continue
+        }
         const polygon = getConductorPolygon(candidate)
         const box = polygon.box
         // Match the original bounds before testing the exact copper contact.
