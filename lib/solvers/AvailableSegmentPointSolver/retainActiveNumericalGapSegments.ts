@@ -32,9 +32,14 @@ export function retainActiveNumericalGapSegments({
   for (const segment of segments) {
     if (segment.crossesNumericalGap) continue
     for (const port of segment.portPoints) {
+      // Component topology deliberately retains its cramped crossings. Count
+      // those planned paths as existing escapes, as the pipeline does.
+      const escapePort = port.cramped && port.nodeIds.some(
+        (nodeId) => nodeMap.get(nodeId)!._isComponentTopologyNode,
+      ) ? { ...port, cramped: false } : port
       for (const nodeId of port.nodeIds) {
         if (!ordinaryPorts.has(nodeId)) ordinaryPorts.set(nodeId, [])
-        ordinaryPorts.get(nodeId)!.push(port)
+        ordinaryPorts.get(nodeId)!.push(escapePort)
       }
     }
   }
