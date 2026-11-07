@@ -625,7 +625,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const hasImmutablePreloadedCopper = fixedHdRoutes.some(
           (route) => route.isFixed === true,
         )
-        let obstacleMargin = cms.srj.defaultObstacleMargin ?? 0.15
+        let obstacleMargin = Math.max(
+          cms.srj.defaultObstacleMargin ?? 0.15,
+          cms.srj.minTraceToPadEdgeClearance ?? 0,
+        )
         if (
           hasImmutablePreloadedCopper &&
           cms.srj.minTraceToPadEdgeClearance !== undefined
