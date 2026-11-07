@@ -26,6 +26,12 @@ import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
 import { getConnectedCopperPourObstacles } from "./getConnectedCopperPourObstacles"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
+import {
+  getPipeline9RouteCopperGeometry,
+  type Pipeline9RouteCopperGeometry,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 
 const ESCAPE_POINT_ID_PREFIX = "escape-via:"
 const GEOMETRIC_TOLERANCE = 1e-4
@@ -104,6 +110,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
   escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
   createdEscapeVias: EscapeViaMetadata[]
   nextEscapeViaIndex = 0
+  private readonly preloadedConnectivity?: ReturnType<
+    typeof getConnectivityMapFromSimpleRouteJson
+  >
+  private readonly preloadedCopper: Array<
+    Pipeline9RouteCopperGeometry & { netId: string }
+  > = []
 
   constructor(
     public readonly ogSrj: SimpleRouteJson,
@@ -128,6 +140,27 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.outputSrj = ogSrj
     this.escapeViaMetadataByPointId = new Map()
     this.createdEscapeVias = []
+    if (ogSrj.traces?.length) {
+      this.preloadedConnectivity = getConnectivityMapFromSimpleRouteJson(ogSrj)
+      for (const [index, trace] of ogSrj.traces.entries()) {
+        const netId =
+          this.preloadedConnectivity.getNetConnectedToId(
+            trace.connection_name,
+          ) ?? trace.connection_name
+        for (const route of convertPreloadedTraceToHdRoutes(
+          trace,
+          index,
+          ogSrj.layerCount,
+          this.viaDiameter,
+          this.preloadedConnectivity,
+        )) {
+          this.preloadedCopper.push({
+            ...getPipeline9RouteCopperGeometry(route, ogSrj),
+            netId,
+          })
+        }
+      }
+    }
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -138,6 +171,44 @@ export class EscapeViaLocationSolver extends BaseSolver {
         connection.__netConnectionName,
       ].filter((id): id is string => Boolean(id)),
     )
+  }
+
+  private getPreloadedCopperClearance(
+    start: Point2D,
+    end: Point2D,
+    minZ: number,
+    maxZ: number,
+    radius: number,
+    connectionNetIds: Set<string>,
+  ): number {
+    let clearance = Number.POSITIVE_INFINITY
+    const connectedNets = new Set(
+      Array.from(connectionNetIds, (id) =>
+        this.preloadedConnectivity?.getNetConnectedToId(id),
+      ),
+    )
+    for (const copper of this.preloadedCopper) {
+      if (connectedNets.has(copper.netId)) continue
+      for (const wire of copper.wireSegments) {
+        if (wire.z < minZ || wire.z > maxZ) continue
+        clearance = Math.min(
+          clearance,
+          minimumDistanceBetweenSegments(start, end, wire.start, wire.end) -
+            radius -
+            wire.width / 2,
+        )
+      }
+      for (const via of copper.viaSpans) {
+        if (via.maxZ < minZ || via.minZ > maxZ) continue
+        clearance = Math.min(
+          clearance,
+          minimumDistanceBetweenSegments(start, end, via.center, via.center) -
+            radius -
+            via.diameter / 2,
+        )
+      }
+    }
+    return clearance
   }
 
   private obstacleMatchesConnectionNet(
@@ -370,8 +441,24 @@ export class EscapeViaLocationSolver extends BaseSolver {
     candidate: Point2D
     sourceLayer: string
     sourceObstacle?: Obstacle
+    connectionNetIds: Set<string>
   }): boolean {
     const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params
+    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
+    if (
+      this.getPreloadedCopperClearance(
+        sourcePoint,
+        candidate,
+        sourceZ,
+        sourceZ,
+        this.minTraceWidth / 2,
+        params.connectionNetIds,
+      ) +
+        GEOMETRIC_TOLERANCE <
+      this.obstacleMargin
+    ) {
+      return false
+    }
     if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
       const crossesOutline = doesSegmentCrossPolygonBoundary({
         start: sourcePoint,
@@ -611,7 +698,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const spanMaxZ = this.ogSrj.allowBlindAndBuriedVias
       ? Math.max(sourceZ, targetZ)
       : this.ogSrj.layerCount - 1
-    let minClearance = Number.POSITIVE_INFINITY
+    let minClearance = this.getPreloadedCopperClearance(
+      candidate,
+      candidate,
+      spanMinZ,
+      spanMaxZ,
+      this.viaRadius,
+      connectionNetIds,
+    )
 
     for (const obstacle of this.ogSrj.obstacles) {
       const obstacleZs = this.getObstacleZs(obstacle)
@@ -748,6 +842,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
             candidate,
             sourceLayer,
             sourceObstacle,
+            connectionNetIds,
           })
         ) {
           continue
