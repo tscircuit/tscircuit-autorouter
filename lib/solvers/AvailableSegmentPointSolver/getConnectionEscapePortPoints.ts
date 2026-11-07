@@ -1,24 +1,30 @@
-import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
+import type {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+  SimpleRouteConnection,
+} from "lib/types"
 import { getConnectionPointLayers } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { SegmentPortPoint } from "./AvailableSegmentPointSolver"
 
-type OrdinaryEscapeInput = {
+type ConnectionEscapeInput = {
   target: CapacityMeshNode
   nodes: CapacityMeshNode[]
-  nodeMap: Map<string, CapacityMeshNode>
-  ordinaryPorts: Map<string, SegmentPortPoint[]>
+  nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
+  portsByNodeId: Map<CapacityMeshNodeId, SegmentPortPoint[]>
   connections: SimpleRouteConnection[]
+  allowCrampedPortPoints?: boolean
 }
 
 /** Nearby free space can be an isolated pocket; check the actual destinations. */
-export function doesOrdinaryEscapeReachConnection({
+export function getConnectionEscapePortPoints({
   target,
   nodes,
   nodeMap,
-  ordinaryPorts,
+  portsByNodeId,
   connections,
-}: OrdinaryEscapeInput): boolean {
+  allowCrampedPortPoints = false,
+}: ConnectionEscapeInput): Set<SegmentPortPoint> | undefined {
   const layerCount = nodes.reduce(
     (count, node) => Math.max(count, ...node.availableZ.map((z) => z + 1)),
     1,
@@ -50,12 +56,10 @@ export function doesOrdinaryEscapeReachConnection({
             .map((node) => node.capacityMeshNodeId),
         ),
     )
-    // Component-local endpoints are absent from the cramped-port stage's
-    // graph. Their planned exits are preserved separately by the pipeline.
     .filter((group) => group.size > 0)
-  if (destinations.length === 0) return true
+  if (destinations.length === 0) return new Set()
   const destinationNodes = new Set(destinations.flatMap((group) => [...group]))
-  const destinationGroupsByNode = new Map<string, number[]>()
+  const destinationGroupsByNode = new Map<CapacityMeshNodeId, number[]>()
   destinations.forEach((group, index) => {
     for (const nodeId of group) {
       const groups = destinationGroupsByNode.get(nodeId) ?? []
@@ -66,11 +70,16 @@ export function doesOrdinaryEscapeReachConnection({
   const reachedGroups = new Set<number>()
   const targetNetIds = new Set(target._connectedTo)
   const visited = new Set([target.capacityMeshNodeId])
+  const parentByNodeId = new Map<
+    CapacityMeshNodeId,
+    { nodeId: CapacityMeshNodeId; port: SegmentPortPoint }
+  >()
+  const escapePorts = new Set<SegmentPortPoint>()
   const queue = [target.capacityMeshNodeId]
   for (let index = 0; index < queue.length; index++) {
     const nodeId = queue[index]!
-    for (const port of ordinaryPorts.get(nodeId) ?? []) {
-      if (port.cramped) continue
+    for (const port of portsByNodeId.get(nodeId) ?? []) {
+      if (port.cramped && !allowCrampedPortPoints) continue
       for (const neighborId of port.nodeIds) {
         if (visited.has(neighborId)) continue
         const neighbor = nodeMap.get(neighborId)!
@@ -85,13 +94,22 @@ export function doesOrdinaryEscapeReachConnection({
           continue
         }
         visited.add(neighborId)
+        parentByNodeId.set(neighborId, { nodeId, port })
         for (const group of destinationGroupsByNode.get(neighborId) ?? []) {
+          if (reachedGroups.has(group)) continue
           reachedGroups.add(group)
+          let parent = parentByNodeId.get(neighborId)
+          while (parent) {
+            escapePorts.add(parent.port)
+            parent = parentByNodeId.get(parent.nodeId)
+          }
         }
-        if (reachedGroups.size === destinations.length) return true
+        if (reachedGroups.size === destinations.length) {
+          return escapePorts
+        }
         queue.push(neighborId)
       }
     }
   }
-  return false
+  return undefined
 }
