@@ -353,6 +353,95 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         board?.maxY ?? Infinity,
       ),
     }
+    // A retained wire may span this entire region and end inside a pad beyond
+    // its boundary. A via-sized collar alone cannot reach around that pad.
+    // Include each intersecting fixed wire and its terminal pads before adding
+    // the via collar, while retaining all board obstacles in the repair SRJ.
+    const nodeBounds = {
+      minX: node.center.x - node.width / 2,
+      maxX: node.center.x + node.width / 2,
+      minY: node.center.y - node.height / 2,
+      maxY: node.center.y + node.height / 2,
+    }
+    for (const fixed of params.fixedRoutes ?? []) {
+      const geometry = getPipeline9RouteCopperGeometry(fixed, params)
+      if (
+        !geometry.wireSegments.some(
+          ({ start, end, width }) =>
+            Math.min(start.x, end.x) - width / 2 <= nodeBounds.maxX &&
+            Math.max(start.x, end.x) + width / 2 >= nodeBounds.minX &&
+            Math.min(start.y, end.y) - width / 2 <= nodeBounds.maxY &&
+            Math.max(start.y, end.y) + width / 2 >= nodeBounds.minY,
+        )
+      )
+        continue
+      const copperBounds = {
+        minX: Math.min(...fixed.route.map((point) => point.x)),
+        maxX: Math.max(...fixed.route.map((point) => point.x)),
+        minY: Math.min(...fixed.route.map((point) => point.y)),
+        maxY: Math.max(...fixed.route.map((point) => point.y)),
+      }
+      for (const obstacle of params.boardObstacles ?? []) {
+        if (
+          obstacle.isCopperPour ||
+          !isPipeline9ObstacleConnectedToRoute({
+            obstacle,
+            route: fixed,
+            connMap: params.connMap,
+          })
+        )
+          continue
+        if (
+          ![fixed.route[0]!, fixed.route.at(-1)!].some(
+            (point) =>
+              getPointToObstacleDistance(point, obstacle) <=
+              fixed.traceThickness / 2 + 1e-6,
+          )
+        )
+          continue
+        const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+        const halfWidth =
+          (Math.abs(Math.cos(angle)) * obstacle.width +
+            Math.abs(Math.sin(angle)) * obstacle.height) /
+          2
+        const halfHeight =
+          (Math.abs(Math.sin(angle)) * obstacle.width +
+            Math.abs(Math.cos(angle)) * obstacle.height) /
+          2
+        copperBounds.minX = Math.min(
+          copperBounds.minX,
+          obstacle.center.x - halfWidth,
+        )
+        copperBounds.maxX = Math.max(
+          copperBounds.maxX,
+          obstacle.center.x + halfWidth,
+        )
+        copperBounds.minY = Math.min(
+          copperBounds.minY,
+          obstacle.center.y - halfHeight,
+        )
+        copperBounds.maxY = Math.max(
+          copperBounds.maxY,
+          obstacle.center.y + halfHeight,
+        )
+      }
+      bounds.minX = Math.max(
+        board?.minX ?? -Infinity,
+        Math.min(bounds.minX, copperBounds.minX - collar),
+      )
+      bounds.maxX = Math.min(
+        board?.maxX ?? Infinity,
+        Math.max(bounds.maxX, copperBounds.maxX + collar),
+      )
+      bounds.minY = Math.max(
+        board?.minY ?? -Infinity,
+        Math.min(bounds.minY, copperBounds.minY - collar),
+      )
+      bounds.maxY = Math.min(
+        board?.maxY ?? Infinity,
+        Math.max(bounds.maxY, copperBounds.maxY + collar),
+      )
+    }
     const dirtyRouteIndices = routes.flatMap((route, index) =>
       this.validateCandidateRoutes([route]) ? [] : [index],
     )

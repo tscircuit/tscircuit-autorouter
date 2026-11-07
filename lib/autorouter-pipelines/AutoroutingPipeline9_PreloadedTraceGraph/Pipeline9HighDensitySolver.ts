@@ -770,7 +770,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
       boardObstacles: this.obstacles,
-      fixedRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+      // Regional repair may route past an adjacent fixed trace's terminal pad.
+      // Check the whole immutable copper set throughout that expanded area.
+      fixedRoutes: this.getUpdatedFixedHdRoutes().filter(
         (route) => route.isFixed === true,
       ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
