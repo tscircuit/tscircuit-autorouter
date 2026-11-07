@@ -1,4 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { NegotiateTraceClearanceSolver } from "@tscircuit/repair04"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -10,7 +11,9 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
@@ -20,6 +23,9 @@ type Pipeline9RegionalFallbackSolverParams = {
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  boardGeometry?: HighDensityBoardGeometry
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -35,7 +41,12 @@ type Pipeline9RegionalFallbackSolverParams = {
   captureSearchDebug?: boolean
 }
 
-type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
+type RegionalFallbackPhase =
+  | "route"
+  | "improve"
+  | "repair"
+  | "via-clearance"
+  | "done"
 
 const getPointToObstacleDistance = (
   point: { x: number; y: number },
@@ -142,6 +153,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly highDensitySolver: HighDensitySolver
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
+  viaClearanceSolver?: NegotiateTraceClearanceSolver
+  private validatedRoutes?: HighDensityRoute[]
   private phase: RegionalFallbackPhase = "route"
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
@@ -205,6 +218,95 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return !hasViaConflict
   }
 
+  private startViaClearanceRepair(routes: HighDensityRoute[]): void {
+    const { params } = this
+    const node = params.nodeWithPortPoints
+    const clearance = params.viaToPadClearance ?? params.obstacleMargin
+    const collar = params.viaDiameter / 2 + clearance
+    const board = params.boardGeometry?.bounds
+    const bounds = {
+      minX: Math.max(
+        node.center.x - node.width / 2 - collar,
+        board?.minX ?? -Infinity,
+      ),
+      maxX: Math.min(
+        node.center.x + node.width / 2 + collar,
+        board?.maxX ?? Infinity,
+      ),
+      minY: Math.max(
+        node.center.y - node.height / 2 - collar,
+        board?.minY ?? -Infinity,
+      ),
+      maxY: Math.min(
+        node.center.y + node.height / 2 + collar,
+        board?.maxY ?? Infinity,
+      ),
+    }
+    const dirtyRouteIndices = routes.flatMap((route, index) =>
+      this.validateCandidateRoutes([route]) ? [] : [index],
+    )
+    const srj: SimpleRouteJson = {
+      ...params.boardGeometry,
+      bounds,
+      layerCount: params.layerCount,
+      minTraceWidth: params.traceWidth,
+      minViaDiameter: params.viaDiameter,
+      minViaHoleDiameter: params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        params.minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+      obstacles: params.obstacles
+        .filter((obstacle) => !obstacle.isCopperPour)
+        .map((obstacle) => ({
+          ...obstacle,
+          connectedTo: [
+            ...obstacle.connectedTo,
+            ...routes
+              .filter((route) =>
+                isPipeline9ObstacleConnectedToRoute({
+                  obstacle,
+                  route,
+                  connMap: params.connMap,
+                }),
+              )
+              .map((route) => route.connectionName),
+          ],
+        })),
+      connections: routes.map((route) => ({
+        name: route.connectionName,
+        rootConnectionName: route.rootConnectionName,
+        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+          (point) => ({
+            x: point.x,
+            y: point.y,
+            layer: mapZToLayerName(point.z, params.layerCount),
+          }),
+        ),
+      })),
+    }
+    this.viaClearanceSolver = new NegotiateTraceClearanceSolver({
+      srj: { ...srj, traces: undefined },
+      routes,
+      bounds,
+      dirtyRouteIndices,
+      isLocked: (routeIndex, pointIndex): boolean =>
+        pointIndex === 0 || pointIndex === routes[routeIndex]!.route.length - 1,
+      allowLayerChanges: true,
+      traceClearance: params.obstacleMargin,
+      viaClearance: clearance,
+      viaHoleDiameter: params.viaHoleDiameter,
+      maxPathSearchNodes: Math.ceil(1_000_000 * params.effort),
+      maxPathSearchNodesPerCall: 100_000,
+      maxPathSearchCalls: Math.ceil(100 * params.effort),
+      pathGridSizeScale: 1,
+      pathHeuristicWeight: 3,
+      searchDirectionCount: 2,
+    })
+    this.activeSubSolver = this.viaClearanceSolver
+    this.phase = "via-clearance"
+    this.MAX_ITERATIONS += this.viaClearanceSolver.MAX_ITERATIONS + 2
+  }
+
   override _step(): void {
     if (this.phase === "route") {
       this.highDensitySolver.step()
@@ -264,6 +366,28 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       if (!this.repairSolver!.solved) return
       const repairedRoutes = this.repairSolver!.getOutput()
       if (!this.validateCandidateRoutes(repairedRoutes)) {
+        this.startViaClearanceRepair(repairedRoutes)
+        return
+      }
+      this.validatedRoutes = repairedRoutes
+      this.activeSubSolver = null
+      this.phase = "done"
+      this.solved = true
+      return
+    }
+
+    if (this.phase === "via-clearance") {
+      const solver = this.viaClearanceSolver!
+      solver.step()
+      this.stats.viaClearanceRepair = solver.stats
+      if (solver.failed) {
+        this.failed = true
+        this.error = solver.error
+        return
+      }
+      if (!solver.solved) return
+      const routes = solver.getOutput().routes
+      if (!this.validateCandidateRoutes(routes)) {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
         this.error =
@@ -271,6 +395,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
+      this.validatedRoutes = routes
       this.activeSubSolver = null
       this.phase = "done"
       this.solved = true
@@ -279,10 +404,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
-    if (!this.solved || !this.repairSolver) {
+    if (!this.solved || !this.validatedRoutes) {
       throw new Error("Cannot publish regional routes before final validation")
     }
-    return this.repairSolver.getOutput()
+    return this.validatedRoutes
   }
 
   override visualize(): GraphicsObject {

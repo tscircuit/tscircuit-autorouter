@@ -45,6 +45,7 @@ test("regional routing permits through-via antipads while keeping solid pad clea
       viaToPadClearance: 0.1,
       effort: 1,
       layerCount: 4,
+      boardGeometry: { bounds: { minX: -2, maxX: 2, minY: -2, maxY: 2 } },
       obstacles: [obstacle],
       boardObstacles: [obstacle],
       movablePreloadedConnectionNames: new Set(["a", "b"]),
