@@ -83,16 +83,14 @@ export function getLayerTopologiesForCoveredNodes({
   // A through-via needs clear global space across the entire layer stack.
   const hasGlobalThroughViaSpace =
     coveringNodes.every(
-      ({ node }) =>
+      ({ node, groupIndex }) =>
+        !nodeGroups[groupIndex]!.isComponent &&
         !node._containsObstacle &&
         !node._containsTarget &&
         !node._isVirtualOffboard,
     ) &&
-    new Set(
-      coveringNodes
-        .filter(({ groupIndex }) => !nodeGroups[groupIndex]!.isComponent)
-        .flatMap(({ node }) => node.availableZ),
-    ).size === layerCount
+    new Set(coveringNodes.flatMap(({ node }) => node.availableZ)).size ===
+      layerCount
   const canJoinFreeLayers = allowBlindAndBuriedVias || hasGlobalThroughViaSpace
   let previousFreeLayer = -2
   let freeRunStart = 0
