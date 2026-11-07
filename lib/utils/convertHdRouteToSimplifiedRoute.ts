@@ -100,7 +100,14 @@ const findNearestTerminalViaPoint = ({
 
   for (const point of connectionPoints) {
     if (!isSingleLayerConnectionPoint(point) || !point.terminalVia) continue
-    if (point.layer !== endpointLayer) continue
+    // Cleanup may approach a reserved through-via from another physical layer.
+    // Keep the terminal via instead of silently exporting a dangling wire.
+    if (
+      point.layer !== endpointLayer &&
+      !point.terminalVia.layers?.includes(endpointLayer)
+    ) {
+      continue
+    }
 
     const endpointDistance = distance(point, endpoint)
     if (endpointDistance > tolerance) continue
@@ -187,7 +194,10 @@ const attachTerminalViasToSimplifiedRoute = ({
       route_type: "via",
       x: startTerminalViaPoint.x,
       y: startTerminalViaPoint.y,
-      from_layer: startTerminalViaPoint.layer,
+      from_layer:
+        startLayer === startTerminalViaPoint.terminalVia.toLayer
+          ? startTerminalViaPoint.layer
+          : startLayer,
       to_layer: startTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
@@ -199,7 +209,7 @@ const attachTerminalViasToSimplifiedRoute = ({
     if (
       !(
         firstLinearRouteSegment?.route_type === "wire" &&
-        firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
+        firstLinearRouteSegment.layer === startLayer &&
         areSameXyPoint(firstLinearRouteSegment, startTerminalViaPoint)
       )
     ) {
@@ -208,7 +218,7 @@ const attachTerminalViasToSimplifiedRoute = ({
         x: startTerminalViaPoint.x,
         y: startTerminalViaPoint.y,
         width: startTraceThickness,
-        layer: startTerminalViaPoint.layer,
+        layer: startLayer,
       })
     }
   }
@@ -217,7 +227,7 @@ const attachTerminalViasToSimplifiedRoute = ({
     if (
       !(
         lastLinearRouteSegment?.route_type === "wire" &&
-        lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
+        lastLinearRouteSegment.layer === endLayer &&
         areSameXyPoint(lastLinearRouteSegment, endTerminalViaPoint)
       )
     ) {
@@ -226,7 +236,7 @@ const attachTerminalViasToSimplifiedRoute = ({
         x: endTerminalViaPoint.x,
         y: endTerminalViaPoint.y,
         width: endTraceThickness,
-        layer: endTerminalViaPoint.layer,
+        layer: endLayer,
       })
     }
 
@@ -234,7 +244,10 @@ const attachTerminalViasToSimplifiedRoute = ({
       route_type: "via",
       x: endTerminalViaPoint.x,
       y: endTerminalViaPoint.y,
-      from_layer: endTerminalViaPoint.layer,
+      from_layer:
+        endLayer === endTerminalViaPoint.terminalVia.toLayer
+          ? endTerminalViaPoint.layer
+          : endLayer,
       to_layer: endTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,

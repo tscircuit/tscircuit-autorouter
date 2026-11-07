@@ -1062,6 +1062,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
           terminalVia: {
             toLayer: escapeViaCandidate.targetLayer,
             viaDiameter: this.viaDiameter,
+            layers: this.getViaSpanLayers(
+              escapeViaCandidate.sourceLayer,
+              escapeViaCandidate.targetLayer,
+            ).layers,
           },
         } satisfies ConnectionPoint)
         this.escapeViaMetadataByPointId.set(

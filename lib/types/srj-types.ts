@@ -16,6 +16,8 @@ export type CircuitJsonMetadata = {
 export type TerminalViaHint = {
   toLayer: string
   viaDiameter?: number
+  /** Physical copper layers reserved for the via, including its barrel. */
+  layers?: string[]
 }
 /** A terminal on one routing layer. Never carries a `layers` array. */
 export type SingleLayerConnectionPoint = {
