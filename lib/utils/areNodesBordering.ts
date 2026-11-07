@@ -1,5 +1,7 @@
 import { CapacityMeshNode } from "../types"
 
+export const NODE_BORDER_EPSILON = 0.001
+
 export function areNodesBordering(
   node1: CapacityMeshNode,
   node2: CapacityMeshNode,
@@ -14,7 +16,7 @@ export function areNodesBordering(
   const n2Top = node2.center.y - node2.height / 2
   const n2Bottom = node2.center.y + node2.height / 2
 
-  const epsilon = 0.001
+  const epsilon = NODE_BORDER_EPSILON
 
   const shareVerticalBorder =
     (Math.abs(n1Right - n2Left) < epsilon ||
