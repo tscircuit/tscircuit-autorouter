@@ -6,6 +6,7 @@ import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getStmp157CompletedMeshSnapshotSvg } from "tests/fixtures/getStmp157CompletedMeshSnapshotSvg"
 
 test("merges the real STMP157 remaining-routing mesh without retaining every atomic cell", async (): Promise<void> => {
   const rawInput = gunzipSync(
@@ -70,7 +71,7 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
     {
       x: minX,
       y: maxY + 2,
-      text: `${status}; slabs ${merger.stats.processedXSlabCount}/${merger.stats.xSlabCount}; retained cells ${merger.stats.atomicRegionCount}`,
+      text: `${status}; slabs ${merger.stats.processedXSlabCount}/${merger.stats.xSlabCount}; computed cells ${merger.stats.atomicRegionCount}`,
       fontSize: 0.65,
       anchorSide: "center_left",
       color: merger.solved ? "green" : "red",
@@ -85,5 +86,23 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(merger.solved).toBe(true)
   expect(merger.stats.atomicRegionCount).toBeLessThan(retainedRegionLimit)
-  expect(merger.getOutput().length).toBeGreaterThan(0)
+  expect(merger.getOutput()).toHaveLength(115881)
+  expect(
+    createHash("sha256")
+      .update(JSON.stringify(merger.getOutput()))
+      .digest("hex"),
+  ).toBe("47d8fdefcebe030fe5155b4c2170bbdd23e7d154208f339d4b940b18285867fe")
+  await expect(getStmp157CompletedMeshSnapshotSvg(merger)).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "completed-topology", tolerance: 0 },
+  )
+  expect(merger.computeProgress()).toBe(1)
+  expect(merger["atomicRegions"]).toHaveLength(0)
+  expect(merger["preparedNodes"]).toHaveLength(0)
+  expect(merger["preparedNodeBySourceKey"].size).toBe(0)
+  expect(merger["xCoordinates"]).toHaveLength(0)
+  expect(merger["horizontalRegionByBucket"].size).toBe(0)
+  expect(merger["overruledTargetSourceKeys"].size).toBe(0)
+  expect(merger["outputProvenance"].groupIndexesByNodeId.size).toBe(0)
+  expect(merger["outputProvenance"].sourceKeysByNodeId.size).toBe(0)
 })

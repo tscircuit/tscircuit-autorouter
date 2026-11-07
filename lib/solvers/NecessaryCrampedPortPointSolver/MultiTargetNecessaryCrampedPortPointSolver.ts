@@ -14,6 +14,7 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import { doesOrdinaryEscapeReachConnection } from "../AvailableSegmentPointSolver/doesOrdinaryEscapeReachConnection"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
@@ -22,6 +23,8 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
+  /** Check complete endpoint connectivity in the Pipeline 9 capacity graph. */
+  preserveConnectionReachability?: boolean
 }
 
 /**
@@ -130,7 +133,20 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           mapOfCapacityMeshNodeIdToRef: this.nodeMap,
         })
 
-        if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
+        const hasConnectedEscape =
+          !this.input.preserveConnectionReachability ||
+          doesOrdinaryEscapeReachConnection({
+            target: this.currentTarget,
+            nodes: this.input.capacityMeshNodes,
+            nodeMap: this.nodeMap,
+            ordinaryPorts: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+            connections: this.input.simpleRouteJson.connections,
+          })
+        if (
+          areAllCandidatesBlocked ||
+          this.candidatesAtDepth.length === 0 ||
+          !hasConnectedEscape
+        ) {
           this.isRunningCrampedPass = true
           this.activeSubSolver =
             new SingleTargetNecessaryCrampedPortPointSolver({
@@ -249,7 +265,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        // Numerical bridges were selected using terminal connectivity. A
+        // shallow local escape must not remove them again on a single layer.
+        if (
+          segment.isActiveTerminalEscape ||
+          this.isMultilayerEscapePort(portPoint)
+        ) {
           return [
             {
               ...portPoint,

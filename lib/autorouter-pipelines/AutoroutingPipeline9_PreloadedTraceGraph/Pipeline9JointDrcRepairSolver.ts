@@ -701,6 +701,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private initialBoundedRegionalRepairStartedAt?: number
+  private initialBoundedRepairCandidate?: HighDensityRoute[]
   private readonly prioritizeConflictedRoutes: boolean
   readonly pipelineDef = [
     {
@@ -765,6 +766,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
           ...this.exactRepairParams,
           hdRoutes:
+            this.initialBoundedRepairCandidate ??
             this.clearanceProjectionSolver?.getOutput() ??
             this.exactRepairParams.hdRoutes,
         })
@@ -934,6 +936,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
     }
+    // Preserve the initial Circuit JSON repair order. An obstacle-only
+    // handoff's incomplete result continues with fixed copper in its score.
+    const hasNativePreloadedTraces =
+      params.updatedPreloadedTraces.length > 0 ||
+      (params.originalSrj.traces?.length ?? 0) > 0
     currentDrc.errors = prioritizeCircuitJsonDrcErrors(currentDrc.errors)
     currentDrc.errorsWithCenters = prioritizeCircuitJsonDrcErrors(
       currentDrc.errorsWithCenters,
@@ -1244,7 +1251,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     // Projection can reject B and return to A. Retain both exact evaluations
     // without keeping a portfolio's worth of full-board keys and errors.
-    const referenceDrcCache = new Map<string, ReturnType<DrcEvaluator>>()
+    const referenceDrcCache = new Map<
+      DrcCandidateKey,
+      {
+        result: NormalizedCandidateDrcResult
+        prioritizeCircuitJsonErrors: boolean
+      }
+    >()
     const multilayerObstacles = params.obstacles.filter(
       (obstacle) =>
         (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
@@ -1432,7 +1445,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
-    ): ReturnType<DrcEvaluator> => {
+    ): NormalizedCandidateDrcResult => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
@@ -1472,11 +1485,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
+      const prioritizeCircuitJsonErrors =
+        hasNativePreloadedTraces ||
+        !this.initialBoundedRegionalRepairSolver?.solved
       return normalizeCandidateDrcResult({
-        errors: prioritizeCircuitJsonDrcErrors(evaluatedNewErrors),
-        errorsWithCenters: prioritizeCircuitJsonDrcErrors(
-          evaluatedNewErrorsWithCenters,
-        ),
+        errors: prioritizeCircuitJsonErrors
+          ? prioritizeCircuitJsonDrcErrors(evaluatedNewErrors)
+          : evaluatedNewErrors,
+        errorsWithCenters: prioritizeCircuitJsonErrors
+          ? prioritizeCircuitJsonDrcErrors(evaluatedNewErrorsWithCenters)
+          : evaluatedNewErrorsWithCenters,
         circuitJson: evaluatedDrc.circuitJson,
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
@@ -1491,10 +1509,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
-      const candidateKey = JSON.stringify(evaluatedRoutes)
+      const candidateKey = JSON.stringify(evaluatedRoutes) as DrcCandidateKey
+      const prioritizeCircuitJsonErrors =
+        hasNativePreloadedTraces ||
+        !this.initialBoundedRegionalRepairSolver?.solved
       const cachedResult = referenceDrcCache.get(candidateKey)
-      if (cachedResult !== undefined) {
-        return cachedResult
+      if (
+        cachedResult !== undefined &&
+        (cachedResult.prioritizeCircuitJsonErrors ===
+          prioritizeCircuitJsonErrors ||
+          cachedResult.result.errors.length === 0)
+      ) {
+        // Zero means both Circuit JSON and fixed copper are clear, so it
+        // remains valid when continuation starts considering both together.
+        return cachedResult.result
       }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
@@ -1502,11 +1530,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCache.size >= 2) {
+      if (cachedResult === undefined && referenceDrcCache.size >= 2) {
         const oldestKey = referenceDrcCache.keys().next().value
         if (oldestKey !== undefined) referenceDrcCache.delete(oldestKey)
       }
-      referenceDrcCache.set(candidateKey, result)
+      referenceDrcCache.set(candidateKey, {
+        result,
+        prioritizeCircuitJsonErrors,
+      })
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
@@ -1623,6 +1654,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
+      if (
+        !hasNativePreloadedTraces &&
+        this.initialBoundedRegionalRepairSolver?.solved
+      ) {
+        const fixedCopperErrors = filterPipeline9DrcErrorsAgainstBaseline({
+          errors: evaluateCandidateDrc.evaluateFixedCopper(
+            candidateDrcInput.evaluatedTraces,
+          ),
+          baselineErrors,
+          originalTraceIdByPreparedTraceId:
+            candidateDrcInput.originalTraceIdByEvaluationTraceId,
+        })
+        evaluatedNewErrors.push(...fixedCopperErrors)
+        evaluatedNewErrorsWithCenters.push(...fixedCopperErrors)
+      }
       if (evaluatedNewErrors.length === 0) {
         const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator({
@@ -1812,10 +1858,27 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
-    // A complete bounded repair can avoid the much broader portfolio search.
-    // Keep incomplete candidates private so the existing stages see their
-    // original input, including all preload ownership and candidate budgets.
-    if (result.publishedDrcIssueCount !== 0) return
+    // Reuse physically validated partial work as an exact-search candidate.
+    // The outer contact guard still compares the final result to its original
+    // input, so this does not publish any newly introduced contacts.
+    if (result.publishedDrcIssueCount !== 0) {
+      if (
+        result.publishedDrcIssueCount !== undefined &&
+        result.initialDrcIssueCount !== undefined &&
+        result.publishedDrcIssueCount < result.initialDrcIssueCount
+      ) {
+        const reference = this.cachedReferenceDrcEvaluator({
+          traces: [],
+          routes: result.routes,
+          hdRoutes: result.routes,
+        })
+        const errors = Array.isArray(reference) ? reference : reference.errors
+        if (errors.some((error) => error.drc_source === "fixed_copper")) {
+          this.initialBoundedRepairCandidate = result.routes
+        }
+      }
+      return
+    }
     const reference = this.cachedReferenceDrcEvaluator({
       traces: [],
       routes: result.routes,
@@ -2034,11 +2097,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
-    // Only an explicit early handoff replaces the remaining regional stages.
-    // Contacts left by a completed portfolio still need that regional search.
+    // Projected earlier copper still needs regional routing; the final contact
+    // repair owns contacts between routed traces, not these fixed obstacles.
     if (
       this.exactRepairSolver.stats.drcBranchPortfolioStoppedForTraceContacts ===
         true &&
+      !exactReferenceDrcErrors.some(
+        (error) => error.drc_source === "fixed_copper",
+      ) &&
       this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
         .length > 1
     ) {

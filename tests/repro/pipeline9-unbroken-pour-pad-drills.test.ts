@@ -31,7 +31,10 @@ test("copper pours do not force extra escape vias", (): void => {
     trace.route.filter((point) => point.route_type === "via"),
   )
   expect(traces).toHaveLength(13)
-  expect(vias).toHaveLength(7)
+  // Seven terminal vias reach the pours. The through-hole reservations also
+  // require two ordinary layer changes on source_trace_8.
+  expect(solver.escapeViaLocationSolver!.createdEscapeVias).toHaveLength(7)
+  expect(vias).toHaveLength(9)
   const evaluate = createPipeline9AutoroutingDrcEvaluator({
     inputSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
