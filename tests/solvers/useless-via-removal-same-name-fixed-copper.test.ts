@@ -54,8 +54,8 @@ test("replacing a route keeps same-name fixed copper in later clearance checks",
   expect(solver.getOptimizedHdRoutes()?.[1].vias).toEqual(detour.vias)
   expect(fixed).toEqual(fixedBefore)
   expect(
-    solver.hdRouteSHI!
-      .getConflictingRoutesNearPoint({ x: 10, y: 0, z: 0 }, 0.1)
+    solver
+      .hdRouteSHI!.getConflictingRoutesNearPoint({ x: 10, y: 0, z: 0 }, 0.1)
       .map(({ conflictingRoute }) => conflictingRoute),
   ).toEqual([fixed])
 })
