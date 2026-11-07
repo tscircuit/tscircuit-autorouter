@@ -1,0 +1,7812 @@
+{
+  "id": "h3",
+  "title": "Allwinner H3 DDR3 16x1",
+  "source": {
+    "id": "h3",
+    "name": "Allwinner H3 DDR3 16x1",
+    "repo": "hvwyl/allwinner-h3-ddr3-16x1-kicad",
+    "commit": "02e365b21363a17710e0f96072c0844940495567",
+    "path": "project/allwinner-h3.kicad_pcb",
+    "sourceSha256": "4a1f99d157a4ed5dc15b2dff2fed9f3765226296c1da3930cdd00413254509bb",
+    "components": [
+      {
+        "ref": "DU1",
+        "value": "DDR3-FBGA96",
+        "footprint": "Package_BGA:Micron_FBGA-96_8x14mm_Layout9x16_P0.8mm",
+        "pads": 96,
+        "at": [
+          "139.9286",
+          "64.560806",
+          "90"
+        ]
+      },
+      {
+        "ref": "U1",
+        "value": "Allwinner-H3",
+        "footprint": "Allwinner:Allwinner-H3",
+        "pads": 347,
+        "at": [
+          "120.290565",
+          "63.925475"
+        ]
+      }
+    ],
+    "nativeLayers": [
+      [
+        "0",
+        "F.Cu",
+        "signal"
+      ],
+      [
+        "31",
+        "B.Cu",
+        "signal"
+      ]
+    ],
+    "signalLayers": [
+      "top",
+      "bottom"
+    ],
+    "nets": 53,
+    "terminals": 108,
+    "pads": 479,
+    "rules": {
+      "widths": [
+        0.1143
+      ],
+      "clearances": [
+        0.0889
+      ],
+      "appliedGlobalClearance": 0.0889,
+      "viaPad": 0.45,
+      "viaDrill": 0.2
+    },
+    "rectangularPadApproximations": {
+      "roundrect": 36
+    },
+    "scope": "All named DDR signal nets incident to CPU or RAM, including passive endpoints. Power, VREF, ZQ and unconnected nets excluded. Existing traces, vias and zones removed. Board uses edge bounding box. No timing or impedance constraints invented.",
+    "sample": "sample001",
+    "sampleSha256": "b4c5d5151c0bc0fb3032f230af12c6428e7148318b39f22d3d14c8803f4c7c1e",
+    "license": "NOASSERTION",
+    "sourceUrl": "https://github.com/hvwyl/allwinner-h3-ddr3-16x1-kicad/blob/02e365b21363a17710e0f96072c0844940495567/project/allwinner-h3.kicad_pcb",
+    "extractionRevision": "preserved-ddr-assessment-2026-10-27",
+    "notes": [
+      "These are the captured routing inputs, not newly simplified two-chip layouts.",
+      "KiCad pad primitives are retained as separate obstacles; some package footprints contain multiple primitives per ball.",
+      "Bus metadata restricts source signal layers only; no timing, skew, impedance or differential-pair constraints are invented."
+    ],
+    "projectSource": {
+      "path": "project/allwinner-h3.kicad_pro",
+      "sha256": "c1f9ac700475417b74f0c929ba20b9c1ccbd6db4928036a25bedc49263405f08"
+    }
+  },
+  "width": 43.18000000000001,
+  "height": 25.39999999999999,
+  "layers": 2,
+  "rules": {
+    "widths": [
+      0.1143
+    ],
+    "clearances": [
+      0.0889
+    ],
+    "appliedGlobalClearance": 0.0889,
+    "viaPad": 0.45,
+    "viaDrill": 0.2
+  },
+  "signalLayers": [
+    "top",
+    "bottom"
+  ],
+  "parts": [
+    {
+      "name": "DU1",
+      "value": "DDR3-FBGA96",
+      "x": 9.118599999999986,
+      "y": 1.4791939999999926,
+      "rotation": 90.0,
+      "layer": "top",
+      "pinLabels": {
+        "pin1": [
+          "BALL_A1"
+        ],
+        "pin2": [
+          "BALL_A2"
+        ],
+        "pin3": [
+          "BALL_A3"
+        ],
+        "pin4": [
+          "BALL_A7"
+        ],
+        "pin5": [
+          "BALL_A8"
+        ],
+        "pin6": [
+          "BALL_A9"
+        ],
+        "pin7": [
+          "BALL_B1"
+        ],
+        "pin8": [
+          "BALL_B2"
+        ],
+        "pin9": [
+          "BALL_B3"
+        ],
+        "pin10": [
+          "BALL_B7"
+        ],
+        "pin11": [
+          "BALL_B8"
+        ],
+        "pin12": [
+          "BALL_B9"
+        ],
+        "pin13": [
+          "BALL_C1"
+        ],
+        "pin14": [
+          "BALL_C2"
+        ],
+        "pin15": [
+          "BALL_C3"
+        ],
+        "pin16": [
+          "BALL_C7"
+        ],
+        "pin17": [
+          "BALL_C8"
+        ],
+        "pin18": [
+          "BALL_C9"
+        ],
+        "pin19": [
+          "BALL_D1"
+        ],
+        "pin20": [
+          "BALL_D2"
+        ],
+        "pin21": [
+          "BALL_D3"
+        ],
+        "pin22": [
+          "BALL_D7"
+        ],
+        "pin23": [
+          "BALL_D8"
+        ],
+        "pin24": [
+          "BALL_D9"
+        ],
+        "pin25": [
+          "BALL_E1"
+        ],
+        "pin26": [
+          "BALL_E2"
+        ],
+        "pin27": [
+          "BALL_E3"
+        ],
+        "pin28": [
+          "BALL_E7"
+        ],
+        "pin29": [
+          "BALL_E8"
+        ],
+        "pin30": [
+          "BALL_E9"
+        ],
+        "pin31": [
+          "BALL_F1"
+        ],
+        "pin32": [
+          "BALL_F2"
+        ],
+        "pin33": [
+          "BALL_F3"
+        ],
+        "pin34": [
+          "BALL_F7"
+        ],
+        "pin35": [
+          "BALL_F8"
+        ],
+        "pin36": [
+          "BALL_F9"
+        ],
+        "pin37": [
+          "BALL_G1"
+        ],
+        "pin38": [
+          "BALL_G2"
+        ],
+        "pin39": [
+          "BALL_G3"
+        ],
+        "pin40": [
+          "BALL_G7"
+        ],
+        "pin41": [
+          "BALL_G8"
+        ],
+        "pin42": [
+          "BALL_G9"
+        ],
+        "pin43": [
+          "BALL_H1"
+        ],
+        "pin44": [
+          "BALL_H2"
+        ],
+        "pin45": [
+          "BALL_H3"
+        ],
+        "pin46": [
+          "BALL_H7"
+        ],
+        "pin47": [
+          "BALL_H8"
+        ],
+        "pin48": [
+          "BALL_H9"
+        ],
+        "pin49": [
+          "BALL_J1"
+        ],
+        "pin50": [
+          "BALL_J2"
+        ],
+        "pin51": [
+          "BALL_J3"
+        ],
+        "pin52": [
+          "BALL_J7"
+        ],
+        "pin53": [
+          "BALL_J8"
+        ],
+        "pin54": [
+          "BALL_J9"
+        ],
+        "pin55": [
+          "BALL_K1"
+        ],
+        "pin56": [
+          "BALL_K2"
+        ],
+        "pin57": [
+          "BALL_K3"
+        ],
+        "pin58": [
+          "BALL_K7"
+        ],
+        "pin59": [
+          "BALL_K8"
+        ],
+        "pin60": [
+          "BALL_K9"
+        ],
+        "pin61": [
+          "BALL_L1"
+        ],
+        "pin62": [
+          "BALL_L2"
+        ],
+        "pin63": [
+          "BALL_L3"
+        ],
+        "pin64": [
+          "BALL_L7"
+        ],
+        "pin65": [
+          "BALL_L8"
+        ],
+        "pin66": [
+          "BALL_L9"
+        ],
+        "pin67": [
+          "BALL_M1"
+        ],
+        "pin68": [
+          "BALL_M2"
+        ],
+        "pin69": [
+          "BALL_M3"
+        ],
+        "pin70": [
+          "BALL_M7"
+        ],
+        "pin71": [
+          "BALL_M8"
+        ],
+        "pin72": [
+          "BALL_M9"
+        ],
+        "pin73": [
+          "BALL_N1"
+        ],
+        "pin74": [
+          "BALL_N2"
+        ],
+        "pin75": [
+          "BALL_N3"
+        ],
+        "pin76": [
+          "BALL_N7"
+        ],
+        "pin77": [
+          "BALL_N8"
+        ],
+        "pin78": [
+          "BALL_N9"
+        ],
+        "pin79": [
+          "BALL_P1"
+        ],
+        "pin80": [
+          "BALL_P2"
+        ],
+        "pin81": [
+          "BALL_P3"
+        ],
+        "pin82": [
+          "BALL_P7"
+        ],
+        "pin83": [
+          "BALL_P8"
+        ],
+        "pin84": [
+          "BALL_P9"
+        ],
+        "pin85": [
+          "BALL_R1"
+        ],
+        "pin86": [
+          "BALL_R2"
+        ],
+        "pin87": [
+          "BALL_R3"
+        ],
+        "pin88": [
+          "BALL_R7"
+        ],
+        "pin89": [
+          "BALL_R8"
+        ],
+        "pin90": [
+          "BALL_R9"
+        ],
+        "pin91": [
+          "BALL_T1"
+        ],
+        "pin92": [
+          "BALL_T2"
+        ],
+        "pin93": [
+          "BALL_T3"
+        ],
+        "pin94": [
+          "BALL_T7"
+        ],
+        "pin95": [
+          "BALL_T8"
+        ],
+        "pin96": [
+          "BALL_T9"
+        ]
+      },
+      "pads": [
+        {
+          "pin": "pin1",
+          "nativePin": "A1",
+          "x": -3.2,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin2",
+          "nativePin": "A2",
+          "x": -2.4,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ12"
+        },
+        {
+          "pin": "pin3",
+          "nativePin": "A3",
+          "x": -1.6,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ9"
+        },
+        {
+          "pin": "pin4",
+          "nativePin": "A7",
+          "x": 1.6,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ8"
+        },
+        {
+          "pin": "pin5",
+          "nativePin": "A8",
+          "x": 2.4,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin6",
+          "nativePin": "A9",
+          "x": 3.2,
+          "y": -6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin7",
+          "nativePin": "B1",
+          "x": -3.2,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin8",
+          "nativePin": "B2",
+          "x": -2.4,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin9",
+          "nativePin": "B3",
+          "x": -1.6,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin10",
+          "nativePin": "B7",
+          "x": 1.6,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS1N"
+        },
+        {
+          "pin": "pin11",
+          "nativePin": "B8",
+          "x": 2.4,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ15"
+        },
+        {
+          "pin": "pin12",
+          "nativePin": "B9",
+          "x": 3.2,
+          "y": -5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin13",
+          "nativePin": "C1",
+          "x": -3.2,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin14",
+          "nativePin": "C2",
+          "x": -2.4,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ11"
+        },
+        {
+          "pin": "pin15",
+          "nativePin": "C3",
+          "x": -1.6,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ14"
+        },
+        {
+          "pin": "pin16",
+          "nativePin": "C7",
+          "x": 1.6,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS1P"
+        },
+        {
+          "pin": "pin17",
+          "nativePin": "C8",
+          "x": 2.4,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ10"
+        },
+        {
+          "pin": "pin18",
+          "nativePin": "C9",
+          "x": 3.2,
+          "y": -4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin19",
+          "nativePin": "D1",
+          "x": -3.2,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin20",
+          "nativePin": "D2",
+          "x": -2.4,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin21",
+          "nativePin": "D3",
+          "x": -1.6,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQM1"
+        },
+        {
+          "pin": "pin22",
+          "nativePin": "D7",
+          "x": 1.6,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ13"
+        },
+        {
+          "pin": "pin23",
+          "nativePin": "D8",
+          "x": 2.4,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin24",
+          "nativePin": "D9",
+          "x": 3.2,
+          "y": -3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin25",
+          "nativePin": "E1",
+          "x": -3.2,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin26",
+          "nativePin": "E2",
+          "x": -2.4,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin27",
+          "nativePin": "E3",
+          "x": -1.6,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ4"
+        },
+        {
+          "pin": "pin28",
+          "nativePin": "E7",
+          "x": 1.6,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQM0"
+        },
+        {
+          "pin": "pin29",
+          "nativePin": "E8",
+          "x": 2.4,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin30",
+          "nativePin": "E9",
+          "x": 3.2,
+          "y": -2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin31",
+          "nativePin": "F1",
+          "x": -3.2,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin32",
+          "nativePin": "F2",
+          "x": -2.4,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ1"
+        },
+        {
+          "pin": "pin33",
+          "nativePin": "F3",
+          "x": -1.6,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS0P"
+        },
+        {
+          "pin": "pin34",
+          "nativePin": "F7",
+          "x": 1.6,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ2"
+        },
+        {
+          "pin": "pin35",
+          "nativePin": "F8",
+          "x": 2.4,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ0"
+        },
+        {
+          "pin": "pin36",
+          "nativePin": "F9",
+          "x": 3.2,
+          "y": -2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin37",
+          "nativePin": "G1",
+          "x": -3.2,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin38",
+          "nativePin": "G2",
+          "x": -2.4,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ3"
+        },
+        {
+          "pin": "pin39",
+          "nativePin": "G3",
+          "x": -1.6,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS0N"
+        },
+        {
+          "pin": "pin40",
+          "nativePin": "G7",
+          "x": 1.6,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin41",
+          "nativePin": "G8",
+          "x": 2.4,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin42",
+          "nativePin": "G9",
+          "x": 3.2,
+          "y": -1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin43",
+          "nativePin": "H1",
+          "x": -3.2,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SVREF"
+        },
+        {
+          "pin": "pin44",
+          "nativePin": "H2",
+          "x": -2.4,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin45",
+          "nativePin": "H3",
+          "x": -1.6,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ7"
+        },
+        {
+          "pin": "pin46",
+          "nativePin": "H7",
+          "x": 1.6,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ5"
+        },
+        {
+          "pin": "pin47",
+          "nativePin": "H8",
+          "x": 2.4,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ6"
+        },
+        {
+          "pin": "pin48",
+          "nativePin": "H9",
+          "x": 3.2,
+          "y": -0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin49",
+          "nativePin": "J1",
+          "x": -3.2,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SODT1"
+        },
+        {
+          "pin": "pin50",
+          "nativePin": "J2",
+          "x": -2.4,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin51",
+          "nativePin": "J3",
+          "x": -1.6,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SRAS"
+        },
+        {
+          "pin": "pin52",
+          "nativePin": "J7",
+          "x": 1.6,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKP"
+        },
+        {
+          "pin": "pin53",
+          "nativePin": "J8",
+          "x": 2.4,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin54",
+          "nativePin": "J9",
+          "x": 3.2,
+          "y": 0.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKE1"
+        },
+        {
+          "pin": "pin55",
+          "nativePin": "K1",
+          "x": -3.2,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SODT0"
+        },
+        {
+          "pin": "pin56",
+          "nativePin": "K2",
+          "x": -2.4,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin57",
+          "nativePin": "K3",
+          "x": -1.6,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCAS"
+        },
+        {
+          "pin": "pin58",
+          "nativePin": "K7",
+          "x": 1.6,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKN"
+        },
+        {
+          "pin": "pin59",
+          "nativePin": "K8",
+          "x": 2.4,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin60",
+          "nativePin": "K9",
+          "x": 3.2,
+          "y": 1.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKE0"
+        },
+        {
+          "pin": "pin61",
+          "nativePin": "L1",
+          "x": -3.2,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCS1"
+        },
+        {
+          "pin": "pin62",
+          "nativePin": "L2",
+          "x": -2.4,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCS0"
+        },
+        {
+          "pin": "pin63",
+          "nativePin": "L3",
+          "x": -1.6,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SWE"
+        },
+        {
+          "pin": "pin64",
+          "nativePin": "L7",
+          "x": 1.6,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA10"
+        },
+        {
+          "pin": "pin65",
+          "nativePin": "L8",
+          "x": 2.4,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/DU1_ZQ"
+        },
+        {
+          "pin": "pin66",
+          "nativePin": "L9",
+          "x": 3.2,
+          "y": 2.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/DU1_ZQ1"
+        },
+        {
+          "pin": "pin67",
+          "nativePin": "M1",
+          "x": -3.2,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin68",
+          "nativePin": "M2",
+          "x": -2.4,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA0"
+        },
+        {
+          "pin": "pin69",
+          "nativePin": "M3",
+          "x": -1.6,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA2"
+        },
+        {
+          "pin": "pin70",
+          "nativePin": "M7",
+          "x": 1.6,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA15"
+        },
+        {
+          "pin": "pin71",
+          "nativePin": "M8",
+          "x": 2.4,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SVREF"
+        },
+        {
+          "pin": "pin72",
+          "nativePin": "M9",
+          "x": 3.2,
+          "y": 2.8,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin73",
+          "nativePin": "N1",
+          "x": -3.2,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin74",
+          "nativePin": "N2",
+          "x": -2.4,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA3"
+        },
+        {
+          "pin": "pin75",
+          "nativePin": "N3",
+          "x": -1.6,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA0"
+        },
+        {
+          "pin": "pin76",
+          "nativePin": "N7",
+          "x": 1.6,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA12"
+        },
+        {
+          "pin": "pin77",
+          "nativePin": "N8",
+          "x": 2.4,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA1"
+        },
+        {
+          "pin": "pin78",
+          "nativePin": "N9",
+          "x": 3.2,
+          "y": 3.6,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin79",
+          "nativePin": "P1",
+          "x": -3.2,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin80",
+          "nativePin": "P2",
+          "x": -2.4,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA5"
+        },
+        {
+          "pin": "pin81",
+          "nativePin": "P3",
+          "x": -1.6,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA2"
+        },
+        {
+          "pin": "pin82",
+          "nativePin": "P7",
+          "x": 1.6,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA1"
+        },
+        {
+          "pin": "pin83",
+          "nativePin": "P8",
+          "x": 2.4,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA4"
+        },
+        {
+          "pin": "pin84",
+          "nativePin": "P9",
+          "x": 3.2,
+          "y": 4.4,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin85",
+          "nativePin": "R1",
+          "x": -3.2,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin86",
+          "nativePin": "R2",
+          "x": -2.4,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA7"
+        },
+        {
+          "pin": "pin87",
+          "nativePin": "R3",
+          "x": -1.6,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA9"
+        },
+        {
+          "pin": "pin88",
+          "nativePin": "R7",
+          "x": 1.6,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA11"
+        },
+        {
+          "pin": "pin89",
+          "nativePin": "R8",
+          "x": 2.4,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA6"
+        },
+        {
+          "pin": "pin90",
+          "nativePin": "R9",
+          "x": 3.2,
+          "y": 5.2,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin91",
+          "nativePin": "T1",
+          "x": -3.2,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        },
+        {
+          "pin": "pin92",
+          "nativePin": "T2",
+          "x": -2.4,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SRST"
+        },
+        {
+          "pin": "pin93",
+          "nativePin": "T3",
+          "x": -1.6,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA13"
+        },
+        {
+          "pin": "pin94",
+          "nativePin": "T7",
+          "x": 1.6,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA14"
+        },
+        {
+          "pin": "pin95",
+          "nativePin": "T8",
+          "x": 2.4,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA8"
+        },
+        {
+          "pin": "pin96",
+          "nativePin": "T9",
+          "x": 3.2,
+          "y": 6.0,
+          "width": 0.4,
+          "height": 0.4,
+          "rotation": 90.0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "GND"
+        }
+      ]
+    },
+    {
+      "name": "U1",
+      "value": "Allwinner-H3",
+      "x": -10.519435000000001,
+      "y": 2.1145249999999933,
+      "rotation": 0,
+      "layer": "top",
+      "pinLabels": {
+        "pin1": [
+          "BALL_A1"
+        ],
+        "pin2": [
+          "BALL_A2"
+        ],
+        "pin3": [
+          "BALL_A3"
+        ],
+        "pin4": [
+          "BALL_A4"
+        ],
+        "pin5": [
+          "BALL_A5"
+        ],
+        "pin6": [
+          "BALL_A7"
+        ],
+        "pin7": [
+          "BALL_A8"
+        ],
+        "pin8": [
+          "BALL_A10"
+        ],
+        "pin9": [
+          "BALL_A11"
+        ],
+        "pin10": [
+          "BALL_A13"
+        ],
+        "pin11": [
+          "BALL_A14"
+        ],
+        "pin12": [
+          "BALL_A16"
+        ],
+        "pin13": [
+          "BALL_A17"
+        ],
+        "pin14": [
+          "BALL_A19"
+        ],
+        "pin15": [
+          "BALL_A20"
+        ],
+        "pin16": [
+          "BALL_A21"
+        ],
+        "pin17": [
+          "BALL_AA1"
+        ],
+        "pin18": [
+          "BALL_AA2"
+        ],
+        "pin19": [
+          "BALL_AA3"
+        ],
+        "pin20": [
+          "BALL_AA5"
+        ],
+        "pin21": [
+          "BALL_AA6"
+        ],
+        "pin22": [
+          "BALL_AA8"
+        ],
+        "pin23": [
+          "BALL_AA9"
+        ],
+        "pin24": [
+          "BALL_AA11"
+        ],
+        "pin25": [
+          "BALL_AA12"
+        ],
+        "pin26": [
+          "BALL_AA14"
+        ],
+        "pin27": [
+          "BALL_AA15"
+        ],
+        "pin28": [
+          "BALL_AA17"
+        ],
+        "pin29": [
+          "BALL_AA18"
+        ],
+        "pin30": [
+          "BALL_AA19"
+        ],
+        "pin31": [
+          "BALL_AA20"
+        ],
+        "pin32": [
+          "BALL_AA21"
+        ],
+        "pin33": [
+          "BALL_B1"
+        ],
+        "pin34": [
+          "BALL_B2"
+        ],
+        "pin35": [
+          "BALL_B3"
+        ],
+        "pin36": [
+          "BALL_B4"
+        ],
+        "pin37": [
+          "BALL_B5"
+        ],
+        "pin38": [
+          "BALL_B6"
+        ],
+        "pin39": [
+          "BALL_B7"
+        ],
+        "pin40": [
+          "BALL_B8"
+        ],
+        "pin41": [
+          "BALL_B9"
+        ],
+        "pin42": [
+          "BALL_B10"
+        ],
+        "pin43": [
+          "BALL_B11"
+        ],
+        "pin44": [
+          "BALL_B12"
+        ],
+        "pin45": [
+          "BALL_B13"
+        ],
+        "pin46": [
+          "BALL_B14"
+        ],
+        "pin47": [
+          "BALL_B15"
+        ],
+        "pin48": [
+          "BALL_B16"
+        ],
+        "pin49": [
+          "BALL_B17"
+        ],
+        "pin50": [
+          "BALL_B18"
+        ],
+        "pin51": [
+          "BALL_B19"
+        ],
+        "pin52": [
+          "BALL_B20"
+        ],
+        "pin53": [
+          "BALL_B21"
+        ],
+        "pin54": [
+          "BALL_C1"
+        ],
+        "pin55": [
+          "BALL_C2"
+        ],
+        "pin56": [
+          "BALL_C3"
+        ],
+        "pin57": [
+          "BALL_C5"
+        ],
+        "pin58": [
+          "BALL_C6"
+        ],
+        "pin59": [
+          "BALL_C7"
+        ],
+        "pin60": [
+          "BALL_C8"
+        ],
+        "pin61": [
+          "BALL_C9"
+        ],
+        "pin62": [
+          "BALL_C10"
+        ],
+        "pin63": [
+          "BALL_C11"
+        ],
+        "pin64": [
+          "BALL_C12"
+        ],
+        "pin65": [
+          "BALL_C13"
+        ],
+        "pin66": [
+          "BALL_C14"
+        ],
+        "pin67": [
+          "BALL_C15"
+        ],
+        "pin68": [
+          "BALL_C16"
+        ],
+        "pin69": [
+          "BALL_C17"
+        ],
+        "pin70": [
+          "BALL_C18"
+        ],
+        "pin71": [
+          "BALL_C19"
+        ],
+        "pin72": [
+          "BALL_C20"
+        ],
+        "pin73": [
+          "BALL_C21"
+        ],
+        "pin74": [
+          "BALL_D1"
+        ],
+        "pin75": [
+          "BALL_D2"
+        ],
+        "pin76": [
+          "BALL_D3"
+        ],
+        "pin77": [
+          "BALL_D5"
+        ],
+        "pin78": [
+          "BALL_D6"
+        ],
+        "pin79": [
+          "BALL_D8"
+        ],
+        "pin80": [
+          "BALL_D10"
+        ],
+        "pin81": [
+          "BALL_D11"
+        ],
+        "pin82": [
+          "BALL_D13"
+        ],
+        "pin83": [
+          "BALL_D15"
+        ],
+        "pin84": [
+          "BALL_D17"
+        ],
+        "pin85": [
+          "BALL_D19"
+        ],
+        "pin86": [
+          "BALL_D20"
+        ],
+        "pin87": [
+          "BALL_E2"
+        ],
+        "pin88": [
+          "BALL_E3"
+        ],
+        "pin89": [
+          "BALL_E8"
+        ],
+        "pin90": [
+          "BALL_E10"
+        ],
+        "pin91": [
+          "BALL_E11"
+        ],
+        "pin92": [
+          "BALL_E13"
+        ],
+        "pin93": [
+          "BALL_E14"
+        ],
+        "pin94": [
+          "BALL_E15"
+        ],
+        "pin95": [
+          "BALL_E16"
+        ],
+        "pin96": [
+          "BALL_E18"
+        ],
+        "pin97": [
+          "BALL_E19"
+        ],
+        "pin98": [
+          "BALL_E20"
+        ],
+        "pin99": [
+          "BALL_E21"
+        ],
+        "pin100": [
+          "BALL_F1"
+        ],
+        "pin101": [
+          "BALL_F2"
+        ],
+        "pin102": [
+          "BALL_F3"
+        ],
+        "pin103": [
+          "BALL_F5"
+        ],
+        "pin104": [
+          "BALL_F6"
+        ],
+        "pin105": [
+          "BALL_F7"
+        ],
+        "pin106": [
+          "BALL_F8"
+        ],
+        "pin107": [
+          "BALL_F10"
+        ],
+        "pin108": [
+          "BALL_F11"
+        ],
+        "pin109": [
+          "BALL_F13"
+        ],
+        "pin110": [
+          "BALL_F14"
+        ],
+        "pin111": [
+          "BALL_F16"
+        ],
+        "pin112": [
+          "BALL_F17"
+        ],
+        "pin113": [
+          "BALL_F18"
+        ],
+        "pin114": [
+          "BALL_F19"
+        ],
+        "pin115": [
+          "BALL_F20"
+        ],
+        "pin116": [
+          "BALL_F21"
+        ],
+        "pin117": [
+          "BALL_G1"
+        ],
+        "pin118": [
+          "BALL_G2"
+        ],
+        "pin119": [
+          "BALL_G4"
+        ],
+        "pin120": [
+          "BALL_G5"
+        ],
+        "pin121": [
+          "BALL_G7"
+        ],
+        "pin122": [
+          "BALL_G8"
+        ],
+        "pin123": [
+          "BALL_G9"
+        ],
+        "pin124": [
+          "BALL_G10"
+        ],
+        "pin125": [
+          "BALL_G11"
+        ],
+        "pin126": [
+          "BALL_G12"
+        ],
+        "pin127": [
+          "BALL_G13"
+        ],
+        "pin128": [
+          "BALL_G14"
+        ],
+        "pin129": [
+          "BALL_G15"
+        ],
+        "pin130": [
+          "BALL_G18"
+        ],
+        "pin131": [
+          "BALL_G20"
+        ],
+        "pin132": [
+          "BALL_H2"
+        ],
+        "pin133": [
+          "BALL_H3"
+        ],
+        "pin134": [
+          "BALL_H4"
+        ],
+        "pin135": [
+          "BALL_H6"
+        ],
+        "pin136": [
+          "BALL_H7"
+        ],
+        "pin137": [
+          "BALL_H8"
+        ],
+        "pin138": [
+          "BALL_H10"
+        ],
+        "pin139": [
+          "BALL_H11"
+        ],
+        "pin140": [
+          "BALL_H12"
+        ],
+        "pin141": [
+          "BALL_H13"
+        ],
+        "pin142": [
+          "BALL_H14"
+        ],
+        "pin143": [
+          "BALL_H15"
+        ],
+        "pin144": [
+          "BALL_H16"
+        ],
+        "pin145": [
+          "BALL_H17"
+        ],
+        "pin146": [
+          "BALL_H18"
+        ],
+        "pin147": [
+          "BALL_H19"
+        ],
+        "pin148": [
+          "BALL_H20"
+        ],
+        "pin149": [
+          "BALL_H21"
+        ],
+        "pin150": [
+          "BALL_J1"
+        ],
+        "pin151": [
+          "BALL_J2"
+        ],
+        "pin152": [
+          "BALL_J3"
+        ],
+        "pin153": [
+          "BALL_J6"
+        ],
+        "pin154": [
+          "BALL_J7"
+        ],
+        "pin155": [
+          "BALL_J8"
+        ],
+        "pin156": [
+          "BALL_J9"
+        ],
+        "pin157": [
+          "BALL_J10"
+        ],
+        "pin158": [
+          "BALL_J11"
+        ],
+        "pin159": [
+          "BALL_J12"
+        ],
+        "pin160": [
+          "BALL_J13"
+        ],
+        "pin161": [
+          "BALL_J14"
+        ],
+        "pin162": [
+          "BALL_J15"
+        ],
+        "pin163": [
+          "BALL_J16"
+        ],
+        "pin164": [
+          "BALL_J19"
+        ],
+        "pin165": [
+          "BALL_J20"
+        ],
+        "pin166": [
+          "BALL_J21"
+        ],
+        "pin167": [
+          "BALL_K1"
+        ],
+        "pin168": [
+          "BALL_K2"
+        ],
+        "pin169": [
+          "BALL_K3"
+        ],
+        "pin170": [
+          "BALL_K4"
+        ],
+        "pin171": [
+          "BALL_K6"
+        ],
+        "pin172": [
+          "BALL_K7"
+        ],
+        "pin173": [
+          "BALL_K8"
+        ],
+        "pin174": [
+          "BALL_K9"
+        ],
+        "pin175": [
+          "BALL_K10"
+        ],
+        "pin176": [
+          "BALL_K11"
+        ],
+        "pin177": [
+          "BALL_K12"
+        ],
+        "pin178": [
+          "BALL_K13"
+        ],
+        "pin179": [
+          "BALL_K14"
+        ],
+        "pin180": [
+          "BALL_K15"
+        ],
+        "pin181": [
+          "BALL_K16"
+        ],
+        "pin182": [
+          "BALL_K17"
+        ],
+        "pin183": [
+          "BALL_K18"
+        ],
+        "pin184": [
+          "BALL_K20"
+        ],
+        "pin185": [
+          "BALL_L2"
+        ],
+        "pin186": [
+          "BALL_L5"
+        ],
+        "pin187": [
+          "BALL_L8"
+        ],
+        "pin188": [
+          "BALL_L9"
+        ],
+        "pin189": [
+          "BALL_L10"
+        ],
+        "pin190": [
+          "BALL_L11"
+        ],
+        "pin191": [
+          "BALL_L12"
+        ],
+        "pin192": [
+          "BALL_L13"
+        ],
+        "pin193": [
+          "BALL_L14"
+        ],
+        "pin194": [
+          "BALL_L15"
+        ],
+        "pin195": [
+          "BALL_L16"
+        ],
+        "pin196": [
+          "BALL_L17"
+        ],
+        "pin197": [
+          "BALL_L18"
+        ],
+        "pin198": [
+          "BALL_L19"
+        ],
+        "pin199": [
+          "BALL_L20"
+        ],
+        "pin200": [
+          "BALL_L21"
+        ],
+        "pin201": [
+          "BALL_M1"
+        ],
+        "pin202": [
+          "BALL_M2"
+        ],
+        "pin203": [
+          "BALL_M3"
+        ],
+        "pin204": [
+          "BALL_M4"
+        ],
+        "pin205": [
+          "BALL_M5"
+        ],
+        "pin206": [
+          "BALL_M6"
+        ],
+        "pin207": [
+          "BALL_M7"
+        ],
+        "pin208": [
+          "BALL_M8"
+        ],
+        "pin209": [
+          "BALL_M9"
+        ],
+        "pin210": [
+          "BALL_M10"
+        ],
+        "pin211": [
+          "BALL_M11"
+        ],
+        "pin212": [
+          "BALL_M12"
+        ],
+        "pin213": [
+          "BALL_M13"
+        ],
+        "pin214": [
+          "BALL_M14"
+        ],
+        "pin215": [
+          "BALL_M15"
+        ],
+        "pin216": [
+          "BALL_M16"
+        ],
+        "pin217": [
+          "BALL_M19"
+        ],
+        "pin218": [
+          "BALL_M20"
+        ],
+        "pin219": [
+          "BALL_M21"
+        ],
+        "pin220": [
+          "BALL_N1"
+        ],
+        "pin221": [
+          "BALL_N2"
+        ],
+        "pin222": [
+          "BALL_N3"
+        ],
+        "pin223": [
+          "BALL_N7"
+        ],
+        "pin224": [
+          "BALL_N8"
+        ],
+        "pin225": [
+          "BALL_N9"
+        ],
+        "pin226": [
+          "BALL_N10"
+        ],
+        "pin227": [
+          "BALL_N11"
+        ],
+        "pin228": [
+          "BALL_N12"
+        ],
+        "pin229": [
+          "BALL_N13"
+        ],
+        "pin230": [
+          "BALL_N14"
+        ],
+        "pin231": [
+          "BALL_N15"
+        ],
+        "pin232": [
+          "BALL_N16"
+        ],
+        "pin233": [
+          "BALL_N17"
+        ],
+        "pin234": [
+          "BALL_N19"
+        ],
+        "pin235": [
+          "BALL_N20"
+        ],
+        "pin236": [
+          "BALL_P2"
+        ],
+        "pin237": [
+          "BALL_P3"
+        ],
+        "pin238": [
+          "BALL_P6"
+        ],
+        "pin239": [
+          "BALL_P7"
+        ],
+        "pin240": [
+          "BALL_P8"
+        ],
+        "pin241": [
+          "BALL_P9"
+        ],
+        "pin242": [
+          "BALL_P10"
+        ],
+        "pin243": [
+          "BALL_P11"
+        ],
+        "pin244": [
+          "BALL_P12"
+        ],
+        "pin245": [
+          "BALL_P13"
+        ],
+        "pin246": [
+          "BALL_P14"
+        ],
+        "pin247": [
+          "BALL_P15"
+        ],
+        "pin248": [
+          "BALL_P16"
+        ],
+        "pin249": [
+          "BALL_P17"
+        ],
+        "pin250": [
+          "BALL_P19"
+        ],
+        "pin251": [
+          "BALL_P20"
+        ],
+        "pin252": [
+          "BALL_P21"
+        ],
+        "pin253": [
+          "BALL_R1"
+        ],
+        "pin254": [
+          "BALL_R2"
+        ],
+        "pin255": [
+          "BALL_R6"
+        ],
+        "pin256": [
+          "BALL_R7"
+        ],
+        "pin257": [
+          "BALL_R8"
+        ],
+        "pin258": [
+          "BALL_R9"
+        ],
+        "pin259": [
+          "BALL_R10"
+        ],
+        "pin260": [
+          "BALL_R11"
+        ],
+        "pin261": [
+          "BALL_R12"
+        ],
+        "pin262": [
+          "BALL_R13"
+        ],
+        "pin263": [
+          "BALL_R14"
+        ],
+        "pin264": [
+          "BALL_R16"
+        ],
+        "pin265": [
+          "BALL_R17"
+        ],
+        "pin266": [
+          "BALL_R18"
+        ],
+        "pin267": [
+          "BALL_R19"
+        ],
+        "pin268": [
+          "BALL_R20"
+        ],
+        "pin269": [
+          "BALL_R21"
+        ],
+        "pin270": [
+          "BALL_T2"
+        ],
+        "pin271": [
+          "BALL_T3"
+        ],
+        "pin272": [
+          "BALL_T4"
+        ],
+        "pin273": [
+          "BALL_T5"
+        ],
+        "pin274": [
+          "BALL_T6"
+        ],
+        "pin275": [
+          "BALL_T7"
+        ],
+        "pin276": [
+          "BALL_T8"
+        ],
+        "pin277": [
+          "BALL_T9"
+        ],
+        "pin278": [
+          "BALL_T10"
+        ],
+        "pin279": [
+          "BALL_T11"
+        ],
+        "pin280": [
+          "BALL_T12"
+        ],
+        "pin281": [
+          "BALL_T13"
+        ],
+        "pin282": [
+          "BALL_T14"
+        ],
+        "pin283": [
+          "BALL_T15"
+        ],
+        "pin284": [
+          "BALL_T16"
+        ],
+        "pin285": [
+          "BALL_T17"
+        ],
+        "pin286": [
+          "BALL_T18"
+        ],
+        "pin287": [
+          "BALL_T20"
+        ],
+        "pin288": [
+          "BALL_U2"
+        ],
+        "pin289": [
+          "BALL_U3"
+        ],
+        "pin290": [
+          "BALL_U4"
+        ],
+        "pin291": [
+          "BALL_U6"
+        ],
+        "pin292": [
+          "BALL_U9"
+        ],
+        "pin293": [
+          "BALL_U11"
+        ],
+        "pin294": [
+          "BALL_U15"
+        ],
+        "pin295": [
+          "BALL_U16"
+        ],
+        "pin296": [
+          "BALL_U18"
+        ],
+        "pin297": [
+          "BALL_U19"
+        ],
+        "pin298": [
+          "BALL_U20"
+        ],
+        "pin299": [
+          "BALL_U21"
+        ],
+        "pin300": [
+          "BALL_V1"
+        ],
+        "pin301": [
+          "BALL_V2"
+        ],
+        "pin302": [
+          "BALL_V3"
+        ],
+        "pin303": [
+          "BALL_V4"
+        ],
+        "pin304": [
+          "BALL_V5"
+        ],
+        "pin305": [
+          "BALL_V6"
+        ],
+        "pin306": [
+          "BALL_V10"
+        ],
+        "pin307": [
+          "BALL_V11"
+        ],
+        "pin308": [
+          "BALL_V12"
+        ],
+        "pin309": [
+          "BALL_V13"
+        ],
+        "pin310": [
+          "BALL_V15"
+        ],
+        "pin311": [
+          "BALL_V17"
+        ],
+        "pin312": [
+          "BALL_V19"
+        ],
+        "pin313": [
+          "BALL_V20"
+        ],
+        "pin314": [
+          "BALL_V21"
+        ],
+        "pin315": [
+          "BALL_W1"
+        ],
+        "pin316": [
+          "BALL_W2"
+        ],
+        "pin317": [
+          "BALL_W3"
+        ],
+        "pin318": [
+          "BALL_W5"
+        ],
+        "pin319": [
+          "BALL_W6"
+        ],
+        "pin320": [
+          "BALL_W9"
+        ],
+        "pin321": [
+          "BALL_W11"
+        ],
+        "pin322": [
+          "BALL_W12"
+        ],
+        "pin323": [
+          "BALL_W13"
+        ],
+        "pin324": [
+          "BALL_W15"
+        ],
+        "pin325": [
+          "BALL_W17"
+        ],
+        "pin326": [
+          "BALL_W18"
+        ],
+        "pin327": [
+          "BALL_W20"
+        ],
+        "pin328": [
+          "BALL_W21"
+        ],
+        "pin329": [
+          "BALL_Y1"
+        ],
+        "pin330": [
+          "BALL_Y2"
+        ],
+        "pin331": [
+          "BALL_Y3"
+        ],
+        "pin332": [
+          "BALL_Y4"
+        ],
+        "pin333": [
+          "BALL_Y7"
+        ],
+        "pin334": [
+          "BALL_Y8"
+        ],
+        "pin335": [
+          "BALL_Y9"
+        ],
+        "pin336": [
+          "BALL_Y10"
+        ],
+        "pin337": [
+          "BALL_Y11"
+        ],
+        "pin338": [
+          "BALL_Y12"
+        ],
+        "pin339": [
+          "BALL_Y13"
+        ],
+        "pin340": [
+          "BALL_Y14"
+        ],
+        "pin341": [
+          "BALL_Y15"
+        ],
+        "pin342": [
+          "BALL_Y16"
+        ],
+        "pin343": [
+          "BALL_Y17"
+        ],
+        "pin344": [
+          "BALL_Y18"
+        ],
+        "pin345": [
+          "BALL_Y19"
+        ],
+        "pin346": [
+          "BALL_Y20"
+        ],
+        "pin347": [
+          "BALL_Y21"
+        ]
+      },
+      "pads": [
+        {
+          "pin": "pin1",
+          "nativePin": "A1",
+          "x": -6.604,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin2",
+          "nativePin": "A2",
+          "x": -5.954,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin3",
+          "nativePin": "A3",
+          "x": -5.304,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin4",
+          "nativePin": "A4",
+          "x": -4.654,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin5",
+          "nativePin": "A5",
+          "x": -4.004,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin6",
+          "nativePin": "A7",
+          "x": -2.704,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin7",
+          "nativePin": "A8",
+          "x": -2.054,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin8",
+          "nativePin": "A10",
+          "x": -0.754,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin9",
+          "nativePin": "A11",
+          "x": -0.104,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin10",
+          "nativePin": "A13",
+          "x": 1.196,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin11",
+          "nativePin": "A14",
+          "x": 1.846,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin12",
+          "nativePin": "A16",
+          "x": 3.146,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin13",
+          "nativePin": "A17",
+          "x": 3.796,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin14",
+          "nativePin": "A19",
+          "x": 5.096,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin15",
+          "nativePin": "A20",
+          "x": 5.746,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin16",
+          "nativePin": "A21",
+          "x": 6.396,
+          "y": -6.492,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin17",
+          "nativePin": "AA1",
+          "x": -6.604,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin18",
+          "nativePin": "AA2",
+          "x": -5.954,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin19",
+          "nativePin": "AA3",
+          "x": -5.304,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin20",
+          "nativePin": "AA5",
+          "x": -4.004,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin21",
+          "nativePin": "AA6",
+          "x": -3.354,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin22",
+          "nativePin": "AA8",
+          "x": -2.054,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA8)"
+        },
+        {
+          "pin": "pin23",
+          "nativePin": "AA9",
+          "x": -1.404,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA9)"
+        },
+        {
+          "pin": "pin24",
+          "nativePin": "AA11",
+          "x": -0.104,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA11)"
+        },
+        {
+          "pin": "pin25",
+          "nativePin": "AA12",
+          "x": 0.546,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA12)"
+        },
+        {
+          "pin": "pin26",
+          "nativePin": "AA14",
+          "x": 1.846,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA14)"
+        },
+        {
+          "pin": "pin27",
+          "nativePin": "AA15",
+          "x": 2.496,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA15)"
+        },
+        {
+          "pin": "pin28",
+          "nativePin": "AA17",
+          "x": 3.796,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA17)"
+        },
+        {
+          "pin": "pin29",
+          "nativePin": "AA18",
+          "x": 4.446,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadAA18)"
+        },
+        {
+          "pin": "pin30",
+          "nativePin": "AA19",
+          "x": 5.096,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKP"
+        },
+        {
+          "pin": "pin31",
+          "nativePin": "AA20",
+          "x": 5.746,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKN"
+        },
+        {
+          "pin": "pin32",
+          "nativePin": "AA21",
+          "x": 6.396,
+          "y": 6.508,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKE0"
+        },
+        {
+          "pin": "pin33",
+          "nativePin": "B1",
+          "x": -6.604,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin34",
+          "nativePin": "B2",
+          "x": -5.954,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin35",
+          "nativePin": "B3",
+          "x": -5.304,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin36",
+          "nativePin": "B4",
+          "x": -4.654,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin37",
+          "nativePin": "B5",
+          "x": -4.004,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin38",
+          "nativePin": "B6",
+          "x": -3.354,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin39",
+          "nativePin": "B7",
+          "x": -2.704,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin40",
+          "nativePin": "B8",
+          "x": -2.054,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin41",
+          "nativePin": "B9",
+          "x": -1.404,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin42",
+          "nativePin": "B10",
+          "x": -0.754,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin43",
+          "nativePin": "B11",
+          "x": -0.104,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin44",
+          "nativePin": "B12",
+          "x": 0.546,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin45",
+          "nativePin": "B13",
+          "x": 1.196,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin46",
+          "nativePin": "B14",
+          "x": 1.846,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin47",
+          "nativePin": "B15",
+          "x": 2.496,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin48",
+          "nativePin": "B16",
+          "x": 3.146,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin49",
+          "nativePin": "B17",
+          "x": 3.796,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin50",
+          "nativePin": "B18",
+          "x": 4.446,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin51",
+          "nativePin": "B19",
+          "x": 5.096,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin52",
+          "nativePin": "B20",
+          "x": 5.746,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin53",
+          "nativePin": "B21",
+          "x": 6.396,
+          "y": -5.842,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin54",
+          "nativePin": "C1",
+          "x": -6.604,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin55",
+          "nativePin": "C2",
+          "x": -5.954,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin56",
+          "nativePin": "C3",
+          "x": -5.304,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin57",
+          "nativePin": "C5",
+          "x": -4.004,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin58",
+          "nativePin": "C6",
+          "x": -3.354,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin59",
+          "nativePin": "C7",
+          "x": -2.704,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin60",
+          "nativePin": "C8",
+          "x": -2.054,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin61",
+          "nativePin": "C9",
+          "x": -1.404,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin62",
+          "nativePin": "C10",
+          "x": -0.754,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin63",
+          "nativePin": "C11",
+          "x": -0.104,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin64",
+          "nativePin": "C12",
+          "x": 0.546,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin65",
+          "nativePin": "C13",
+          "x": 1.196,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin66",
+          "nativePin": "C14",
+          "x": 1.846,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin67",
+          "nativePin": "C15",
+          "x": 2.496,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin68",
+          "nativePin": "C16",
+          "x": 3.146,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin69",
+          "nativePin": "C17",
+          "x": 3.796,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin70",
+          "nativePin": "C18",
+          "x": 4.446,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin71",
+          "nativePin": "C19",
+          "x": 5.096,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin72",
+          "nativePin": "C20",
+          "x": 5.746,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin73",
+          "nativePin": "C21",
+          "x": 6.396,
+          "y": -5.192,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin74",
+          "nativePin": "D1",
+          "x": -6.604,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin75",
+          "nativePin": "D2",
+          "x": -5.954,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin76",
+          "nativePin": "D3",
+          "x": -5.304,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin77",
+          "nativePin": "D5",
+          "x": -4.004,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin78",
+          "nativePin": "D6",
+          "x": -3.354,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin79",
+          "nativePin": "D8",
+          "x": -2.054,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin80",
+          "nativePin": "D10",
+          "x": -0.754,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin81",
+          "nativePin": "D11",
+          "x": -0.104,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin82",
+          "nativePin": "D13",
+          "x": 1.196,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin83",
+          "nativePin": "D15",
+          "x": 2.496,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin84",
+          "nativePin": "D17",
+          "x": 3.796,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin85",
+          "nativePin": "D19",
+          "x": 5.096,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin86",
+          "nativePin": "D20",
+          "x": 5.746,
+          "y": -4.542,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin87",
+          "nativePin": "E2",
+          "x": -5.954,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin88",
+          "nativePin": "E3",
+          "x": -5.304,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin89",
+          "nativePin": "E8",
+          "x": -2.054,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin90",
+          "nativePin": "E10",
+          "x": -0.754,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin91",
+          "nativePin": "E11",
+          "x": -0.104,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin92",
+          "nativePin": "E13",
+          "x": 1.196,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin93",
+          "nativePin": "E14",
+          "x": 1.846,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin94",
+          "nativePin": "E15",
+          "x": 2.496,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin95",
+          "nativePin": "E16",
+          "x": 3.146,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin96",
+          "nativePin": "E18",
+          "x": 4.446,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin97",
+          "nativePin": "E19",
+          "x": 5.096,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin98",
+          "nativePin": "E20",
+          "x": 5.746,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin99",
+          "nativePin": "E21",
+          "x": 6.396,
+          "y": -3.892,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin100",
+          "nativePin": "F1",
+          "x": -6.604,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin101",
+          "nativePin": "F2",
+          "x": -5.954,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin102",
+          "nativePin": "F3",
+          "x": -5.304,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin103",
+          "nativePin": "F5",
+          "x": -4.004,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin104",
+          "nativePin": "F6",
+          "x": -3.354,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin105",
+          "nativePin": "F7",
+          "x": -2.704,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin106",
+          "nativePin": "F8",
+          "x": -2.054,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin107",
+          "nativePin": "F10",
+          "x": -0.754,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin108",
+          "nativePin": "F11",
+          "x": -0.104,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin109",
+          "nativePin": "F13",
+          "x": 1.196,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin110",
+          "nativePin": "F14",
+          "x": 1.846,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin111",
+          "nativePin": "F16",
+          "x": 3.146,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin112",
+          "nativePin": "F17",
+          "x": 3.796,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin113",
+          "nativePin": "F18",
+          "x": 4.446,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin114",
+          "nativePin": "F19",
+          "x": 5.096,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin115",
+          "nativePin": "F20",
+          "x": 5.746,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin116",
+          "nativePin": "F21",
+          "x": 6.396,
+          "y": -3.242,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin117",
+          "nativePin": "G1",
+          "x": -6.604,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin118",
+          "nativePin": "G2",
+          "x": -5.954,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin119",
+          "nativePin": "G4",
+          "x": -4.654,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin120",
+          "nativePin": "G5",
+          "x": -4.004,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin121",
+          "nativePin": "G7",
+          "x": -2.704,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin122",
+          "nativePin": "G8",
+          "x": -2.054,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin123",
+          "nativePin": "G9",
+          "x": -1.404,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin124",
+          "nativePin": "G10",
+          "x": -0.754,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin125",
+          "nativePin": "G11",
+          "x": -0.104,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin126",
+          "nativePin": "G12",
+          "x": 0.546,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin127",
+          "nativePin": "G13",
+          "x": 1.196,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin128",
+          "nativePin": "G14",
+          "x": 1.846,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin129",
+          "nativePin": "G15",
+          "x": 2.496,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin130",
+          "nativePin": "G18",
+          "x": 4.446,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin131",
+          "nativePin": "G20",
+          "x": 5.746,
+          "y": -2.592,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQM1"
+        },
+        {
+          "pin": "pin132",
+          "nativePin": "H2",
+          "x": -5.954,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin133",
+          "nativePin": "H3",
+          "x": -5.304,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin134",
+          "nativePin": "H4",
+          "x": -4.654,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin135",
+          "nativePin": "H6",
+          "x": -3.354,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin136",
+          "nativePin": "H7",
+          "x": -2.704,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin137",
+          "nativePin": "H8",
+          "x": -2.054,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin138",
+          "nativePin": "H10",
+          "x": -0.754,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin139",
+          "nativePin": "H11",
+          "x": -0.104,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin140",
+          "nativePin": "H12",
+          "x": 0.546,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin141",
+          "nativePin": "H13",
+          "x": 1.196,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin142",
+          "nativePin": "H14",
+          "x": 1.846,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin143",
+          "nativePin": "H15",
+          "x": 2.496,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin144",
+          "nativePin": "H16",
+          "x": 3.146,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin145",
+          "nativePin": "H17",
+          "x": 3.796,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin146",
+          "nativePin": "H18",
+          "x": 4.446,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin147",
+          "nativePin": "H19",
+          "x": 5.096,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin148",
+          "nativePin": "H20",
+          "x": 5.746,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ9"
+        },
+        {
+          "pin": "pin149",
+          "nativePin": "H21",
+          "x": 6.396,
+          "y": -1.942,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ10"
+        },
+        {
+          "pin": "pin150",
+          "nativePin": "J1",
+          "x": -6.604,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin151",
+          "nativePin": "J2",
+          "x": -5.954,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin152",
+          "nativePin": "J3",
+          "x": -5.304,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin153",
+          "nativePin": "J6",
+          "x": -3.354,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin154",
+          "nativePin": "J7",
+          "x": -2.704,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin155",
+          "nativePin": "J8",
+          "x": -2.054,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin156",
+          "nativePin": "J9",
+          "x": -1.404,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin157",
+          "nativePin": "J10",
+          "x": -0.754,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin158",
+          "nativePin": "J11",
+          "x": -0.104,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin159",
+          "nativePin": "J12",
+          "x": 0.546,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin160",
+          "nativePin": "J13",
+          "x": 1.196,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin161",
+          "nativePin": "J14",
+          "x": 1.846,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin162",
+          "nativePin": "J15",
+          "x": 2.496,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin163",
+          "nativePin": "J16",
+          "x": 3.146,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin164",
+          "nativePin": "J19",
+          "x": 5.096,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ8"
+        },
+        {
+          "pin": "pin165",
+          "nativePin": "J20",
+          "x": 5.746,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS1N"
+        },
+        {
+          "pin": "pin166",
+          "nativePin": "J21",
+          "x": 6.396,
+          "y": -1.292,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ11"
+        },
+        {
+          "pin": "pin167",
+          "nativePin": "K1",
+          "x": -6.604,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin168",
+          "nativePin": "K2",
+          "x": -5.954,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin169",
+          "nativePin": "K3",
+          "x": -5.304,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin170",
+          "nativePin": "K4",
+          "x": -4.654,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin171",
+          "nativePin": "K6",
+          "x": -3.354,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin172",
+          "nativePin": "K7",
+          "x": -2.704,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin173",
+          "nativePin": "K8",
+          "x": -2.054,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin174",
+          "nativePin": "K9",
+          "x": -1.404,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin175",
+          "nativePin": "K10",
+          "x": -0.754,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin176",
+          "nativePin": "K11",
+          "x": -0.104,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin177",
+          "nativePin": "K12",
+          "x": 0.546,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin178",
+          "nativePin": "K13",
+          "x": 1.196,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin179",
+          "nativePin": "K14",
+          "x": 1.846,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin180",
+          "nativePin": "K15",
+          "x": 2.496,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin181",
+          "nativePin": "K16",
+          "x": 3.146,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin182",
+          "nativePin": "K17",
+          "x": 3.796,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin183",
+          "nativePin": "K18",
+          "x": 4.446,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin184",
+          "nativePin": "K20",
+          "x": 5.746,
+          "y": -0.642,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS1P"
+        },
+        {
+          "pin": "pin185",
+          "nativePin": "L2",
+          "x": -5.954,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin186",
+          "nativePin": "L5",
+          "x": -4.004,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin187",
+          "nativePin": "L8",
+          "x": -2.054,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin188",
+          "nativePin": "L9",
+          "x": -1.404,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin189",
+          "nativePin": "L10",
+          "x": -0.754,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin190",
+          "nativePin": "L11",
+          "x": -0.104,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin191",
+          "nativePin": "L12",
+          "x": 0.546,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin192",
+          "nativePin": "L13",
+          "x": 1.196,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin193",
+          "nativePin": "L14",
+          "x": 1.846,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin194",
+          "nativePin": "L15",
+          "x": 2.496,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin195",
+          "nativePin": "L16",
+          "x": 3.146,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin196",
+          "nativePin": "L17",
+          "x": 3.796,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin197",
+          "nativePin": "L18",
+          "x": 4.446,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin198",
+          "nativePin": "L19",
+          "x": 5.096,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin199",
+          "nativePin": "L20",
+          "x": 5.746,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ12"
+        },
+        {
+          "pin": "pin200",
+          "nativePin": "L21",
+          "x": 6.396,
+          "y": 0.008,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ13"
+        },
+        {
+          "pin": "pin201",
+          "nativePin": "M1",
+          "x": -6.604,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin202",
+          "nativePin": "M2",
+          "x": -5.954,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin203",
+          "nativePin": "M3",
+          "x": -5.304,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin204",
+          "nativePin": "M4",
+          "x": -4.654,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin205",
+          "nativePin": "M5",
+          "x": -4.004,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin206",
+          "nativePin": "M6",
+          "x": -3.354,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin207",
+          "nativePin": "M7",
+          "x": -2.704,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin208",
+          "nativePin": "M8",
+          "x": -2.054,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin209",
+          "nativePin": "M9",
+          "x": -1.404,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin210",
+          "nativePin": "M10",
+          "x": -0.754,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin211",
+          "nativePin": "M11",
+          "x": -0.104,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin212",
+          "nativePin": "M12",
+          "x": 0.546,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin213",
+          "nativePin": "M13",
+          "x": 1.196,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin214",
+          "nativePin": "M14",
+          "x": 1.846,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin215",
+          "nativePin": "M15",
+          "x": 2.496,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin216",
+          "nativePin": "M16",
+          "x": 3.146,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin217",
+          "nativePin": "M19",
+          "x": 5.096,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ15"
+        },
+        {
+          "pin": "pin218",
+          "nativePin": "M20",
+          "x": 5.746,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQM0"
+        },
+        {
+          "pin": "pin219",
+          "nativePin": "M21",
+          "x": 6.396,
+          "y": 0.658,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ14"
+        },
+        {
+          "pin": "pin220",
+          "nativePin": "N1",
+          "x": -6.604,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin221",
+          "nativePin": "N2",
+          "x": -5.954,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin222",
+          "nativePin": "N3",
+          "x": -5.304,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin223",
+          "nativePin": "N7",
+          "x": -2.704,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin224",
+          "nativePin": "N8",
+          "x": -2.054,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin225",
+          "nativePin": "N9",
+          "x": -1.404,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin226",
+          "nativePin": "N10",
+          "x": -0.754,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin227",
+          "nativePin": "N11",
+          "x": -0.104,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin228",
+          "nativePin": "N12",
+          "x": 0.546,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin229",
+          "nativePin": "N13",
+          "x": 1.196,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin230",
+          "nativePin": "N14",
+          "x": 1.846,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin231",
+          "nativePin": "N15",
+          "x": 2.496,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin232",
+          "nativePin": "N16",
+          "x": 3.146,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin233",
+          "nativePin": "N17",
+          "x": 3.796,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA14"
+        },
+        {
+          "pin": "pin234",
+          "nativePin": "N19",
+          "x": 5.096,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA11"
+        },
+        {
+          "pin": "pin235",
+          "nativePin": "N20",
+          "x": 5.746,
+          "y": 1.308,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ0"
+        },
+        {
+          "pin": "pin236",
+          "nativePin": "P2",
+          "x": -5.954,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin237",
+          "nativePin": "P3",
+          "x": -5.304,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin238",
+          "nativePin": "P6",
+          "x": -3.354,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin239",
+          "nativePin": "P7",
+          "x": -2.704,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin240",
+          "nativePin": "P8",
+          "x": -2.054,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin241",
+          "nativePin": "P9",
+          "x": -1.404,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin242",
+          "nativePin": "P10",
+          "x": -0.754,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin243",
+          "nativePin": "P11",
+          "x": -0.104,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin244",
+          "nativePin": "P12",
+          "x": 0.546,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin245",
+          "nativePin": "P13",
+          "x": 1.196,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin246",
+          "nativePin": "P14",
+          "x": 1.846,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin247",
+          "nativePin": "P15",
+          "x": 2.496,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin248",
+          "nativePin": "P16",
+          "x": 3.146,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin249",
+          "nativePin": "P17",
+          "x": 3.796,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin250",
+          "nativePin": "P19",
+          "x": 5.096,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA10"
+        },
+        {
+          "pin": "pin251",
+          "nativePin": "P20",
+          "x": 5.746,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ2"
+        },
+        {
+          "pin": "pin252",
+          "nativePin": "P21",
+          "x": 6.396,
+          "y": 1.958,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ1"
+        },
+        {
+          "pin": "pin253",
+          "nativePin": "R1",
+          "x": -6.604,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin254",
+          "nativePin": "R2",
+          "x": -5.954,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin255",
+          "nativePin": "R6",
+          "x": -3.354,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin256",
+          "nativePin": "R7",
+          "x": -2.704,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin257",
+          "nativePin": "R8",
+          "x": -2.054,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin258",
+          "nativePin": "R9",
+          "x": -1.404,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin259",
+          "nativePin": "R10",
+          "x": -0.754,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin260",
+          "nativePin": "R11",
+          "x": -0.104,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin261",
+          "nativePin": "R12",
+          "x": 0.546,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin262",
+          "nativePin": "R13",
+          "x": 1.196,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin263",
+          "nativePin": "R14",
+          "x": 1.846,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin264",
+          "nativePin": "R16",
+          "x": 3.146,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin265",
+          "nativePin": "R17",
+          "x": 3.796,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA15"
+        },
+        {
+          "pin": "pin266",
+          "nativePin": "R18",
+          "x": 4.446,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA12"
+        },
+        {
+          "pin": "pin267",
+          "nativePin": "R19",
+          "x": 5.096,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ4"
+        },
+        {
+          "pin": "pin268",
+          "nativePin": "R20",
+          "x": 5.746,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS0P"
+        },
+        {
+          "pin": "pin269",
+          "nativePin": "R21",
+          "x": 6.396,
+          "y": 2.608,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQS0N"
+        },
+        {
+          "pin": "pin270",
+          "nativePin": "T2",
+          "x": -5.954,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin271",
+          "nativePin": "T3",
+          "x": -5.304,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin272",
+          "nativePin": "T4",
+          "x": -4.654,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin273",
+          "nativePin": "T5",
+          "x": -4.004,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin274",
+          "nativePin": "T6",
+          "x": -3.354,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin275",
+          "nativePin": "T7",
+          "x": -2.704,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin276",
+          "nativePin": "T8",
+          "x": -2.054,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin277",
+          "nativePin": "T9",
+          "x": -1.404,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin278",
+          "nativePin": "T10",
+          "x": -0.754,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin279",
+          "nativePin": "T11",
+          "x": -0.104,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin280",
+          "nativePin": "T12",
+          "x": 0.546,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin281",
+          "nativePin": "T13",
+          "x": 1.196,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin282",
+          "nativePin": "T14",
+          "x": 1.846,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin283",
+          "nativePin": "T15",
+          "x": 2.496,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin284",
+          "nativePin": "T16",
+          "x": 3.146,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SVREF"
+        },
+        {
+          "pin": "pin285",
+          "nativePin": "T17",
+          "x": 3.796,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA0"
+        },
+        {
+          "pin": "pin286",
+          "nativePin": "T18",
+          "x": 4.446,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA1"
+        },
+        {
+          "pin": "pin287",
+          "nativePin": "T20",
+          "x": 5.746,
+          "y": 3.258,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ5"
+        },
+        {
+          "pin": "pin288",
+          "nativePin": "U2",
+          "x": -5.954,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin289",
+          "nativePin": "U3",
+          "x": -5.304,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin290",
+          "nativePin": "U4",
+          "x": -4.654,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin291",
+          "nativePin": "U6",
+          "x": -3.354,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin292",
+          "nativePin": "U9",
+          "x": -1.404,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin293",
+          "nativePin": "U11",
+          "x": -0.104,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "VCC-DRAM"
+        },
+        {
+          "pin": "pin294",
+          "nativePin": "U15",
+          "x": 2.496,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCAS"
+        },
+        {
+          "pin": "pin295",
+          "nativePin": "U16",
+          "x": 3.146,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SRST"
+        },
+        {
+          "pin": "pin296",
+          "nativePin": "U18",
+          "x": 4.446,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA1"
+        },
+        {
+          "pin": "pin297",
+          "nativePin": "U19",
+          "x": 5.096,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ6"
+        },
+        {
+          "pin": "pin298",
+          "nativePin": "U20",
+          "x": 5.746,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ7"
+        },
+        {
+          "pin": "pin299",
+          "nativePin": "U21",
+          "x": 6.396,
+          "y": 3.908,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SDQ3"
+        },
+        {
+          "pin": "pin300",
+          "nativePin": "V1",
+          "x": -6.604,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin301",
+          "nativePin": "V2",
+          "x": -5.954,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin302",
+          "nativePin": "V3",
+          "x": -5.304,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin303",
+          "nativePin": "V4",
+          "x": -4.654,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin304",
+          "nativePin": "V5",
+          "x": -4.004,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin305",
+          "nativePin": "V6",
+          "x": -3.354,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin306",
+          "nativePin": "V10",
+          "x": -0.754,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SZQ"
+        },
+        {
+          "pin": "pin307",
+          "nativePin": "V11",
+          "x": -0.104,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SODT1"
+        },
+        {
+          "pin": "pin308",
+          "nativePin": "V12",
+          "x": 0.546,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA13"
+        },
+        {
+          "pin": "pin309",
+          "nativePin": "V13",
+          "x": 1.196,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SRAS"
+        },
+        {
+          "pin": "pin310",
+          "nativePin": "V15",
+          "x": 2.496,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA7"
+        },
+        {
+          "pin": "pin311",
+          "nativePin": "V17",
+          "x": 3.796,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA2"
+        },
+        {
+          "pin": "pin312",
+          "nativePin": "V19",
+          "x": 5.096,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA2"
+        },
+        {
+          "pin": "pin313",
+          "nativePin": "V20",
+          "x": 5.746,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA3"
+        },
+        {
+          "pin": "pin314",
+          "nativePin": "V21",
+          "x": 6.396,
+          "y": 4.558,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA4"
+        },
+        {
+          "pin": "pin315",
+          "nativePin": "W1",
+          "x": -6.604,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin316",
+          "nativePin": "W2",
+          "x": -5.954,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin317",
+          "nativePin": "W3",
+          "x": -5.304,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin318",
+          "nativePin": "W5",
+          "x": -4.004,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin319",
+          "nativePin": "W6",
+          "x": -3.354,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin320",
+          "nativePin": "W9",
+          "x": -1.404,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadW9)"
+        },
+        {
+          "pin": "pin321",
+          "nativePin": "W11",
+          "x": -0.104,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SODT0"
+        },
+        {
+          "pin": "pin322",
+          "nativePin": "W12",
+          "x": 0.546,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadW12)"
+        },
+        {
+          "pin": "pin323",
+          "nativePin": "W13",
+          "x": 1.196,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SWE"
+        },
+        {
+          "pin": "pin324",
+          "nativePin": "W15",
+          "x": 2.496,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadW15)"
+        },
+        {
+          "pin": "pin325",
+          "nativePin": "W17",
+          "x": 3.796,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SBA0"
+        },
+        {
+          "pin": "pin326",
+          "nativePin": "W18",
+          "x": 4.446,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA8"
+        },
+        {
+          "pin": "pin327",
+          "nativePin": "W20",
+          "x": 5.746,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCS0"
+        },
+        {
+          "pin": "pin328",
+          "nativePin": "W21",
+          "x": 6.396,
+          "y": 5.208,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCS1"
+        },
+        {
+          "pin": "pin329",
+          "nativePin": "Y1",
+          "x": -6.604,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin330",
+          "nativePin": "Y2",
+          "x": -5.954,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin331",
+          "nativePin": "Y3",
+          "x": -5.304,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin332",
+          "nativePin": "Y4",
+          "x": -4.654,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": null
+        },
+        {
+          "pin": "pin333",
+          "nativePin": "Y7",
+          "x": -2.704,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY7)"
+        },
+        {
+          "pin": "pin334",
+          "nativePin": "Y8",
+          "x": -2.054,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY8)"
+        },
+        {
+          "pin": "pin335",
+          "nativePin": "Y9",
+          "x": -1.404,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY9)"
+        },
+        {
+          "pin": "pin336",
+          "nativePin": "Y10",
+          "x": -0.754,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY10)"
+        },
+        {
+          "pin": "pin337",
+          "nativePin": "Y11",
+          "x": -0.104,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY11)"
+        },
+        {
+          "pin": "pin338",
+          "nativePin": "Y12",
+          "x": 0.546,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY12)"
+        },
+        {
+          "pin": "pin339",
+          "nativePin": "Y13",
+          "x": 1.196,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY13)"
+        },
+        {
+          "pin": "pin340",
+          "nativePin": "Y14",
+          "x": 1.846,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY14)"
+        },
+        {
+          "pin": "pin341",
+          "nativePin": "Y15",
+          "x": 2.496,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY15)"
+        },
+        {
+          "pin": "pin342",
+          "nativePin": "Y16",
+          "x": 3.146,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY16)"
+        },
+        {
+          "pin": "pin343",
+          "nativePin": "Y17",
+          "x": 3.796,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "unconnected-(U1-PadY17)"
+        },
+        {
+          "pin": "pin344",
+          "nativePin": "Y18",
+          "x": 4.446,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA9"
+        },
+        {
+          "pin": "pin345",
+          "nativePin": "Y19",
+          "x": 5.096,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA5"
+        },
+        {
+          "pin": "pin346",
+          "nativePin": "Y20",
+          "x": 5.746,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SA6"
+        },
+        {
+          "pin": "pin347",
+          "nativePin": "Y21",
+          "x": 6.396,
+          "y": 5.858,
+          "width": 0.279,
+          "height": 0.279,
+          "rotation": 0,
+          "shape": "circle",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKE1"
+        }
+      ]
+    },
+    {
+      "name": "R1",
+      "value": "100",
+      "x": 9.870000000000005,
+      "y": 1.7099999999999937,
+      "rotation": 0,
+      "layer": "bottom",
+      "pinLabels": {
+        "pin1": [
+          "BALL_1"
+        ],
+        "pin2": [
+          "BALL_2"
+        ]
+      },
+      "pads": [
+        {
+          "pin": "pin1",
+          "nativePin": "1",
+          "x": -0.51,
+          "y": 0.0,
+          "width": 0.54,
+          "height": 0.64,
+          "rotation": 0,
+          "shape": "roundrect",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKP"
+        },
+        {
+          "pin": "pin2",
+          "nativePin": "2",
+          "x": 0.51,
+          "y": 0.0,
+          "width": 0.54,
+          "height": 0.64,
+          "rotation": 0,
+          "shape": "roundrect",
+          "kind": "smd",
+          "drill": 0.0,
+          "net": "/DDR3 16x1/SCKN"
+        }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "name": "N000_SA0",
+      "nativeNet": "/DDR3 16x1/SA0",
+      "path": [
+        ".DU1 > .pin75",
+        ".U1 > .pin285"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N001_SA1",
+      "nativeNet": "/DDR3 16x1/SA1",
+      "path": [
+        ".DU1 > .pin82",
+        ".U1 > .pin296"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N002_SA10",
+      "nativeNet": "/DDR3 16x1/SA10",
+      "path": [
+        ".DU1 > .pin64",
+        ".U1 > .pin250"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N003_SA11",
+      "nativeNet": "/DDR3 16x1/SA11",
+      "path": [
+        ".DU1 > .pin88",
+        ".U1 > .pin234"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N004_SA12",
+      "nativeNet": "/DDR3 16x1/SA12",
+      "path": [
+        ".DU1 > .pin76",
+        ".U1 > .pin266"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N005_SA13",
+      "nativeNet": "/DDR3 16x1/SA13",
+      "path": [
+        ".DU1 > .pin93",
+        ".U1 > .pin308"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N006_SA14",
+      "nativeNet": "/DDR3 16x1/SA14",
+      "path": [
+        ".DU1 > .pin94",
+        ".U1 > .pin233"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N007_SA15",
+      "nativeNet": "/DDR3 16x1/SA15",
+      "path": [
+        ".DU1 > .pin70",
+        ".U1 > .pin265"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N008_SA2",
+      "nativeNet": "/DDR3 16x1/SA2",
+      "path": [
+        ".DU1 > .pin81",
+        ".U1 > .pin312"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N009_SA3",
+      "nativeNet": "/DDR3 16x1/SA3",
+      "path": [
+        ".DU1 > .pin74",
+        ".U1 > .pin313"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N010_SA4",
+      "nativeNet": "/DDR3 16x1/SA4",
+      "path": [
+        ".DU1 > .pin83",
+        ".U1 > .pin314"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N011_SA5",
+      "nativeNet": "/DDR3 16x1/SA5",
+      "path": [
+        ".DU1 > .pin80",
+        ".U1 > .pin345"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N012_SA6",
+      "nativeNet": "/DDR3 16x1/SA6",
+      "path": [
+        ".DU1 > .pin89",
+        ".U1 > .pin346"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N013_SA7",
+      "nativeNet": "/DDR3 16x1/SA7",
+      "path": [
+        ".DU1 > .pin86",
+        ".U1 > .pin310"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N014_SA8",
+      "nativeNet": "/DDR3 16x1/SA8",
+      "path": [
+        ".DU1 > .pin95",
+        ".U1 > .pin326"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N015_SA9",
+      "nativeNet": "/DDR3 16x1/SA9",
+      "path": [
+        ".DU1 > .pin87",
+        ".U1 > .pin344"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N016_SBA0",
+      "nativeNet": "/DDR3 16x1/SBA0",
+      "path": [
+        ".DU1 > .pin68",
+        ".U1 > .pin325"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N017_SBA1",
+      "nativeNet": "/DDR3 16x1/SBA1",
+      "path": [
+        ".DU1 > .pin77",
+        ".U1 > .pin286"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N018_SBA2",
+      "nativeNet": "/DDR3 16x1/SBA2",
+      "path": [
+        ".DU1 > .pin69",
+        ".U1 > .pin311"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N019_SCAS",
+      "nativeNet": "/DDR3 16x1/SCAS",
+      "path": [
+        ".DU1 > .pin57",
+        ".U1 > .pin294"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N020_SCKE0",
+      "nativeNet": "/DDR3 16x1/SCKE0",
+      "path": [
+        ".DU1 > .pin60",
+        ".U1 > .pin32"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N021_SCKE1",
+      "nativeNet": "/DDR3 16x1/SCKE1",
+      "path": [
+        ".DU1 > .pin54",
+        ".U1 > .pin347"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N022_SCKN",
+      "nativeNet": "/DDR3 16x1/SCKN",
+      "path": [
+        ".DU1 > .pin58",
+        ".U1 > .pin31",
+        ".R1 > .pin2"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N023_SCKP",
+      "nativeNet": "/DDR3 16x1/SCKP",
+      "path": [
+        ".DU1 > .pin52",
+        ".U1 > .pin30",
+        ".R1 > .pin1"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N024_SCS0",
+      "nativeNet": "/DDR3 16x1/SCS0",
+      "path": [
+        ".DU1 > .pin62",
+        ".U1 > .pin327"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N025_SCS1",
+      "nativeNet": "/DDR3 16x1/SCS1",
+      "path": [
+        ".DU1 > .pin61",
+        ".U1 > .pin328"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N026_SDQ0",
+      "nativeNet": "/DDR3 16x1/SDQ0",
+      "path": [
+        ".DU1 > .pin35",
+        ".U1 > .pin235"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N027_SDQ1",
+      "nativeNet": "/DDR3 16x1/SDQ1",
+      "path": [
+        ".DU1 > .pin32",
+        ".U1 > .pin252"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N028_SDQ10",
+      "nativeNet": "/DDR3 16x1/SDQ10",
+      "path": [
+        ".DU1 > .pin17",
+        ".U1 > .pin149"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N029_SDQ11",
+      "nativeNet": "/DDR3 16x1/SDQ11",
+      "path": [
+        ".DU1 > .pin14",
+        ".U1 > .pin166"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N030_SDQ12",
+      "nativeNet": "/DDR3 16x1/SDQ12",
+      "path": [
+        ".DU1 > .pin2",
+        ".U1 > .pin199"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N031_SDQ13",
+      "nativeNet": "/DDR3 16x1/SDQ13",
+      "path": [
+        ".DU1 > .pin22",
+        ".U1 > .pin200"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N032_SDQ14",
+      "nativeNet": "/DDR3 16x1/SDQ14",
+      "path": [
+        ".DU1 > .pin15",
+        ".U1 > .pin219"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N033_SDQ15",
+      "nativeNet": "/DDR3 16x1/SDQ15",
+      "path": [
+        ".DU1 > .pin11",
+        ".U1 > .pin217"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N034_SDQ2",
+      "nativeNet": "/DDR3 16x1/SDQ2",
+      "path": [
+        ".DU1 > .pin34",
+        ".U1 > .pin251"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N035_SDQ3",
+      "nativeNet": "/DDR3 16x1/SDQ3",
+      "path": [
+        ".DU1 > .pin38",
+        ".U1 > .pin299"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N036_SDQ4",
+      "nativeNet": "/DDR3 16x1/SDQ4",
+      "path": [
+        ".DU1 > .pin27",
+        ".U1 > .pin267"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N037_SDQ5",
+      "nativeNet": "/DDR3 16x1/SDQ5",
+      "path": [
+        ".DU1 > .pin46",
+        ".U1 > .pin287"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N038_SDQ6",
+      "nativeNet": "/DDR3 16x1/SDQ6",
+      "path": [
+        ".DU1 > .pin47",
+        ".U1 > .pin297"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N039_SDQ7",
+      "nativeNet": "/DDR3 16x1/SDQ7",
+      "path": [
+        ".DU1 > .pin45",
+        ".U1 > .pin298"
+      ],
+      "width": 0.1143,
+      "group": "byte0"
+    },
+    {
+      "name": "N040_SDQ8",
+      "nativeNet": "/DDR3 16x1/SDQ8",
+      "path": [
+        ".DU1 > .pin4",
+        ".U1 > .pin164"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N041_SDQ9",
+      "nativeNet": "/DDR3 16x1/SDQ9",
+      "path": [
+        ".DU1 > .pin3",
+        ".U1 > .pin148"
+      ],
+      "width": 0.1143,
+      "group": "byte1"
+    },
+    {
+      "name": "N042_SDQM0",
+      "nativeNet": "/DDR3 16x1/SDQM0",
+      "path": [
+        ".DU1 > .pin28",
+        ".U1 > .pin218"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N043_SDQM1",
+      "nativeNet": "/DDR3 16x1/SDQM1",
+      "path": [
+        ".DU1 > .pin21",
+        ".U1 > .pin131"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N044_SDQS0N",
+      "nativeNet": "/DDR3 16x1/SDQS0N",
+      "path": [
+        ".DU1 > .pin39",
+        ".U1 > .pin269"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N045_SDQS0P",
+      "nativeNet": "/DDR3 16x1/SDQS0P",
+      "path": [
+        ".DU1 > .pin33",
+        ".U1 > .pin268"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N046_SDQS1N",
+      "nativeNet": "/DDR3 16x1/SDQS1N",
+      "path": [
+        ".DU1 > .pin10",
+        ".U1 > .pin165"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N047_SDQS1P",
+      "nativeNet": "/DDR3 16x1/SDQS1P",
+      "path": [
+        ".DU1 > .pin16",
+        ".U1 > .pin184"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N048_SODT0",
+      "nativeNet": "/DDR3 16x1/SODT0",
+      "path": [
+        ".DU1 > .pin55",
+        ".U1 > .pin321"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N049_SODT1",
+      "nativeNet": "/DDR3 16x1/SODT1",
+      "path": [
+        ".DU1 > .pin49",
+        ".U1 > .pin307"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N050_SRAS",
+      "nativeNet": "/DDR3 16x1/SRAS",
+      "path": [
+        ".DU1 > .pin51",
+        ".U1 > .pin309"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N051_SRST",
+      "nativeNet": "/DDR3 16x1/SRST",
+      "path": [
+        ".DU1 > .pin92",
+        ".U1 > .pin295"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    },
+    {
+      "name": "N052_SWE",
+      "nativeNet": "/DDR3 16x1/SWE",
+      "path": [
+        ".DU1 > .pin63",
+        ".U1 > .pin323"
+      ],
+      "width": 0.1143,
+      "group": "remaining"
+    }
+  ],
+  "requestedNames": [
+    "N026_SDQ0",
+    "N027_SDQ1",
+    "N028_SDQ10",
+    "N029_SDQ11",
+    "N030_SDQ12",
+    "N031_SDQ13",
+    "N032_SDQ14",
+    "N033_SDQ15",
+    "N034_SDQ2",
+    "N035_SDQ3",
+    "N036_SDQ4",
+    "N037_SDQ5",
+    "N038_SDQ6",
+    "N039_SDQ7",
+    "N040_SDQ8",
+    "N041_SDQ9",
+    "N047_SDQS1P"
+  ]
+}
