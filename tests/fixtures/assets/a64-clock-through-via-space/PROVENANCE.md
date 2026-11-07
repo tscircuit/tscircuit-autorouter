@@ -21,7 +21,8 @@ fixed-copper raster obstacles with the actual 32 completed data routes and
 retains all native pads and the 33 requested connection identities. It is never
 passed to the solver.
 
-Baseline: the clock cannot reach R3 pin 2 on bottom. The mesh represents its
-pocket separately on each layer, despite overlapping clear space across all
-six layers. The SVG shows the existing data copper; a successful clock solve
+Baseline: the clock cannot reach R3 pin 2 on bottom. Its escape crosses six
+mesh edges before reaching through-via space. The cramped-port filter retains
+only a local prefix, leaving the terminal disconnected from the clock's other
+endpoints. The SVG shows the existing data copper; a successful clock solve
 adds its three branches without changing the data routing.
