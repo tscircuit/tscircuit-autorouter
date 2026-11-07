@@ -1,0 +1,44 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: bottom-layer ports at retained copper</text><text x="24" y="59" font-family="sans-serif" font-size="16">After: red port keeps the planner's crossing order</text><svg x="0" y="80" width="1000" height="600" viewBox="453.5824407407406 40 178.14814814814827 520" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="24.912,-7.812 28.352057000000002,-7.812" data-type="line" data-label="" points="334.36762592592595,291.5259259259259 665.6323740740745,291.5259259259259" fill="none" stroke="rgba(0,0,255,0.5)" stroke-linejoin="round" stroke-width="57.777777777777786" stroke-dasharray="0.2 0.2"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="27.075" data-y="-7.9" x="453.5824407407406" y="40" width="178.14814814814827" height="520" fill="none" stroke="none" stroke-width="0.010384615384615383"/></g><circle data-type="circle" data-label="" data-x="26.750060999999995" data-y="-6.343779000000001" cx="511.3660925925924" cy="150.14168148148156" r="4.814814814814817" fill="red" stroke="black" stroke-width="0.010384615384615383"/><circle data-type="circle" data-label="" data-x="26.750060999999995" data-y="-5.812534000000001" cx="511.3660925925924" cy="98.98475555555558" r="4.814814814814817" fill="#f59e0b" stroke="black" stroke-width="0.010384615384615383"/><circle data-type="circle" data-label="" data-x="26.750060999999995" data-y="-7.406269" cx="511.3660925925924" cy="252.45553333333328" r="4.814814814814817" fill="#f59e0b" stroke="black" stroke-width="0.010384615384615383"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":96.29629629629632,"c":0,"e":-2064.565707407408,"b":0,"d":-96.29629629629632,"f":-460.740740740741};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

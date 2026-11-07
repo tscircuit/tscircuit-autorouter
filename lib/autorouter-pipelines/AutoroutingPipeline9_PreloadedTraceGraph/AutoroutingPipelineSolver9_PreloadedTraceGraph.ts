@@ -593,6 +593,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preloadedRoutes: removeChangedSectionsFromFixedHdRoutes({
+            traces: cms.originalSrj.traces ?? [],
+            fixedHdRoutes: cms.getOriginalFixedHdRoutes(),
+            sections: cms.getChangedPreloadedTraceSections(),
+          }),
         },
       ],
     ),

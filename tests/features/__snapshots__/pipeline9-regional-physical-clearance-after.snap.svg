@@ -1,0 +1,47 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: regional repair at the battery regulator</text><text x="24" y="59" font-family="sans-serif" font-size="16">After: physical clearance permits repair; both routes stay on top</text><svg x="0" y="80" width="1000" height="600" viewBox="257.65931484472276 40.00000000000091 450.8665307901392 450.8665307901374" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-31.72,-33.69 -32.10761600000001,-33.602498000000004 -32.257616000000006,-33.452498000000006 -32.257616000000006,-33.077498000000006 -32.18261600000001,-33.002498 -32.10761600000001,-32.92749800000001 -32.032616000000004,-32.92749800000001 -31.95761600000001,-32.92749800000001 -31.882616000000006,-32.92749800000001 -31.687,-33.048" data-type="line" data-label="" points="416.9654890572401,397.6874477601759 300.45676825807095,371.38629897537794 255.3701151790574,326.2996458963644 255.3701151790574,213.5830131988314 277.91344171856144,191.0396866593237 300.45676825807095,168.49636011981784 323.00009479757864,168.49636011981784 345.5434213370827,168.49636011981784 368.0867478765904,168.49636011981784 426.88455273462205,204.71657258199775" fill="none" stroke="red" stroke-linejoin="round" stroke-width="45.08665307901381"/></g><g><polyline data-points="-31.475,-33.369 -31.97,-33.369" data-type="line" data-label="" points="490.60702241962827,301.20201017108593 341.821067258883,301.20201017108593" fill="none" stroke="red" stroke-linejoin="round" stroke-width="45.08665307901381"/></g><g><rect data-type="rect" data-label="top" data-x="-30.879884" data-y="-33.96" x="594.3413418019163" y="397.6868466048036" width="150.2885430190272" height="162.31315339519642" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.003326926923076921"/></g><g><rect data-type="rect" data-label="top" data-x="-31.720116" data-y="-33.96" x="341.7863505360101" y="397.6868466048036" width="150.2885430190272" height="162.31315339519642" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.003326926923076921"/></g><g><rect data-type="rect" data-label="top
+inner1
+inner2
+bottom" data-x="-31.250065" data-y="-32.8225968" x="490.58748486996046" y="69.33542042147928" width="135.2599592370425" height="135.2599592370425" fill="rgba(255,0,0,0.9375)" stroke="black" stroke-width="0.003326926923076921"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="-31.5" data-y="-33.25" x="257.65931484472276" y="40.00000000000091" width="450.8665307901392" height="450.8665307901374" fill="none" stroke="none" stroke-width="0.003326926923076921"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":300.5776871934254,"c":0,"e":9951.289726832692,"b":0,"d":-300.5776871934254,"f":-9728.774833786325};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

@@ -1,7 +1,11 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
+import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -30,6 +34,8 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Copper retained by path planning whose edge-crossing order must stay fixed. */
+  preloadedRoutes?: HighDensityRoute[]
 }
 
 /**
@@ -143,7 +149,29 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
     const family: PortPointWithOwnerPair[] = []
+    const layersWithPreloadedCrossings = new Set<number>()
+    for (const route of this.input.preloadedRoutes ?? []) {
+      for (let i = 1; i < route.route.length; i++) {
+        const a = route.route[i - 1]!
+        const b = route.route[i]!
+        if (a.z !== b.z || layersWithPreloadedCrossings.has(a.z)) continue
+        if (
+          segmentToSegmentMinDistance(
+            a,
+            b,
+            { x: sharedEdge.x1, y: sharedEdge.y1 },
+            { x: sharedEdge.x2, y: sharedEdge.y2 },
+          ) < 1e-8
+        ) {
+          layersWithPreloadedCrossings.add(a.z)
+        }
+      }
+    }
     for (const portPoint of familyRaw) {
+      // Spacing only the new ports can move them across retained copper and
+      // reverse the topology's crossing order. Keep the planner's positions
+      // on these layers; the copper remains a route, not a topology obstacle.
+      if (layersWithPreloadedCrossings.has(portPoint.z)) continue
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
