@@ -579,6 +579,7 @@ export const checkTraceContinuity = (
       polygon: ReturnType<typeof circlePolygon>,
       bridge: boolean,
       platedPort = false,
+      pour?: Obstacle,
     ): void => {
       if (polygon.isEmpty()) return
       const scaled = polygon.scale(1e6, 1e6)
@@ -589,6 +590,7 @@ export const checkTraceContinuity = (
         geometry: { kind: "polygon", polygon: scaled },
         bridge,
         platedPort,
+        pour,
         minX: box.xmin,
         minY: box.ymin,
         maxX: box.xmax,
@@ -610,8 +612,9 @@ export const checkTraceContinuity = (
               pour.ccwRotationDegrees ?? 0,
             ),
         true,
+        false,
+        pour,
       )
-      conductors[conductors.length - 1]!.pour = pour
     }
     for (const via of viaContacts) {
       if (via.radius === undefined) continue
