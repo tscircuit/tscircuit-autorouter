@@ -485,6 +485,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            preserveConnectionReachability: true,
           },
         ]
       },

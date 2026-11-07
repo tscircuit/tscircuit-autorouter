@@ -50,8 +50,21 @@ export function doesOrdinaryEscapeReachConnection({
             .map((node) => node.capacityMeshNodeId),
         ),
     )
+    // Component-local endpoints are absent from the cramped-port stage's
+    // graph. Their planned exits are preserved separately by the pipeline.
+    .filter((group) => group.size > 0)
   if (destinations.length === 0) return true
   const destinationNodes = new Set(destinations.flatMap((group) => [...group]))
+  const destinationGroupsByNode = new Map<string, number[]>()
+  destinations.forEach((group, index) => {
+    for (const nodeId of group) {
+      const groups = destinationGroupsByNode.get(nodeId) ?? []
+      groups.push(index)
+      destinationGroupsByNode.set(nodeId, groups)
+    }
+  })
+  const reachedGroups = new Set<number>()
+  const targetNetIds = new Set(target._connectedTo)
   const visited = new Set([target.capacityMeshNodeId])
   const queue = [target.capacityMeshNodeId]
   for (let index = 0; index < queue.length; index++) {
@@ -62,7 +75,7 @@ export function doesOrdinaryEscapeReachConnection({
         if (visited.has(neighborId)) continue
         const neighbor = nodeMap.get(neighborId)!
         const sameNet = neighbor._connectedTo?.some((net) =>
-          target._connectedTo?.includes(net),
+          targetNetIds.has(net),
         )
         if (
           neighbor._containsObstacle &&
@@ -72,9 +85,13 @@ export function doesOrdinaryEscapeReachConnection({
           continue
         }
         visited.add(neighborId)
+        for (const group of destinationGroupsByNode.get(neighborId) ?? []) {
+          reachedGroups.add(group)
+        }
+        if (reachedGroups.size === destinations.length) return true
         queue.push(neighborId)
       }
     }
   }
-  return destinations.every((group) => [...group].some((id) => visited.has(id)))
+  return false
 }

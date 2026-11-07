@@ -81,13 +81,14 @@ export function retainActiveNumericalGapSegments({
           candidates: escape.getOutput(),
           mapOfCapacityMeshNodeIdToRef: nodeMap,
         }) ||
-        !doesOrdinaryEscapeReachConnection({
-          target: node,
-          nodes,
-          nodeMap,
-          ordinaryPorts,
-          connections,
-        })
+        (!node._isComponentTopologyNode &&
+          !doesOrdinaryEscapeReachConnection({
+            target: node,
+            nodes,
+            nodeMap,
+            ordinaryPorts,
+            connections,
+          }))
       ) {
         reached.add(node.capacityMeshNodeId)
       }
@@ -105,9 +106,15 @@ export function retainActiveNumericalGapSegments({
     }
   }
 
-  return segments.filter(
-    (segment) =>
-      !segment.crossesNumericalGap ||
-      segment.nodeIds.some((nodeId) => reached.has(nodeId)),
-  )
+  return segments
+    .filter(
+      (segment) =>
+        !segment.crossesNumericalGap ||
+        segment.nodeIds.some((nodeId) => reached.has(nodeId)),
+    )
+    .map((segment) =>
+      segment.crossesNumericalGap
+        ? { ...segment, isActiveTerminalEscape: true }
+        : segment,
+    )
 }
