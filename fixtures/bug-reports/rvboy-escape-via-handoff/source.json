@@ -1,0 +1,17 @@
+{
+  "source": "Unmodified full RVboy native input and the captured native stitch output before trace simplification",
+  "inputSha256": "53af5ed85d39e8fb1ae28875e83080560d5b184e01fcd27af5b8f1d152adeb47",
+  "stitchSha256": "7b67c665df4610766aed7d8c027b395a9faad790de5b60c8dbe55ac13a99568f",
+  "viewbox": {
+    "minX": -30.35,
+    "maxX": -28.75,
+    "minY": 8.1,
+    "maxY": 9.7
+  },
+  "via": {
+    "x": -29.845,
+    "y": 9,
+    "diameter": 0.45
+  },
+  "connectionName": "source_net_127"
+}

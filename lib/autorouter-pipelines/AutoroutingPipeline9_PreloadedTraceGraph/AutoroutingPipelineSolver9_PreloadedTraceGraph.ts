@@ -583,7 +583,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
+          obstacles: cms.srjWithPointPairs!.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
@@ -645,7 +645,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             fixedHdRoutes,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
-            obstacles: cms.srj.obstacles,
+            obstacles: cms.srjWithPointPairs!.obstacles,
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
@@ -691,7 +691,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
-          obstacles: cms.srj.obstacles,
+          obstacles: cms.srjWithPointPairs!.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
@@ -757,7 +757,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: newHdRoutes,
-            obstacles: cms.srj.obstacles,
+            obstacles: cms.srjWithPointPairs!.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -793,7 +793,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: editableHdRoutes,
-            obstacles: cms.srj.obstacles,
+            obstacles: cms.srjWithPointPairs!.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -817,7 +817,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.srj.obstacles,
+        obstacles: cms.srjWithPointPairs!.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
@@ -933,7 +933,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             config: {
               hdRoutes,
               preserveRouteEndpoints: true,
-              obstacles: cms.srj.obstacles,
+              obstacles: cms.srjWithPointPairs!.obstacles,
               connMap: cms.connMap,
               colorMap: cms.colorMap,
               outline: cms.srj.outline,
