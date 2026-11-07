@@ -24,6 +24,7 @@ type PreloadedTracePrimitive = {
   routePositionStart: number
   routePositionEnd: number
   zLayers: number[]
+  copperWidth: number
   start: Point
   end: Point
 }
@@ -88,6 +89,7 @@ const getPreloadedTracePrimitives = (
           routePositionStart: routePosition,
           routePositionEnd: routePosition,
           zLayers: getPreloadedViaLayers({ via: routePoint, srj }),
+          copperWidth: routePoint.via_diameter ?? srj.minViaDiameter ?? 0.45,
           start: routePoint,
           end: routePoint,
         })
@@ -104,6 +106,7 @@ const getPreloadedTracePrimitives = (
             routePoint.to_layer,
             srj.layerCount,
           ),
+          copperWidth: srj.minTraceWidth,
           start: routePoint.start,
           end: routePoint.end,
         })
@@ -121,6 +124,7 @@ const getPreloadedTracePrimitives = (
             routePositionStart: routePosition + padIndex,
             routePositionEnd: routePosition + padIndex,
             zLayers: [z],
+            copperWidth: srj.minTraceWidth,
             start: padCenter,
             end: padCenter,
           })
@@ -150,6 +154,7 @@ const getPreloadedTracePrimitives = (
         routePositionStart: pointIndex,
         routePositionEnd: pointIndex + 1,
         zLayers: [mapLayerNameToZ(start.layer, srj.layerCount)],
+        copperWidth: start.width,
         start,
         end,
       })
@@ -256,8 +261,9 @@ const preloadPort = (
 }
 
 /**
- * Loads fixed copper onto existing capacity-graph boundary ports. Capacity
- * regions, edges, and ports are never added or removed.
+ * Loads retained copper onto existing capacity-graph boundary ports. Explicitly
+ * immutable copper also reserves nearby port layers for physical clearance;
+ * capacity regions and obstacle geometry are unchanged.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
@@ -327,6 +333,48 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       }
     }
 
+    // Explicitly immutable copper reserves its physical clearance on graph
+    // ports, including edges it runs beside without crossing. Movable preload
+    // geometry remains graph occupancy and is never converted into obstacles.
+    let fixedClearancePortLayerCount = 0
+    for (const primitive of this.primitives) {
+      if (primitive.isFixed !== true || this.boundaryIndex === null) continue
+      const radius =
+        (primitive.copperWidth + this.srj.minTraceWidth) / 2 +
+        (this.srj.minTraceToPadEdgeClearance ?? 0.1) +
+        GEOMETRIC_TOLERANCE
+      const candidates = this.boundaryIndex.search(
+        Math.min(primitive.start.x, primitive.end.x) - radius,
+        Math.min(primitive.start.y, primitive.end.y) - radius,
+        Math.max(primitive.start.x, primitive.end.x) + radius,
+        Math.max(primitive.start.y, primitive.end.y) + radius,
+      )
+      for (const index of candidates) {
+        for (const port of this.sharedEdgeSegments[index]!.portPoints) {
+          if (
+            pointToSegmentDistance(port, primitive.start, primitive.end) >=
+            radius
+          )
+            continue
+          port.availableZ = port.availableZ.filter((z) => {
+            if (!primitive.zLayers.includes(z)) return true
+            // The existing crossing belongs to the fixed route itself and must
+            // remain available to serialize that route's occupied topology.
+            if (
+              port._preloadedTracePortAssignments?.some(
+                (assignment) =>
+                  assignment.z === z &&
+                  assignment.fixedNetId === primitive.fixedNetId,
+              )
+            )
+              return true
+            fixedClearancePortLayerCount++
+            return false
+          })
+        }
+      }
+    }
+
     const portPoints = this.sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
     )
@@ -335,6 +383,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     )
     this.stats = {
       boundaryDistanceCheckCount,
+      fixedClearancePortLayerCount,
       preloadedTraceCount: this.srj.traces?.length ?? 0,
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
@@ -347,7 +396,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           count + (portPoint._preloadedTracePortAssignments?.length ?? 0),
         0,
       ),
-      topologyChanged: false,
+      topologyChanged: fixedClearancePortLayerCount > 0,
     }
     this.solved = true
   }

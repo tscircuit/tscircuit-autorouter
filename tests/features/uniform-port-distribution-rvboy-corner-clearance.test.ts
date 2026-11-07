@@ -25,6 +25,15 @@ test("RVboy boundary anchors on perpendicular edges retain physical clearance", 
     connMap: new ConnectivityMap(fixture.input.connMap.netMap),
   }
   const solver = new UniformPortDistributionSolver(input)
+  const before: NodeWithPortPoints = fixture.beforeNode
+  // Replay this historical corner's exact edges. Other regions in the captured
+  // board predate fixed-copper port reservation and now correctly reject those
+  // impossible ports before detailed routing (covered by its own full fixture).
+  solver.ownerPairsToProcess = solver.ownerPairsToProcess.filter((key) =>
+    solver.mapOfOwnerPairToSharedEdge
+      .get(key)!
+      .ownerNodeIds.includes(before.capacityMeshNodeId),
+  )
   solver.solve()
   expect(solver.solved).toBe(true)
   const crowdedPairs: Array<{
@@ -32,7 +41,9 @@ test("RVboy boundary anchors on perpendicular edges retain physical clearance", 
     second: string
     distance: number
   }> = []
-  for (const node of solver.getOutput()) {
+  for (const node of solver
+    .getOutput()
+    .filter((node) => node.capacityMeshNodeId === before.capacityMeshNodeId)) {
     const ports = [
       ...new Map(
         node.portPoints.map((port) => [port.portPointId, port]),
@@ -60,7 +71,6 @@ test("RVboy boundary anchors on perpendicular edges retain physical clearance", 
     }
   }
   expect(crowdedPairs).toEqual([])
-  const before: NodeWithPortPoints = fixture.beforeNode
   const after = solver
     .getOutput()
     .find((node) => node.capacityMeshNodeId === before.capacityMeshNodeId)!

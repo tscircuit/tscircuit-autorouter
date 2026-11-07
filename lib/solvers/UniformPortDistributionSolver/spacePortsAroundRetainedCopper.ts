@@ -62,7 +62,7 @@ export const spacePortsAroundRetainedCopper = ({
   preferredPorts: PortPointWithOwnerPair[]
   neighboringPorts?: PortPointWithOwnerPair[]
   movableIds: ReadonlySet<string>
-  routes: HighDensityRoute[]
+  routes: Array<HighDensityRoute & { isFixed?: boolean }>
   traceWidth: number
   clearance: number
   connMap: ConnectivityMap
@@ -137,9 +137,11 @@ export const spacePortsAroundRetainedCopper = ({
             const a = route.route[i]!,
               b = route.route[i + 1]!
             if (a.z !== z || b.z !== z) continue
-            // Only edge crossings are anchors shared by neighboring regions.
-            // Nearby copper within a region remains movable during HD repair.
+            // A retained crossing constrains both neighboring regions. Explicitly
+            // fixed copper also constrains nearby edges that it does not cross;
+            // regional repair cannot move that copper away from a locked port.
             if (
+              route.isFixed !== true &&
               segmentToSegmentMinDistance(
                 a,
                 b,
