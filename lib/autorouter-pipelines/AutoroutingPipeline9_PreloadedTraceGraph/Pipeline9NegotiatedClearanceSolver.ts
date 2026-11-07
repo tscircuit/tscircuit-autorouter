@@ -2,7 +2,9 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { preparePipeline9RepairConnectivity } from "./preparePipeline9RepairConnectivity"
 import { NegotiateTraceClearanceSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import { convertSimplifiedPcbTraceToHighDensityRoute } from "../AutoroutingPipeline11_Simplification/convertSimplifiedPcbTraceToHighDensityRoute"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type NegotiatedClearanceParams = {
@@ -11,7 +13,15 @@ type NegotiatedClearanceParams = {
   fixedRoutes: HighDensityRoute[]
   effort: number
   connMap?: ConnectivityMap
-  evaluate: (routes: HighDensityRoute[]) => {
+  preloaded?: {
+    traces: SimplifiedPcbTraces
+    viaDiameter: number
+    viaHoleDiameter: number
+  }
+  evaluate: (
+    routes: HighDensityRoute[],
+    preloadedTraces: SimplifiedPcbTraces,
+  ) => {
     errorCount: number
     dirtyRouteIndices: number[]
   }
@@ -21,6 +31,7 @@ type NegotiatedClearanceParams = {
 export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
   readonly params: NegotiatedClearanceParams
   bestRoutes: HighDensityRoute[]
+  private readonly initialPreloadedRoutes: HighDensityRoute[]
   bestErrorCount: number | undefined
   private dirtyRouteIndices: number[] = []
   completedPasses = 0
@@ -29,12 +40,27 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
   constructor(params: NegotiatedClearanceParams) {
     super()
     this.params = params
-    this.bestRoutes = params.routes
+    this.initialPreloadedRoutes = (params.preloaded?.traces ?? [])
+      .filter((trace) => trace.isFixed !== true)
+      .map((trace): HighDensityRoute => {
+        const net = params.connMap?.getNetConnectedToId(trace.connection_name)
+        if (!net)
+          throw new Error(
+            `Preloaded trace "${trace.pcb_trace_id}" has no declared net`,
+          )
+        return convertSimplifiedPcbTraceToHighDensityRoute(trace, {
+          layerCount: params.srj.layerCount,
+          defaultTraceThickness: params.srj.minTraceWidth,
+          defaultViaDiameter: params.preloaded!.viaDiameter,
+          rootConnectionName: net,
+        })
+      })
+    this.bestRoutes = [...params.routes, ...this.initialPreloadedRoutes]
     if (params.effort <= 1) {
       this.solved = true
       return
     }
-    const initial = params.evaluate(this.bestRoutes)
+    const initial = this.evaluateRoutes(this.bestRoutes)
     this.bestErrorCount = initial.errorCount
     this.dirtyRouteIndices = initial.dirtyRouteIndices
     this.stats = { initialErrorCount: this.bestErrorCount }
@@ -116,7 +142,7 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
           rootConnectionName: this.bestRoutes[index]!.rootConnectionName,
         }),
       )
-    const evaluated = this.params.evaluate(candidate)
+    const evaluated = this.evaluateRoutes(candidate)
     const errorCount = evaluated.errorCount
     this.completedPasses++
     const improved = errorCount < this.bestErrorCount!
@@ -141,8 +167,53 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
     this.solved = true
   }
 
+  private convertPreloadedRoutes(
+    routes: HighDensityRoute[],
+  ): SimplifiedPcbTraces {
+    let index = 0
+    return (this.params.preloaded?.traces ?? []).map((trace) => {
+      if (trace.isFixed === true) return trace
+      const original = this.initialPreloadedRoutes[index]!
+      const route = routes[index++]
+      if (!route)
+        throw new Error(
+          `Missing negotiated preloaded trace "${trace.pcb_trace_id}"`,
+        )
+      if (JSON.stringify(route.route) === JSON.stringify(original.route))
+        return trace
+      return {
+        ...trace,
+        route: convertHdRouteToSimplifiedRoute(
+          route,
+          this.params.srj.layerCount,
+          {
+            defaultViaHoleDiameter: this.params.preloaded!.viaHoleDiameter,
+            obstacles: this.params.srj.obstacles,
+            connMap: this.params.connMap,
+          },
+        ),
+      }
+    })
+  }
+
+  private evaluateRoutes(
+    routes: HighDensityRoute[],
+  ): ReturnType<NegotiatedClearanceParams["evaluate"]> {
+    return this.params.evaluate(
+      routes.slice(0, this.params.routes.length),
+      this.convertPreloadedRoutes(routes.slice(this.params.routes.length)),
+    )
+  }
+
+  getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
+    if (!this.solved) throw new Error("Negotiated clearance is not complete")
+    return this.convertPreloadedRoutes(
+      this.bestRoutes.slice(this.params.routes.length),
+    )
+  }
+
   getOutput(): HighDensityRoute[] {
     if (!this.solved) throw new Error("Negotiated clearance is not complete")
-    return this.bestRoutes
+    return this.bestRoutes.slice(0, this.params.routes.length)
   }
 }

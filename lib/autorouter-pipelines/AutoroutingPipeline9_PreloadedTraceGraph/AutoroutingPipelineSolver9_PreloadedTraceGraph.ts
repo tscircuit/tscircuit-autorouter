@@ -923,6 +923,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         let evaluate: ReturnType<typeof createPipeline9AutoroutingDrcEvaluator>
         const evaluateRoutes = (
           routes: HighDensityRoute[],
+          updatedPreloadedTraces: SimplifiedPcbTraces,
         ): { errorCount: number; dirtyRouteIndices: number[] } => {
           evaluate ??= createPipeline9AutoroutingDrcEvaluator({
             inputSrj,
@@ -942,7 +943,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             rawTraces,
             preloadedTraces,
           )
-          const result = evaluate(traces)
+          const result = evaluate([...traces, ...updatedPreloadedTraces])
           const routeIndexByRawId = getPipeline9RouteIndexByTraceId({
             routes,
             newConnections: cms.netToPointPairsSolver!.newConnections,
@@ -954,11 +955,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               routeIndexByRawId.get(rawTraces[index]!.pcb_trace_id),
             ]),
           )
+          let preloadedIndex = routes.length
+          for (const trace of updatedPreloadedTraces) {
+            if (trace.isFixed !== true)
+              indexById.set(trace.pcb_trace_id, preloadedIndex++)
+          }
           const errors = addAutoroutingViaTraceIds({
             errors: result.errors,
             circuitJson: result.circuitJson,
             evaluatedTraceIds: new Set(
-              traces.map((trace) => trace.pcb_trace_id),
+              [...traces, ...updatedPreloadedTraces].map(
+                (trace) => trace.pcb_trace_id,
+              ),
             ),
           })
           const dirty = new Set<number>()
@@ -984,15 +992,22 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: cms.srjWithPointPairs!,
             routes: hdRoutes,
-            fixedRoutes: preloadedTraces.flatMap((trace, index) =>
-              convertPreloadedTraceToHdRoutes(
-                trace,
-                index,
-                cms.srj.layerCount,
-                cms.viaDiameter,
-                cms.connMap,
+            fixedRoutes: preloadedTraces
+              .filter((trace) => trace.isFixed === true)
+              .flatMap((trace, index) =>
+                convertPreloadedTraceToHdRoutes(
+                  trace,
+                  index,
+                  cms.srj.layerCount,
+                  cms.viaDiameter,
+                  cms.connMap,
+                ),
               ),
-            ),
+            preloaded: {
+              traces: preloadedTraces,
+              viaDiameter: cms.viaDiameter,
+              viaHoleDiameter: cms.viaHoleDiameter,
+            },
             effort: cms.effort,
             connMap: cms.connMap,
             evaluate: evaluateRoutes,
@@ -1772,6 +1787,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
+    if (this.negotiatedClearanceSolver?.solved) {
+      return this.negotiatedClearanceSolver.getUpdatedPreloadedTraces()
+    }
     return (
       this.pipeline9JointDrcRepairSolver?.getUpdatedPreloadedTraces() ??
       this.getPreloadedTraceUpdatesAfterHighDensity().updatedPreloadedTraces
@@ -1779,6 +1797,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getMutatedPreloadedTraces(): SimplifiedPcbTraces {
+    if (this.negotiatedClearanceSolver?.solved) {
+      const originalById = new Map(
+        (this.originalSrj.traces ?? []).map((trace) => [
+          trace.pcb_trace_id,
+          trace,
+        ]),
+      )
+      return this.getUpdatedPreloadedTraces().filter(
+        (trace) =>
+          JSON.stringify(trace.route) !==
+          JSON.stringify(originalById.get(trace.pcb_trace_id)?.route),
+      )
+    }
     return (
       this.pipeline9JointDrcRepairSolver?.getMutatedPreloadedTraces() ??
       this.getPreloadedTraceUpdatesAfterHighDensity().mutatedPreloadedTraces
