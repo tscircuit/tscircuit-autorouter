@@ -119,6 +119,9 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     }).viaSpans
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
+        // Pours are regenerated with antipads around foreign through vias.
+        // Keep their wire-layer obstacles, but do not treat them as solid pads.
+        if (obstacle.isCopperPour) return false
         if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
           return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
