@@ -1,0 +1,44 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: port beside a retained SoC bypass</text><text x="24" y="59" font-family="sans-serif" font-size="16">After: 100.0 µm copper gap; 100 µm required</text><svg x="0" y="80" width="1000" height="600" viewBox="470.16908212560384 40.000000000000455 251.2077294685987 219.80676328502432" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="6,14.625 7.69,14.625" data-type="line" data-label="" points="234.66183574879233,204.85507246376892 765.3381642512072,204.85507246376892" fill="none" stroke="red" stroke-linejoin="round" stroke-width="31.400966183574834"/></g><g><polyline data-points="7.02,14.45 7.02,15.15" data-type="line" data-label="" points="554.9516908212554,259.8067632850243 554.9516908212554,40.00000000000091" fill="none" stroke="#64748b" stroke-linejoin="round" stroke-width="0.942028985507245"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="7.15" data-y="14.8" x="470.16908212560384" y="40.000000000000455" width="251.2077294685987" height="219.80676328502432" fill="none" stroke="none" stroke-width="0.0031846153846153895"/></g><circle data-type="circle" data-label="" data-x="7.02" data-y="14.825001" cx="554.9516908212554" cy="142.05282608695688" r="15.700483091787417" fill="#0284c7" stroke="black" stroke-width="0.0031846153846153895"/><circle data-type="circle" data-label="" data-x="7.02" data-y="14.085333333333333" cx="554.9516908212554" cy="374.3156199677942" r="15.700483091787417" fill="#f59e0b" stroke="black" stroke-width="0.0031846153846153895"/><circle data-type="circle" data-label="" data-x="7.02" data-y="13.544" cx="554.9516908212554" cy="544.2995169082124" r="15.700483091787417" fill="#f59e0b" stroke="black" stroke-width="0.0031846153846153895"/><circle data-type="circle" data-label="" data-x="7.02" data-y="15.0625" cx="554.9516908212554" cy="67.47584541062861" r="15.700483091787417" fill="#f59e0b" stroke="black" stroke-width="0.0031846153846153895"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":314.0096618357483,"c":0,"e":-1649.3961352656975,"b":0,"d":-314.0096618357483,"f":4797.246376811588};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

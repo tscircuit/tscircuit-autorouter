@@ -1,3 +1,5 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { spacePortsAroundRetainedCopper } from "./spacePortsAroundRetainedCopper"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
@@ -36,6 +38,9 @@ export interface UniformPortDistributionSolverInput {
   preserveSolitaryPorts?: boolean
   /** Copper retained by path planning whose edge-crossing order must stay fixed. */
   preloadedRoutes?: HighDensityRoute[]
+  minTraceWidth?: number
+  traceClearance?: number
+  connMap?: ConnectivityMap
 }
 
 /**
@@ -208,14 +213,47 @@ export class UniformPortDistributionSolver extends BaseSolver {
     // need uniform spacing; freezing them can create unnecessary congestion.
     // Preserve the whole family on an affected layer so new ports cannot
     // reverse their order relative to each other either.
-    this.mapOfOwnerPairToPortPoints.set(
-      ownerPairKey,
-      redistributed.map((port) =>
-        layersWithReversedCrossings.has(port.z)
-          ? originalById.get(port.portPointId)!
-          : port,
-      ),
+    const preferredPorts = redistributed.map((port) =>
+      layersWithReversedCrossings.has(port.z)
+        ? originalById.get(port.portPointId)!
+        : port,
     )
+    const { minTraceWidth, traceClearance, connMap, preloadedRoutes } =
+      this.input
+    const spacedPorts =
+      minTraceWidth !== undefined &&
+      traceClearance !== undefined &&
+      connMap &&
+      preloadedRoutes?.length
+        ? spacePortsAroundRetainedCopper({
+            edge: sharedEdge,
+            originalPorts: familyRaw,
+            preferredPorts,
+            movableIds: new Set(
+              familyRaw
+                .filter(
+                  (port) =>
+                    !shouldIgnorePortPoint({
+                      portPoint: port,
+                      ownerNodeIds: port.ownerNodeIds,
+                      inputNodes: this.input.inputNodesWithPortPoints,
+                    }) &&
+                    !shouldIgnoreSharedEdge({
+                      sharedEdge,
+                      obstacles: this.input.obstacles,
+                      z: port.z,
+                      layerCount: this.input.layerCount,
+                    }),
+                )
+                .map((port) => port.portPointId!),
+            ),
+            routes: preloadedRoutes,
+            traceWidth: minTraceWidth,
+            clearance: traceClearance,
+            connMap,
+          })
+        : preferredPorts
+    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, spacedPorts)
   }
 
   rebuildNodes(): void {
