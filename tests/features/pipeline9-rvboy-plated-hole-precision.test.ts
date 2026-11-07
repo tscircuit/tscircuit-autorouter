@@ -2,13 +2,16 @@ import { expect, test } from "bun:test"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import fixture from "../../fixtures/bug-reports/rvboy-plated-hole-precision.json"
-import { Pipeline9HighDensityForceImproveSampleSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"
+import {
+  Pipeline9HighDensityForceImproveSampleSolver,
+  type Pipeline9HighDensityForceImproveSampleInput,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"
 import type { Obstacle } from "lib/types"
 
 test("Pipeline9 preserves RVboy's plated-hole layer connection through cleanup", () => {
   // Unmodified force-improve sample and obstacle from RVboy's native input.
   const force = new Pipeline9HighDensityForceImproveSampleSolver(
-    structuredClone(fixture.forceInput),
+    structuredClone(fixture.forceInput) as Pipeline9HighDensityForceImproveSampleInput,
   )
   force.solve()
   expect(force.solved).toBe(true)
