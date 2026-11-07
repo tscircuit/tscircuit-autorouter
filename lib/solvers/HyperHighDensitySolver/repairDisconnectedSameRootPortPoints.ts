@@ -148,6 +148,20 @@ export const repairDisconnectedSameRootPortPoints = (
 
       if (!bridgeRoute) continue
 
+      // A connection can cross this node in several disjoint pairs. A bridge
+      // already copied for one pair need not belong to the first port's island.
+      // Test its own endpoints before copying it for the pair's other port.
+      const [bridgeStart, bridgeEnd] = routeEndpoints(bridgeRoute)
+      if (
+        getConnectedPointKeysForConnection(
+          repairedRoutes,
+          connectionName,
+          pointKey(bridgeStart!),
+        ).has(pointKey(bridgeEnd!))
+      ) {
+        continue
+      }
+
       repairedRoutes.push({
         ...bridgeRoute,
         connectionName,
