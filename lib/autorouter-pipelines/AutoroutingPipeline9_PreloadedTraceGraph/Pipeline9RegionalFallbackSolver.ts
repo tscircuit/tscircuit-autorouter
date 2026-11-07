@@ -1,5 +1,8 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { NegotiateTraceClearanceSolver } from "@tscircuit/repair04"
+import {
+  NegotiateTraceClearanceSolver,
+  getFixedObstacleViolations,
+} from "@tscircuit/repair04"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -196,6 +199,48 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       movablePreloadedConnectionNames,
       viaToPadClearance,
     } = this.params
+    const pourObstacles = this.params.obstacles
+      .filter((obstacle) => obstacle.isCopperPour)
+      .map((obstacle) => ({
+        ...obstacle,
+        connectedTo: [
+          ...obstacle.connectedTo,
+          ...routes
+            .filter((route) =>
+              isPipeline9ObstacleConnectedToRoute({
+                obstacle,
+                route,
+                connMap: this.params.connMap,
+              }),
+            )
+            .map((route) => route.connectionName),
+        ],
+      }))
+    if (pourObstacles.length > 0) {
+      const node = this.params.nodeWithPortPoints
+      const conflicts = getFixedObstacleViolations({
+        srj: {
+          bounds: {
+            minX: node.center.x - node.width / 2,
+            maxX: node.center.x + node.width / 2,
+            minY: node.center.y - node.height / 2,
+            maxY: node.center.y + node.height / 2,
+          },
+          layerCount: this.params.layerCount,
+          minTraceWidth: this.params.traceWidth,
+          obstacles: pourObstacles,
+          connections: [],
+        },
+        routes,
+        traceClearance:
+          this.params.traceToPadClearance ?? this.params.obstacleMargin,
+      })
+      if (conflicts.some((conflict) => conflict.kind === "wire")) {
+        this.stats.pourWireCandidateRejectionCount =
+          Number(this.stats.pourWireCandidateRejectionCount ?? 0) + 1
+        return false
+      }
+    }
     if (
       !boardObstacles ||
       !movablePreloadedConnectionNames ||
@@ -256,23 +301,21 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       minViaHoleEdgeToViaHoleEdgeClearance:
         params.minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
-      obstacles: params.obstacles
-        .filter((obstacle) => !obstacle.isCopperPour)
-        .map((obstacle) => ({
-          ...obstacle,
-          connectedTo: [
-            ...obstacle.connectedTo,
-            ...routes
-              .filter((route) =>
-                isPipeline9ObstacleConnectedToRoute({
-                  obstacle,
-                  route,
-                  connMap: params.connMap,
-                }),
-              )
-              .map((route) => route.connectionName),
-          ],
-        })),
+      obstacles: params.obstacles.map((obstacle) => ({
+        ...obstacle,
+        connectedTo: [
+          ...obstacle.connectedTo,
+          ...routes
+            .filter((route) =>
+              isPipeline9ObstacleConnectedToRoute({
+                obstacle,
+                route,
+                connMap: params.connMap,
+              }),
+            )
+            .map((route) => route.connectionName),
+        ],
+      })),
       connections: routes.map((route) => ({
         name: route.connectionName,
         rootConnectionName: route.rootConnectionName,
