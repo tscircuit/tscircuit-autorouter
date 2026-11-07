@@ -142,6 +142,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   readonly budget: Pipeline9BoundedRepairBudget
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
+  private repairCandidate?: HighDensityRoute[]
   private reservedChildMaximum = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
@@ -765,6 +766,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     context.currentRoutes = state.candidateRoutes
+    this.repairCandidate = state.candidateRoutes
     context.currentErrors = candidateErrors
     context.reference = candidateReference
     context.fixedViolations = new Map(
@@ -1060,6 +1062,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         )
     }
     this.updateProgress()
+  }
+
+  /** Validated regional progress for another repair stage, not published output. */
+  getRepairCandidate(): HighDensityRoute[] | undefined {
+    if (!this.solved || this.failed) {
+      throw new Error("Regional repair candidate requested before completion")
+    }
+    return this.repairCandidate
   }
 
   getResult(): Pipeline9BoundedRegionalRepairResult {

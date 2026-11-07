@@ -32,10 +32,14 @@ const createSolver = (): Pipeline9JointDrcRepairSolver => {
     ...getResult(),
     publishedDrcIssueCount: undefined,
   }))
+  const initialCandidate = spyOn(initial, "getRepairCandidate").mockReturnValue(
+    undefined,
+  )
   try {
     while (!solver.exactRepairSolver && !solver.failed) solver.step()
   } finally {
     initialResult.mockRestore()
+    initialCandidate.mockRestore()
   }
   return solver
 }
