@@ -994,6 +994,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
             ),
             effort: cms.effort,
+            connMap: cms.connMap,
             evaluate: evaluateRoutes,
           },
         ]

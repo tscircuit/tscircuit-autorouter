@@ -1,3 +1,5 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { preparePipeline9RepairConnectivity } from "./preparePipeline9RepairConnectivity"
 import { NegotiateTraceClearanceSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
@@ -8,6 +10,7 @@ type NegotiatedClearanceParams = {
   routes: HighDensityRoute[]
   fixedRoutes: HighDensityRoute[]
   effort: number
+  connMap?: ConnectivityMap
   evaluate: (routes: HighDensityRoute[]) => {
     errorCount: number
     dirtyRouteIndices: number[]
@@ -44,7 +47,17 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
 
   private startNegotiation(): void {
     const { params } = this
-    const routes = structuredClone([...this.bestRoutes, ...params.fixedRoutes])
+    const candidateRoutes = structuredClone([
+      ...this.bestRoutes,
+      ...params.fixedRoutes,
+    ])
+    const { srj, routes } = params.connMap
+      ? preparePipeline9RepairConnectivity({
+          srj: params.srj,
+          routes: candidateRoutes,
+          connMap: params.connMap,
+        })
+      : { srj: params.srj, routes: candidateRoutes }
     const movableCount = this.bestRoutes.length
     const clearance =
       params.srj.minTraceToPadEdgeClearance ??
@@ -52,7 +65,7 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
       0.1
     this.negotiationSolver = new NegotiateTraceClearanceSolver({
       // Fixed copper is supplied as locked HD routes, including through-obstacle metadata.
-      srj: { ...params.srj, traces: undefined },
+      srj: { ...srj, traces: undefined },
       routes,
       bounds: params.srj.bounds,
       dirtyRouteIndices: this.dirtyRouteIndices,
@@ -94,7 +107,15 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
       return
     }
     if (!child.solved) return
-    const candidate = child.getOutput().routes.slice(0, this.bestRoutes.length)
+    const candidate = child
+      .getOutput()
+      .routes.slice(0, this.bestRoutes.length)
+      .map(
+        (route, index): HighDensityRoute => ({
+          ...route,
+          rootConnectionName: this.bestRoutes[index]!.rootConnectionName,
+        }),
+      )
     const evaluated = this.params.evaluate(candidate)
     const errorCount = evaluated.errorCount
     this.completedPasses++
