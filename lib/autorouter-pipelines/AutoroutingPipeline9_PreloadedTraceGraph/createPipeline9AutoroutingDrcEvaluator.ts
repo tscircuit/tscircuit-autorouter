@@ -21,6 +21,7 @@ import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRo
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
+import { createPipeline9CopperPourWireDrcEvaluator } from "./createPipeline9CopperPourWireDrcEvaluator"
 
 type DrcError = Record<string, unknown>
 
@@ -101,6 +102,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     representedPadObstacleIndexes,
     viaClearance: drcOptions.viaToPadClearance,
   })
+  const evaluatePourWires = createPipeline9CopperPourWireDrcEvaluator(
+    inputSrj,
+    srjWithPointPairs,
+  )
   const evaluate = (
     routedTraces: SimplifiedPcbTrace[],
     options: { includeTraceContinuity?: boolean } = {},
@@ -122,6 +127,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const errors = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
+      ...evaluatePourWires(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false

@@ -36,6 +36,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   boardObstacles?: Obstacle[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
+  traceToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   captureSearchDebug?: boolean
@@ -292,7 +293,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       isLocked: (routeIndex, pointIndex): boolean =>
         pointIndex === 0 || pointIndex === routes[routeIndex]!.route.length - 1,
       allowLayerChanges: true,
-      traceClearance: params.obstacleMargin,
+      // The topology's planning margin can exceed the board's clearance rule.
+      // Keep already legal regional endpoints available to clearance repair.
+      traceClearance: params.traceToPadClearance ?? params.obstacleMargin,
       viaClearance: clearance,
       viaHoleDiameter: params.viaHoleDiameter,
       maxPathSearchNodes: Math.ceil(1_000_000 * params.effort),

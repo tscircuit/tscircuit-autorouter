@@ -64,7 +64,9 @@ test("Pipeline9 rejects invalid geometry and retries across legal layers", () =>
   regionalSolver.solve()
   expect(regionalSolver.solved).toBeFalse()
   expect(regionalSolver.failed).toBeTrue()
-  expect(regionalSolver.getOutput()).toEqual([])
+  expect(() => regionalSolver.getOutput()).toThrow(
+    "Cannot publish regional routes before final validation",
+  )
 
   const twoLayerSolver = new Pipeline9HighDensitySolver({
     ...sharedParams,

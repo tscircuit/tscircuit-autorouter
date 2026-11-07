@@ -50,6 +50,7 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
+  traceToPadClearance?: number
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -769,6 +770,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacles: this.obstacles,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
+      traceToPadClearance: this.params.traceToPadClearance,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })

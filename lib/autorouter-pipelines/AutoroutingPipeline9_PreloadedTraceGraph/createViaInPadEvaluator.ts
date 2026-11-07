@@ -15,6 +15,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 
 type ViaInPadRoute = HighDensityRoute | SimplifiedPcbTrace
 
@@ -47,27 +48,28 @@ function getViaElements({
         [viaTrace],
       ).filter((element): element is PcbVia => element.type === "pcb_via")
     }
-    return getRepairViaGeometry(route, srj.layerCount).map(
-      (via, viaIndex): PcbVia => {
-        let minZ = 0
-        let maxZ = srj.layerCount - 1
-        if (srj.allowBlindAndBuriedVias === true) {
-          minZ = via.minZ
-          maxZ = via.maxZ
-        }
-        return {
-          type: "pcb_via",
-          pcb_via_id: `repair_via_${routeIndex}_${viaIndex}`,
-          x: via.x,
-          y: via.y,
-          hole_diameter: holeDiameter,
-          outer_diameter: via.diameter,
-          layers: Array.from({ length: maxZ - minZ + 1 }, (_, index) =>
-            mapZToLayerName(minZ + index, srj.layerCount),
-          ),
-        }
-      },
-    )
+    return getRepairViaGeometry(
+      canonicalizePipeline9HdRoutes([route])[0]!,
+      srj.layerCount,
+    ).map((via, viaIndex): PcbVia => {
+      let minZ = 0
+      let maxZ = srj.layerCount - 1
+      if (srj.allowBlindAndBuriedVias === true) {
+        minZ = via.minZ
+        maxZ = via.maxZ
+      }
+      return {
+        type: "pcb_via",
+        pcb_via_id: `repair_via_${routeIndex}_${viaIndex}`,
+        x: via.x,
+        y: via.y,
+        hole_diameter: holeDiameter,
+        outer_diameter: via.diameter,
+        layers: Array.from({ length: maxZ - minZ + 1 }, (_, index) =>
+          mapZToLayerName(minZ + index, srj.layerCount),
+        ),
+      }
+    })
   })
 }
 

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
-test("power expansion uses declared pad clearance and regeneratable pour outlines", (): void => {
+test("power expansion preserves foreign copper-pour routing layers", (): void => {
   for (const isCopperPour of [false, true]) {
     const input: SimpleRouteJson = {
       layerCount: 4,
@@ -52,8 +52,7 @@ test("power expansion uses declared pad clearance and regeneratable pour outline
           point.route_type === "wire" ? [point.width] : [],
         ),
       )
-    if (isCopperPour) expect(Math.min(...widths)).toBeCloseTo(0.8)
-    else expect(Math.max(...widths)).toBeCloseTo(0.1)
+    expect(Math.max(...widths)).toBeCloseTo(0.1)
     expect(input.obstacles).toHaveLength(1)
   }
 })
