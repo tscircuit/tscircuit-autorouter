@@ -30,19 +30,22 @@ test("numerical bridges follow active escapes across multiple gaps without openi
   edges.solve()
   for (const hasActiveConnection of [false, true]) {
     const connections: SimpleRouteConnection[] = hasActiveConnection
-      ? [{
-          name: "active",
-          pointsToConnect: [
-            { x: 0, y: 0, layer: "top" },
-            { x: 3.001, y: 0, layer: "top" },
-          ],
-        }, {
-          name: "already-escaped",
-          pointsToConnect: [
-            { x: 20, y: 0, layer: "top" },
-            { x: 21, y: 1, layer: "top" },
-          ],
-        }]
+      ? [
+          {
+            name: "active",
+            pointsToConnect: [
+              { x: 0, y: 0, layer: "top" },
+              { x: 3.001, y: 0, layer: "top" },
+            ],
+          },
+          {
+            name: "already-escaped",
+            pointsToConnect: [
+              { x: 20, y: 0, layer: "top" },
+              { x: 21, y: 1, layer: "top" },
+            ],
+          },
+        ]
       : []
     const solver = new AvailableSegmentPointSolver({
       nodes,
@@ -58,11 +61,21 @@ test("numerical bridges follow active escapes across multiple gaps without openi
     expect(solver.getAvailablePortCountForEdge("escape", "outside") > 0).toBe(
       hasActiveConnection,
     )
-    expect(solver.getAvailablePortCountForEdge("outside", "ordinary")).toBeGreaterThan(0)
-    expect(solver.getAvailablePortCountForEdge("inactive-pad", "inactive-escape")).toBe(0)
-    expect(solver.getAvailablePortCountForEdge("escaped-pad", "redundant-gap")).toBe(0)
-    expect(solver.getAvailablePortCountForEdge("escaped-corner", "escaped-outside")).toBeGreaterThan(0)
-    const retainedPorts = solver.getOutput().flatMap((segment) => segment.portPoints)
+    expect(
+      solver.getAvailablePortCountForEdge("outside", "ordinary"),
+    ).toBeGreaterThan(0)
+    expect(
+      solver.getAvailablePortCountForEdge("inactive-pad", "inactive-escape"),
+    ).toBe(0)
+    expect(
+      solver.getAvailablePortCountForEdge("escaped-pad", "redundant-gap"),
+    ).toBe(0)
+    expect(
+      solver.getAvailablePortCountForEdge("escaped-corner", "escaped-outside"),
+    ).toBeGreaterThan(0)
+    const retainedPorts = solver
+      .getOutput()
+      .flatMap((segment) => segment.portPoints)
     expect(solver.portPointMap.size).toBe(retainedPorts.length)
     expect(solver.edgeSegmentMap.size).toBe(solver.getOutput().length)
   }

@@ -23,40 +23,50 @@ test("planned component crossings provide an escape without new numerical shortc
       ["corridor", "outside", false],
       ["pad", "outside", true],
     ]
-    const segments: SharedEdgeSegment[] = edges.map(([first, second, gap], index) => ({
-      edgeId: `edge${index}`,
-      nodeIds: [first, second],
-      start: { x: index, y: 0 },
-      end: { x: index, y: 1 },
-      availableZ: [0],
-      crossesNumericalGap: gap,
-      portPoints: [{
-        segmentPortPointId: `port${index}`,
+    const segments: SharedEdgeSegment[] = edges.map(
+      ([first, second, gap], index) => ({
         edgeId: `edge${index}`,
         nodeIds: [first, second],
-        x: index,
-        y: 0.5,
+        start: { x: index, y: 0 },
+        end: { x: index, y: 1 },
         availableZ: [0],
-        connectionName: null,
-        distToCentermostPortOnZ: 0,
-        cramped: true,
-      }],
-    }))
+        crossesNumericalGap: gap,
+        portPoints: [
+          {
+            segmentPortPointId: `port${index}`,
+            edgeId: `edge${index}`,
+            nodeIds: [first, second],
+            x: index,
+            y: 0.5,
+            availableZ: [0],
+            connectionName: null,
+            distToCentermostPortOnZ: 0,
+            cramped: true,
+          },
+        ],
+      }),
+    )
     const retained = retainActiveNumericalGapSegments({
       nodes,
       segments,
-      connections: [{
-        name: "signal",
-        pointsToConnect: [
-          { x: 0, y: 0, layer: "top" },
-          { x: 2, y: 0, layer: "top" },
-        ],
-      }],
+      connections: [
+        {
+          name: "signal",
+          pointsToConnect: [
+            { x: 0, y: 0, layer: "top" },
+            { x: 2, y: 0, layer: "top" },
+          ],
+        },
+      ],
     })
-    expect(retained.filter((segment) => segment.crossesNumericalGap)).toHaveLength(
-      isComponentTopology ? 0 : 1,
+    expect(
+      retained.filter((segment) => segment.crossesNumericalGap),
+    ).toHaveLength(isComponentTopology ? 0 : 1)
+    expect(
+      retained.filter((segment) => !segment.crossesNumericalGap),
+    ).toHaveLength(2)
+    expect(segments.every((segment) => segment.portPoints[0]!.cramped)).toBe(
+      true,
     )
-    expect(retained.filter((segment) => !segment.crossesNumericalGap)).toHaveLength(2)
-    expect(segments.every((segment) => segment.portPoints[0]!.cramped)).toBe(true)
   }
 })

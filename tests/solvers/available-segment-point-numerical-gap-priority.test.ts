@@ -96,11 +96,11 @@ test("numerical gap ports preserve continuous routes and still connect isolated 
     expect(
       routedNodes.some((node) => node.capacityMeshNodeId === "continuous"),
     ).toBe(hasContinuousPath)
-    expect(
-      routedNodes.some((node) => node.capacityMeshNodeId === "west"),
-    ).toBe(true)
-    expect(
-      routedNodes.some((node) => node.capacityMeshNodeId === "east"),
-    ).toBe(true)
+    expect(routedNodes.some((node) => node.capacityMeshNodeId === "west")).toBe(
+      true,
+    )
+    expect(routedNodes.some((node) => node.capacityMeshNodeId === "east")).toBe(
+      true,
+    )
   }
 })

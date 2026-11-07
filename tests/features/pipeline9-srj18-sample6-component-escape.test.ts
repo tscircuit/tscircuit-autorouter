@@ -13,16 +13,22 @@ test("SRJ18 sample 6 keeps planned component escapes without numerical shortcuts
   }
   expect(solver.failed).toBe(false)
   const ports = solver.availableSegmentPointSolver!
-  const componentSegments = ports.getOutput().filter((segment) =>
-    segment.nodeIds.some((nodeId) =>
-      ports.nodeMap.get(nodeId)!._isComponentTopologyNode,
-    ),
-  )
+  const componentSegments = ports
+    .getOutput()
+    .filter((segment) =>
+      segment.nodeIds.some(
+        (nodeId) => ports.nodeMap.get(nodeId)!._isComponentTopologyNode,
+      ),
+    )
   expect(componentSegments.length).toBeGreaterThan(0)
-  expect(componentSegments.some((segment) =>
-    segment.portPoints.some((port) => port.cramped),
-  )).toBe(true)
+  expect(
+    componentSegments.some((segment) =>
+      segment.portPoints.some((port) => port.cramped),
+    ),
+  ).toBe(true)
   // These cramped crossings are deliberately retained by component topology.
   // Treating them as blocked added shortcuts and nearly doubled routing time.
-  expect(componentSegments.filter((segment) => segment.crossesNumericalGap)).toEqual([])
+  expect(
+    componentSegments.filter((segment) => segment.crossesNumericalGap),
+  ).toEqual([])
 })

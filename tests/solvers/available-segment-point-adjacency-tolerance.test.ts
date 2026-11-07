@@ -61,7 +61,9 @@ test("accepted capacity edges retain ports across sub-micron mesh gaps", () => {
       // Numerical adjacency must not create a connection between disjoint layers.
       second.availableZ = [1]
       second.layer = "z1"
-      const separateLayers = new CapacityMeshEdgeSolver2_NodeTreeOptimization(nodes)
+      const separateLayers = new CapacityMeshEdgeSolver2_NodeTreeOptimization(
+        nodes,
+      )
       separateLayers.solve()
       expect(separateLayers.edges).toHaveLength(0)
     }

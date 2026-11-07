@@ -1,5 +1,8 @@
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import type { SegmentPortPoint, SharedEdgeSegment } from "./AvailableSegmentPointSolver"
+import type {
+  SegmentPortPoint,
+  SharedEdgeSegment,
+} from "./AvailableSegmentPointSolver"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "../NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver"
 import { isAllCandidatesBlockedByObstacles } from "../NecessaryCrampedPortPointSolver/isAllCandidatesBlockedByObstacles"
 
@@ -26,7 +29,9 @@ export function retainActiveNumericalGapSegments({
 
   // _containsTarget also marks completed copper. Only actual connection
   // endpoints need new escapes; inactive copper must not add routing shortcuts.
-  const endpoints = connections.flatMap((connection) => connection.pointsToConnect)
+  const endpoints = connections.flatMap(
+    (connection) => connection.pointsToConnect,
+  )
   const nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
   const ordinaryPorts = new Map<string, SegmentPortPoint[]>()
   for (const segment of segments) {
@@ -34,9 +39,13 @@ export function retainActiveNumericalGapSegments({
     for (const port of segment.portPoints) {
       // Component topology deliberately retains its cramped crossings. Count
       // those planned paths as existing escapes, as the pipeline does.
-      const escapePort = port.cramped && port.nodeIds.some(
-        (nodeId) => nodeMap.get(nodeId)!._isComponentTopologyNode,
-      ) ? { ...port, cramped: false } : port
+      const escapePort =
+        port.cramped &&
+        port.nodeIds.some(
+          (nodeId) => nodeMap.get(nodeId)!._isComponentTopologyNode,
+        )
+          ? { ...port, cramped: false }
+          : port
       for (const nodeId of port.nodeIds) {
         if (!ordinaryPorts.has(nodeId)) ordinaryPorts.set(nodeId, [])
         ordinaryPorts.get(nodeId)!.push(escapePort)
@@ -45,7 +54,8 @@ export function retainActiveNumericalGapSegments({
   }
   const reached = new Set<string>()
   for (const node of nodes) {
-    if (!node._containsTarget || !neighbors.has(node.capacityMeshNodeId)) continue
+    if (!node._containsTarget || !neighbors.has(node.capacityMeshNodeId))
+      continue
     if (
       endpoints.some(
         (point) =>
@@ -63,7 +73,8 @@ export function retainActiveNumericalGapSegments({
         mapOfCapacityMeshNodeIdToRef: nodeMap,
       })
       escape.solve()
-      if (escape.failed) throw new Error(escape.error ?? "Terminal escape analysis failed")
+      if (escape.failed)
+        throw new Error(escape.error ?? "Terminal escape analysis failed")
       if (
         isAllCandidatesBlockedByObstacles({
           candidates: escape.getOutput(),
