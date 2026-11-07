@@ -6,7 +6,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import fixture from "../fixtures/bluetooth-pedometer-clock.srj.json"
 
-test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): void => {
+test("real Bluetooth pedometer honors the X48_N zero-via and 6 mm limits", (): void => {
   // https://tscircuit.com/techmannih/Bluetooth-pedometer @ ebe6cfad63786434183a4ec6709409ade261dfff.
   // Complete board geometry, all 48 nets and 213 terminals; manual copper removed.
   // Restore only X48_N's lost rule to isolate the clock-routing defect.
@@ -17,6 +17,7 @@ test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): 
     cacheProvider: null,
   })
   solver.solve()
+  expect(solver.error).toBeFalsy()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const traces = solver.getOutputSimplifiedPcbTraces()
@@ -41,9 +42,9 @@ test("real Bluetooth pedometer ignores the X48_N zero-via and 6 mm limits", (): 
         length += Math.hypot(a.x - b.x, a.y - b.y)
     }
   }
-  expect(vias).toBeGreaterThan(0)
-  // Include the 1.6 mm board traversal for each through via.
-  expect(length + vias * 1.6).toBeGreaterThan(6)
+  expect(vias).toBe(0)
+  expect(length).toBeGreaterThan(0)
+  expect(length).toBeLessThanOrEqual(6)
   const outputCoordinates = new Set(
     traces.flatMap((trace) =>
       trace.route.flatMap((point) =>

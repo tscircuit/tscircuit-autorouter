@@ -1,3 +1,5 @@
+import { FinalRouteConstraintsSolver } from "lib/solvers/ConstrainedRouteSolver/FinalRouteConstraintsSolver"
+import { ConstrainedRouteSolver } from "lib/solvers/ConstrainedRouteSolver/ConstrainedRouteSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -310,7 +312,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  declare finalRouteConstraintsSolver?: FinalRouteConstraintsSolver
+  declare constrainedRouteSolver?: ConstrainedRouteSolver
+
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -1109,6 +1114,34 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
+    if (this.originalSrj.routeConstraints?.length) {
+      this.pipelineDef.unshift(
+        definePipelineStep(
+          "constrainedRouteSolver",
+          ConstrainedRouteSolver,
+          (cms) => [cms.originalSrj],
+          {
+            onSolved: (cms) => {
+              cms.originalSrj = cms.constrainedRouteSolver!.outputSrj
+              cms.setSimpleRouteJson(cms.originalSrj)
+            },
+          },
+        ),
+      )
+      this.pipelineDef.push(
+        definePipelineStep(
+          "finalRouteConstraintsSolver",
+          FinalRouteConstraintsSolver,
+          (cms) => [
+            cms.originalSrj,
+            [
+              ...cms.getPowerTraceExpansionFixedTraces(),
+              ...cms.powerTraceExpansionSolver!.getOutput(),
+            ],
+          ],
+        ),
+      )
+    }
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -1709,12 +1742,28 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
-      ...this.getPowerTraceExpansionFixedTraces().filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
-      ),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    if (!this.originalSrj.routeConstraints?.length) {
+      return [
+        ...this.getPowerTraceExpansionFixedTraces().filter(
+          (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        ),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ]
+    }
+    if (!this.finalRouteConstraintsSolver)
+      throw new Error("Constrained routing completed without final validation")
+    const originalPreloadedIds = new Set(
+      (this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
+    )
+    return this.finalRouteConstraintsSolver!.traces.filter(
+      (trace) =>
+        !originalPreloadedIds.has(trace.pcb_trace_id) ||
+        trace.__replaces_pcb_trace_id !== undefined ||
+        this.constrainedRouteSolver?.newTraceIds.has(trace.pcb_trace_id) ||
+        this.finalRouteConstraintsSolver!.replacedTraceIds.has(
+          trace.pcb_trace_id,
+        ),
+    )
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1726,10 +1775,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    const traces = [
-      ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    if (
+      this.originalSrj.routeConstraints?.length &&
+      !this.finalRouteConstraintsSolver
+    )
+      throw new Error("Constrained routing completed without final validation")
+    const traces = this.originalSrj.routeConstraints?.length
+      ? this.finalRouteConstraintsSolver!.traces
+      : [
+          ...this.getPowerTraceExpansionFixedTraces(),
+          ...this.powerTraceExpansionSolver.getOutput(),
+        ]
     return {
       ...this.originalSrj,
       traces,
