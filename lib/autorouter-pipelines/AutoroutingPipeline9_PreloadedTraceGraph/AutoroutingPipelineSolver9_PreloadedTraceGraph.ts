@@ -1,3 +1,5 @@
+import { Pipeline9TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
+import { getMinimumTraceWidthByConnectionName } from "lib/utils/getMinimumTraceWidthByConnectionName"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -303,6 +305,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private readonly hasConnectionMinimumTraceWidths: boolean
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -536,6 +539,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             graph,
             connections,
+            minimumTraceWidthSrj: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!
+              : undefined,
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
@@ -653,6 +659,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
+            connections: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!.connections
+              : undefined,
             obstacleMargin,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -757,6 +766,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: newHdRoutes,
+            connections: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!.connections
+              : undefined,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
@@ -793,6 +805,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: editableHdRoutes,
+            connections: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!.connections
+              : undefined,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
@@ -1108,6 +1123,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
+    this.hasConnectionMinimumTraceWidths =
+      getMinimumTraceWidthByConnectionName(srj.connections).size > 0
+    if (this.hasConnectionMinimumTraceWidths) {
+      for (const step of this.pipelineDef) {
+        if (step.solverClass === TraceSimplificationSolver) {
+          step.solverClass = Pipeline9TraceSimplificationSolver
+        }
+      }
+    }
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -1223,6 +1247,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      const minimumWidths = getMinimumTraceWidthByConnectionName(
+        this.srjWithPointPairs!.connections,
+      )
+      for (const trace of this.powerTraceExpansionSolver!.getOutput()) {
+        const minimum = minimumWidths.get(trace.connection_name)
+        if (minimum === undefined) continue
+        const violation = trace.route.find(
+          (point) =>
+            point.route_type === "wire" &&
+            point.width + 1e-6 < Math.max(this.srj.minTraceWidth, minimum),
+        )
+        if (violation) {
+          this.failed = true
+          this.error = `Connection "${trace.connection_name}" final copper violates minimum trace width ${minimum}mm`
+          return
+        }
+      }
       this.solved = true
       return
     }

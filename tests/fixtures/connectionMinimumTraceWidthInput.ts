@@ -1,12 +1,7 @@
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 
 // Based on the existing narrow-channel repro (#2606).
-// Proposed opt-in contract; production SRJ does not support this field yet.
-type ConstrainedSrj = SimpleRouteJson & {
-  connections: Array<SimpleRouteConnection & { minTraceWidth: number }>
-}
-
-export const getConnectionMinimumTraceWidthInput = (): ConstrainedSrj => ({
+export const getConnectionMinimumTraceWidthInput = (): SimpleRouteJson => ({
   bounds: { minX: -15, maxX: 15, minY: -10, maxY: 10 },
   layerCount: 1,
   minTraceWidth: 0.1,

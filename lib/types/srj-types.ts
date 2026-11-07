@@ -177,6 +177,12 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   __netConnectionName?: string
+  /**
+   * Opt-in hard minimum for new Pipeline9 copper, including terminal escapes.
+   * Connected branches share their largest minimum; existing fixed copper is
+   * preserved. Nominal-only connections retain advisory width/neckdown behavior.
+   */
+  minTraceWidth?: number
   nominalTraceWidth?: number
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number

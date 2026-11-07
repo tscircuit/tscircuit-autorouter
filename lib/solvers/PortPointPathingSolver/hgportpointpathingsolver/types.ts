@@ -12,6 +12,7 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   SimpleRouteConnection,
+  SimpleRouteJson,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
@@ -90,6 +91,7 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
+  minimumTraceWidthSrj?: SimpleRouteJson
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>
