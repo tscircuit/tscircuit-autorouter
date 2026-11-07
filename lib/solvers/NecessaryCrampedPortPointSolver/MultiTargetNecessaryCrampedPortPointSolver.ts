@@ -249,7 +249,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        // Numerical bridges were selected using terminal connectivity. A
+        // shallow local escape must not remove them again on a single layer.
+        if (
+          segment.crossesNumericalGap ||
+          this.isMultilayerEscapePort(portPoint)
+        ) {
           return [
             {
               ...portPoint,

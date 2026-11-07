@@ -1,3 +1,4 @@
+import { doesOrdinaryEscapeReachConnection } from "./doesOrdinaryEscapeReachConnection"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import type {
   SegmentPortPoint,
@@ -63,8 +64,8 @@ export function retainActiveNumericalGapSegments({
           Math.abs(point.y - node.center.y) <= node.height / 2,
       )
     ) {
-      // Reuse the necessary-port stage's ordinary escape check. A terminal
-      // that already reaches free space does not need additional gap ports.
+      // Nearby free space may be a closed pocket. Retain a numerical bridge
+      // unless ordinary ports can also reach the connection's destinations.
       const escape = new SingleTargetNecessaryCrampedPortPointSolver({
         target: node,
         depthLimit: 2,
@@ -79,6 +80,13 @@ export function retainActiveNumericalGapSegments({
         isAllCandidatesBlockedByObstacles({
           candidates: escape.getOutput(),
           mapOfCapacityMeshNodeIdToRef: nodeMap,
+        }) ||
+        !doesOrdinaryEscapeReachConnection({
+          target: node,
+          nodes,
+          nodeMap,
+          ordinaryPorts,
+          connections,
         })
       ) {
         reached.add(node.capacityMeshNodeId)

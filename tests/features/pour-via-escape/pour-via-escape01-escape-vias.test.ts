@@ -114,9 +114,12 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
     const targetZ = mapLayerNameToZ(metadata!.targetLayer, srj.layerCount)
     const expectedZLayers = Array.from(
       {
-        length: Math.abs(targetZ - sourceZ) + 1,
+        length: srj.allowBlindAndBuriedVias
+          ? Math.abs(targetZ - sourceZ) + 1
+          : srj.layerCount,
       },
-      (_, index) => Math.min(sourceZ, targetZ) + index,
+      (_, index) =>
+        (srj.allowBlindAndBuriedVias ? Math.min(sourceZ, targetZ) : 0) + index,
     )
     expect(escapeViaObstacle?.__zLayers).toEqual(expectedZLayers)
   }
