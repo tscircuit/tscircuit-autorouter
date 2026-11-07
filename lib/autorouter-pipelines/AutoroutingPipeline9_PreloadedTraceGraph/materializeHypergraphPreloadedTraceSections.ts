@@ -323,8 +323,21 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
       sectionEnd,
     })
 
+    const sectionWidths = traces[traceIndex]!.route.slice(
+      Math.floor(section.startRoutePosition),
+      Math.ceil(section.endRoutePosition),
+    ).flatMap((point) => (point.route_type === "wire" ? [point.width] : []))
+    // A moved section inherits only the copper widths it replaces, not the
+    // widest segment anywhere on the original trace. A via-only section has
+    // no original wire width and retains the router's declared wire width.
+    const traceThickness =
+      sectionWidths.length > 0
+        ? Math.max(...sectionWidths)
+        : stitchedRoute.traceThickness
     return {
       ...stitchedRoute,
+      traceThickness,
+      route: stitchedRoute.route.map((point) => ({ ...point, traceThickness })),
       preloadedTraceIndex: traceIndex,
       preloadedRouteIndex:
         Number.MAX_SAFE_INTEGER - sections.length + sectionIndex,

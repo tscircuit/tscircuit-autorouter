@@ -60,10 +60,16 @@ const appendConnectedRoute = (
 
   const previousEnd = combinedPoints.at(-1)!
   if (route.route[0] && pointsAreEqual(previousEnd, route.route[0])) {
+    // Width belongs to the outgoing segment. The shared vertex starts the
+    // next section, while the preceding vertex retains the incoming width.
+    previousEnd.traceThickness =
+      route.route[0].traceThickness ?? previousEnd.traceThickness
     combinedPoints.push(...route.route.slice(1))
     return
   }
   if (route.route.at(-1) && pointsAreEqual(previousEnd, route.route.at(-1)!)) {
+    previousEnd.traceThickness =
+      route.route.at(-1)!.traceThickness ?? previousEnd.traceThickness
     combinedPoints.push(...route.route.slice(0, -1).reverse())
     return
   }
@@ -88,18 +94,6 @@ const comparePreloadedRouteOrder = (
     left.preloadedRouteIndex - right.preloadedRouteIndex ||
     left.connectionName.localeCompare(right.connectionName)
   )
-}
-
-const getMaximumOriginalTraceThickness = (
-  trace: SimplifiedPcbTrace,
-): number | undefined => {
-  const traceWidths = trace.route.flatMap((routePoint) =>
-    routePoint.route_type === "wire" ||
-    routePoint.route_type === "through_obstacle"
-      ? [routePoint.width]
-      : [],
-  )
-  return traceWidths.length > 0 ? Math.max(...traceWidths) : undefined
 }
 
 const convertUpdatedTraceRoutes = ({
@@ -144,7 +138,19 @@ const convertUpdatedTraceRoutes = ({
         }
       }
     }
-    appendConnectedRoute(combinedPoints, orientedRoute)
+    const hasPlanarWire = orientedRoute.route.some((point, pointIndex) => {
+      const next = orientedRoute.route[pointIndex + 1]
+      return next && point.z === next.z && !pointsAreEqual(point, next)
+    })
+    appendConnectedRoute(combinedPoints, {
+      ...orientedRoute,
+      route: orientedRoute.route.map((point) => ({
+        ...point,
+        traceThickness:
+          point.traceThickness ??
+          (hasPlanarWire ? orientedRoute.traceThickness : undefined),
+      })),
+    })
     traceThickness = Math.max(traceThickness, updatedTraceRoute.traceThickness)
     viaDiameter = Math.max(viaDiameter, updatedTraceRoute.viaDiameter)
     rootConnectionName ??= updatedTraceRoute.rootConnectionName
@@ -152,7 +158,7 @@ const convertUpdatedTraceRoutes = ({
   const combinedRoute: HighDensityRoute = {
     connectionName: trace.connection_name,
     rootConnectionName,
-    traceThickness: getMaximumOriginalTraceThickness(trace) ?? traceThickness,
+    traceThickness,
     viaDiameter,
     route: combinedPoints,
     vias: combinedPoints.slice(0, -1).flatMap((point, pointIndex) => {

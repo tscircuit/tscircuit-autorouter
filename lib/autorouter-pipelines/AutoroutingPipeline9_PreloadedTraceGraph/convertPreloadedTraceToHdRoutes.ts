@@ -117,7 +117,7 @@ export const convertPreloadedTraceToHdRoutes = (
           z: mapLayerNameToZ(nextPoint.layer, layerCount),
         },
       ],
-      Math.max(point.width, nextPoint.width),
+      point.width,
       defaultViaDiameter,
       [],
       pointIndex,
