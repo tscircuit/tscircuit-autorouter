@@ -50,6 +50,7 @@ export const spacePortsAroundRetainedCopper = ({
   edge,
   originalPorts,
   preferredPorts,
+  neighboringPorts = [],
   movableIds,
   routes,
   traceWidth,
@@ -59,6 +60,7 @@ export const spacePortsAroundRetainedCopper = ({
   edge: SharedEdge
   originalPorts: PortPointWithOwnerPair[]
   preferredPorts: PortPointWithOwnerPair[]
+  neighboringPorts?: PortPointWithOwnerPair[]
   movableIds: ReadonlySet<string>
   routes: HighDensityRoute[]
   traceWidth: number
@@ -92,6 +94,29 @@ export const spacePortsAroundRetainedCopper = ({
       let low = movable ? min : original
       let high = movable ? max : original
       if (movable) {
+        // Ports on perpendicular edges are locked HD anchors too. Reserve
+        // their circular copper clearance before regional routing begins.
+        for (const neighbor of neighboringPorts) {
+          if (
+            neighbor.z !== z ||
+            neighbor.connectionName === port.connectionName ||
+            connMap.areIdsConnected(
+              neighbor.connectionName,
+              port.connectionName,
+            )
+          )
+            continue
+          const interval = getBlockedInterval(
+            edge,
+            neighbor,
+            neighbor,
+            traceWidth + clearance + 1e-6,
+          )
+          if (!interval || interval.max < min || interval.min > max) continue
+          affected = true
+          if (original < interval.center) high = Math.min(high, interval.min)
+          else low = Math.max(low, interval.max)
+        }
         for (const route of routes) {
           const portNet =
             connMap.getNetConnectedToId(port.connectionName) ??
@@ -145,12 +170,30 @@ export const spacePortsAroundRetainedCopper = ({
     if (!affected) continue
     // Keep neighboring new ports in their established order as well. Their
     // ordinary uniform spacing is retained wherever the reserved copper allows.
+    const separation = (
+      left: (typeof entries)[number],
+      right: (typeof entries)[number],
+    ): number =>
+      left.port.connectionName === right.port.connectionName ||
+      connMap.areIdsConnected(
+        left.port.connectionName,
+        right.port.connectionName,
+      )
+        ? 1e-8
+        : traceWidth + clearance + 1e-6
     for (let i = 1; i < entries.length; i++)
-      entries[i]!.low = Math.max(entries[i]!.low, entries[i - 1]!.low + 1e-8)
+      entries[i]!.low = Math.max(
+        entries[i]!.low,
+        entries[i - 1]!.low + separation(entries[i - 1]!, entries[i]!),
+      )
     for (let i = entries.length - 2; i >= 0; i--)
-      entries[i]!.high = Math.min(entries[i]!.high, entries[i + 1]!.high - 1e-8)
+      entries[i]!.high = Math.min(
+        entries[i]!.high,
+        entries[i + 1]!.high - separation(entries[i]!, entries[i + 1]!),
+      )
     let previous = -Infinity
-    for (const entry of entries) {
+    for (const [index, entry] of entries.entries()) {
+      const gap = index === 0 ? 0 : separation(entries[index - 1]!, entry)
       if (entry.low > entry.high + 1e-8) {
         throw new Error(
           `No clearance interval for port "${entry.port.portPointId}" on mesh edge "${edge.ownerPairKey}": ${JSON.stringify({ low: entry.low, high: entry.high, port: entry.port, edge })}`,
@@ -158,7 +201,7 @@ export const spacePortsAroundRetainedCopper = ({
       }
       const value = Math.max(
         entry.low,
-        previous + 1e-8,
+        previous + gap,
         Math.min(entry.high, entry.preferred),
       )
       previous = value

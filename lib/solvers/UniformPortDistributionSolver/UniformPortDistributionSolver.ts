@@ -63,6 +63,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private ownerPairKeysByNode = new Map<string, Set<OwnerPairKey>>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -118,6 +119,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
       nodeBounds: this.mapOfNodeIdToBounds,
     })
 
+    for (const [key, edge] of this.mapOfOwnerPairToSharedEdge) {
+      for (const nodeId of edge.ownerNodeIds) {
+        const keys =
+          this.ownerPairKeysByNode.get(nodeId) ?? new Set<OwnerPairKey>()
+        keys.add(key)
+        this.ownerPairKeysByNode.set(nodeId, keys)
+      }
+    }
     this.ownerPairsToProcess = Array.from(
       this.mapOfOwnerPairToSharedEdge.keys(),
     )
@@ -250,6 +259,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
                 )
                 .map((port) => port.portPointId!),
             ),
+            neighboringPorts: [
+              ...new Set(
+                sharedEdge.ownerNodeIds.flatMap((nodeId) => [
+                  ...(this.ownerPairKeysByNode.get(nodeId) ?? []),
+                ]),
+              ),
+            ]
+              .filter((key) => key !== ownerPairKey)
+              .flatMap((key) => this.mapOfOwnerPairToPortPoints.get(key) ?? []),
             routes: preloadedRoutes,
             traceWidth: minTraceWidth,
             clearance: traceClearance,
