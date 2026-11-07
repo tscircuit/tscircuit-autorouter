@@ -144,7 +144,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
     this.traceThickness = opts.traceThickness ?? 0.15
-    this.obstacleMargin = opts.obstacleMargin ?? 0.15
+    this.obstacleMargin = opts.obstacleMargin ?? 0.2
     this.layerCount = opts.layerCount ?? 2
     this.availableZ =
       opts.availableZ && opts.availableZ.length > 0
@@ -153,7 +153,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
-    this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
+    this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? this.obstacleMargin
     this.debugEnabled = opts.captureSearchDebug ?? true
     this.MAX_ITERATIONS = 10e3 // 5000
 
