@@ -34,6 +34,16 @@ export const createBenchmarkDrcRepro = ({
         routedTraces,
         jointParams,
         jointStats: joint?.stats,
+        boundedRepairParams: joint?.boundedRegionalRepairSolver
+          ? {
+              ...joint.boundedRegionalRepairSolver.params,
+              connMap: joint.boundedRegionalRepairSolver.params.connMap?.netMap,
+              syntheticConnectionNames: [
+                ...joint.boundedRegionalRepairSolver.params
+                  .syntheticConnectionNames,
+              ],
+            }
+          : undefined,
         jointOutput: joint?.solved ? joint.getOutput() : undefined,
         contactRepairInput: joint?.traceContactRepairSolver?.params.hdRoutes,
         contactRepairStats: joint?.traceContactRepairSolver?.stats,
