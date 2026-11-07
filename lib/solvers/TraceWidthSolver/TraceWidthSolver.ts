@@ -170,10 +170,18 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-      ...this.hdRoutes,
-      ...(input.otherHdRoutes ?? []),
-    ])
+    const hasWidthsToCheck =
+      !this.onlyWiden ||
+      this.hdRoutes.some((route) => {
+        const nominalTraceWidth = this.getNominalTraceWidthForRoute(route)
+        return (
+          nominalTraceWidth !== undefined &&
+          route.traceThickness < nominalTraceWidth
+        )
+      })
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(
+      hasWidthsToCheck ? [...this.hdRoutes, ...(input.otherHdRoutes ?? [])] : [],
+    )
   }
 
   private getNominalTraceWidthForRoute(
