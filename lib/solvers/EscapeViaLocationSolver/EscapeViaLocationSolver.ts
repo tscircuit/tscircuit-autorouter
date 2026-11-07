@@ -25,6 +25,7 @@ import {
 import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
+import { getConnectedCopperPourObstacles } from "./getConnectedCopperPourObstacles"
 
 const ESCAPE_POINT_ID_PREFIX = "escape-via:"
 const GEOMETRIC_TOLERANCE = 1e-4
@@ -699,6 +700,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     pointIndex: number
     matchingCopperPours: Obstacle[]
     connectionNetIds: Set<string>
+    connectedPourByObstacle: Map<Obstacle, Obstacle>
     sourceObstacle?: Obstacle
   }): EscapeViaCandidate | null {
     const {
@@ -707,6 +709,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       pointIndex,
       matchingCopperPours,
       connectionNetIds,
+      connectedPourByObstacle,
       sourceObstacle: sourceObstacleOverride,
     } = params
 
@@ -732,7 +735,9 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-      const targetPourKey = getObstacleKey(copperPour)
+      const connectedPour = connectedPourByObstacle.get(copperPour)
+      if (!connectedPour) throw new Error("Missing copper pour connectivity")
+      const targetPourKey = getObstacleKey(connectedPour)
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
@@ -877,6 +882,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const copperPours = this.ogSrj.obstacles.filter(
       (obstacle) => obstacle.isCopperPour,
     )
+    const connectedPourByObstacle = getConnectedCopperPourObstacles(copperPours)
     const originalConnections = this.ogSrj.connections
     const newConnections = originalConnections.map((connection) =>
       structuredClone(connection),
@@ -934,6 +940,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
           pointIndex: pointOwner.pointIndex,
           matchingCopperPours,
           connectionNetIds,
+          connectedPourByObstacle,
           sourceObstacle,
         })
 

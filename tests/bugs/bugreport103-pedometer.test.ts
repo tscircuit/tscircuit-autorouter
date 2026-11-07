@@ -34,8 +34,22 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
   expect(tinySolver.solved).toBe(true)
   expect(tinySolver.iterations).toBe(tinySolver.MAX_ITERATIONS)
   expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).toBe(true)
-  expect(tinySolver.getOutput().solvedRoutes).toHaveLength(230)
+  expect(tinySolver.getOutput().solvedRoutes).toHaveLength(
+    tinySolver.problem.routeCount,
+  )
   expect(tinySolver.state.unroutedRoutes).toEqual([])
+  // Connected pour tiles remove redundant airwires, but every original
+  // terminal must still be represented in the routing problem.
+  const pairedTerminalIds = new Set(
+    pipeline.srjWithPointPairs!.connections.flatMap((connection) =>
+      connection.pointsToConnect.map((point) => point.pointId),
+    ),
+  )
+  for (const connection of srj.connections) {
+    for (const point of connection.pointsToConnect) {
+      expect(pairedTerminalIds.has(point.pointId)).toBe(true)
+    }
+  }
   for (
     let regionId = 0;
     regionId < tinySolver.topology.regionCount;
