@@ -8,7 +8,10 @@ type NegotiatedClearanceParams = {
   routes: HighDensityRoute[]
   fixedRoutes: HighDensityRoute[]
   effort: number
-  countErrors: (routes: HighDensityRoute[]) => number
+  evaluate: (routes: HighDensityRoute[]) => {
+    errorCount: number
+    dirtyRouteIndices: number[]
+  }
 }
 
 /** Whole-board negotiation lets interacting repairs move together at higher effort. */
@@ -16,6 +19,7 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
   readonly params: NegotiatedClearanceParams
   bestRoutes: HighDensityRoute[]
   bestErrorCount: number | undefined
+  private dirtyRouteIndices: number[] = []
   completedPasses = 0
   negotiationSolver?: NegotiateTraceClearanceSolver
 
@@ -27,9 +31,11 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
       this.solved = true
       return
     }
-    this.bestErrorCount = params.countErrors(this.bestRoutes)
+    const initial = params.evaluate(this.bestRoutes)
+    this.bestErrorCount = initial.errorCount
+    this.dirtyRouteIndices = initial.dirtyRouteIndices
     this.stats = { initialErrorCount: this.bestErrorCount }
-    if (this.bestErrorCount === 0) {
+    if (this.bestErrorCount === 0 || this.dirtyRouteIndices.length === 0) {
       this.solved = true
       return
     }
@@ -49,7 +55,10 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
       srj: { ...params.srj, traces: undefined },
       routes,
       bounds: params.srj.bounds,
-      dirtyRouteIndices: this.bestRoutes.map((_, index) => index),
+      dirtyRouteIndices: this.dirtyRouteIndices,
+      fixedRouteIndices: params.fixedRoutes.map(
+        (_, index) => movableCount + index,
+      ),
       isLocked: (routeIndex, pointIndex): boolean =>
         routeIndex >= movableCount ||
         pointIndex === 0 ||
@@ -86,18 +95,21 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
     }
     if (!child.solved) return
     const candidate = child.getOutput().routes.slice(0, this.bestRoutes.length)
-    const errorCount = this.params.countErrors(candidate)
+    const evaluated = this.params.evaluate(candidate)
+    const errorCount = evaluated.errorCount
     this.completedPasses++
     const improved = errorCount < this.bestErrorCount!
     if (improved) {
       this.bestRoutes = candidate
       this.bestErrorCount = errorCount
+      this.dirtyRouteIndices = evaluated.dirtyRouteIndices
     }
     this.stats.remainingErrorCount = this.bestErrorCount
     this.stats.completedPasses = this.completedPasses
     if (
       improved &&
       errorCount > 0 &&
+      this.dirtyRouteIndices.length > 0 &&
       this.completedPasses < Math.ceil(this.params.effort)
     ) {
       this.startNegotiation()

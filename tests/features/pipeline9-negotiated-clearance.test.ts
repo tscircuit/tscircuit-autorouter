@@ -60,7 +60,10 @@ test("higher-effort negotiation repairs coupled routes while preserving terminal
       routes: routes.slice(0, 3),
       fixedRoutes,
       effort,
-      countErrors,
+      evaluate: (candidate) => ({
+        errorCount: countErrors(candidate),
+        dirtyRouteIndices: candidate.map((_, index) => index),
+      }),
     })
     solver.solve()
     expect(solver.failed).toBe(false)

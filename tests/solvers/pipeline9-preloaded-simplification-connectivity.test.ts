@@ -38,6 +38,7 @@ test("Pipeline9 simplification recognizes connected preload aliases without igno
     }
     const preloadedSnapshot = structuredClone(srj.traces)
     const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj)
+    pipeline.srjWithPointPairs = srj
     const route: HighDensityRoute = {
       connectionName: "new_route",
       rootConnectionName: "new_route",

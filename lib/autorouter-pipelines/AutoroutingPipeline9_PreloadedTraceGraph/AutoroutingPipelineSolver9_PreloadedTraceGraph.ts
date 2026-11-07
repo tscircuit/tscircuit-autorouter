@@ -92,7 +92,11 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import {
+  Pipeline9JointDrcRepairSolver,
+  addAutoroutingViaTraceIds,
+} from "./Pipeline9JointDrcRepairSolver"
+import { getPipeline9RouteIndexByTraceId } from "./pipeline9JointDrcRepairUtils"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -899,20 +903,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
         )
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
-          assignUniquePcbTraceIdsToNewTraces(
-            convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
-              originalConnections: cms.originalSrj.connections,
-              hdRoutes: canonicalizePipeline9HdRoutes(routes),
-              layerCount: cms.srj.layerCount,
-              obstacles: cms.srj.obstacles,
-              defaultViaHoleDiameter: cms.viaHoleDiameter,
-              connMap: cms.connMap,
-            }),
-            cms.originalSrj.traces ?? [],
-          )
+          convertPipeline7HdRoutesToSimplifiedPcbTraces({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            hdRoutes: canonicalizePipeline9HdRoutes(routes),
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+          })
         let evaluate: ReturnType<typeof createPipeline9AutoroutingDrcEvaluator>
-        const countErrors = (routes: HighDensityRoute[]): number => {
+        const evaluateRoutes = (
+          routes: HighDensityRoute[],
+        ): { errorCount: number; dirtyRouteIndices: number[] } => {
           evaluate ??= createPipeline9AutoroutingDrcEvaluator({
             inputSrj,
             srjWithPointPairs: cms.srjWithPointPairs!,
@@ -926,7 +929,48 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             },
           })
-          return evaluate(convert(routes)).errors.length
+          const rawTraces = convert(routes)
+          const traces = assignUniquePcbTraceIdsToNewTraces(
+            rawTraces,
+            preloadedTraces,
+          )
+          const result = evaluate(traces)
+          const routeIndexByRawId = getPipeline9RouteIndexByTraceId({
+            routes,
+            newConnections: cms.netToPointPairsSolver!.newConnections,
+            syntheticConnectionNames: new Set(),
+          })
+          const indexById = new Map(
+            traces.map((trace, index) => [
+              trace.pcb_trace_id,
+              routeIndexByRawId.get(rawTraces[index]!.pcb_trace_id),
+            ]),
+          )
+          const errors = addAutoroutingViaTraceIds({
+            errors: result.errors,
+            circuitJson: result.circuitJson,
+            evaluatedTraceIds: new Set(
+              traces.map((trace) => trace.pcb_trace_id),
+            ),
+          })
+          const dirty = new Set<number>()
+          for (const error of errors) {
+            const ids = [
+              error.pcb_trace_id,
+              ...(Array.isArray(error.pcb_trace_ids)
+                ? error.pcb_trace_ids
+                : []),
+            ]
+            for (const id of ids) {
+              const index =
+                typeof id === "string" ? indexById.get(id) : undefined
+              if (index !== undefined) dirty.add(index)
+            }
+          }
+          return {
+            errorCount: errors.length,
+            dirtyRouteIndices: [...dirty].sort((a, b) => a - b),
+          }
         }
         return [
           {
@@ -942,7 +986,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
             ),
             effort: cms.effort,
-            countErrors,
+            evaluate: evaluateRoutes,
           },
         ]
       },

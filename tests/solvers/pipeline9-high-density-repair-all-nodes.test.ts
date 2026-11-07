@@ -45,6 +45,7 @@ test("Pipeline9 repairs every node when the board has more than 80 repair sample
     },
     { cacheProvider: null },
   )
+  pipeline.srjWithPointPairs = pipeline.srj
   pipeline.highDensityNodePortPoints = nodes
   pipeline.highDensityForceImproveSolver = {
     getOutput: (): HighDensityRoute[] => routes,
