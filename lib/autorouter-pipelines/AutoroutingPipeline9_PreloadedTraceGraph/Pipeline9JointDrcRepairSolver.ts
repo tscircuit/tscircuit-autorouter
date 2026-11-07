@@ -603,6 +603,9 @@ const rebuildPreloadedTraceFromSections = ({
     originalRoutePosition = repairedSection.routePositionEnd + 1
   }
   rebuiltRoute.push(...originalTrace.route.slice(originalRoutePosition))
+  if (JSON.stringify(rebuiltRoute) === JSON.stringify(originalTrace.route)) {
+    return originalTrace
+  }
 
   return {
     ...originalTrace,
