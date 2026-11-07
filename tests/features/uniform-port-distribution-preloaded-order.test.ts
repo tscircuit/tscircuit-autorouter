@@ -43,7 +43,11 @@ test("uniform spacing preserves crossing order around retained copper on its lay
       { x: 1, y: 1, z: 3 },
     ],
   }
-  for (const preloadedRoutes of [[], [preloaded]]) {
+  const safePreloaded = {
+    ...preloaded,
+    route: preloaded.route.map((point) => ({ ...point, x: 0.2 })),
+  }
+  for (const preloadedRoutes of [[], [preloaded], [safePreloaded]]) {
     const solver = new UniformPortDistributionSolver({
       useLayerAwareGeometry: true,
       layerCount: 4,
@@ -59,7 +63,7 @@ test("uniform spacing preserves crossing order around retained copper on its lay
         0.5, 1.5,
       ])
       expect(node.portPoints.filter((p) => p.z === 3).map((p) => p.x)).toEqual(
-        preloadedRoutes.length ? [1.2, 1.8] : [0.5, 1.5],
+        preloadedRoutes[0] === preloaded ? [1.2, 1.8] : [0.5, 1.5],
       )
     }
   }

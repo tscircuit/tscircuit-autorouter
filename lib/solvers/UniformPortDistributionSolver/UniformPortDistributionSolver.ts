@@ -149,29 +149,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
     const family: PortPointWithOwnerPair[] = []
-    const layersWithPreloadedCrossings = new Set<number>()
-    for (const route of this.input.preloadedRoutes ?? []) {
-      for (let i = 1; i < route.route.length; i++) {
-        const a = route.route[i - 1]!
-        const b = route.route[i]!
-        if (a.z !== b.z || layersWithPreloadedCrossings.has(a.z)) continue
-        if (
-          segmentToSegmentMinDistance(
-            a,
-            b,
-            { x: sharedEdge.x1, y: sharedEdge.y1 },
-            { x: sharedEdge.x2, y: sharedEdge.y2 },
-          ) < 1e-8
-        ) {
-          layersWithPreloadedCrossings.add(a.z)
-        }
-      }
-    }
     for (const portPoint of familyRaw) {
-      // Spacing only the new ports can move them across retained copper and
-      // reverse the topology's crossing order. Keep the planner's positions
-      // on these layers; the copper remains a route, not a topology obstacle.
-      if (layersWithPreloadedCrossings.has(portPoint.z)) continue
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
@@ -203,7 +181,43 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    const originalById = new Map(
+      family.map((port) => [port.portPointId, port]),
+    )
+    const layersWithReversedCrossings = new Set<number>()
+    for (const port of redistributed) {
+      const original = originalById.get(port.portPointId)!
+      if (
+        layersWithReversedCrossings.has(port.z) ||
+        Math.hypot(original.x - port.x, original.y - port.y) < 1e-8
+      ) {
+        continue
+      }
+      for (const route of this.input.preloadedRoutes ?? []) {
+        for (let i = 1; i < route.route.length; i++) {
+          const a = route.route[i - 1]!
+          const b = route.route[i]!
+          if (a.z !== port.z || b.z !== port.z) continue
+          if (segmentToSegmentMinDistance(a, b, original, port) < 1e-8) {
+            layersWithReversedCrossings.add(port.z)
+            break
+          }
+        }
+        if (layersWithReversedCrossings.has(port.z)) break
+      }
+    }
+    // Reject only moves that cross retained copper. Unaffected layers still
+    // need uniform spacing; freezing them can create unnecessary congestion.
+    // Preserve the whole family on an affected layer so new ports cannot
+    // reverse their order relative to each other either.
+    this.mapOfOwnerPairToPortPoints.set(
+      ownerPairKey,
+      redistributed.map((port) =>
+        layersWithReversedCrossings.has(port.z)
+          ? originalById.get(port.portPointId)!
+          : port,
+      ),
+    )
   }
 
   rebuildNodes(): void {
