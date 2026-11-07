@@ -20,6 +20,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { getFullyCoveredNodeLayers } from "./getFullyCoveredNodeLayers"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -163,6 +164,41 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
+    const node = params.nodeWithPortPoints
+    const blockedLayers = getFullyCoveredNodeLayers(
+      node,
+      params.obstacles.filter(
+        (obstacle) =>
+          obstacle.isCopperPour &&
+          node.portPoints.every(
+            (port) =>
+              !isPipeline9ObstacleConnectedToRoute({
+                obstacle,
+                route: port,
+                connMap: params.connMap,
+              }),
+          ),
+      ),
+      params.layerCount,
+    )
+    if (node.portPoints.some((port) => blockedLayers.has(port.z))) {
+      throw new Error(
+        `Regional node "${node.capacityMeshNodeId}" has a terminal inside a foreign copper plane`,
+      )
+    }
+    // These layers cannot contain any legal planar wire for any regional net.
+    // Restrict candidate generation before grow/shrink and force-improve; vias
+    // may still cross the plane because it is regenerated with antipads.
+    params = {
+      ...params,
+      nodeWithPortPoints: {
+        ...node,
+        availableZ: (
+          node.availableZ ??
+          Array.from({ length: params.layerCount }, (_, z) => z)
+        ).filter((z) => !blockedLayers.has(z)),
+      },
+    }
     this.params = params
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,

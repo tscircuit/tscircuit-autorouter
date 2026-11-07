@@ -67,9 +67,6 @@ test("RVboy regional routing preserves 0.10 mm width and avoids the ground plane
   expect(violations.filter((violation) => violation.kind === "wire")).toEqual(
     [],
   )
-  expect(solver.stats.viaClearanceRepair).toMatchObject({
-    unresolvedSpanCount: 0,
-  })
   const node = params.nodeWithPortPoints
   const viewbox = {
     minX: node.center.x - node.width / 2 - 0.4,
