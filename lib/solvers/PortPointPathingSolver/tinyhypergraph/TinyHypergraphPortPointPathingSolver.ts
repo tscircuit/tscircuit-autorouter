@@ -1129,28 +1129,30 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
-      if (params.portGeometry) {
-        const boundsByPortId = new Map<
-          string,
-          { minX: number; maxX: number; minY: number; maxY: number }
-        >()
-        graphForTiny = constrainBoundaryPortCapacity(
-          graphForTiny,
-          params.portGeometry,
-          boundsByPortId,
-        )
-        graphForTiny = addBoundaryPortClearanceConflicts(
-          graphForTiny,
-          boundsByPortId,
-          params.portGeometry.traceWidth + params.portGeometry.clearance,
-        )
-      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
         delete metadata._preloadedFixedNetIds
         delete metadata._preloadedTracePortAssignments
       }
+    }
+    // Physical capacity applies to the original graph too when the optional
+    // duplication pass cannot complete. Its failure must not admit blocked ports.
+    if (params.portGeometry) {
+      const boundsByPortId = new Map<
+        string,
+        { minX: number; maxX: number; minY: number; maxY: number }
+      >()
+      graphForTiny = constrainBoundaryPortCapacity(
+        graphForTiny,
+        params.portGeometry,
+        boundsByPortId,
+      )
+      graphForTiny = addBoundaryPortClearanceConflicts(
+        graphForTiny,
+        boundsByPortId,
+        params.portGeometry.traceWidth + params.portGeometry.clearance,
+      )
     }
     this.duplicatedPortCount = graphForTiny.ports.filter(
       (port) => typeof port.d?.duplicatedFromPortId === "string",
