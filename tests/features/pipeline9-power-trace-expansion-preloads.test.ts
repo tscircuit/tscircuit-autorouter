@@ -83,7 +83,8 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   const input = rawInput as Pipeline7PowerTraceExpansionInput
 
   expect(options as PowerTraceExpanderOptions).toMatchObject({
-    allowNewVias: false,
+    allowNewVias: true,
+    effort: 1,
     onlyConnectionNames: ["POWER"],
   })
   expect(input.fixedTraces).toEqual([updatedSignalTrace])
