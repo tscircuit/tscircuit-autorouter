@@ -21,6 +21,10 @@ test("RVboy regional routing repairs provisional vias before publishing validate
   const params = captured.params
   const solver = new Pipeline9RegionalFallbackSolver({
     ...params,
+    // This historical capture predates the separate physical trace-clearance
+    // input. RVboy uses 0.10 mm clearance; its 0.15 mm topology planning margin
+    // would incorrectly make two already legal, fixed endpoints unroutable.
+    traceToPadClearance: 0.1,
     connMap: new ConnectivityMap(params.connMap),
     movablePreloadedConnectionNames: new Set(
       params.movablePreloadedConnectionNames,
