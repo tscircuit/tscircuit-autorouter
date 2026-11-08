@@ -145,10 +145,24 @@ const routePointReferencesPort = (
   return point.start_pcb_port_id === portId || point.end_pcb_port_id === portId
 }
 
-const routePointTouchesPad = (point: RoutePoint, pad: Pad): boolean => {
+const routePointTouchesPad = (
+  point: RoutePoint,
+  pad: Pad,
+  copperWidth?: number,
+): boolean => {
   if (point.route_type !== "wire") return false
   const layers = pad.type === "pcb_smtpad" ? [pad.layer] : pad.layers
-  return layers.includes(point.layer) && pointIsInPad(point, pad)
+  if (!layers.includes(point.layer)) return false
+  if (copperWidth === undefined) return pointIsInPad(point, pad)
+  return viaTouchesPad(
+    {
+      ...point,
+      id: "trace-endpoint",
+      layers: [point.layer],
+      radius: copperWidth / 2,
+    },
+    pad,
+  )
 }
 
 const viaTouchesPad = (via: ViaContact, pad: Pad): boolean => {
@@ -472,9 +486,18 @@ export const checkTraceContinuity = (
         [...padsByPort]
           .filter(([, portPads]) =>
             [trace.route[0], trace.route.at(-1)].some(
-              (point) =>
+              (point, index) =>
                 point &&
-                portPads.some((pad) => routePointTouchesPad(point, pad)),
+                portPads.some((pad) =>
+                  routePointTouchesPad(
+                    point,
+                    pad,
+                    getEndpointCopperWidth(
+                      trace,
+                      index === 0 ? "start" : "end",
+                    ),
+                  ),
+                ),
             ),
           )
           .map(([portId]) => portId),
@@ -907,11 +930,7 @@ export const checkTraceContinuity = (
     for (const port of expectedPorts) {
       const portPads = padsByPort.get(port.pcb_port_id)
       if (!portPads?.length) continue
-      if (
-        [first, last].some((point) =>
-          portPads.some((pad) => routePointTouchesPad(point, pad)),
-        )
-      )
+      if (touchedPortsByTrace.get(trace.pcb_trace_id)!.has(port.pcb_port_id))
         continue
       if (connectsThroughPads(trace.pcb_trace_id, port.pcb_port_id)) continue
       const physical = getPhysicalConnectivity()
@@ -943,7 +962,13 @@ export const checkTraceContinuity = (
     if (expectedPorts.length > 0) continue
     const firstConnected =
       [...padsByPort.values()].some((portPads) =>
-        portPads.some((pad) => routePointTouchesPad(first, pad)),
+        portPads.some((pad) =>
+          routePointTouchesPad(
+            first,
+            pad,
+            getEndpointCopperWidth(trace, "start"),
+          ),
+        ),
       ) || endpointTouchesCopper(trace, "start")
     const sameEndpoints =
       first.route_type === "wire" &&
@@ -955,7 +980,13 @@ export const checkTraceContinuity = (
       if (index === 1 && sameEndpoints && !firstConnected) continue
       if (
         [...padsByPort.values()].some((portPads) =>
-          portPads.some((pad) => routePointTouchesPad(endpoint, pad)),
+          portPads.some((pad) =>
+            routePointTouchesPad(
+              endpoint,
+              pad,
+              getEndpointCopperWidth(trace, index === 0 ? "start" : "end"),
+            ),
+          ),
         ) ||
         endpointTouchesCopper(trace, index === 0 ? "start" : "end")
       )

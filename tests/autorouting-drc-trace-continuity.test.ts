@@ -164,10 +164,11 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
   const referenceEdgeCircuit = structuredClone(edgeCircuit)
   // Reference overlap checking adds endpoint ids before continuity runs.
   checkEachPcbTraceNonOverlapping(referenceEdgeCircuit)
-  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(1)
+  // The 0.1 mm wire's round end cap overlaps the pad by 0.01 mm.
+  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(0)
   annotateTraceEndpointPorts(edgeCircuit)
   expect(edgeCircuit).toEqual(referenceEdgeCircuit)
-  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(1)
+  expect(checkTraceContinuity(edgeCircuit)).toHaveLength(0)
   expect<unknown>(checkTraceContinuity(edgeCircuit)).toEqual(
     checkTracesAreContiguous(referenceEdgeCircuit),
   )
