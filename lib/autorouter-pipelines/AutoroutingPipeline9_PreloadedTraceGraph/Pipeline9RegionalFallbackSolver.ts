@@ -1,22 +1,23 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   NegotiateTraceClearanceSolver,
   getFixedObstacleViolations,
 } from "@tscircuit/repair04"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
-import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { getFullyCoveredNodeLayers } from "./getFullyCoveredNodeLayers"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import {
   arePipeline9RoutesOnSameNet,
@@ -24,7 +25,6 @@ import {
   getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import { preparePipeline9RepairConnectivity } from "./preparePipeline9RepairConnectivity"
-import { getFullyCoveredNodeLayers } from "./getFullyCoveredNodeLayers"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -647,6 +647,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
             connMap: params.connMap,
           })
         : { srj, routes }
+    const pathGridSizeScale = this.hasFixedCopperConflict(routes) ? 0.25 : 1
+    const maxPathSearchNodes = Math.ceil(1_000_000 * params.effort)
     this.viaClearanceSolver = new NegotiateTraceClearanceSolver({
       srj: { ...prepared.srj, traces: undefined },
       routes: prepared.routes,
@@ -663,13 +665,19 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       traceClearance: params.traceToPadClearance ?? params.obstacleMargin,
       viaClearance: clearance,
       viaHoleDiameter: params.viaHoleDiameter,
-      maxPathSearchNodes: Math.ceil(1_000_000 * params.effort),
-      maxPathSearchNodesPerCall: 100_000,
+      maxPathSearchNodes,
+      // A finer grid needs quadratically more sites to search the same area.
+      // Keep the regional work cap unchanged while allowing one difficult
+      // attachment to use the remaining budget instead of stopping at 100k.
+      maxPathSearchNodesPerCall: Math.min(
+        maxPathSearchNodes,
+        Math.ceil(100_000 / pathGridSizeScale ** 2),
+      ),
       maxPathSearchCalls: Math.ceil(100 * params.effort),
       // Retained fanout tracks can leave via passages narrower than the usual
       // half-trace-width grid. Resolve these fixed-copper corridors directly;
       // pad-only repairs keep their coarser grid and existing search budget.
-      pathGridSizeScale: this.hasFixedCopperConflict(routes) ? 0.25 : 1,
+      pathGridSizeScale,
       pathHeuristicWeight: 3,
       searchDirectionCount: 2,
     })
