@@ -76,7 +76,9 @@ type ObstacleClearanceEvaluator = (
 ) => TraceClearanceErrorGroups
 
 const TRACE_CLEARANCE = 0.1
-const DRC_EPSILON = 5e-3
+// Allow one micrometer for geometry rounding, not a five-micrometer reduction
+// of the declared manufacturing clearance.
+const DRC_EPSILON = 1e-3
 
 export const compileTraceClearanceObstacle = (
   element: PadOrVia,
