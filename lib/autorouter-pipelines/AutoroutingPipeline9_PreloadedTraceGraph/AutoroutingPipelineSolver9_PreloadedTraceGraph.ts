@@ -104,7 +104,10 @@ import {
   addAutoroutingViaTraceIds,
 } from "./Pipeline9JointDrcRepairSolver"
 import { getPipeline9RouteIndexByTraceId } from "./pipeline9JointDrcRepairUtils"
-import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import {
+  PreloadedTraceGraphSolver,
+  createFixedTracePortAvailability,
+} from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
@@ -481,6 +484,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
           connections: cms.srjWithPointPairs!.connections,
+          isOrdinaryPortAvailable: createFixedTracePortAvailability(
+            cms.srjWithPointPairs!,
+          ),
         },
       ],
     ),

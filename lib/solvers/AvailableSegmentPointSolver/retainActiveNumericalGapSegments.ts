@@ -1,6 +1,7 @@
 import { doesOrdinaryEscapeReachConnection } from "./doesOrdinaryEscapeReachConnection"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import type {
+  OrdinaryPortAvailability,
   SegmentPortPoint,
   SharedEdgeSegment,
 } from "./AvailableSegmentPointSolver"
@@ -12,10 +13,12 @@ export function retainActiveNumericalGapSegments({
   segments,
   nodes,
   connections,
+  isOrdinaryPortAvailable,
 }: {
   segments: SharedEdgeSegment[]
   nodes: CapacityMeshNode[]
   connections: SimpleRouteConnection[]
+  isOrdinaryPortAvailable?: OrdinaryPortAvailability
 }): SharedEdgeSegment[] {
   const neighbors = new Map<string, Set<string>>()
   for (const segment of segments) {
@@ -88,6 +91,7 @@ export function retainActiveNumericalGapSegments({
             nodeMap,
             ordinaryPorts,
             connections,
+            isOrdinaryPortAvailable,
           }))
       ) {
         reached.add(node.capacityMeshNodeId)

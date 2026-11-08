@@ -49,6 +49,11 @@ export interface SegmentPortPoint {
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 
+export type OrdinaryPortAvailability = (
+  port: SegmentPortPoint,
+  target: CapacityMeshNode,
+) => boolean
+
 export interface SharedEdgeSegment {
   crossesNumericalGap?: boolean
   /** Selected by the active-terminal connectivity check, not just geometry. */
@@ -103,6 +108,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
   connections?: SimpleRouteJson["connections"]
+  isOrdinaryPortAvailable?: OrdinaryPortAvailability
 
   // edgeMargin = 0.25
 
@@ -114,6 +120,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     colorMap,
     shouldReturnCrampedPortPoints,
     connections,
+    isOrdinaryPortAvailable,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -122,9 +129,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
     connections?: SimpleRouteJson["connections"]
+    isOrdinaryPortAvailable?: OrdinaryPortAvailability
   }) {
     super()
     this.nodes = nodes
+    this.isOrdinaryPortAvailable = isOrdinaryPortAvailable
     this.connections = connections
     this.edges = edges
     this.traceWidth = traceWidth
@@ -149,6 +158,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         segments: this.sharedEdgeSegments,
         nodes: this.nodes,
         connections: this.connections,
+        isOrdinaryPortAvailable: this.isOrdinaryPortAvailable,
       })
       this.edgeSegmentMap.clear()
       this.portPointMap.clear()

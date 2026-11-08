@@ -1,6 +1,7 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
 import type {
+  OrdinaryPortAvailability,
   PreloadedTracePortAssignment,
   SegmentPortPoint,
   SharedEdgeSegment,
@@ -466,5 +467,64 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       throw new Error("PreloadedTraceGraphSolver has not solved yet")
     }
     return this.sharedEdgeSegments
+  }
+}
+
+/** Terminal escape pruning must see the same immutable copper as path planning.
+ * Keep movable routes negotiable; never turn retained traces into obstacles.
+ */
+export const createFixedTracePortAvailability = (
+  srj: SimpleRouteJson,
+): OrdinaryPortAvailability | undefined => {
+  const primitives = getPreloadedTracePrimitives(srj).filter(
+    (primitive) => primitive.isFixed === true,
+  )
+  if (primitives.length === 0) return undefined
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  const clearance = srj.minTraceToPadEdgeClearance ?? 0.1
+  const index = new Flatbush(primitives.length)
+  for (const primitive of primitives) {
+    const radius = (primitive.copperWidth + srj.minTraceWidth) / 2 + clearance
+    index.add(
+      Math.min(primitive.start.x, primitive.end.x) - radius,
+      Math.min(primitive.start.y, primitive.end.y) - radius,
+      Math.max(primitive.start.x, primitive.end.x) + radius,
+      Math.max(primitive.start.y, primitive.end.y) + radius,
+    )
+  }
+  index.finish()
+  const blockedNetsByPort = new WeakMap<
+    SegmentPortPoint,
+    Map<number, Set<string>>
+  >()
+  return (port, target): boolean => {
+    let blockedByLayer = blockedNetsByPort.get(port)
+    if (!blockedByLayer) {
+      blockedByLayer = new Map()
+      for (const candidate of index.search(port.x, port.y, port.x, port.y)) {
+        const primitive = primitives[candidate]!
+        const radius =
+          (primitive.copperWidth + srj.minTraceWidth) / 2 + clearance
+        if (
+          pointToSegmentDistance(port, primitive.start, primitive.end) >=
+          radius - GEOMETRIC_TOLERANCE
+        )
+          continue
+        for (const z of primitive.zLayers) {
+          const nets = blockedByLayer.get(z) ?? new Set<string>()
+          nets.add(primitive.fixedNetId)
+          blockedByLayer.set(z, nets)
+        }
+      }
+      blockedNetsByPort.set(port, blockedByLayer)
+    }
+    const targetNets = new Set(
+      (target._connectedTo ?? []).map(
+        (id) => connMap.getNetConnectedToId(id) ?? id,
+      ),
+    )
+    return port.availableZ.some((z) =>
+      [...(blockedByLayer!.get(z) ?? [])].every((net) => targetNets.has(net)),
+    )
   }
 }

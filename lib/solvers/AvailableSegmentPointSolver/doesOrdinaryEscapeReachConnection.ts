@@ -1,7 +1,10 @@
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import { getConnectionPointLayers } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import type { SegmentPortPoint } from "./AvailableSegmentPointSolver"
+import type {
+  OrdinaryPortAvailability,
+  SegmentPortPoint,
+} from "./AvailableSegmentPointSolver"
 
 type OrdinaryEscapeInput = {
   target: CapacityMeshNode
@@ -9,6 +12,7 @@ type OrdinaryEscapeInput = {
   nodeMap: Map<string, CapacityMeshNode>
   ordinaryPorts: Map<string, SegmentPortPoint[]>
   connections: SimpleRouteConnection[]
+  isOrdinaryPortAvailable?: OrdinaryPortAvailability
 }
 
 /** Nearby free space can be an isolated pocket; check the actual destinations. */
@@ -18,6 +22,7 @@ export function doesOrdinaryEscapeReachConnection({
   nodeMap,
   ordinaryPorts,
   connections,
+  isOrdinaryPortAvailable,
 }: OrdinaryEscapeInput): boolean {
   const layerCount = nodes.reduce(
     (count, node) => Math.max(count, ...node.availableZ.map((z) => z + 1)),
@@ -70,7 +75,11 @@ export function doesOrdinaryEscapeReachConnection({
   for (let index = 0; index < queue.length; index++) {
     const nodeId = queue[index]!
     for (const port of ordinaryPorts.get(nodeId) ?? []) {
-      if (port.cramped) continue
+      if (
+        port.cramped ||
+        (isOrdinaryPortAvailable && !isOrdinaryPortAvailable(port, target))
+      )
+        continue
       for (const neighborId of port.nodeIds) {
         if (visited.has(neighborId)) continue
         const neighbor = nodeMap.get(neighborId)!
