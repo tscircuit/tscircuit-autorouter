@@ -1,0 +1,44 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: retained USB power feed at the capacitor pad</text><text x="24" y="59" font-family="sans-serif" font-size="16">Before: the mesh has no port where the existing copper crosses</text><svg x="0" y="80" width="1000" height="600" viewBox="810.2468525621557 453.0970954005368 104.6602521912414 104.6602521912414" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-9.800106,31 -7.639359475587423,28.6200009" data-type="line" data-label="" points="85.092895246603,382.07763855648 246.62452107972342,559.9999999999995" fill="none" stroke="#fdba74" stroke-linejoin="round" stroke-width="59.805858394995084"/></g><g><polyline data-points="-7.639359475587423,28.6200009 0.19595501521749004,28.6200009" data-type="line" data-label="" points="246.62452107972342,559.9999999999995 832.371657226388,559.9999999999995" fill="none" stroke="#fdba74" stroke-linejoin="round" stroke-width="59.805858394995084"/></g><g><polyline data-points="0.19595501521749004,28.6200009 0.19595501521749004,28.87667843963007" data-type="line" data-label="" points="832.371657226388,559.9999999999995 832.371657226388,540.8114742646353" fill="none" stroke="#fdba74" stroke-linejoin="round" stroke-width="59.805858394995084"/></g><g><polyline data-points="0.19595501521749004,28.87667843963007 0.700024,29.6" data-type="line" data-label="" points="832.371657226388,540.8114742646353 870.0545051329026,486.7378907477214" fill="none" stroke="#fdba74" stroke-linejoin="round" stroke-width="59.805858394995084"/></g><g><polyline data-points="0.3000248000000001,29 0.3000248000000001,29.150000900000002" data-type="line" data-label="" points="840.1516357412635,531.5922845439677 840.1516357412635,520.3786188133154" fill="none" stroke="#334155" stroke-linejoin="round" stroke-width="0.8970878759249263"/></g><g><rect data-type="rect" data-label="" data-x="-2.4001603000000005" data-y="34.9258552" x="615.8649246159375" y="39.99999999999977" width="44.856202923462774" height="97.18242668682296" fill="transparent" stroke="#334155" stroke-width="0.013376615961538458"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="0.6" data-y="29.35" x="810.2468525621557" y="453.0970954005368" width="104.6602521912414" height="104.6602521912414" fill="none" stroke="none" stroke-width="0.013376615961538458"/></g><circle data-type="circle" data-label="" data-x="0.3000248000000001" data-y="29.026014981628833" cx="840.1516357412635" cy="529.6474741596649" r="3.3640795347184733" fill="white" stroke="#dc2626" stroke-width="0.013376615961538458"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":74.75732299374386,"c":0,"e":817.7225848615301,"b":0,"d":-74.75732299374386,"f":2699.5546513625395};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

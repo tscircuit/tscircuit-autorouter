@@ -1,11 +1,11 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
-import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   PreloadedTracePortAssignment,
-  SharedEdgeSegment,
   SegmentPortPoint,
+  SharedEdgeSegment,
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -260,8 +260,47 @@ const preloadPort = (
   }
 }
 
+/** Restore an actual retained crossing omitted by generic port spacing. */
+const createRetainedCrossingPort = (
+  segment: SharedEdgeSegment,
+  primitive: PreloadedTracePrimitive,
+  z: number,
+): SegmentPortPoint | undefined => {
+  const dx = primitive.end.x - primitive.start.x
+  const dy = primitive.end.y - primitive.start.y
+  const edgeDx = segment.end.x - segment.start.x
+  const edgeDy = segment.end.y - segment.start.y
+  const denominator = dx * edgeDy - dy * edgeDx
+  // A via or copper running along the boundary has no transverse crossing.
+  if (Math.abs(denominator) < 1e-12) return undefined
+  const offsetX = segment.start.x - primitive.start.x
+  const offsetY = segment.start.y - primitive.start.y
+  const t = (offsetX * edgeDy - offsetY * edgeDx) / denominator
+  const u = (offsetX * dy - offsetY * dx) / denominator
+  if (t < 0 || t > 1 || u < 0 || u > 1) return undefined
+  const x = primitive.start.x + t * dx
+  const y = primitive.start.y + t * dy
+  const port: SegmentPortPoint = {
+    segmentPortPointId: `${segment.edgeId}_retained${segment.portPoints.length}_z${z}`,
+    x,
+    y,
+    availableZ: [z],
+    nodeIds: segment.nodeIds,
+    edgeId: segment.edgeId,
+    connectionName: null,
+    distToCentermostPortOnZ: Math.hypot(
+      x - (segment.start.x + segment.end.x) / 2,
+      y - (segment.start.y + segment.end.y) / 2,
+    ),
+    cramped: false,
+  }
+  segment.portPoints.push(port)
+  return port
+}
+
 /**
- * Loads retained copper onto existing capacity-graph boundary ports. Explicitly
+ * Loads retained copper onto capacity-graph boundary ports, restoring actual
+ * crossings where generic spacing omitted all ports on a short edge. Explicitly
  * immutable copper also reserves nearby port layers for physical clearance;
  * capacity regions and obstacle geometry are unchanged.
  */
@@ -298,6 +337,10 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
+    const inputPortCount = this.sharedEdgeSegments.reduce(
+      (count, segment) => count + segment.portPoints.length,
+      0,
+    )
     let boundaryDistanceCheckCount: number = 0
     for (const primitive of this.primitives) {
       if (this.boundaryIndex === null) break
@@ -324,10 +367,25 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         ) {
           continue
         }
+        const dx = primitive.end.x - primitive.start.x
+        const dy = primitive.end.y - primitive.start.y
+        // A wire along an edge occupies copper, but does not cross that edge.
+        // Treating it as a crossing projects several unrelated boundary ports
+        // onto its centerline and can serialize a false out-and-back section.
+        if (
+          (dx !== 0 || dy !== 0) &&
+          Math.abs(
+            dx * (segment.end.y - segment.start.y) -
+              dy * (segment.end.x - segment.start.x),
+          ) < 1e-12
+        )
+          continue
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
+          const portPoint =
+            getClosestPortPoint(segment, primitive, z) ??
+            createRetainedCrossingPort(segment, primitive, z)
           if (portPoint) preloadPort(portPoint, primitive, z)
         }
       }
@@ -388,7 +446,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
       outputBoundaryCount: this.sharedEdgeSegments.length,
-      inputPortCount: portPoints.length,
+      inputPortCount,
       outputPortCount: portPoints.length,
       preloadedPortCount: preloadedPortPoints.length,
       tracePortAssignmentCount: preloadedPortPoints.reduce(
@@ -396,7 +454,9 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           count + (portPoint._preloadedTracePortAssignments?.length ?? 0),
         0,
       ),
-      topologyChanged: fixedClearancePortLayerCount > 0,
+      restoredCrossingPortCount: portPoints.length - inputPortCount,
+      topologyChanged:
+        fixedClearancePortLayerCount > 0 || portPoints.length > inputPortCount,
     }
     this.solved = true
   }
