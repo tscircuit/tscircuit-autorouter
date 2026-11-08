@@ -396,9 +396,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
     expect(result).toMatchInlineSnapshot(`
       [
         {
-          "from_layer": "top",
+          "from_layer": "inner1",
           "route_type": "via",
-          "to_layer": "inner1",
+          "to_layer": "top",
           "via_diameter": 0.35,
           "x": 1,
           "y": 1,

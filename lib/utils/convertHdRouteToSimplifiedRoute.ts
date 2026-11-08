@@ -197,8 +197,10 @@ const attachTerminalViasToSimplifiedRoute = ({
       from_layer:
         startLayer === startTerminalViaPoint.terminalVia.toLayer
           ? startTerminalViaPoint.layer
-          : startLayer,
-      to_layer: startTerminalViaPoint.terminalVia.toLayer,
+          : startTerminalViaPoint.terminalVia.toLayer,
+      // A prepended via enters the first wire's layer; the appended via below
+      // leaves the last wire's layer. Their traversal directions are opposite.
+      to_layer: startLayer,
       via_diameter:
         startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
       ...(defaultViaHoleDiameter !== undefined
@@ -244,11 +246,11 @@ const attachTerminalViasToSimplifiedRoute = ({
       route_type: "via",
       x: endTerminalViaPoint.x,
       y: endTerminalViaPoint.y,
-      from_layer:
+      from_layer: endLayer,
+      to_layer:
         endLayer === endTerminalViaPoint.terminalVia.toLayer
           ? endTerminalViaPoint.layer
-          : endLayer,
-      to_layer: endTerminalViaPoint.terminalVia.toLayer,
+          : endTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
       ...(defaultViaHoleDiameter !== undefined

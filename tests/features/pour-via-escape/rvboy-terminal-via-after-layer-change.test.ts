@@ -90,8 +90,8 @@ test("RVboy emits its reserved ground via after cleanup changes the approach lay
     })[0],
   ).toMatchObject({
     route_type: "via",
-    from_layer: "bottom",
-    to_layer: "inner1",
+    from_layer: "inner1",
+    to_layer: "bottom",
   })
   for (const [name, route] of [
     ["before", before],
