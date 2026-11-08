@@ -99,4 +99,14 @@ test("closest future-point memo preserves exact references, ties, layer penaltie
   expect(solver.getClosestFutureConnectionPoint(node)).toBeNull()
   solver.futureConnectionPoints = [points[1]]
   expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[1])
+
+  // Distinct squared distances can round to the same Euclidean distance.
+  // The earlier point must win even when the later point is nearer.
+  for (const z of [0, 1]) {
+    const first = { x: 1, y: 2 ** -26, z }
+    const nearer = { x: 1, y: 0, z }
+    expect(distance(node, first)).toBe(distance(node, nearer))
+    solver.futureConnectionPoints = [first, nearer]
+    expect(solver.getClosestFutureConnectionPoint(node)).toBe(first)
+  }
 })

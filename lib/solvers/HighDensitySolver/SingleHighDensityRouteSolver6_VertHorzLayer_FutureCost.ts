@@ -84,17 +84,30 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     let closestPoint = null
     let closestPointIndex = -1
     let pointIndex = 0
+    let sameLayerSquared = Infinity
+    let otherLayerSquared = Infinity
 
     for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      const index = pointIndex++
+      const dx = node.x - point.x
+      const dy = node.y - point.y
+      const squared = dx * dx + dy * dy
+      const sameLayer = node.z === point.z
+      // Candidates in each group have the same layer penalty. Only a new
+      // squared-distance minimum can improve the original rounded score.
+      if (sameLayer) {
+        if (!(squared < sameLayerSquared)) continue
+        sameLayerSquared = squared
+      } else {
+        if (!(squared < otherLayerSquared)) continue
+        otherLayerSquared = squared
+      }
+      const dist = Math.sqrt(squared) + (sameLayer ? 0 : viaPenaltyDistance)
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
-        closestPointIndex = pointIndex
+        closestPointIndex = index
       }
-      pointIndex++
     }
 
     // A fixed workspace avoids retaining every explored coordinate in large
