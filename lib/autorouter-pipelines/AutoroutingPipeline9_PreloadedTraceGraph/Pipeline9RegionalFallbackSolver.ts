@@ -62,6 +62,13 @@ const getPointToObstacleDistance = (
   point: { x: number; y: number },
   obstacle: Obstacle,
 ): number => {
+  if (obstacle.shape === "circle") {
+    return Math.max(
+      0,
+      Math.hypot(point.x - obstacle.center.x, point.y - obstacle.center.y) -
+        obstacle.width / 2,
+    )
+  }
   const rotationRadians =
     (-1 * (obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
   const offsetX = point.x - obstacle.center.x
@@ -112,9 +119,8 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   })
 }
 
-const hasPreloadedViaToBoardObstacleConflict = ({
+export const hasViaToBoardObstacleConflict = ({
   routes,
-  movablePreloadedConnectionNames,
   boardObstacles,
   connMap,
   layerCount,
@@ -122,7 +128,6 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   allowBlindAndBuriedVias,
 }: {
   routes: HighDensityRoute[]
-  movablePreloadedConnectionNames: ReadonlySet<string>
   boardObstacles: Obstacle[]
   connMap: ConnectivityMap
   layerCount: number
@@ -130,9 +135,6 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   allowBlindAndBuriedVias?: boolean
 }): boolean =>
   routes.some((route) => {
-    if (!movablePreloadedConnectionNames.has(route.connectionName)) {
-      return false
-    }
     const viaSpans = getPipeline9RouteCopperGeometry(route, {
       layerCount,
       allowBlindAndBuriedVias,
@@ -149,7 +151,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
           return false
         }
         return (
-          getPointToObstacleDistance(via.center, obstacle) <
+          getPointToObstacleDistance(via.center, obstacle) + 1e-9 <
           via.diameter / 2 + viaToPadClearance
         )
       }),
@@ -235,11 +237,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
-    const {
-      boardObstacles,
-      movablePreloadedConnectionNames,
-      viaToPadClearance,
-    } = this.params
+    const { boardObstacles, viaToPadClearance } = this.params
     if (
       routes.some((route) =>
         (this.params.fixedRoutes ?? []).some(
@@ -306,16 +304,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         return false
       }
     }
-    if (
-      !boardObstacles ||
-      !movablePreloadedConnectionNames ||
-      viaToPadClearance === undefined
-    ) {
+    if (!boardObstacles || viaToPadClearance === undefined) {
       return true
     }
-    const hasViaConflict = hasPreloadedViaToBoardObstacleConflict({
+    const hasViaConflict = hasViaToBoardObstacleConflict({
       routes,
-      movablePreloadedConnectionNames,
       boardObstacles,
       connMap: this.params.connMap,
       layerCount: this.params.layerCount,
@@ -356,6 +349,56 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         node.center.y + node.height / 2 + collar,
         board?.maxY ?? Infinity,
       ),
+    }
+    // A node on inner layers can lie beneath a solid surface pad. A through-via
+    // cannot escape that pad inside a node-sized window, so include its edge
+    // and a legal via-center collar in the physical repair search.
+    for (const route of routes) {
+      const vias = getPipeline9RouteCopperGeometry(route, params).viaSpans
+      for (const obstacle of params.boardObstacles ?? []) {
+        if (
+          obstacle.isCopperPour ||
+          isPipeline9ObstacleConnectedToRoute({
+            obstacle,
+            route,
+            connMap: params.connMap,
+          }) ||
+          !vias.some(
+            (via) =>
+              getObstacleZLayers(obstacle, params.layerCount).some(
+                (z) => z >= via.minZ && z <= via.maxZ,
+              ) &&
+              getPointToObstacleDistance(via.center, obstacle) + 1e-9 <
+                via.diameter / 2 + clearance,
+          )
+        )
+          continue
+        const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+        const halfWidth =
+          (Math.abs(Math.cos(angle)) * obstacle.width +
+            Math.abs(Math.sin(angle)) * obstacle.height) /
+          2
+        const halfHeight =
+          (Math.abs(Math.sin(angle)) * obstacle.width +
+            Math.abs(Math.cos(angle)) * obstacle.height) /
+          2
+        bounds.minX = Math.max(
+          board?.minX ?? -Infinity,
+          Math.min(bounds.minX, obstacle.center.x - halfWidth - collar),
+        )
+        bounds.maxX = Math.min(
+          board?.maxX ?? Infinity,
+          Math.max(bounds.maxX, obstacle.center.x + halfWidth + collar),
+        )
+        bounds.minY = Math.max(
+          board?.minY ?? -Infinity,
+          Math.min(bounds.minY, obstacle.center.y - halfHeight - collar),
+        )
+        bounds.maxY = Math.min(
+          board?.maxY ?? Infinity,
+          Math.max(bounds.maxY, obstacle.center.y + halfHeight + collar),
+        )
+      }
     }
     // A retained wire may span this entire region and end inside a pad beyond
     // its boundary. A via-sized collar alone cannot reach around that pad.

@@ -33,7 +33,10 @@ import {
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
-import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import {
+  Pipeline9RegionalFallbackSolver,
+  hasViaToBoardObstacleConflict,
+} from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -654,6 +657,32 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
+    // Native node candidates can fit their mesh interface while a through-via
+    // intersects copper on another drilled layer. Complete physical clearance
+    // repair before accepting those candidates into the stitched board.
+    if (
+      !this.activeFallbackSolver &&
+      hasViaToBoardObstacleConflict({
+        routes: solvedRoutes,
+        boardObstacles: this.obstacles,
+        connMap: this.connMap,
+        layerCount: this.layerCount,
+        allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+        viaToPadClearance: this.viaToPadClearance ?? this.obstacleMargin,
+      })
+    ) {
+      this.activeFallbackReason =
+        "Native node vias violate board copper clearance"
+      if (!this.enableRegionalFallback) {
+        this.error = this.activeFallbackReason
+        this.failed = true
+        return
+      }
+      this.activeB01Solver = null
+      this.activeRegularSolver = null
+      this.startRegionalFallback()
+      return
+    }
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)

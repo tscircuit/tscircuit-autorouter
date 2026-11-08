@@ -14,7 +14,9 @@ test("unfixed SRJ18 boards retain provisional crossings for regional routing", a
       solver.step()
     expect(solver.failed, solver.error ?? "").toBeFalse()
     expect(solver.portPointPathingSolver!.solved).toBeTrue()
-    expect(solver.portPointPathingSolver!.params.portGeometry).toBeUndefined()
+    expect(
+      solver.portPointPathingSolver!.getConstructorParams()[0].portGeometry,
+    ).toBeUndefined()
     expect(JSON.stringify(scenario)).toBe(original)
   }
 })

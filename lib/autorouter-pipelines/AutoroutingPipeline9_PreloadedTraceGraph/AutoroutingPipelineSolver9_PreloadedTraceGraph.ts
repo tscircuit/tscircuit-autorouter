@@ -824,8 +824,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       TraceSimplificationSolver,
       (cms) => {
         const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
-        const editableHdRoutes = preparedSections.sections.map(
-          (section) => section.hdRoute,
+        const editableHdRoutes = canonicalizePipeline9HdRoutes(
+          preparedSections.sections.map((section) => section.hdRoute),
         )
         const otherHdRoutes = [
           ...preparedSections.immutableHdRoutes,
