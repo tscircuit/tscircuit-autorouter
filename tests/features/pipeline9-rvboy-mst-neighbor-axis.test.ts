@@ -17,7 +17,7 @@ test("RVboy pairs ground terminals with nearby neighbors across KD-tree splits",
   const ground = paired.connections.filter((connection) =>
     connection.name.includes("source_net_0"),
   )
-  expect(ground).toHaveLength(213)
+  expect(ground).toHaveLength(178)
   const terminalIds = new Set(
     ground.flatMap((connection) =>
       connection.pointsToConnect.map((point) => point.pointId),
@@ -26,7 +26,14 @@ test("RVboy pairs ground terminals with nearby neighbors across KD-tree splits",
   for (const point of input.connections.find(
     (connection) => connection.name === "source_net_0",
   )!.pointsToConnect) {
-    expect(terminalIds.has(point.pointId)).toBe(true)
+    // Terminals already joined by retained ground copper need no extra edge.
+    const retained = pipeline.netToPointPairsSolver!.initiallyConnectedMap
+    expect(
+      terminalIds.has(point.pointId) ||
+        [...terminalIds].some((id) =>
+          retained.areIdsConnected(point.pointId!, id!),
+        ),
+    ).toBe(true)
   }
   const distances = ground.map(({ pointsToConnect: [a, b] }) =>
     Math.hypot(a!.x - b!.x, a!.y - b!.y),

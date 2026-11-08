@@ -30,7 +30,19 @@ test("RVboy exact phase input retains LCD pad escapes and solves port-point path
     solver.step()
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver?.solved).toBe(true)
-  expect(
-    solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()?.routeCount,
-  ).toBe(581)
+  const pathing = solver.portPointPathingSolver!
+  expect(pathing.getSolveGraphBenchmarkMetrics()?.routeCount).toBe(580)
+  const routedNames = new Set(
+    pathing
+      .getOutput()
+      .nodesWithPortPoints.flatMap((node) =>
+        node.portPoints.map((point) => point.connectionName),
+      ),
+  )
+  for (const connection of pathing.getConstructorParams()[0].connections) {
+    expect(
+      routedNames.has(connection.connectionId),
+      connection.connectionId,
+    ).toBe(true)
+  }
 })

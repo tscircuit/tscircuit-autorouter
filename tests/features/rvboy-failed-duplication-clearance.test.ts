@@ -7,7 +7,7 @@ import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/Autoro
 import type { SimpleRouteJson } from "lib/types"
 import { renderPlanarShortcutView } from "../fixtures/renderPlanarShortcutView"
 
-test("RVboy still checks physical port capacity when duplication cannot complete", async (): Promise<void> => {
+test("RVboy preserves physical port capacity after successful congestion duplication", async (): Promise<void> => {
   // Exact phase input, including every board obstacle and retained route.
   const srj: SimpleRouteJson = JSON.parse(
     gunzipSync(
@@ -28,9 +28,8 @@ test("RVboy still checks physical port capacity when duplication cannot complete
   while (!solver.highDensityRouteSolver && !solver.failed) solver.step()
   expect(solver.failed, solver.error ?? "").toBeFalse()
   const pathing = solver.portPointPathingSolver!
-  expect(pathing.stats.duplicateCongestedPortError).toContain(
-    "could not be solved independently",
-  )
+  expect(pathing.solved).toBeTrue()
+  expect(pathing.stats.duplicateCongestedPortError).toBeUndefined()
   expect(solver.uniformPortDistributionSolver!.solved).toBeTrue()
   const blockedUses = pathing
     .getOutput()
@@ -127,4 +126,4 @@ test("RVboy still checks physical port capacity when duplication cannot complete
       }),
     ).toMatchSvgSnapshot(import.meta.path, { svgName: state })
   }
-}, 120000)
+})
