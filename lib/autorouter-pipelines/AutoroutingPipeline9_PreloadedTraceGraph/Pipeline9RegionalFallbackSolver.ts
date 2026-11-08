@@ -509,8 +509,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     // A legal boundary port may sit between pads rather than inside one. If
     // the repair window cuts those pads, it can exclude every legal via site
     // on the far side. Include complete physical obstacles intersecting the
-    // topology node and their via collar, without recursively growing it.
-    const initialBounds = nodeBounds
+    // initial search window and their via collar, without recursively growing
+    // it. The pad collar can itself cut adjacent escape-via annuli; testing only
+    // the topology node would still exclude every legal via beyond that row.
+    const initialBounds = { ...bounds }
     for (const obstacle of params.boardObstacles ?? []) {
       if (obstacle.isCopperPour) continue
       const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
