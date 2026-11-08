@@ -34,6 +34,7 @@ export interface UniformPortDistributionSolverInput {
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
   layerCount?: number
+  allowBlindAndBuriedVias?: boolean
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
@@ -303,6 +304,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
               ? this.input.obstacles
               : [],
             layerCount: this.input.layerCount,
+            allowBlindAndBuriedVias: this.input.allowBlindAndBuriedVias,
           })
         : preferredPorts
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, spacedPorts)

@@ -1,11 +1,12 @@
-import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { getWireClearanceInterval } from "./getWireClearanceInterval"
 import { getObstacleClearanceInterval } from "./getObstacleClearanceInterval"
+import { getWireClearanceInterval } from "./getWireClearanceInterval"
 import type { PortPointWithOwnerPair, SharedEdge } from "./types"
 
 type Point = { x: number; y: number }
@@ -24,6 +25,7 @@ export const spacePortsAroundRetainedCopper = ({
   boundsByPortId,
   obstacles = [],
   layerCount,
+  allowBlindAndBuriedVias,
 }: {
   edge: SharedEdge
   originalPorts: PortPointWithOwnerPair[]
@@ -37,6 +39,7 @@ export const spacePortsAroundRetainedCopper = ({
   boundsByPortId?: Map<string, { min: number; max: number }>
   obstacles?: Obstacle[]
   layerCount?: number
+  allowBlindAndBuriedVias?: boolean
 }): PortPointWithOwnerPair[] => {
   const vertical = edge.orientation === "vertical"
   const coordinate = (point: Point): number => (vertical ? point.y : point.x)
@@ -129,9 +132,31 @@ export const spacePortsAroundRetainedCopper = ({
           const portNet = getHdRouteNetId(port, connMap)
           const routeNet = getHdRouteNetId(route, connMap)
           if (portNet && portNet === routeNet) continue
+          // Uniform spacing must not move a legal boundary anchor into a
+          // retained via's annulus on an intermediate drilled layer.
+          if (layerCount !== undefined) {
+            for (const via of getPipeline9RouteCopperGeometry(route, {
+              layerCount,
+              allowBlindAndBuriedVias,
+            }).viaSpans) {
+              if (z < via.minZ || z > via.maxZ) continue
+              const interval = getWireClearanceInterval(
+                edge,
+                via.center,
+                via.center,
+                (traceWidth + via.diameter) / 2 + clearance + 1e-6,
+              )
+              if (!interval || interval.max < min || interval.min > max)
+                continue
+              affected = true
+              if (original < interval.center)
+                high = Math.min(high, interval.min)
+              else low = Math.max(low, interval.max)
+            }
+          }
           for (let i = 0; i < route.route.length - 1; i++) {
-            const a = route.route[i]!,
-              b = route.route[i + 1]!
+            const a = route.route[i]!
+            const b = route.route[i + 1]!
             if (a.z !== z || b.z !== z) continue
             // A retained crossing constrains both neighboring regions. Explicitly
             // fixed copper also constrains nearby edges that it does not cross;

@@ -621,6 +621,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           obstacles: cms.physicalRoutingObstacles!,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
+          allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
           reservePadClearance: true,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
           preloadedRoutes: removeChangedSectionsFromFixedHdRoutes({
