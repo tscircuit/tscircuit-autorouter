@@ -26,6 +26,7 @@ import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
 import { getConnectedCopperPourObstacles } from "./getConnectedCopperPourObstacles"
+import { getPreloadedPourPointGroups } from "./getPreloadedPourPointGroups"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import {
@@ -1021,6 +1022,21 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
       const groupedEscapePointIds = new Map<string, string[]>()
       const representativeConnectionNameByPourKey = new Map<string, string>()
+      const preloadedPointIds = new Set<string>()
+      for (const [pour, pointIds] of getPreloadedPourPointGroups({
+        srj: this.ogSrj,
+        points: mergedConnection.pointsToConnect,
+        matchingPours: matchingCopperPours,
+        connectedPourByObstacle,
+      })) {
+        const key = getObstacleKey(pour)
+        groupedEscapePointIds.set(key, pointIds)
+        representativeConnectionNameByPourKey.set(
+          key,
+          groupConnections[0]!.name,
+        )
+        for (const id of pointIds) preloadedPointIds.add(id)
+      }
       const pointPlacementPlans = this.buildPointPlacementPlans({
         mergedConnection,
         groupConnections,
@@ -1029,6 +1045,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       })
 
       for (const { point, pointOwner, sourceObstacle } of pointPlacementPlans) {
+        if (point.pointId && preloadedPointIds.has(point.pointId)) continue
         const escapeViaCandidate = this.findBestEscapeViaCandidate({
           connection: pointOwner.connection,
           point,
