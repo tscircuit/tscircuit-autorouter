@@ -1677,11 +1677,11 @@ jobs:
 
       - name: Install base dependencies
         working-directory: same-machine-base
-        run: bun install
+        run: bun install --ignore-scripts
 
       - name: Install PR dependencies
         working-directory: same-machine-pr
-        run: bun install
+        run: bun install --ignore-scripts
 
       - name: Use identical local network benchmark harnesses
         if: steps.refs.outputs.pipeline9_networked == 'true'
