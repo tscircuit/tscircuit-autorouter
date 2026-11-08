@@ -4,6 +4,10 @@ import {
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import {
+  Pipeline9PlanarShortcutSolver,
+  type PlanarShortcutParams,
+} from "./Pipeline9PlanarShortcutSolver"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -12,6 +16,7 @@ type CleanupParams = {
   viaRemovalPasses?: 1 | 2
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
+  planarSearch?: Omit<PlanarShortcutParams, "routes" | "effort">
 }
 
 /** Post-repair cleanup commits only valid improvements, including at default effort. */
@@ -22,6 +27,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly cleanupPasses: number
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
+  planarShortcutSolver?: Pipeline9PlanarShortcutSolver
   readonly params: CleanupParams
 
   constructor(params: CleanupParams) {
@@ -75,6 +81,16 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.planarShortcutSolver) {
+      this.planarShortcutSolver.step()
+      if (this.planarShortcutSolver.solved) {
+        this.bestRoutes = this.planarShortcutSolver.getOutput()
+        this.bestCost = this.params.getCost(this.bestRoutes)
+        this.stats = this.planarShortcutSolver.stats
+        this.solved = true
+      }
+      return
+    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -133,7 +149,15 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    this.solved = simplifier.solved
+    if (simplifier.solved && this.params.planarSearch) {
+      this.planarShortcutSolver = new Pipeline9PlanarShortcutSolver({
+        ...this.params.planarSearch,
+        routes: this.bestRoutes,
+        effort: this.params.effort,
+      })
+    } else {
+      this.solved = simplifier.solved
+    }
   }
 
   getOutput(): HighDensityRoute[] {

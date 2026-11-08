@@ -1,9 +1,13 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { getConnectionPointLayers } from "lib/types/srj-types"
 import { Pipeline9NegotiatedClearanceSolver } from "./Pipeline9NegotiatedClearanceSolver"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
+import {
+  PhysicalConnectivityInvariant,
+  type PowerTraceExpanderOptions,
+} from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
@@ -1050,9 +1054,50 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
           },
         })
+        let physicalConnectivity: PhysicalConnectivityInvariant | undefined
         return [
           {
             effort: cms.effort,
+            planarSearch: {
+              connMap: cms.connMap,
+              otherRoutes: preloadedTraces.flatMap((trace, index) =>
+                convertPreloadedTraceToHdRoutes(
+                  trace,
+                  index,
+                  cms.srj.layerCount,
+                  cms.viaDiameter,
+                  cms.connMap,
+                ),
+              ),
+              srj: { ...cms.srjWithPointPairs!, traces: preloadedTraces },
+              viaHoleDiameter: cms.viaHoleDiameter,
+              isValid: (routes: HighDensityRoute[]): boolean => {
+                const traces = convert(routes)
+                if (evaluateCleanupDrc(traces).errors.length > 0) return false
+                physicalConnectivity ??= new PhysicalConnectivityInvariant(
+                  {
+                    ...inputSrj,
+                    connections: inputSrj.connections.map((connection) => ({
+                      ...connection,
+                      pointsToConnect: connection.pointsToConnect.map(
+                        (point) => ({
+                          ...point,
+                          layer: getConnectionPointLayers(point)[0]!,
+                        }),
+                      ),
+                    })),
+                  },
+                  [...preloadedTraces, ...convert(hdRoutes)],
+                )
+                const validation = physicalConnectivity.validate([
+                  ...preloadedTraces,
+                  ...traces,
+                ])
+                if (validation.validationError)
+                  throw new Error(validation.validationError)
+                return validation.safe
+              },
+            },
             viaRemovalPasses:
               cms.pipeline9JointDrcRepairSolver!.stats
                 .initialBoundedRegionalRepairAddedViaCount > 0
