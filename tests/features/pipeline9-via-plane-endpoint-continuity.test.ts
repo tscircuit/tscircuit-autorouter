@@ -58,8 +58,9 @@ test("plane-return endpoints require physical same-net copper on a via layer", (
       },
     ],
   }
-  for (const viaKind of ["retained", "routed"] as const) {
+  for (const viaKind of ["retained", "retained-drilled", "routed"] as const) {
     const srj = structuredClone(input)
+    if (viaKind === "retained-drilled") srj.obstacles[1]!.holeDiameter = 0.3
     if (viaKind === "routed") {
       srj.obstacles.splice(1, 1)
       srj.traces![0]!.route.push(
