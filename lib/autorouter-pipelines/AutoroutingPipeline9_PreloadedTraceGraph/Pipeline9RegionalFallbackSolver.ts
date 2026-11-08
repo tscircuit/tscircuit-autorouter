@@ -236,28 +236,30 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return "Pipeline9RegionalFallbackSolver"
   }
 
+  private hasFixedCopperConflict(routes: HighDensityRoute[]): boolean {
+    return routes.some((route) =>
+      (this.params.fixedRoutes ?? []).some(
+        (fixedRoute) =>
+          !arePipeline9RoutesOnSameNet(
+            route,
+            fixedRoute,
+            this.params.connMap,
+          ) &&
+          doPipeline9RoutesHaveCopperConflict({
+            left: route,
+            right: fixedRoute,
+            clearance:
+              this.params.traceToPadClearance ?? this.params.obstacleMargin,
+            layerCount: this.params.layerCount,
+            allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+          }),
+      ),
+    )
+  }
+
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     const { boardObstacles, viaToPadClearance } = this.params
-    if (
-      routes.some((route) =>
-        (this.params.fixedRoutes ?? []).some(
-          (fixedRoute) =>
-            !arePipeline9RoutesOnSameNet(
-              route,
-              fixedRoute,
-              this.params.connMap,
-            ) &&
-            doPipeline9RoutesHaveCopperConflict({
-              left: route,
-              right: fixedRoute,
-              clearance:
-                this.params.traceToPadClearance ?? this.params.obstacleMargin,
-              layerCount: this.params.layerCount,
-              allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
-            }),
-        ),
-      )
-    ) {
+    if (this.hasFixedCopperConflict(routes)) {
       this.stats.fixedCopperCandidateRejectionCount =
         Number(this.stats.fixedCopperCandidateRejectionCount ?? 0) + 1
       return false
@@ -565,7 +567,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       maxPathSearchNodes: Math.ceil(1_000_000 * params.effort),
       maxPathSearchNodesPerCall: 100_000,
       maxPathSearchCalls: Math.ceil(100 * params.effort),
-      pathGridSizeScale: 1,
+      // Retained fanout tracks can leave via passages narrower than the usual
+      // half-trace-width grid. Resolve these fixed-copper corridors directly;
+      // pad-only repairs keep their coarser grid and existing search budget.
+      pathGridSizeScale: this.hasFixedCopperConflict(routes) ? 0.25 : 1,
       pathHeuristicWeight: 3,
       searchDirectionCount: 2,
     })
