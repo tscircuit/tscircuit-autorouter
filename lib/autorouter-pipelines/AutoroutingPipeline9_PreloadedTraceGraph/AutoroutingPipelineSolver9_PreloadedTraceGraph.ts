@@ -551,6 +551,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             preserveTerminalPcbPortIds: true,
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
+            portGeometry: {
+              traceWidth: cms.minTraceWidth,
+              retainedRoutes: cms.getOriginalFixedHdRoutes(),
+              clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+              obstacles: cms.srjWithPointPairs!.obstacles,
+              layerCount: cms.srj.layerCount,
+            },
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -598,6 +605,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           obstacles: cms.srjWithPointPairs!.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
+          reservePadClearance: true,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
           preloadedRoutes: removeChangedSectionsFromFixedHdRoutes({
             traces: cms.originalSrj.traces ?? [],

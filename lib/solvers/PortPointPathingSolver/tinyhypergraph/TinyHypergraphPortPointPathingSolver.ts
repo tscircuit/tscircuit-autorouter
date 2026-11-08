@@ -38,6 +38,8 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { addBoundaryPortClearanceConflicts } from "./addBoundaryPortClearanceConflicts"
+import { constrainBoundaryPortCapacity } from "./constrainBoundaryPortCapacity"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -1127,6 +1129,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.portGeometry) {
+        const boundsByPortId = new Map<
+          string,
+          { minX: number; maxX: number; minY: number; maxY: number }
+        >()
+        graphForTiny = constrainBoundaryPortCapacity(
+          graphForTiny,
+          params.portGeometry,
+          boundsByPortId,
+        )
+        graphForTiny = addBoundaryPortClearanceConflicts(
+          graphForTiny,
+          boundsByPortId,
+          params.portGeometry.traceWidth + params.portGeometry.clearance,
+        )
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
@@ -1134,11 +1152,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         delete metadata._preloadedTracePortAssignments
       }
     }
-    this.duplicatedPortCount =
-      this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-        (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-        0,
-      ) ?? 0
+    this.duplicatedPortCount = graphForTiny.ports.filter(
+      (port) => typeof port.d?.duplicatedFromPortId === "string",
+    ).length
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,

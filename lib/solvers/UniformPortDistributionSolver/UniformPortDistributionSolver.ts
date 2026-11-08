@@ -37,6 +37,8 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Match pad-aware graph capacity when positioning selected crossings. */
+  reservePadClearance?: boolean
   /** Copper retained by path planning whose edge-crossing order must stay fixed. */
   preloadedRoutes?: HighDensityRoute[]
   minTraceWidth?: number
@@ -297,6 +299,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
             traceWidth: minTraceWidth,
             clearance: traceClearance,
             connMap,
+            obstacles: this.input.reservePadClearance
+              ? this.input.obstacles
+              : [],
+            layerCount: this.input.layerCount,
           })
         : preferredPorts
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, spacedPorts)

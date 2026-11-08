@@ -1,49 +1,13 @@
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getWireClearanceInterval } from "./getWireClearanceInterval"
+import { getObstacleClearanceInterval } from "./getObstacleClearanceInterval"
 import type { PortPointWithOwnerPair, SharedEdge } from "./types"
 
 type Point = { x: number; y: number }
-
-/** Locate the intersection of a wire's clearance capsule with a mesh edge. */
-const getBlockedInterval = (
-  edge: SharedEdge,
-  a: Point,
-  b: Point,
-  radius: number,
-): { min: number; max: number; center: number } | undefined => {
-  const vertical = edge.orientation === "vertical"
-  const fixed = vertical ? edge.x1 : edge.y1
-  const aFixed = vertical ? a.x : a.y
-  const bFixed = vertical ? b.x : b.y
-  const aAlong = vertical ? a.y : a.x
-  const bAlong = vertical ? b.y : b.x
-  const t =
-    aFixed === bFixed
-      ? 0.5
-      : Math.max(0, Math.min(1, (fixed - aFixed) / (bFixed - aFixed)))
-  const center = aAlong + (bAlong - aAlong) * t
-  const distance = (along: number): number => {
-    const point = vertical ? { x: fixed, y: along } : { x: along, y: fixed }
-    return segmentToSegmentMinDistance(a, b, point, point)
-  }
-  if (distance(center) >= radius) return undefined
-  let min = Math.min(aAlong, bAlong) - radius
-  let max = Math.max(aAlong, bAlong) + radius
-  let inside = center
-  for (let i = 0; i < 40; i++) {
-    const mid = (min + inside) / 2
-    if (distance(mid) < radius) inside = mid
-    else min = mid
-  }
-  inside = center
-  for (let i = 0; i < 40; i++) {
-    const mid = (max + inside) / 2
-    if (distance(mid) < radius) inside = mid
-    else max = mid
-  }
-  return { min, max, center }
-}
 
 /** Reserve physical clearance at retained crossings without changing their order. */
 export const spacePortsAroundRetainedCopper = ({
@@ -57,6 +21,8 @@ export const spacePortsAroundRetainedCopper = ({
   clearance,
   connMap,
   boundsByPortId,
+  obstacles = [],
+  layerCount,
 }: {
   edge: SharedEdge
   originalPorts: PortPointWithOwnerPair[]
@@ -68,6 +34,8 @@ export const spacePortsAroundRetainedCopper = ({
   clearance: number
   connMap: ConnectivityMap
   boundsByPortId?: Map<string, { min: number; max: number }>
+  obstacles?: Obstacle[]
+  layerCount?: number
 }): PortPointWithOwnerPair[] => {
   const vertical = edge.orientation === "vertical"
   const coordinate = (point: Point): number => (vertical ? point.y : point.x)
@@ -96,6 +64,43 @@ export const spacePortsAroundRetainedCopper = ({
       let low = movable ? min : original
       let high = movable ? max : original
       if (movable) {
+        for (const obstacle of obstacles) {
+          const zs =
+            obstacle.__zLayers ??
+            obstacle.zLayers ??
+            (layerCount === undefined
+              ? undefined
+              : obstacle.layers.map((layer) =>
+                  mapLayerNameToZ(layer, layerCount),
+                ))
+          if (zs && !zs.includes(z)) continue
+          const interval = getObstacleClearanceInterval(
+            edge,
+            obstacle,
+            traceWidth / 2 + clearance,
+          )
+          if (!interval) continue
+          if (
+            obstacle.connectedTo.some(
+              (id) =>
+                id === port.connectionName ||
+                id === port.rootConnectionName ||
+                connMap.areIdsConnected(id, port.connectionName) ||
+                (port.rootConnectionName &&
+                  connMap.areIdsConnected(id, port.rootConnectionName)),
+            )
+          )
+            continue
+          affected = true
+          const belowFits = interval.min >= min - 1e-8
+          const aboveFits = interval.max <= max + 1e-8
+          if (
+            belowFits &&
+            (!aboveFits || original - interval.min <= interval.max - original)
+          )
+            high = Math.min(high, interval.min)
+          else low = Math.max(low, interval.max)
+        }
         // Ports on perpendicular edges are locked HD anchors too. Reserve
         // their circular copper clearance before regional routing begins.
         for (const neighbor of neighboringPorts) {
@@ -108,7 +113,7 @@ export const spacePortsAroundRetainedCopper = ({
             )
           )
             continue
-          const interval = getBlockedInterval(
+          const interval = getWireClearanceInterval(
             edge,
             neighbor,
             neighbor,
@@ -156,7 +161,7 @@ export const spacePortsAroundRetainedCopper = ({
               (traceWidth + (a.traceThickness ?? route.traceThickness)) / 2 +
               clearance +
               1e-6
-            const interval = getBlockedInterval(edge, a, b, radius)
+            const interval = getWireClearanceInterval(edge, a, b, radius)
             if (!interval || interval.max < min || interval.min > max) continue
             affected = true
             if (original < interval.center) high = Math.min(high, interval.min)
