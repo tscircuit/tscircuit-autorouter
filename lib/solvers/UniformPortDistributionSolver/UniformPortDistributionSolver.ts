@@ -1,5 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { spacePortsAroundRetainedCopper } from "./spacePortsAroundRetainedCopper"
+import { UniformPortClearanceSolver } from "./UniformPortClearanceSolver"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
@@ -63,7 +64,36 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
-  private ownerPairKeysByNode = new Map<string, Set<OwnerPairKey>>()
+  private movablePortIdsByOwnerPair = new Map<OwnerPairKey, Set<string>>()
+  private boundsByPortId = new Map<string, { min: number; max: number }>()
+  clearanceSolver?: UniformPortClearanceSolver
+
+  private getMovablePortIds(ownerPairKey: OwnerPairKey): Set<string> {
+    const cached = this.movablePortIdsByOwnerPair.get(ownerPairKey)
+    if (cached) return cached
+    const edge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+    if (!edge) throw new Error(`Missing shared edge "${ownerPairKey}"`)
+    const ids = new Set(
+      (this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? [])
+        .filter(
+          (port) =>
+            !shouldIgnorePortPoint({
+              portPoint: port,
+              ownerNodeIds: port.ownerNodeIds,
+              inputNodes: this.input.inputNodesWithPortPoints,
+            }) &&
+            !shouldIgnoreSharedEdge({
+              sharedEdge: edge,
+              obstacles: this.input.obstacles,
+              z: port.z,
+              layerCount: this.input.layerCount,
+            }),
+        )
+        .map((port) => port.portPointId!),
+    )
+    this.movablePortIdsByOwnerPair.set(ownerPairKey, ids)
+    return ids
+  }
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -119,14 +149,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
       nodeBounds: this.mapOfNodeIdToBounds,
     })
 
-    for (const [key, edge] of this.mapOfOwnerPairToSharedEdge) {
-      for (const nodeId of edge.ownerNodeIds) {
-        const keys =
-          this.ownerPairKeysByNode.get(nodeId) ?? new Set<OwnerPairKey>()
-        keys.add(key)
-        this.ownerPairKeysByNode.set(nodeId, keys)
-      }
-    }
     this.ownerPairsToProcess = Array.from(
       this.mapOfOwnerPairToSharedEdge.keys(),
     )
@@ -139,6 +161,34 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   step(): void {
     if (this.ownerPairsToProcess.length === 0) {
+      if (this.boundsByPortId.size > 0) {
+        this.clearanceSolver ??= new UniformPortClearanceSolver({
+          edges: new Map(
+            [...this.mapOfOwnerPairToSharedEdge].filter(([key]) =>
+              (this.mapOfOwnerPairToPortPoints.get(key) ?? []).some((port) =>
+                this.boundsByPortId.has(port.portPointId!),
+              ),
+            ),
+          ),
+          portsByEdge: this.mapOfOwnerPairToPortPoints,
+          originalPositionsByPortId: new Map(
+            this.input.nodeWithPortPoints.flatMap((node) =>
+              node.portPoints
+                .filter((port) => port.portPointId)
+                .map((port) => [port.portPointId!, port] as const),
+            ),
+          ),
+          boundsByPortId: this.boundsByPortId,
+          connMap: this.input.connMap!,
+          separation: this.input.minTraceWidth! + this.input.traceClearance!,
+        })
+        this.activeSubSolver = this.clearanceSolver
+        if (!this.clearanceSolver.solved) this.clearanceSolver.step()
+        if (this.clearanceSolver.failed)
+          throw new Error(this.clearanceSolver.error!)
+        if (!this.clearanceSolver.solved) return
+        this.mapOfOwnerPairToPortPoints = this.clearanceSolver.getOutput()
+      }
       this.rebuildNodes()
       this.solved = true
       return
@@ -241,33 +291,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
             edge: sharedEdge,
             originalPorts: familyRaw,
             preferredPorts,
-            movableIds: new Set(
-              familyRaw
-                .filter(
-                  (port) =>
-                    !shouldIgnorePortPoint({
-                      portPoint: port,
-                      ownerNodeIds: port.ownerNodeIds,
-                      inputNodes: this.input.inputNodesWithPortPoints,
-                    }) &&
-                    !shouldIgnoreSharedEdge({
-                      sharedEdge,
-                      obstacles: this.input.obstacles,
-                      z: port.z,
-                      layerCount: this.input.layerCount,
-                    }),
-                )
-                .map((port) => port.portPointId!),
-            ),
-            neighboringPorts: [
-              ...new Set(
-                sharedEdge.ownerNodeIds.flatMap((nodeId) => [
-                  ...(this.ownerPairKeysByNode.get(nodeId) ?? []),
-                ]),
-              ),
-            ]
-              .filter((key) => key !== ownerPairKey)
-              .flatMap((key) => this.mapOfOwnerPairToPortPoints.get(key) ?? []),
+            movableIds: this.getMovablePortIds(ownerPairKey),
+            boundsByPortId: this.boundsByPortId,
             routes: preloadedRoutes,
             traceWidth: minTraceWidth,
             clearance: traceClearance,

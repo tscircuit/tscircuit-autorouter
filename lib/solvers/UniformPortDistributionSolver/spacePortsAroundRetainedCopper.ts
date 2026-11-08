@@ -56,6 +56,7 @@ export const spacePortsAroundRetainedCopper = ({
   traceWidth,
   clearance,
   connMap,
+  boundsByPortId,
 }: {
   edge: SharedEdge
   originalPorts: PortPointWithOwnerPair[]
@@ -66,6 +67,7 @@ export const spacePortsAroundRetainedCopper = ({
   traceWidth: number
   clearance: number
   connMap: ConnectivityMap
+  boundsByPortId?: Map<string, { min: number; max: number }>
 }): PortPointWithOwnerPair[] => {
   const vertical = edge.orientation === "vertical"
   const coordinate = (point: Point): number => (vertical ? point.y : point.x)
@@ -162,6 +164,7 @@ export const spacePortsAroundRetainedCopper = ({
           }
         }
       }
+      boundsByPortId?.set(port.portPointId!, { min: low, max: high })
       return {
         port,
         low,
