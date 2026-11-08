@@ -333,7 +333,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const { params } = this
     const node = params.nodeWithPortPoints
     const clearance = params.viaToPadClearance ?? params.obstacleMargin
-    const collar = params.viaDiameter / 2 + clearance
+    // Negotiation keeps mutable copper strictly inside the window. Include a
+    // search-grid step beyond the first legal via center beside terminal pads;
+    // otherwise that center lies on the excluded boundary and no via can fit.
+    const repairGridSize = Math.min(0.1, params.traceWidth / 2)
+    const collar = params.viaDiameter / 2 + clearance + repairGridSize
     const board = params.boardGeometry?.bounds
     const bounds = {
       minX: Math.max(
