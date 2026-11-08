@@ -105,7 +105,16 @@ const findNodeIndexForRoute = (
     const regionNodeIndex = nodes.findIndex(
       (node) => node.capacityMeshNodeId === route.regionId,
     )
-    if (regionNodeIndex !== -1) return regionNodeIndex
+    if (regionNodeIndex !== -1) {
+      const node = nodes[regionNodeIndex]!
+      // A regional detour can keep its source region ID while leaving that
+      // region. Node-local repair must not clamp it back into the old bounds.
+      return [...route.route, ...route.vias].every((point) =>
+        isPointInsideNode(point, node, margin + 1e-6),
+      )
+        ? regionNodeIndex
+        : -1
+    }
   }
 
   const routePoints = route.route.map(({ x, y }) => ({ x, y }))

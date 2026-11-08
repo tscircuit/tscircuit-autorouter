@@ -8,6 +8,8 @@ import {
   type Pipeline9HighDensitySolverParams,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { preparePipeline9RepairConnectivity } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9RepairConnectivity"
+import { Pipeline9HighDensityForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver"
+import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -62,7 +64,32 @@ test("RVboy inner-layer routing clears through-vias on every drilled layer", asy
     obstacles: params.obstacles,
     connections: [],
   }
-  const violations = [beforeRoutes, solver.routes].map((routes) => {
+  const force = new Pipeline9HighDensityForceImproveSolver({
+    nodeWithPortPoints: params.nodePortPoints,
+    hdRoutes: solver.routes,
+    totalStepsPerNode: 20,
+    nodeAssignmentMargin: 0.2,
+    preserveTopologyPortAnchors: true,
+  })
+  force.solve()
+  expect(force.getOutput()).toEqual(solver.routes)
+  const repair = new Pipeline4HighDensityRepairSolver({
+    nodeWithPortPoints: params.nodePortPoints,
+    hdRoutes: force.getOutput(),
+    obstacles: params.obstacles,
+    connMap,
+    repairMargin: 0.2,
+    minimumTraceWidth: params.traceWidth,
+  })
+  repair.solve()
+  expect(repair.solved).toBeTrue()
+  const finalRoutes = repair.getOutput()
+  for (const route of solver.routes.filter((r) => r.vias.length > 0)) {
+    expect(
+      finalRoutes.find((r) => r.connectionName === route.connectionName),
+    ).toEqual(route)
+  }
+  const violations = [beforeRoutes, finalRoutes].map((routes) => {
     const prepared = preparePipeline9RepairConnectivity({
       srj,
       routes,
@@ -82,7 +109,7 @@ test("RVboy inner-layer routing clears through-vias on every drilled layer", asy
   const viewbox = { minX: -0.8, maxX: 2.3, minY: 7.6, maxY: 12.0 }
   for (const [name, routes] of [
     ["before", beforeRoutes],
-    ["after", solver.routes],
+    ["after", finalRoutes],
   ] as const) {
     const graphics = convertSrjToGraphicsObject({
       ...srj,
