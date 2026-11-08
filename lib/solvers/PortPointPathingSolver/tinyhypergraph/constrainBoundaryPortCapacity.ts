@@ -34,6 +34,19 @@ export const constrainBoundaryPortCapacity = (
   const groups = new Map<string, typeof graph.ports>()
   const allowedNetsByPort = new Map<string, string[]>()
   for (const port of graph.ports) {
+    // Uniform spacing locks pad entry/exit ports. Include those anchors when
+    // rejecting foreign crossings that cannot clear a neighboring narrow edge.
+    if (
+      regions.get(port.region1Id)?.d?._containsTarget ||
+      regions.get(port.region2Id)?.d?._containsTarget
+    ) {
+      boundsByPortId?.set(port.portId, {
+        minX: port.d!.x,
+        maxX: port.d!.x,
+        minY: port.d!.y,
+        maxY: port.d!.y,
+      })
+    }
     // A fixed trace crossing only one boundary has no region-to-region
     // assignment to serialize. Its occupied port still belongs to that net.
     const fixedOwners = port.d?._preloadedTracePortAssignments

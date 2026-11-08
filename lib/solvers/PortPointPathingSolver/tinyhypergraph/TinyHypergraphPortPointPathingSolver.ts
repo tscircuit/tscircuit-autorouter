@@ -415,6 +415,7 @@ const toSerializedRegionData = (
       : {}),
     _containsObstacle: region.d._containsObstacle,
     _containsTarget: region.d._containsTarget,
+    _connectedTo: region.d._connectedTo,
     _offBoardConnectionId: region.d._offBoardConnectionId,
     _offBoardConnectedCapacityMeshNodeIds:
       region.d._offBoardConnectedCapacityMeshNodeIds === undefined

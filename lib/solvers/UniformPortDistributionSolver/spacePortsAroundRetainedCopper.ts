@@ -132,9 +132,9 @@ export const spacePortsAroundRetainedCopper = ({
           const portNet = getHdRouteNetId(port, connMap)
           const routeNet = getHdRouteNetId(route, connMap)
           if (portNet && portNet === routeNet) continue
-          // Uniform spacing must not move a legal boundary anchor into a
-          // retained via's annulus on an intermediate drilled layer.
-          if (layerCount !== undefined) {
+          // Immutable vias constrain every drilled layer. Movable preload vias
+          // remain available to the downstream regional copper negotiation.
+          if (layerCount !== undefined && route.isFixed === true) {
             for (const via of getPipeline9RouteCopperGeometry(route, {
               layerCount,
               allowBlindAndBuriedVias,

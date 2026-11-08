@@ -157,6 +157,25 @@ export const serializePreloadedTraceAssignments = (
       connection.endRegionId,
     ]),
   )
+  const preloadedNetIds = new Set(
+    serializedHyperGraph.ports.flatMap((port) =>
+      (port.d?._preloadedTracePortAssignments ?? []).map(
+        (assignment: PreloadedTracePortAssignment) => assignment.fixedNetId,
+      ),
+    ),
+  )
+  const preloadedTargetOwners = new Map<string, string>()
+  for (const region of serializedHyperGraph.regions) {
+    const owners = region.d?._connectedTo
+    if (
+      region.d?._containsObstacle === true &&
+      region.d?._containsTarget === true &&
+      owners?.length === 1 &&
+      preloadedNetIds.has(owners[0])
+    ) {
+      preloadedTargetOwners.set(region.regionId, owners[0])
+    }
+  }
   const removedObstacleRegionIds = new Set(
     serializedHyperGraph.regions
       .filter((region) => {
@@ -169,7 +188,8 @@ export const serializePreloadedTraceAssignments = (
         return (
           region.d?._containsObstacle === true &&
           (netId === undefined || netId === -1) &&
-          !connectedRegionIds.has(region.regionId)
+          !connectedRegionIds.has(region.regionId) &&
+          !preloadedTargetOwners.has(region.regionId)
         )
       })
       .map((region) => region.regionId),
@@ -329,6 +349,21 @@ export const serializePreloadedTraceAssignments = (
     if (contiguousRuns.length > 0) {
       preloadedTraceCount++
     }
+  }
+
+  // Match the loader's net numbering after all preload sections are appended.
+  // A pad can be internal to a retained section, so endpoint inference alone
+  // cannot preserve its ownership when the loader filters obstacle regions.
+  const netIndexById = new Map<string, number>()
+  for (const connection of connections) {
+    const net = connection.mutuallyConnectedNetworkId ?? connection.connectionId
+    if (!netIndexById.has(net)) netIndexById.set(net, netIndexById.size)
+  }
+  for (const region of serializedHyperGraph.regions) {
+    const owner = preloadedTargetOwners.get(region.regionId)
+    if (owner === undefined || typeof region.d?.netId === "number") continue
+    const netIndex = netIndexById.get(owner)
+    if (netIndex !== undefined) region.d!.netId = netIndex
   }
 
   return {

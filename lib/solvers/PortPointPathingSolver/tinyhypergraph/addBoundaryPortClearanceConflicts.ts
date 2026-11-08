@@ -8,9 +8,34 @@ export const addBoundaryPortClearanceConflicts = (
   boundsByPortId: ReadonlyMap<string, Bounds>,
   separation: number,
 ): SerializedHyperGraph => {
+  const connectedRegions = new Set(
+    (graph.connections ?? []).flatMap((connection) => [
+      connection.startRegionId,
+      connection.endRegionId,
+    ]),
+  )
+  // The loader removes unowned obstacles and their incident ports. Conflicts
+  // against those unreachable ports must not survive as dangling references.
+  const removedRegions = new Set(
+    graph.regions
+      .filter((region) => {
+        const net = region.d?.netId ?? region.d?.NetId
+        return (
+          region.d?._containsObstacle === true &&
+          (typeof net !== "number" || net === -1) &&
+          !connectedRegions.has(region.regionId)
+        )
+      })
+      .map((region) => region.regionId),
+  )
   const portsByRegion = new Map<string, typeof graph.ports>()
   for (const port of graph.ports) {
-    if (!boundsByPortId.has(port.portId)) continue
+    if (
+      !boundsByPortId.has(port.portId) ||
+      removedRegions.has(port.region1Id) ||
+      removedRegions.has(port.region2Id)
+    )
+      continue
     for (const id of [port.region1Id, port.region2Id]) {
       const ports = portsByRegion.get(id) ?? []
       ports.push(port)

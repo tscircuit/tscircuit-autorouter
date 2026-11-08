@@ -29,6 +29,8 @@ export class UniformPortClearanceSolver extends BaseSolver {
   private values: number[] = []
   private constraints: Constraint[] = []
   private anchors = new Map<string, Anchor>()
+  private perpendicularPairs: Array<[Anchor, Anchor]> = []
+  private linearConstraintCount = 0
 
   constructor(private input: Input) {
     super()
@@ -88,6 +90,9 @@ export class UniformPortClearanceSolver extends BaseSolver {
         }
       }
     }
+    this.linearConstraintCount = this.constraints.length
+    for (const [first, second] of this.perpendicularPairs)
+      this.addPerpendicularSeparationConstraint(first, second)
   }
 
   private addConstraint(
@@ -108,14 +113,6 @@ export class UniformPortClearanceSolver extends BaseSolver {
   }
 
   private addSeparationConstraint(first: Anchor, second: Anchor): void {
-    const firstOriginal = this.input.originalPositionsByPortId.get(
-      first.port.portPointId!,
-    )
-    const secondOriginal = this.input.originalPositionsByPortId.get(
-      second.port.portPointId!,
-    )
-    if (!firstOriginal || !secondOriginal)
-      throw new Error("Missing original port position for clearance constraint")
     const movable = [first, second].filter(
       (anchor) => anchor.variableIndex !== undefined,
     )
@@ -126,8 +123,34 @@ export class UniformPortClearanceSolver extends BaseSolver {
       this.addParallelSeparationConstraint(first, second, movable[0]!.axis)
       return
     }
-    let dx = second.port.x - first.port.x
-    let dy = second.port.y - first.port.y
+    this.perpendicularPairs.push([first, second])
+  }
+
+  private addPerpendicularSeparationConstraint(
+    first: Anchor,
+    second: Anchor,
+  ): void {
+    const firstOriginal = this.input.originalPositionsByPortId.get(
+      first.port.portPointId!,
+    )
+    const secondOriginal = this.input.originalPositionsByPortId.get(
+      second.port.portPointId!,
+    )
+    if (!firstOriginal || !secondOriginal)
+      throw new Error("Missing original port position for clearance constraint")
+    const positions = [first, second].map((anchor) => {
+      if (anchor.variableIndex === undefined) return anchor.port
+      const bounds = this.input.boundsByPortId.get(anchor.port.portPointId!)!
+      return {
+        ...anchor.port,
+        [anchor.axis]: Math.max(
+          bounds.min,
+          Math.min(bounds.max, this.values[anchor.variableIndex]!),
+        ),
+      }
+    })
+    let dx = positions[1]!.x - positions[0]!.x
+    let dy = positions[1]!.y - positions[0]!.y
     if (Math.hypot(dx, dy) < 1e-10) {
       dx = secondOriginal.x - firstOriginal.x
       dy = secondOriginal.y - firstOriginal.y
@@ -193,24 +216,25 @@ export class UniformPortClearanceSolver extends BaseSolver {
     )
     const positiveRoom = intervals[1]!.max - intervals[0]!.min
     const negativeRoom = intervals[0]!.max - intervals[1]!.min
-    const delta = second.port[axis] - first.port[axis]
-    let direction: number
-    if (Math.abs(delta) > 1e-10) direction = Math.sign(delta)
-    else {
-      const firstOriginal = this.input.originalPositionsByPortId.get(
-        first.port.portPointId!,
-      )!
-      const secondOriginal = this.input.originalPositionsByPortId.get(
-        second.port.portPointId!,
-      )!
-      const originalDelta = secondOriginal[axis] - firstOriginal[axis]
-      direction =
-        Math.abs(originalDelta) > 1e-10
-          ? Math.sign(originalDelta)
-          : positiveRoom >= offset
-            ? 1
-            : -1
-    }
+    const firstOriginal = this.input.originalPositionsByPortId.get(
+      first.port.portPointId!,
+    )!
+    const secondOriginal = this.input.originalPositionsByPortId.get(
+      second.port.portPointId!,
+    )!
+    const originalDelta = secondOriginal[axis] - firstOriginal[axis]
+    // Uniform spacing is only a preferred position, not an established side.
+    // Overlapping ports on distinct edges have no valid axial order to
+    // preserve. This includes off-edge duplicates of an aligned crossing.
+    // Choose the side with room instead of locking in their initial overlap.
+    let direction =
+      Math.abs(originalDelta) > 1e-10 &&
+      (first.edge.ownerPairKey === second.edge.ownerPairKey ||
+        Math.abs(originalDelta) >= offset - 1e-8)
+        ? Math.sign(originalDelta)
+        : positiveRoom >= negativeRoom
+          ? 1
+          : -1
     if ((direction > 0 ? positiveRoom : negativeRoom) < offset - 1e-8) {
       if ((direction > 0 ? negativeRoom : positiveRoom) < offset - 1e-8)
         throw new Error("Insufficient edge length to separate parallel ports")
@@ -234,6 +258,15 @@ export class UniformPortClearanceSolver extends BaseSolver {
   }
 
   override _step(): void {
+    // Sequential convex projection updates the tangent at perpendicular
+    // crossings as neighboring ports move. A tangent fixed at the initial
+    // preferred positions can exclude a legal circular-clearance solution.
+    if (this.iterations > 0 && this.iterations % 32 === 0) {
+      this.constraints.length = this.linearConstraintCount
+      for (const constraint of this.constraints) constraint.multiplier = 0
+      for (const [first, second] of this.perpendicularPairs)
+        this.addPerpendicularSeparationConstraint(first, second)
+    }
     // Hildreth's dual projection minimizes squared displacement subject to all
     // box and separation constraints. Dual corrections let earlier ports move
     // again instead of permanently consuming a neighboring narrow edge's space.
