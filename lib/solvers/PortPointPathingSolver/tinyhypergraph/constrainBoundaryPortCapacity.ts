@@ -32,7 +32,18 @@ export const constrainBoundaryPortCapacity = (
     graph.regions.map((region) => [region.regionId, region]),
   )
   const groups = new Map<string, typeof graph.ports>()
+  const allowedNetsByPort = new Map<string, string[]>()
   for (const port of graph.ports) {
+    // A fixed trace crossing only one boundary has no region-to-region
+    // assignment to serialize. Its occupied port still belongs to that net.
+    const fixedOwners = port.d?._preloadedTracePortAssignments
+      ?.filter(
+        (assignment: { isFixed?: boolean; z: number }) =>
+          assignment.isFixed === true && assignment.z === port.d?.z,
+      )
+      .map((assignment: { fixedNetId: string }) => assignment.fixedNetId)
+    if (fixedOwners?.length)
+      allowedNetsByPort.set(port.portId, [...new Set<string>(fixedOwners)])
     const key = JSON.stringify([
       [port.region1Id, port.region2Id].sort(),
       port.d?.z,
@@ -41,7 +52,6 @@ export const constrainBoundaryPortCapacity = (
     ports.push(port)
     groups.set(key, ports)
   }
-  const allowedNetsByPort = new Map<string, string[]>()
   const netByAlias = new Map<string, string>()
   // Internal net keys may also be obsolete aliases of another net. Resolve
   // obstacle aliases through the same connectivity map used by graph planning.
