@@ -1,3 +1,4 @@
+import { createPipeline9KeepoutDrcEvaluator } from "./createPipeline9KeepoutDrcEvaluator"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   type CircuitJsonConnectivityMaps,
@@ -102,6 +103,13 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     representedPadObstacleIndexes,
     viaClearance: drcOptions.viaToPadClearance,
   })
+  const evaluateKeepouts = createPipeline9KeepoutDrcEvaluator(
+    inputSrj,
+    drcOptions.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
+    drcOptions.viaToPadClearance ??
+      getViaToPadClearance(inputSrj) ??
+      RELAXED_DRC_OPTIONS.traceClearance,
+  )
   const evaluatePourWires = createPipeline9CopperPourWireDrcEvaluator(
     inputSrj,
     srjWithPointPairs,
@@ -127,6 +135,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const errors = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
+      ...evaluateKeepouts(traces),
       ...evaluatePourWires(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??

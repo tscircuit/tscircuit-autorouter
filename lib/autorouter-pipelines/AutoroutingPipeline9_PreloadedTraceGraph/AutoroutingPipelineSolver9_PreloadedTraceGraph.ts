@@ -1220,7 +1220,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             resolveConnectedTraceAliases: true,
           }),
           {
-            allowNewVias: false,
+            allowNewVias: true,
+            effort: cms.effort,
             ...configuredOptions,
             onlyConnectionNames,
           },

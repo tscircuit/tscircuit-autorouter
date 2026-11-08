@@ -58,13 +58,14 @@ export const getPipeline9BoundedRepairBudget = (
   const scale = Math.max(1, effort)
   return {
     maxRegions: Math.ceil(24 * scale),
-    maxCandidateAttempts: Math.ceil(4096 * scale),
+    maxCandidateAttempts: Math.ceil(8192 * scale),
     maxPathSearchNodes: Math.ceil(40_000_000 * scale),
     initialMaxRegions: Math.ceil(4 * scale),
     initialMaxCandidateAttempts: Math.ceil(1024 * scale),
     initialMaxPathSearchNodes: Math.ceil(2_000_000 * scale),
     regionsPerAcceptedRepair: 2,
-    candidateAttemptsPerAcceptedRepair: 512,
+    // Each accepted repair unlocks two regions, each with up to 512 searches.
+    candidateAttemptsPerAcceptedRepair: 1024,
     pathSearchNodesPerAcceptedRepair: 2_000_000,
     maxCandidateAttemptsPerRegion: 512,
     maxPathSearchNodesPerCall: 1_000_000,
