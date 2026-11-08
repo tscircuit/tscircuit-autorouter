@@ -569,6 +569,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                   netMap: cms.connMap.netMap,
                   traceWidth: cms.minTraceWidth,
                   retainedRoutes,
+                  allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
                   clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
                   obstacles: cms.physicalRoutingObstacles!,
                   layerCount: cms.srj.layerCount,

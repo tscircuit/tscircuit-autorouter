@@ -1,4 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getWireClearanceInterval } from "../../UniformPortDistributionSolver/getWireClearanceInterval"
 import type { Obstacle } from "lib/types"
@@ -12,6 +15,7 @@ export type PortGeometry = {
   clearance: number
   obstacles: Obstacle[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
   retainedRoutes: Array<HighDensityRoute & { isFixed?: boolean }>
 }
 
@@ -44,6 +48,13 @@ export const constrainBoundaryPortCapacity = (
   for (const [net, aliases] of Object.entries(geometry.netMap)) {
     for (const alias of aliases) netByAlias.set(alias, net)
   }
+  const connMap = new ConnectivityMap(geometry.netMap)
+  const fixedCopper = geometry.retainedRoutes
+    .filter((route) => route.isFixed)
+    .map((route) => ({
+      net: getHdRouteNetId(route, connMap),
+      ...getPipeline9RouteCopperGeometry(route, geometry),
+    }))
   const removed = new Set<string>()
   for (const ports of groups.values()) {
     const duplicates = ports.filter(
@@ -71,7 +82,11 @@ export const constrainBoundaryPortCapacity = (
       nodeSideByOwnerId: {},
     }
     let intervals = [{ min: vertical ? y1 : x1, max: vertical ? y2 : x2 }]
-    const padIntervals: Array<{ min: number; max: number; nets: string[] }> = []
+    const clearanceIntervals: Array<{
+      min: number
+      max: number
+      nets: string[]
+    }> = []
     for (const obstacle of geometry.obstacles) {
       const layers =
         obstacle.__zLayers ??
@@ -86,7 +101,7 @@ export const constrainBoundaryPortCapacity = (
         geometry.traceWidth / 2 + geometry.clearance,
       )
       if (!blocked) continue
-      padIntervals.push({
+      clearanceIntervals.push({
         ...blocked,
         nets: [
           ...new Set(
@@ -106,16 +121,63 @@ export const constrainBoundaryPortCapacity = (
         ].filter((part) => part.max >= part.min)
       })
     }
+    const occupiedIntervals: Array<{
+      min: number
+      max: number
+      center: number
+    }> = []
+    // Fixed copper bounds pad-owner escapes too. A pad exemption cannot make
+    // a foreign via annulus or wire disappear from the same narrow passage.
+    for (const copper of fixedCopper) {
+      const segments = [
+        ...copper.wireSegments
+          .filter((wire) => wire.z === first.d!.z)
+          .map((wire) => ({
+            start: wire.start,
+            end: wire.end,
+            width: wire.width,
+          })),
+        ...copper.viaSpans
+          .filter((via) => first.d!.z >= via.minZ && first.d!.z <= via.maxZ)
+          .map((via) => ({
+            start: via.center,
+            end: via.center,
+            width: via.diameter,
+          })),
+      ]
+      for (const segment of segments) {
+        const blocked = getWireClearanceInterval(
+          edge,
+          segment.start,
+          segment.end,
+          (geometry.traceWidth + segment.width) / 2 + geometry.clearance + 1e-6,
+        )
+        if (!blocked) continue
+        occupiedIntervals.push(blocked)
+        clearanceIntervals.push({
+          ...blocked,
+          nets: copper.net ? [copper.net] : [],
+        })
+        intervals = intervals.flatMap((interval) => {
+          if (blocked.max <= interval.min || blocked.min >= interval.max)
+            return [interval]
+          return [
+            { min: interval.min, max: Math.min(interval.max, blocked.min) },
+            { min: Math.max(interval.min, blocked.max), max: interval.max },
+          ].filter((part) => part.max >= part.min)
+        })
+      }
+    }
     // A passage closed to foreign signals may still be a legal pad escape.
     // Preserve it only for owners whose own pad copper leaves a free interval.
     if (!intervals.length && !a._containsTarget && !b._containsTarget) {
       const allowedNets = [
-        ...new Set(padIntervals.flatMap((pad) => pad.nets)),
+        ...new Set(clearanceIntervals.flatMap((pad) => pad.nets)),
       ].filter((net) => {
         let ownedIntervals = [
           { min: vertical ? y1 : x1, max: vertical ? y2 : x2 },
         ]
-        for (const blocked of padIntervals) {
+        for (const blocked of clearanceIntervals) {
           if (blocked.nets.includes(net)) continue
           ownedIntervals = ownedIntervals.flatMap((interval) => {
             if (blocked.max <= interval.min || blocked.min >= interval.max)
@@ -140,37 +202,6 @@ export const constrainBoundaryPortCapacity = (
         else removed.add(port.portId)
       }
       continue
-    }
-    const occupiedIntervals: Array<{
-      min: number
-      max: number
-      center: number
-    }> = []
-    for (const route of geometry.retainedRoutes) {
-      if (!route.isFixed) continue
-      for (let i = 1; i < route.route.length; i++) {
-        const a = route.route[i - 1]!
-        const b = route.route[i]!
-        if (a.z !== first.d!.z || b.z !== first.d!.z) continue
-        const blocked = getWireClearanceInterval(
-          edge,
-          a,
-          b,
-          (geometry.traceWidth + (a.traceThickness ?? route.traceThickness)) /
-            2 +
-            geometry.clearance,
-        )
-        if (!blocked) continue
-        occupiedIntervals.push(blocked)
-        intervals = intervals.flatMap((interval) => {
-          if (blocked.max <= interval.min || blocked.min >= interval.max)
-            return [interval]
-          return [
-            { min: interval.min, max: Math.min(interval.max, blocked.min) },
-            { min: Math.max(interval.min, blocked.max), max: interval.max },
-          ].filter((part) => part.max >= part.min)
-        })
-      }
     }
     if (intervals.length && !a._containsTarget && !b._containsTarget) {
       for (const port of ports) {
