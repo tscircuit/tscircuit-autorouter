@@ -99,6 +99,7 @@ test("negotiation repairs earlier unfixed copper and publishes it with its origi
   expect(output).toHaveLength(2)
   expect(output[0]!.pcb_trace_id).toBe("retained-id")
   expect(output[0]!.connection_name).toBe("retained-net")
+  expect(output[0]!.__replaces_pcb_trace_id).toBe("retained-id")
   expect(output[0]!.route).not.toEqual(original[0]!.route)
   expect(output[0]!.route[0]).toEqual(original[0]!.route[0])
   expect(output[0]!.route.at(-1)).toEqual(original[0]!.route.at(-1))

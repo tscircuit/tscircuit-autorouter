@@ -1,5 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { preparePipeline9RepairConnectivity } from "./preparePipeline9RepairConnectivity"
+import { getPipeline9TerminalViaRoutes } from "./getPipeline9TerminalViaRoutes"
 import { NegotiateTraceClearanceSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
@@ -73,9 +74,17 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
 
   private startNegotiation(): void {
     const { params } = this
+    const fixedRoutes = [
+      ...params.fixedRoutes,
+      ...getPipeline9TerminalViaRoutes({
+        srj: params.srj,
+        routes: this.bestRoutes,
+        connMap: params.connMap,
+      }),
+    ]
     const candidateRoutes = structuredClone([
       ...this.bestRoutes,
-      ...params.fixedRoutes,
+      ...fixedRoutes,
     ])
     const { srj, routes } = params.connMap
       ? preparePipeline9RepairConnectivity({
@@ -95,9 +104,7 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
       routes,
       bounds: params.srj.bounds,
       dirtyRouteIndices: this.dirtyRouteIndices,
-      fixedRouteIndices: params.fixedRoutes.map(
-        (_, index) => movableCount + index,
-      ),
+      fixedRouteIndices: fixedRoutes.map((_, index) => movableCount + index),
       isLocked: (routeIndex, pointIndex): boolean =>
         routeIndex >= movableCount ||
         pointIndex === 0 ||
@@ -183,6 +190,8 @@ export class Pipeline9NegotiatedClearanceSolver extends BaseSolver {
         return trace
       return {
         ...trace,
+        __replaces_pcb_trace_id:
+          trace.__replaces_pcb_trace_id ?? trace.pcb_trace_id,
         route: convertHdRouteToSimplifiedRoute(
           route,
           this.params.srj.layerCount,

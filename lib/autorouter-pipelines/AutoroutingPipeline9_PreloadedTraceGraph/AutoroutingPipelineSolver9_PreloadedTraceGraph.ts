@@ -985,7 +985,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             rawTraces,
             preloadedTraces,
           )
-          const result = evaluate([...traces, ...updatedPreloadedTraces])
+          const result = evaluate([
+            ...traces,
+            ...updatedPreloadedTraces.map((trace) => ({
+              ...trace,
+              // A repair replaces earlier copper; retaining both paths scores
+              // collisions against geometry that the candidate has removed.
+              __replaces_pcb_trace_id: trace.pcb_trace_id,
+            })),
+          ])
           const routeIndexByRawId = getPipeline9RouteIndexByTraceId({
             routes,
             newConnections: cms.netToPointPairsSolver!.newConnections,
