@@ -161,6 +161,8 @@ export interface Obstacle {
   center: { x: number; y: number }
   width: number
   height: number
+  /** Physical circular drill diameter, independent of the copper outline. */
+  holeDiameter?: number
   /** Optional counter-clockwise rotation metadata in degrees. */
   ccwRotationDegrees?: number
   connectedTo: Array<TraceId | NetId>

@@ -108,6 +108,7 @@ import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { Pipeline9SameNetCopperGapSolver } from "./Pipeline9SameNetCopperGapSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
@@ -288,6 +289,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  sameNetCopperGapSolver?: Pipeline9SameNetCopperGapSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -1314,6 +1316,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "sameNetCopperGapSolver",
+      Pipeline9SameNetCopperGapSolver,
+      (cms) => [
+        {
+          inputSrj: cms.originalSrj,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          traces: [
+            ...cms.getPowerTraceExpansionFixedTraces(),
+            ...cms.powerTraceExpansionSolver!.getOutput(),
+          ],
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -1664,6 +1680,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       pipeline9JointDrcRepairViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
+      this.sameNetCopperGapSolver?.visualize(),
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1951,11 +1968,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
+    if (!this.sameNetCopperGapSolver) {
+      throw new Error(
+        "Pipeline9 invariant violated: solved pipeline is missing same-net copper gap validation",
+      )
+    }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.sameNetCopperGapSolver.getOutput(),
     ]
   }
 
@@ -1968,9 +1991,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
+    if (!this.sameNetCopperGapSolver) {
+      throw new Error(
+        "Pipeline9 invariant violated: solved pipeline is missing same-net copper gap validation",
+      )
+    }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.sameNetCopperGapSolver.getOutput(),
     ]
     return {
       ...this.originalSrj,

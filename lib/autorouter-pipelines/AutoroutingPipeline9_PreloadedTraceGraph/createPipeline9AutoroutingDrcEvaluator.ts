@@ -11,6 +11,7 @@ import type {
   SimplifiedPcbTrace,
 } from "lib/types"
 import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
+import { getRetainedDrilledCopper } from "lib/utils/getRetainedDrilledCopper"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 import { checkBoardTraceClearance } from "lib/utils/autorouting-drc/checkBoardTraceClearance"
@@ -82,6 +83,8 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     ...conversionOptions,
     representedPadObstacleIndexes,
   })
+  const retainedDrilledCopper = getRetainedDrilledCopper(inputSrj)
+  staticCircuitJson.push(...retainedDrilledCopper)
   if (board) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
@@ -127,6 +130,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       traces,
       conversionOptions,
     )
+    circuitJson.push(...retainedDrilledCopper)
     if (board) circuitJson.push(board)
     const connMap = createDrcConnectivityMap(circuitJson)
     connMap.addConnections(declaredNetGroups)
