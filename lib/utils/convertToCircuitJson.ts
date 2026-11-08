@@ -1,3 +1,4 @@
+import { isCircularObstacle } from "./isCircularObstacle"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
@@ -700,7 +701,7 @@ export function createPcbPadElements(
         x: obstacle.center.x,
         y: obstacle.center.y,
       }
-      if (obstacle.shape === "circle") {
+      if (isCircularObstacle(obstacle)) {
         pads.push({
           ...common,
           hole_shape: "circle",
@@ -875,7 +876,7 @@ export function createPcbPadElements(
     )
     if (id === undefined) continue
 
-    if (obstacle.shape === "circle") {
+    if (isCircularObstacle(obstacle)) {
       pads.push({
         type: "pcb_smtpad",
         pcb_smtpad_id: id,

@@ -1,3 +1,4 @@
+import { isCircularObstacle } from "lib/utils/isCircularObstacle"
 import { getPipeline9PhysicalObstacles } from "./getPipeline9PhysicalObstacles"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -1297,7 +1298,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   ) {
     super()
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(srj)
+      createSrjWithBoardValidObstacleLayers({
+        ...srj,
+        obstacles: srj.obstacles.map((obstacle) =>
+          isCircularObstacle(obstacle)
+            ? { ...obstacle, type: "rect" as const, shape: "circle" as const }
+            : obstacle,
+        ),
+      })
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
