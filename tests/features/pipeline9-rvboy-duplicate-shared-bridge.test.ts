@@ -32,6 +32,7 @@ test("a shared bridge is copied once for a disjoint port pair and stitches to th
     originalNode: NodeWithPortPoints
     hdRoutes: HighDensityRoute[]
     srj: SimpleRouteJson
+    beforeStitchedRoute: HighDensityRoute
   }
   const { repairInput, originalNode, hdRoutes, srj } = captured
   const original = structuredClone(repairInput)
@@ -75,19 +76,24 @@ test("a shared bridge is copied once for a disjoint port pair and stitches to th
     ["before", hdRoutes],
     ["after", afterRoutes],
   ] as const) {
-    const solver = new MultipleHighDensityRouteStitchSolver3({
-      connections: srj.connections,
-      hdRoutes: routes,
-      layerCount: srj.layerCount,
-      defaultViaDiameter: 0.45,
-      preserveTerminalPcbPortIds: true,
-      preferSameLayerTerminalEndpoints: true,
-    })
-    solver.solve()
-    expect(solver.failed).toBe(false)
-    const route = solver.mergedHdRoutes.find(
-      (route) => route.connectionName === "source_net_62_mst2",
-    )!
+    // The original failure is frozen at bc9fe2f. Current path selection also
+    // repairs the old duplicate input, so rerunning it is not a before image.
+    let route = captured.beforeStitchedRoute
+    if (name === "after") {
+      const solver = new MultipleHighDensityRouteStitchSolver3({
+        connections: srj.connections,
+        hdRoutes: routes,
+        layerCount: srj.layerCount,
+        defaultViaDiameter: 0.45,
+        preserveTerminalPcbPortIds: true,
+        preferSameLayerTerminalEndpoints: true,
+      })
+      solver.solve()
+      expect(solver.failed).toBe(false)
+      route = solver.mergedHdRoutes.find(
+        (route) => route.connectionName === "source_net_62_mst2",
+      )!
+    }
     const end = route.route.at(-1)!
     if (name === "before") expect(end.z).toBe(3)
     else expect(end).toMatchObject({ x: 6, y: 10.075, z: 0 })
