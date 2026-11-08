@@ -134,6 +134,40 @@ export class UniformPortClearanceSolver extends BaseSolver {
       dx = second.edge.center.x - first.edge.center.x
       dy = second.edge.center.y - first.edge.center.y
     }
+    const movableAnchor = [first, second].find(
+      (anchor) => anchor.variableIndex !== undefined,
+    )
+    if (
+      movableAnchor &&
+      Math.hypot(dx, dy) < this.input.separation &&
+      [first, second].every(
+        (anchor) =>
+          anchor.variableIndex === undefined ||
+          Math.abs(anchor.axis === "x" ? dx : dy) < 1e-10,
+      )
+    ) {
+      // Opposite-edge ports can be aligned in both the planner and uniform
+      // output. Their current normal is perpendicular to every movable axis;
+      // it is not evidence that the ports are fixed. Build the separating
+      // normal from the required offset along their actual edge instead.
+      const axis = movableAnchor.axis
+      const perpendicularDistance = axis === "x" ? dy : dx
+      const offset = Math.sqrt(
+        this.input.separation ** 2 - perpendicularDistance ** 2,
+      )
+      const intervals = [first, second].map((anchor) =>
+        anchor.variableIndex !== undefined && anchor.axis === axis
+          ? this.input.boundsByPortId.get(anchor.port.portPointId!)!
+          : { min: anchor.port[axis], max: anchor.port[axis] },
+      )
+      const positiveRoom = intervals[1]!.max - intervals[0]!.min
+      const negativeRoom = intervals[0]!.max - intervals[1]!.min
+      if (Math.max(positiveRoom, negativeRoom) < offset)
+        throw new Error("Insufficient edge length to separate aligned ports")
+      const direction = positiveRoom >= offset ? 1 : -1
+      if (axis === "x") dx = direction * offset
+      else dy = direction * offset
+    }
     const distance = Math.hypot(dx, dy)
     if (distance < 1e-10) {
       throw new Error(
