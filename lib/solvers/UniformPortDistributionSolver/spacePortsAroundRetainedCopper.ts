@@ -1,3 +1,4 @@
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Obstacle } from "lib/types"
@@ -125,20 +126,8 @@ export const spacePortsAroundRetainedCopper = ({
           else low = Math.max(low, interval.max)
         }
         for (const route of routes) {
-          const portNet =
-            connMap.getNetConnectedToId(port.connectionName) ??
-            (port.rootConnectionName &&
-              (connMap.getNetConnectedToId(port.rootConnectionName) ??
-                (connMap.netMap[port.rootConnectionName]
-                  ? port.rootConnectionName
-                  : undefined)))
-          const routeNet =
-            connMap.getNetConnectedToId(route.connectionName) ??
-            (route.rootConnectionName &&
-              (connMap.getNetConnectedToId(route.rootConnectionName) ??
-                (connMap.netMap[route.rootConnectionName]
-                  ? route.rootConnectionName
-                  : undefined)))
+          const portNet = getHdRouteNetId(port, connMap)
+          const routeNet = getHdRouteNetId(route, connMap)
           if (portNet && portNet === routeNet) continue
           for (let i = 0; i < route.route.length - 1; i++) {
             const a = route.route[i]!,

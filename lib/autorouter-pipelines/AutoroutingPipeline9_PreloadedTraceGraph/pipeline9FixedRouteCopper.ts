@@ -1,3 +1,4 @@
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -220,17 +221,13 @@ export const arePipeline9RoutesOnSameNet = (
   right: HighDensityRoute,
   connMap: ConnectivityMap,
 ): boolean => {
-  const leftIds = [left.connectionName, left.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  const rightIds = [right.connectionName, right.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  return leftIds.some((leftId) =>
-    rightIds.some(
-      (rightId) =>
-        leftId === rightId || connMap.areIdsConnected(leftId, rightId),
-    ),
+  const leftNet = getHdRouteNetId(left, connMap)
+  const rightNet = getHdRouteNetId(right, connMap)
+  if (leftNet && rightNet) return leftNet === rightNet
+  return (
+    left.connectionName === right.connectionName ||
+    (left.rootConnectionName !== undefined &&
+      left.rootConnectionName === right.rootConnectionName)
   )
 }
 

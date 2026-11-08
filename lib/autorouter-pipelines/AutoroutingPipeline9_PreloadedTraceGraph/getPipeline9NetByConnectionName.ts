@@ -1,3 +1,4 @@
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -7,14 +8,7 @@ export const getPipeline9NetByConnectionName = (
 ): ReadonlyMap<string, string> =>
   new Map(
     routes.flatMap((route) => {
-      const netName =
-        connMap.getNetConnectedToId(route.connectionName) ??
-        (route.rootConnectionName
-          ? (connMap.getNetConnectedToId(route.rootConnectionName) ??
-            (connMap.netMap[route.rootConnectionName]
-              ? route.rootConnectionName
-              : undefined))
-          : undefined)
+      const netName = getHdRouteNetId(route, connMap)
       return netName ? [[route.connectionName, netName] as const] : []
     }),
   )
