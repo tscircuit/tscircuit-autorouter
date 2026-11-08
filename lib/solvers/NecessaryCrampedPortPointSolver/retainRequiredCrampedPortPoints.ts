@@ -8,7 +8,31 @@ import type {
   SegmentPortPoint,
   SharedEdgeSegment,
 } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { getConnectionEscapeIndex } from "../AvailableSegmentPointSolver/getConnectionEscapeIndex"
 import { getConnectionEscapePortPoints } from "../AvailableSegmentPointSolver/getConnectionEscapePortPoints"
+
+function getPortPointsByNodeId({
+  segments,
+  arePortsRetained,
+}: {
+  segments: SharedEdgeSegment[]
+  arePortsRetained: boolean
+}): Map<CapacityMeshNodeId, SegmentPortPoint[]> {
+  const portsByNodeId = new Map<CapacityMeshNodeId, SegmentPortPoint[]>()
+  for (const segment of segments) {
+    for (const port of segment.portPoints) {
+      let indexedPort = port
+      if (arePortsRetained && port.cramped) {
+        indexedPort = { ...port, cramped: false }
+      }
+      for (const nodeId of port.nodeIds) {
+        if (!portsByNodeId.has(nodeId)) portsByNodeId.set(nodeId, [])
+        portsByNodeId.get(nodeId)!.push(indexedPort)
+      }
+    }
+  }
+  return portsByNodeId
+}
 
 /** Pruning local crossings must preserve complete terminal escapes. */
 export function retainRequiredCrampedPortPoints({
@@ -23,27 +47,16 @@ export function retainRequiredCrampedPortPoints({
   connections: SimpleRouteJson["connections"]
 }): SharedEdgeSegment[] {
   const nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
-  const originalPorts = new Map<CapacityMeshNodeId, SegmentPortPoint[]>()
-  const retainedPorts = new Map<CapacityMeshNodeId, SegmentPortPoint[]>()
-  for (const segment of originalSegments) {
-    for (const port of segment.portPoints) {
-      for (const nodeId of port.nodeIds) {
-        if (!originalPorts.has(nodeId)) originalPorts.set(nodeId, [])
-        originalPorts.get(nodeId)!.push(port)
-      }
-    }
-  }
-  for (const segment of filteredSegments) {
-    for (const port of segment.portPoints) {
-      // These crossings already survive pruning, including component-local
-      // crossings and penalized multilayer escapes.
-      const retainedPort = { ...port, cramped: false }
-      for (const nodeId of port.nodeIds) {
-        if (!retainedPorts.has(nodeId)) retainedPorts.set(nodeId, [])
-        retainedPorts.get(nodeId)!.push(retainedPort)
-      }
-    }
-  }
+  let originalPorts: Map<CapacityMeshNodeId, SegmentPortPoint[]> | undefined
+  const retainedPorts = getPortPointsByNodeId({
+    segments: filteredSegments,
+    arePortsRetained: true,
+  })
+  const escapeIndex = getConnectionEscapeIndex({
+    nodes,
+    nodeMap,
+    portsByNodeId: retainedPorts,
+  })
 
   const requiredPorts = new Set<SegmentPortPoint>()
   const endpoints = connections.flatMap(
@@ -57,12 +70,18 @@ export function retainRequiredCrampedPortPoints({
     ) {
       continue
     }
-    const escapeInput = { target, nodes, nodeMap, connections }
+    const escapeInput = { target, nodes, nodeMap, connections, escapeIndex }
     const retainedEscape = getConnectionEscapePortPoints({
       ...escapeInput,
       portsByNodeId: retainedPorts,
     })
     if (retainedEscape) continue
+    if (!originalPorts) {
+      originalPorts = getPortPointsByNodeId({
+        segments: originalSegments,
+        arePortsRetained: false,
+      })
+    }
     const originalEscape = getConnectionEscapePortPoints({
       ...escapeInput,
       portsByNodeId: originalPorts,
@@ -79,6 +98,7 @@ export function retainRequiredCrampedPortPoints({
     }
   }
 
+  if (requiredPorts.size === 0) return filteredSegments
   const originalSegmentByEdgeId = new Map(
     originalSegments.map((segment) => [segment.edgeId, segment]),
   )

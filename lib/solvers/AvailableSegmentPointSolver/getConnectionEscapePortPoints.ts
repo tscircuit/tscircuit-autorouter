@@ -6,6 +6,7 @@ import type {
 import { getConnectionPointLayers } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { SegmentPortPoint } from "./AvailableSegmentPointSolver"
+import type { ConnectionEscapeIndex } from "./getConnectionEscapeIndex"
 
 type ConnectionEscapeInput = {
   target: CapacityMeshNode
@@ -14,9 +15,34 @@ type ConnectionEscapeInput = {
   portsByNodeId: Map<CapacityMeshNodeId, SegmentPortPoint[]>
   connections: SimpleRouteConnection[]
   allowCrampedPortPoints?: boolean
+  escapeIndex?: ConnectionEscapeIndex
 }
 
-/** Nearby free space can be an isolated pocket; check the actual destinations. */
+function getAdjacentFreeSpaceComponents({
+  nodeIds,
+  portsByNodeId,
+  freeSpaceComponentIds,
+}: {
+  nodeIds: Iterable<CapacityMeshNodeId>
+  portsByNodeId: Map<CapacityMeshNodeId, SegmentPortPoint[]>
+  freeSpaceComponentIds: Map<CapacityMeshNodeId, CapacityMeshNodeId>
+}): Set<CapacityMeshNodeId> {
+  const components = new Set<CapacityMeshNodeId>()
+  for (const nodeId of nodeIds) {
+    const ownComponent = freeSpaceComponentIds.get(nodeId)
+    if (ownComponent !== undefined) components.add(ownComponent)
+    for (const port of portsByNodeId.get(nodeId) ?? []) {
+      if (port.cramped) continue
+      for (const neighborId of port.nodeIds) {
+        const component = freeSpaceComponentIds.get(neighborId)
+        if (component !== undefined) components.add(component)
+      }
+    }
+  }
+  return components
+}
+
+/** Return required cramped crossings, or undefined if destinations are unreachable. */
 export function getConnectionEscapePortPoints({
   target,
   nodes,
@@ -24,11 +50,14 @@ export function getConnectionEscapePortPoints({
   portsByNodeId,
   connections,
   allowCrampedPortPoints = false,
+  escapeIndex,
 }: ConnectionEscapeInput): Set<SegmentPortPoint> | undefined {
-  const layerCount = nodes.reduce(
-    (count, node) => Math.max(count, ...node.availableZ.map((z) => z + 1)),
-    1,
-  )
+  const layerCount =
+    escapeIndex?.layerCount ??
+    nodes.reduce(
+      (count, node) => Math.max(count, ...node.availableZ.map((z) => z + 1)),
+      1,
+    )
   const containsPoint = (
     node: CapacityMeshNode,
     point: SimpleRouteConnection["pointsToConnect"][number],
@@ -48,16 +77,43 @@ export function getConnectionEscapePortPoints({
     )
     .flatMap((connection) => connection.pointsToConnect)
     .filter((point) => !containsPoint(target, point))
-    .map(
-      (point) =>
-        new Set(
-          nodes
-            .filter((node) => containsPoint(node, point))
-            .map((node) => node.capacityMeshNodeId),
-        ),
-    )
+    .map((point) => {
+      let candidates = nodes
+      if (escapeIndex) {
+        candidates = escapeIndex.nodeTree.getNodesInArea(
+          point.x,
+          point.y,
+          2e-9,
+          2e-9,
+        )
+      }
+      return new Set(
+        candidates
+          .filter((node) => containsPoint(node, point))
+          .map((node) => node.capacityMeshNodeId),
+      )
+    })
     .filter((group) => group.size > 0)
   if (destinations.length === 0) return new Set()
+  // A shared free component proves an escape without crossing another net's pad.
+  if (escapeIndex && !allowCrampedPortPoints) {
+    const componentInput = {
+      portsByNodeId,
+      freeSpaceComponentIds: escapeIndex.freeSpaceComponentIds,
+    }
+    const startComponents = getAdjacentFreeSpaceComponents({
+      ...componentInput,
+      nodeIds: [target.capacityMeshNodeId],
+    })
+    const hasFreeSpaceEscape = destinations.every((nodeIds) => {
+      const components = getAdjacentFreeSpaceComponents({
+        ...componentInput,
+        nodeIds,
+      })
+      return [...components].some((component) => startComponents.has(component))
+    })
+    if (hasFreeSpaceEscape) return new Set()
+  }
   const destinationNodes = new Set(destinations.flatMap((group) => [...group]))
   const destinationGroupsByNode = new Map<CapacityMeshNodeId, number[]>()
   destinations.forEach((group, index) => {
@@ -94,13 +150,15 @@ export function getConnectionEscapePortPoints({
           continue
         }
         visited.add(neighborId)
-        parentByNodeId.set(neighborId, { nodeId, port })
+        if (allowCrampedPortPoints) {
+          parentByNodeId.set(neighborId, { nodeId, port })
+        }
         for (const group of destinationGroupsByNode.get(neighborId) ?? []) {
           if (reachedGroups.has(group)) continue
           reachedGroups.add(group)
           let parent = parentByNodeId.get(neighborId)
           while (parent) {
-            escapePorts.add(parent.port)
+            if (parent.port.cramped) escapePorts.add(parent.port)
             parent = parentByNodeId.get(parent.nodeId)
           }
         }
