@@ -5,6 +5,7 @@ import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { Pipeline9NegotiatedClearanceSolver } from "./Pipeline9NegotiatedClearanceSolver"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { stitchPipeline9RepairedFragments } from "./stitchPipeline9RepairedFragments"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import {
@@ -1104,6 +1105,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         })
         let physicalConnectivity: PhysicalConnectivityInvariant | undefined
+        const preservesPhysicalConnectivity = (
+          routes: HighDensityRoute[],
+        ): boolean => {
+          const traces = convert(routes)
+          if (evaluateCleanupDrc(traces).errors.length > 0) return false
+          physicalConnectivity ??= new PhysicalConnectivityInvariant(
+            {
+              ...inputSrj,
+              connections: inputSrj.connections.map((connection) => ({
+                ...connection,
+                pointsToConnect: connection.pointsToConnect.map((point) => ({
+                  ...point,
+                  layer: getConnectionPointLayers(point)[0]!,
+                })),
+              })),
+            },
+            [...preloadedTraces, ...convert(hdRoutes)],
+          )
+          const validation = physicalConnectivity.validate([
+            ...preloadedTraces,
+            ...traces,
+          ])
+          if (validation.validationError)
+            throw new Error(validation.validationError)
+          return validation.safe
+        }
+        const stitchedHdRoutes = stitchPipeline9RepairedFragments({
+          routes: hdRoutes,
+          connections: cms.netToPointPairsSolver!.newConnections,
+          isValid: preservesPhysicalConnectivity,
+        })
         return [
           {
             effort: cms.effort,
@@ -1120,32 +1152,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
               srj: { ...cms.srjWithPointPairs!, traces: preloadedTraces },
               viaHoleDiameter: cms.viaHoleDiameter,
-              isValid: (routes: HighDensityRoute[]): boolean => {
-                const traces = convert(routes)
-                if (evaluateCleanupDrc(traces).errors.length > 0) return false
-                physicalConnectivity ??= new PhysicalConnectivityInvariant(
-                  {
-                    ...inputSrj,
-                    connections: inputSrj.connections.map((connection) => ({
-                      ...connection,
-                      pointsToConnect: connection.pointsToConnect.map(
-                        (point) => ({
-                          ...point,
-                          layer: getConnectionPointLayers(point)[0]!,
-                        }),
-                      ),
-                    })),
-                  },
-                  [...preloadedTraces, ...convert(hdRoutes)],
-                )
-                const validation = physicalConnectivity.validate([
-                  ...preloadedTraces,
-                  ...traces,
-                ])
-                if (validation.validationError)
-                  throw new Error(validation.validationError)
-                return validation.safe
-              },
+              isValid: preservesPhysicalConnectivity,
             },
             viaRemovalPasses:
               cms.pipeline9JointDrcRepairSolver!.stats
@@ -1153,7 +1160,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ? 2
                 : 1,
             config: {
-              hdRoutes,
+              hdRoutes: stitchedHdRoutes,
               preserveRouteEndpoints: true,
               obstacles: cms.srjWithPointPairs!.obstacles,
               connMap: cms.connMap,
