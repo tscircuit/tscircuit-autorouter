@@ -14,8 +14,9 @@ import {
   projectionInput,
 } from "../fixtures/repair04StepFixtures"
 import golden from "../fixtures/repair04-stepped-golden.json"
+import { getDrcSnapshot } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 
-test("repair04 incremental APIs preserve the original synchronous geometry and work accounting", (): void => {
+test("repair04 incremental APIs match synchronous geometry and work accounting", (): void => {
   const original = structuredClone({
     routes: negotiationInput.routes,
     projection: projectionInput.routes,
@@ -50,6 +51,9 @@ test("repair04 incremental APIs preserve the original synchronous geometry and w
   expect(visiblePathSteps).toBeGreaterThan(1)
   expect(negotiation.iterations).toBeGreaterThan(1)
   expect(negotiateTraceClearance(negotiationInput)).toEqual(golden.negotiation)
+  expect(
+    getDrcSnapshot(negotiationInput.srj, negotiation.getOutput().routes).count,
+  ).toBe(0)
 
   const projection = new RelaxTraceClearanceSolver(projectionInput)
   expect(() => projection.getOutput()).toThrow()
