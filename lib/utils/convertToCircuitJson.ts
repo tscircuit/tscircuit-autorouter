@@ -636,7 +636,7 @@ function getBestObstaclePcbPortId(
     }
   }
 
-  return bestPcbPortId ?? candidatePortIds[0]
+  return bestPcbPortId
 }
 
 const layerNames = new Set<string>([
@@ -692,6 +692,14 @@ export function createPcbPadElements(
   const addedPlatedHoleIds = new Map<string, Set<string>>()
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
+  const fragmentsByPortId = new Map<string, Obstacle[]>()
+  for (const obstacle of srj.obstacles) {
+    const id = obstacle.circuitJsonMetadata?.pcb_port_id
+    if (!id) continue
+    const fragments = fragmentsByPortId.get(id)
+    if (fragments) fragments.push(obstacle)
+    else fragmentsByPortId.set(id, [obstacle])
+  }
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
     if (obstacle.isNonPlatedHole) {
@@ -769,17 +777,38 @@ export function createPcbPadElements(
         }
       }
     }
-    // Imported metadata may use an older port alias. Prefer it only when
-    // that port is present in the SRJ's exported connection points.
+    // A net alias does not identify a physical terminal. Resolve older port
+    // aliases only where an active terminal lies on this pad's fragments.
+    // Pads outside this routing phase retain their original port identity.
+    const fragments = circuitJsonMetadata.pcb_port_id
+      ? fragmentsByPortId.get(circuitJsonMetadata.pcb_port_id)!
+      : [obstacle]
+    const physicalPortIds = candidatePortIds.filter((id) => {
+      const position = portPositionMap.get(id)
+      if (!position) return false
+      return fragments.some((fragment) => {
+        const dx = position.x - fragment.center.x
+        const dy = position.y - fragment.center.y
+        if (isCircularObstacle(fragment))
+          return Math.hypot(dx, dy) <= fragment.width / 2 + 1e-6
+        const angle = ((fragment.ccwRotationDegrees ?? 0) * Math.PI) / 180
+        return (
+          Math.abs(dx * Math.cos(angle) + dy * Math.sin(angle)) <=
+            fragment.width / 2 + 1e-6 &&
+          Math.abs(-dx * Math.sin(angle) + dy * Math.cos(angle)) <=
+            fragment.height / 2 + 1e-6
+        )
+      })
+    })
     const pcbPortId =
       circuitJsonMetadata.pcb_port_id &&
       portPositionMap.has(circuitJsonMetadata.pcb_port_id)
         ? circuitJsonMetadata.pcb_port_id
-        : getBestObstaclePcbPortId(
+        : (getBestObstaclePcbPortId(
             obstacle.center,
-            candidatePortIds,
+            physicalPortIds,
             portPositionMap,
-          )
+          ) ?? circuitJsonMetadata.pcb_port_id)
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
