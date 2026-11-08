@@ -116,57 +116,25 @@ export class UniformPortClearanceSolver extends BaseSolver {
     )
     if (!firstOriginal || !secondOriginal)
       throw new Error("Missing original port position for clearance constraint")
+    const movable = [first, second].filter(
+      (anchor) => anchor.variableIndex !== undefined,
+    )
+    if (
+      movable.length &&
+      movable.every((anchor) => anchor.axis === movable[0]!.axis)
+    ) {
+      this.addParallelSeparationConstraint(first, second, movable[0]!.axis)
+      return
+    }
     let dx = second.port.x - first.port.x
     let dy = second.port.y - first.port.y
-    // If uniform spacing aligns opposite-edge ports, their separation normal
-    // has no movable component. Use the planner's ordering to break that tie;
-    // an already separated pair should keep its preferred normal instead.
-    const hasMovableProjection = [first, second].some(
-      (anchor) =>
-        anchor.variableIndex !== undefined &&
-        Math.abs(anchor.axis === "x" ? dx : dy) > 1e-10,
-    )
-    if (!hasMovableProjection && Math.hypot(dx, dy) < this.input.separation) {
+    if (Math.hypot(dx, dy) < 1e-10) {
       dx = secondOriginal.x - firstOriginal.x
       dy = secondOriginal.y - firstOriginal.y
     }
     if (Math.hypot(dx, dy) < 1e-10) {
       dx = second.edge.center.x - first.edge.center.x
       dy = second.edge.center.y - first.edge.center.y
-    }
-    const movableAnchor = [first, second].find(
-      (anchor) => anchor.variableIndex !== undefined,
-    )
-    if (
-      movableAnchor &&
-      Math.hypot(dx, dy) < this.input.separation &&
-      [first, second].every(
-        (anchor) =>
-          anchor.variableIndex === undefined ||
-          Math.abs(anchor.axis === "x" ? dx : dy) < 1e-10,
-      )
-    ) {
-      // Opposite-edge ports can be aligned in both the planner and uniform
-      // output. Their current normal is perpendicular to every movable axis;
-      // it is not evidence that the ports are fixed. Build the separating
-      // normal from the required offset along their actual edge instead.
-      const axis = movableAnchor.axis
-      const perpendicularDistance = axis === "x" ? dy : dx
-      const offset = Math.sqrt(
-        this.input.separation ** 2 - perpendicularDistance ** 2,
-      )
-      const intervals = [first, second].map((anchor) =>
-        anchor.variableIndex !== undefined && anchor.axis === axis
-          ? this.input.boundsByPortId.get(anchor.port.portPointId!)!
-          : { min: anchor.port[axis], max: anchor.port[axis] },
-      )
-      const positiveRoom = intervals[1]!.max - intervals[0]!.min
-      const negativeRoom = intervals[0]!.max - intervals[1]!.min
-      if (Math.max(positiveRoom, negativeRoom) < offset)
-        throw new Error("Insufficient edge length to separate aligned ports")
-      const direction = positiveRoom >= offset ? 1 : -1
-      if (axis === "x") dx = direction * offset
-      else dy = direction * offset
     }
     const distance = Math.hypot(dx, dy)
     if (distance < 1e-10) {
@@ -200,6 +168,67 @@ export class UniformPortClearanceSolver extends BaseSolver {
       this.input.separation +
         (terms.some((term) => Math.abs(term.coefficient) > 1e-10) ? 1e-6 : 0) -
         constant,
+      `${first.port.portPointId} / ${second.port.portPointId}`,
+    )
+  }
+
+  private addParallelSeparationConstraint(
+    first: Anchor,
+    second: Anchor,
+    axis: "x" | "y",
+  ): void {
+    // For parallel motion, the perpendicular distance is constant. The exact
+    // clearance is an axis offset, not a tangent half-plane at the preferred
+    // positions; that tangent can exclude a physically feasible narrow seam.
+    const perpendicularAxis = axis === "x" ? "y" : "x"
+    const perpendicularDistance =
+      second.port[perpendicularAxis] - first.port[perpendicularAxis]
+    if (Math.abs(perpendicularDistance) >= this.input.separation) return
+    const offset =
+      Math.sqrt(this.input.separation ** 2 - perpendicularDistance ** 2) + 1e-6
+    const intervals = [first, second].map((anchor) =>
+      anchor.variableIndex !== undefined
+        ? this.input.boundsByPortId.get(anchor.port.portPointId!)!
+        : { min: anchor.port[axis], max: anchor.port[axis] },
+    )
+    const positiveRoom = intervals[1]!.max - intervals[0]!.min
+    const negativeRoom = intervals[0]!.max - intervals[1]!.min
+    const delta = second.port[axis] - first.port[axis]
+    let direction: number
+    if (Math.abs(delta) > 1e-10) direction = Math.sign(delta)
+    else {
+      const firstOriginal = this.input.originalPositionsByPortId.get(
+        first.port.portPointId!,
+      )!
+      const secondOriginal = this.input.originalPositionsByPortId.get(
+        second.port.portPointId!,
+      )!
+      const originalDelta = secondOriginal[axis] - firstOriginal[axis]
+      direction =
+        Math.abs(originalDelta) > 1e-10
+          ? Math.sign(originalDelta)
+          : positiveRoom >= offset
+            ? 1
+            : -1
+    }
+    if ((direction > 0 ? positiveRoom : negativeRoom) < offset - 1e-8) {
+      if ((direction > 0 ? negativeRoom : positiveRoom) < offset - 1e-8)
+        throw new Error("Insufficient edge length to separate parallel ports")
+      direction = -direction
+    }
+    const terms: Constraint["terms"] = []
+    let constant = 0
+    for (const [anchor, sign] of [
+      [first, -direction],
+      [second, direction],
+    ] as const) {
+      if (anchor.variableIndex !== undefined)
+        terms.push({ index: anchor.variableIndex, coefficient: sign })
+      else constant += sign * anchor.port[axis]
+    }
+    this.addConstraint(
+      terms,
+      offset - constant,
       `${first.port.portPointId} / ${second.port.portPointId}`,
     )
   }

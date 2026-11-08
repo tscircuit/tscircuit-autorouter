@@ -68,15 +68,15 @@ test("corner clearance can move both boundary ports without moving a fixed ancho
   expect(output[0]!.y).toBe(0)
   expect(output[1]!.x).toBe(0)
   expect(ports).toEqual(original)
-  const impossible = new UniformPortClearanceSolver({
-    ...input,
-    boundsByPortId: new Map([
-      ["port0", { min: -0.08, max: -0.08 }],
-      ["port1", { min: -0.16, max: 0 }],
-    ]),
-  })
-  expect(() => impossible.solve()).toThrow(
-    "Port clearance constraints did not converge",
-  )
-  expect(impossible.solved).toBeFalse()
+  // The exact parallel-motion bound can reject this impossible fixed-anchor
+  // case during construction, before iterative projection is needed.
+  expect(() =>
+    new UniformPortClearanceSolver({
+      ...input,
+      boundsByPortId: new Map([
+        ["port0", { min: -0.08, max: -0.08 }],
+        ["port1", { min: -0.16, max: 0 }],
+      ]),
+    }).solve(),
+  ).toThrow("Insufficient edge length to separate parallel ports")
 })
