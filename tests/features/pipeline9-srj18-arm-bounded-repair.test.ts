@@ -32,14 +32,14 @@ test("SRJ18 sample 14 retains enough earned work for the exact ARM64 route geome
     drcEvaluator: joint["cachedReferenceDrcEvaluator"]!,
     budget: getPipeline9BoundedRepairBudget(
       fixture.bounded.routes.length,
-      439,
+      418,
       1,
     ),
   })
   solver.solve()
   expect(solver.failed).toBe(false)
   const result = solver.getResult()
-  expect(result.initialDrcIssueCount).toBe(439)
+  expect(result.initialDrcIssueCount).toBe(418)
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.repaired).toBe(true)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(8192)
