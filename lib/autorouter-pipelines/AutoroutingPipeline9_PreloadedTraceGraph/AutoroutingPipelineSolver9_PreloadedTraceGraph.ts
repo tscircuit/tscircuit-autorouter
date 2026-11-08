@@ -549,6 +549,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
+        const retainedRoutes = cms.getOriginalFixedHdRoutes()
 
         return [
           {
@@ -559,14 +560,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             preserveTerminalPcbPortIds: true,
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
-            portGeometry: {
-              netMap: cms.connMap.netMap,
-              traceWidth: cms.minTraceWidth,
-              retainedRoutes: cms.getOriginalFixedHdRoutes(),
-              clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
-              obstacles: cms.physicalRoutingObstacles!,
-              layerCount: cms.srj.layerCount,
-            },
+            // Mesh seams are provisional on an unfixed board: regional repair
+            // can move crossings or change their layer. Hard seam capacity is
+            // needed when earlier fixed copper anchors the routing topology.
+            portGeometry: retainedRoutes.some((route) => route.isFixed)
+              ? {
+                  netMap: cms.connMap.netMap,
+                  traceWidth: cms.minTraceWidth,
+                  retainedRoutes,
+                  clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+                  obstacles: cms.physicalRoutingObstacles!,
+                  layerCount: cms.srj.layerCount,
+                }
+              : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
