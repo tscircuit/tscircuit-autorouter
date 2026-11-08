@@ -358,21 +358,33 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     for (const route of routes) {
       const vias = getPipeline9RouteCopperGeometry(route, params).viaSpans
       for (const obstacle of params.boardObstacles ?? []) {
+        const connected = isPipeline9ObstacleConnectedToRoute({
+          obstacle,
+          route,
+          connMap: params.connMap,
+        })
+        // A topology anchor can lie on the far edge of its terminal pad.
+        // Retained copper may block that side, so include the entire pad and
+        // its via collar to let repair escape through the opposite side.
+        const touchesTerminal =
+          connected &&
+          [route.route[0]!, route.route.at(-1)!].some(
+            (point) =>
+              getPointToObstacleDistance(point, obstacle) <=
+              route.traceThickness / 2 + 1e-6,
+          )
         if (
           obstacle.isCopperPour ||
-          isPipeline9ObstacleConnectedToRoute({
-            obstacle,
-            route,
-            connMap: params.connMap,
-          }) ||
-          !vias.some(
-            (via) =>
-              getObstacleZLayers(obstacle, params.layerCount).some(
-                (z) => z >= via.minZ && z <= via.maxZ,
-              ) &&
-              getPointToObstacleDistance(via.center, obstacle) + 1e-9 <
-                via.diameter / 2 + clearance,
-          )
+          (!touchesTerminal &&
+            (connected ||
+              !vias.some(
+                (via) =>
+                  getObstacleZLayers(obstacle, params.layerCount).some(
+                    (z) => z >= via.minZ && z <= via.maxZ,
+                  ) &&
+                  getPointToObstacleDistance(via.center, obstacle) + 1e-9 <
+                    via.diameter / 2 + clearance,
+              )))
         )
           continue
         const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
