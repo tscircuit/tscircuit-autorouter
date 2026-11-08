@@ -300,6 +300,7 @@ const getSrjDeclaredConnectionReferences = (
 const createCircuitJsonSourceTraceIdResolver = (
   connections: SimpleRouteJson["connections"],
   connMap: ConnectivityMap,
+  preloadedTraces: readonly SimplifiedPcbTrace[] = [],
 ): CircuitJsonSourceTraceIdResolver => {
   const circuitJsonSourceTraceIdBySrjDeclaredConnectionReference = new Map<
     SrjDeclaredConnectionReference,
@@ -341,6 +342,28 @@ const createCircuitJsonSourceTraceIdResolver = (
       brandedConnectivityNetId,
       sourceTraceIds,
     )
+  }
+  // A completed phase keeps its own source connection even when a later
+  // connection is on the same electrical net. The remaining power backbone
+  // may not have been routed yet, so net membership cannot merge their
+  // physical endpoint obligations into the currently active connection.
+  for (const trace of preloadedTraces) {
+    const reference = trace.connection_name as SrjDeclaredConnectionReference
+    if (circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.has(reference))
+      continue
+    const sourceTraceId = trace.connection_name as CircuitJsonSourceTraceId
+    circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.set(
+      reference,
+      sourceTraceId,
+    )
+    const net = connMap.getNetConnectedToId(trace.connection_name)
+    if (!net) continue
+    const netId = net as ConnectivityNetId
+    const sources =
+      circuitJsonSourceTraceIdsByConnectivityNetId.get(netId) ??
+      new Set<CircuitJsonSourceTraceId>()
+    sources.add(sourceTraceId)
+    circuitJsonSourceTraceIdsByConnectivityNetId.set(netId, sources)
   }
   return {
     connMap,
@@ -395,6 +418,7 @@ function createSourceTraces(
         getConnectivityMapFromSimpleRouteJson(
           sourceSrj === srj ? srj : { ...sourceSrj, connections },
         ),
+      sourceSrj.traces,
     )
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
     connections,
@@ -1200,6 +1224,7 @@ export function convertToCircuitJson(
         : srjWithPointPairs.connections,
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+      (originalSrj ?? srjWithPointPairs).traces,
     )
 
   // Process routes based on their type
