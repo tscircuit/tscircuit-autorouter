@@ -1,3 +1,4 @@
+import { getPipeline9PhysicalObstacles } from "./getPipeline9PhysicalObstacles"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { Pipeline9NegotiatedClearanceSolver } from "./Pipeline9NegotiatedClearanceSolver"
@@ -310,6 +311,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   activeSubSolver?: BaseSolver | null = null
   connMap!: ConnectivityMap
+  physicalRoutingObstacles?: SimpleRouteJson["obstacles"]
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -355,7 +357,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.srjWithEscapeViaLocations =
-            cms.escapeViaLocationSolver?.getOutputSimpleRouteJson()
+            cms.escapeViaLocationSolver!.getOutputSimpleRouteJson()
+          cms.physicalRoutingObstacles = getPipeline9PhysicalObstacles(
+            cms.originalSrj,
+            cms.srjWithEscapeViaLocations,
+            cms.escapeViaLocationSolver!.getEscapeViaMetadataByPointId().keys(),
+          )
         },
       },
     ),
@@ -552,10 +559,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
             portGeometry: {
+              netMap: cms.connMap.netMap,
               traceWidth: cms.minTraceWidth,
               retainedRoutes: cms.getOriginalFixedHdRoutes(),
               clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
-              obstacles: cms.srjWithPointPairs!.obstacles,
+              obstacles: cms.physicalRoutingObstacles!,
               layerCount: cms.srj.layerCount,
             },
             flags: {
@@ -602,7 +610,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           minTraceWidth: cms.minTraceWidth,
           traceClearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
           connMap: cms.connMap,
-          obstacles: cms.srjWithPointPairs!.obstacles,
+          obstacles: cms.physicalRoutingObstacles!,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           reservePadClearance: true,

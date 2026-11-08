@@ -548,6 +548,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       this.forceImproveSolver = new HighDensityForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
+        preserveTopologyPortAnchors: true,
         colorMap: this.params.colorMap,
         totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
         nodeAssignmentMargin: this.params.obstacleMargin,

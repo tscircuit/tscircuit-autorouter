@@ -8,6 +8,7 @@ import type { SharedEdge } from "../../UniformPortDistributionSolver/types"
 
 export type PortGeometry = {
   traceWidth: number
+  netMap: Record<string, string[]>
   clearance: number
   obstacles: Obstacle[]
   layerCount: number
@@ -36,6 +37,13 @@ export const constrainBoundaryPortCapacity = (
     ports.push(port)
     groups.set(key, ports)
   }
+  const allowedNetsByPort = new Map<string, string[]>()
+  const netByAlias = new Map<string, string>()
+  // Internal net keys may also be obsolete aliases of another net. Resolve
+  // obstacle aliases through the same connectivity map used by graph planning.
+  for (const [net, aliases] of Object.entries(geometry.netMap)) {
+    for (const alias of aliases) netByAlias.set(alias, net)
+  }
   const removed = new Set<string>()
   for (const ports of groups.values()) {
     const duplicates = ports.filter(
@@ -63,6 +71,7 @@ export const constrainBoundaryPortCapacity = (
       nodeSideByOwnerId: {},
     }
     let intervals = [{ min: vertical ? y1 : x1, max: vertical ? y2 : x2 }]
+    const padIntervals: Array<{ min: number; max: number; nets: string[] }> = []
     for (const obstacle of geometry.obstacles) {
       const layers =
         obstacle.__zLayers ??
@@ -77,6 +86,17 @@ export const constrainBoundaryPortCapacity = (
         geometry.traceWidth / 2 + geometry.clearance,
       )
       if (!blocked) continue
+      padIntervals.push({
+        ...blocked,
+        nets: [
+          ...new Set(
+            obstacle.connectedTo.flatMap((id) => {
+              const net = netByAlias.get(id)
+              return net ? [net] : []
+            }),
+          ),
+        ],
+      })
       intervals = intervals.flatMap((interval) => {
         if (blocked.max <= interval.min || blocked.min >= interval.max)
           return [interval]
@@ -86,17 +106,38 @@ export const constrainBoundaryPortCapacity = (
         ].filter((part) => part.max >= part.min)
       })
     }
-    // A free-space sliver between pads is not a routable opening when the
-    // requested trace and two pad clearances exceed its width. Preserve pad
-    // terminals and explicit existing-copper assignments; omit anonymous transit slots.
+    // A passage closed to foreign signals may still be a legal pad escape.
+    // Preserve it only for owners whose own pad copper leaves a free interval.
     if (!intervals.length && !a._containsTarget && !b._containsTarget) {
+      const allowedNets = [
+        ...new Set(padIntervals.flatMap((pad) => pad.nets)),
+      ].filter((net) => {
+        let ownedIntervals = [
+          { min: vertical ? y1 : x1, max: vertical ? y2 : x2 },
+        ]
+        for (const blocked of padIntervals) {
+          if (blocked.nets.includes(net)) continue
+          ownedIntervals = ownedIntervals.flatMap((interval) => {
+            if (blocked.max <= interval.min || blocked.min >= interval.max)
+              return [interval]
+            return [
+              { min: interval.min, max: Math.min(interval.max, blocked.min) },
+              { min: Math.max(interval.min, blocked.max), max: interval.max },
+            ].filter((part) => part.max >= part.min)
+          })
+        }
+        return ownedIntervals.length > 0
+      })
       for (const port of ports) {
         if (
-          (port.d?.cramped ||
-            typeof port.d?.duplicatedFromPortId === "string") &&
-          !port.d?._preloadedTracePortAssignments?.length
+          !(
+            port.d?.cramped || typeof port.d?.duplicatedFromPortId === "string"
+          ) ||
+          port.d?._preloadedTracePortAssignments?.length
         )
-          removed.add(port.portId)
+          continue
+        if (allowedNets.length) allowedNetsByPort.set(port.portId, allowedNets)
+        else removed.add(port.portId)
       }
       continue
     }
@@ -187,7 +228,14 @@ export const constrainBoundaryPortCapacity = (
   }
   return {
     ...graph,
-    ports: graph.ports.filter((port) => !removed.has(port.portId)),
+    ports: graph.ports
+      .filter((port) => !removed.has(port.portId))
+      .map((port) => {
+        const allowed = allowedNetsByPort.get(port.portId)
+        return allowed
+          ? { ...port, d: { ...port.d, clearanceAllowedNetIds: allowed } }
+          : port
+      }),
     regions: graph.regions.map((region) => ({
       ...region,
       pointIds: region.pointIds.filter((id) => !removed.has(id)),

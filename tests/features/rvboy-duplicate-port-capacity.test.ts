@@ -45,7 +45,12 @@ test("exact RVboy graph cannot add a third signal slot in a two-trace pad openin
   const regions = new Map(
     before.regions.map((region) => [region.regionId, region]),
   )
-  expect(removed.has("ce39596_pp0_z0_cramped::0")).toBeTrue()
+  // The microphone pad gap is closed to foreign nets, but either pad owner
+  // may still escape through its own copper.
+  expect(
+    after.ports.find((port) => port.portId === "ce39596_pp0_z0_cramped::0")!.d!
+      .clearanceAllowedNetIds,
+  ).toEqual(["connectivity_net157", "connectivity_net158"])
   expect(
     before.ports
       .filter(
