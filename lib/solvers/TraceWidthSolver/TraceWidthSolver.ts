@@ -43,6 +43,8 @@ type TaperRoutePointEntry = {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
+  /** Retained copper participates in clearance without being widened or emitted. */
+  otherHdRoutes?: HighDensityRoute[]
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -142,7 +144,10 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.hdRoutes,
+      ...(input.otherHdRoutes ?? []),
+    ])
   }
 
   private getNominalTraceWidthForRoute(

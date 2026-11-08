@@ -1,3 +1,4 @@
+import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { isCircularObstacle } from "lib/utils/isCircularObstacle"
 import { getPipeline9PhysicalObstacles } from "./getPipeline9PhysicalObstacles"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -858,6 +859,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        otherHdRoutes: cms.getUpdatedPreloadedTraces().flatMap((trace, index) =>
+          convertPreloadedTraceToHdRoutes(
+            trace,
+            index,
+            cms.srj.layerCount,
+            cms.viaDiameter,
+            cms.connMap,
+          ).map((route) => ({
+            ...route,
+            rootConnectionName: trace.connection_name,
+          })),
+        ),
         obstacles: cms.srjWithPointPairs!.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
@@ -998,12 +1011,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           })
           const dirty = new Set<number>()
           for (const error of errors) {
-            const ids = [
-              error.pcb_trace_id,
-              ...(Array.isArray(error.pcb_trace_ids)
-                ? error.pcb_trace_ids
-                : []),
-            ]
+            const ids = getDrcErrorTraceIds(error)
             for (const id of ids) {
               const index =
                 typeof id === "string" ? indexById.get(id) : undefined

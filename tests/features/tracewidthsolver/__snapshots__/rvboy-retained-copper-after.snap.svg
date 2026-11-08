@@ -1,0 +1,47 @@
+<svg width="1000" height="680" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="24" y="30" font-family="sans-serif" font-size="22">RVboy: ground width beside retained VSYS</text><text x="24" y="59" font-family="sans-serif" font-size="16">After: width selection preserves clearance to existing copper</text><svg x="0" y="80" width="1000" height="600" viewBox="520.7012866610451 145.59526334827558 15.19356307169437 12.91452861094021" overflow="hidden" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-30.175,35.4 -29.750014999999998,12.049959999999999" data-type="line" data-label="" points="528.4879877352885,40 531.7165059363005,217.38515273329276" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-29.750014999999998,12.049959999999999 -29.950014999999993,-8.15004" data-type="line" data-label="" points="531.7165059363005,217.38515273329276 530.1971496291311,370.8401397574055" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-29.950014999999993,-8.15004 -32.150014999999996,-10.750040000000002" data-type="line" data-label="" points="530.1971496291311,370.8401397574055 513.4842302502673,390.59177175060813" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-32.150014999999996,-10.750040000000002 -32.95001499999999,-18.550040000000003" data-type="line" data-label="" points="513.4842302502673,390.59177175060813 507.40680502158955,449.84666773021604" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-32.95001499999999,-18.550040000000003 -36.350015,-27.95004" data-type="line" data-label="" points="507.40680502158955,449.84666773021604 481.57774779970913,521.2564141671794" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-36.350015,-27.95004 -37.95001499999999,-29.550040000000003" data-type="line" data-label="" points="481.57774779970913,521.2564141671794 469.42289734235374,533.4112646245349" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-37.95001499999999,-29.550040000000003 -38.650014999999996,-33.05004" data-type="line" data-label="" points="469.42289734235374,533.4112646245349 464.1051502672607,560" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.0387126143388667"/></g><g><polyline data-points="-30.49,21 -30.49,20.305" data-type="line" data-label="" points="526.0950015514966,149.39365411619917 526.0950015514966,154.67341728361296" fill="none" stroke="red" stroke-linejoin="round" stroke-width="3.418551691131225"/></g><g><rect data-type="rect" data-label="top" data-x="-30.49" data-y="21" x="524.0438705368178" y="146.96268402472808" width="4.102262029357462" height="4.861940182942192" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.1316346923076923"/></g><g><rect data-type="rect" data-label="top
+inner1
+inner2
+bottom" data-x="-30.49" data-y="20.305" x="524.385725705931" y="152.96414143804736" width="3.4185516911311424" height="3.4185516911312277" fill="rgba(255,0,0,0.9375)" stroke="black" stroke-width="0.1316346923076923"/></g><g><rect data-type="rect" data-label="rvboy-viewport" data-x="-30.2" data-y="20.65" x="520.7012866610451" y="145.59526334827558" width="15.19356307169437" height="12.91452861094021" fill="none" stroke="none" stroke-width="0.1316346923076923"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="1000" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '1000');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":7.596781535847167,"c":0,"e":757.7208705794767,"b":0,"d":-7.596781535847167,"f":308.92606636898967};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg></svg>

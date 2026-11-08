@@ -1,3 +1,4 @@
+import { PriorityQueue } from "lib/data-structures/PriorityQueue"
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import {
@@ -315,25 +316,38 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  // A complete path through routed copper is preferable to every synthetic
+  // gap. Unweighted BFS can shortcut several real pieces, fail clearance on
+  // that gap, then expose an unrelated dead-end branch to greedy stitching.
+  const gapCost = canonicalHdRoutes.length + 1
+  const queue = new PriorityQueue<{ f: number; hash: string }>(
+    [{ f: 0, hash: startHash }],
+    Infinity,
+  )
+  const bestCostByHash = new Map<string, number>([[startHash, 0]])
+  const visitedHashes = new Set<string>()
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
   >()
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
+  while (!queue.isEmpty()) {
+    const current = queue.dequeue()!
+    const currentHash = current.hash
+    if (visitedHashes.has(currentHash)) continue
+    visitedHashes.add(currentHash)
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
       if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      const cost = current.f + (edge.routeIndex === null ? gapCost : 1)
+      if (cost >= (bestCostByHash.get(edge.nextHash) ?? Infinity)) continue
+      bestCostByHash.set(edge.nextHash, cost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      queue.enqueue({ f: cost, hash: edge.nextHash })
     }
   }
 
