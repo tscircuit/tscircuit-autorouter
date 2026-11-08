@@ -550,6 +550,46 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         Math.max(bounds.maxY, top + collar),
       )
     }
+    // Retained vias are routes, not board obstacles. Their annuli can straddle
+    // the expanded window, so include a legal drill site beyond those annuli.
+    const viaBounds = { ...bounds }
+    for (const fixed of params.fixedRoutes ?? []) {
+      for (const via of getPipeline9RouteCopperGeometry(fixed, params)
+        .viaSpans) {
+        const radius = via.diameter / 2
+        if (
+          via.center.x + radius < viaBounds.minX ||
+          via.center.x - radius > viaBounds.maxX ||
+          via.center.y + radius < viaBounds.minY ||
+          via.center.y - radius > viaBounds.maxY
+        )
+          continue
+        const viaCollar = Math.max(
+          radius + collar,
+          ((params.viaHoleDiameter ?? params.viaDiameter) +
+            (params.viaHoleDiameter ?? fixed.viaDiameter)) /
+            2 +
+            (params.minViaHoleEdgeToViaHoleEdgeClearance ?? clearance) +
+            repairGridSize,
+        )
+        bounds.minX = Math.max(
+          board?.minX ?? -Infinity,
+          Math.min(bounds.minX, via.center.x - viaCollar),
+        )
+        bounds.maxX = Math.min(
+          board?.maxX ?? Infinity,
+          Math.max(bounds.maxX, via.center.x + viaCollar),
+        )
+        bounds.minY = Math.max(
+          board?.minY ?? -Infinity,
+          Math.min(bounds.minY, via.center.y - viaCollar),
+        )
+        bounds.maxY = Math.min(
+          board?.maxY ?? Infinity,
+          Math.max(bounds.maxY, via.center.y + viaCollar),
+        )
+      }
+    }
     const dirtyRouteIndices = routes.flatMap((route, index) =>
       this.validateCandidateRoutes([route]) ? [] : [index],
     )
