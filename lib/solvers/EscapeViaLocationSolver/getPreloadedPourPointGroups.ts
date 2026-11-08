@@ -1,4 +1,9 @@
-import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
+import {
+  getConnectionPointLayers,
+  type ConnectionPoint,
+  type Obstacle,
+  type SimpleRouteJson,
+} from "lib/types"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -43,6 +48,44 @@ export const getPreloadedPourPointGroups = ({
             ? via.layers.includes(pour.layers[0]!)
             : z >= Math.min(fromZ, toZ) && z <= Math.max(fromZ, toZ))
         if (!spansLayer || !isPointInRect(via, pour)) continue
+        const representative = connectedPourByObstacle.get(pour)
+        if (!representative) throw new Error("Missing copper pour connectivity")
+        groups.set(representative, [
+          ...new Set([...(groups.get(representative) ?? []), ...pointIds]),
+        ])
+      }
+    }
+  }
+  // Standalone plated vias/holes are physical connections too. They need not
+  // appear as a layer transition in a retained trace. Verify both the terminal
+  // contact and the actual layer span before reusing its plane connection.
+  for (const obstacle of srj.obstacles) {
+    if (
+      obstacle.shape !== "circle" ||
+      obstacle.isCopperPour ||
+      obstacle.isNonPlatedHole ||
+      obstacle.layers.length < 2
+    )
+      continue
+    for (const point of points) {
+      if (
+        !point.pointId ||
+        !obstacle.connectedTo.includes(point.pointId) ||
+        !getConnectionPointLayers(point).some((layer) =>
+          obstacle.layers.includes(layer),
+        ) ||
+        Math.hypot(point.x - obstacle.center.x, point.y - obstacle.center.y) >
+          obstacle.width / 2 + 1e-9
+      )
+        continue
+      const group = initiallyConnected.getNetConnectedToId(point.pointId)
+      const pointIds = group ? pointIdsByGroup.get(group)! : [point.pointId]
+      for (const pour of matchingPours) {
+        if (
+          !obstacle.layers.includes(pour.layers[0]!) ||
+          !isPointInRect(obstacle.center, pour)
+        )
+          continue
         const representative = connectedPourByObstacle.get(pour)
         if (!representative) throw new Error("Missing copper pour connectivity")
         groups.set(representative, [

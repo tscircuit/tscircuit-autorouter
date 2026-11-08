@@ -14,7 +14,7 @@ test("RVboy escape vias share the complete tiled ground plane", async (): Promis
   }
   expect(pipeline.failed).toBe(false)
   const escape = pipeline.escapeViaLocationSolver!
-  expect(escape.createdEscapeVias).toHaveLength(197)
+  expect(escape.createdEscapeVias).toHaveLength(166)
   const viaIds = escape.createdEscapeVias.map((via) => via.pointId).sort()
   const groups = escape
     .getOutputSimpleRouteJson()
@@ -23,14 +23,16 @@ test("RVboy escape vias share the complete tiled ground plane", async (): Promis
     )
   expect(
     groups.some(
-      (group) => JSON.stringify([...group].sort()) === JSON.stringify(viaIds),
+      (group) =>
+        viaIds.every((id) => group.includes(id)) &&
+        group.filter((id) => !id.startsWith("escape-via:")).length === 35,
     ),
   ).toBe(true)
   const paired = pipeline.srjWithPointPairs!
   const ground = paired.connections.filter((connection) =>
     connection.name.includes("source_net_0"),
   )
-  expect(ground).toHaveLength(213)
+  expect(ground).toHaveLength(178)
   expect(
     ground.filter((connection) =>
       connection.pointsToConnect.every((point) =>

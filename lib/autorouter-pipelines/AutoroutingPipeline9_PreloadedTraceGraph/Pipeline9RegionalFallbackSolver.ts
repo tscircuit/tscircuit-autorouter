@@ -506,6 +506,50 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         Math.max(bounds.maxY, copperBounds.maxY + collar),
       )
     }
+    // A legal boundary port may sit between pads rather than inside one. If
+    // the repair window cuts those pads, it can exclude every legal via site
+    // on the far side. Include complete physical obstacles intersecting the
+    // topology node and their via collar, without recursively growing it.
+    const initialBounds = nodeBounds
+    for (const obstacle of params.boardObstacles ?? []) {
+      if (obstacle.isCopperPour) continue
+      const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+      const halfWidth =
+        (Math.abs(Math.cos(angle)) * obstacle.width +
+          Math.abs(Math.sin(angle)) * obstacle.height) /
+        2
+      const halfHeight =
+        (Math.abs(Math.sin(angle)) * obstacle.width +
+          Math.abs(Math.cos(angle)) * obstacle.height) /
+        2
+      const left = obstacle.center.x - halfWidth
+      const right = obstacle.center.x + halfWidth
+      const bottom = obstacle.center.y - halfHeight
+      const top = obstacle.center.y + halfHeight
+      if (
+        right + 1e-9 < initialBounds.minX ||
+        left - 1e-9 > initialBounds.maxX ||
+        top + 1e-9 < initialBounds.minY ||
+        bottom - 1e-9 > initialBounds.maxY
+      )
+        continue
+      bounds.minX = Math.max(
+        board?.minX ?? -Infinity,
+        Math.min(bounds.minX, left - collar),
+      )
+      bounds.maxX = Math.min(
+        board?.maxX ?? Infinity,
+        Math.max(bounds.maxX, right + collar),
+      )
+      bounds.minY = Math.max(
+        board?.minY ?? -Infinity,
+        Math.min(bounds.minY, bottom - collar),
+      )
+      bounds.maxY = Math.min(
+        board?.maxY ?? Infinity,
+        Math.max(bounds.maxY, top + collar),
+      )
+    }
     const dirtyRouteIndices = routes.flatMap((route, index) =>
       this.validateCandidateRoutes([route]) ? [] : [index],
     )
