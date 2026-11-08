@@ -680,7 +680,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       this.activeB01Solver = null
       this.activeRegularSolver = null
-      this.startRegionalFallback()
+      this.startRegionalFallback(new Set(), solvedRoutes)
       return
     }
     this.routes.push(
@@ -726,6 +726,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   private startRegionalFallback(
     promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
+    initialRoutes?: HighDensityRoute[],
   ): void {
     if (!this.activeNode) {
       throw new Error(
@@ -784,6 +785,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      // Reuse complete native topology when only clearance needs repair.
+      // Newly movable retained sections introduce extra connections and still
+      // require the regional routing stage to construct a complete candidate.
+      initialRoutes:
+        fallbackProblem.fixedRouteSectionsByConnectionName.size === 0
+          ? initialRoutes
+          : undefined,
       captureSearchDebug: this.params.captureSearchDebug,
       viaHoleDiameter: this.params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance:

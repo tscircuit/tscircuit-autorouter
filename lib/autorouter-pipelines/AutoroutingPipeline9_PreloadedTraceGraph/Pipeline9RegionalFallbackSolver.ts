@@ -49,6 +49,8 @@ type Pipeline9RegionalFallbackSolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   captureSearchDebug?: boolean
+  /** Complete topology routes that need physical clearance repair. */
+  initialRoutes?: HighDensityRoute[]
 }
 
 type RegionalFallbackPhase =
@@ -230,6 +232,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
+    if (params.initialRoutes) this.startForceImprove(params.initialRoutes)
   }
 
   override getSolverName(): string {
@@ -591,6 +594,22 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.MAX_ITERATIONS += this.viaClearanceSolver.MAX_ITERATIONS + 2
   }
 
+  private startForceImprove(routes: HighDensityRoute[]): void {
+    const routedCandidate = materializePipeline9HdRouteVias(routes)
+    // Both initial native routes and grow/shrink candidates still pass through
+    // the same force-improve, obstacle repair, and physical copper validation.
+    this.forceImproveSolver = new HighDensityForceImproveSolver({
+      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      hdRoutes: routedCandidate,
+      preserveTopologyPortAnchors: true,
+      colorMap: this.params.colorMap,
+      totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
+      nodeAssignmentMargin: this.params.obstacleMargin,
+    })
+    this.activeSubSolver = this.forceImproveSolver
+    this.phase = "improve"
+  }
+
   override _step(): void {
     if (this.phase === "route") {
       this.highDensitySolver.step()
@@ -600,21 +619,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         return
       }
       if (!this.highDensitySolver.solved) return
-      const routedCandidate = materializePipeline9HdRouteVias(
-        this.highDensitySolver.routes,
-      )
       // Grow/shrink produces provisional geometry. Keep it private until the
       // existing force-improve and obstacle-repair stages have placed its vias.
-      this.forceImproveSolver = new HighDensityForceImproveSolver({
-        nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: routedCandidate,
-        preserveTopologyPortAnchors: true,
-        colorMap: this.params.colorMap,
-        totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
-        nodeAssignmentMargin: this.params.obstacleMargin,
-      })
-      this.activeSubSolver = this.forceImproveSolver
-      this.phase = "improve"
+      this.startForceImprove(this.highDensitySolver.routes)
       return
     }
 
