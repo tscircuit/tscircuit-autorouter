@@ -236,6 +236,29 @@ const getEndpointCopperWidth = (
   return undefined
 }
 
+const viaTouchesCopperPour = (via: ViaContact, pour: Obstacle): boolean => {
+  if (
+    via.radius === undefined ||
+    !pour.layers.some((layer) => via.layers.includes(layer))
+  )
+    return false
+  const polygon =
+    pour.shape === "circle"
+      ? circlePolygon(pour.center, pour.width / 2)
+      : roundedRectangle(
+          pour.center,
+          pour.width,
+          pour.height,
+          0,
+          pour.ccwRotationDegrees ?? 0,
+        )
+  return copperPolygonsTouch(
+    circlePolygon(via, via.radius).scale(1e6, 1e6),
+    polygon.scale(1e6, 1e6),
+    0.1,
+  )
+}
+
 const getMissingConnectionCenter = (
   first: RoutePoint,
   last: RoutePoint,
@@ -818,7 +841,6 @@ export const checkTraceContinuity = (
     if (!Number.isFinite(width) || width <= 0) return false
     return viaContacts.some((via) => {
       if (
-        via.ownerTraceId === trace.pcb_trace_id ||
         !via.layers.includes(point.layer) ||
         fullConnectivity.getNetConnectedToId(via.id) !== net
       )
@@ -826,6 +848,20 @@ export const checkTraceContinuity = (
       const viaReach = via.radius === undefined ? 0 : via.radius + width / 2
       if (Math.hypot(point.x - via.x, point.y - via.y) > viaReach + 1e-9)
         return false
+      // A plane return ends at its via even when no other trace or surface
+      // pad touches that via. Require actual same-net copper on a spanned layer.
+      if (
+        (options.copperPours ?? []).some(
+          (pour) =>
+            pour.isCopperPour &&
+            pour.connectedTo.some((id) =>
+              fullConnectivity.areIdsConnected(via.id, id),
+            ) &&
+            viaTouchesCopperPour(via, pour),
+        )
+      )
+        return true
+      if (via.ownerTraceId === trace.pcb_trace_id) return false
       if (
         pads.some(
           (pad) =>
