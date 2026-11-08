@@ -593,7 +593,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       pathGridSizeScale:
         this.budget.pathGridSizeScale === undefined
           ? undefined
-          : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
+          : this.budget.pathGridSizeScale *
+            (Math.min(...context.regionSizes) / size),
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance:
