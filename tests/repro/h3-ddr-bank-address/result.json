@@ -1,0 +1,16 @@
+{
+  "requested": 17,
+  "connected": 17,
+  "nativePads": 445,
+  "physicalFindings": {
+    "overlap": 0,
+    "padTrace": 0,
+    "viaTrace": 1,
+    "viaPad": 1,
+    "viaSpacing": 0,
+    "continuity": 0,
+    "viaInPad": 0,
+    "outOfBoard": 0,
+    "selfShorts": 0
+  }
+}
