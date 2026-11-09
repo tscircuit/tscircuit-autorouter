@@ -643,6 +643,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         Math.round(50_000_000 * this.effort),
       )
       const solver = new HighDensitySolverA13WithDrcValidation({
+        searchBackend: "wasm",
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
         connMap: this.connMap,
