@@ -2,6 +2,7 @@ import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
 } from "@tscircuit/math-utils"
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
 import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
 import { GapFill } from "lib/solvers/BgaTopologyGeneratorSolver/GapFill"
@@ -15,7 +16,13 @@ import {
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode, Obstacle } from "lib/types"
+import { areNodesBordering } from "lib/utils/areNodesBordering"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { BgaGrid } from "./bga-grid"
+import { getBgaTargetsNeedingViaAccess } from "./getBgaTargetsNeedingViaAccess"
+import { replaceBgaFreeRegionsWithViaRegions } from "./replaceBgaFreeRegionsWithViaRegions"
 
 export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGeneratorSolverParams> {
   static readonly componentKind = "bga"
@@ -24,6 +31,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
   removeMeshNodeOverlappingWithUnmarkedObstacle!: RemoveMeshNodeOverlappingWithUnmarkedObstacle
   gapfillDueToNodeRemoval!: GapFill
   mergeMeshNodes!: MergeMeshNodes
+  freeSpaceTopology!: RectDiffPipeline
+  targetsNeedingViaAccess: CapacityMeshNode[] = []
   markedComponentObstacles: Obstacle[] = []
   unmarkedComponentObstacles: Obstacle[] = []
 
@@ -85,6 +94,26 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
             bgaTopologyGeneratorSolver.inputProblem.inputSrj.layerCount,
         },
       ],
+      {
+        onSolved: (
+          bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver,
+        ): void => {
+          bgaTopologyGeneratorSolver.findTargetsNeedingViaAccess()
+        },
+      },
+    ),
+    definePipelineStep(
+      "freeSpaceTopology",
+      RectDiffPipeline,
+      (bgaTopologyGeneratorSolver: BgaTopologyGeneratorSolver) => [
+        {
+          simpleRouteJson: {
+            ...bgaTopologyGeneratorSolver.inputProblem.inputSrj,
+            connections: [],
+          },
+          maxGapFillPasses: 4,
+        },
+      ],
     ),
   ]
 
@@ -117,6 +146,25 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     this.unmarkedComponentObstacles = unmarkedComponentObstacles
   }
 
+  private findTargetsNeedingViaAccess(): void {
+    if (this.unmarkedComponentObstacles.length === 0) return
+
+    const bgaGrid = BgaGrid.fromObstacles(this.markedComponentObstacles)
+    if (!bgaGrid) return
+    const viaDiameter =
+      this.inputProblem.viaDiameter ??
+      getViaDimensions(this.inputProblem.inputSrj).padDiameter
+    const hasNarrowPadGaps =
+      bgaGrid.pitchX - bgaGrid.padWidth < viaDiameter ||
+      bgaGrid.pitchY - bgaGrid.padHeight < viaDiameter
+    if (!hasNarrowPadGaps) return
+
+    this.targetsNeedingViaAccess = getBgaTargetsNeedingViaAccess({
+      routingRegions: this.mergeMeshNodes.getOutput(),
+      bounds: getBoundsForObstacles(this.markedComponentObstacles),
+    })
+  }
+
   override getConstructorParams(): readonly [TopologyGeneratorSolverParams] {
     return [this.inputProblem] as const
   }
@@ -128,8 +176,39 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       this.removeMeshNodeOverlappingWithUnmarkedObstacle?.getOutput() ??
       []
 
+    if (this.targetsNeedingViaAccess.length === 0) return { routingRegions }
+
+    const srj = this.inputProblem.inputSrj
+    const viaDiameter =
+      this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
+    const viaClearance =
+      srj.minViaEdgeToPadEdgeClearance ??
+      this.inputProblem.obstacleMargin ??
+      0.15
+    const minimumViaRegionDimension = viaDiameter + viaClearance * 2
+    const viaRegions = this.freeSpaceTopology
+      .getOutput()
+      .meshNodes.filter(
+        (node) =>
+          !node._containsObstacle &&
+          !node._containsTarget &&
+          node.availableZ.length === srj.layerCount &&
+          node.width > minimumViaRegionDimension &&
+          node.height > minimumViaRegionDimension &&
+          this.targetsNeedingViaAccess.some((target) =>
+            areNodesBordering(node, target),
+          ),
+      )
+      .map((node) => ({
+        ...node,
+        capacityMeshNodeId: `${this.inputProblem.detectedComponent.componentId}:via-space:${node.capacityMeshNodeId}`,
+      }))
+    if (viaRegions.length === 0) return { routingRegions }
     return {
-      routingRegions,
+      routingRegions: replaceBgaFreeRegionsWithViaRegions({
+        routingRegions,
+        viaRegions,
+      }),
     }
   }
 

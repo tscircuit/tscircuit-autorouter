@@ -1624,7 +1624,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   preview(): GraphicsObject {
-    return this.visualize()
+    return this.tinyPipelineSolver.preview()
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {

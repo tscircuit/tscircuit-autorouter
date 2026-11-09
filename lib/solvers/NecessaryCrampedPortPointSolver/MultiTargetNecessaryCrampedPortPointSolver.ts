@@ -5,6 +5,7 @@ import {
   SimpleRouteJson,
 } from "lib/types"
 import {
+  type OrdinaryPortAvailability,
   SegmentPortPoint,
   SharedEdgeSegment,
 } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -14,7 +15,7 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
-import { doesOrdinaryEscapeReachConnection } from "../AvailableSegmentPointSolver/doesOrdinaryEscapeReachConnection"
+import { getConnectionEscapePortPoints } from "../AvailableSegmentPointSolver/getConnectionEscapePortPoints"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
@@ -25,6 +26,7 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   simpleRouteJson: SimpleRouteJson
   /** Check complete endpoint connectivity in the Pipeline 9 capacity graph. */
   preserveConnectionReachability?: boolean
+  isOrdinaryPortAvailable?: OrdinaryPortAvailability
 }
 
 /**
@@ -135,13 +137,14 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
         const hasConnectedEscape =
           !this.input.preserveConnectionReachability ||
-          doesOrdinaryEscapeReachConnection({
+          getConnectionEscapePortPoints({
             target: this.currentTarget,
             nodes: this.input.capacityMeshNodes,
             nodeMap: this.nodeMap,
-            ordinaryPorts: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+            portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
             connections: this.input.simpleRouteJson.connections,
-          })
+            isOrdinaryPortAvailable: this.input.isOrdinaryPortAvailable,
+          }) !== undefined
         if (
           areAllCandidatesBlocked ||
           this.candidatesAtDepth.length === 0 ||

@@ -20,6 +20,7 @@ import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
+import { retainRequiredCrampedPortPoints } from "lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import {
@@ -514,6 +515,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
             preserveConnectionReachability: true,
+            isOrdinaryPortAvailable:
+              cms.availableSegmentPointSolver!.isOrdinaryPortAvailable,
           },
         ]
       },
@@ -523,13 +526,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.capacityNodes,
           )
 
+          const filteredSegments = mergeComponentSharedEdgeSegments({
+            originalSharedEdgeSegments:
+              cms.availableSegmentPointSolver!.getOutput(),
+            filteredSharedEdgeSegments:
+              cms.necessaryCrampedPortPointSolver!.getOutput(),
+            componentCapacityMeshNodeIds,
+          })
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
-            mergeComponentSharedEdgeSegments({
-              originalSharedEdgeSegments:
-                cms.availableSegmentPointSolver!.getOutput(),
-              filteredSharedEdgeSegments:
-                cms.necessaryCrampedPortPointSolver!.getOutput(),
-              componentCapacityMeshNodeIds,
+            retainRequiredCrampedPortPoints({
+              nodes: cms.capacityNodes!,
+              originalSegments: cms.availableSegmentPointSolver!.getOutput(),
+              filteredSegments,
+              connections: cms.srjWithPointPairs!.connections,
+              isOrdinaryPortAvailable:
+                cms.availableSegmentPointSolver!.isOrdinaryPortAvailable,
             })
         },
       },

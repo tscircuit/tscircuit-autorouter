@@ -1892,6 +1892,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (
       !this.initialBoundedRegionalRepairSolver?.solved ||
       this.initialBoundedRegionalRepairStartedAt === undefined ||
+      !this.exactRepairParams ||
       !this.cachedReferenceDrcEvaluator
     ) {
       throw new Error("Pipeline9 initial regional repair is not complete")
@@ -1932,6 +1933,35 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         const errors = Array.isArray(reference) ? reference : reference.errors
         if (errors.some((error) => error.drc_source === "fixed_copper")) {
           this.initialBoundedRepairCandidate = result.routes
+        }
+      }
+      // Unresolved peer-copper errors can prevent partial publication, while
+      // the exact stage can still finish the validated regional progress.
+      const candidate =
+        this.initialBoundedRegionalRepairSolver.getRepairCandidate()
+      if (candidate) {
+        const startingRoutes =
+          this.initialBoundedRepairCandidate ??
+          this.clearanceProjectionSolver?.getOutput() ??
+          this.exactRepairParams.hdRoutes
+        const startingReference = this.cachedReferenceDrcEvaluator({
+          traces: [],
+          routes: startingRoutes,
+          hdRoutes: startingRoutes,
+        })
+        const candidateReference = this.cachedReferenceDrcEvaluator({
+          traces: [],
+          routes: candidate,
+          hdRoutes: candidate,
+        })
+        const startingErrors = Array.isArray(startingReference)
+          ? startingReference
+          : startingReference.errors
+        const candidateErrors = Array.isArray(candidateReference)
+          ? candidateReference
+          : candidateReference.errors
+        if (candidateErrors.length < startingErrors.length) {
+          this.initialBoundedRepairCandidate = candidate
         }
       }
       return

@@ -1,4 +1,4 @@
-import { doesOrdinaryEscapeReachConnection } from "./doesOrdinaryEscapeReachConnection"
+import { getConnectionEscapePortPoints } from "./getConnectionEscapePortPoints"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import type {
   OrdinaryPortAvailability,
@@ -85,11 +85,11 @@ export function retainActiveNumericalGapSegments({
           mapOfCapacityMeshNodeIdToRef: nodeMap,
         }) ||
         (!node._isComponentTopologyNode &&
-          !doesOrdinaryEscapeReachConnection({
+          !getConnectionEscapePortPoints({
             target: node,
             nodes,
             nodeMap,
-            ordinaryPorts,
+            portsByNodeId: ordinaryPorts,
             connections,
             isOrdinaryPortAvailable,
           }))
