@@ -1,4 +1,7 @@
-import { getFixedObstacleViolations } from "@tscircuit/repair04"
+import {
+  createFixedObstacleViolationEvaluator,
+  type FixedObstacleViolation,
+} from "@tscircuit/repair04"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
@@ -7,7 +10,12 @@ import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRout
 
 type DrcError = Record<string, unknown>
 type ViaLocationKey = string
-type CopperGeometryKey = string
+type ViaGeometryKey = string
+type PcbTraceId = string
+type CachedTraceCheck = {
+  geometry: string
+  violations: FixedObstacleViolation[]
+}
 
 /** Retains earlier copper that has no pad identity in Circuit JSON. */
 export const createPipeline9FixedCopperDrcEvaluator = ({
@@ -57,25 +65,25 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.defaultObstacleMargin ?? 0,
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
-  const errorsByCopperGeometry = new Map<CopperGeometryKey, DrcError[]>()
+  let checksByTraceId = new Map<PcbTraceId, CachedTraceCheck>()
+  const errorsByViaGeometry = new Map<ViaGeometryKey, DrcError[]>()
   const checkWireSegments = wireObstacleIndexes.size > 0
-  let geometryCacheLimit = 64
-  if (checkWireSegments) geometryCacheLimit = 2
+  let evaluateObstacles:
+    | ReturnType<typeof createFixedObstacleViolationEvaluator>
+    | undefined
   return (traces): DrcError[] => {
-    // Wire changes must invalidate the cached check against earlier copper.
-    const key = JSON.stringify(
-      traces.map((trace) => {
-        let copperGeometry = trace.route
-        if (!checkWireSegments) {
-          copperGeometry = trace.route.filter(
-            (point) => point.route_type === "via",
-          )
-        }
-        return [trace.pcb_trace_id, trace.connection_name, copperGeometry]
-      }),
-    )
-    const cachedErrors = errorsByCopperGeometry.get(key)
-    if (cachedErrors !== undefined) return cachedErrors
+    let viaGeometryKey: ViaGeometryKey | undefined
+    if (!checkWireSegments) {
+      viaGeometryKey = JSON.stringify(
+        traces.map((trace) => [
+          trace.pcb_trace_id,
+          trace.connection_name,
+          trace.route.filter((point) => point.route_type === "via"),
+        ]),
+      )
+      const cachedErrors = errorsByViaGeometry.get(viaGeometryKey)
+      if (cachedErrors !== undefined) return cachedErrors
+    }
     const viaIds = new Map<ViaLocationKey, string>()
     const routes = traces.flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
@@ -103,12 +111,44 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           }
         }),
     )
-    const errors = getFixedObstacleViolations({
+    evaluateObstacles ??= createFixedObstacleViolationEvaluator({
       srj: fixedCopperSrj,
       routes,
       traceClearance: traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance: clearance,
     })
+    const nextChecksByTraceId = new Map<PcbTraceId, CachedTraceCheck>()
+    const violations: FixedObstacleViolation[] = []
+    for (const [traceIndex, trace] of traces.entries()) {
+      const traceRoutes = routes.filter(
+        (route) => route.preloadedTraceIndex === traceIndex,
+      )
+      let copperGeometry = trace.route
+      if (!checkWireSegments) {
+        copperGeometry = trace.route.filter(
+          (point) => point.route_type === "via",
+        )
+      }
+      const geometry = JSON.stringify([trace.connection_name, copperGeometry])
+      let check = checksByTraceId.get(trace.pcb_trace_id)
+      if (check?.geometry !== geometry) {
+        check = { geometry, violations: evaluateObstacles(traceRoutes) }
+      }
+      nextChecksByTraceId.set(trace.pcb_trace_id, check)
+      for (const violation of check.violations) {
+        violations.push({
+          ...violation,
+          routeIndex: routes.indexOf(traceRoutes[violation.routeIndex]!),
+        })
+      }
+    }
+    checksByTraceId = nextChecksByTraceId
+    // Preserve obstacle/route order when combining independently cached checks.
+    violations.sort(
+      (a, b) =>
+        a.obstacleIndex - b.obstacleIndex || a.routeIndex - b.routeIndex,
+    )
+    const errors = violations
       .filter(({ obstacleIndex, kind }) => {
         if (kind === "wire") return wireObstacleIndexes.has(obstacleIndex)
         return fixedObstacleIndexes.has(obstacleIndex)
@@ -139,10 +179,12 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           message: "Via is too close to fixed copper on a drilled layer",
         }
       })
-    if (errorsByCopperGeometry.size >= geometryCacheLimit) {
-      errorsByCopperGeometry.delete(errorsByCopperGeometry.keys().next().value!)
+    if (viaGeometryKey !== undefined) {
+      if (errorsByViaGeometry.size >= 64) {
+        errorsByViaGeometry.delete(errorsByViaGeometry.keys().next().value!)
+      }
+      errorsByViaGeometry.set(viaGeometryKey, errors)
     }
-    errorsByCopperGeometry.set(key, errors)
     return errors
   }
 }
