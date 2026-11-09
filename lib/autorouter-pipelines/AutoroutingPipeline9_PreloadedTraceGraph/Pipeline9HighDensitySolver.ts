@@ -362,8 +362,19 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const nodeId = nodeWithPortPoints.capacityMeshNodeId
+  const nodePfByIdForNode = new Map<CapacityMeshNodeId, number | null>()
+  // This solver owns one node. Copy only its diagnostic entry, rather than
+  // cloning the full board map each time another regular node starts.
+  if (nodePfById instanceof Map) {
+    if (nodePfById.has(nodeId)) {
+      nodePfByIdForNode.set(nodeId, nodePfById.get(nodeId)!)
+    }
+  } else if (Object.prototype.propertyIsEnumerable.call(nodePfById, nodeId)) {
+    nodePfByIdForNode.set(nodeId, nodePfById[nodeId])
+  }
+  return new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -373,7 +384,7 @@ export const createPipeline9RegularNodeSolver = ({
     traceWidth,
     obstacleMargin,
     effort,
-    nodePfById,
+    nodePfById: nodePfByIdForNode,
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
@@ -391,6 +402,7 @@ export const createPipeline9RegularNodeSolver = ({
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
