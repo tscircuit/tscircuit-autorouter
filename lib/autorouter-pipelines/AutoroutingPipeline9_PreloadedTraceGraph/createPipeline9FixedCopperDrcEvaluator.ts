@@ -48,14 +48,21 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   const errorsByCopperGeometry = new Map<CopperGeometryKey, DrcError[]>()
+  // Explicit preloads already supply wire geometry to the indexed checker.
+  // Supplement wires when earlier copper is supplied only as obstacles.
+  const checkWireSegments = (inputSrj.traces?.length ?? 0) === 0
   return (traces): DrcError[] => {
     // Wire changes must invalidate the cached check against earlier copper.
     const key = JSON.stringify(
-      traces.map((trace) => [
-        trace.pcb_trace_id,
-        trace.connection_name,
-        trace.route,
-      ]),
+      traces.map((trace) => {
+        let copperGeometry = trace.route
+        if (!checkWireSegments) {
+          copperGeometry = trace.route.filter(
+            (point) => point.route_type === "via",
+          )
+        }
+        return [trace.pcb_trace_id, trace.connection_name, copperGeometry]
+      }),
     )
     const cachedErrors = errorsByCopperGeometry.get(key)
     if (cachedErrors !== undefined) return cachedErrors
@@ -67,22 +74,24 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         inputSrj.layerCount,
         inputSrj.minViaPadDiameter ?? inputSrj.minViaDiameter ?? 0.3,
         connMap,
-      ).map((route) => {
-        const point = trace.route[route.preloadedRoutePositionStart!]!
-        let pcbViaId: string | undefined
-        let rootConnectionName = route.rootConnectionName
-        if (point.route_type === "via") {
-          const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
-          if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
-          pcbViaId = viaIds.get(key)!
-          rootConnectionName = trace.connection_name
-        }
-        return {
-          ...route,
-          rootConnectionName,
-          pcbViaId,
-        }
-      }),
+      )
+        .filter((route) => checkWireSegments || route.vias.length > 0)
+        .map((route) => {
+          const point = trace.route[route.preloadedRoutePositionStart!]!
+          let pcbViaId: string | undefined
+          let rootConnectionName = route.rootConnectionName
+          if (point.route_type === "via") {
+            const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
+            if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
+            pcbViaId = viaIds.get(key)!
+            rootConnectionName = trace.connection_name
+          }
+          return {
+            ...route,
+            rootConnectionName,
+            pcbViaId,
+          }
+        }),
     )
     const errors = getFixedObstacleViolations({
       srj: fixedCopperSrj,
