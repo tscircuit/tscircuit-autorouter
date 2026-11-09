@@ -1,0 +1,186 @@
+name: Manual Preview
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open same-repository PR number to preview
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: manual-preview-${{ github.event.issue.number || github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: >-
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/preview') ||
+      (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'preview-test' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      # No checkout, dependency installation, or PR code execution on this runner.
+      - name: Request preview and update the PR status comment
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const marker = "<!-- tscircuit-manual-preview -->";
+            const event = context.eventName;
+            const payload = context.payload;
+            const isComment = event === "issue_comment" &&
+              payload.issue?.pull_request && payload.comment?.body?.trim() === "/preview";
+            const isLabel = event === "pull_request" &&
+              payload.action === "labeled" && payload.label?.name === "preview-test";
+            const isDispatch = event === "workflow_dispatch";
+            if (!isComment && !isLabel && !isDispatch) return;
+            const actor = payload.sender?.login;
+            if (!actor || payload.sender?.type === "Bot") return;
+            const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner, repo, username: actor,
+            });
+            if (!["admin", "maintain", "write"].includes(permission.permission)) {
+              core.setFailed("Only repository users with write, maintain, or admin permission can request a preview.");
+              return;
+            }
+            const number = Number(isComment ? payload.issue.number :
+              isLabel ? payload.pull_request.number : payload.inputs?.pr_number);
+            if (!Number.isSafeInteger(number) || number < 1) {
+              core.setFailed("A positive pull request number is required.");
+              return;
+            }
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+            if (pr.state !== "open" || pr.base.ref !== "main" ||
+                pr.head.repo?.full_name !== `${owner}/${repo}`) {
+              core.setFailed("Previews require an open, same-repository pull request targeting main. Forks are not supported.");
+              return;
+            }
+            if (isLabel && payload.pull_request.head.sha !== pr.head.sha) {
+              core.setFailed("The PR changed after the label request. Remove and reapply preview-test for the current commit.");
+              return;
+            }
+            const sha = pr.head.sha;
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: number, per_page: 100,
+            });
+            const previous = comments.find((comment) =>
+              comment.user?.login === "github-actions[bot]" && comment.body?.includes(marker));
+            let commentId = previous?.id;
+            async function report(message) {
+              const body = [marker, "### Preview deployment", "", message, "",
+                `Commit: \`${sha}\` · [Workflow run](${runUrl})`].join("\n");
+              if (commentId) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: commentId, body });
+              } else {
+                const result = await github.rest.issues.createComment({
+                  owner, repo, issue_number: number, body,
+                });
+                commentId = result.data.id;
+              }
+            }
+            await report("⏳ Preview request received. Checking the Vercel configuration.");
+            try {
+              const { VERCEL_TOKEN, VERCEL_TEAM_ID, VERCEL_PROJECT_ID } = process.env;
+              if (!VERCEL_TOKEN || !VERCEL_TEAM_ID?.startsWith("team_") ||
+                  !VERCEL_PROJECT_ID?.startsWith("prj_")) {
+                throw new Error("Configure the VERCEL_TOKEN repository secret and VERCEL_TEAM_ID / VERCEL_PROJECT_ID repository variables first.");
+              }
+              async function vercel(path, options = {}) {
+                const url = new URL(path, "https://api.vercel.com");
+                url.searchParams.set("teamId", VERCEL_TEAM_ID);
+                const response = await fetch(url, {
+                  ...options,
+                  headers: { Authorization: `Bearer ${VERCEL_TOKEN}`, "Content-Type": "application/json" },
+                  signal: AbortSignal.timeout(30_000),
+                });
+                if (!response.ok) {
+                  throw new Error(`Vercel returned HTTP ${response.status}. Check access and the workflow configuration; no automatic retry was made.`);
+                }
+                return response.json();
+              }
+              const listUrl = new URL("/v6/deployments", "https://api.vercel.com");
+              listUrl.searchParams.set("projectId", VERCEL_PROJECT_ID);
+              listUrl.searchParams.set("target", "preview");
+              listUrl.searchParams.set("sha", sha);
+              listUrl.searchParams.set("limit", "100");
+              const listed = await vercel(listUrl.pathname + listUrl.search);
+              if (!Array.isArray(listed.deployments)) throw new Error("Vercel returned an invalid deployment list.");
+              let deployment = listed.deployments.find((item) =>
+                item.meta?.githubCommitSha === sha &&
+                item.meta?.manualPreviewPr === String(number) &&
+                ["READY", "QUEUED", "INITIALIZING", "BUILDING"].includes(item.readyState ?? item.state));
+              if (!deployment) {
+                const { data: freshPr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+                if (freshPr.state !== "open" || freshPr.head.sha !== sha) {
+                  throw new Error("The PR changed while preparing the preview. Request a new preview for its current commit.");
+                }
+                deployment = await vercel("/v13/deployments", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    name: "capacity-node-autorouter",
+                    project: VERCEL_PROJECT_ID,
+                    target: "preview",
+                    gitSource: { type: "github", repoId: String(pr.head.repo.id), ref: pr.head.ref, sha },
+                    meta: {
+                      githubCommitSha: sha, githubCommitRef: pr.head.ref,
+                      githubCommitRepo: repo, githubCommitOrg: owner,
+                      githubPrId: String(number), manualPreviewPr: String(number),
+                    },
+                  }),
+                });
+              }
+              const deploymentId = deployment.id ?? deployment.uid;
+              if (typeof deploymentId !== "string" || !/^dpl_[A-Za-z0-9]+$/.test(deploymentId)) {
+                throw new Error("Vercel did not return a valid deployment ID.");
+              }
+              const dashboardUrl = `https://vercel.com/tscircuit/capacity-node-autorouter/${deploymentId}`;
+              let lastState;
+              const deadline = Date.now() + 20 * 60_000;
+              while (Date.now() < deadline) {
+                const state = deployment.readyState ?? deployment.state;
+                if (state === "READY") {
+                  if (typeof deployment.url !== "string" ||
+                      !/^[a-z0-9.-]+\.vercel\.app$/i.test(deployment.url)) {
+                    throw new Error("The ready deployment has no valid Vercel preview URL.");
+                  }
+                  await report(`✅ Ready: [Open preview](https://${deployment.url}) · [Build details](${dashboardUrl})`);
+                  return;
+                }
+                if (["ERROR", "CANCELED"].includes(state)) {
+                  await report(`❌ Preview ${state.toLowerCase()}. [View build logs](${dashboardUrl}).`);
+                  core.setFailed(`Preview deployment ended in ${state}.`);
+                  return;
+                }
+                if (!["QUEUED", "INITIALIZING", "BUILDING"].includes(state)) {
+                  throw new Error("Vercel returned an unexpected deployment state.");
+                }
+                if (state !== lastState) {
+                  await report(`⏳ Preview ${state.toLowerCase()}. [Follow the deployment](${dashboardUrl}).`);
+                  lastState = state;
+                }
+                await new Promise((resolve) => setTimeout(resolve, 10_000));
+                deployment = await vercel(`/v13/deployments/${deploymentId}`);
+              }
+              await report(`⚠️ Still pending after 20 minutes. [Follow the deployment](${dashboardUrl}); this workflow did not cancel it. Requesting the same commit again reuses an active or ready preview.`);
+              core.setFailed("Preview is still pending after the polling deadline.");
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "Unknown preview error.";
+              await report(`❌ Preview could not be completed. ${message}`);
+              core.setFailed(message);
+            }
