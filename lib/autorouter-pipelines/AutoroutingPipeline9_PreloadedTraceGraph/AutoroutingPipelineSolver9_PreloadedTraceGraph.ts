@@ -709,6 +709,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             traceToPadClearance: cms.srj.minTraceToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
+            clearanceRepairEffort: cms.effort,
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,

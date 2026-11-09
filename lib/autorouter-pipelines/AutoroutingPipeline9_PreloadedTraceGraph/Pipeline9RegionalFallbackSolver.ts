@@ -37,6 +37,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   traceWidth: number
   obstacleMargin: number
   effort: number
+  clearanceRepairEffort?: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
@@ -650,7 +651,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
           })
         : { srj, routes }
     const pathGridSizeScale = this.hasFixedCopperConflict(routes) ? 0.25 : 1
-    const maxPathSearchNodes = Math.ceil(1_000_000 * params.effort)
+    // Primary topology search is capped separately. Dense physical repairs
+    // must still receive the board's requested effort instead of exhausting
+    // the 1x budget even when the caller requested a higher effort level.
+    const clearanceRepairEffort = params.clearanceRepairEffort ?? params.effort
+    const maxPathSearchNodes = Math.ceil(1_000_000 * clearanceRepairEffort)
     this.viaClearanceSolver = new NegotiateTraceClearanceSolver({
       srj: { ...prepared.srj, traces: undefined },
       routes: prepared.routes,
@@ -675,7 +680,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         maxPathSearchNodes,
         Math.ceil(100_000 / pathGridSizeScale ** 2),
       ),
-      maxPathSearchCalls: Math.ceil(100 * params.effort),
+      maxPathSearchCalls: Math.ceil(100 * clearanceRepairEffort),
       // Retained fanout tracks can leave via passages narrower than the usual
       // half-trace-width grid. Resolve these fixed-copper corridors directly;
       // pad-only repairs keep their coarser grid and existing search budget.

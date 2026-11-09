@@ -55,6 +55,7 @@ export type Pipeline9HighDensitySolverParams = {
   viaToPadClearance?: number
   traceToPadClearance?: number
   effort: number
+  clearanceRepairEffort?: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
@@ -806,6 +807,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
+      clearanceRepairEffort: this.params.clearanceRepairEffort,
       boardObstacles: this.obstacles,
       // Regional repair may route past an adjacent fixed trace's terminal pad.
       // Check the whole immutable copper set throughout that expanded area.
