@@ -56,6 +56,7 @@
     "tests/repro/a13-no-via-in-pad",
     "tests/repro/h3-ddr-strobe-via-access",
     "tests/repro/h3-ddr-bank-address",
+    "tests/repro/h616-native-ddr-clearance",
     "tests/repro/orangecrab-via-roundoff",
     "examples/legacy/assets/**/*.json"
   ]
