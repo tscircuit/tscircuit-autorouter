@@ -11,9 +11,12 @@ const autorouter = {
   groupMode: "subcircuit",
   async algorithmFn(inputSrj) {
     writeFileSync("remaining.srj.json", JSON.stringify(inputSrj))
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-      cacheProvider: null,
-    })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      inputSrj,
+      {
+        cacheProvider: null,
+      },
+    )
     const events = new EventEmitter()
     return {
       on: events.on.bind(events),
