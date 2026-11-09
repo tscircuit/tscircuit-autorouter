@@ -88,6 +88,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     inputSrj,
     srjWithPointPairs,
     representedPadObstacleIndexes,
+    traceClearance: drcOptions.traceClearance,
     viaClearance: drcOptions.viaToPadClearance,
   })
   const evaluate = (
