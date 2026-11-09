@@ -8,7 +8,9 @@ import { H616DdrBoard } from "./board"
 
 const autorouter = {
   local: true,
+  groupMode: "subcircuit",
   async algorithmFn(inputSrj) {
+    writeFileSync("remaining.srj.json", JSON.stringify(inputSrj))
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
       cacheProvider: null,
     })
