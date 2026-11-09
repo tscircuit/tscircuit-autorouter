@@ -1,0 +1,39 @@
+name: Preview smoke test observation
+on:
+  pull_request:
+    types: [synchronize]
+permissions:
+  contents: read
+jobs:
+  observe:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'abse/test-preview-comment-only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        with:
+          script: |
+            const { VERCEL_TOKEN, VERCEL_TEAM_ID, VERCEL_PROJECT_ID } = process.env;
+            if (!VERCEL_TOKEN || !VERCEL_TEAM_ID || !VERCEL_PROJECT_ID) throw new Error("Missing Vercel configuration.");
+            const url = new URL("https://api.vercel.com/v6/deployments");
+            url.searchParams.set("teamId", VERCEL_TEAM_ID);
+            url.searchParams.set("projectId", VERCEL_PROJECT_ID);
+            url.searchParams.set("branch", context.payload.pull_request.head.ref);
+            url.searchParams.set("limit", "100");
+            for (let sample = 0; sample < 6; sample++) {
+              const response = await fetch(url, {
+                headers: { Authorization: `Bearer ${VERCEL_TOKEN}` },
+                signal: AbortSignal.timeout(30000),
+              });
+              if (!response.ok) throw new Error(`Deployment inspection returned HTTP ${response.status}`);
+              const data = await response.json();
+              if (!Array.isArray(data.deployments)) throw new Error("Invalid deployment list.");
+              const deployments = data.deployments.map(item => ({ id: item.uid, state: item.state, sha: item.meta?.githubCommitSha }));
+              console.log(JSON.stringify({ sample, branch: context.payload.pull_request.head.ref, deployments }));
+              if (deployments.length !== 0) throw new Error("Unexpected deployment exists before /preview.");
+              if (sample < 5) await new Promise(resolve => setTimeout(resolve, 10000));
+            }
