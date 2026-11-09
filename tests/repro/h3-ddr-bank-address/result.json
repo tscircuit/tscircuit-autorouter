@@ -5,8 +5,8 @@
   "physicalFindings": {
     "overlap": 0,
     "padTrace": 0,
-    "viaTrace": 1,
-    "viaPad": 1,
+    "viaTrace": 0,
+    "viaPad": 0,
     "viaSpacing": 0,
     "continuity": 0,
     "viaInPad": 0,
