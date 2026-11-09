@@ -23,15 +23,25 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
   traceClearance?: number
   viaClearance?: number
 }): ((traces: SimplifiedPcbTrace[]) => DrcError[]) => {
-  if (
-    !inputSrj.obstacles.some(
-      (obstacle, obstacleIndex) =>
-        !representedPadObstacleIndexes.has(obstacleIndex) &&
-        obstacle.connectedTo.length > 0 &&
-        !obstacle.isCopperPour &&
-        !obstacle.isNonPlatedHole,
-    )
-  ) {
+  const fixedObstacleIndexes = new Set<number>()
+  const wireObstacleIndexes = new Set<number>()
+  for (const [obstacleIndex, obstacle] of inputSrj.obstacles.entries()) {
+    if (
+      representedPadObstacleIndexes.has(obstacleIndex) ||
+      obstacle.connectedTo.length === 0 ||
+      obstacle.isCopperPour ||
+      obstacle.isNonPlatedHole
+    ) {
+      continue
+    }
+    fixedObstacleIndexes.add(obstacleIndex)
+    // Identified vias retain their existing via-specific evaluation.
+    // Anonymous copper includes the earlier data wires from Core.
+    if (!obstacle.circuitJsonMetadata?.pcb_via_id) {
+      wireObstacleIndexes.add(obstacleIndex)
+    }
+  }
+  if (fixedObstacleIndexes.size === 0) {
     return (): DrcError[] => []
   }
   const fixedCopperSrj = {
@@ -48,9 +58,9 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   const errorsByCopperGeometry = new Map<CopperGeometryKey, DrcError[]>()
-  // Explicit preloads already supply wire geometry to the indexed checker.
-  // Supplement wires when earlier copper is supplied only as obstacles.
-  const checkWireSegments = (inputSrj.traces?.length ?? 0) === 0
+  const checkWireSegments = wireObstacleIndexes.size > 0
+  let geometryCacheLimit = 64
+  if (checkWireSegments) geometryCacheLimit = 2
   return (traces): DrcError[] => {
     // Wire changes must invalidate the cached check against earlier copper.
     const key = JSON.stringify(
@@ -99,14 +109,9 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       traceClearance: traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance: clearance,
     })
-      .filter(({ obstacleIndex }) => {
-        const obstacle = inputSrj.obstacles[obstacleIndex]!
-        return (
-          !representedPadObstacleIndexes.has(obstacleIndex) &&
-          obstacle.connectedTo.length > 0 &&
-          !obstacle.isCopperPour &&
-          !obstacle.isNonPlatedHole
-        )
+      .filter(({ obstacleIndex, kind }) => {
+        if (kind === "wire") return wireObstacleIndexes.has(obstacleIndex)
+        return fixedObstacleIndexes.has(obstacleIndex)
       })
       .map((violation): DrcError => {
         const trace = traces[routes[violation.routeIndex]!.preloadedTraceIndex]!
@@ -134,7 +139,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           message: "Via is too close to fixed copper on a drilled layer",
         }
       })
-    if (errorsByCopperGeometry.size >= 2) {
+    if (errorsByCopperGeometry.size >= geometryCacheLimit) {
       errorsByCopperGeometry.delete(errorsByCopperGeometry.keys().next().value!)
     }
     errorsByCopperGeometry.set(key, errors)
