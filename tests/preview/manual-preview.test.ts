@@ -34,6 +34,61 @@ type RecordItem = {
   url?: string
   [key: string]: unknown
 }
+type FetchState = {
+  options: Options
+  calls: RecordItem[]
+  created: RecordItem[]
+  polls: number
+}
+async function fakeFetch(
+  state: FetchState,
+  input: URL,
+  init: { method?: string; body?: string },
+): Promise<unknown> {
+  const { options, calls, created } = state
+  calls.push({ url: input.toString(), method: init.method ?? "GET" })
+  if (input.pathname === "/v6/deployments")
+    return {
+      ok: true,
+      json: async (): Promise<unknown> => ({
+        deployments: options.reuse
+          ? [
+              {
+                uid: "dpl_test",
+                state: "READY",
+                url: "test.vercel.app",
+                meta: { githubCommitSha: sha, manualPreviewPr: "42" },
+              },
+            ]
+          : [],
+      }),
+    }
+  if (init.method === "POST") {
+    const body = JSON.parse(init.body!)
+    created.push(body)
+    return {
+      ok: true,
+      json: async (): Promise<unknown> => ({
+        id: "dpl_test",
+        readyState: "QUEUED",
+      }),
+    }
+  }
+  state.polls++
+  return {
+    ok: true,
+    json: async (): Promise<unknown> => ({
+      id: "dpl_test",
+      readyState: options.failure
+        ? "ERROR"
+        : state.polls === 1
+          ? "BUILDING"
+          : "READY",
+      url: "test.vercel.app",
+    }),
+  }
+}
+
 async function run(options: Options = {}): Promise<{
   failures: string[]
   comments: RecordItem[]
@@ -106,53 +161,6 @@ async function run(options: Options = {}): Promise<{
           ]
         : [],
   }
-  let polls = 0
-  const fakeFetch = async (
-    input: URL,
-    init: { method?: string; body?: string },
-  ): Promise<unknown> => {
-    calls.push({ url: input.toString(), method: init.method ?? "GET" })
-    if (input.pathname === "/v6/deployments")
-      return {
-        ok: true,
-        json: async (): Promise<unknown> => ({
-          deployments: options.reuse
-            ? [
-                {
-                  uid: "dpl_test",
-                  state: "READY",
-                  url: "test.vercel.app",
-                  meta: { githubCommitSha: sha, manualPreviewPr: "42" },
-                },
-              ]
-            : [],
-        }),
-      }
-    if (init.method === "POST") {
-      const body = JSON.parse(init.body!)
-      created.push(body)
-      return {
-        ok: true,
-        json: async (): Promise<unknown> => ({
-          id: "dpl_test",
-          readyState: "QUEUED",
-        }),
-      }
-    }
-    polls++
-    return {
-      ok: true,
-      json: async (): Promise<unknown> => ({
-        id: "dpl_test",
-        readyState: options.failure
-          ? "ERROR"
-          : polls === 1
-            ? "BUILDING"
-            : "READY",
-        url: "test.vercel.app",
-      }),
-    }
-  }
   const env = options.missing
     ? {}
     : {
@@ -182,7 +190,7 @@ async function run(options: Options = {}): Promise<{
       },
     },
     { env },
-    fakeFetch,
+    fakeFetch.bind(null, { options, calls, created, polls: 0 }),
     (resolve: () => void): void => {
       resolve()
     },
