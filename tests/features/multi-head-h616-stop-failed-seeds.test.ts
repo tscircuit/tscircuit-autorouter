@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import type { Candidate } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types1"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 type NativePortPair = [
   trace: number,
