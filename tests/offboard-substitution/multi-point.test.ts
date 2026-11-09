@@ -19,8 +19,8 @@ import multiPointSrjData from "./srj/multi-point.srj.json"
  * optimize each edge independently. Both edges should be rerouted to the
  * more optimal B', resulting in two final traces: A -> B' and C -> B'.
  */
-test("multi-point on-board net", () => {
-  const srj: SimpleRouteJson = multiPointSrjData as any
+test("multi-point on-board net", async (): Promise<void> => {
+  const srj = multiPointSrjData as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
 
@@ -32,7 +32,15 @@ test("multi-point on-board net", () => {
   expect(connectionsAsPointIdPairs).toContainEqual(["A", "B_prime"].sort())
   expect(connectionsAsPointIdPairs).toContainEqual(["C", "B_prime"].sort())
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+  // This unobstructed net should not need vias or layer changes.
+  for (const trace of solver.getOutputSimplifiedPcbTraces()) {
+    const staysOnTop = trace.route.every(
+      (point) => point.route_type === "wire" && point.layer === "top",
+    )
+    expect(staysOnTop).toBeTrue()
+  }
+
+  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
 })

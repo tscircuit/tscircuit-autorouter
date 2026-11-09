@@ -97,16 +97,15 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         .map((route) => {
           const point = trace.route[route.preloadedRoutePositionStart!]!
           let pcbViaId: string | undefined
-          let rootConnectionName = route.rootConnectionName
           if (point.route_type === "via") {
             const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
             if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
             pcbViaId = viaIds.get(key)!
-            rootConnectionName = trace.connection_name
           }
           return {
             ...route,
-            rootConnectionName,
+            // The obstacle checker resolves SRJ aliases, not connMap's synthetic net IDs.
+            rootConnectionName: trace.connection_name,
             pcbViaId,
           }
         }),
