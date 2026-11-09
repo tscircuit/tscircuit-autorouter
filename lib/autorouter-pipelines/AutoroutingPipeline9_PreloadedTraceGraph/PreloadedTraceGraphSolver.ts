@@ -417,6 +417,17 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
             continue
           port.availableZ = port.availableZ.filter((z) => {
             if (!primitive.zLayers.includes(z)) return true
+            // Keep retained crossings available to the demand pass, which may
+            // allocate neighboring slots beside this copper. The physical
+            // capacity pass reserves the original crossing for its fixed net.
+            if (
+              port._preloadedTracePortAssignments?.some(
+                (assignment) =>
+                  assignment.z === z &&
+                  assignment.fixedNetId === primitive.fixedNetId,
+              )
+            )
+              return true
             // Nearby fixed copper forbids foreign nets, but its owner may
             // branch into it without crossing this boundary's centerline.
             // Intersect restrictions when more than one fixed net is nearby.

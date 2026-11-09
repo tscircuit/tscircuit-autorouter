@@ -95,7 +95,9 @@ export const constrainBoundaryPortCapacity = (
     )
     if (
       !duplicates.length &&
-      !ports.some((port) => port.d?.cramped || port.d?.clearanceAllowedNetIds)
+      !ports.some(
+        (port) => port.d?.cramped || allowedNetsByPort.has(port.portId),
+      )
     )
       continue
     const first = ports[0]!
@@ -229,7 +231,7 @@ export const constrainBoundaryPortCapacity = (
       })
       for (const port of ports) {
         if (
-          !port.d?.clearanceAllowedNetIds &&
+          !allowedNetsByPort.has(port.portId) &&
           (!(
             port.d?.cramped || typeof port.d?.duplicatedFromPortId === "string"
           ) ||
@@ -277,12 +279,15 @@ export const constrainBoundaryPortCapacity = (
     }
     // Existing slots include net-specific pad escapes and retained crossings.
     // This pass limits added demand slots; it does not remove those terminals.
+    // Net-specific slots lie inside reserved copper clearance. They do not
+    // consume the free interval's capacity for unrelated new connections.
     const occupiedOriginalPorts = ports.filter(
       (port) =>
         typeof port.d?.duplicatedFromPortId !== "string" &&
-        port.d?._preloadedTracePortAssignments?.some(
-          (assignment: { isFixed?: boolean }) => assignment.isFixed,
-        ),
+        (port.d?.clearanceAllowedNetIds !== undefined ||
+          port.d?._preloadedTracePortAssignments?.some(
+            (assignment: { isFixed?: boolean }) => assignment.isFixed,
+          )),
     ).length
     const additionalCapacity = Math.max(
       0,
