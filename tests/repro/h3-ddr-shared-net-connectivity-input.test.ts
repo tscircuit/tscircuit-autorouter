@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import input from "../../fixtures/bug-reports/h3-ddr-shared-net-connectivity/input.srj.json" with { type: "json" }
+import input from "../../fixtures/bug-reports/h3-ddr-shared-net-connectivity/input.srj.json" with {
+  type: "json",
+}
 
 // Captured from our four-layer H3/DDR3 HDMI streaming-stick board after saved
 // fanout: retain DQS0_P/N, their four escape traces, and four source pads.
@@ -21,7 +23,10 @@ test("H3 DDR strobe input preserves the disconnected saved escape traces", () =>
       expect(fragments).toHaveLength(1)
       expect(fragments[0].connectsTo).toContain(connection.name)
       expect(fragments[0].route.at(-1)).toMatchObject({
-        route_type: "wire", x: point.x, y: point.y, layer: "bottom",
+        route_type: "wire",
+        x: point.x,
+        y: point.y,
+        layer: "bottom",
       })
     }
   }

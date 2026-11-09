@@ -2,7 +2,9 @@ import { expect, test } from "bun:test"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import input from "../../fixtures/bug-reports/h3-ddr-shared-net-connectivity/input.srj.json" with { type: "json" }
+import input from "../../fixtures/bug-reports/h3-ddr-shared-net-connectivity/input.srj.json" with {
+  type: "json",
+}
 
 // Reproduction only: remove .skip to expose the missing routes on main.
 // Shared source_trace IDs in connectsTo join separate escape endpoints in the
