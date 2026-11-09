@@ -1,6 +1,6 @@
 # Manual autorouter previews
 
-Automatic Git deployments are enabled only for `main`. Non-production branches, including names with slashes, match the disabled `**` rule; Vercel's true-match precedence keeps `main` enabled.
+Automatic preview suppression is managed in the Vercel dashboard. This change does not add or modify vercel.json. Keep production deployments enabled. Before testing, verify that the dashboard setting permits explicitly requested previews; an Ignored Build Step may skip manual deployments too.
 
 ## Request a preview
 
@@ -41,7 +41,7 @@ The label triggers only when applied, not on synchronize/push events.
 If the PR changes before a queued label request starts, that request fails rather than deploying unreviewed new code.
 No merge is needed for this label-driven integration test.
 The actual `/preview` issue_comment trigger still needs one post-merge smoke test.
-Automatic preview suppression can be inspected in configuration before merge, but its behavior on subsequent branches needs post-merge verification.
+Dashboard preview suppression must be verified separately: an ordinary branch push should not create a hosted preview, while an explicitly requested preview must still build.
 
 A maintainer can also use workflow_dispatch with a PR number after the workflow exists on main.
 Existing tests, typechecking, and the GitHub Actions Vercel Build check are unchanged; that check compiles in GitHub Actions and is separate from hosted Vercel build charges.
