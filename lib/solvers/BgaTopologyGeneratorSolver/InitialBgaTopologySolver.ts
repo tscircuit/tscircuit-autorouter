@@ -1,6 +1,8 @@
 import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
+  pointToBoxDistance,
+  pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
@@ -8,7 +10,10 @@ import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanning
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
+import { TOPOLOGY_MERGING_EPSILON } from "../TopologyMergingSolver/topology-merging-types"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
@@ -91,6 +96,7 @@ function createMeshNodesFromBgaGap(input: {
   bgaGap: BgaGap
   freeLayers: number[]
   multiLayerThreshold: number
+  hasClearViaCenter: boolean
 }): CapacityMeshNode[] {
   const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
   const isLargeEnoughForMultiLayer =
@@ -108,7 +114,10 @@ function createMeshNodesFromBgaGap(input: {
     height: bgaGap.height,
   })
 
-  if (bgaGap.orientation === "diagonal" && isLargeEnoughForMultiLayer) {
+  if (
+    bgaGap.orientation === "diagonal" &&
+    (isLargeEnoughForMultiLayer || input.hasClearViaCenter)
+  ) {
     return [
       {
         center: bgaGap.center,
@@ -304,6 +313,71 @@ export class InitialBgaTopologySolver extends BaseSolver {
       this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
     const multiLayerThreshold =
       viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR
+    // Round pad corners can leave room for a via wider than the rectangular
+    // gap. Restore only those false box conflicts after certifying clearance.
+    const hasClearGapViaCenter = (gap: BgaGap): boolean => {
+      if (
+        gap.orientation !== "diagonal" ||
+        (viaDiameter <= gap.width + TOPOLOGY_MERGING_EPSILON &&
+          viaDiameter <= gap.height + TOPOLOGY_MERGING_EPSILON)
+      )
+        return false
+      const clearance = getViaToPadClearance(srj) ?? 0.15
+      const boardMargin = viaDiameter / 2 + (srj.minBoardEdgeClearance ?? 0)
+      // Component-local SRJs omit copper beyond these bounds. Keep the full
+      // clearance disk inside the domain covered by the supplied obstacles.
+      const domainMargin = Math.max(boardMargin, viaDiameter / 2 + clearance)
+      const center = gap.center
+      if (
+        center.x < srj.bounds.minX + domainMargin ||
+        center.x > srj.bounds.maxX - domainMargin ||
+        center.y < srj.bounds.minY + domainMargin ||
+        center.y > srj.bounds.maxY - domainMargin
+      )
+        return false
+      if (srj.outline && srj.outline.length >= 3) {
+        if (!isPointInOrOnPolygon(center, srj.outline)) return false
+        for (let i = 0; i < srj.outline.length; i++) {
+          if (
+            pointToSegmentDistance(
+              center,
+              srj.outline[i]!,
+              srj.outline[(i + 1) % srj.outline.length]!,
+            ) < boardMargin
+          )
+            return false
+        }
+      }
+      let boundingBoxBlocksVia = false
+      const allObstaclesClear = srj.obstacles.every((obstacle): boolean => {
+        let edgeDistance: number
+        if (obstacle.shape === "circle" && obstacle.width === obstacle.height) {
+          boundingBoxBlocksVia ||=
+            pointToBoxDistance(center, obstacle) < viaDiameter / 2 + clearance
+          edgeDistance =
+            Math.hypot(
+              center.x - obstacle.center.x,
+              center.y - obstacle.center.y,
+            ) -
+            obstacle.width / 2
+        } else {
+          const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+          const dx = center.x - obstacle.center.x
+          const dy = center.y - obstacle.center.y
+          edgeDistance = pointToBoxDistance(
+            {
+              x:
+                obstacle.center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+              y:
+                obstacle.center.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+            },
+            obstacle,
+          )
+        }
+        return edgeDistance - viaDiameter / 2 >= clearance
+      })
+      return allObstaclesClear && boundingBoxBlocksVia
+    }
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
@@ -311,6 +385,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
           bgaGap,
           freeLayers,
           multiLayerThreshold,
+          hasClearViaCenter: false,
         }),
       ),
       ...diagonalGaps.flatMap((bgaGap) =>
@@ -319,6 +394,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
           bgaGap,
           freeLayers,
           multiLayerThreshold,
+          hasClearViaCenter: hasClearGapViaCenter(bgaGap),
         }),
       ),
       ...missingBgaSlots.flatMap((missingBgaSlot) =>
