@@ -46,8 +46,3 @@ Dashboard preview suppression must be verified separately: an ordinary branch pu
 A maintainer can also use workflow_dispatch with a PR number after the workflow exists on main.
 Existing tests, typechecking, and the GitHub Actions Vercel Build check are unchanged; that check compiles in GitHub Actions and is separate from hosted Vercel build charges.
 
-## Local validation
-
-Run `node --test tests/preview/manual-preview.test.ts` on Node 24, or `bun test tests/preview/manual-preview.test.ts`.
-The test executes the actual inline workflow script with mocked GitHub/Vercel APIs, including permission failures, fork rejection, stale commits, missing credentials, status transitions, deployment failure, reuse, and credential redaction.
-It does not create a deployment.
