@@ -110,7 +110,11 @@ jobs:
                   signal: AbortSignal.timeout(30_000),
                 });
                 if (!response.ok) {
-                  throw new Error(`Vercel returned HTTP ${response.status}. Check access and the workflow configuration; no automatic retry was made.`);
+                  const failure = await response.json();
+                  const code = typeof failure?.error?.code === "string" ? failure.error.code : "unknown";
+                  const detail = typeof failure?.error?.message === "string" ? failure.error.message : "No API error message returned.";
+                  const safeDetail = detail.split(VERCEL_TOKEN).join("[REDACTED]").slice(0, 500);
+                  throw new Error(`Vercel ${options.method ?? "GET"} ${url.pathname} returned HTTP ${response.status} (${code}): ${safeDetail}`);
                 }
                 return response.json();
               }
@@ -135,7 +139,7 @@ jobs:
                   body: JSON.stringify({
                     name: "capacity-node-autorouter",
                     project: VERCEL_PROJECT_ID,
-                    target: "preview",
+                    // Omitting target selects Preview; "preview" is not a valid create target.
                     gitSource: { type: "github", repoId: String(pr.head.repo.id), ref: pr.head.ref, sha },
                     meta: {
                       githubCommitSha: sha, githubCommitRef: pr.head.ref,
