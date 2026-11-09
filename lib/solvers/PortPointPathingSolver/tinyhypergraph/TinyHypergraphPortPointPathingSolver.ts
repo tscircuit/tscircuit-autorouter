@@ -443,6 +443,7 @@ const toSerializedPortData = (
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
+    clearanceAllowedNetIds: port.d.clearanceAllowedNetIds,
   }
 }
 

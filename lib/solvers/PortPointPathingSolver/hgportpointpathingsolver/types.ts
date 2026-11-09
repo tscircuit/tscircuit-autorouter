@@ -25,6 +25,7 @@ export type RawPort = {
   cramped?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
+  clearanceAllowedNetIds?: string[]
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }

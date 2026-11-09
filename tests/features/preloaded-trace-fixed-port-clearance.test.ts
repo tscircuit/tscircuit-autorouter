@@ -37,7 +37,10 @@ test("fixed RVboy bypasses reserve clearance beside edges they do not cross", as
     .find((edge) => edge.edgeId === before.edgeId)!
   expect(solver.solved).toBe(true)
   expect(
-    after.portPoints.filter((port) => port.availableZ.includes(0)),
+    after.portPoints.filter(
+      (port) =>
+        port.availableZ.includes(0) && !port.clearanceAllowedNetIdsByZ?.[0],
+    ),
   ).toHaveLength(0)
   expect(
     after.portPoints.filter((port) => port.availableZ.includes(3)),
@@ -80,8 +83,14 @@ test("fixed RVboy bypasses reserve clearance beside edges they do not cross", as
       graphics.circles!.push({
         center: port,
         radius: fixture.srj.minTraceWidth / 2,
-        fill: port.availableZ.includes(0) ? "#0284c7" : "#e2e8f0",
-        stroke: port.availableZ.includes(0) ? "#0284c7" : "#64748b",
+        fill:
+          port.availableZ.includes(0) && !port.clearanceAllowedNetIdsByZ?.[0]
+            ? "#0284c7"
+            : "#e2e8f0",
+        stroke:
+          port.availableZ.includes(0) && !port.clearanceAllowedNetIdsByZ?.[0]
+            ? "#0284c7"
+            : "#64748b",
       })
     }
     await expect(

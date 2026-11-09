@@ -45,6 +45,8 @@ export interface SegmentPortPoint {
   tinyHypergraphPortPenalty?: number
   /** Canonical fixed-net ids loaded onto this existing graph port. */
   _preloadedFixedNetIds?: string[]
+  /** Only these nets may use a layer occupied by nearby immutable copper. */
+  clearanceAllowedNetIdsByZ?: Record<number, string[]>
   /** Ordered crossings used to create serialized graph assignments. */
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }

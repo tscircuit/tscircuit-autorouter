@@ -1,12 +1,12 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
-import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import { getWireClearanceInterval } from "../../UniformPortDistributionSolver/getWireClearanceInterval"
 import type { Obstacle } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getHdRouteNetId } from "lib/utils/getHdRouteNetId"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { getObstacleClearanceInterval } from "../../UniformPortDistributionSolver/getObstacleClearanceInterval"
+import { getWireClearanceInterval } from "../../UniformPortDistributionSolver/getWireClearanceInterval"
 import type { SharedEdge } from "../../UniformPortDistributionSolver/types"
 
 export type PortGeometry = {
@@ -34,6 +34,9 @@ export const constrainBoundaryPortCapacity = (
   const groups = new Map<string, typeof graph.ports>()
   const allowedNetsByPort = new Map<string, string[]>()
   for (const port of graph.ports) {
+    if (port.d?.clearanceAllowedNetIds) {
+      allowedNetsByPort.set(port.portId, port.d.clearanceAllowedNetIds)
+    }
     // Uniform spacing locks pad entry/exit ports. Include those anchors when
     // rejecting foreign crossings that cannot clear a neighboring narrow edge.
     if (
@@ -55,8 +58,15 @@ export const constrainBoundaryPortCapacity = (
           assignment.isFixed === true && assignment.z === port.d?.z,
       )
       .map((assignment: { fixedNetId: string }) => assignment.fixedNetId)
-    if (fixedOwners?.length)
-      allowedNetsByPort.set(port.portId, [...new Set<string>(fixedOwners)])
+    if (fixedOwners?.length) {
+      const allowed = allowedNetsByPort.get(port.portId)
+      allowedNetsByPort.set(
+        port.portId,
+        [...new Set<string>(fixedOwners)].filter(
+          (net) => !allowed || allowed.includes(net),
+        ),
+      )
+    }
     const key = JSON.stringify([
       [port.region1Id, port.region2Id].sort(),
       port.d?.z,
@@ -83,7 +93,11 @@ export const constrainBoundaryPortCapacity = (
     const duplicates = ports.filter(
       (port) => typeof port.d?.duplicatedFromPortId === "string",
     )
-    if (!duplicates.length && !ports.some((port) => port.d?.cramped)) continue
+    if (
+      !duplicates.length &&
+      !ports.some((port) => port.d?.cramped || port.d?.clearanceAllowedNetIds)
+    )
+      continue
     const first = ports[0]!
     const a = regions.get(first.region1Id)!.d!
     const b = regions.get(first.region2Id)!.d!
@@ -215,14 +229,25 @@ export const constrainBoundaryPortCapacity = (
       })
       for (const port of ports) {
         if (
-          !(
+          !port.d?.clearanceAllowedNetIds &&
+          (!(
             port.d?.cramped || typeof port.d?.duplicatedFromPortId === "string"
           ) ||
-          port.d?._preloadedTracePortAssignments?.length
+            port.d?._preloadedTracePortAssignments?.length)
         )
           continue
-        if (allowedNets.length) allowedNetsByPort.set(port.portId, allowedNets)
-        else removed.add(port.portId)
+        const existingAllowed = allowedNetsByPort.get(port.portId)
+        const restricted = allowedNets.filter(
+          (net) => !existingAllowed || existingAllowed.includes(net),
+        )
+        if (
+          restricted.length ||
+          port.d?._preloadedTracePortAssignments?.length
+        ) {
+          // Retained geometry is already routed at its own width. Keep its
+          // serialized crossing even when a wider new branch cannot use it.
+          allowedNetsByPort.set(port.portId, restricted)
+        } else removed.add(port.portId)
       }
       continue
     }

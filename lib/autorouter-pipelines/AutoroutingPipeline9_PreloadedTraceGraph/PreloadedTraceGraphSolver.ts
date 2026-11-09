@@ -417,17 +417,17 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
             continue
           port.availableZ = port.availableZ.filter((z) => {
             if (!primitive.zLayers.includes(z)) return true
-            // The existing crossing belongs to the fixed route itself and must
-            // remain available to serialize that route's occupied topology.
-            if (
-              port._preloadedTracePortAssignments?.some(
-                (assignment) =>
-                  assignment.z === z &&
-                  assignment.fixedNetId === primitive.fixedNetId,
-              )
-            )
-              return true
+            // Nearby fixed copper forbids foreign nets, but its owner may
+            // branch into it without crossing this boundary's centerline.
+            // Intersect restrictions when more than one fixed net is nearby.
+            const allowed = port.clearanceAllowedNetIdsByZ?.[z]
+            const nextAllowed = allowed
+              ? allowed.filter((net) => net === primitive.fixedNetId)
+              : [primitive.fixedNetId]
+            port.clearanceAllowedNetIdsByZ ??= {}
+            port.clearanceAllowedNetIdsByZ[z] = nextAllowed
             fixedClearancePortLayerCount++
+            if (nextAllowed.length > 0) return true
             return false
           })
         }
