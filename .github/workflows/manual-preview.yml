@@ -14,8 +14,8 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
-  issues: write
+  pull-requests: write
+  issues: read
 
 concurrency:
   group: manual-preview-${{ github.event.issue.number || github.event.pull_request.number || inputs.pr_number }}
