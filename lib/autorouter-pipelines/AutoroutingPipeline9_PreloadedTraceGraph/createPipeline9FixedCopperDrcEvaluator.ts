@@ -159,7 +159,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       })
       .map((violation): DrcError => {
         const trace = traces[routes[violation.routeIndex]!.preloadedTraceIndex]!
-        const pcb_obstacle_id =
+        const pcbObstacleId =
           inputSrj.obstacles[violation.obstacleIndex]!.obstacleId ??
           `fixed_copper_obstacle_${violation.obstacleIndex}`
         if (violation.kind === "wire") {
@@ -169,7 +169,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
             drc_source: "fixed_copper",
             pcb_trace_error_id: `fixed_copper_${trace.pcb_trace_id}_${violation.obstacleIndex}`,
             pcb_trace_id: trace.pcb_trace_id,
-            pcb_obstacle_id,
+            pcb_obstacle_id: pcbObstacleId,
             center: violation.center,
             actual_clearance: wireClearance - violation.severity,
             minimum_clearance: wireClearance,
@@ -183,7 +183,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           pcb_via_trace_clearance_error_id: `fixed_copper_${trace.pcb_trace_id}_${violation.obstacleIndex}_${routes[violation.routeIndex]!.pcbViaId}`,
           pcb_via_id: routes[violation.routeIndex]!.pcbViaId,
           pcb_trace_id: trace.pcb_trace_id,
-          pcb_obstacle_id,
+          pcb_obstacle_id: pcbObstacleId,
           center: violation.center,
           actual_clearance: clearance - violation.severity,
           minimum_clearance: clearance,
