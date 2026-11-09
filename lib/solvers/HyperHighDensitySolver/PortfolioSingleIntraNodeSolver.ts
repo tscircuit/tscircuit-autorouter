@@ -198,6 +198,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
+    // The native searches carry each connection's physical width. The closed
+    // form and external grid solvers accept only a uniform width.
+    if (this.constructorParams.traceWidthByConnectionName) {
+      return [
+        ["majorCombinations", "orderings6", "cellSizeFactor"],
+        ["noVias"],
+        ["orderings50"],
+        ["flipTraceAlignmentDirection", "orderings6"],
+      ]
+    }
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],

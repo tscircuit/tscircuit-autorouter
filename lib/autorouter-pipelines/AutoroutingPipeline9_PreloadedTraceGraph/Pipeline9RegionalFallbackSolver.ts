@@ -21,6 +21,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   connMap: ConnectivityMap
   viaDiameter: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   obstacleMargin: number
   effort: number
   nodePfById?:
@@ -156,6 +157,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       connMap: params.connMap,
       viaDiameter: params.viaDiameter,
       traceWidth: params.traceWidth,
+      traceWidthByConnectionName: params.traceWidthByConnectionName,
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
       nodePfById: params.nodePfById,

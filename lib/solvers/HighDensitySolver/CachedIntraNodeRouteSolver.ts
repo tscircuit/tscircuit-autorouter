@@ -173,6 +173,9 @@ export class CachedIntraNodeRouteSolver
         this.minDistBetweenEnteringPoints,
       ),
       traceWidth: roundCoord(this.traceWidth),
+      ...(this.traceWidthByConnectionName
+        ? { traceWidthByConnectionName: this.traceWidthByConnectionName }
+        : {}),
       viaDiameter: roundCoord(this.viaDiameter),
       obstacleMargin: roundCoord(this.obstacleMargin),
       normalizedConnMap,

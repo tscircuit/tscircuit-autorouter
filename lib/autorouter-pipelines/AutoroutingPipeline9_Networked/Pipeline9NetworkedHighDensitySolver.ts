@@ -143,13 +143,16 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   private createNodeInput(
     node: NodeWithPortPoints,
   ): Pipeline9NetworkedHighDensityNodeInput {
+    const traceWidth = this.traceWidth
+    const traceWidthByConnectionName = this.getTraceWidthsForConnections(node)
     const regionalInput = this.enableRegionalFallback
       ? projectPipeline9RegionalHighDensityInput({
           nodeWithPortPoints: node,
           connMap: this.connMap,
           obstacles: this.obstacles,
           obstacleMargin: this.obstacleMargin,
-          traceWidth: this.traceWidth,
+          traceWidth,
+          traceWidthByConnectionName,
           viaDiameter: this.viaDiameter,
         })
       : { connectivityNetMap: {}, obstacles: [] }
@@ -163,7 +166,8 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
         ? regionalInput.obstacles
         : this.obstacles,
       obstacleMargin: this.obstacleMargin,
-      traceWidth: this.traceWidth,
+      traceWidth,
+      traceWidthByConnectionName,
       viaDiameter: this.viaDiameter,
     })
     return {
@@ -176,7 +180,8 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       ),
       colorMap: projectedInput.colorMap,
       viaDiameter: this.viaDiameter,
-      traceWidth: this.traceWidth,
+      traceWidth,
+      traceWidthByConnectionName,
       obstacleMargin: this.obstacleMargin,
       effort: 1,
       obstacles: projectedInput.obstacles,

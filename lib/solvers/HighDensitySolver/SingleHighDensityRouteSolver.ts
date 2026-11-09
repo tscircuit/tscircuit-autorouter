@@ -47,6 +47,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   viaDiameter: number
   traceThickness: number
+  private readonly respectObstacleTraceWidths: boolean
+  private maximumObstacleTraceThickness: number
   obstacleMargin: number
   layerCount: number
   availableZ: number[]
@@ -114,6 +116,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     B: { x: number; y: number; z: number }
     viaDiameter?: number
     traceThickness?: number
+    respectObstacleTraceWidths?: boolean
     obstacleMargin?: number
     layerCount?: number
     availableZ?: number[]
@@ -144,6 +147,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
     this.traceThickness = opts.traceThickness ?? 0.15
+    this.respectObstacleTraceWidths = opts.respectObstacleTraceWidths ?? false
+    this.maximumObstacleTraceThickness = this.traceThickness
     this.obstacleMargin = opts.obstacleMargin ?? 0.15
     this.layerCount = opts.layerCount ?? 2
     this.availableZ =
@@ -293,8 +298,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    const traceProximity = this.traceThickness + margin
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    const traceProximity = this.getTraceObstacleProximity(margin, isVia)
+    const viaProximity =
+      this.respectObstacleTraceWidths && isVia
+        ? this.viaDiameter + margin
+        : this.viaDiameter / 2 + this.traceThickness / 2 + margin
     // Planar point clearance is independent of the parent. Supplied queries
     // must cover the full point rectangle before their result can be reused.
     const canCachePlanarPoint =
@@ -377,7 +385,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
               segment.deltaY,
               segment.lengthSquared,
             ),
-          ) < traceProximity
+          ) <
+          this.getTraceObstacleProximity(margin, isVia, segment.traceThickness)
         ) {
           return true
         }
@@ -430,6 +439,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return tooClose
   }
 
+  private getTraceObstacleProximity(
+    margin: number,
+    isVia = false,
+    obstacleTraceThickness = this.maximumObstacleTraceThickness,
+  ): number {
+    if (!this.respectObstacleTraceWidths) {
+      return this.traceThickness + margin
+    }
+    const diameter = isVia ? this.viaDiameter : this.traceThickness
+    return (diameter + obstacleTraceThickness) / 2 + margin
+  }
+
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
@@ -442,7 +463,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.respectObstacleTraceWidths
+          ? this.getTraceObstacleProximity(this.obstacleMargin)
+          : this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
     const minX = Math.min(node.x, parent.x)
@@ -501,7 +524,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           pathDeltaY,
           pathLengthSquared,
           segment,
-        ) < clearance
+        ) <
+          (this.respectObstacleTraceWidths
+            ? this.getTraceObstacleProximity(
+                this.obstacleMargin,
+                false,
+                segment.traceThickness,
+              )
+            : clearance)
       ) {
         return true
       }
@@ -523,10 +553,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       sharedQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!segments || (!sharedQuery && !segmentIndex)) return undefined
 
-    const traceProximity = this.traceThickness + this.obstacleMargin
+    const traceProximity = this.getTraceObstacleProximity(this.obstacleMargin)
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.respectObstacleTraceWidths
+          ? traceProximity
+          : this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
     const minX = Math.min(node.x - traceProximity, parent.x - clearance)
@@ -560,9 +592,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
     const segments = this.obstacleSegmentsByLayer.get(node.z)
     if (!segmentIndex || !segments) return undefined
-    const traceProximity = this.traceThickness + this.obstacleMargin
+    const traceProximity = this.getTraceObstacleProximity(this.obstacleMargin)
     const clearance =
-      this.obstacleSegments.length > 0 ? this.NEARBY_SEGMENT_CLEARANCE : 0
+      this.obstacleSegments.length > 0
+        ? this.respectObstacleTraceWidths
+          ? traceProximity
+          : this.NEARBY_SEGMENT_CLEARANCE
+        : 0
     const { minX, minY, maxX, maxY } = this.bounds
     const minimumNeighborX = clamp(node.x - this.cellStep, minX, maxX)
     const minimumNeighborY = clamp(node.y - this.cellStep, minY, maxY)
@@ -581,6 +617,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   buildObstacleIndexes() {
     this.freePlanarObstaclePoints.clear()
+    this.maximumObstacleTraceThickness = this.obstacleRoutes.reduce(
+      (width, route) => Math.max(width, route.traceThickness),
+      this.traceThickness,
+    )
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -604,6 +644,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         const deltaY = pointPair.B.y - pointPair.A.y
         obstacleSegments.push({
           ...pointPair,
+          traceThickness: route.traceThickness,
           deltaX,
           deltaY,
           lengthSquared: deltaX ** 2 + deltaY ** 2,
@@ -1120,6 +1161,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
 type IndexedObstacleSegment = {
   z: number
+  traceThickness: number
   A: { x: number; y: number; z: number }
   B: { x: number; y: number; z: number }
   deltaX: number

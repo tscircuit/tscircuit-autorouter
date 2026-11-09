@@ -79,7 +79,18 @@ export function mergeConnections(
   // Construct the new merged connections
   for (const simpleRouteConnectionGroup of connectionTempIdGroups.values()) {
     if (simpleRouteConnectionGroup.length === 1) {
-      mergedSimpleRouteConnections.push(simpleRouteConnectionGroup[0])
+      const connection = simpleRouteConnectionGroup[0]
+      mergedSimpleRouteConnections.push(
+        connection.minTraceWidth === undefined
+          ? connection
+          : {
+              ...connection,
+              nominalTraceWidth: Math.max(
+                connection.nominalTraceWidth ?? 0,
+                connection.minTraceWidth,
+              ),
+            },
+      )
       continue // No merging needed for groups of one
     }
 
@@ -89,6 +100,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    let minTraceWidth: number | undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -125,6 +137,13 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
 
+      if (simpleRouteConnection.minTraceWidth !== undefined) {
+        minTraceWidth = Math.max(
+          minTraceWidth ?? 0,
+          simpleRouteConnection.minTraceWidth,
+        )
+      }
+
       // Take the nominalTraceWidth from the first connection for now
       // A more robust solution might average or pick the max/min based on context
       if (
@@ -152,7 +171,11 @@ export function mergeConnections(
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      minTraceWidth,
+      nominalTraceWidth:
+        minTraceWidth === undefined
+          ? nominalTraceWidth
+          : Math.max(nominalTraceWidth ?? 0, minTraceWidth),
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)

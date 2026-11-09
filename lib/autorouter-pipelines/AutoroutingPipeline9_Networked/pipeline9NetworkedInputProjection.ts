@@ -32,17 +32,24 @@ export const getMaximumPipeline9NodeBounds = ({
   nodeWithPortPoints,
   obstacleMargin,
   traceWidth,
+  traceWidthByConnectionName,
   viaDiameter,
 }: {
   nodeWithPortPoints: NodeWithPortPoints
   obstacleMargin: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   viaDiameter: number
 }): Bounds => {
   const nodeBounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
   const clearance =
     obstacleMargin +
-    Math.max(traceWidth, viaDiameter) / 2 +
+    Math.max(
+      traceWidth,
+      viaDiameter,
+      ...Object.values(traceWidthByConnectionName ?? {}),
+    ) /
+      2 +
     OBSTACLE_OVERLAP_TOLERANCE
   return {
     minX:
@@ -235,6 +242,7 @@ export function projectPipeline9RegionalHighDensityInput({
   obstacles,
   obstacleMargin,
   traceWidth,
+  traceWidthByConnectionName,
   viaDiameter,
 }: {
   nodeWithPortPoints: NodeWithPortPoints
@@ -242,12 +250,14 @@ export function projectPipeline9RegionalHighDensityInput({
   obstacles: Obstacle[]
   obstacleMargin: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   viaDiameter: number
 }): Pipeline9RegionalHighDensityProjection {
   const maximumNodeBounds = getMaximumPipeline9NodeBounds({
     nodeWithPortPoints,
     obstacleMargin,
     traceWidth,
+    traceWidthByConnectionName,
     viaDiameter,
   })
   const relevantIds = new Set<string>()
@@ -311,6 +321,7 @@ export function projectPipeline9OrdinaryHighDensityInput({
   obstacles,
   obstacleMargin,
   traceWidth,
+  traceWidthByConnectionName,
   viaDiameter,
 }: {
   nodeWithPortPoints: NodeWithPortPoints
@@ -319,12 +330,14 @@ export function projectPipeline9OrdinaryHighDensityInput({
   obstacles: Obstacle[]
   obstacleMargin: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   viaDiameter: number
 }): Pipeline9OrdinaryHighDensityProjection {
   const grownNodeBounds = getMaximumPipeline9NodeBounds({
     nodeWithPortPoints,
     obstacleMargin,
     traceWidth,
+    traceWidthByConnectionName,
     viaDiameter,
   })
   const nodeConnectionNames = getNodeConnectionNames(nodeWithPortPoints)

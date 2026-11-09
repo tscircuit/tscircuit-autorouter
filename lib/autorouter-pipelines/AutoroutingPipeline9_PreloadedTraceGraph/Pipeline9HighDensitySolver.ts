@@ -17,7 +17,11 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import type {
+  Obstacle,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
@@ -34,6 +38,8 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { getMinimumTraceWidthByConnectionName } from "lib/utils/getMinimumTraceWidthByConnectionName"
+import { MinimumTraceWidthB01Solver } from "./MinimumTraceWidthB01Solver"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -48,6 +54,7 @@ export type Pipeline9HighDensitySolverParams = {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
+  connections?: SimpleRouteConnection[]
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -325,6 +332,7 @@ export type Pipeline9RegularNodeSolverParams = {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   obstacleMargin: number
   effort: number
   nodePfById:
@@ -356,6 +364,7 @@ export const createPipeline9RegularNodeSolver = ({
   priorityDagSearch = false,
   captureSearchDebug = false,
   traceWidth,
+  traceWidthByConnectionName,
   obstacleMargin,
   effort,
   nodePfById,
@@ -371,6 +380,7 @@ export const createPipeline9RegularNodeSolver = ({
     connMap,
     viaDiameter,
     traceWidth,
+    traceWidthByConnectionName,
     obstacleMargin,
     effort,
     nodePfById,
@@ -407,6 +417,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
+  protected readonly traceWidthByConnectionName?: Readonly<
+    Record<string, number>
+  >
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
   readonly effort: number
@@ -416,14 +429,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
-  readonly failedSolvers: HighDensitySolverB01[] = []
+  readonly failedSolvers: Array<
+    HighDensitySolverB01 | MinimumTraceWidthB01Solver
+  > = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
   readonly removedFixedRouteConnectionNames = new Set<string>()
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
-  activeB01Solver: HighDensitySolverB01 | null = null
+  activeB01Solver: HighDensitySolverB01 | MinimumTraceWidthB01Solver | null =
+    null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
   activeFallbackFixedObstacleRoutes: PreloadedHighDensityRoute[] = []
@@ -444,6 +460,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
+    const widths = getMinimumTraceWidthByConnectionName(
+      params.connections ?? [],
+    )
+    this.traceWidthByConnectionName =
+      widths.size === 0 ? undefined : Object.fromEntries(widths)
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
@@ -669,6 +690,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
+  protected getTraceWidthsForConnections(
+    node: NodeWithPortPoints,
+  ): Readonly<Record<string, number>> | undefined {
+    const widths: Record<string, number> = {}
+    for (const point of node.portPoints) {
+      const width = Math.max(
+        this.traceWidthByConnectionName?.[point.connectionName] ?? 0,
+        this.traceWidthByConnectionName?.[point.rootConnectionName ?? ""] ?? 0,
+      )
+      if (width > this.traceWidth) widths[point.connectionName] = width
+    }
+    return Object.keys(widths).length === 0 ? undefined : widths
+  }
+
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
@@ -677,6 +712,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      traceWidthByConnectionName: this.getTraceWidthsForConnections(node),
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -758,6 +794,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      traceWidthByConnectionName: this.getTraceWidthsForConnections(
+        fallbackProblem.nodeWithPortPoints,
+      ),
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -1195,7 +1234,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
-    const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
+    const traceWidthByConnectionName = this.getTraceWidthsForConnections(node)
+    const routedCopperRadius =
+      Math.max(
+        this.traceWidth,
+        this.viaDiameter,
+        ...Object.values(traceWidthByConnectionName ?? {}),
+      ) / 2
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
@@ -1241,7 +1286,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleClearanceMargin = this.obstacleMargin
     }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
-    this.activeB01Solver = new HighDensitySolverB01({
+    const b01Params: ConstructorParameters<typeof HighDensitySolverB01>[0] = {
       ...defaultB01Params,
       nodeWithPortPoints: normalizedNode as B01NodeWithPortPoints,
       obstacles: [
@@ -1255,7 +1300,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleClearanceMargin,
       ...this.params.b01RepairOptions,
       effort: this.effort,
-    })
+    }
+    this.activeB01Solver = traceWidthByConnectionName
+      ? new MinimumTraceWidthB01Solver(b01Params, traceWidthByConnectionName)
+      : new HighDensitySolverB01(b01Params)
     if (this.maxB01Rips !== undefined) {
       this.activeB01Solver.MAX_RIPS = this.maxB01Rips
     }

@@ -1,3 +1,5 @@
+import { Pipeline9TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
+import { getMinimumTraceWidthByConnectionName } from "lib/utils/getMinimumTraceWidthByConnectionName"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -304,6 +306,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private readonly hasConnectionMinimumTraceWidths: boolean
+  private minimumTraceWidths: ReadonlyMap<string, number>
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -365,6 +369,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.minimumTraceWidths = getMinimumTraceWidthByConnectionName(
+            cms.srjWithPointPairs!.connections,
+          )
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -543,6 +550,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             graph,
             connections,
+            minimumTraceWidthSrj: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!
+              : undefined,
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
@@ -594,6 +604,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preserveConnectionNames: cms.hasConnectionMinimumTraceWidths
+            ? new Set(cms.minimumTraceWidths.keys())
+            : undefined,
         },
       ],
     ),
@@ -660,6 +673,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaHoleEdgeToViaHoleEdgeClearance:
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
+            connections: cms.hasConnectionMinimumTraceWidths
+              ? cms.srjWithPointPairs!.connections
+              : undefined,
             obstacleMargin,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -831,6 +847,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         connection: cms.srjWithPointPairs!.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+        deferMinimumClearanceValidation: cms.hasConnectionMinimumTraceWidths,
         layerCount: cms.srj.layerCount,
       },
     ]),
@@ -899,6 +916,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline9EffortCleanupSolver,
       (cms) => {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
+        const preloadedHdRoutes = preloadedTraces.flatMap((trace, index) =>
+          convertPreloadedTraceToHdRoutes(
+            trace,
+            index,
+            cms.srj.layerCount,
+            cms.viaDiameter,
+            cms.connMap,
+          ),
+        )
+        const minimumWidths = cms.minimumTraceWidths
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = canonicalizePipeline9HdRoutes(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
@@ -948,15 +975,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               layerCount: cms.srj.layerCount,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
               minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-              otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
-                convertPreloadedTraceToHdRoutes(
-                  trace,
-                  index,
-                  cms.srj.layerCount,
-                  cms.viaDiameter,
-                  cms.connMap,
-                ),
-              ),
+              otherHdRoutes: preloadedHdRoutes,
               enableCrossingViaReduction: true,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
@@ -983,8 +1002,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               }
             },
-            isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateCleanupDrc(convert(routes)).errors.length === 0,
+            isValid: (routes: HighDensityRoute[]): boolean => {
+              const widthsValid = routes.every((route) => {
+                const minimum = Math.max(
+                  minimumWidths.get(route.connectionName) ?? 0,
+                  minimumWidths.get(route.rootConnectionName ?? "") ?? 0,
+                )
+                return (
+                  route.traceThickness >= minimum - 1e-6 &&
+                  route.route.every(
+                    (point) =>
+                      (point.traceThickness ?? route.traceThickness) >=
+                      minimum - 1e-6,
+                  )
+                )
+              })
+              return (
+                widthsValid &&
+                (minimumWidths.size === 0 ||
+                  cms.getMinimumClearanceViolation(
+                    routes,
+                    preloadedHdRoutes,
+                  ) === null) &&
+                evaluateCleanupDrc(convert(routes)).errors.length === 0
+              )
+            },
           },
         ]
       },
@@ -1103,6 +1145,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ...configuredOptions,
             onlyConnectionNames,
           },
+          cms.hasConnectionMinimumTraceWidths
+            ? Array.from(cms.minimumTraceWidths.keys())
+            : undefined,
         ]
       },
     ),
@@ -1115,6 +1160,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
+    this.minimumTraceWidths = getMinimumTraceWidthByConnectionName(
+      srj.connections,
+    )
+    this.hasConnectionMinimumTraceWidths = this.minimumTraceWidths.size > 0
+    if (this.hasConnectionMinimumTraceWidths) {
+      for (const step of this.pipelineDef) {
+        if (step.solverClass === TraceSimplificationSolver) {
+          step.solverClass = Pipeline9TraceSimplificationSolver
+        }
+      }
+    }
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -1219,6 +1275,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
   }
 
+  private getMinimumClearanceViolation(
+    routes: HighDensityRoute[],
+    fixedRoutes: HighDensityRoute[],
+  ): string | null {
+    const validator = new TraceWidthSolver({
+      hdRoutes: [...fixedRoutes, ...routes],
+      connection: this.srjWithPointPairs!.connections,
+      obstacles: this.srj.obstacles,
+      connMap: this.connMap,
+      minTraceWidth: this.minTraceWidth,
+      obstacleMargin: this.srj.minTraceToPadEdgeClearance ?? 0.15,
+      minTraceToHoleEdgeClearance: this.srj.minTraceToHoleEdgeClearance,
+      layerCount: this.srj.layerCount,
+    })
+    return validator.getMinimumClearanceViolation(routes)
+  }
+
   computeProgress(): number {
     const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
     return (
@@ -1230,6 +1303,56 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      const minimumWidths = this.minimumTraceWidths
+      const outputTraces = this.powerTraceExpansionSolver!.getOutput()
+      for (const trace of outputTraces) {
+        const minimum = minimumWidths.get(trace.connection_name)
+        if (minimum === undefined) continue
+        const violation = trace.route.find(
+          (point) =>
+            point.route_type === "wire" &&
+            point.width + 1e-6 < Math.max(this.srj.minTraceWidth, minimum),
+        )
+        if (violation) {
+          this.failed = true
+          this.error = `Connection "${trace.connection_name}" final copper violates minimum trace width ${minimum}mm`
+          return
+        }
+      }
+      if (minimumWidths.size > 0) {
+        const hdRoutes = outputTraces.flatMap((trace, index) =>
+          convertPreloadedTraceToHdRoutes(
+            trace,
+            index,
+            this.srj.layerCount,
+            this.viaDiameter,
+            this.connMap,
+          ).map((route) => ({
+            ...route,
+            connectionName: trace.connection_name,
+            rootConnectionName: trace.connection_name,
+          })),
+        )
+        const fixedHdRoutes = this.getPowerTraceExpansionFixedTraces().flatMap(
+          (trace, index) =>
+            convertPreloadedTraceToHdRoutes(
+              trace,
+              index,
+              this.srj.layerCount,
+              this.viaDiameter,
+              this.connMap,
+            ),
+        )
+        const violation = this.getMinimumClearanceViolation(
+          hdRoutes,
+          fixedHdRoutes,
+        )
+        if (violation) {
+          this.failed = true
+          this.error = violation
+          return
+        }
+      }
       this.solved = true
       return
     }

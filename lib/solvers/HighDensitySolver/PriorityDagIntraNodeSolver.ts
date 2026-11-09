@@ -305,7 +305,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      traceThickness: this.traceWidth,
+      traceThickness: this.getTraceWidthForConnection(this.tasks[task]),
+      respectObstacleTraceWidths: this.traceWidthByConnectionName !== undefined,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
     }
@@ -381,7 +382,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       route.connectionName !== expected.connectionName ||
       route.rootConnectionName !== expected.rootConnectionName ||
       route.regionId !== this.regionId ||
-      route.traceThickness !== this.traceWidth ||
+      route.traceThickness !== this.getTraceWidthForConnection(expected) ||
       route.viaDiameter !== this.viaDiameter ||
       !start ||
       !end ||

@@ -21,6 +21,7 @@ import {
 } from "./pipeline9RegionalFallback"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { getMinimumTraceWidthByConnectionName } from "lib/utils/getMinimumTraceWidthByConnectionName"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 export type Pipeline9RegionalB01RepairResult = {
@@ -441,6 +442,7 @@ export const preparePipeline9RegionalB01Candidate = ({
   )
   const solver = new Pipeline9HighDensitySolver({
     nodePortPoints: [movableProblem.nodeWithPortPoints],
+    connections: srj.connections,
     fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes].map((route) => ({
       ...route,
       rootConnectionName:
@@ -566,8 +568,11 @@ export const preparePipeline9RegularRegionalCandidate = ({
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
+  const minimumWidths = getMinimumTraceWidthByConnectionName(srj.connections)
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
+    traceWidthByConnectionName:
+      minimumWidths.size > 0 ? Object.fromEntries(minimumWidths) : undefined,
     colorMap,
     connMap,
     viaDiameter,

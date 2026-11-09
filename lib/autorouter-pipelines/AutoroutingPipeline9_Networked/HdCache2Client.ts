@@ -300,6 +300,7 @@ const isValidRemoteRoutes = (
     nodeWithPortPoints: input.nodeWithPortPoints,
     obstacleMargin: input.obstacleMargin,
     traceWidth: input.traceWidth,
+    traceWidthByConnectionName: input.traceWidthByConnectionName,
     viaDiameter: input.viaDiameter,
   })
   const isPortPointForConnection = (
@@ -347,6 +348,15 @@ const isValidRemoteRoutes = (
       }
     }
 
+    const requestedWidth =
+      input.traceWidthByConnectionName?.[route.connectionName as string]
+    if (
+      requestedWidth !== undefined &&
+      (route.traceThickness as number) < requestedWidth - 1e-6
+    ) {
+      return false
+    }
+
     for (const pointValue of route.route) {
       if (!pointValue || typeof pointValue !== "object") return false
       const point = pointValue as Record<string, unknown>
@@ -371,7 +381,9 @@ const isValidRemoteRoutes = (
         point.traceThickness !== undefined &&
         (typeof point.traceThickness !== "number" ||
           !Number.isFinite(point.traceThickness) ||
-          point.traceThickness <= 0)
+          point.traceThickness <= 0 ||
+          (requestedWidth !== undefined &&
+            point.traceThickness < requestedWidth - 1e-6))
       ) {
         return false
       }

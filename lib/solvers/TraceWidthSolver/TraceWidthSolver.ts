@@ -1,3 +1,4 @@
+import { getMinimumTraceWidthByConnectionName } from "lib/utils/getMinimumTraceWidthByConnectionName"
 import { BaseSolver } from "../BaseSolver"
 import {
   distance,
@@ -51,6 +52,8 @@ export interface TraceWidthSolverInput {
   obstacleMargin?: number
   minTraceToHoleEdgeClearance?: number
   layerCount: number
+  /** The caller must validate minimum clearance after its geometry repair stages. */
+  deferMinimumClearanceValidation?: boolean
 }
 
 /**
@@ -80,6 +83,9 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceToHoleEdgeClearance?: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
+  private readonly connectionMinimumTraceWidths: ReadonlyMap<string, number>
+  private currentMinimumTraceWidth: number
+  private readonly deferMinimumClearanceValidation: boolean
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -110,6 +116,12 @@ export class TraceWidthSolver extends BaseSolver {
 
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
+    this.currentMinimumTraceWidth = input.minTraceWidth
+    this.deferMinimumClearanceValidation =
+      input.deferMinimumClearanceValidation ?? false
+    this.connectionMinimumTraceWidths = getMinimumTraceWidthByConnectionName(
+      input.connection,
+    )
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
     this.nominalTraceWidth = 0
@@ -158,6 +170,18 @@ export class TraceWidthSolver extends BaseSolver {
     return undefined
   }
 
+  private getExplicitMinimumForRoute(
+    route: HighDensityRoute,
+  ): number | undefined {
+    const byName = this.connectionMinimumTraceWidths.get(route.connectionName)
+    const byRoot =
+      route.rootConnectionName === undefined
+        ? undefined
+        : this.connectionMinimumTraceWidths.get(route.rootConnectionName)
+    if (byName === undefined && byRoot === undefined) return undefined
+    return Math.max(byName ?? 0, byRoot ?? 0)
+  }
+
   _step() {
     // If no current trace, dequeue one
     if (!this.currentTrace) {
@@ -171,7 +195,16 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       // Initialize the new trace processing
-      const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
+      const explicitMinimum = this.getExplicitMinimumForRoute(nextTrace)
+      this.currentMinimumTraceWidth = Math.max(
+        this.minTraceWidth,
+        explicitMinimum ?? 0,
+      )
+      const requestedNominal = this.getNominalTraceWidthForRoute(nextTrace)
+      const nominalTraceWidth =
+        explicitMinimum === undefined
+          ? requestedNominal
+          : Math.max(this.currentMinimumTraceWidth, requestedNominal ?? 0)
       if (nominalTraceWidth === undefined) {
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
@@ -183,12 +216,25 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+      const midWidth =
+        (this.nominalTraceWidth + this.currentMinimumTraceWidth) / 2
+      this.TRACE_WIDTH_SCHEDULE =
+        explicitMinimum === undefined
+          ? [this.nominalTraceWidth, midWidth]
+          : [
+              ...new Set([
+                this.nominalTraceWidth,
+                midWidth,
+                this.currentMinimumTraceWidth,
+              ]),
+            ]
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(
-          this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
+          this.createRouteWithWidth(
+            this.currentTrace,
+            this.currentMinimumTraceWidth,
+          ),
         )
         this.currentTrace = null
         return
@@ -223,12 +269,35 @@ export class TraceWidthSolver extends BaseSolver {
           this.TRACE_WIDTH_SCHEDULE[this.currentScheduleIndex]!
         this.initializeCursor()
       } else {
-        // Exhausted all widths in schedule, use minTraceWidth as fallback
-        this.finalizeCurrentTrace(this.minTraceWidth)
+        if (
+          this.getExplicitMinimumForRoute(this.currentTrace) !== undefined &&
+          !this.deferMinimumClearanceValidation
+        ) {
+          this.failed = true
+          this.error = `Connection "${this.currentTrace.connectionName}" cannot meet minimum trace width ${this.currentMinimumTraceWidth}mm with the required clearance`
+          return
+        }
+        this.finalizeCurrentTrace(this.currentMinimumTraceWidth)
       }
     } else if (!stepped) {
       this.finalizeCurrentTrace(this.currentTargetWidth)
     }
+  }
+
+  getMinimumClearanceViolation(
+    routes: readonly HighDensityRoute[] = this.hdRoutes,
+  ): string | null {
+    for (const route of routes) {
+      const minimum = this.getExplicitMinimumForRoute(route)
+      if (minimum === undefined) continue
+      this.currentTrace = route
+      this.currentTargetWidth = Math.max(this.minTraceWidth, minimum)
+      const required = this.currentTargetWidth / 2 + this.obstacleMargin
+      if (this.getMinimumRouteClearance() + 1e-6 < required) {
+        return `Connection "${route.connectionName}" final copper cannot meet minimum trace width ${this.currentTargetWidth}mm with the required clearance`
+      }
+    }
+    return null
   }
 
   /**
@@ -682,6 +751,12 @@ export class TraceWidthSolver extends BaseSolver {
     route: HighDensityRoute,
     traceWidth: number,
   ): RoutePoint[] {
+    if (this.getExplicitMinimumForRoute(route) !== undefined) {
+      return route.route.map((point) => ({
+        ...point,
+        traceThickness: traceWidth,
+      }))
+    }
     if (route.route.length < 2) {
       return route.route.map((point) => ({
         ...point,

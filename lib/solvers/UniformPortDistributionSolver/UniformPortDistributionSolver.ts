@@ -30,6 +30,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  preserveConnectionNames?: ReadonlySet<string>
 }
 
 /**
@@ -130,6 +131,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (!sharedEdge) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    if (
+      familyRaw.some(
+        (point) =>
+          this.input.preserveConnectionNames?.has(point.connectionName) ||
+          this.input.preserveConnectionNames?.has(
+            point.rootConnectionName ?? "",
+          ),
+      )
+    )
+      return
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
       sharedEdge,
       obstacles: this.input.obstacles,

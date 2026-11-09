@@ -142,6 +142,12 @@ export class CachedPortfolioSingleIntraNodeSolver
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
+      ...(this.constructorParams.traceWidthByConnectionName
+        ? {
+            traceWidthByConnectionName:
+              this.constructorParams.traceWidthByConnectionName,
+          }
+        : {}),
       viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
       obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),
       // TODO connMap

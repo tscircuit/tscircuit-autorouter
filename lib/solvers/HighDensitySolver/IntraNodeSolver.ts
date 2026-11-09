@@ -74,6 +74,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   minDistBetweenEnteringPoints: number
   viaDiameter: number
   traceWidth: number
+  readonly traceWidthByConnectionName?: Readonly<Record<string, number>>
   obstacleMargin: number
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
@@ -101,6 +102,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     viaDiameter?: number
     traceWidth?: number
+    traceWidthByConnectionName?: Readonly<Record<string, number>>
     obstacleMargin?: number
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
@@ -123,6 +125,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
+    this.traceWidthByConnectionName = params.traceWidthByConnectionName
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
@@ -218,6 +221,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
   }
 
+  protected getTraceWidthForConnection(connection: {
+    connectionName: string
+    rootConnectionName?: string
+  }): number {
+    return Math.max(
+      this.traceWidth,
+      this.traceWidthByConnectionName?.[connection.connectionName] ?? 0,
+      this.traceWidthByConnectionName?.[connection.rootConnectionName ?? ""] ??
+        0,
+    )
+  }
+
   protected getSingleRouteSolverOpts(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
@@ -261,7 +276,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      traceThickness: this.traceWidth,
+      traceThickness: this.getTraceWidthForConnection(unsolvedConnection),
+      respectObstacleTraceWidths: this.traceWidthByConnectionName !== undefined,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
     }
@@ -299,7 +315,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       connectionName: unsolvedConnection.connectionName,
       rootConnectionName: unsolvedConnection.rootConnectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
-      traceThickness: this.traceWidth,
+      traceThickness: opts.traceThickness!,
       viaDiameter: this.viaDiameter,
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],

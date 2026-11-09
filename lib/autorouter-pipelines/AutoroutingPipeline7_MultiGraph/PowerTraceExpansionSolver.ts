@@ -11,17 +11,36 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
+  private readonly preservedTraces: SimplifiedPcbTraces
 
   constructor(
     public readonly inputSrj: SimpleRouteJson,
     public readonly options: PowerTraceExpanderOptions = {},
+    private readonly preserveConnectionNames?: readonly string[],
   ) {
     super()
+    const preservedNames = new Set(preserveConnectionNames)
+    const traces = inputSrj.traces ?? []
+    this.preservedTraces = traces.filter((trace) =>
+      preservedNames.has(trace.connection_name),
+    )
+    const preparedInput: SimpleRouteJson & {
+      fixedTraces?: SimplifiedPcbTraces
+    } = {
+      ...inputSrj,
+      minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
+    }
+    if (this.preservedTraces.length > 0) {
+      preparedInput.traces = traces.filter(
+        (trace) => !preservedNames.has(trace.connection_name),
+      )
+      preparedInput.fixedTraces = [
+        ...(preparedInput.fixedTraces ?? []),
+        ...this.preservedTraces,
+      ]
+    }
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
-      {
-        ...inputSrj,
-        minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
-      } as unknown as PowerTraceExpanderInput,
+      preparedInput as unknown as PowerTraceExpanderInput,
       options,
     )
     if (options.onlyConnectionNames?.length === 0) {
@@ -50,11 +69,13 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     if (solver.solved) this.solved = true
   }
 
-  override getConstructorParams(): readonly [
-    SimpleRouteJson,
-    PowerTraceExpanderOptions,
-  ] {
-    return [this.inputSrj, this.options] as const
+  override getConstructorParams():
+    | readonly [SimpleRouteJson, PowerTraceExpanderOptions]
+    | readonly [SimpleRouteJson, PowerTraceExpanderOptions, readonly string[]] {
+    if (this.preserveConnectionNames === undefined) {
+      return [this.inputSrj, this.options] as const
+    }
+    return [this.inputSrj, this.options, this.preserveConnectionNames] as const
   }
 
   getOutput(): SimplifiedPcbTraces {
@@ -62,7 +83,10 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       throw new Error("Cannot get power trace expansion output before solving")
     }
 
-    return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+    return [
+      ...this.preservedTraces,
+      ...(this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces),
+    ]
   }
 
   override visualize(): GraphicsObject {

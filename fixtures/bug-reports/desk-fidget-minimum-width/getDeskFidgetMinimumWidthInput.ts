@@ -1,14 +1,10 @@
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import savedInput from "./input.srj.json"
-
-type MinimumWidthInput = Omit<SimpleRouteJson, "connections"> & {
-  connections: Array<SimpleRouteConnection & { minTraceWidth?: number }>
-}
 
 export const getDeskFidgetMinimumWidthInput = (
   policy: "nominal" | "minimum",
-): MinimumWidthInput => {
-  const input = structuredClone(savedInput) as MinimumWidthInput
+): SimpleRouteJson => {
+  const input = structuredClone(savedInput) as SimpleRouteJson
   if (policy === "minimum") {
     for (const connection of input.connections) {
       if (connection.nominalTraceWidth === 0.15) {

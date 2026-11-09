@@ -24,6 +24,7 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   colorMap: Record<string, string>
   viaDiameter: number
   traceWidth: number
+  traceWidthByConnectionName?: Readonly<Record<string, number>>
   obstacleMargin: number
   effort: 1
   obstacles: Obstacle[]

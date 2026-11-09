@@ -177,6 +177,7 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   __netConnectionName?: string
+  minTraceWidth?: number
   nominalTraceWidth?: number
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number

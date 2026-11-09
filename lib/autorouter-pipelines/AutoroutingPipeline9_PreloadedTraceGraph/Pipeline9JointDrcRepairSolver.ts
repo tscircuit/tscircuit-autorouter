@@ -37,6 +37,7 @@ import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegional
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
+import { applyPipeline9MinimumWidthViaRepairs } from "./applyPipeline9MinimumWidthViaRepairs"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
@@ -1781,7 +1782,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       this.stats = { ...this.stats, ...solver.stats }
       this.activeSubSolver = null
-      this.solved = true
+      this.finishMinimumWidthViaClearance()
       return
     }
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
@@ -2259,7 +2260,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      this.solved = true
+      this.finishMinimumWidthViaClearance()
       return
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
@@ -2270,6 +2271,33 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     this.activeSubSolver = this.traceContactRepairSolver
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
+  }
+
+  private finishMinimumWidthViaClearance(): void {
+    if (!this.combinedOutput) {
+      throw new Error("Pipeline9 minimum-width via repair is missing its input")
+    }
+    if (
+      !this.params.newConnections.some(
+        (connection) => connection.minTraceWidth !== undefined,
+      )
+    ) {
+      this.solved = true
+      return
+    }
+    this.combinedOutput = applyPipeline9MinimumWidthViaRepairs({
+      inputSrj: {
+        ...this.params.originalSrj,
+        traces: this.getUpdatedPreloadedTraces(),
+      },
+      srjWithPointPairs: this.params.srjWithPointPairs,
+      connections: this.params.newConnections,
+      routes: this.combinedOutput,
+      otherHdRoutes: this.fixedPreloadedObstacleRoutes,
+      connMap: this.params.connMap,
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
+    })
+    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
