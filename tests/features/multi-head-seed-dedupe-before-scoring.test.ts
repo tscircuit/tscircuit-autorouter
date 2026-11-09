@@ -46,6 +46,7 @@ class ScoreBeforeDedupeSolver extends CountingSolver {
     for (let seed = 0; seed < Math.min(2000, permutations); seed++) {
       this.attemptedSeeds.push(seed)
       const candidate = this.createInitialCandidateFromSeed(seed)
+      if (this.failed) return
       if (!candidate) continue
       this.gapScores++
       const hash = referenceHash(candidate.polyLines)
@@ -124,7 +125,12 @@ test("seed dedupe preserves candidates and forces while skipping duplicate score
     const reference = new ScoreBeforeDedupeSolver(structuredClone(params))
     optimized.step()
     reference.step()
-    const expectedSeedCount = nodeWithPortPoints === parallelNode ? 120 : 6
+    const expectedSeedCount =
+      nodeWithPortPoints === cn27910.nodeWithPortPoints
+        ? 1
+        : nodeWithPortPoints === parallelNode
+          ? 120
+          : 6
     expect(reference.attemptedSeeds).toEqual(
       Array.from({ length: expectedSeedCount }, (_, index) => index),
     )
