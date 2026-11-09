@@ -40,11 +40,16 @@ type FetchState = {
   created: RecordItem[]
   polls: number
 }
-async function fakeFetch(
-  state: FetchState,
-  input: URL,
-  init: { method?: string; body?: string },
-): Promise<unknown> {
+type FetchInputs = {
+  state: FetchState
+  input: URL
+  init: { method?: string; body?: string }
+}
+async function fakeFetch({
+  state,
+  input,
+  init,
+}: FetchInputs): Promise<unknown> {
   const { options, calls, created } = state
   calls.push({ url: input.toString(), method: init.method ?? "GET" })
   if (input.pathname === "/v6/deployments")
@@ -168,6 +173,7 @@ async function run(options: Options = {}): Promise<{
         VERCEL_TEAM_ID: "team_test",
         VERCEL_PROJECT_ID: "prj_test",
       }
+  const fetchState: FetchState = { options, calls, created, polls: 0 }
   await new AsyncFunction(
     "github",
     "context",
@@ -190,7 +196,8 @@ async function run(options: Options = {}): Promise<{
       },
     },
     { env },
-    fakeFetch.bind(null, { options, calls, created, polls: 0 }),
+    (input: URL, init: FetchInputs["init"]): Promise<unknown> =>
+      fakeFetch({ state: fetchState, input, init }),
     (resolve: () => void): void => {
       resolve()
     },
