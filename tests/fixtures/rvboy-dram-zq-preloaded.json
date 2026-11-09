@@ -1,0 +1,127 @@
+{
+  "type": "pcb_trace",
+  "pcb_trace_id": "source_net_52_0",
+  "connection_name": "source_net_52",
+  "connectsTo": [
+    "pcb_port_213",
+    "pcb_port_309"
+  ],
+  "route": [
+    {
+      "route_type": "wire",
+      "x": 1.2249999999999996,
+      "y": 6,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 1.135,
+      "y": 6.24,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 1.242,
+      "y": 6.429,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 1.489692049712331,
+      "y": 6.676692049712331,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 2.1636920497123313,
+      "y": 6.676692049712331,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 2.165,
+      "y": 6.678,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "via",
+      "x": 2.165,
+      "y": 6.678,
+      "from_layer": "top",
+      "to_layer": "bottom",
+      "via_diameter": 0.45,
+      "via_hole_diameter": 0.2
+    },
+    {
+      "route_type": "wire",
+      "x": 2.165,
+      "y": 6.678,
+      "width": 0.1,
+      "layer": "bottom"
+    },
+    {
+      "route_type": "wire",
+      "x": 4.37889326390305,
+      "y": 6.678,
+      "width": 0.1,
+      "layer": "bottom"
+    },
+    {
+      "route_type": "wire",
+      "x": 6.236553887040348,
+      "y": 4.8203393768627025,
+      "width": 0.1,
+      "layer": "bottom"
+    },
+    {
+      "route_type": "wire",
+      "x": 6.440000623137297,
+      "y": 4.8203393768627025,
+      "width": 0.1,
+      "layer": "bottom"
+    },
+    {
+      "route_type": "wire",
+      "x": 6.469339999999999,
+      "y": 4.791,
+      "width": 0.1,
+      "layer": "bottom"
+    },
+    {
+      "route_type": "via",
+      "x": 6.469339999999999,
+      "y": 4.791,
+      "from_layer": "bottom",
+      "to_layer": "top",
+      "via_diameter": 0.45,
+      "via_hole_diameter": 0.2
+    },
+    {
+      "route_type": "wire",
+      "x": 6.469339999999999,
+      "y": 4.791,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 6.469339999999999,
+      "y": 3.820660000000001,
+      "width": 0.1,
+      "layer": "top"
+    },
+    {
+      "route_type": "wire",
+      "x": 6.49,
+      "y": 3.8,
+      "width": 0.1,
+      "layer": "top"
+    }
+  ]
+}

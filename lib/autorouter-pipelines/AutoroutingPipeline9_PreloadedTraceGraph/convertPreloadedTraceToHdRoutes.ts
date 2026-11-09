@@ -53,20 +53,46 @@ export const convertPreloadedTraceToHdRoutes = (
   for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
     const point = trace.route[pointIndex]!
     if (point.route_type === "via") {
+      const fromZ = mapLayerNameToZ(point.from_layer, layerCount)
+      const toZ = mapLayerNameToZ(point.to_layer, layerCount)
+      // A via section can acquire planar wire when routing relocates it.
+      // Inherit the adjoining copper width so that new wire is planned and
+      // serialized at its physical width, never the bare-via placeholder.
+      const adjoiningWireWidths = trace.route.flatMap((start, index) => {
+        const end = trace.route[index + 1]
+        if (
+          start.route_type !== "wire" ||
+          end?.route_type !== "wire" ||
+          start.layer !== end.layer
+        )
+          return []
+        const wireZ = mapLayerNameToZ(start.layer, layerCount)
+        if (wireZ < Math.min(fromZ, toZ) || wireZ > Math.max(fromZ, toZ))
+          return []
+        return [start, end].some(
+          (endpoint) =>
+            Math.hypot(endpoint.x - point.x, endpoint.y - point.y) <=
+            MIN_ROUTE_DIMENSION,
+        )
+          ? [start.width]
+          : []
+      })
       addRoute(
         [
           {
             x: point.x,
             y: point.y,
-            z: mapLayerNameToZ(point.from_layer, layerCount),
+            z: fromZ,
           },
           {
             x: point.x,
             y: point.y,
-            z: mapLayerNameToZ(point.to_layer, layerCount),
+            z: toZ,
           },
         ],
-        MIN_ROUTE_DIMENSION,
+        adjoiningWireWidths.length > 0
+          ? Math.min(...adjoiningWireWidths)
+          : MIN_ROUTE_DIMENSION,
         point.via_diameter ?? defaultViaDiameter,
         [{ x: point.x, y: point.y }],
         pointIndex,
