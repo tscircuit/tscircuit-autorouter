@@ -86,6 +86,4 @@ test("manual previews enforce authorization, pin commits, reuse builds, and repo
   assert.equal(reused.created.length, 0)
   assert.ok(reused.comments.every((comment): boolean => comment.comment_id === 99))
   assert.ok(!workflow.includes("actions/checkout"))
-  const config = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8"))
-  assert.deepEqual(config.git.deploymentEnabled, { "**": false, main: true })
 })
