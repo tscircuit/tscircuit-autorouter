@@ -208,7 +208,7 @@ test("manual previews enforce authorization, pin commits, reuse builds, and repo
     const result = await run({ event })
     assert.deepEqual(result.failures, [])
     assert.equal(result.created.length, 1)
-    assert.equal(result.created[0].target, "preview")
+    assert.equal(Object.hasOwn(result.created[0], "target"), false)
     assert.equal((result.created[0].gitSource as { sha: string }).sha, sha)
     assert.ok(result.comments[0].body!.includes("request received"))
     assert.ok(
