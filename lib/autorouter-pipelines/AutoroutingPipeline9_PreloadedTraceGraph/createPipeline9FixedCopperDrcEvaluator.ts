@@ -7,18 +7,20 @@ import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRout
 
 type DrcError = Record<string, unknown>
 type ViaLocationKey = string
-type ViaGeometryKey = string
+type CopperGeometryKey = string
 
 /** Retains earlier copper that has no pad identity in Circuit JSON. */
 export const createPipeline9FixedCopperDrcEvaluator = ({
   inputSrj,
   srjWithPointPairs,
   representedPadObstacleIndexes,
+  traceClearance,
   viaClearance,
 }: {
   inputSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   representedPadObstacleIndexes: ReadonlySet<number>
+  traceClearance?: number
   viaClearance?: number
 }): ((traces: SimplifiedPcbTrace[]) => DrcError[]) => {
   if (
@@ -45,18 +47,17 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     inputSrj.defaultObstacleMargin ?? 0,
     inputSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
-  const errorsByViaGeometry = new Map<ViaGeometryKey, DrcError[]>()
+  const errorsByCopperGeometry = new Map<CopperGeometryKey, DrcError[]>()
   return (traces): DrcError[] => {
-    // Wire-only candidates leave this via-only check unchanged. Include trace
-    // identity, ownership, diameter and layer span so moved vias are rechecked.
+    // Wire changes must invalidate the cached check against earlier copper.
     const key = JSON.stringify(
       traces.map((trace) => [
         trace.pcb_trace_id,
         trace.connection_name,
-        trace.route.filter((point) => point.route_type === "via"),
+        trace.route,
       ]),
-    ) as ViaGeometryKey
-    const cachedErrors = errorsByViaGeometry.get(key)
+    )
+    const cachedErrors = errorsByCopperGeometry.get(key)
     if (cachedErrors !== undefined) return cachedErrors
     const viaIds = new Map<ViaLocationKey, string>()
     const routes = traces.flatMap((trace, traceIndex) =>
@@ -67,24 +68,27 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         inputSrj.minViaPadDiameter ?? inputSrj.minViaDiameter ?? 0.3,
         connMap,
       )
-        .filter((route) => route.vias.length > 0)
         .map((route) => {
           const point = trace.route[route.preloadedRoutePositionStart!]!
-          if (point.route_type !== "via") {
-            throw new Error("Fixed copper via evaluation requires a via point")
+          let pcbViaId: string | undefined
+          let rootConnectionName = route.rootConnectionName
+          if (point.route_type === "via") {
+            const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
+            if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
+            pcbViaId = viaIds.get(key)!
+            rootConnectionName = trace.connection_name
           }
-          const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
-          if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
           return {
             ...route,
-            rootConnectionName: trace.connection_name,
-            pcbViaId: viaIds.get(key)!,
+            rootConnectionName,
+            pcbViaId,
           }
         }),
     )
     const errors = getFixedObstacleViolations({
       srj: fixedCopperSrj,
       routes,
+      traceClearance: traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance: clearance,
     })
       .filter(({ obstacleIndex }) => {
@@ -98,6 +102,17 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       })
       .map((violation): DrcError => {
         const trace = traces[routes[violation.routeIndex]!.preloadedTraceIndex]!
+        if (violation.kind === "wire") {
+          return {
+            type: "pcb_trace_error",
+            error_type: "pcb_trace_error",
+            drc_source: "fixed_copper",
+            pcb_trace_error_id: `fixed_copper_${trace.pcb_trace_id}_${violation.obstacleIndex}`,
+            pcb_trace_id: trace.pcb_trace_id,
+            center: violation.center,
+            message: "Trace is too close to fixed copper on its layer",
+          }
+        }
         return {
           type: "pcb_via_trace_clearance_error",
           error_type: "pcb_via_trace_clearance_error",
@@ -111,10 +126,10 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           message: "Via is too close to fixed copper on a drilled layer",
         }
       })
-    if (errorsByViaGeometry.size >= 64) {
-      errorsByViaGeometry.delete(errorsByViaGeometry.keys().next().value!)
+    if (errorsByCopperGeometry.size >= 2) {
+      errorsByCopperGeometry.delete(errorsByCopperGeometry.keys().next().value!)
     }
-    errorsByViaGeometry.set(key, errors)
+    errorsByCopperGeometry.set(key, errors)
     return errors
   }
 }
