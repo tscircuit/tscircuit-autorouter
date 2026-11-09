@@ -67,23 +67,22 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
         inputSrj.layerCount,
         inputSrj.minViaPadDiameter ?? inputSrj.minViaDiameter ?? 0.3,
         connMap,
-      )
-        .map((route) => {
-          const point = trace.route[route.preloadedRoutePositionStart!]!
-          let pcbViaId: string | undefined
-          let rootConnectionName = route.rootConnectionName
-          if (point.route_type === "via") {
-            const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
-            if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
-            pcbViaId = viaIds.get(key)!
-            rootConnectionName = trace.connection_name
-          }
-          return {
-            ...route,
-            rootConnectionName,
-            pcbViaId,
-          }
-        }),
+      ).map((route) => {
+        const point = trace.route[route.preloadedRoutePositionStart!]!
+        let pcbViaId: string | undefined
+        let rootConnectionName = route.rootConnectionName
+        if (point.route_type === "via") {
+          const key: ViaLocationKey = `${point.x},${point.y},${point.from_layer},${point.to_layer}`
+          if (!viaIds.has(key)) viaIds.set(key, `via_${viaIds.size}`)
+          pcbViaId = viaIds.get(key)!
+          rootConnectionName = trace.connection_name
+        }
+        return {
+          ...route,
+          rootConnectionName,
+          pcbViaId,
+        }
+      }),
     )
     const errors = getFixedObstacleViolations({
       srj: fixedCopperSrj,
