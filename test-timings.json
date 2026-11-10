@@ -553,7 +553,6 @@
     "tests/repro/pipeline1-bug1.test.tsx": 1.7,
     "tests/repro/pipeline10-srj29-terminal-region-ownership.test.ts": 65.6,
     "tests/repro/pipeline9-bga36-phase2.test.ts": 0.4,
-    "tests/repro/pipeline9-butterstick-ddr-fixed-copper.test.ts": 817.8,
     "tests/repro/pipeline9-default-via-is-through-hole-visual.test.ts": 0.6,
     "tests/repro/pipeline9-length-matching-preloaded-clearance1.test.ts": 2,
     "tests/repro/pipeline9-length-matching-preloaded-clearance2.test.ts": 4.1,

@@ -7,7 +7,8 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 // Native board: https://github.com/butterstick-fpga/butterstick-hardware/blob/0694ddfa9824a07f0c6c6981186e45f80187659c/hardware/ButterStick_r1.0/ButterStick.kicad_pcb
 
-test("routes ButterStick DDR beside completed data-byte copper", async (): Promise<void> => {
+// Takes about 14 minutes; the focused BGA regression runs in CI.
+test.skip("routes ButterStick DDR beside completed data-byte copper", async (): Promise<void> => {
   const fixtureUrl = new URL(
     "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
     import.meta.url,

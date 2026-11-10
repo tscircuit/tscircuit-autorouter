@@ -71,7 +71,7 @@ jobs:
               bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff
             fi
             case "$test_file" in
-              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts|tests/repro/pipeline9-butterstick-ddr-fixed-copper.test.ts)
+              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts)
                 full_board_tests+=("$test_file")
                 ;;
               tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts|tests/repro/pipeline9-stmp157-mesh-memory.test.ts)
