@@ -1381,6 +1381,25 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.error = this.tinyPipelineSolver.error ?? null
   }
 
+  /**
+   * Search iterations needed to route each connection alone, most expensive
+   * first, with each connection's share of the total. Connections at the top
+   * usually touch a badly placed part (rotated or swapped passives, pins on
+   * the wrong side).
+   */
+  getRouteEffortSummary() {
+    const iterations = this.duplicateCongestedPortReport?.routeSearchIterations
+    if (!iterations) return undefined
+    const total = Object.values(iterations).reduce((sum, n) => sum + n, 0)
+    return Object.entries(iterations)
+      .map(([connectionId, n]) => ({
+        connectionId,
+        iterations: n,
+        iterationShare: total === 0 ? 0 : n / total,
+      }))
+      .sort((a, b) => b.iterations - a.iterations)
+  }
+
   getSolveGraphBenchmarkMetrics() {
     const solveGraphSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
