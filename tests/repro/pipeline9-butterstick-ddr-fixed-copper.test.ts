@@ -7,7 +7,7 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 // Native board: https://github.com/butterstick-fpga/butterstick-hardware/blob/0694ddfa9824a07f0c6c6981186e45f80187659c/hardware/ButterStick_r1.0/ButterStick.kicad_pcb
 
-test("reproduces ButterStick DDR routing beside completed data-byte copper", async (): Promise<void> => {
+test("routes ButterStick DDR beside completed data-byte copper", async (): Promise<void> => {
   const fixtureUrl = new URL(
     "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
     import.meta.url,
@@ -23,11 +23,10 @@ test("reproduces ButterStick DDR routing beside completed data-byte copper", asy
     cacheProvider: null,
   })
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
-  expect(solver.error).toContain("ran out of iterations")
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
 
-  // Keep the completed data-byte traces visible beside the unresolved nets.
+  // Include the completed data-byte copper in both the drawing and physical checks.
   const referenceSrj = {
     ...inputSrj,
     connections: [...preloadedConnections, ...inputSrj.connections],
@@ -43,8 +42,7 @@ test("reproduces ButterStick DDR routing beside completed data-byte copper", asy
           ...solver.srjWithPointPairs!.connections,
         ],
       },
-      // The baseline fails before detailed routing emits any new traces.
-      routedTraces: [],
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
       drcOptions: { traceClearance: 0.0889, viaToPadClearance: 0.1 },
     }),
   ).toMatchSvgSnapshot(import.meta.path)
