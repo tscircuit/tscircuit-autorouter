@@ -45,7 +45,10 @@ test("hypergraph route effort points at the rotated resistor", async () => {
     circuitJson: circuit.getCircuitJson(),
     minTraceWidth: 0.15,
   })
-  const solver = new AutoroutingPipelineSolver({ ...simpleRouteJson, traces: [] })
+  const solver = new AutoroutingPipelineSolver({
+    ...simpleRouteJson,
+    traces: [],
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
 

@@ -30,7 +30,10 @@ test("route effort keeps every pair of a split net traceable to its pads", async
     circuitJson: circuit.getCircuitJson(),
     minTraceWidth: 0.15,
   })
-  const solver = new AutoroutingPipelineSolver({ ...simpleRouteJson, traces: [] })
+  const solver = new AutoroutingPipelineSolver({
+    ...simpleRouteJson,
+    traces: [],
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
 
@@ -42,12 +45,18 @@ test("route effort keeps every pair of a split net traceable to its pads", async
     ),
   )
 
-  expect(effort.measuredPairCount).toBeGreaterThan(simpleRouteJson.connections.length)
+  expect(effort.measuredPairCount).toBeGreaterThan(
+    simpleRouteJson.connections.length,
+  )
   expect(effort.totalIterations).toBe(
     effort.pairs.reduce((sum, pair) => sum + pair.iterations, 0),
   )
   for (const pair of effort.pairs) {
-    expect(pair.rootConnectionNames.every((name) => srjNames.has(name))).toBe(true)
-    expect(pair.pcbPortIds.every((id) => id !== null && pcbPortIds.has(id))).toBe(true)
+    expect(pair.rootConnectionNames.every((name) => srjNames.has(name))).toBe(
+      true,
+    )
+    expect(
+      pair.pcbPortIds.every((id) => id !== null && pcbPortIds.has(id)),
+    ).toBe(true)
   }
 })
