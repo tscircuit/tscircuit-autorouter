@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -35,19 +36,21 @@ test("routes H616 DDR controls beside completed data-byte copper", async (): Pro
     ],
     traces: fixture.preloadedTraces,
   }
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: referenceSrj,
-      srjWithPointPairs: {
-        ...solver.srjWithPointPairs!,
-        connections: [
-          ...fixture.preloadedConnections,
-          ...solver.srjWithPointPairs!.connections,
-        ],
-      },
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-      // Preserve the native board's 0.1 mm copper clearance.
-      drcOptions: { traceClearance: 0.1, viaToPadClearance: 0.1 },
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const snapshotInput = {
+    inputSrj: referenceSrj,
+    srjWithPointPairs: {
+      ...solver.srjWithPointPairs!,
+      connections: [
+        ...fixture.preloadedConnections,
+        ...solver.srjWithPointPairs!.connections,
+      ],
+    },
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    // Preserve the native board's 0.1 mm copper clearance.
+    drcOptions: { traceClearance: 0.1, viaToPadClearance: 0.1 },
+  }
+  expect(evaluateRelaxedDrc(snapshotInput).errors.length).toBeLessThan(50)
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
