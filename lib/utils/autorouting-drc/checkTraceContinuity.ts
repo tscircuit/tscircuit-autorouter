@@ -444,34 +444,41 @@ export const checkTraceContinuity = (
       }
     }
   }
-  const touchedPortsByTrace = new Map(
-    traces.map((trace) => [
-      trace.pcb_trace_id,
-      new Set(
-        [...padsByPort]
-          .filter(([, portPads]) =>
-            [trace.route[0], trace.route.at(-1)].some(
-              (point) =>
-                point &&
-                portPads.some((pad) => routePointTouchesPad(point, pad)),
-            ),
-          )
-          .map(([portId]) => portId),
-      ),
-    ]),
-  )
+  // Most intact traces reach their declared pads directly. Build the
+  // board-wide endpoint connectivity only if a trace needs a sibling bridge.
+  const touchedPortsByTrace = new Map<string, Set<string>>()
   const traceIdsByTouchedPort = new Map<string, string[]>()
-  for (const [traceId, portIds] of touchedPortsByTrace) {
-    for (const portId of portIds) {
-      const traceIds = traceIdsByTouchedPort.get(portId)
-      if (traceIds) traceIds.push(traceId)
-      else traceIdsByTouchedPort.set(portId, [traceId])
+  const indexTouchedPorts = (): void => {
+    if (touchedPortsByTrace.size > 0) return
+    for (const trace of traces) {
+      const first = trace.route[0]
+      const last = trace.route.at(-1)
+      const touched = new Set<string>()
+      for (const [portId, portPads] of padsByPort) {
+        if (
+          portPads.some((pad) =>
+            (first && routePointTouchesPad(first, pad)) ||
+            (last && routePointTouchesPad(last, pad)),
+          )
+        ) {
+          touched.add(portId)
+        }
+      }
+      touchedPortsByTrace.set(trace.pcb_trace_id, touched)
+    }
+    for (const [traceId, portIds] of touchedPortsByTrace) {
+      for (const portId of portIds) {
+        const traceIds = traceIdsByTouchedPort.get(portId)
+        if (traceIds) traceIds.push(traceId)
+        else traceIdsByTouchedPort.set(portId, [traceId])
+      }
     }
   }
   const padConnectedPortsByTrace = new Map<string, Set<string>>()
   const connectsThroughPads = (traceId: string, portId: string): boolean => {
     const cached = padConnectedPortsByTrace.get(traceId)
     if (cached) return cached.has(portId)
+    indexTouchedPorts()
     const pending = [traceId]
     const visited = new Set(pending)
     const connectedPorts = new Set<string>()
@@ -495,6 +502,7 @@ export const checkTraceContinuity = (
   let physicalConnectivity: ConnectivityMap | undefined
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
+    indexTouchedPorts()
     const map = new ConnectivityMap({})
     const connections: string[][] = []
     const indexedSegments = segments.map((segment, order) => ({
@@ -689,6 +697,7 @@ export const checkTraceContinuity = (
     physicalConnectivity = map
     return map
   }
+  let segmentsByNet: Map<string, WireSegment[]> | undefined
   const endpointTouchesCopper = (
     trace: PcbTrace,
     endpoint: "start" | "end",
@@ -698,16 +707,24 @@ export const checkTraceContinuity = (
     if (point?.route_type !== "wire" || width === undefined) return false
     const net = fullConnectivity.getNetConnectedToId(trace.pcb_trace_id)
     if (!net) return false
-    const netSegments = segments.filter(
-      (segment) =>
-        segment.trace.route_thickness_mode !== "interpolated" &&
-        fullConnectivity.getNetConnectedToId(segment.trace.pcb_trace_id) ===
-          net &&
-        Math.hypot(
+    if (!segmentsByNet) {
+      segmentsByNet = new Map()
+      for (const segment of segments) {
+        if (segment.trace.route_thickness_mode === "interpolated") continue
+        const segmentNet = fullConnectivity.getNetConnectedToId(
+          segment.trace.pcb_trace_id,
+        )
+        const length = Math.hypot(
           segment.start.x - segment.end.x,
           segment.start.y - segment.end.y,
-        ) > 1e-9,
-    )
+        )
+        if (!segmentNet || !(length > 1e-9)) continue
+        const group = segmentsByNet.get(segmentNet)
+        if (group) group.push(segment)
+        else segmentsByNet.set(segmentNet, [segment])
+      }
+    }
+    const netSegments = segmentsByNet.get(net) ?? []
     if (
       netSegments.some(
         (segment) =>

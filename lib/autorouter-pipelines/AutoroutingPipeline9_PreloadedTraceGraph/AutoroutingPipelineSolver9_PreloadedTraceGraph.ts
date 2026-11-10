@@ -584,20 +584,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
-          minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-          useLayerAwareGeometry: cms.srj.layerCount > 2,
-          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-        },
-      ],
+      (cms) => {
+        const output = cms.portPointPathingSolver!.getOutput()
+        return [
+          {
+            nodeWithPortPoints: output.nodesWithPortPoints,
+            inputNodesWithPortPoints: output.inputNodeWithPortPoints,
+            minTraceWidth: cms.minTraceWidth,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            useLayerAwareGeometry: cms.srj.layerCount > 2,
+            preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
@@ -630,7 +630,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
           traces: cms.originalSrj.traces ?? [],
           fixedHdRoutes: originalFixedHdRoutes,
-          sections: cms.getChangedPreloadedTraceSections(),
+          sections: portPointPathingOutput.changedPreloadedTraceSections,
         })
         const hasImmutablePreloadedCopper = fixedHdRoutes.some(
           (route) => route.isFixed === true,
@@ -666,7 +666,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
-            nodePfById: portPointPathingSolver.computeNodePfMap(),
+            nodePfById: portPointPathingSolver.computeNodePfMap(fallbackNodes),
             preserveTerminalPcbPortIds: true,
           },
         ]
@@ -1561,7 +1561,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
     return (
-      this.portPointPathingSolver?.getOutput().changedPreloadedTraceSections ??
+      this.portPointPathingSolver?.getChangedPreloadedTraceSections() ??
       []
     )
   }

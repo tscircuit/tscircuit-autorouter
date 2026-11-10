@@ -1,9 +1,10 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
+import Flatbush from "flatbush"
 import type {
   AnyCircuitElement,
   PcbBoard,
   PcbTrace,
   PcbVia,
+  SourceTrace,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getViaLayers } from "high-density-repair03/lib"
@@ -381,7 +382,7 @@ function createSourceTraces(
   sourceSrj = srj,
   sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
-  const sourceTraces: AnyCircuitElement[] = []
+  const sourceTraceById = new Map<string, SourceTrace>()
   const connections =
     sourceSrj === srj
       ? srj.connections
@@ -399,6 +400,29 @@ function createSourceTraces(
     connections,
     obstacles,
   })
+
+  const firstRouteByConnection = new Map<string, (typeof hdRoutes)[number]>()
+  for (const route of hdRoutes) {
+    const name =
+      "connection_name" in route ? route.connection_name : route.connectionName
+    if (!firstRouteByConnection.has(name))
+      firstRouteByConnection.set(name, route)
+  }
+  const obstacleIndex =
+    obstacles.length > 0 && hdRoutes.length > 0
+      ? new Flatbush(obstacles.length)
+      : undefined
+  if (obstacleIndex) {
+    for (const { center, width, height } of obstacles) {
+      obstacleIndex.add(
+        center.x - width / 2,
+        center.y - height / 2,
+        center.x + width / 2,
+        center.y + height / 2,
+      )
+    }
+    obstacleIndex.finish()
+  }
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
@@ -430,11 +454,7 @@ function createSourceTraces(
 
     // Physical terminals fix the net; unbound routes can attach by geometry.
     const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
+    const hdRoute = firstRouteByConnection.get(connection.name)
     if (hdRoute) {
       const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
         if ("route_type" in segment && segment.route_type === "jumper") {
@@ -452,12 +472,15 @@ function createSourceTraces(
       ]
 
       for (const endpoint of endpoints) {
-        for (const obstacle of obstacles) {
+        // Preserve input order when multiple pads touch the same endpoint.
+        const hits =
+          obstacleIndex?.search(endpoint.x, endpoint.y, endpoint.x, endpoint.y) ?? []
+        for (const index of hits.sort((a, b) => a - b)) {
+          const obstacle = obstacles[index]!
           if (
-            pointToBoxDistance(endpoint, obstacle) <= 0 &&
-            (connectedPortIds.length === 0 ||
-              obstacle.netIsAssignable ||
-              obstacle.connectedTo.some((id) => connectionReferences.has(id)))
+            connectedPortIds.length === 0 ||
+            obstacle.netIsAssignable ||
+            obstacle.connectedTo.some((id) => connectionReferences.has(id))
           ) {
             obstaclesContainingEndpoints.push(obstacle)
           }
@@ -466,14 +489,11 @@ function createSourceTraces(
     }
 
     // Check if this source_trace already exists
-    const existingSourceTrace = sourceTraces.find(
-      (st) =>
-        st.type === "source_trace" && st.source_trace_id === netConnectionName,
-    )
+    const existingSourceTrace = sourceTraceById.get(netConnectionName)
 
     if (existingSourceTrace) {
       // Add these port IDs to the existing source_trace
-      const sourceTrace = existingSourceTrace as any
+      const sourceTrace = existingSourceTrace
       sourceTrace.connected_source_port_ids = [
         ...new Set([
           ...sourceTrace.connected_source_port_ids,
@@ -491,7 +511,7 @@ function createSourceTraces(
       ]
     } else {
       // Create a new source_trace for this connection
-      sourceTraces.push({
+      sourceTraceById.set(netConnectionName, {
         type: "source_trace",
         source_trace_id: netConnectionName,
         connected_source_port_ids: connectedPortIds,
@@ -543,12 +563,8 @@ function createSourceTraces(
         (connection
           ? getCircuitJsonSourceTraceId(connection)
           : (trace.connection_name as CircuitJsonSourceTraceId))
-      const existingSourceTrace = sourceTraces.find(
-        (sourceTrace) =>
-          sourceTrace.type === "source_trace" &&
-          sourceTrace.source_trace_id === sourceTraceId,
-      )
-      if (existingSourceTrace?.type === "source_trace") {
+      const existingSourceTrace = sourceTraceById.get(sourceTraceId)
+      if (existingSourceTrace) {
         existingSourceTrace.connected_source_port_ids = [
           ...new Set([
             ...existingSourceTrace.connected_source_port_ids,
@@ -563,7 +579,7 @@ function createSourceTraces(
         ]
         continue
       }
-      sourceTraces.push({
+      sourceTraceById.set(sourceTraceId, {
         type: "source_trace",
         source_trace_id: sourceTraceId,
         connected_source_port_ids: connectedSourcePortIds,
@@ -572,7 +588,7 @@ function createSourceTraces(
     }
   }
 
-  return sourceTraces
+  return [...sourceTraceById.values()]
 }
 
 /**
