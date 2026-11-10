@@ -1,0 +1,24 @@
+{
+  "title": "iCE/Pi CM0 SBC",
+  "repo": "cheyao/icepi-sbc",
+  "commit": "45037f8522e6b95649ab43772b08fe223cb87f01",
+  "path": "hardware/cm0.kicad_pcb",
+  "controllerRef": "U1",
+  "memoryRef": "U2",
+  "rules": {
+    "appliedGlobalClearance": 0.1,
+    "viaPad": 0.45,
+    "viaDrill": 0.2,
+    "widths": [
+      0.124,
+      0.1565
+    ]
+  },
+  "scope": "Native DDR subsystem: all pads on controller, RAM and every component touching a selected DDR signal. Existing copper removed. Power, VREF, ZQ and unconnected nets excluded. Original board edge bounding box. Per-net modal manufactured track widths and smallest manufactured DDR via size; project clearance. No timing constraints invented.",
+  "capture": "tscircuit@0.0.3130 / @tscircuit/core@0.0.2315; unchanged native TSX, byte0 then byte1 then remaining signals",
+  "inputSha256": "9c2b57fb384e0dd3466736e053a886933c15dc67d5197491074a2bfdbfa7e63f",
+  "requestedSignals": 50,
+  "remainingSignals": 34,
+  "completedDataSignals": 16,
+  "reference": "Original physical obstacles and both completed data-byte routes; used only for drawing and DRC, never added to the solver input."
+}
