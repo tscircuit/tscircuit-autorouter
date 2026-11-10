@@ -44,7 +44,10 @@ test("retains the declared inline sections when a shorter net tree could bypass 
   solver.solve()
 
   const routedLinks = solver.newConnections.map((connection) =>
-    connection.pointsToConnect.map((point) => point.pointId).sort().join("/"),
+    connection.pointsToConnect
+      .map((point) => point.pointId)
+      .sort()
+      .join("/"),
   )
   expect(routedLinks.sort()).toEqual([
     "N.A/N.B",

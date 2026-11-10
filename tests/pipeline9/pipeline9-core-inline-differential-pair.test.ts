@@ -15,9 +15,7 @@ test("Pipeline9 routes both sections of the three-header differential pair from 
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   expect(
-    routedTraces
-      .map((trace) => [...trace.connectsTo!].sort().join("/"))
-      .sort(),
+    routedTraces.map((trace) => [...trace.connectsTo!].sort().join("/")).sort(),
   ).toEqual([
     "pcb_port_0/pcb_port_2",
     "pcb_port_1/pcb_port_3",

@@ -1,6 +1,10 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import type { ConnectionPoint, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type {
+  ConnectionPoint,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
@@ -95,9 +99,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     connection: SimpleRouteConnection,
     connectedState: ReturnType<typeof getInitiallyConnectedStateForConnection>,
   ): ReturnType<typeof buildMinimumSpanningTree<ConnectionPoint>> {
-    const sections = this.differentialPairSectionPlan.sectionsByMergedConnection.get(
-      connection.name,
-    )
+    const sections =
+      this.differentialPairSectionPlan.sectionsByMergedConnection.get(
+        connection.name,
+      )
     if (!sections) {
       return buildMinimumSpanningTree(connection.pointsToConnect, {
         extraEdges: connectedState.zeroWeightEdges,

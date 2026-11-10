@@ -155,10 +155,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const minimumSpanningTreeEdges = this.routeOrderedSectionsAndGetRemainingEdges(
-      currentConnection,
-      connectedState,
-    )
+    const minimumSpanningTreeEdges =
+      this.routeOrderedSectionsAndGetRemainingEdges(
+        currentConnection,
+        connectedState,
+      )
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {

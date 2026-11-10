@@ -1,7 +1,8 @@
 import type { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 
-type PostProcessingError =
-  ReturnType<PostProcessingSolver["getOutput"]>["postProcessingErrors"][number]
+type PostProcessingError = ReturnType<
+  PostProcessingSolver["getOutput"]
+>["postProcessingErrors"][number]
 
 export function assertInlineDifferentialPairProcessing(
   sectionNames: readonly string[],
@@ -14,9 +15,13 @@ export function assertInlineDifferentialPairProcessing(
     const affectedNames =
       error.connectionNames ??
       (error.connectionName ? [error.connectionName] : undefined)
-    return !affectedNames || affectedNames.some((name) => inlineSections.has(name))
+    return (
+      !affectedNames || affectedNames.some((name) => inlineSections.has(name))
+    )
   })
   if (failure) {
-    throw new Error(`Inline differential pair routing failed: ${failure.message}`)
+    throw new Error(
+      `Inline differential pair routing failed: ${failure.message}`,
+    )
   }
 }

@@ -35,7 +35,10 @@ export function planDifferentialPairSections(
   )
   const mergedByPoint = new Map(
     mergedConnections.flatMap((connection) =>
-      connection.pointsToConnect.map((point) => [getPointKey(point), connection]),
+      connection.pointsToConnect.map((point) => [
+        getPointKey(point),
+        connection,
+      ]),
     ),
   )
   const reservedNames = new Set([
@@ -94,25 +97,27 @@ export function planDifferentialPairSections(
         )
       }
 
-      const sections = points.slice(1).map((point, index): SimpleRouteConnection => {
-        let name = `${member.name}_pair_section${index}`
-        while (reservedNames.has(name)) name += "_"
-        reservedNames.add(name)
-        return {
-          ...routingConnection,
-          name,
-          pointsToConnect: [points[index]!, point],
-          __rootConnectionNames: [
-            ...new Set([
-              ...(member.__rootConnectionNames?.length
-                ? member.__rootConnectionNames
-                : [member.name]),
-              ...(merged.__rootConnectionNames ?? []),
-            ]),
-          ],
-          __netConnectionName: merged.__netConnectionName,
-        }
-      })
+      const sections = points
+        .slice(1)
+        .map((point, index): SimpleRouteConnection => {
+          let name = `${member.name}_pair_section${index}`
+          while (reservedNames.has(name)) name += "_"
+          reservedNames.add(name)
+          return {
+            ...routingConnection,
+            name,
+            pointsToConnect: [points[index]!, point],
+            __rootConnectionNames: [
+              ...new Set([
+                ...(member.__rootConnectionNames?.length
+                  ? member.__rootConnectionNames
+                  : [member.name]),
+                ...(merged.__rootConnectionNames ?? []),
+              ]),
+            ],
+            __netConnectionName: merged.__netConnectionName,
+          }
+        })
       sectionNamesByMember.set(
         member.name,
         sections.map((section) => section.name),

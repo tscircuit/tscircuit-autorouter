@@ -40,7 +40,9 @@ test("Pipelines 7 and 9 route both sections of an inline three-pad differential 
     expect(routes).toHaveLength(4)
 
     const memberLengths = connections.map(({ name, pointsToConnect }) => {
-      const sections = routes.filter((route) => route.rootConnectionName === name)
+      const sections = routes.filter(
+        (route) => route.rootConnectionName === name,
+      )
       expect(sections).toHaveLength(2)
       return pointsToConnect.slice(1).reduce((length, to, index) => {
         const from = pointsToConnect[index]!

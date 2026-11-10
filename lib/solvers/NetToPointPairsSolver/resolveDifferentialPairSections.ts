@@ -40,37 +40,42 @@ export function resolveDifferentialPairSections(
       )
     }
 
-    return positiveSections.map((positiveSection, index): ResolvedDifferentialPair => {
-      const negativeSection = negativeSections[index]!
-      if (positiveSection === negativeSection) {
-        throw new Error(
-          `${pipelineName}: differential pair ${pair.connectionNames.join("/")} resolves both members to "${positiveSection}"`,
-        )
-      }
-
-      const section: ResolvedDifferentialPair = {
-        connectionNames: [positiveSection, negativeSection],
-        // Bounding each section's skew bounds the sum along the whole path.
-        lengthTolerance: pair.lengthTolerance / positiveSections.length,
-      }
-      if (pair.maxUncoupledLength !== undefined) {
-        section.maxUncoupledLength = pair.maxUncoupledLength
-      }
-      if (pair.traceGap === undefined) return section
-
-      const halfWidths = section.connectionNames.map((name) => {
-        const matchingRoutes = hdRoutes.filter((route) => route.connectionName === name)
-        if (matchingRoutes.length !== 1) {
+    return positiveSections.map(
+      (positiveSection, index): ResolvedDifferentialPair => {
+        const negativeSection = negativeSections[index]!
+        if (positiveSection === negativeSection) {
           throw new Error(
-            `${pipelineName}: differential pair connection "${name}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
+            `${pipelineName}: differential pair ${pair.connectionNames.join("/")} resolves both members to "${positiveSection}"`,
           )
         }
-        return matchingRoutes[0]!.traceThickness / 2
-      })
-      const centerlineDistance = pair.traceGap + halfWidths[0]! + halfWidths[1]!
-      section.minimumCenterlineDistance = centerlineDistance
-      section.maximumCenterlineDistance = centerlineDistance
-      return section
-    })
+
+        const section: ResolvedDifferentialPair = {
+          connectionNames: [positiveSection, negativeSection],
+          // Bounding each section's skew bounds the sum along the whole path.
+          lengthTolerance: pair.lengthTolerance / positiveSections.length,
+        }
+        if (pair.maxUncoupledLength !== undefined) {
+          section.maxUncoupledLength = pair.maxUncoupledLength
+        }
+        if (pair.traceGap === undefined) return section
+
+        const halfWidths = section.connectionNames.map((name) => {
+          const matchingRoutes = hdRoutes.filter(
+            (route) => route.connectionName === name,
+          )
+          if (matchingRoutes.length !== 1) {
+            throw new Error(
+              `${pipelineName}: differential pair connection "${name}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
+            )
+          }
+          return matchingRoutes[0]!.traceThickness / 2
+        })
+        const centerlineDistance =
+          pair.traceGap + halfWidths[0]! + halfWidths[1]!
+        section.minimumCenterlineDistance = centerlineDistance
+        section.maximumCenterlineDistance = centerlineDistance
+        return section
+      },
+    )
   })
 }
