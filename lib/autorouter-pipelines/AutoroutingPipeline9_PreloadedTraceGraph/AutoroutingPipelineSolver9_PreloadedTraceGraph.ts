@@ -675,6 +675,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline9HighDensityForceImproveSolver,
       (cms) => [
         {
+          inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
