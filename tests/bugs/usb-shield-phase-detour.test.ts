@@ -7,7 +7,11 @@ import phase1Input from "../fixtures/bug-reports/usb-dp-phase-detour/input.json"
 import phase0Input from "../fixtures/bug-reports/usb-dp-phase-detour/phase-0.input.json"
 
 test("routes the USB shield through both MIDI keyboard phases", async (): Promise<void> => {
-  const phase0Srj: SimpleRouteJson = structuredClone(phase0Input)
+  // These electrical routing phases permit their existing via-in-pad escapes.
+  const phase0Srj: SimpleRouteJson = {
+    ...structuredClone(phase0Input),
+    allowViaInPad: true,
+  }
   const phase0 = new AutoroutingPipelineSolver9_PreloadedTraceGraph(phase0Srj, {
     effort: 1,
     cacheProvider: null,
@@ -48,7 +52,10 @@ test("routes the USB shield through both MIDI keyboard phases", async (): Promis
     { svgName: phase0SvgName },
   )
 
-  const phase1Srj: SimpleRouteJson = structuredClone(phase1Input)
+  const phase1Srj: SimpleRouteJson = {
+    ...structuredClone(phase1Input),
+    allowViaInPad: true,
+  }
   phase1Srj.traces = phase0Output.traces
   const phase1 = new AutoroutingPipelineSolver9_PreloadedTraceGraph(phase1Srj, {
     effort: 1,

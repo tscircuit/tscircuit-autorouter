@@ -424,7 +424,11 @@ function createSourceTraces(
         connection.name,
       ) ?? getCircuitJsonSourceTraceId(connection)
 
-    // Test for obstacles we're inside of
+    const connectionReferences = new Set<string>(
+      getSrjDeclaredConnectionReferences(connection),
+    )
+
+    // Physical terminals fix the net; unbound routes can attach by geometry.
     const obstaclesContainingEndpoints: Obstacle[] = []
     const hdRoute = hdRoutes.find(
       (r) =>
@@ -449,7 +453,12 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+          if (
+            pointToBoxDistance(endpoint, obstacle) <= 0 &&
+            (connectedPortIds.length === 0 ||
+              obstacle.netIsAssignable ||
+              obstacle.connectedTo.some((id) => connectionReferences.has(id)))
+          ) {
             obstaclesContainingEndpoints.push(obstacle)
           }
         }
@@ -675,6 +684,7 @@ function getPadFragmentId(
 
 export function createPcbPadElements(
   srj: SimpleRouteJson,
+  representedPadObstacleIndexes?: Set<number>,
 ): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Map<string, Set<string>>()
@@ -715,7 +725,7 @@ export function createPcbPadElements(
     }
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
-    if (circuitJsonMetadata.pcb_via_id) continue
+    if (circuitJsonMetadata.pcb_via_id || obstacle.isCopperPour) continue
 
     // An imported pad can belong to a net outside the current routing task.
     // Its source identity still describes copper that DRC must retain.
@@ -774,6 +784,9 @@ export function createPcbPadElements(
 
     const layers = obstacle.layers.filter(isLayerName)
     if (layers.length === 0) continue
+
+    // Identical pad fragments are already represented by the first element.
+    representedPadObstacleIndexes?.add(obstacleIndex)
 
     const width = obstacle.width
     const height = obstacle.height
@@ -1044,6 +1057,8 @@ export type ConvertToCircuitJsonOptions = {
   includeOriginalConnections?: boolean
   /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Collect obstacles represented by pads, including deduplicated fragments. */
+  representedPadObstacleIndexes?: Set<number>
 }
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
@@ -1122,7 +1137,12 @@ export function convertToCircuitJson(
   )
 
   // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  circuitJson.push(
+    ...createPcbPadElements(
+      originalSrj ?? srjWithPointPairs,
+      options.representedPadObstacleIndexes,
+    ),
+  )
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(

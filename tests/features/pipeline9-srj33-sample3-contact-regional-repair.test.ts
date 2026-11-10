@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
+import { checkViasInPads } from "@tscircuit/checks"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 preserves regional repair for contacts left by a completed exact portfolio", async (): Promise<void> => {
@@ -19,8 +21,9 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces,
   })
-  // Pair repair clears four more issues at the cost of two additional vias.
-  expect(errors.length).toBeLessThanOrEqual(3)
+  // The baseline routes have four issues: endpoint geometry used to hide the
+  // lower pad contact beneath source_net_5's top-layer terminal.
+  expect(errors.length).toBeLessThanOrEqual(4)
   let viaCount: number = 0
   for (const trace of routedTraces) {
     for (const point of trace.route) {
@@ -28,4 +31,12 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     }
   }
   expect(viaCount).toBeLessThanOrEqual(114)
+  const output = solver.getOutputSimpleRouteJson()
+  const circuitJson = convertToCircuitJson(output, output.traces!, {
+    originalSrj: scenario,
+    includeOriginalConnections: true,
+    minTraceWidth: scenario.minTraceWidth,
+    minViaDiameter: scenario.minViaDiameter,
+  })
+  expect(checkViasInPads(circuitJson)).toEqual([])
 })

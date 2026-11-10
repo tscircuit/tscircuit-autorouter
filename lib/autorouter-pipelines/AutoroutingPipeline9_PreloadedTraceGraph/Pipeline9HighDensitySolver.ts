@@ -73,8 +73,6 @@ type NodeBounds = {
   maxY: number
 }
 
-const PRELOADED_TRACE_CLEARANCE = 0.15
-
 const getNodeBounds = (
   node: NodeWithPortPoints,
   margin: number,
@@ -900,13 +898,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ]
       const reconstructableConnectionNames = [
         ...conflictingFixedRoutesByConnectionName,
-      ].flatMap(([connectionName, fixedRoute]) =>
-        fixedRoute.isThroughObstacle === true ? [] : [connectionName],
-      )
+      ]
+        .filter(
+          ([, fixedRoute]) =>
+            fixedRoute.isFixed !== true &&
+            fixedRoute.isThroughObstacle !== true,
+        )
+        .map(([connectionName]) => connectionName)
       // Moving one proven blocker can expose another. Grow only by exact
       // conflicts from the latest candidate, so the retry stays finite and
-      // every other preload remains immutable. Component-owned through-
-      // obstacle primitives are never movable.
+      // every other preload remains immutable. Fixed native traces and
+      // component-owned through-obstacle primitives are never movable.
       const promotedConnectionNames = new Set(
         this.activeFallbackPromotedFixedRouteConnectionNames,
       )
@@ -1239,6 +1241,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
+    let obstacleClearanceMargin = 0.15
+    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
+      obstacleClearanceMargin = this.obstacleMargin
+    }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
@@ -1251,7 +1257,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin,
       ...this.params.b01RepairOptions,
       effort: this.effort,
     })

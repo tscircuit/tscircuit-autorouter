@@ -19,6 +19,7 @@ import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
 
 type DrcError = Record<string, unknown>
 
@@ -27,6 +28,13 @@ export type Pipeline9AutoroutingDrcResult = {
   errors: DrcError[]
   errorsWithCenters: DrcError[]
   locationAwareErrors: DrcError[]
+}
+
+export type Pipeline9AutoroutingDrcEvaluator = ((
+  routedTraces: SimplifiedPcbTrace[],
+  options?: { includeTraceContinuity?: boolean },
+) => Pipeline9AutoroutingDrcResult) & {
+  readonly evaluateFixedCopper: (traces: SimplifiedPcbTrace[]) => DrcError[]
 }
 
 /** Reuses static pad geometry while evaluating joint repair candidates. */
@@ -42,10 +50,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   drcOptions?: GetDrcErrorsOptions
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
-}): ((
-  routedTraces: SimplifiedPcbTrace[],
-  options?: { includeTraceContinuity?: boolean },
-) => Pipeline9AutoroutingDrcResult) => {
+}): Pipeline9AutoroutingDrcEvaluator => {
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
@@ -59,11 +64,11 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
         minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
       })
     : undefined
-  const staticCircuitJson = convertToCircuitJson(
-    srjWithPointPairs,
-    [],
-    conversionOptions,
-  )
+  const representedPadObstacleIndexes = new Set<number>()
+  const staticCircuitJson = convertToCircuitJson(srjWithPointPairs, [], {
+    ...conversionOptions,
+    representedPadObstacleIndexes,
+  })
   if (board) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
@@ -75,10 +80,21 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     },
   )
   const evaluateViaPads = createViaPadClearanceEvaluator(staticCircuitJson, {
+    allowViaInPad: inputSrj.allowViaInPad,
     minClearance:
       drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
   })
-  return (routedTraces, options = {}): Pipeline9AutoroutingDrcResult => {
+  const evaluateFixedCopper = createPipeline9FixedCopperDrcEvaluator({
+    inputSrj,
+    srjWithPointPairs,
+    representedPadObstacleIndexes,
+    traceClearance: drcOptions.traceClearance,
+    viaClearance: drcOptions.viaToPadClearance,
+  })
+  const evaluate = (
+    routedTraces: SimplifiedPcbTrace[],
+    options: { includeTraceContinuity?: boolean } = {},
+  ): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
       inputSrj.traces ?? [],
       routedTraces,
@@ -94,6 +110,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [
       ...obstacleErrors.traceErrors,
+      ...evaluateFixedCopper(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
@@ -134,4 +151,5 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ),
     }
   }
+  return Object.assign(evaluate, { evaluateFixedCopper })
 }

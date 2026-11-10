@@ -27,7 +27,7 @@ type ViaPadClearanceEvaluator = (
 /** Reuses original pad geometry while checking candidate via copper clearance. */
 export const createViaPadClearanceEvaluator = (
   staticCircuitJson: AnyCircuitElement[],
-  options: { minClearance?: number } = {},
+  options: { minClearance?: number; allowViaInPad?: boolean } = {},
 ): ViaPadClearanceEvaluator => {
   const board = staticCircuitJson.find(
     (element) => element.type === "pcb_board",
@@ -85,7 +85,18 @@ export const createViaPadClearanceEvaluator = (
         )
       for (const pad of candidates) {
         if (!via.layers.some((layer) => pad.layers.includes(layer))) continue
-        if (connMap.areIdsConnected(via.pcb_via_id, pad.id)) continue
+        const sameNet = connMap.areIdsConnected(via.pcb_via_id, pad.id)
+        if (sameNet && options.allowViaInPad !== false) continue
+        let requiredClearance = clearance
+        let tolerance = 0.005
+        let viaDiameter = via.outer_diameter
+        let errorType = "pcb_pad_pad_clearance_error"
+        if (sameNet) {
+          requiredClearance = 0
+          tolerance = 1e-6
+          viaDiameter = via.hole_diameter
+          errorType = "pcb_placement_error"
+        }
         const circle = {
           kind: "circle" as const,
           x: (viaBounds.minX + viaBounds.maxX) / 2,
@@ -96,7 +107,7 @@ export const createViaPadClearanceEvaluator = (
               viaBounds.maxY - viaBounds.minY,
             ) / 2,
         }
-        const gap =
+        let gap =
           pad.shape.kind === "circle"
             ? distanceBetweenCircleAndCircle(circle, {
                 kind: "circle",
@@ -118,17 +129,31 @@ export const createViaPadClearanceEvaluator = (
                   kind: "polygon",
                   points: pad.shape.points,
                 }) - (pad.shape.radius ?? 0)
-        if (gap + 0.005 >= clearance) continue
+        if (sameNet) {
+          gap = getTraceObstacleClearance(via, via, viaDiameter, pad).gap
+        }
+        if (gap + tolerance >= requiredClearance) continue
+        let center = getTraceObstacleClearance(
+          via,
+          via,
+          viaDiameter,
+          pad,
+        ).center
+        if (sameNet) {
+          center = {
+            x: (pad.minX + pad.maxX) / 2,
+            y: (pad.minY + pad.maxY) / 2,
+          }
+        }
         errors.push({
-          type: "pcb_pad_pad_clearance_error",
-          error_type: "pcb_pad_pad_clearance_error",
-          pcb_pad_pad_clearance_error_id: `via_pad_clearance_${via.pcb_via_id}_${pad.id}`,
-          message: `Via ${getDrcReadableElementName(circuitJson, via.pcb_via_id)} and pad ${getDrcReadableElementName(circuitJson, pad.id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(clearance)})`,
+          type: errorType,
+          error_type: errorType,
+          [`${errorType}_id`]: `via_pad_clearance_${via.pcb_via_id}_${pad.id}`,
+          message: `Via ${getDrcReadableElementName(circuitJson, via.pcb_via_id)} and pad ${getDrcReadableElementName(circuitJson, pad.id)} are too close (clearance: ${formatMm(gap)}, minimum: ${formatMm(requiredClearance)})`,
           pcb_pad_ids: [via.pcb_via_id, pad.id],
-          minimum_clearance: clearance,
+          minimum_clearance: requiredClearance,
           actual_clearance: gap,
-          center: getTraceObstacleClearance(via, via, via.outer_diameter, pad)
-            .center,
+          center,
           pcb_via_ids: [via.pcb_via_id],
           ...(typeof via.pcb_trace_id === "string"
             ? { pcb_trace_id: via.pcb_trace_id }

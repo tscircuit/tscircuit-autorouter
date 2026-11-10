@@ -142,6 +142,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   readonly budget: Pipeline9BoundedRepairBudget
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
+  private repairCandidate?: HighDensityRoute[]
   private reservedChildMaximum = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
@@ -504,11 +505,33 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
-    // Center selection prioritizes trace crossings, but every violating route
-    // inside that region must enter negotiation, including via-pad contacts.
-    const dirtyTraceIds = new Set(
-      context.currentErrors.flatMap(getDrcErrorTraceIds),
-    )
+    const errorTraceIds: string[][] =
+      context.currentErrors.map(getDrcErrorTraceIds)
+    if (this.params.prioritizeConflictedRoutes) {
+      // Reorder the initial fast pass without changing final cleanup's schedule.
+      const priorityTraceIds: string[][] = targetErrors.map(getDrcErrorTraceIds)
+      const routeErrorCounts: number[] = region.routes.map(
+        (route): number =>
+          priorityTraceIds.filter((traceIds): boolean =>
+            traceIds.some(
+              (traceId): boolean =>
+                traceId === route.connectionName ||
+                traceId.startsWith(`${route.connectionName}_`),
+            ),
+          ).length,
+      )
+      const routeOrder: number[] = region.routes
+        .map((_, index): number => index)
+        .sort((a, b): number => routeErrorCounts[b]! - routeErrorCounts[a]!)
+      region.routes = routeOrder.map((index) => region.routes[index]!)
+      region.lockedPointIndices = routeOrder.map(
+        (index) => region.lockedPointIndices[index]!,
+      )
+      region.routeMappings = routeOrder.map(
+        (index) => region.routeMappings[index]!,
+      )
+    }
+    const dirtyTraceIds = new Set(errorTraceIds.flat())
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(
@@ -570,7 +593,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       pathGridSizeScale:
         this.budget.pathGridSizeScale === undefined
           ? undefined
-          : this.budget.pathGridSizeScale * (context.regionSizes[0]! / size),
+          : this.budget.pathGridSizeScale *
+            (Math.min(...context.regionSizes) / size),
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance,
       viaClearance:
@@ -743,6 +767,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     context.currentRoutes = state.candidateRoutes
+    this.repairCandidate = state.candidateRoutes
     context.currentErrors = candidateErrors
     context.reference = candidateReference
     context.fixedViolations = new Map(
@@ -1038,6 +1063,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         )
     }
     this.updateProgress()
+  }
+
+  /** Validated regional progress for another repair stage, not published output. */
+  getRepairCandidate(): HighDensityRoute[] | undefined {
+    if (!this.solved || this.failed) {
+      throw new Error("Regional repair candidate requested before completion")
+    }
+    return this.repairCandidate
   }
 
   getResult(): Pipeline9BoundedRegionalRepairResult {

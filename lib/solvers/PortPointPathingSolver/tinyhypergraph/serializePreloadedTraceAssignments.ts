@@ -1,5 +1,6 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { TraceId } from "lib/types"
 
 type SerializedPort = SerializedHyperGraph["ports"][number]
 type SerializedRegion = SerializedHyperGraph["regions"][number]
@@ -24,6 +25,7 @@ export type PreloadedTraceSectionMetadata = {
 
 export type PreloadedTraceConnectionMetadata = {
   connectionId: PreloadedTraceConnectionId
+  isFixed?: boolean
   preloadedTraceSection: PreloadedTraceSectionMetadata
 }
 
@@ -148,6 +150,7 @@ export const serializePreloadedTraceAssignments = (
 ): SerializedPreloadedTraceStats => {
   const orderedPortsByTraceId = new Map<string, OrderedTracePort[]>()
   const fixedNetIdByTraceId = new Map<string, string>()
+  const fixedTraceIds = new Set<TraceId>()
   const connectedRegionIds = new Set(
     (serializedHyperGraph.connections ?? []).flatMap((connection) => [
       connection.startRegionId,
@@ -185,6 +188,7 @@ export const serializePreloadedTraceAssignments = (
     }
 
     for (const assignment of assignments) {
+      if (assignment.isFixed) fixedTraceIds.add(assignment.traceId)
       const existingFixedNetId = fixedNetIdByTraceId.get(assignment.traceId)
       if (
         existingFixedNetId !== undefined &&
@@ -288,6 +292,7 @@ export const serializePreloadedTraceAssignments = (
       const connection: SerializedConnection &
         PreloadedTraceConnectionMetadata = {
         connectionId,
+        ...(fixedTraceIds.has(traceId) && { isFixed: true }),
         mutuallyConnectedNetworkId: fixedNetIdByTraceId.get(traceId) ?? traceId,
         startRegionId: getEndpointRegionId(firstPort, firstSegment.regionId),
         endRegionId: getEndpointRegionId(lastPort, lastSegment.regionId),

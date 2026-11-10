@@ -20,8 +20,8 @@ const frames: SolverSvgFrame[] = [
   {
     type: "solver",
     solverName: "portPointPathingSolver",
-    step: "start",
-    view: "preview",
+    step: 1,
+    view: "visualize",
   },
   {
     type: "solver",

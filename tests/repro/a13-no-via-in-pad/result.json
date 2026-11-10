@@ -1,0 +1,107 @@
+{
+  "allowViaInPad": false,
+  "traces": 8,
+  "vias": 2,
+  "viaInPad": [],
+  "otherPhysicalErrors": [
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_91_source_trace_69_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_F9 and trace .RN1 > .pin2 to .U200 > .pin35 are too close (clearance: 0.022mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_91",
+      "pcb_trace_id": "source_trace_69_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.02203436628510287,
+      "center": {
+        "x": -0.8806845685875113,
+        "y": 1.2591766965996327
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_82_source_trace_68_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_E3 and trace .RN4 > .pin3 to .U200 > .pin32 are too close (clearance: 0.157mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_82",
+      "pcb_trace_id": "source_trace_68_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.15673566638973935,
+      "center": {
+        "x": -5.596060009724903,
+        "y": 2.142533948685486
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_76_source_trace_68_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_D3 and trace .RN4 > .pin3 to .U200 > .pin32 are too close (clearance: 0.142mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_76",
+      "pcb_trace_id": "source_trace_68_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.14158419645055015,
+      "center": {
+        "x": -5.60383276408533,
+        "y": 2.393429027411755
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_81_source_trace_68_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_E2 and trace .RN4 > .pin3 to .U200 > .pin32 are too close (clearance: 0.137mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_81",
+      "pcb_trace_id": "source_trace_68_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.1372896018067658,
+      "center": {
+        "x": -6.132131115909498,
+        "y": 1.884597185744577
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_85_source_trace_61_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_E9 and trace .RN1 > .pin1 to .U200 > .pin34 are too close (clearance: 0.159mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_85",
+      "pcb_trace_id": "source_trace_61_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.15884545373432246,
+      "center": {
+        "x": -1.0793933206197257,
+        "y": 1.860140275420905
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_79_source_trace_61_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_D9 and trace .RN1 > .pin1 to .U200 > .pin34 are too close (clearance: 0.136mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_79",
+      "pcb_trace_id": "source_trace_61_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.1360199351780978,
+      "center": {
+        "x": -0.8020112586846104,
+        "y": 2.396191579179616
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_smtpad_84_source_trace_61_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad U200.BALL_E8 and trace .RN1 > .pin1 to .U200 > .pin34 are too close (clearance: 0.061mm, minimum: 0.2mm)",
+      "pcb_pad_id": "pcb_smtpad_84",
+      "pcb_trace_id": "source_trace_61_0",
+      "minimum_clearance": 0.2,
+      "actual_clearance": 0.061326012889517015,
+      "center": {
+        "x": -1.5922337965429874,
+        "y": 1.6336617709603303
+      }
+    }
+  ],
+  "connectivity": []
+}

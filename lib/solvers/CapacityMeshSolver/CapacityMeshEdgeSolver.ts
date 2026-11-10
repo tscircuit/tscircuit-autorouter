@@ -6,6 +6,8 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { getNodeEdgeMap } from "./getNodeEdgeMap"
+import { getTargetNodesWithRoutingAccess } from "./getTargetNodesWithRoutingAccess"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -58,9 +60,7 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
 
   handleTargetNodes() {
     const targetNodes = this.nodes.filter((node) => node._containsTarget)
-    const nodeById = new Map(
-      this.nodes.map((node) => [node.capacityMeshNodeId, node]),
-    )
+    const nodeEdgeMap = getNodeEdgeMap(this.edges)
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -68,36 +68,33 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        const hasExistingEdge = nodeEdgeMap
+          .get(nodeA.capacityMeshNodeId)
+          ?.some((edge) => edge.nodeIds.includes(nodeB.capacityMeshNodeId))
+        if (hasExistingEdge) continue
 
-        this.edges.push({
+        const edge: CapacityMeshEdge = {
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
-        })
+        }
+        this.edges.push(edge)
+        for (const nodeId of edge.nodeIds) {
+          nodeEdgeMap.set(nodeId, [...(nodeEdgeMap.get(nodeId) ?? []), edge])
+        }
       }
     }
 
+    const targetNodesWithRoutingAccess = getTargetNodesWithRoutingAccess({
+      nodes: this.nodes,
+      edges: this.edges,
+    })
     for (const targetNode of targetNodes) {
       if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
-        const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
-
-        return (
-          !otherNode._containsObstacle &&
-          !otherNode._containsTarget &&
-          this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
-      if (hasRoutingEdge) continue
+      if (targetNodesWithRoutingAccess.has(targetNode.capacityMeshNodeId))
+        continue
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,
@@ -110,14 +107,6 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     node2: CapacityMeshNode,
   ): boolean {
     return node1.availableZ.some((z) => node2.availableZ.includes(z))
-  }
-
-  hasEdgeBetween(node1: CapacityMeshNode, node2: CapacityMeshNode): boolean {
-    return this.edges.some(
-      (edge) =>
-        edge.nodeIds.includes(node1.capacityMeshNodeId) &&
-        edge.nodeIds.includes(node2.capacityMeshNodeId),
-    )
   }
 
   doNodesTouchOrOverlap(

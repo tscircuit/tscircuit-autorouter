@@ -150,12 +150,18 @@ const getMutationMasksWithLockedBoundaries = ({
       )
     }
     const sourceMask = regionalMutationMasks.get(sourceRoute.connectionName)
+    if (sourceRoute.isFixed && sourceMask?.some(Boolean)) {
+      throw new Error(
+        `Pipeline9 cannot simplify a mutation of fixed trace "${sourceRoute.connectionName}"`,
+      )
+    }
     if (sourceMask && sourceMask.length !== segmentCount) {
       throw new Error(
         `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${sourceMask.length} segments, expected ${segmentCount}`,
       )
     }
     const maySimplify =
+      sourceRoute.isFixed !== true &&
       sourceRoute.isThroughObstacle !== true &&
       (sourceRoute.jumpers?.length ?? 0) === 0
     mutationMasks.set(

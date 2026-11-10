@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "bun --tsconfig-override ../../../tsconfig.json render.mjs"
+  },
+  "dependencies": {
+    "circuit-to-svg": "0.0.457",
+    "react": "19.3.1",
+    "transformation-matrix": "3.1.0",
+    "tscircuit": "0.0.3125"
+  }
+}
