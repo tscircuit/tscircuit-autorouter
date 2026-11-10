@@ -20,6 +20,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { assertInlineDifferentialPairProcessing } from "lib/solvers/assertInlineDifferentialPairProcessing"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -359,7 +360,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-          cms.srj,
+          cms.srj.connections,
         ]
       },
       {
@@ -1011,9 +1012,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             hdRoutes,
             differentialPairs,
-            inlineDifferentialPairSectionNames: Array.from(
-              netToPointPairsSolver.differentialPairSectionNamesByMember.values(),
-            ).flat(),
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
             obstacles: cms.srj.obstacles,
@@ -1023,6 +1021,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          assertInlineDifferentialPairProcessing(
+            cms.netToPointPairsSolver!.differentialPairSectionNamesByMember,
+            cms.lengthMatchingPostProcessingSolver!.getOutput()
+              .postProcessingErrors,
+          )
+        },
       },
     ),
     definePipelineStep(

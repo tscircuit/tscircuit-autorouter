@@ -10,10 +10,7 @@ import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
-import {
-  type DifferentialPairInput,
-  planDifferentialPairSections,
-} from "./planDifferentialPairSections"
+import { planDifferentialPairSections } from "./planDifferentialPairSections"
 
 type ConnectionName = SimpleRouteConnection["name"]
 
@@ -50,7 +47,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
-    differentialPairInput?: DifferentialPairInput,
+    declaredConnections?: readonly SimpleRouteConnection[],
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -85,7 +82,8 @@ export class NetToPointPairsSolver extends BaseSolver {
       connectionsWithBusTraceWidths,
     )
     this.differentialPairSectionPlan = planDifferentialPairSections(
-      differentialPairInput,
+      ogSrj.differentialPairs,
+      declaredConnections,
       connectionsWithBusTraceWidths,
       this.unprocessedConnections,
     )

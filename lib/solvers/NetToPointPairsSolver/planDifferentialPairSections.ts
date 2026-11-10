@@ -1,12 +1,7 @@
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type { DifferentialPair, SimpleRouteConnection } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
 
 type ConnectionName = SimpleRouteConnection["name"]
-
-export type DifferentialPairInput = Pick<
-  SimpleRouteJson,
-  "connections" | "differentialPairs"
->
 
 type DifferentialPairSectionPlan = {
   sectionsByMergedConnection: Map<ConnectionName, SimpleRouteConnection[]>
@@ -14,7 +9,8 @@ type DifferentialPairSectionPlan = {
 }
 
 export function planDifferentialPairSections(
-  input: DifferentialPairInput | undefined,
+  pairs: DifferentialPair[] | undefined,
+  declaredConnections: readonly SimpleRouteConnection[] | undefined,
   routingConnections: SimpleRouteConnection[],
   mergedConnections: SimpleRouteConnection[],
 ): DifferentialPairSectionPlan {
@@ -23,12 +19,13 @@ export function planDifferentialPairSections(
     SimpleRouteConnection[]
   >()
   const sectionNamesByMember = new Map<ConnectionName, ConnectionName[]>()
-  if (!input?.differentialPairs?.length) {
+  if (!pairs?.length || !declaredConnections) {
     return { sectionsByMergedConnection, sectionNamesByMember }
   }
 
+  // Escape vias can add routing points that are not part of the declared pair.
   const declaredByName = new Map(
-    input.connections.map((connection) => [connection.name, connection]),
+    declaredConnections.map((connection) => [connection.name, connection]),
   )
   const routingByName = new Map(
     routingConnections.map((connection) => [connection.name, connection]),
@@ -46,7 +43,7 @@ export function planDifferentialPairSections(
     ...mergedConnections.map((connection) => connection.name),
   ])
 
-  for (const pair of input.differentialPairs) {
+  for (const pair of pairs) {
     const [positiveName, negativeName] = pair.connectionNames
     const positive = declaredByName.get(positiveName)
     const negative = declaredByName.get(negativeName)

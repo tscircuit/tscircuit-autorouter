@@ -39,7 +39,7 @@ test("retains the declared inline sections when a shorter net tree could bypass 
     input,
     {},
     getInitiallyConnectedMapFromSimpleRouteJson(input),
-    input,
+    input.connections,
   )
   solver.solve()
 

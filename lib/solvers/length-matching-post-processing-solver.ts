@@ -1,23 +1,22 @@
 import {
+  type DifferentialPair,
   LengthMatchingSolver,
   PostProcessingSolver,
+  type PostProcessingSolverOutput,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
-  DifferentialPair,
   Obstacle,
   SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
-import { assertInlineDifferentialPairProcessing } from "./assertInlineDifferentialPairProcessing"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
   differentialPairs: DifferentialPair[]
-  inlineDifferentialPairSectionNames?: string[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
   traces?: SimplifiedPcbTraces
@@ -138,7 +137,7 @@ const assertBusLengthSkew = (
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
   private readonly differentialPairSolver: PostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
-  private outputHdRoutes?: HighDensityRoute[]
+  private output?: PostProcessingSolverOutput
 
   constructor(
     private readonly params: LengthMatchingPostProcessingSolverParams,
@@ -172,18 +171,13 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      const { hdRoutes, postProcessingErrors } =
-        this.differentialPairSolver.getOutput()
-      assertInlineDifferentialPairProcessing(
-        this.params.inlineDifferentialPairSectionNames ?? [],
-        postProcessingErrors,
-      )
+      this.output = this.differentialPairSolver.getOutput()
+      const { hdRoutes } = this.output
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
       )
       if (differentialPairs.length === 0) {
-        this.outputHdRoutes = hdRoutes
         this.solved = true
         return
       }
@@ -210,18 +204,19 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       return
     }
     if (!this.busLengthMatchingSolver.solved) return
-    this.outputHdRoutes =
+    const hdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
-    assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
+    assertBusLengthSkew(this.params.buses, hdRoutes)
+    this.output!.hdRoutes = hdRoutes
     this.solved = true
   }
 
-  getOutput(): { hdRoutes: HighDensityRoute[] } {
-    if (!this.solved || !this.outputHdRoutes)
+  getOutput(): PostProcessingSolverOutput {
+    if (!this.solved || !this.output)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return { hdRoutes: this.outputHdRoutes }
+    return { ...this.output }
   }
 
   override visualize(): GraphicsObject {

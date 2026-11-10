@@ -1,16 +1,14 @@
-import type { PostProcessingSolver } from "@tscircuit/length-matching-solver"
-
-type PostProcessingError = ReturnType<
-  PostProcessingSolver["getOutput"]
->["postProcessingErrors"][number]
+import type { PostProcessingError } from "@tscircuit/length-matching-solver"
 
 export function assertInlineDifferentialPairProcessing(
-  sectionNames: readonly string[],
+  sectionNamesByMember: ReadonlyMap<string, string[]>,
   errors: PostProcessingError[],
 ): void {
-  if (sectionNames.length === 0 || errors.length === 0) return
+  if (sectionNamesByMember.size === 0 || errors.length === 0) return
 
-  const inlineSections = new Set(sectionNames)
+  const inlineSections = new Set(
+    Array.from(sectionNamesByMember.values()).flat(),
+  )
   const failure = errors.find((error) => {
     const affectedNames =
       error.connectionNames ??

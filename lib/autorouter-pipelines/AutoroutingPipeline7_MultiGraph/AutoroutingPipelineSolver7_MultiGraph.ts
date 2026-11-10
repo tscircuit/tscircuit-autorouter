@@ -316,7 +316,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-          cms.srj,
+          cms.srj.connections,
         ]
       },
       {
@@ -740,7 +740,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.netToPointPairsSolver!.differentialPairSectionNamesByMember
           if (sectionNamesByMember.size === 0) return
           assertInlineDifferentialPairProcessing(
-            Array.from(sectionNamesByMember.values()).flat(),
+            sectionNamesByMember,
             cms.lengthMatchingPostProcessingSolver!.getOutput()
               .postProcessingErrors,
           )

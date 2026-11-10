@@ -1,10 +1,6 @@
+import type { DifferentialPair as LengthMatchingPair } from "@tscircuit/length-matching-solver"
 import type { DifferentialPair, SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-
-type ResolvedDifferentialPair = DifferentialPair & {
-  minimumCenterlineDistance?: number
-  maximumCenterlineDistance?: number
-}
 
 export function resolveDifferentialPairSections(
   pipelineName: string,
@@ -12,7 +8,7 @@ export function resolveDifferentialPairSections(
   pointPairs: SimpleRouteConnection[],
   sectionNamesByMember: ReadonlyMap<string, string[]>,
   hdRoutes: HighDensityRoute[],
-): ResolvedDifferentialPair[] {
+): LengthMatchingPair[] {
   const resolveMember = (name: string): string[] => {
     const sectionNames = sectionNamesByMember.get(name)
     if (sectionNames) return sectionNames
@@ -41,7 +37,7 @@ export function resolveDifferentialPairSections(
     }
 
     return positiveSections.map(
-      (positiveSection, index): ResolvedDifferentialPair => {
+      (positiveSection, index): LengthMatchingPair => {
         const negativeSection = negativeSections[index]!
         if (positiveSection === negativeSection) {
           throw new Error(
@@ -49,7 +45,7 @@ export function resolveDifferentialPairSections(
           )
         }
 
-        const section: ResolvedDifferentialPair = {
+        const section: LengthMatchingPair = {
           connectionNames: [positiveSection, negativeSection],
           // Bounding each section's skew bounds the sum along the whole path.
           lengthTolerance: pair.lengthTolerance / positiveSections.length,
