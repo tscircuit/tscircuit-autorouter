@@ -1,8 +1,17 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
+import { getFixedObstacleViolations } from "@tscircuit/repair04"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import { Obstacle, type SimpleRouteJson } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import {
+  compileTraceClearanceObstacle,
+  getTraceObstacleClearance,
+  type IndexedObstacle,
+} from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
+import { createPcbPadElements } from "lib/utils/convertToCircuitJson"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -30,6 +39,9 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  minTraceWidth?: number
+  srj?: SimpleRouteJson
+  connMap?: ConnectivityMap
 }
 
 /**
@@ -52,9 +64,26 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly crampedPortIds = new Set<string>()
+  private readonly clearanceObstacles: IndexedObstacle[]
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    for (const node of input.inputNodesWithPortPoints) {
+      for (const point of node.portPoints) {
+        if (point.cramped) this.crampedPortIds.add(point.portPointId)
+      }
+    }
+    this.clearanceObstacles = input.srj && !input.srj.traces?.length
+      ? createPcbPadElements(input.srj)
+          .filter(
+            (element): element is IndexedObstacle["element"] =>
+              element.type === "pcb_smtpad" ||
+              element.type === "pcb_plated_hole" ||
+              element.type === "pcb_hole",
+          )
+          .map(compileTraceClearanceObstacle)
+      : []
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -175,7 +204,132 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    this.mapOfOwnerPairToPortPoints.set(
+      ownerPairKey,
+      redistributed.map((point) =>
+        portCountByLayer.get(point.z) === 1 &&
+        this.crampedPortIds.has(point.portPointId!)
+          ? this.placeCrampedPort(sharedEdge, point)
+          : point,
+      ),
+    )
+  }
+
+  private placeCrampedPort(
+    edge: SharedEdge,
+    point: PortPointWithOwnerPair,
+  ): PortPointWithOwnerPair {
+    const { srj, minTraceWidth, connMap } = this.input
+    if (!srj || srj.traces?.length || minTraceWidth === undefined) return point
+    const root = point.rootConnectionName ?? point.connectionName
+    const net =
+      connMap?.getNetConnectedToId(point.connectionName) ??
+      connMap?.getNetConnectedToId(root) ??
+      root
+    const layer = mapZToLayerName(point.z, srj.layerCount)
+    const obstacles = this.clearanceObstacles.filter((obstacle) => {
+      if (!obstacle.layers.includes(layer)) return false
+      const portId =
+        "pcb_port_id" in obstacle.element
+          ? obstacle.element.pcb_port_id
+          : undefined
+      return ![obstacle.id, portId].some(
+        (id) =>
+          typeof id === "string" &&
+          (id === point.connectionName ||
+            id === root ||
+            connMap?.getNetConnectedToId(id) === net),
+      )
+    })
+    const padClearance =
+      srj.minTraceToPadEdgeClearance ?? srj.defaultObstacleMargin ?? 0.1
+    const requiredClearance = (obstacle: IndexedObstacle): number => {
+      if (obstacle.element.type === "pcb_hole") {
+        return srj.minTraceToHoleEdgeClearance ?? 0.2
+      }
+      return padClearance
+    }
+    if (
+      !obstacles.some(
+        (obstacle) =>
+          obstacle.shape.kind === "circle" &&
+          obstacle.element.type !== "pcb_hole" &&
+          getTraceObstacleClearance(point, point, minTraceWidth, obstacle).gap <
+            requiredClearance(obstacle),
+      )
+    ) {
+      return point
+    }
+
+    const vertical = edge.orientation === "vertical"
+    let intervals: Array<[number, number]> = [
+      vertical ? [edge.y1, edge.y2] : [edge.x1, edge.x2],
+    ]
+    for (const obstacle of obstacles) {
+      if (obstacle.shape.kind !== "circle") continue
+      const { center, radius } = obstacle.shape
+      const reach = radius + minTraceWidth / 2 + requiredClearance(obstacle)
+      const offset = vertical ? edge.x1 - center.x : edge.y1 - center.y
+      if (Math.abs(offset) >= reach) continue
+      const extent = Math.sqrt(reach * reach - offset * offset)
+      const middle = vertical ? center.y : center.x
+      const low = middle - extent
+      const high = middle + extent
+      intervals = intervals.flatMap(([start, end]): Array<[number, number]> => {
+        if (high <= start || low >= end) return [[start, end]]
+        const remaining: Array<[number, number]> = []
+        if (low > start) remaining.push([start, low])
+        if (high < end) remaining.push([high, end])
+        return remaining
+      })
+    }
+    const longest = intervals.sort(
+      (a, b) => b[1] - b[0] - (a[1] - a[0]),
+    )[0]
+    if (!longest) return point
+    const middle = (longest[0] + longest[1]) / 2
+    const candidate = {
+      ...point,
+      x: vertical ? edge.x1 : middle,
+      y: vertical ? middle : edge.y1,
+    }
+    if (
+      !obstacles.every(
+        (obstacle) =>
+          getTraceObstacleClearance(
+            candidate, candidate, minTraceWidth, obstacle,
+          ).gap >= requiredClearance(obstacle),
+      )
+    ) {
+      return point
+    }
+    const fixedViolations = getFixedObstacleViolations({
+      srj: {
+        ...srj,
+        traces: undefined,
+        connections: [
+          ...srj.connections,
+          {
+            name: point.connectionName,
+            rootConnectionName: root,
+            __rootConnectionNames: connMap?.netMap[net],
+            pointsToConnect: [],
+          },
+        ],
+      },
+      traceClearance: padClearance,
+      routes: [
+        {
+          connectionName: point.connectionName,
+          rootConnectionName: root,
+          traceThickness: minTraceWidth,
+          viaDiameter: srj.minViaPadDiameter ?? srj.minViaDiameter ?? 0.3,
+          route: [candidate, candidate],
+          vias: [],
+        },
+      ],
+    })
+    return fixedViolations.length === 0 ? candidate : point
   }
 
   rebuildNodes(): void {

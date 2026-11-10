@@ -96,6 +96,7 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
     points[0]!, searchedPoint, inputSrj.minTraceWidth!,
     compileTraceClearanceObstacle(pad, 0),
   ).gap
+  expect(gap).toBeGreaterThanOrEqual(0.1)
   const graphics: GraphicsObject = {
     title: `iCEPi DDR source_trace_44: pad clearance ${gap.toFixed(4)} mm (required 0.1 mm)`,
     circles: [
