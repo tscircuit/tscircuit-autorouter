@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 
-test("Pipeline7 rejects a differential pair member split across final routes", () => {
+test("Pipeline7 rejects differential pair members with different segment counts", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -57,6 +57,6 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
       exactGeometryDrcForceImproveSolver: { getOutput: () => [] },
     } as any),
   ).toThrow(
-    'Pipeline7: differential pair connection "PAIR_P" must resolve to exactly one final point-pair connection, got 2',
+    'Pipeline7: differential pair PAIR_P/PAIR_N must decompose into the same non-zero number of corresponding segments, got 2 and 1',
   )
 })

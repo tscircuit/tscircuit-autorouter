@@ -1,7 +1,4 @@
-import {
-  LengthMatchingSolver,
-  PostProcessingSolver,
-} from "@tscircuit/length-matching-solver"
+import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
@@ -12,6 +9,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
+import { DifferentialPairSegmentPostProcessingSolver } from "./DifferentialPairSegmentPostProcessingSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
@@ -134,7 +132,7 @@ const assertBusLengthSkew = (
 
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly differentialPairSolver: PostProcessingSolver
+  private readonly differentialPairSolver: DifferentialPairSegmentPostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
 
@@ -142,7 +140,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new PostProcessingSolver({
+    this.differentialPairSolver = new DifferentialPairSegmentPostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
       traces: params.traces,
@@ -162,6 +160,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override _step(): void {
     if (!this.differentialPairSolver.solved) {
       this.differentialPairSolver.step()
+      this.MAX_ITERATIONS = this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
       if (this.differentialPairSolver.failed) {
         this.failed = true
         this.error = this.differentialPairSolver.error

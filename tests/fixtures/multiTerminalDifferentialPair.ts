@@ -65,7 +65,7 @@ export const multiTerminalDifferentialPair: SimpleRouteJson = {
     {
       connectionNames: ["USB_P", "USB_N"],
       lengthTolerance: 0.05,
-      traceGap: 0.85,
+      traceGap: 0.3,
       maxUncoupledLength: 3,
     },
   ],
