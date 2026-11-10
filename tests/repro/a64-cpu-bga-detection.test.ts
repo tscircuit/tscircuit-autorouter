@@ -12,7 +12,7 @@ test("detects packages on the real A64 DDR board after data-byte routing", async
     import.meta.url,
   )
   const inputSrj = JSON.parse(
-    gunzipSync(readFileSync(fixture)).toString("utf8"),
+    gunzipSync(new Uint8Array(readFileSync(fixture))).toString("utf8"),
   ) as SimpleRouteJson
   const before = structuredClone(inputSrj)
   const solver = new ComponentDetectionSolver({ inputSrj })
