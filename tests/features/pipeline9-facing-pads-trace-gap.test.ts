@@ -49,7 +49,7 @@ test("Pipeline 9 preserves the requested trace gap between facing pads", (): voi
     return a.y - (a.x * (b.y - a.y)) / (b.x - a.x)
   })
   const actualGap = Math.abs(centerYs[0]! - centerYs[1]!) - 0.15
-  expect(actualGap).toBeCloseTo(0.05, 6)
+  expect(actualGap).toBeCloseTo(traceGap, 6)
   expect(
     convertSrjToGraphicsObject(solver.getOutputSimpleRouteJson()),
   ).toMatchGraphicsSvg(import.meta.path, { backgroundColor: "white" })
