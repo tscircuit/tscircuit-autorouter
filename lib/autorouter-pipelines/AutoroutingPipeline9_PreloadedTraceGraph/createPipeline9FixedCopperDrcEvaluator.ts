@@ -58,6 +58,11 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     connections: [...srjWithPointPairs.connections, ...inputSrj.connections],
   }
   const connMap = getConnectivityMapFromSimpleRouteJson(inputSrj)
+  const wireClearance = Math.max(
+    traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
+    inputSrj.defaultObstacleMargin ?? 0,
+    inputSrj.minTraceToPadEdgeClearance ?? 0,
+  )
   const clearance = Math.max(
     viaClearance ??
       getViaToPadClearance(inputSrj) ??
@@ -113,7 +118,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
     evaluateObstacles ??= createFixedObstacleViolationEvaluator({
       srj: fixedCopperSrj,
       routes,
-      traceClearance: traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
+      traceClearance: wireClearance,
       viaClearance: clearance,
     })
     const nextChecksByTraceId = new Map<PcbTraceId, CachedTraceCheck>()
@@ -154,6 +159,9 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
       })
       .map((violation): DrcError => {
         const trace = traces[routes[violation.routeIndex]!.preloadedTraceIndex]!
+        const pcbObstacleId =
+          inputSrj.obstacles[violation.obstacleIndex]!.obstacleId ??
+          `fixed_copper_obstacle_${violation.obstacleIndex}`
         if (violation.kind === "wire") {
           return {
             type: "pcb_trace_error",
@@ -161,7 +169,10 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
             drc_source: "fixed_copper",
             pcb_trace_error_id: `fixed_copper_${trace.pcb_trace_id}_${violation.obstacleIndex}`,
             pcb_trace_id: trace.pcb_trace_id,
+            pcb_obstacle_id: pcbObstacleId,
             center: violation.center,
+            actual_clearance: wireClearance - violation.severity,
+            minimum_clearance: wireClearance,
             message: "Trace is too close to fixed copper on its layer",
           }
         }
@@ -172,6 +183,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
           pcb_via_trace_clearance_error_id: `fixed_copper_${trace.pcb_trace_id}_${violation.obstacleIndex}_${routes[violation.routeIndex]!.pcbViaId}`,
           pcb_via_id: routes[violation.routeIndex]!.pcbViaId,
           pcb_trace_id: trace.pcb_trace_id,
+          pcb_obstacle_id: pcbObstacleId,
           center: violation.center,
           actual_clearance: clearance - violation.severity,
           minimum_clearance: clearance,
