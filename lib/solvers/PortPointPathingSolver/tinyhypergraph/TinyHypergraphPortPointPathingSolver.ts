@@ -294,7 +294,9 @@ const getTinyHyperGraphSolveGraphOptions = ({
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(iterationBudgetEffort) * graphScale),
+    MAX_ITERATIONS: Math.ceil(
+      2_000_000 * getEffortScale(iterationBudgetEffort) * graphScale,
+    ),
   }
 }
 
@@ -309,16 +311,18 @@ const getTinyHyperGraphSectionSolverOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
-    MAX_ITERATIONS: Math.ceil(1_000_000 * getEffortScale(iterationBudgetEffort)),
+    MAX_ITERATIONS: Math.ceil(
+      1_000_000 * getEffortScale(iterationBudgetEffort),
+    ),
   }
 }
 
 const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
-  { effort, iterationBudgetEffort = effort }: Pick<
-    TinyPathingParams,
-    "effort" | "iterationBudgetEffort"
-  >,
+  {
+    effort,
+    iterationBudgetEffort = effort,
+  }: Pick<TinyPathingParams, "effort" | "iterationBudgetEffort">,
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
@@ -1130,7 +1134,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
           MAX_ITERATIONS: Math.ceil(
-            2_000_000 * getEffortScale(params.iterationBudgetEffort ?? params.effort),
+            2_000_000 *
+              getEffortScale(params.iterationBudgetEffort ?? params.effort),
           ),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
