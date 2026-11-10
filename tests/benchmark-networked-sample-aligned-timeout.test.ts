@@ -4,6 +4,7 @@ import {
   createSolverForTask,
 } from "../scripts/benchmark/benchmark-run-task"
 import type { BenchmarkTask } from "../scripts/benchmark/benchmark-types"
+import type { TinyHypergraphPortPointPathingSolver } from "../lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { NodeWithPortPoints } from "../lib/types/high-density-types"
 
 test("the harness applies the same sample budget to existing networked constructors without changing local repair or remote defaults", (): void => {
@@ -29,7 +30,7 @@ test("the harness applies the same sample budget to existing networked construct
   }
   const nodePortPoints: NodeWithPortPoints[] = []
   const pathingStub = {
-    getOutput(): {
+    getRoutedPortOutput(): {
       nodesWithPortPoints: NodeWithPortPoints[]
       changedPreloadedTraceSections: []
     } {
@@ -39,7 +40,10 @@ test("the harness applies the same sample budget to existing networked construct
       }
     },
     computeNodePfMap: (): Map<string, number> => new Map(),
-  }
+  } satisfies Pick<
+    TinyHypergraphPortPointPathingSolver,
+    "getRoutedPortOutput" | "computeNodePfMap"
+  >
   for (const networkedCachePass of ["cold", "hot"] as const) {
     const solver = createSolverForTask({ ...task, networkedCachePass })
     Object.assign(solver, { portPointPathingSolver: pathingStub })
