@@ -1558,10 +1558,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
-    return (
-      this.portPointPathingSolver?.getChangedPreloadedTraceSections() ??
-      []
-    )
+    return this.portPointPathingSolver?.getChangedPreloadedTraceSections() ?? []
   }
 
   private getPreloadedFixedRouteStateAfterHighDensity(): Pipeline9PreloadedFixedRouteState {
