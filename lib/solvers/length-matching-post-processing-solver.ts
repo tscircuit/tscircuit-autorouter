@@ -124,6 +124,24 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     )
     this.matcher = new LengthMatchingSolver({
       ...params,
+      // Pathing recomputes electrical roots. Keep terminal obstacles in that
+      // same identity space so tuning can retain its own pad escape leads.
+      obstacles: params.obstacles.map(
+        (obstacle): Obstacle => ({
+          ...obstacle,
+          connectedTo: [
+            ...new Set([
+              ...obstacle.connectedTo,
+              ...params.hdRoutes.flatMap((route): string[] =>
+                route.rootConnectionName &&
+                obstacle.connectedTo.includes(route.connectionName)
+                  ? [route.rootConnectionName]
+                  : [],
+              ),
+            ]),
+          ],
+        }),
+      ),
       originalConnections: [
         ...params.connections.filter((connection): boolean =>
           ownedNames.has(connection.name),
