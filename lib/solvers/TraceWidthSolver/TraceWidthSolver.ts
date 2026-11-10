@@ -553,8 +553,10 @@ export class TraceWidthSolver extends BaseSolver {
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
 
-      const limit = this.getObstacleWidthAlongVector(obstacle, normal)
-      if (limit <= COORDINATE_EPSILON) continue
+      const padWidth = this.getObstacleWidthAlongVector(obstacle, normal)
+      if (padWidth <= COORDINATE_EPSILON) continue
+      // A narrow pad fragment must not taper copper below the board minimum.
+      const limit = Math.max(this.minTraceWidth, padWidth)
 
       const neckDistance =
         this.getObstacleWidthAlongVector(obstacle, tangent) / 2

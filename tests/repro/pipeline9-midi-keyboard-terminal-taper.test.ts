@@ -95,5 +95,6 @@ test("snapshots live terminal tapers on the complete real MIDI keyboard phase", 
       { svgName, tolerance: 0 },
     )
   }
+  expect(undersizedWires).toHaveLength(0)
   expect(input).toEqual(originalInput)
 })
