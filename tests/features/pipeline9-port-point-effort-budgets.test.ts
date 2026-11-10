@@ -11,13 +11,19 @@ test("Pipeline 9 passes effort to the global and regional port-point search limi
     )
     solver.solveUntilPhase("portPointPathingSolver")
     const limits: Record<string, number> = {}
-    while (solver.getCurrentPhase() === "portPointPathingSolver" && !solver.failed) {
+    while (
+      solver.getCurrentPhase() === "portPointPathingSolver" &&
+      !solver.failed
+    ) {
       solver.step()
       const active = solver.portPointPathingSolver?.activeSubSolver
       if (active) limits[active.getSolverName()] = active.MAX_ITERATIONS
     }
     expect(solver.failed).toBe(false)
-    return [limits.PreparedPortPointRoutingSolver, limits.TinyHyperGraphSectionSolver]
+    return [
+      limits.PreparedPortPointRoutingSolver,
+      limits.TinyHyperGraphSectionSolver,
+    ]
   })
   expect(budgets).toEqual([
     [1_000_000, 500_000],
