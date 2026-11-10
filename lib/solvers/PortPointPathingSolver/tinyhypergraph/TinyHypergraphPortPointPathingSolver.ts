@@ -1793,7 +1793,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   getChangedPreloadedTraceSections(
     solvedTinySolver = this.getSolvedTinySolver(),
-    changedPreloadedRouteIds = this.getChangedPreloadedRouteIds(solvedTinySolver),
+    changedPreloadedRouteIds = this.getChangedPreloadedRouteIds(
+      solvedTinySolver,
+    ),
   ): ChangedPreloadedTraceSection[] {
     const changedPreloadedTraceSections = [...changedPreloadedRouteIds].map(
       (routeId): ChangedPreloadedTraceSection => {
@@ -1851,10 +1853,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     nodesWithPortPoints = this.getOutput().nodesWithPortPoints,
   ): Map<string, number | null> {
     const solvedNodeById = new Map(
-      nodesWithPortPoints.map((node) => [
-        node.capacityMeshNodeId,
-        node,
-      ]),
+      nodesWithPortPoints.map((node) => [node.capacityMeshNodeId, node]),
     )
     return new Map(
       this.inputNodeWithPortPoints.map((node) => [

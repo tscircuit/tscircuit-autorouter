@@ -456,9 +456,10 @@ export const checkTraceContinuity = (
       const touched = new Set<string>()
       for (const [portId, portPads] of padsByPort) {
         if (
-          portPads.some((pad) =>
-            (first && routePointTouchesPad(first, pad)) ||
-            (last && routePointTouchesPad(last, pad)),
+          portPads.some(
+            (pad) =>
+              (first && routePointTouchesPad(first, pad)) ||
+              (last && routePointTouchesPad(last, pad)),
           )
         ) {
           touched.add(portId)

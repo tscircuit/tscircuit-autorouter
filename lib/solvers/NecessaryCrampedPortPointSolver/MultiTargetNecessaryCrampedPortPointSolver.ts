@@ -14,6 +14,10 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import {
+  getConnectionEscapeIndex,
+  type ConnectionEscapeIndex,
+} from "../AvailableSegmentPointSolver/getConnectionEscapeIndex"
 import { getConnectionEscapePortPoints } from "../AvailableSegmentPointSolver/getConnectionEscapePortPoints"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
@@ -40,6 +44,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
   private filteredOutput?: SharedEdgeSegment[]
+  private escapeIndex?: ConnectionEscapeIndex
 
   override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
     null
@@ -55,11 +60,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   >()
   constructor(private input: MultiTargetNecessaryCrampedPortPointSolverInput) {
     super()
-    /**
-     * TODO: AutoroutingPipeline2_HgPortPointSolver does not call setup
-     * Add support for calling setup in the pipeline runner and remove this call to setup in the constructor.
-     */
-    this._setup()
+    this.setup()
   }
 
   getSolverName(): string {
@@ -95,12 +96,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           if (!cmNode) {
             throw new Error(`Could not find capacity mesh node for id ${id}`)
           }
-          const existingSegmentPortPoints =
-            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
-          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
-            ...existingSegmentPortPoints,
-            segmentPortPoint,
-          ])
+          const points = this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id)
+          if (points) points.push(segmentPortPoint)
+          else
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
+              segmentPortPoint,
+            ])
         }
       }
     }
@@ -141,6 +142,11 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
             nodeMap: this.nodeMap,
             portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
             connections: this.input.simpleRouteJson.connections,
+            escapeIndex: (this.escapeIndex ??= getConnectionEscapeIndex({
+              nodes: this.input.capacityMeshNodes,
+              nodeMap: this.nodeMap,
+              portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+            })),
           }) !== undefined
         if (
           areAllCandidatesBlocked ||
