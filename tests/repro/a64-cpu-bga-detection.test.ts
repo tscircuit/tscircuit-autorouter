@@ -21,8 +21,8 @@ test("detects packages on the real A64 DDR board after data-byte routing", async
   expect(inputSrj).toEqual(before)
 
   const graphics = convertSrjToGraphicsObject(inputSrj)
-  const detectedPackages = solver.rectBoundsComponentDetection!
-    .visualize()
+  const detectedPackages = solver
+    .rectBoundsComponentDetection!.visualize()
     .rects!.filter((rect) => rect.step === 2)
   graphics.rects.push(...detectedPackages.map(({ step, ...rect }) => rect))
   await expect(
