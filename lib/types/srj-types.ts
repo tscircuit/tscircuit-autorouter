@@ -102,7 +102,7 @@ export interface SimpleRouteJson {
 
 export interface DifferentialPair {
   /**
-   * The two members. For an inline path in pipelines 7 and 9, give both
+   * The two members. For an inline path in Pipeline 9, give both
    * connections the same number of pointsToConnect in corresponding order.
    */
   connectionNames: [string, string]

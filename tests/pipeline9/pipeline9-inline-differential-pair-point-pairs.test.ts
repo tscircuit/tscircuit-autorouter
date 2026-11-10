@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test"
-import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { Pipeline9NetToPointPairsSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9NetToPointPairsSolver"
 import type { SimpleRouteJson } from "lib/types"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 
-test("retains the declared inline sections when a shorter net tree could bypass them", () => {
+test("retains declared inline sections while routing taps and escape vias", () => {
   const [positive, negative] = ["P", "N"].map((name, polarity) => ({
     name,
     pointsToConnect: [
@@ -35,12 +34,19 @@ test("retains the declared inline sections when a shorter net tree could bypass 
     ],
     differentialPairs: [{ connectionNames: ["P", "N"], lengthTolerance: 0.05 }],
   }
-  const solver = new NetToPointPairsSolver2_OffBoardConnection(
-    input,
-    {},
-    getInitiallyConnectedMapFromSimpleRouteJson(input),
-    input.connections,
-  )
+  const srjWithEscapeVias = structuredClone(input)
+  srjWithEscapeVias.connections[0]!.pointsToConnect.push({
+    x: -0.5,
+    y: 0,
+    pointId: "P.escape",
+    layer: "top",
+    terminalVia: { toLayer: "bottom", viaDiameter: 0.5 },
+  })
+  const solver = new Pipeline9NetToPointPairsSolver({
+    srjBeforeEscapeVias: input,
+    srjWithEscapeVias,
+    colorMap: {},
+  })
   solver.solve()
 
   const routedLinks = solver.newConnections.map((connection) =>
@@ -53,6 +59,7 @@ test("retains the declared inline sections when a shorter net tree could bypass 
     "N.A/N.B",
     "N.B/N.C",
     "P.A/P.B",
+    "P.A/P.escape",
     "P.B/P.C",
     "P.B/TP",
   ])

@@ -1,4 +1,4 @@
-import type { DifferentialPair, SimpleRouteConnection } from "lib/types"
+import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
 
 type ConnectionName = SimpleRouteConnection["name"]
@@ -9,8 +9,7 @@ type DifferentialPairSectionPlan = {
 }
 
 export function planDifferentialPairSections(
-  pairs: DifferentialPair[] | undefined,
-  declaredConnections: readonly SimpleRouteConnection[] | undefined,
+  srjBeforeEscapeVias: SimpleRouteJson,
   routingConnections: SimpleRouteConnection[],
   mergedConnections: SimpleRouteConnection[],
 ): DifferentialPairSectionPlan {
@@ -19,16 +18,22 @@ export function planDifferentialPairSections(
     SimpleRouteConnection[]
   >()
   const sectionNamesByMember = new Map<ConnectionName, ConnectionName[]>()
-  if (!pairs?.length || !declaredConnections) {
+  const pairs = srjBeforeEscapeVias.differentialPairs
+  if (!pairs?.length) {
     return { sectionsByMergedConnection, sectionNamesByMember }
   }
 
   // Escape vias can add routing points that are not part of the declared pair.
   const declaredByName = new Map(
-    declaredConnections.map((connection) => [connection.name, connection]),
+    srjBeforeEscapeVias.connections.map((connection) => [
+      connection.name,
+      connection,
+    ]),
   )
   const routingByName = new Map(
-    routingConnections.map((connection) => [connection.name, connection]),
+    routingConnections
+      .filter((connection) => !connection.isOffBoard)
+      .map((connection) => [connection.name, connection]),
   )
   const mergedByPoint = new Map(
     mergedConnections.flatMap((connection) =>
@@ -93,6 +98,15 @@ export function planDifferentialPairSections(
           `Differential pair member "${member.name}" has no on-board routing connection`,
         )
       }
+      let nominalTraceWidth = routingConnection.nominalTraceWidth
+      for (const bus of srjBeforeEscapeVias.buses ?? []) {
+        if (
+          bus.traceWidth !== undefined &&
+          bus.connectionNames.includes(member.name)
+        ) {
+          nominalTraceWidth = Math.max(nominalTraceWidth ?? 0, bus.traceWidth)
+        }
+      }
 
       const sections = points
         .slice(1)
@@ -103,6 +117,7 @@ export function planDifferentialPairSections(
           return {
             ...routingConnection,
             name,
+            nominalTraceWidth,
             pointsToConnect: [points[index]!, point],
             __rootConnectionNames: [
               ...new Set([

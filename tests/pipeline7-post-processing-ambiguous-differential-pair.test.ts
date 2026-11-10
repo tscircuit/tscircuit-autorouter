@@ -36,7 +36,6 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
     lengthMatchingPostProcessingStep.getConstructorParams({
       ...solver,
       netToPointPairsSolver: {
-        differentialPairSectionNamesByMember: new Map(),
         newConnections: [
           {
             ...solver.srj.connections[0]!,

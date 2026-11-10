@@ -3,7 +3,6 @@ import type { DifferentialPair, SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 export function resolveDifferentialPairSections(
-  pipelineName: string,
   pairs: DifferentialPair[],
   pointPairs: SimpleRouteConnection[],
   sectionNamesByMember: ReadonlyMap<string, string[]>,
@@ -21,7 +20,7 @@ export function resolveDifferentialPairSections(
     )
     if (matches.length !== 1) {
       throw new Error(
-        `${pipelineName}: differential pair connection "${name}" must resolve to exactly one final point-pair connection, got ${matches.length}`,
+        `Pipeline9: differential pair connection "${name}" must resolve to exactly one final point-pair connection, got ${matches.length}`,
       )
     }
     return [matches[0]!.name]
@@ -32,7 +31,7 @@ export function resolveDifferentialPairSections(
     const negativeSections = resolveMember(pair.connectionNames[1])
     if (positiveSections.length !== negativeSections.length) {
       throw new Error(
-        `${pipelineName}: differential pair ${pair.connectionNames.join("/")} resolves to different section counts`,
+        `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves to different section counts`,
       )
     }
 
@@ -41,7 +40,7 @@ export function resolveDifferentialPairSections(
         const negativeSection = negativeSections[index]!
         if (positiveSection === negativeSection) {
           throw new Error(
-            `${pipelineName}: differential pair ${pair.connectionNames.join("/")} resolves both members to "${positiveSection}"`,
+            `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves both members to "${positiveSection}"`,
           )
         }
 
@@ -61,7 +60,7 @@ export function resolveDifferentialPairSections(
           )
           if (matchingRoutes.length !== 1) {
             throw new Error(
-              `${pipelineName}: differential pair connection "${name}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
+              `Pipeline9: differential pair connection "${name}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
             )
           }
           return matchingRoutes[0]!.traceThickness / 2

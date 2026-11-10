@@ -1,16 +1,11 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import type {
-  ConnectionPoint,
-  SimpleRouteConnection,
-  SimpleRouteJson,
-} from "lib/types"
+import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
-import { planDifferentialPairSections } from "./planDifferentialPairSections"
 
 type ConnectionName = SimpleRouteConnection["name"]
 
@@ -35,19 +30,11 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
-  private readonly differentialPairSectionPlan: ReturnType<
-    typeof planDifferentialPairSections
-  >
-  readonly differentialPairSectionNamesByMember: ReadonlyMap<
-    ConnectionName,
-    ConnectionName[]
-  >
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
-    declaredConnections?: readonly SimpleRouteConnection[],
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -81,48 +68,8 @@ export class NetToPointPairsSolver extends BaseSolver {
     this.unprocessedConnections = mergeConnections(
       connectionsWithBusTraceWidths,
     )
-    this.differentialPairSectionPlan = planDifferentialPairSections(
-      ogSrj.differentialPairs,
-      declaredConnections,
-      connectionsWithBusTraceWidths,
-      this.unprocessedConnections,
-    )
-    this.differentialPairSectionNamesByMember =
-      this.differentialPairSectionPlan.sectionNamesByMember
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
-  }
-
-  protected routeOrderedSectionsAndGetRemainingEdges(
-    connection: SimpleRouteConnection,
-    connectedState: ReturnType<typeof getInitiallyConnectedStateForConnection>,
-  ): ReturnType<typeof buildMinimumSpanningTree<ConnectionPoint>> {
-    const sections =
-      this.differentialPairSectionPlan.sectionsByMergedConnection.get(
-        connection.name,
-      )
-    if (!sections) {
-      return buildMinimumSpanningTree(connection.pointsToConnect, {
-        extraEdges: connectedState.zeroWeightEdges,
-      })
-    }
-
-    const orderedEdges = sections.map((section) => {
-      const [from, to] = section.pointsToConnect
-      if (connectedState.arePointsConnected(from!, to!)) {
-        throw new Error(
-          `Differential pair section "${section.name}" already has copper and cannot be routed as a new paired section`,
-        )
-      }
-      return { from: from!, to: to!, weight: 0 }
-    })
-    this.newConnections.push(...sections)
-
-    // Treat the ordered sections as connected when picking links to any taps.
-    const orderedEdgeSet = new Set(orderedEdges)
-    return buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: [...orderedEdges, ...connectedState.zeroWeightEdges],
-    }).filter((edge) => !orderedEdgeSet.has(edge))
   }
 
   _step() {
@@ -132,11 +79,11 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
 
-    const connectedState = getInitiallyConnectedStateForConnection(
-      connection,
-      this.initiallyConnectedMap,
-    )
-    const { arePointsConnected } = connectedState
+    const { zeroWeightEdges, arePointsConnected } =
+      getInitiallyConnectedStateForConnection(
+        connection,
+        this.initiallyConnectedMap,
+      )
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
@@ -152,10 +99,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const edges = this.routeOrderedSectionsAndGetRemainingEdges(
-      connection,
-      connectedState,
-    )
+    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
+      extraEdges: zeroWeightEdges,
+    })
 
     let mstIdx = 0
     for (const edge of edges) {

@@ -6,6 +6,7 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
+import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
 
 /**
@@ -36,7 +37,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
-    declaredConnections?: readonly SimpleRouteConnection[],
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -76,7 +76,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       { ...ogSrj, connections: onBoardConnections },
       colorMap,
       initiallyConnectedMap,
-      declaredConnections,
     )
 
     this.connectionPointDsu = connectionPointDsu
@@ -128,11 +127,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const connectedState = getInitiallyConnectedStateForConnection(
-      currentConnection,
-      this.initiallyConnectedMap,
-    )
-    const { arePointsConnected } = connectedState
+    const { zeroWeightEdges, arePointsConnected } =
+      getInitiallyConnectedStateForConnection(
+        currentConnection,
+        this.initiallyConnectedMap,
+      )
 
     if (currentConnection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = currentConnection.pointsToConnect
@@ -154,11 +153,10 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const minimumSpanningTreeEdges =
-      this.routeOrderedSectionsAndGetRemainingEdges(
-        currentConnection,
-        connectedState,
-      )
+    const minimumSpanningTreeEdges = buildMinimumSpanningTree(
+      currentConnection.pointsToConnect,
+      { extraEdges: zeroWeightEdges },
+    )
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {

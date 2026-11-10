@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import type { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 
 test("Pipeline7 runs post-processing before default power expansion", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
@@ -50,21 +49,15 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     onlyConnectionNames: [],
   })
 
-  const netToPointPairsSolver = {
-    differentialPairSectionNamesByMember: new Map(),
-    newConnections: solver.srj.connections.map((connection) => ({
-      ...connection,
-      name: `${connection.name}_mst0`,
-      __rootConnectionNames: [connection.name],
-    })),
-  } satisfies Pick<
-    NetToPointPairsSolver,
-    "differentialPairSectionNamesByMember" | "newConnections"
-  >
-
   const [params] = lengthMatchingPostProcessingStep!.getConstructorParams({
     ...solver,
-    netToPointPairsSolver,
+    netToPointPairsSolver: {
+      newConnections: solver.srj.connections.map((connection) => ({
+        ...connection,
+        name: `${connection.name}_mst0`,
+        __rootConnectionNames: [connection.name],
+      })),
+    },
     exactGeometryDrcForceImproveSolver: {
       getOutput: () => [
         {

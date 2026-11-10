@@ -20,7 +20,6 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
-import { assertInlineDifferentialPairProcessing } from "lib/solvers/assertInlineDifferentialPairProcessing"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -43,7 +42,6 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -63,9 +61,9 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
-import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { resolveDifferentialPairSections } from "../../solvers/NetToPointPairsSolver/resolveDifferentialPairSections"
-import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { Pipeline9NetToPointPairsSolver } from "./Pipeline9NetToPointPairsSolver"
+import { assertInlineDifferentialPairProcessing } from "./assertInlineDifferentialPairProcessing"
+import { resolveDifferentialPairSections } from "./resolveDifferentialPairSections"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -256,7 +254,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
-  netToPointPairsSolver?: NetToPointPairsSolver
+  netToPointPairsSolver?: Pipeline9NetToPointPairsSolver
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
@@ -353,16 +351,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "netToPointPairsSolver",
-      NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => {
-        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-        return [
-          inputSrj,
-          cms.colorMap,
-          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-          cms.srj.connections,
-        ]
-      },
+      Pipeline9NetToPointPairsSolver,
+      (cms) => [
+        {
+          srjBeforeEscapeVias: cms.srj,
+          srjWithEscapeVias: cms.srjWithEscapeViaLocations ?? cms.srj,
+          colorMap: cms.colorMap,
+        },
+      ],
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
@@ -1002,7 +998,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           )
         const hdRoutes = cms.effortCleanupSolver!.getOutput()
         const differentialPairs = resolveDifferentialPairSections(
-          "Pipeline9",
           cms.srj.differentialPairs ?? [],
           netToPointPairsSolver.newConnections,
           netToPointPairsSolver.differentialPairSectionNamesByMember,
