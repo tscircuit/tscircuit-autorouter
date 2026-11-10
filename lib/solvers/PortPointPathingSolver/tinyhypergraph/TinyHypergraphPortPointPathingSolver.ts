@@ -1200,6 +1200,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private getChangedPreloadedRouteIds(
     solvedTinySolver: TinyHyperGraphSolver,
   ): Set<number> {
+    if (this.originalPreloadedSegmentKeysByConnectionId.size === 0)
+      return new Set()
     const routeIdByConnectionId = new Map<PreloadedTraceConnectionId, number>()
     const solvedSegmentKeysByRouteId = new Map<number, Set<string>>()
 
@@ -1746,6 +1748,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       })
     }
 
+    const changedPreloadedTraceSections = this.getChangedPreloadedTraceSections(
+      solvedTinySolver,
+      changedPreloadedRouteIds,
+    )
+
+    return {
+      nodesWithPortPoints,
+      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      changedPreloadedTraceSections,
+    }
+  }
+
+  getChangedPreloadedTraceSections(
+    solvedTinySolver = this.getSolvedTinySolver(),
+    changedPreloadedRouteIds = this.getChangedPreloadedRouteIds(solvedTinySolver),
+  ): ChangedPreloadedTraceSection[] {
     const changedPreloadedTraceSections = [...changedPreloadedRouteIds].map(
       (routeId): ChangedPreloadedTraceSection => {
         const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
@@ -1788,11 +1806,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.stats.changedPreloadedTraceSectionCount =
       changedPreloadedTraceSections.length
 
-    return {
-      nodesWithPortPoints,
-      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
-      changedPreloadedTraceSections,
-    }
+    return changedPreloadedTraceSections
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number | null {
@@ -1802,9 +1816,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return this.computeSolvedNodePf(node.capacityMeshNodeId, solvedNode)
   }
 
-  computeNodePfMap(): Map<string, number | null> {
+  computeNodePfMap(
+    nodesWithPortPoints = this.getOutput().nodesWithPortPoints,
+  ): Map<string, number | null> {
     const solvedNodeById = new Map(
-      this.getOutput().nodesWithPortPoints.map((node) => [
+      nodesWithPortPoints.map((node) => [
         node.capacityMeshNodeId,
         node,
       ]),
