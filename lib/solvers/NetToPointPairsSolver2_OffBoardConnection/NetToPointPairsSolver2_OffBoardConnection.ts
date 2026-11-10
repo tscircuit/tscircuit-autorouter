@@ -6,8 +6,8 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
-import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
+import type { DifferentialPairInput } from "../NetToPointPairsSolver/planDifferentialPairSections"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -37,6 +37,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    differentialPairInput?: DifferentialPairInput,
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -76,6 +77,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       { ...ogSrj, connections: onBoardConnections },
       colorMap,
       initiallyConnectedMap,
+      differentialPairInput,
     )
 
     this.connectionPointDsu = connectionPointDsu
@@ -127,11 +129,11 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
-    const { zeroWeightEdges, arePointsConnected } =
-      getInitiallyConnectedStateForConnection(
-        currentConnection,
-        this.initiallyConnectedMap,
-      )
+    const connectedState = getInitiallyConnectedStateForConnection(
+      currentConnection,
+      this.initiallyConnectedMap,
+    )
+    const { arePointsConnected } = connectedState
 
     if (currentConnection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = currentConnection.pointsToConnect
@@ -153,9 +155,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const minimumSpanningTreeEdges = buildMinimumSpanningTree(
-      currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+    const minimumSpanningTreeEdges = this.routeOrderedSectionsAndGetRemainingEdges(
+      currentConnection,
+      connectedState,
     )
 
     let mstEdgeIndex = 0

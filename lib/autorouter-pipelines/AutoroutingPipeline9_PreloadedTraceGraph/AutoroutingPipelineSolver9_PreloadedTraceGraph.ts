@@ -25,7 +25,6 @@ import { getColorMap } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
-  DifferentialPair,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -64,6 +63,7 @@ import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/E
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import { resolveDifferentialPairSections } from "../../solvers/NetToPointPairsSolver/resolveDifferentialPairSections"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
@@ -359,6 +359,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+          cms.srj,
         ]
       },
       {
@@ -998,79 +999,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const connections = netToPointPairsSolver.newConnections
-        const finalHdConnectionNames = new Map<string, string>()
-        for (const pair of cms.srj.differentialPairs ?? []) {
-          for (const connectionName of pair.connectionNames) {
-            const matchingConnections = connections.filter(
-              (connection) =>
-                connection.name === connectionName ||
-                connection.__rootConnectionNames?.includes(connectionName) ||
-                connection.__netConnectionName === connectionName,
-            )
-            if (matchingConnections.length !== 1)
-              throw new Error(
-                `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
-              )
-            finalHdConnectionNames.set(
-              connectionName,
-              matchingConnections[0]!.name,
-            )
-          }
-        }
         const hdRoutes = cms.effortCleanupSolver!.getOutput()
-        const differentialPairs = (cms.srj.differentialPairs ?? []).map(
-          (pair) => {
-            const connectionNames = pair.connectionNames.map(
-              (connectionName) => {
-                const finalHdConnectionName =
-                  finalHdConnectionNames.get(connectionName)
-                if (!finalHdConnectionName)
-                  throw new Error(
-                    `Pipeline9: differential pair connection "${connectionName}" is missing from final routed output`,
-                  )
-                return finalHdConnectionName
-              },
-            ) as [string, string]
-            if (connectionNames[0] === connectionNames[1])
-              throw new Error(
-                `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
-              )
-            const resolvedPair: DifferentialPair = {
-              connectionNames,
-              lengthTolerance: pair.lengthTolerance,
-            }
-            if (pair.maxUncoupledLength !== undefined)
-              resolvedPair.maxUncoupledLength = pair.maxUncoupledLength
-            if (pair.traceGap === undefined) return resolvedPair
-            const pairRoutes = connectionNames.map((connectionName) => {
-              const matchingRoutes = hdRoutes.filter(
-                (route) => route.connectionName === connectionName,
-              )
-              if (matchingRoutes.length !== 1)
-                throw new Error(
-                  `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
-                )
-              return matchingRoutes[0]!
-            })
-            const centerlineDistance =
-              pair.traceGap +
-              pairRoutes.reduce(
-                (halfWidthTotal, route) =>
-                  halfWidthTotal + route.traceThickness / 2,
-                0,
-              )
-            return {
-              ...resolvedPair,
-              minimumCenterlineDistance: centerlineDistance,
-              maximumCenterlineDistance: centerlineDistance,
-            }
-          },
+        const differentialPairs = resolveDifferentialPairSections(
+          "Pipeline9",
+          cms.srj.differentialPairs ?? [],
+          netToPointPairsSolver.newConnections,
+          netToPointPairsSolver.differentialPairSectionNamesByMember,
+          hdRoutes,
         )
         return [
           {
             hdRoutes,
             differentialPairs,
+            inlineDifferentialPairSectionNames: Array.from(
+              netToPointPairsSolver.differentialPairSectionNamesByMember.values(),
+            ).flat(),
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
             obstacles: cms.srj.obstacles,

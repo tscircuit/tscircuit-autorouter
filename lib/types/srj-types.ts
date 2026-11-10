@@ -101,6 +101,10 @@ export interface SimpleRouteJson {
 }
 
 export interface DifferentialPair {
+  /**
+   * The two members. For an inline path in pipelines 7 and 9, give both
+   * connections the same number of pointsToConnect in corresponding order.
+   */
   connectionNames: [string, string]
   /** Maximum permitted routed-length difference in millimeters. */
   lengthTolerance: number

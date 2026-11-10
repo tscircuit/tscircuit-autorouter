@@ -12,10 +12,12 @@ import type {
   SimpleRouteConnection,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
+import { assertInlineDifferentialPairProcessing } from "./assertInlineDifferentialPairProcessing"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
   differentialPairs: DifferentialPair[]
+  inlineDifferentialPairSectionNames?: string[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
   traces?: SimplifiedPcbTraces
@@ -170,7 +172,12 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      const { hdRoutes, postProcessingErrors } =
+        this.differentialPairSolver.getOutput()
+      assertInlineDifferentialPairProcessing(
+        this.params.inlineDifferentialPairSectionNames ?? [],
+        postProcessingErrors,
+      )
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
