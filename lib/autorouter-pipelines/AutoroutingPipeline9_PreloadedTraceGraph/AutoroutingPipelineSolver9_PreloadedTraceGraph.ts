@@ -544,7 +544,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
+            // Keep the baseline rip schedule while allowing a longer search.
             effort: Math.min(1, cms.effort),
+            iterationBudgetEffort: cms.effort,
             preserveTerminalPcbPortIds: true,
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
