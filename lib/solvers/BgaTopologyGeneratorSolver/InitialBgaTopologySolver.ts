@@ -13,7 +13,6 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
-import { TOPOLOGY_MERGING_EPSILON } from "../TopologyMergingSolver/topology-merging-types"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
@@ -318,8 +317,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
     const hasClearGapViaCenter = (gap: BgaGap): boolean => {
       if (
         gap.orientation !== "diagonal" ||
-        (viaDiameter <= gap.width + TOPOLOGY_MERGING_EPSILON &&
-          viaDiameter <= gap.height + TOPOLOGY_MERGING_EPSILON)
+        (gap.width > multiLayerThreshold && gap.height > multiLayerThreshold)
       )
         return false
       const clearance = getViaToPadClearance(srj) ?? 0.15
