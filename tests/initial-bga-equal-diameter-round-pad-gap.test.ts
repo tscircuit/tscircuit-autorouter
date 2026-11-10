@@ -8,16 +8,18 @@ const pads: Obstacle[] = [
   [446, -18.400000000000006, -5.2000000000000055],
   [464, -19.200000000000006, -6.000000000000005],
   [465, -18.400000000000006, -6.000000000000005],
-].map(([id, x, y]): Obstacle => ({
-  type: "rect",
-  shape: "circle",
-  componentId: "pcb_component_1",
-  center: { x: x!, y: y! },
-  width: 0.4,
-  height: 0.4,
-  layers: ["top"],
-  connectedTo: [`pcb_smtpad_${id}`],
-}))
+].map(
+  ([id, x, y]): Obstacle => ({
+    type: "rect",
+    shape: "circle",
+    componentId: "pcb_component_1",
+    center: { x: x!, y: y! },
+    width: 0.4,
+    height: 0.4,
+    layers: ["top"],
+    connectedTo: [`pcb_smtpad_${id}`],
+  }),
+)
 
 function getViaColumn(srj: SimpleRouteJson): CapacityMeshNode[] {
   const solver = new InitialBgaTopologySolver({
@@ -31,11 +33,13 @@ function getViaColumn(srj: SimpleRouteJson): CapacityMeshNode[] {
   })
   solver.solve()
   expect(solver.solved).toBe(true)
-  return solver.getOutput().filter(
-    (node) =>
-      !node._containsObstacle &&
-      Math.hypot(node.center.x + 18.8, node.center.y + 5.6) < 1e-8,
-  )
+  return solver
+    .getOutput()
+    .filter(
+      (node) =>
+        !node._containsObstacle &&
+        Math.hypot(node.center.x + 18.8, node.center.y + 5.6) < 1e-8,
+    )
 }
 
 test("a via matching the round-pad gap still receives the physical clearance check", (): void => {
