@@ -679,7 +679,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
-      nodePfById: this.nodePfById,
+      nodePfById: {
+        [node.capacityMeshNodeId]:
+          this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+      },
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
