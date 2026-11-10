@@ -8,21 +8,29 @@ export function createDifferentialPairSegmentInput(
   srj: SimpleRouteJson,
 ): Parameters<typeof resolveDifferentialPairSegments>[0] {
   const solver = new NetToPointPairsSolver(
-    srj, {}, getInitiallyConnectedMapFromSimpleRouteJson(srj),
+    srj,
+    {},
+    getInitiallyConnectedMapFromSimpleRouteJson(srj),
   )
   solver.solve()
   return {
     differentialPairs: srj.differentialPairs!,
     connections: solver.newConnections,
-    hdRoutes: solver.newConnections.map((connection): HighDensityRoute => ({
-      connectionName: connection.name,
-      traceThickness: 0.15,
-      viaDiameter: 0.3,
-      vias: [],
-      route: connection.pointsToConnect.map((point): HighDensityRoute["route"][number] => ({
-        x: point.x, y: point.y, z: 0,
-      })),
-    })),
+    hdRoutes: solver.newConnections.map(
+      (connection): HighDensityRoute => ({
+        connectionName: connection.name,
+        traceThickness: 0.15,
+        viaDiameter: 0.3,
+        vias: [],
+        route: connection.pointsToConnect.map(
+          (point): HighDensityRoute["route"][number] => ({
+            x: point.x,
+            y: point.y,
+            z: 0,
+          }),
+        ),
+      }),
+    ),
     pipelineName: "Test",
   }
 }

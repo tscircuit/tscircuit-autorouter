@@ -11,7 +11,8 @@ test("rejects ambiguous terminal geometry instead of guessing a segment pairing"
   srj.connections[1]!.pointsToConnect[1] = { x: 0, y: 2, layer: "top" }
   const input = createDifferentialPairSegmentInput(srj)
 
-  expect((): ReturnType<typeof resolveDifferentialPairSegments> => resolveDifferentialPairSegments(input)).toThrow(
-    "has no unique corresponding terminal",
-  )
+  expect(
+    (): ReturnType<typeof resolveDifferentialPairSegments> =>
+      resolveDifferentialPairSegments(input),
+  ).toThrow("has no unique corresponding terminal")
 })

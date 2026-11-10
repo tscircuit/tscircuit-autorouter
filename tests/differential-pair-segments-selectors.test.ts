@@ -14,8 +14,12 @@ test("component selectors disambiguate terminals closer to another component", (
   expect(pairs).toHaveLength(2)
   for (const pair of pairs) {
     const owners = pair.connectionNames.map((name): string[] =>
-      input.connections.find((connection): boolean => connection.name === name)!
-        .pointsToConnect.map((point): string => point.port_selector!.split(".")[0]!).sort(),
+      input.connections
+        .find((connection): boolean => connection.name === name)!
+        .pointsToConnect.map(
+          (point): string => point.port_selector!.split(".")[0]!,
+        )
+        .sort(),
     )
     expect(owners[0]).toEqual(owners[1])
   }

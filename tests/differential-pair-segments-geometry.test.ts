@@ -11,12 +11,14 @@ test("pairs four-terminal members by geometry regardless of segment order or dir
   }
   const input = createDifferentialPairSegmentInput(srj)
   input.connections.reverse()
-  const negative = input.connections.filter(
-    (connection): boolean => connection.__rootConnectionNames!.includes("USB_N"),
+  const negative = input.connections.filter((connection): boolean =>
+    connection.__rootConnectionNames!.includes("USB_N"),
   )
   for (const [index, connection] of negative.entries()) {
     connection.pointsToConnect.reverse()
-    const route = input.hdRoutes.find((route): boolean => route.connectionName === connection.name)!
+    const route = input.hdRoutes.find(
+      (route): boolean => route.connectionName === connection.name,
+    )!
     connection.name = `negative_segment_${index}`
     route.connectionName = connection.name
     route.traceThickness = 0.25
@@ -27,9 +29,11 @@ test("pairs four-terminal members by geometry regardless of segment order or dir
   expect(pairs).toHaveLength(3)
   for (const pair of pairs) {
     const [positiveSegment, negativeSegment] = pair.connectionNames.map(
-      (name): number[] => input.connections.find(
-        (connection): boolean => connection.name === name,
-      )!.pointsToConnect.map((point): number => point.x).sort((a, b): number => a - b),
+      (name): number[] =>
+        input.connections
+          .find((connection): boolean => connection.name === name)!
+          .pointsToConnect.map((point): number => point.x)
+          .sort((a, b): number => a - b),
     )
     expect(positiveSegment).toEqual(negativeSegment)
     expect(pair.minimumCenterlineDistance).toBeCloseTo(0.5)

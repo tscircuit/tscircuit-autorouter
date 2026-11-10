@@ -57,6 +57,6 @@ test("Pipeline7 rejects differential pair members with different segment counts"
       exactGeometryDrcForceImproveSolver: { getOutput: () => [] },
     } as any),
   ).toThrow(
-    'Pipeline7: differential pair PAIR_P/PAIR_N must decompose into the same non-zero number of corresponding segments, got 2 and 1',
+    "Pipeline7: differential pair PAIR_P/PAIR_N must decompose into the same non-zero number of corresponding segments, got 2 and 1",
   )
 })

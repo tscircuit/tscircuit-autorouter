@@ -5,7 +5,9 @@ import { multiTerminalDifferentialPair } from "../fixtures/multiTerminalDifferen
 test("Pipeline9 rejects a three-terminal member paired with a two-terminal member", (): void => {
   const srj = structuredClone(multiTerminalDifferentialPair)
   srj.connections[1]!.pointsToConnect.splice(1, 1)
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, { cacheProvider: null })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+    cacheProvider: null,
+  })
 
   expect((): void => solver.solve()).toThrow(
     "Pipeline9: differential pair USB_P/USB_N must decompose into the same non-zero number of corresponding segments, got 2 and 1",

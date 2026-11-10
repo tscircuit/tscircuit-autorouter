@@ -5,8 +5,12 @@ import { multiTerminalDifferentialPair } from "../fixtures/multiTerminalDifferen
 test("Pipeline9 throws when a segment cannot satisfy the terminal escape limit", (): void => {
   const srj = structuredClone(multiTerminalDifferentialPair)
   srj.differentialPairs![0]!.maxUncoupledLength = 0
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, { cacheProvider: null })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+    cacheProvider: null,
+  })
 
-  expect((): void => solver.solve()).toThrow("Differential pair segment post-processing failed:")
+  expect((): void => solver.solve()).toThrow(
+    "Differential pair segment post-processing failed:",
+  )
   expect(solver.failed).toBe(true)
 })

@@ -140,15 +140,16 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new DifferentialPairSegmentPostProcessingSolver({
-      hdRoutes: params.hdRoutes,
-      differentialPairs: params.differentialPairs,
-      traces: params.traces,
-      obstacles: params.obstacles,
-      bounds: params.bounds,
-      layerCount: params.layerCount,
-      minTraceToPadEdgeClearance: params.obstacleMargin,
-    })
+    this.differentialPairSolver =
+      new DifferentialPairSegmentPostProcessingSolver({
+        hdRoutes: params.hdRoutes,
+        differentialPairs: params.differentialPairs,
+        traces: params.traces,
+        obstacles: params.obstacles,
+        bounds: params.bounds,
+        layerCount: params.layerCount,
+        minTraceToPadEdgeClearance: params.obstacleMargin,
+      })
     this.MAX_ITERATIONS =
       this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
   }
@@ -160,7 +161,8 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override _step(): void {
     if (!this.differentialPairSolver.solved) {
       this.differentialPairSolver.step()
-      this.MAX_ITERATIONS = this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
+      this.MAX_ITERATIONS =
+        this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
       if (this.differentialPairSolver.failed) {
         this.failed = true
         this.error = this.differentialPairSolver.error
