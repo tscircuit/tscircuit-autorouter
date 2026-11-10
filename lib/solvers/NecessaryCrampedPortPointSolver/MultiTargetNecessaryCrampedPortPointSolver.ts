@@ -242,6 +242,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     if (!this.currentTarget) {
       this.currentTarget = this.unprocessedTargets.shift()
       if (!this.currentTarget) {
+        // Only the search uses these indexes. Output and visualization use nodeMap and the retained paths.
+        this.escapeIndex = undefined
+        this.mapOfCapacityMeshNodeIdToSegmentPortPoints.clear()
         this.solved = true
         return
       }
