@@ -15,10 +15,16 @@ import {
 
 test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<void> => {
   const { inputSrj } = JSON.parse(
-    gunzipSync(new Uint8Array(readFileSync(new URL(
-      "../fixtures/assets/icepi-retained-vias/input.srj.json.gz",
-      import.meta.url,
-    )))).toString("utf8"),
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/icepi-retained-vias/input.srj.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString("utf8"),
   ) as { inputSrj: SimpleRouteJson }
   // Actual ce39469 interface from tscircuit3133, before high-density routing.
   const port = {
@@ -48,7 +54,8 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
     },
   ]
   const ownerNodeIds: [string, string] = [
-    nodes[0]!.capacityMeshNodeId, nodes[1]!.capacityMeshNodeId,
+    nodes[0]!.capacityMeshNodeId,
+    nodes[1]!.capacityMeshNodeId,
   ]
   const inputNodes: InputNodeWithPortPoints[] = nodes.map((node) => ({
     ...node,
@@ -83,7 +90,8 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
   expect(inputSrj.minTraceToPadEdgeClearance).toBe(0.1)
 
   const padObstacle = inputSrj.obstacles.find(
-    (obstacle) => obstacle.circuitJsonMetadata?.pcb_smtpad_id === "pcb_smtpad_23",
+    (obstacle) =>
+      obstacle.circuitJsonMetadata?.pcb_smtpad_id === "pcb_smtpad_23",
   )!
   const pad = createPcbPadElements({
     ...inputSrj,
@@ -93,7 +101,9 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
   // The searched A13 endpoint is unchanged when this artificial anchor moves.
   const searchedPoint = { x: 18.881999999999998, y: -1.1446666666666783 }
   const gap = getTraceObstacleClearance(
-    points[0]!, searchedPoint, inputSrj.minTraceWidth!,
+    points[0]!,
+    searchedPoint,
+    inputSrj.minTraceWidth!,
     compileTraceClearanceObstacle(pad, 0),
   ).gap
   const graphics: GraphicsObject = {
@@ -114,7 +124,10 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
     ],
     lines: [
       {
-        points: [{ x: 18.72, y: -1.3066666666666782 }, { x: 18.72, y: -1.0700000000000176 }],
+        points: [
+          { x: 18.72, y: -1.3066666666666782 },
+          { x: 18.72, y: -1.0700000000000176 },
+        ],
         strokeColor: "#64748b",
         strokeWidth: 0.008,
       },
@@ -128,7 +141,13 @@ test("shows the native iCEPi DDR crossing beside BALL_AA11", async (): Promise<v
     points: [{ ...points[0]!, color: "#0f766e", label: "shared crossing" }],
   }
   const svg = getSvgFromGraphicsObject(graphics, { backgroundColor: "white" })
-    .replaceAll('stroke-linejoin="round"', 'stroke-linejoin="round" stroke-linecap="round"')
-    .replace("</svg>", `<g><rect x="8" y="8" width="624" height="60" fill="white"/><text x="20" y="30" font-family="Arial, sans-serif" font-size="17">Native iCEPi DDR crossing beside BALL_AA11</text><text x="20" y="54" font-family="Arial, sans-serif" font-size="17">Clearance: ${gap.toFixed(4)} mm; required: 0.1000 mm</text></g></svg>`)
+    .replaceAll(
+      'stroke-linejoin="round"',
+      'stroke-linejoin="round" stroke-linecap="round"',
+    )
+    .replace(
+      "</svg>",
+      `<g><rect x="8" y="8" width="624" height="60" fill="white"/><text x="20" y="30" font-family="Arial, sans-serif" font-size="17">Native iCEPi DDR crossing beside BALL_AA11</text><text x="20" y="54" font-family="Arial, sans-serif" font-size="17">Clearance: ${gap.toFixed(4)} mm; required: 0.1000 mm</text></g></svg>`,
+    )
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
