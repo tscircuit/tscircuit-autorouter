@@ -7,6 +7,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
+import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
 
 type DrcError = Record<string, unknown>
 type ViaLocationKey = string
@@ -31,18 +32,13 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
   traceClearance?: number
   viaClearance?: number
 }): ((traces: SimplifiedPcbTrace[]) => DrcError[]) => {
-  const fixedObstacleIndexes = new Set<number>()
+  const fixedObstacleIndexes = getFixedCopperObstacleIndexes({
+    inputSrj,
+    representedPadObstacleIndexes,
+  })
   const wireObstacleIndexes = new Set<number>()
-  for (const [obstacleIndex, obstacle] of inputSrj.obstacles.entries()) {
-    if (
-      representedPadObstacleIndexes.has(obstacleIndex) ||
-      obstacle.connectedTo.length === 0 ||
-      obstacle.isCopperPour ||
-      obstacle.isNonPlatedHole
-    ) {
-      continue
-    }
-    fixedObstacleIndexes.add(obstacleIndex)
+  for (const obstacleIndex of fixedObstacleIndexes) {
+    const obstacle = inputSrj.obstacles[obstacleIndex]!
     // Identified vias retain their existing via-specific evaluation.
     // Anonymous copper includes the earlier data wires from Core.
     if (!obstacle.circuitJsonMetadata?.pcb_via_id) {

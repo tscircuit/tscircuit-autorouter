@@ -1,13 +1,117 @@
+import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import type { SimpleRouteJson } from "lib/types"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
+import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
+
+type ForceImproveParams = ConstructorParameters<
+  typeof HighDensityForceImproveSolver
+>[0] & { inputSrj: SimpleRouteJson }
+type ForceImproveConstructorParams = ReturnType<
+  HighDensityForceImproveSolver["getConstructorParams"]
+>[0] & { inputSrj: SimpleRouteJson }
+type ViaClearanceViolationKey = string
 
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
+  private readonly inputSrj: SimpleRouteJson
+  private readonly fixedViaObstacleIndexes: ReadonlySet<number>
+  private readonly evaluateFixedObstacles: ReturnType<
+    typeof createFixedObstacleViolationEvaluator
+  >
+
+  constructor(params: ForceImproveParams) {
+    super(params)
+    this.inputSrj = params.inputSrj
+    const representedPadObstacleIndexes = new Set<number>()
+    convertToCircuitJson(params.inputSrj, [], {
+      originalSrj: params.inputSrj,
+      representedPadObstacleIndexes,
+    })
+    const fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
+      inputSrj: params.inputSrj,
+      representedPadObstacleIndexes,
+    })
+    this.fixedViaObstacleIndexes = new Set(
+      [...fixedCopperObstacleIndexes].filter((obstacleIndex) => {
+        const obstacle = params.inputSrj.obstacles[obstacleIndex]!
+        return obstacle.shape === "circle" && obstacle.layers.length > 1
+      }),
+    )
+    this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
+      srj: {
+        ...params.inputSrj,
+        traces: undefined,
+        // The checker represents circular copper as an equal-width oval.
+        obstacles: params.inputSrj.obstacles.map((obstacle) =>
+          obstacle.shape === "circle"
+            ? { ...obstacle, type: "oval" as const, height: obstacle.width }
+            : obstacle,
+        ),
+      },
+      routes: params.hdRoutes,
+      traceClearance:
+        params.inputSrj.minTraceToPadEdgeClearance ??
+        params.inputSrj.defaultObstacleMargin ??
+        RELAXED_DRC_OPTIONS.traceClearance,
+      viaClearance:
+        getViaToPadClearance(params.inputSrj) ??
+        RELAXED_DRC_OPTIONS.traceClearance,
+    })
+  }
+
+  override getConstructorParams(): readonly [ForceImproveConstructorParams] {
+    return [
+      {
+        ...super.getConstructorParams()[0],
+        inputSrj: this.inputSrj,
+      },
+    ]
+  }
+
+  private validateImprovedSample(routeIndexes: number[]): void {
+    if (this.fixedViaObstacleIndexes.size === 0) return
+    const originalRoutes = routeIndexes.map(
+      (routeIndex) => this.originalHdRoutes[routeIndex],
+    )
+    const candidateRoutes = routeIndexes.map((routeIndex) => {
+      const route = this.improvedRoutesByIndex.get(routeIndex)
+      if (!route) throw new Error("Force improvement lost a node's candidate")
+      return route
+    })
+    // Existing via conflicts belong to repair; preserve previously clear pairs.
+    const originalViolationKeys = new Set<ViaClearanceViolationKey>(
+      this.evaluateFixedObstacles(originalRoutes)
+        .filter(
+          (violation) =>
+            violation.kind === "via" &&
+            this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
+        )
+        .map((violation) => violation.key),
+    )
+    const introducesViaClearanceViolation = this.evaluateFixedObstacles(
+      candidateRoutes,
+    ).some(
+      (violation) =>
+        violation.kind === "via" &&
+        this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
+        !originalViolationKeys.has(violation.key),
+    )
+    if (!introducesViaClearanceViolation) return
+    // A node's routes move together; accepting only some can introduce peer shorts.
+    for (const routeIndex of routeIndexes) {
+      this.improvedRoutesByIndex.delete(routeIndex)
+    }
+    this.stats.improvedRouteCount = this.improvedRoutesByIndex.size
+  }
 
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
@@ -93,7 +197,9 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   override _step(): void {
     const result = this.completedSample
     if (!result) {
+      const entry = this.sampleEntries[this.activeSampleIndex]
       super._step()
+      if (entry) this.validateImprovedSample(entry.routeIndexes)
       return
     }
     this.completedSample = undefined
@@ -104,6 +210,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
     for (const [index, routeIndex] of entry.routeIndexes.entries()) {
       this.improvedRoutesByIndex.set(routeIndex, result.routes[index])
     }
+    this.validateImprovedSample(entry.routeIndexes)
     this.latestVisualization = result.latestVisualization
     this.activeSampleIndex += 1
     this.stats = {

@@ -14,9 +14,14 @@ export function expectHighDensityForceImproveState(
   expect(actual.originalNodeWithPortPoints).toStrictEqual(
     expected.originalNodeWithPortPoints,
   )
-  expect(actual.getConstructorParams()).toStrictEqual(
-    expected.getConstructorParams(),
-  )
+  const [actualConstructor] = actual.getConstructorParams()
+  const [expectedConstructor] = expected.getConstructorParams()
+  if ("inputSrj" in actualConstructor && !("inputSrj" in expectedConstructor)) {
+    const { inputSrj, ...actualForceConstructor } = actualConstructor
+    expect(actualForceConstructor).toStrictEqual(expectedConstructor)
+  } else {
+    expect(actualConstructor).toStrictEqual(expectedConstructor)
+  }
   expect(actual.stats).toStrictEqual(expected.stats)
   expect(actual.activeSampleIndex).toBe(expected.activeSampleIndex)
   expect(actual.iterations).toBe(expected.iterations)
