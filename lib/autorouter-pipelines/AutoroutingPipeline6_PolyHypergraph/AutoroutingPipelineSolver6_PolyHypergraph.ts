@@ -1,3 +1,4 @@
+import { stepUntilPhase } from "lib/utils/stepUntilPhase"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
@@ -395,10 +396,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
-      this.step()
-    }
+  solveUntilPhase(phase: string): void {
+    stepUntilPhase(this, phase)
   }
 
   getCurrentPhase(): string {

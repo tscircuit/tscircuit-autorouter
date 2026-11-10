@@ -1,3 +1,4 @@
+import { stepUntilPhase } from "lib/utils/stepUntilPhase"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
@@ -486,10 +487,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
-      this.step()
-    }
+  solveUntilPhase(phase: string): void {
+    stepUntilPhase(this, phase)
   }
 
   getCurrentPhase(): string {

@@ -33,7 +33,7 @@ test("routing difficulty reaches a terminal solver before the high-density phase
     if (solver.failed || solver.solved) throw new Error("stepped a terminal solver")
     step()
   })
-  expect(() => solver.solveUntilPhase("highDensityRouteSolver")).toThrow("stepped a terminal solver")
+  expect(() => solver.solveUntilPhase("highDensityRouteSolver")).toThrow("no legal path")
   expect(solver.failed).toBe(true)
   expect(solver.error).toContain("no legal path")
 })

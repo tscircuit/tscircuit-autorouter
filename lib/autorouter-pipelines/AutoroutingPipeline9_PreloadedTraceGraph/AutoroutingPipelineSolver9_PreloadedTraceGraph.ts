@@ -1,3 +1,4 @@
+import { stepUntilPhase } from "lib/utils/stepUntilPhase"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -1275,10 +1276,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
-      this.step()
-    }
+  solveUntilPhase(phase: string): void {
+    stepUntilPhase(this, phase)
   }
 
   getCurrentPhase(): string {
