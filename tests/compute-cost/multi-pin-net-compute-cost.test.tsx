@@ -37,7 +37,7 @@ test("compute cost keeps every pair of a split net traceable to its pads", async
   solver.solve()
   expect(solver.solved).toBe(true)
 
-  const computeCost = solver.getComputeCostSummary()!
+  const computeCost = solver.getComputeCost()!
   const srjNames = new Set(simpleRouteJson.connections.map((c: any) => c.name))
   const pcbPortIds = new Set(
     simpleRouteJson.connections.flatMap((c: any) =>
@@ -45,13 +45,16 @@ test("compute cost keeps every pair of a split net traceable to its pads", async
     ),
   )
 
-  expect(computeCost.measuredPairCount).toBeGreaterThan(
+  expect(computeCost.summary.measuredPairCount).toBeGreaterThan(
     simpleRouteJson.connections.length,
   )
-  expect(computeCost.totalIterations).toBe(
-    computeCost.pairs.reduce((sum, pair) => sum + pair.iterations, 0),
+  expect(computeCost.value).toBe(
+    computeCost.summary.topPairs.reduce(
+      (sum, pair) => sum + pair.iterations,
+      0,
+    ),
   )
-  for (const pair of computeCost.pairs) {
+  for (const pair of computeCost.summary.topPairs) {
     expect(pair.rootConnectionNames.every((name) => srjNames.has(name))).toBe(
       true,
     )
