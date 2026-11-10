@@ -1,3 +1,4 @@
+import { BudgetedPreparedPortPointRoutingSolver } from "./BudgetedPreparedPortPointRoutingSolver"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -272,6 +273,13 @@ const getTinyViaSizeOptions = (
     ? { minViaPadDiameter: minViaPadDiameter }
     : {}
 
+const getGlobalIterationLimit = (effort: number, portCount: number): number =>
+  Math.ceil(
+    2_000_000 *
+      getEffortScale(effort) *
+      Math.max(1, Math.floor(portCount / 125_000)),
+  )
+
 const getTinyHyperGraphSolveGraphOptions = ({
   effort,
   iterationBudgetEffort,
@@ -284,8 +292,6 @@ const getTinyHyperGraphSolveGraphOptions = ({
   minViaPadDiameter?: number
 }): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
-  // A fixed budget can expire before large graphs settle congestion.
-  const graphScale = Math.max(1, Math.floor(portCount / 125_000))
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
@@ -294,15 +300,12 @@ const getTinyHyperGraphSolveGraphOptions = ({
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(
-      2_000_000 * getEffortScale(iterationBudgetEffort) * graphScale,
-    ),
+    MAX_ITERATIONS: getGlobalIterationLimit(iterationBudgetEffort, portCount),
   }
 }
 
 const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
-  iterationBudgetEffort: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
@@ -311,9 +314,7 @@ const getTinyHyperGraphSectionSolverOptions = (
     ...getTinyViaSizeOptions(minViaPadDiameter),
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
-    MAX_ITERATIONS: Math.ceil(
-      1_000_000 * getEffortScale(iterationBudgetEffort),
-    ),
+    MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
 }
 
@@ -360,11 +361,7 @@ const getTinyHyperGraphPipelineInput = (
           }),
     },
     sectionSolverOptions: {
-      ...getTinyHyperGraphSectionSolverOptions(
-        effort,
-        iterationBudgetEffort,
-        minViaPadDiameter,
-      ),
+      ...getTinyHyperGraphSectionSolverOptions(effort, minViaPadDiameter),
     },
   }
 }
@@ -939,6 +936,7 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
 }
 
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+  private readonly baselineGraphLimit: number
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
@@ -954,6 +952,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     usePreparedPortPointRouting = false,
   ) {
     super(inputProblem)
+    this.baselineGraphLimit = getGlobalIterationLimit(
+      1,
+      inputProblem.serializedHyperGraph.ports.length,
+    )
     this.useSelectiveReripRouting = useSelectiveReripRouting
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
@@ -973,6 +975,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solveGraphStep.solverClass = usePreparedPortPointRouting
         ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      if (
+        usePreparedPortPointRouting &&
+        (inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 0) >
+          this.baselineGraphLimit
+      ) {
+        solveGraphStep.solverClass = BudgetedPreparedPortPointRoutingSolver
+      }
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1048,6 +1057,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       return
     }
 
+    if (solver instanceof BudgetedPreparedPortPointRoutingSolver) {
+      solver.baselineIterationLimit = this.baselineGraphLimit
+    }
     if (
       solver instanceof TinyHyperGraphSectionSolver ||
       solver instanceof TinyHyperGraphSolver
@@ -1133,10 +1145,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(
-            2_000_000 *
-              getEffortScale(params.iterationBudgetEffort ?? params.effort),
-          ),
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
         },

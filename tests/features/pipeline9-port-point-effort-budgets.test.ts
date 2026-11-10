@@ -28,6 +28,6 @@ test("Pipeline 9 passes effort to the global and regional port-point search limi
   expect(budgets).toEqual([
     [1_000_000, 500_000],
     [2_000_000, 1_000_000],
-    [4_000_000, 2_000_000],
+    [4_000_000, 1_000_000],
   ])
 })
