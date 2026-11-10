@@ -16,9 +16,15 @@ test("Pipeline9 reproduces the connector/ESD/MCU differential-pair failure", asy
   expect(solver.netToPointPairsSolver!.newConnections).toHaveLength(4)
   expect(solver.effortCleanupSolver!.getOutput()).toHaveLength(4)
   await expect(
-    getSvgFromGraphicsObject(convertSrjToGraphicsObject({
-      ...multiTerminalDifferentialPair,
-      traces: solver.getNewTracesBeforePowerExpansion(),
-    }, { traceColorMode: "net" }), { backgroundColor: "white" }),
+    getSvgFromGraphicsObject(
+      convertSrjToGraphicsObject(
+        {
+          ...multiTerminalDifferentialPair,
+          traces: solver.getNewTracesBeforePowerExpansion(),
+        },
+        { traceColorMode: "net" },
+      ),
+      { backgroundColor: "white" },
+    ),
   ).toMatchSvgSnapshot(import.meta.path)
 })
