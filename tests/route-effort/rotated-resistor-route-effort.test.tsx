@@ -49,16 +49,18 @@ test("hypergraph route effort points at the rotated resistor", async () => {
   solver.solve()
   expect(solver.solved).toBe(true)
 
-  const effort = solver.portPointPathingSolver!.getRouteEffortSummary()!
-  const selectorsByConnection = new Map(
-    simpleRouteJson.connections.map((c: any) => [
-      c.name,
-      c.pointsToConnect.map((p: any) => p.port_selector).join(" -> "),
-    ]),
+  const effort = solver.getRouteEffortSummary()!
+  const selectorByPcbPortId = new Map(
+    simpleRouteJson.connections.flatMap((c: any) =>
+      c.pointsToConnect.map((p: any) => [p.pcb_port_id, p.port_selector]),
+    ),
   )
-  const top = effort[0]!
-  const median = effort[Math.floor(effort.length / 2)]!
+  const [top] = effort.pairs
+  const median = effort.pairs[Math.floor(effort.pairs.length / 2)]!
 
-  expect(selectorsByConnection.get(top.connectionId)).toContain("R2.")
-  expect(top.iterations).toBeGreaterThan(median.iterations * 3)
+  expect(effort.measuredPairCount).toBe(simpleRouteJson.connections.length)
+  expect(top!.pcbPortIds.map((id) => selectorByPcbPortId.get(id))).toContain(
+    "R2.pin2",
+  )
+  expect(top!.iterations).toBeGreaterThan(median.iterations * 3)
 })

@@ -1285,6 +1285,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
   }
 
+  /** Per-connection solo search effort; known once port-point pathing starts. */
+  getRouteEffortSummary() {
+    return this.portPointPathingSolver?.getRouteEffortSummary()
+  }
+
   visualize(): GraphicsObject {
     if (!this.solved && this.activeSubSolver) {
       return this.visualizeStage(this.activeSubSolver)

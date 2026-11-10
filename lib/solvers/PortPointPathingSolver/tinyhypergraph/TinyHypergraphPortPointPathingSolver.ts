@@ -1043,6 +1043,28 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 }
 
+const ROUTE_EFFORT_MAX_PAIRS = 25
+
+/**
+ * Search iterations needed to route each connection alone, most expensive
+ * first. Connections at the top usually touch a badly placed part.
+ */
+export interface RouteEffortSummary {
+  metric: "solo_search_iterations"
+  /** Over every measured pair, before the list is cut. */
+  totalIterations: number
+  measuredPairCount: number
+  pairs: Array<{
+    connectionName: string
+    /** Every SRJ connection merged into this one. */
+    rootConnectionNames: string[]
+    /** Measured endpoints; null for synthetic points such as breakouts. */
+    pcbPortIds: [string | null, string | null]
+    iterations: number
+    share: number
+  }>
+}
+
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1063,6 +1085,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
+  private simpleRouteConnectionById: Map<
+    string,
+    HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
+  >
+  private routeEffortSummary?: RouteEffortSummary
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
@@ -1083,6 +1110,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connections.map((connection) => [
         connection.connectionId,
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
+      ]),
+    )
+    this.simpleRouteConnectionById = new Map(
+      connections.map((connection) => [
+        connection.connectionId,
+        connection.simpleRouteConnection,
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
@@ -1387,17 +1420,37 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
    * usually touch a badly placed part (rotated or swapped passives, pins on
    * the wrong side).
    */
-  getRouteEffortSummary() {
+  getRouteEffortSummary(): RouteEffortSummary | undefined {
+    if (this.routeEffortSummary) return this.routeEffortSummary
     const iterations = this.duplicateCongestedPortReport?.routeSearchIterations
     if (!iterations) return undefined
-    const total = Object.values(iterations).reduce((sum, n) => sum + n, 0)
-    return Object.entries(iterations)
-      .map(([connectionId, n]) => ({
-        connectionId,
-        iterations: n,
-        iterationShare: total === 0 ? 0 : n / total,
-      }))
-      .sort((a, b) => b.iterations - a.iterations)
+    // Sections generated from earlier-stage copper have no SRJ connection.
+    const measured = Object.entries(iterations).filter(([connectionId]) =>
+      this.simpleRouteConnectionById.has(connectionId),
+    )
+    const totalIterations = measured.reduce((sum, [, n]) => sum + n, 0)
+    this.routeEffortSummary = Object.freeze<RouteEffortSummary>({
+      metric: "solo_search_iterations",
+      totalIterations,
+      measuredPairCount: measured.length,
+      pairs: measured
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, ROUTE_EFFORT_MAX_PAIRS)
+        .map(([connectionId, n]) => {
+          const connection = this.simpleRouteConnectionById.get(connectionId)!
+          const [start, end] = connection.pointsToConnect
+          return {
+            connectionName: connection.name,
+            rootConnectionNames: connection.__rootConnectionNames ?? [
+              connection.name,
+            ],
+            pcbPortIds: [start?.pcb_port_id ?? null, end?.pcb_port_id ?? null],
+            iterations: n,
+            share: totalIterations === 0 ? 0 : n / totalIterations,
+          }
+        }),
+    })
+    return this.routeEffortSummary
   }
 
   getSolveGraphBenchmarkMetrics() {
