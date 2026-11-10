@@ -474,7 +474,12 @@ function createSourceTraces(
       for (const endpoint of endpoints) {
         // Preserve input order when multiple pads touch the same endpoint.
         const hits =
-          obstacleIndex?.search(endpoint.x, endpoint.y, endpoint.x, endpoint.y) ?? []
+          obstacleIndex?.search(
+            endpoint.x,
+            endpoint.y,
+            endpoint.x,
+            endpoint.y,
+          ) ?? []
         for (const index of hits.sort((a, b) => a - b)) {
           const obstacle = obstacles[index]!
           if (
