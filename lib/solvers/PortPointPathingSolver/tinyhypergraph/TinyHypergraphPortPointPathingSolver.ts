@@ -1043,13 +1043,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 }
 
-const ROUTE_EFFORT_MAX_PAIRS = 25
+const COMPUTE_COST_MAX_PAIRS = 25
 
 /**
  * Search iterations needed to route each connection alone, most expensive
  * first. Connections at the top usually touch a badly placed part.
  */
-export interface RouteEffortSummary {
+export interface ComputeCostSummary {
   metric: "solo_search_iterations"
   /** Over every measured pair, before the list is cut. */
   totalIterations: number
@@ -1089,7 +1089,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     string,
     HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
   >
-  private routeEffortSummary?: RouteEffortSummary
+  private computeCostSummary?: ComputeCostSummary
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
@@ -1420,8 +1420,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
    * usually touch a badly placed part (rotated or swapped passives, pins on
    * the wrong side).
    */
-  getRouteEffortSummary(): RouteEffortSummary | undefined {
-    if (this.routeEffortSummary) return this.routeEffortSummary
+  getComputeCostSummary(): ComputeCostSummary | undefined {
+    if (this.computeCostSummary) return this.computeCostSummary
     const iterations = this.duplicateCongestedPortReport?.routeSearchIterations
     if (!iterations) return undefined
     // Sections generated from earlier-stage copper have no SRJ connection.
@@ -1429,13 +1429,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.simpleRouteConnectionById.has(connectionId),
     )
     const totalIterations = measured.reduce((sum, [, n]) => sum + n, 0)
-    this.routeEffortSummary = Object.freeze<RouteEffortSummary>({
+    this.computeCostSummary = Object.freeze<ComputeCostSummary>({
       metric: "solo_search_iterations",
       totalIterations,
       measuredPairCount: measured.length,
       pairs: measured
         .sort((a, b) => b[1] - a[1])
-        .slice(0, ROUTE_EFFORT_MAX_PAIRS)
+        .slice(0, COMPUTE_COST_MAX_PAIRS)
         .map(([connectionId, n]) => {
           const connection = this.simpleRouteConnectionById.get(connectionId)!
           const [start, end] = connection.pointsToConnect
@@ -1450,7 +1450,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           }
         }),
     })
-    return this.routeEffortSummary
+    return this.computeCostSummary
   }
 
   getSolveGraphBenchmarkMetrics() {

@@ -36,7 +36,7 @@ const RotatedResistorBoard = () => (
   </board>
 )
 
-test("hypergraph route effort points at the rotated resistor", async () => {
+test("hypergraph compute cost points at the rotated resistor", async () => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   circuit.add(<RotatedResistorBoard />)
@@ -52,16 +52,16 @@ test("hypergraph route effort points at the rotated resistor", async () => {
   solver.solve()
   expect(solver.solved).toBe(true)
 
-  const effort = solver.getRouteEffortSummary()!
+  const computeCost = solver.getComputeCostSummary()!
   const selectorByPcbPortId = new Map(
     simpleRouteJson.connections.flatMap((c: any) =>
       c.pointsToConnect.map((p: any) => [p.pcb_port_id, p.port_selector]),
     ),
   )
-  const [top] = effort.pairs
-  const median = effort.pairs[Math.floor(effort.pairs.length / 2)]!
+  const [top] = computeCost.pairs
+  const median = computeCost.pairs[Math.floor(computeCost.pairs.length / 2)]!
 
-  expect(effort.measuredPairCount).toBe(simpleRouteJson.connections.length)
+  expect(computeCost.measuredPairCount).toBe(simpleRouteJson.connections.length)
   expect(top!.pcbPortIds.map((id) => selectorByPcbPortId.get(id))).toContain(
     "R2.pin2",
   )
