@@ -1,3 +1,5 @@
+import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
+import { assertDifferentialPairOutput } from "lib/utils/assertDifferentialPairOutput"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -25,7 +27,6 @@ import { getColorMap } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
-  DifferentialPair,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -722,6 +723,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
+          ownedConnectionNames: new Set(
+            (cms.srj.differentialPairs ?? []).flatMap((pair) =>
+              pair.connectionNames.flat(),
+            ),
+          ),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
@@ -994,86 +1000,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
-        const netToPointPairsSolver = cms.netToPointPairsSolver
-        if (!netToPointPairsSolver)
-          throw new Error(
-            "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
-          )
-        const connections = netToPointPairsSolver.newConnections
-        const finalHdConnectionNames = new Map<string, string>()
-        for (const pair of cms.srj.differentialPairs ?? []) {
-          for (const connectionName of pair.connectionNames) {
-            const matchingConnections = connections.filter(
-              (connection) =>
-                connection.name === connectionName ||
-                connection.__rootConnectionNames?.includes(connectionName) ||
-                connection.__netConnectionName === connectionName,
-            )
-            if (matchingConnections.length !== 1)
-              throw new Error(
-                `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
-              )
-            finalHdConnectionNames.set(
-              connectionName,
-              matchingConnections[0]!.name,
-            )
-          }
-        }
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
-        const differentialPairs = (cms.srj.differentialPairs ?? []).map(
-          (pair) => {
-            const connectionNames = pair.connectionNames.map(
-              (connectionName) => {
-                const finalHdConnectionName =
-                  finalHdConnectionNames.get(connectionName)
-                if (!finalHdConnectionName)
-                  throw new Error(
-                    `Pipeline9: differential pair connection "${connectionName}" is missing from final routed output`,
-                  )
-                return finalHdConnectionName
-              },
-            ) as [string, string]
-            if (connectionNames[0] === connectionNames[1])
-              throw new Error(
-                `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
-              )
-            const resolvedPair: DifferentialPair = {
-              connectionNames,
-              lengthTolerance: pair.lengthTolerance,
-            }
-            if (pair.maxUncoupledLength !== undefined)
-              resolvedPair.maxUncoupledLength = pair.maxUncoupledLength
-            if (pair.traceGap === undefined) return resolvedPair
-            const pairRoutes = connectionNames.map((connectionName) => {
-              const matchingRoutes = hdRoutes.filter(
-                (route) => route.connectionName === connectionName,
-              )
-              if (matchingRoutes.length !== 1)
-                throw new Error(
-                  `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
-                )
-              return matchingRoutes[0]!
-            })
-            const centerlineDistance =
-              pair.traceGap +
-              pairRoutes.reduce(
-                (halfWidthTotal, route) =>
-                  halfWidthTotal + route.traceThickness / 2,
-                0,
-              )
-            return {
-              ...resolvedPair,
-              minimumCenterlineDistance: centerlineDistance,
-              maximumCenterlineDistance: centerlineDistance,
-            }
-          },
-        )
         return [
           {
-            hdRoutes,
-            differentialPairs,
+            hdRoutes: cms.effortCleanupSolver!.getOutput(),
+            differentialPairs: cms.originalSrj.differentialPairs ?? [],
             buses: cms.srj.buses ?? [],
-            connections: cms.srj.connections,
+            connections: cms.originalSrj.connections,
             obstacles: cms.srj.obstacles,
             traces: cms.getUpdatedPreloadedTraces(),
             bounds: cms.srj.bounds,
@@ -1106,6 +1038,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
+      {
+        onSolved: (cms): void => {
+          assertDifferentialPairOutput(
+            cms.originalSrj,
+            cms.powerTraceExpansionSolver!.getOutput(),
+          )
+        },
+      },
     ),
   ]
 
@@ -1114,6 +1054,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    validateDifferentialPairs(srj)
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
@@ -1689,6 +1630,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
+      differentialPairs: this.originalSrj.differentialPairs,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,

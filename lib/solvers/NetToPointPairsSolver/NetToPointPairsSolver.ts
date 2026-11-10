@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
@@ -65,10 +66,15 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
+    const ownedNames = validateDifferentialPairs(ogSrj)
     this.unprocessedConnections = mergeConnections(
-      connectionsWithBusTraceWidths,
+      connectionsWithBusTraceWidths.filter(
+        (connection): boolean => !ownedNames.has(connection.name),
+      ),
     )
-    this.newConnections = []
+    this.newConnections = connectionsWithBusTraceWidths.filter(
+      (connection): boolean => ownedNames.has(connection.name),
+    )
     this.initiallyConnectedMap = initiallyConnectedMap
   }
 

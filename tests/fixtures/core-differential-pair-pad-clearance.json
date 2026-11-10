@@ -472,10 +472,10 @@
   "differentialPairs": [
     {
       "connectionNames": [
-        "source_trace_0",
-        "source_trace_1"
+        ["source_trace_0"],
+        ["source_trace_1"]
       ],
-      "lengthTolerance": 0.05
+      "maxLengthSkewMm": 0.05
     }
   ],
   "traces": [],

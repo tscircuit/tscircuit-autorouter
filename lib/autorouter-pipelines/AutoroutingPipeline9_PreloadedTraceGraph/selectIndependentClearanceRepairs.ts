@@ -62,7 +62,9 @@ export const selectIndependentClearanceRepairs = ({
   const resolver = new ConnectionNameResolver(indexInput)
   const protectedNets = new Set(
     resolver.canonicalize([
-      ...(srj.differentialPairs ?? []).flatMap((pair) => pair.connectionNames),
+      ...(srj.differentialPairs ?? []).flatMap((pair) =>
+        pair.connectionNames.flat(),
+      ),
       ...(srj.buses ?? []).flatMap((bus) => bus.connectionNames),
     ]),
   )

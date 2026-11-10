@@ -321,10 +321,12 @@ class FanoutStage extends BaseSolver {
 
   constructor(public readonly inputProblem: FanoutStageInput) {
     super()
-    this.fanoutSolver = new FanoutSolver(
-      inputProblem.inputSrj,
-      inputProblem.options,
-    )
+    const { differentialPairs, ...fanoutInput } = inputProblem.inputSrj
+    if (differentialPairs?.length)
+      throw new Error(
+        "Differential pair hops cannot span the Pipeline10 fanout and global routing phases",
+      )
+    this.fanoutSolver = new FanoutSolver(fanoutInput, inputProblem.options)
     this.activeSubSolver = this.fanoutSolver as unknown as BaseSolver
     this.MAX_ITERATIONS = this.fanoutSolver.MAX_ITERATIONS + 1
   }
