@@ -1049,25 +1049,23 @@ const COMPUTE_COST_MAX_PAIRS = 25
 export type Iterations = number
 
 /**
- * Routing compute cost of one stage. Compare values only for the same board
- * stage and autorouter settings: there, higher means harder to route.
+ * Which connections were hardest to route in one stage: each pair's solo
+ * search iterations, highest first. Pairs at the top usually touch a badly
+ * placed part.
  */
-export interface ComputeCost {
-  /** Solo search iterations summed over every measured pair. */
-  readonly value: Iterations
-  readonly summary: {
-    readonly metric: "hypergraph_route_search_iterations"
-    readonly measuredPairCount: number
-    /** The most expensive pairs, highest first; at most 25. */
-    readonly topPairs: readonly {
-      readonly connectionName: string
-      /** Every SRJ connection merged into this one. */
-      readonly rootConnectionNames: readonly string[]
-      /** Measured endpoints; null for synthetic points such as breakouts. */
-      readonly pcbPortIds: readonly [string | null, string | null]
-      readonly iterations: Iterations
-    }[]
-  }
+export interface ComputeCostSummary {
+  readonly metric: "hypergraph_route_search_iterations"
+  /** Every pair that was measured, including those cut from topPairs. */
+  readonly measuredPairCount: number
+  /** The most expensive pairs, highest first; at most 25. */
+  readonly topPairs: readonly {
+    readonly connectionName: string
+    /** Every SRJ connection merged into this one. */
+    readonly rootConnectionNames: readonly string[]
+    /** Measured endpoints; null for synthetic points such as breakouts. */
+    readonly pcbPortIds: readonly [string | null, string | null]
+    readonly iterations: Iterations
+  }[]
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
@@ -1094,7 +1092,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     string,
     HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
   >
-  private computeCost?: ComputeCost
+  private computeCostSummary?: ComputeCostSummary
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
@@ -1420,8 +1418,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   /** Frozen once the solo pass has run; undefined before that or if it failed. */
-  getComputeCost(): ComputeCost | undefined {
-    if (this.computeCost) return this.computeCost
+  getComputeCostSummary(): ComputeCostSummary | undefined {
+    if (this.computeCostSummary) return this.computeCostSummary
     const iterations = this.duplicateCongestedPortReport?.routeSearchIterations
     if (!iterations) return undefined
     // Sections generated from earlier-stage copper have no SRJ connection.
@@ -1446,15 +1444,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           iterations: n,
         })
       })
-    this.computeCost = Object.freeze({
-      value: measured.reduce((sum, [, n]) => sum + n, 0),
-      summary: Object.freeze({
-        metric: "hypergraph_route_search_iterations" as const,
-        measuredPairCount: measured.length,
-        topPairs: Object.freeze(topPairs),
-      }),
+    this.computeCostSummary = Object.freeze({
+      metric: "hypergraph_route_search_iterations" as const,
+      measuredPairCount: measured.length,
+      topPairs: Object.freeze(topPairs),
     })
-    return this.computeCost
+    return this.computeCostSummary
   }
 
   getSolveGraphBenchmarkMetrics() {

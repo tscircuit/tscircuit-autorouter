@@ -52,19 +52,19 @@ test("hypergraph compute cost points at the rotated resistor", async () => {
   solver.solve()
   expect(solver.solved).toBe(true)
 
-  const computeCost = solver.getComputeCost()!
+  const computeCostSummary = solver.getComputeCostSummary()!
   const selectorByPcbPortId = new Map(
     simpleRouteJson.connections.flatMap((c: any) =>
       c.pointsToConnect.map((p: any) => [p.pcb_port_id, p.port_selector]),
     ),
   )
-  const [top] = computeCost.summary.topPairs
+  const [top] = computeCostSummary.topPairs
   const median =
-    computeCost.summary.topPairs[
-      Math.floor(computeCost.summary.topPairs.length / 2)
+    computeCostSummary.topPairs[
+      Math.floor(computeCostSummary.topPairs.length / 2)
     ]!
 
-  expect(computeCost.summary.measuredPairCount).toBe(
+  expect(computeCostSummary.measuredPairCount).toBe(
     simpleRouteJson.connections.length,
   )
   expect(top!.pcbPortIds.map((id) => selectorByPcbPortId.get(id))).toContain(
