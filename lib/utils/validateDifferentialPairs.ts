@@ -12,11 +12,26 @@ export const validateDifferentialPairs = (
   srj: SimpleRouteJson,
 ): Set<string> => {
   const ownedNames = new Set<string>()
+  if (!srj.differentialPairs?.length) return ownedNames
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
   const initiallyConnected = getInitiallyConnectedMapFromSimpleRouteJson(srj)
   for (const [pairIndex, pair] of (srj.differentialPairs ?? []).entries()) {
-    const fail = (message: string): never => {
-      throw new DifferentialPairRoutingError(`pair ${pairIndex}: ${message}`)
+    const fail = (
+      detail: string,
+      connectionName?: string,
+      reason:
+        | "invalid_differential_pair"
+        | "unsupported_routing_scope" = "invalid_differential_pair",
+    ): never => {
+      throw new DifferentialPairRoutingError(
+        {
+          reason,
+          pairIndex,
+          ...(connectionName === undefined ? {} : { connectionName }),
+          detail,
+        },
+        `pair ${pairIndex}: ${detail}`,
+      )
     }
     if (!Number.isFinite(pair.maxLengthSkewMm) || pair.maxLengthSkewMm < 0)
       fail("maxLengthSkewMm must be finite and nonnegative")
@@ -36,7 +51,7 @@ export const validateDifferentialPairs = (
           name.length === 0 ||
           ownedNames.has(name)
         )
-          fail(`invalid or repeated owned hop "${name}"`)
+          fail(`invalid or repeated owned hop "${name}"`, name)
         ownedNames.add(name)
         const matches = srj.connections.filter(
           (connection): boolean => connection.name === name,
@@ -44,12 +59,17 @@ export const validateDifferentialPairs = (
         if (matches.length !== 1)
           fail(
             `hop "${name}" must resolve to exactly one connection in this routing phase`,
+            name,
           )
         const connection = matches[0]!
         if (connection.pointsToConnect.length !== 2)
-          fail(`hop "${name}" must have exactly two points`)
+          fail(`hop "${name}" must have exactly two points`, name)
         if (connection.isOffBoard)
-          fail(`hop "${name}" cannot use off-board copper`)
+          fail(
+            `hop "${name}" cannot use off-board copper`,
+            name,
+            "unsupported_routing_scope",
+          )
         groups.add(connection.routingPcbGroupId)
         const endpointIds = connection.pointsToConnect.map(
           (point): string | undefined => point.pointId ?? point.pcb_port_id,
@@ -65,6 +85,8 @@ export const validateDifferentialPairs = (
         )
           fail(
             `hop "${name}" has preserved copper; multi-phase matching is unsupported`,
+            name,
+            "unsupported_routing_scope",
           )
         if (
           (srj.traces ?? []).some(
@@ -76,6 +98,8 @@ export const validateDifferentialPairs = (
         )
           fail(
             `hop "${name}" has preserved copper; multi-phase matching is unsupported`,
+            name,
+            "unsupported_routing_scope",
           )
         for (const point of connection.pointsToConnect) {
           if (
@@ -83,11 +107,11 @@ export const validateDifferentialPairs = (
             !Number.isFinite(point.y) ||
             getConnectionPointLayers(point).length === 0
           )
-            fail(`hop "${name}" has an invalid endpoint`)
+            fail(`hop "${name}" has an invalid endpoint`, name)
           const pointId = point.pointId ?? point.pcb_port_id
           if (!pointId) continue
           for (const copy of srj.connections.flatMap(
-            (item) => item.pointsToConnect,
+            (item): typeof connection.pointsToConnect => item.pointsToConnect,
           )) {
             if ((copy.pointId ?? copy.pcb_port_id) !== pointId) continue
             if (
@@ -107,6 +131,8 @@ export const validateDifferentialPairs = (
     if (groups.size > 1)
       fail(
         "hops span multiple routing groups/phases; end-to-end matching is unsupported",
+        undefined,
+        "unsupported_routing_scope",
       )
     if ([...laneNets[0]].some((net): boolean => laneNets[1].has(net)))
       fail("positive and negative lanes are electrically shorted")

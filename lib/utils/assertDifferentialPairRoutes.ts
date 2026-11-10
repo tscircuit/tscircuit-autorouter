@@ -33,12 +33,21 @@ export const assertDifferentialPairRoutes = (
         )
         if (connections.length !== 1 || matchingRoutes.length !== 1)
           throw new DifferentialPairRoutingError(
+            {
+              reason:
+                matchingRoutes.length === 0
+                  ? "missing_hop_route"
+                  : "ownership_violation",
+              pairIndex,
+              connectionName: name,
+            },
             `pair ${pairIndex}: hop "${name}" requires one original connection and one complete stitched route, got ${connections.length} / ${matchingRoutes.length}`,
           )
         const connection = connections[0]!
         const route = matchingRoutes[0]!
         const fail = (message: string): never => {
           throw new DifferentialPairRoutingError(
+            { reason: "ownership_violation", pairIndex, connectionName: name },
             `pair ${pairIndex}: hop "${name}" ${message}`,
           )
         }
@@ -101,9 +110,14 @@ export const assertDifferentialPairRoutes = (
     // Numerical allowance only; not an additional routing tolerance.
     if (
       checkSkew &&
-      Math.abs(lengths[0]! - lengths[1]!) > pair.maxLengthSkewMm + 1e-6
+      Math.abs(lengths[0]! - lengths[1]!) > pair.maxLengthSkewMm + 1e-9
     )
       throw new DifferentialPairRoutingError(
+        {
+          reason: "length_skew",
+          pairIndex,
+          laneLengthsMm: [lengths[0]!, lengths[1]!],
+        },
         `pair ${pairIndex}: P ${lengths[0]!.toFixed(6)}mm, N ${lengths[1]!.toFixed(6)}mm exceeds maxLengthSkewMm ${pair.maxLengthSkewMm}`,
       )
   }

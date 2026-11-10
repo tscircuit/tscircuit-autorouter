@@ -121,3 +121,10 @@ export {
   Pipeline9HighDensitySolver,
   type Pipeline9HighDensitySolverParams,
 } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+
+export type {
+  DifferentialPairFailure,
+  RoutingFailure,
+  RouterResult,
+} from "./types/routingResult"
+export { getRoutingFailure } from "./utils/getRoutingFailure"

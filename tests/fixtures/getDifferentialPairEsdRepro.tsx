@@ -8,7 +8,7 @@ import {
 
 /** TSX pads in board-world mm, +X right, +Y up, +Z above. No pre-routed copper. */
 export async function getDifferentialPairEsdRepro(
-  mcuX = -3,
+  mcuX: number = -3,
 ): Promise<SimpleRouteJson> {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
@@ -65,6 +65,7 @@ export async function getDifferentialPairEsdRepro(
     // Human-readable hop names; all geometry and pad identities come from TSX.
     connections: simpleRouteJson.connections.map((connection) => ({
       ...connection,
+      source_trace_id: connection.name,
       name: sourceTraces.find(
         (trace) => trace.source_trace_id === connection.name,
       )!.name!,

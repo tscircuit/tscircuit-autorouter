@@ -6,12 +6,14 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
+  ConnectionPoint,
   DifferentialPair,
   Obstacle,
   SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
+import { getHighDensityRouteLength } from "lib/utils/getHighDensityRouteLength"
 import { assertDifferentialPairRoutes } from "lib/utils/assertDifferentialPairRoutes"
 import { DifferentialPairRoutingError } from "lib/utils/DifferentialPairRoutingError"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
@@ -29,19 +31,23 @@ type LengthMatchingPostProcessingSolverParams = {
   obstacleMargin: number
 }
 
+type BusMember = { names: [string, ...string[]]; length: number }
+
 /** Adapt existing bus roots to exact route memberships without changing roots. */
 const getBusLengthMatchingInput = (
   params: LengthMatchingPostProcessingSolverParams,
 ): { pairs: LengthMatchingPair[]; connections: SimpleRouteConnection[] } => {
   const ownedNames = new Set(
-    params.differentialPairs.flatMap((pair) => pair.connectionNames.flat()),
+    params.differentialPairs.flatMap((pair): string[] =>
+      pair.connectionNames.flat(),
+    ),
   )
   const connections = new Map<string, SimpleRouteConnection>()
   const pairs: LengthMatchingPair[] = []
   for (const bus of params.buses) {
     if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
       continue
-    const members = bus.connectionNames.map((name) => {
+    const members = bus.connectionNames.map((name): BusMember => {
       const routes = params.hdRoutes.filter(
         (route): boolean =>
           (route.rootConnectionName ?? route.connectionName) === name,
@@ -53,6 +59,14 @@ const getBusLengthMatchingInput = (
       for (const route of routes) {
         if (ownedNames.has(route.connectionName))
           throw new DifferentialPairRoutingError(
+            {
+              reason: "invalid_differential_pair",
+              pairIndex: params.differentialPairs.findIndex((pair): boolean =>
+                pair.connectionNames.flat().includes(route.connectionName),
+              ),
+              connectionName: route.connectionName,
+              detail: `Owned hop also belongs to length-matched bus "${bus.busId}"`,
+            },
             `hop "${route.connectionName}" also belongs to length-matched bus "${bus.busId}"`,
           )
         if (route.route.length < 2)
@@ -62,7 +76,7 @@ const getBusLengthMatchingInput = (
         connections.set(route.connectionName, {
           name: route.connectionName,
           pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
-            (point) => ({
+            (point): ConnectionPoint => ({
               x: point.x,
               y: point.y,
               layer: mapZToLayerName(point.z, params.layerCount),
@@ -76,24 +90,14 @@ const getBusLengthMatchingInput = (
           ...string[],
         ],
         length: routes.reduce(
-          (total, route): number =>
-            total +
-            route.route
-              .slice(1)
-              .reduce(
-                (length, point, index): number =>
-                  length +
-                  Math.hypot(
-                    point.x - route.route[index]!.x,
-                    point.y - route.route[index]!.y,
-                  ),
-                0,
-              ),
+          (total, route): number => total + getHighDensityRouteLength(route),
           0,
         ),
       }
     })
-    const longest = members.reduce((a, b) => (a.length > b.length ? a : b))
+    const longest = members.reduce(
+      (a, b): BusMember => (a.length > b.length ? a : b),
+    )
     for (const member of members) {
       if (member === longest) continue
       pairs.push({
@@ -114,7 +118,9 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     super()
     const busInput = getBusLengthMatchingInput(params)
     const ownedNames = new Set(
-      params.differentialPairs.flatMap((pair) => pair.connectionNames.flat()),
+      params.differentialPairs.flatMap((pair): string[] =>
+        pair.connectionNames.flat(),
+      ),
     )
     this.matcher = new LengthMatchingSolver({
       ...params,
@@ -132,8 +138,23 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override _step(): void {
     if (this.iterations === 1)
       assertDifferentialPairRoutes(this.params, this.params.hdRoutes, false)
-    this.matcher.step()
+    try {
+      this.matcher.step()
+    } catch (error) {
+      // Convert an exhausted owned-pair search into final, measured lane data.
+      assertDifferentialPairRoutes(
+        this.params,
+        this.matcher.matchedHdRoutes,
+        true,
+      )
+      throw error
+    }
     if (this.matcher.failed) {
+      assertDifferentialPairRoutes(
+        this.params,
+        this.matcher.matchedHdRoutes,
+        true,
+      )
       this.failed = true
       this.error = this.matcher.error
       return
@@ -144,6 +165,31 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       this.matcher.getOutput().matchedHdRoutes,
       true,
     )
+    for (const bus of this.params.buses) {
+      if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
+        continue
+      const lengths = bus.connectionNames.map((name): number => {
+        const routes = this.matcher
+          .getOutput()
+          .matchedHdRoutes.filter(
+            (route): boolean =>
+              (route.rootConnectionName ?? route.connectionName) === name,
+          )
+        if (routes.length === 0)
+          throw new Error(
+            `Length matching: bus "${bus.busId}" lost routed geometry for connection "${name}"`,
+          )
+        return routes.reduce(
+          (total, route): number => total + getHighDensityRouteLength(route),
+          0,
+        )
+      })
+      const skew = Math.max(...lengths) - Math.min(...lengths)
+      if (skew > bus.maxLengthSkew + 1e-6)
+        throw new Error(
+          `Length matching: bus "${bus.busId}" routed length skew ${skew.toFixed(4)}mm exceeds ${bus.maxLengthSkew.toFixed(4)}mm`,
+        )
+    }
     this.solved = true
   }
 

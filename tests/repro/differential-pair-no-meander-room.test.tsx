@@ -103,11 +103,19 @@ test("exhausted meander space propagates failure instead of accepting 9.6mm skew
     connections: srj.connections,
     buses: [],
   })
-  expect(() => solver.solve()).toThrow(
-    "no same-layer straight segment can tune",
-  )
+  expect(() => solver.solve()).toThrow("exceeds maxLengthSkewMm")
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("no same-layer straight segment can tune")
+  expect(solver.routingFailure).toMatchObject({
+    reason: "length_skew",
+    pairIndex: 0,
+  })
+  if (solver.routingFailure?.reason !== "length_skew")
+    throw new Error("Expected measured lane lengths")
+  expect(solver.routingFailure.laneLengthsMm[0]).toBeCloseTo(0.4)
+  expect(solver.routingFailure.laneLengthsMm[1]).toBeCloseTo(10)
+  expect(JSON.parse(JSON.stringify(solver.routingFailure))).toEqual(
+    solver.routingFailure,
+  )
   expect(() => solver.getOutput()).toThrow("before completion")
 })

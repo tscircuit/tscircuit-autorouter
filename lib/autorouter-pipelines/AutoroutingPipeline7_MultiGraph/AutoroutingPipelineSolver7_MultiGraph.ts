@@ -1,3 +1,4 @@
+import type { RouterResult } from "lib/types/routingResult"
 import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
 import { assertDifferentialPairOutput } from "lib/utils/assertDifferentialPairOutput"
 import { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
@@ -829,7 +830,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     )
   }
 
-  _step() {
+  _step(): void {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
@@ -847,6 +848,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
+        this.routingFailure = this.activeSubSolver.routingFailure
         this.error = this.activeSubSolver?.error
         this.failed = true
         this.activeSubSolver = null
@@ -1156,6 +1158,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
+  }
+
+  getResult(): RouterResult {
+    if (this.failed) {
+      if (!this.routingFailure)
+        throw new Error("Failed router has no structured routingFailure")
+      return { status: "failed", failure: this.routingFailure }
+    }
+    if (!this.solved)
+      throw new Error("Cannot get router result before completion")
+    return { status: "solved", traces: this.getOutputSimplifiedPcbTraces() }
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

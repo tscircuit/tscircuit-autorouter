@@ -56,7 +56,11 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
     },
     exactGeometryDrcForceImproveSolver: { getOutput: () => [] },
   } as any)
-  const post = new LengthMatchingPostProcessingSolver(params)
+  const post = new LengthMatchingPostProcessingSolver(
+    params as ConstructorParameters<
+      typeof LengthMatchingPostProcessingSolver
+    >[0],
+  )
   expect(() => post.solve()).toThrow(
     'hop "PAIR_P" requires one original connection and one complete stitched route',
   )

@@ -39,7 +39,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
-}: StaticConvertPipeline7HdRoutesOptions) => {
+}: StaticConvertPipeline7HdRoutesOptions): ((
+  hdRoutes: HighDensityRoute[],
+) => SimplifiedPcbTraces) => {
   const ownedNames = new Set(
     (differentialPairs ?? []).flatMap((pair) => pair.connectionNames.flat()),
   )
@@ -57,7 +59,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   }
 
   const preparedConnections: PreparedConnection[] = connections.map(
-    (connection) => {
+    (connection): PreparedConnection => {
       if (connection.pointsToConnect.length !== 2) {
         throw new Error(
           `Expected Pipeline7 output connection "${connection.name}" to have two points, got ${connection.pointsToConnect.length}`,
@@ -67,9 +69,10 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       const [startPoint, endPoint] = connection.pointsToConnect
       return {
         connection,
-        connectsTo: [startPoint?.pointId, endPoint?.pointId].filter(
-          (pointId): pointId is string => Boolean(pointId),
-        ),
+        connectsTo: [
+          startPoint?.pointId ?? startPoint?.pcb_port_id,
+          endPoint?.pointId ?? endPoint?.pcb_port_id,
+        ].filter((pointId): pointId is string => Boolean(pointId)),
         outputConnectionName: ownedNames.has(connection.name)
           ? connection.name
           : (connection.__netConnectionName ??

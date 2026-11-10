@@ -12393,10 +12393,14 @@
   "differentialPairs": [
     {
       "connectionNames": [
-        "source_trace_53",
-        "source_trace_51"
+        [
+          "source_trace_53"
+        ],
+        [
+          "source_trace_51"
+        ]
       ],
-      "lengthTolerance": 0.3
+      "maxLengthSkewMm": 0.3
     }
   ],
   "layerCount": 2,

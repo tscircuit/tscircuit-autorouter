@@ -6,13 +6,15 @@ import srj from "../../fixtures/bug-reports/bugreport85-pico-usb-differential-pa
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("bugreport85 Pico USB differential-pair best-effort visualization", (): void => {
+test("bugreport85 Pico USB differential-pair owned-hop visualization", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj) as SimpleRouteJson,
     { cacheProvider: null },
   )
 
   solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
