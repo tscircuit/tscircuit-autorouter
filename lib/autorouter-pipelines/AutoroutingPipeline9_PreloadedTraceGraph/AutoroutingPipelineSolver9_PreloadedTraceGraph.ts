@@ -583,11 +583,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
       (cms) => {
-        const output = cms.portPointPathingSolver!.getOutput()
+        const pathing = cms.portPointPathingSolver!
+        const { nodesWithPortPoints } = pathing.getRoutedPortOutput()
         return [
           {
-            nodeWithPortPoints: output.nodesWithPortPoints,
-            inputNodesWithPortPoints: output.inputNodeWithPortPoints,
+            nodeWithPortPoints: nodesWithPortPoints,
+            inputNodesWithPortPoints:
+              pathing.getInputNodesForRoutedPorts(nodesWithPortPoints),
             minTraceWidth: cms.minTraceWidth,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
@@ -607,7 +609,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
           )
         }
-        const portPointPathingOutput = portPointPathingSolver.getOutput()
+        const portPointPathingOutput =
+          portPointPathingSolver.getRoutedPortOutput()
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
