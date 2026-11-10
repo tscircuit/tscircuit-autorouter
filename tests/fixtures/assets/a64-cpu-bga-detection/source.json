@@ -1,0 +1,15 @@
+{
+  "board": "OLIMEX A64-OLinuXino rev H",
+  "sourceUrl": "https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/A64-OLinuXino/1.%20Latest%20hardware%20revision/A64-OLinuXino%20hardware%20revision%20H/A64-OlinuXino_Rev_H.kicad_pcb",
+  "sourceCommit": "85eee9c17ee13af65617d73bdd94de7ec49cfb42",
+  "sourceSha256": "3acf7af7d39d54ba87343845d78851b0245a6290841cb463c42c7e41696404f4",
+  "license": "CC-BY-SA-3.0-US",
+  "capturedFrom": {
+    "tscircuit": "0.0.3133",
+    "core": "0.0.2320",
+    "capacityAutorouter": "0.0.1068",
+    "stage": "A64 remaining phase after four completed eight-bit DQ byte groups",
+    "inputSha256": "7481413e7c236f7954e71fadcee679f6904f27557e68413bd0a96a4a5cc596d6"
+  },
+  "scope": "Unmodified routing input from the real TSX \u2192 Core board. All pads, three CPU fiducials, completed data copper obstacles, and native clearances are retained. This repro visualizes component detection; it does not assert that the remaining DDR signals route."
+}
