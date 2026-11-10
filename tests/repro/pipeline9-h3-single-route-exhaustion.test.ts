@@ -20,9 +20,7 @@ test("H3 stops retrying an exhausted strobe search", (): void => {
   solver.solve()
 
   expect(solver.failed).toBe(true)
-  expect(
-    solver.portPointPathingSolver?.stats.duplicateCongestedPortError,
-  ).toBe(
+  expect(solver.portPointPathingSolver?.stats.duplicateCongestedPortError).toBe(
     "Route 10 could not be solved independently: No path for source_trace_46",
   )
 })
