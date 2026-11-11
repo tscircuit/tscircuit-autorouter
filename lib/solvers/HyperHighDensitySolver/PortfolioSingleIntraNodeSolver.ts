@@ -14,6 +14,7 @@ import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
 import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntraNodeSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
+import { isHighDensityRouteOnAllowedLayers } from "../HighDensitySolver/isHighDensityRouteOnAllowedLayers"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
@@ -772,9 +773,38 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const repairedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    const policies = this.nodeWithPortPoints.allowedZByConnectionName
+    if (policies) {
+      const invalidRoute = repairedRoutes.find((route) => {
+        const allowedZ = policies[route.connectionName]
+        if (allowedZ === undefined) return false
+        return !isHighDensityRouteOnAllowedLayers(
+          route,
+          allowedZ.filter(
+            (z) =>
+              !this.nodeWithPortPoints.availableZ?.length ||
+              this.nodeWithPortPoints.availableZ.includes(z),
+          ),
+        )
+      })
+      if (invalidRoute) {
+        solver.solver.solved = false
+        solver.solver.failed = true
+        solver.solver.error = `Connection "${invalidRoute.connectionName}" uses a forbidden wire layer`
+        this.solved = false
+        this.winningSolver = undefined
+        return
+      }
+      this.solvedRoutes = repairedRoutes.map((route) => {
+        const allowedZ = policies[route.connectionName]
+        return allowedZ === undefined ? route : { ...route, allowedZ }
+      })
+      return
+    }
+    this.solvedRoutes = repairedRoutes
   }
 }

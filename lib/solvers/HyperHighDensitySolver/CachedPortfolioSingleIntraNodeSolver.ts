@@ -113,6 +113,19 @@ export class CachedPortfolioSingleIntraNodeSolver
         y: roundCoord(center.y),
       },
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
+      ...(node.allowedZByConnectionName
+        ? {
+            allowedZByConnectionName: Object.fromEntries(
+              Object.entries(node.allowedZByConnectionName)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([name, layers]) => [
+                  name,
+                  [...layers].sort((a, b) => a - b),
+                ]),
+            ),
+            layerCount: this.constructorParams.layerCount,
+          }
+        : {}),
       portPoints: normalizedPortPoints,
     }
 

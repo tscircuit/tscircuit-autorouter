@@ -76,6 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  layerCount?: number
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -125,6 +126,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.layerCount = params.layerCount
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -226,6 +228,15 @@ export class IntraNodeRouteSolver extends BaseSolver {
     typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
   >[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const allowedZ =
+      this.nodeWithPortPoints.allowedZByConnectionName?.[connectionName]
+    const availableZ = this.nodeWithPortPoints.availableZ?.length
+      ? this.nodeWithPortPoints.availableZ
+      : this.getAvailableZLayers()
+    const localLayerCount = this.nodeWithPortPoints.portPoints.reduce(
+      (max, p) => Math.max(max, (p.z ?? 0) + 1),
+      2,
+    )
     return {
       connectionName,
       rootConnectionName,
@@ -245,19 +256,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
-        (max, p) => Math.max(max, (p.z ?? 0) + 1),
-        2,
-      ),
+      layerCount: this.nodeWithPortPoints.allowedZByConnectionName
+        ? (this.layerCount ?? localLayerCount)
+        : localLayerCount,
       availableZ:
-        this.nodeWithPortPoints.availableZ &&
-        this.nodeWithPortPoints.availableZ.length > 0
-          ? this.nodeWithPortPoints.availableZ
-          : [
-              ...new Set(
-                this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
-              ),
-            ].sort((a, b) => a - b),
+        allowedZ === undefined
+          ? availableZ
+          : availableZ.filter((z) => allowedZ.includes(z)),
+      ...(allowedZ === undefined ? {} : { allowedZ }),
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -301,6 +307,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
       traceThickness: this.traceWidth,
       viaDiameter: this.viaDiameter,
+      ...(opts.allowedZ === undefined ? {} : { allowedZ: opts.allowedZ }),
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],
     })

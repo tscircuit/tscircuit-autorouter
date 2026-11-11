@@ -6,6 +6,8 @@ import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
+import { getConnectionAllowedZ } from "lib/utils/getConnectionAllowedZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 type ConnectionName = SimpleRouteConnection["name"]
 
@@ -37,6 +39,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     initiallyConnectedMap: ConnectivityMap,
   ) {
     super()
+    const allowedZByConnectionName = getConnectionAllowedZ(ogSrj)
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
     for (const bus of ogSrj.buses ?? []) {
       if (bus.traceWidth === undefined) continue
@@ -55,13 +58,26 @@ export class NetToPointPairsSolver extends BaseSolver {
         const busTraceWidth = busTraceWidthsByConnectionName.get(
           connection.name,
         )
-        if (busTraceWidth === undefined) return connection
+        const allowedZ = allowedZByConnectionName.get(connection.name)
+        if (busTraceWidth === undefined && allowedZ === undefined)
+          return connection
         return {
           ...connection,
-          nominalTraceWidth: Math.max(
-            connection.nominalTraceWidth ?? 0,
-            busTraceWidth,
-          ),
+          ...(busTraceWidth === undefined
+            ? {}
+            : {
+                nominalTraceWidth: Math.max(
+                  connection.nominalTraceWidth ?? 0,
+                  busTraceWidth,
+                ),
+              }),
+          ...(allowedZ === undefined
+            ? {}
+            : {
+                allowedLayers: allowedZ.map((z) =>
+                  mapZToLayerName(z, ogSrj.layerCount),
+                ),
+              }),
         }
       },
     )

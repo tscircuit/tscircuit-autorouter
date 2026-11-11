@@ -89,8 +89,22 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    let allowedLayers: string[] | undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
+      if (simpleRouteConnection.allowedLayers !== undefined) {
+        allowedLayers =
+          allowedLayers === undefined
+            ? [...simpleRouteConnection.allowedLayers]
+            : allowedLayers.filter((layer) =>
+                simpleRouteConnection.allowedLayers!.includes(layer),
+              )
+        if (allowedLayers.length === 0) {
+          throw new Error(
+            `Merged connection "${simpleRouteConnectionGroup.map((connection) => connection.name).join("__")}" has no permitted wire layers`,
+          )
+        }
+      }
       // Collect unique points
       simpleRouteConnection.pointsToConnect.forEach((connectionPoint) =>
         uniqueConnectionPoints.set(
@@ -153,6 +167,7 @@ export function mergeConnections(
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
+      ...(allowedLayers === undefined ? {} : { allowedLayers }),
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)

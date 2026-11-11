@@ -21,6 +21,7 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { isHighDensityRouteOnAllowedLayers } from "../../solvers/HighDensitySolver/isHighDensityRouteOnAllowedLayers"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -650,9 +651,25 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    const nodePolicies = this.activeNode?.allowedZByConnectionName
+    for (const route of routes) {
+      const allowedZ = nodePolicies?.[route.connectionName] ?? route.allowedZ
+      if (!isHighDensityRouteOnAllowedLayers(route, allowedZ)) {
+        this.error = `Pipeline9 high-density route "${route.connectionName}" violates its allowed wire layers`
+        this.failed = true
+        return
+      }
+    }
+    const routesWithPolicies =
+      nodePolicies === undefined
+        ? routes
+        : routes.map((route) => {
+            const allowedZ = nodePolicies[route.connectionName]
+            return allowedZ === undefined ? route : { ...route, allowedZ }
+          })
     const solvedRoutes = this.activeNode
-      ? restoreRootConnectionNames(routes, this.activeNode)
-      : routes
+      ? restoreRootConnectionNames(routesWithPolicies, this.activeNode)
+      : routesWithPolicies
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)

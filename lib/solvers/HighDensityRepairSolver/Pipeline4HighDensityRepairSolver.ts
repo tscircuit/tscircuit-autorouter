@@ -14,6 +14,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
+import { isHighDensityRouteOnAllowedLayers } from "../HighDensitySolver/isHighDensityRouteOnAllowedLayers"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
@@ -166,6 +167,9 @@ const fromRepairRoute = (
   regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
   traceThickness: fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
+  ...(fallbackRoute.allowedZ === undefined
+    ? {}
+    : { allowedZ: fallbackRoute.allowedZ }),
   route:
     route.route?.map((point) => ({
       x: point.x,
@@ -497,15 +501,25 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         Number(this.stats.nodeClearanceCandidateCount ?? 0) +
         Number(result.clearanceStats?.nodeClearanceCandidateCount ?? 0),
     }
+    const candidateRoutes = sampleEntry.routeIndexes.map((routeIndex, i) => {
+      const originalRoute = this.originalHdRoutes[routeIndex]!
+      const repairedRoute = result.repairedRoutes[i]
+      return repairedRoute
+        ? fromRepairRoute(repairedRoute, originalRoute)
+        : originalRoute
+    })
+    // A repair is a node-wide transaction: retaining only some changed routes
+    // would invalidate the clearances used to solve the other routes.
+    const respectsWireLayers = candidateRoutes.every((route) =>
+      isHighDensityRouteOnAllowedLayers(route),
+    )
     for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
       const routeIndex = sampleEntry.routeIndexes[i]
-      const fallbackRoute = this.originalHdRoutes[routeIndex]
-      const repairedRoute = result.repairedRoutes[i]
       this.repairedRoutesByIndex.set(
         routeIndex,
-        repairedRoute
-          ? fromRepairRoute(repairedRoute, fallbackRoute)
-          : fallbackRoute,
+        respectsWireLayers
+          ? candidateRoutes[i]!
+          : this.originalHdRoutes[routeIndex]!,
       )
     }
     this.activeSubSolver = null

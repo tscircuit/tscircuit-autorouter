@@ -291,6 +291,16 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
           obstacleRoutes.push(witness.route)
       } else if (i !== task) futureConnections.push(this.tasks[i])
     }
+    const allowedZ =
+      this.nodeWithPortPoints.allowedZByConnectionName?.[
+        this.tasks[task].connectionName
+      ]
+    if (allowedZ !== undefined) {
+      this.charge(
+        "priorityConnectionLayerPolicyVisits",
+        this.allowedLayers.length,
+      )
+    }
     return {
       ...this.tasks[task],
       A: this.tasks[task].points[0],
@@ -301,7 +311,11 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       bounds: this.nativeBounds,
       minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
       layerCount: this.board.layerCount,
-      availableZ: this.allowedLayers,
+      availableZ:
+        allowedZ === undefined
+          ? this.allowedLayers
+          : this.allowedLayers.filter((z) => allowedZ.includes(z)),
+      ...(allowedZ === undefined ? {} : { allowedZ }),
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

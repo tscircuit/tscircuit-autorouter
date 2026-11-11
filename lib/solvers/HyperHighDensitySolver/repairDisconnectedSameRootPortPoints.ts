@@ -152,6 +152,12 @@ export const repairDisconnectedSameRootPortPoints = (
         ...bridgeRoute,
         connectionName,
         rootConnectionName,
+        ...(nodeWithPortPoints.allowedZByConnectionName
+          ? {
+              allowedZ:
+                nodeWithPortPoints.allowedZByConnectionName[connectionName],
+            }
+          : {}),
         route: bridgeRoute.route.map((point) => ({
           ...point,
           connectionName,

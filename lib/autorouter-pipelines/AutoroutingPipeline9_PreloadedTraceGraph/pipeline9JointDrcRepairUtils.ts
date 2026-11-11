@@ -133,10 +133,11 @@ export const isPipeline9DrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
 ) =>
-  candidateErrors.length < currentErrors.length ||
-  (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) <
-      getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+  !candidateErrors.some((error) => error.drc_source === "wire_layer") &&
+  (candidateErrors.length < currentErrors.length ||
+    (candidateErrors.length === currentErrors.length &&
+      getDrcIssueScore(candidateErrors) <
+        getDrcIssueScore(currentErrors) - SCORE_EPSILON))
 
 export const getPipeline9RouteIndexByTraceId = ({
   routes,

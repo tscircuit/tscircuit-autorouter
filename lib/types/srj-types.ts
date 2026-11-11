@@ -178,6 +178,8 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
+  /** Permitted wire layers; through vias still occupy their physical stack. */
+  allowedLayers?: string[]
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number
   pointsToConnect: Array<ConnectionPoint>

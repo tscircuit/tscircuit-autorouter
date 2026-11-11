@@ -48,6 +48,9 @@ export const createInvalidDirectConnectionRoutes = (
           regionId: node.capacityMeshNodeId,
           traceThickness,
           viaDiameter,
+          ...(node.allowedZByConnectionName?.[connectionName] === undefined
+            ? {}
+            : { allowedZ: node.allowedZByConnectionName[connectionName] }),
           route: [
             { x: start.x, y: start.y, z: z ?? start.z ?? 0 },
             { x: end.x, y: end.y, z: z ?? end.z ?? 0 },

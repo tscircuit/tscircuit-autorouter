@@ -67,7 +67,7 @@
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#551ed1971ef4c521f385a846f1b6be9682e92a5a",
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/e81da13cfba35ce8bb9901f22354c60e7f113e7a",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/01d2436051dc9209bf8fbce13a5182fd2da226ea",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#b607e0b93b302daad818711d9a85f26a0da8dc08",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -102,7 +102,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#f953f0d84d2013accd3d4ce6bb5a1b7b77a6357f",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#f87c0bcb501dcc5553ea0931cc98aa3e7bcd0fb2",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -115,7 +115,7 @@
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/2e38b47de811dce2114e9d1d956a11bb50427dd2",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0",
-    "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
+    "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#a94613666a63e8c77c1b8043ee900766135aca7d",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
   },
   "dependencies": {

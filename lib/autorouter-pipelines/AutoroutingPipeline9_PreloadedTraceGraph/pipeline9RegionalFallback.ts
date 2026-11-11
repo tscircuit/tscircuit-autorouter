@@ -237,6 +237,7 @@ export const createRegionalFallbackProblem = (
     FixedRouteSection
   >()
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
+  const allowedZByConnectionName = { ...node.allowedZByConnectionName }
   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
   const localSlices = fixedRoutes
@@ -297,11 +298,29 @@ export const createRegionalFallbackProblem = (
     }
     fixedRouteSectionsByConnectionName.set(connectionName, section)
     fallbackPortPairs.push(createFallbackPortPair(section))
+    const policies = section.sourceRoutes.flatMap((route) =>
+      route.allowedZ === undefined ? [] : [route.allowedZ],
+    )
+    if (policies.length > 0) {
+      const allowedZ = policies.reduce(
+        (allowed, policy) => allowed.filter((z) => policy.includes(z)),
+        policies[0]!,
+      )
+      if (allowedZ.length === 0) {
+        throw new Error(
+          `Regional route "${connectionName}" has no permitted wire layers`,
+        )
+      }
+      allowedZByConnectionName[connectionName] = allowedZ
+    }
   }
 
   return {
     nodeWithPortPoints: {
       ...node,
+      ...(Object.keys(allowedZByConnectionName).length > 0
+        ? { allowedZByConnectionName }
+        : {}),
       portPoints: [
         ...node.portPoints,
         ...fallbackPortPairs.flatMap((pair) => pair),

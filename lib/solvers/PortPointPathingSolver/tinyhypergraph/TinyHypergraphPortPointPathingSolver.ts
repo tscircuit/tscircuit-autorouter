@@ -31,6 +31,7 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
+  type TinySerializedHyperGraph,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -68,7 +69,7 @@ export type ChangedPreloadedTraceSection = {
 }
 
 type SerializedTinyConnection = NonNullable<
-  SerializedHyperGraph["connections"]
+  TinySerializedHyperGraph["connections"]
 >[number]
 type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
@@ -381,7 +382,21 @@ const getSharedConnectionZ = (params: {
   const pointZLayers = getConnectionPointLayers(point).map((layerName) =>
     mapLayerNameToZ(layerName, params.layerCount),
   )
-  const sharedZ = params.regionAvailableZ.find((z) => pointZLayers.includes(z))
+  const allowedLayers =
+    params.routeMetadata.simpleRouteConnection?.allowedLayers
+  const allowedZ = allowedLayers?.map((layer) =>
+    mapLayerNameToZ(layer, params.layerCount),
+  )
+  const sharedZ = params.regionAvailableZ.find(
+    (z) =>
+      pointZLayers.includes(z) &&
+      (allowedZ === undefined || allowedZ.includes(z)),
+  )
+  if (allowedZ !== undefined && sharedZ === undefined) {
+    throw new Error(
+      `Connection "${params.routeMetadata.connectionId}" has no permitted terminal layer`,
+    )
+  }
   return sharedZ ?? params.fallbackZ
 }
 
@@ -469,7 +484,7 @@ const getTinyRouteConnectionsOrThrow = (
 
 const buildSerializedTinyGraph = (
   params: TinyHypergraphInput,
-): SerializedHyperGraph => {
+): TinySerializedHyperGraph => {
   const getNetIndex = createTinyRouteNetIndexer()
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
     params,
@@ -509,6 +524,13 @@ const buildSerializedTinyGraph = (
       startRegionId: connection.startRegion.regionId,
       endRegionId: connection.endRegion.regionId,
       simpleRouteConnection: connection.simpleRouteConnection,
+      ...(connection.simpleRouteConnection.allowedLayers === undefined
+        ? {}
+        : {
+            allowedZ: connection.simpleRouteConnection.allowedLayers.map(
+              (layer) => mapLayerNameToZ(layer, params.layerCount),
+            ),
+          }),
     }),
   )
 
@@ -636,7 +658,7 @@ const buildSerializedTinyGraph = (
     ports,
     connections,
     solvedRoutes,
-  } satisfies SerializedHyperGraph
+  } satisfies TinySerializedHyperGraph
   serializePreloadedTraceAssignments(serializedHyperGraph)
   return serializedHyperGraph
 }

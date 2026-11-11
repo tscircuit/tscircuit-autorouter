@@ -50,6 +50,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleMargin: number
   layerCount: number
   availableZ: number[]
+  allowedZ?: number[]
   minCellSize = 0.05
   cellStep = 0.05
   GREEDY_MULTIPLER = 1.1
@@ -117,6 +118,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     obstacleMargin?: number
     layerCount?: number
     availableZ?: number[]
+    allowedZ?: number[]
     futureConnections?: FutureConnection[]
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
@@ -150,6 +152,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
+    if (opts.allowedZ !== undefined) {
+      this.allowedZ = [...opts.allowedZ]
+      this.availableZ = (opts.availableZ ?? this.availableZ).filter((z) =>
+        this.allowedZ!.includes(z),
+      )
+    }
     this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
@@ -198,6 +206,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.futureConnections &&
       this.futureConnections.length === 0 &&
       this.obstacleRoutes.length === 0 &&
+      (this.allowedZ === undefined ||
+        (this.availableZ.includes(this.A.z) &&
+          this.availableZ.includes(this.B.z))) &&
       !isOnSameEdge
     ) {
       this.handleSimpleCases()
@@ -236,14 +247,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       Math.abs(roundedInitialNode.x - opts.A.x) > 1e-9 ||
       Math.abs(roundedInitialNode.y - opts.A.y) > 1e-9
     const shouldFallbackToExactStart =
-      roundedInitialNodeDiffersFromA &&
-      (this.isNodeTooCloseToObstacle(roundedInitialNode) ||
-        this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
-        this.doesPathToParentIntersectObstacle(roundedInitialNode))
+      (this.allowedZ !== undefined && !this.allowedZ.includes(this.A.z)) ||
+      (roundedInitialNodeDiffersFromA &&
+        (this.isNodeTooCloseToObstacle(roundedInitialNode) ||
+          this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
+          this.doesPathToParentIntersectObstacle(roundedInitialNode)))
 
     this.candidates = new SingleRouteCandidatePriorityQueue([
       shouldFallbackToExactStart ? initialParent : roundedInitialNode,
     ])
+    if (
+      this.allowedZ !== undefined &&
+      (this.A.x !== this.B.x || this.A.y !== this.B.y) &&
+      (!this.availableZ.includes(this.A.z) ||
+        !this.availableZ.includes(this.B.z))
+    ) {
+      this.solved = false
+      this.failed = true
+      this.error =
+        "Route terminals are outside the connection's allowed wire layers"
+    }
   }
 
   handleSimpleCases() {
@@ -268,6 +291,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
+      ...(this.allowedZ === undefined ? {} : { allowedZ: this.allowedZ }),
       vias: this.A.z === this.B.z ? [] : [this.boundsCenter],
     }
   }
@@ -712,7 +736,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       Math.round(centerY / this.cellStep) - this.gridMinYIndex
     const upperYIndex = Math.round(upperY / this.cellStep) - this.gridMinYIndex
 
-    for (let x = -1; x <= 1; x++) {
+    const canRouteOnLayer =
+      this.allowedZ === undefined || this.allowedZ.includes(node.z)
+    for (let x = -1; canRouteOnLayer && x <= 1; x++) {
       const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
       const xIndex = Math.round(neighborX / this.cellStep) - this.gridMinXIndex
       for (let y = -1; y <= 1; y++) {
@@ -780,7 +806,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
-    for (const newZ of this.availableZ) {
+    const viaLayers =
+      this.allowedZ !== undefined &&
+      node.x === this.B.x &&
+      node.y === this.B.y &&
+      !this.availableZ.includes(this.B.z)
+        ? [...this.availableZ, this.B.z]
+        : this.availableZ
+    for (const newZ of viaLayers) {
       if (newZ === node.z) continue
 
       const viaNeighbor: Node = {
@@ -853,6 +886,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       regionId: this.regionId,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
+      ...(this.allowedZ === undefined ? {} : { allowedZ: this.allowedZ }),
       route: path
         .map((node) => ({ x: node.x, y: node.y, z: node.z }))
         .concat([this.B]),

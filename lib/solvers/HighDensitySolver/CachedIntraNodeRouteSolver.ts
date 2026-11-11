@@ -165,6 +165,19 @@ export class CachedIntraNodeRouteSolver
         availableZ: this.nodeWithPortPoints.availableZ
           ? [...this.nodeWithPortPoints.availableZ].sort()
           : undefined,
+        ...(this.nodeWithPortPoints.allowedZByConnectionName
+          ? {
+              allowedZByConnectionName: Object.fromEntries(
+                Object.entries(this.nodeWithPortPoints.allowedZByConnectionName)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([name, layers]) => [
+                    name,
+                    [...layers].sort((a, b) => a - b),
+                  ]),
+              ),
+              layerCount: this.layerCount,
+            }
+          : {}),
         portPoints: normalizedPortPoints,
       },
       normalizedConnections,

@@ -19,6 +19,8 @@ export type NodeWithPortPoints = {
   height: number
   portPoints: PortPoint[]
   availableZ?: number[]
+  /** Wire layers allowed for each connection; through-via copper still spans the board. */
+  allowedZByConnectionName?: Record<string, number[]>
   portPointsInPairs?: [PortPoint, PortPoint][]
 }
 
@@ -44,6 +46,8 @@ export type HighDensityIntraNodeRoute = {
   endPcbPortId?: string
   traceThickness: number
   viaDiameter: number
+  /** Restricts nonzero wire segments, not the physical span of through vias. */
+  allowedZ?: number[]
   route: Array<{
     x: number
     y: number

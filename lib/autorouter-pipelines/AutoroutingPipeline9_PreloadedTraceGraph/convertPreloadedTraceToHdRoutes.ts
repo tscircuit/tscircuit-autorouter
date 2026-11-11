@@ -20,6 +20,7 @@ export const convertPreloadedTraceToHdRoutes = (
   layerCount: number,
   defaultViaDiameter: number,
   connMap: ConnectivityMap,
+  allowedZ?: number[],
 ): PreloadedHighDensityRoute[] => {
   const rootConnectionName =
     connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
@@ -47,6 +48,7 @@ export const convertPreloadedTraceToHdRoutes = (
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
       vias,
+      ...(allowedZ === undefined ? {} : { allowedZ }),
     })
   }
 

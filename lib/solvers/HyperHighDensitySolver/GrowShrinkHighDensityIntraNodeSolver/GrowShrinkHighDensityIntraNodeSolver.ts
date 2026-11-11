@@ -5,6 +5,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { isHighDensityRouteOnAllowedLayers } from "../../HighDensitySolver/isHighDensityRouteOnAllowedLayers"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
@@ -187,6 +188,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         params.traceWidth ?? 0.15,
         params.viaDiameter ?? 0.3,
       )
+      if (
+        !this.solvedRoutes.every((route) =>
+          isHighDensityRouteOnAllowedLayers(route),
+        )
+      ) {
+        this.failed = true
+        this.error = "Direct crossing geometry uses a forbidden wire layer"
+        return
+      }
       this.solved = true
       this.progress = 1
       this.stats = {
@@ -286,6 +296,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           this.constructorParams.traceWidth ?? 0.15,
           this.constructorParams.viaDiameter ?? 0.3,
         )
+        if (
+          !this.solvedRoutes.every((route) =>
+            isHighDensityRouteOnAllowedLayers(route),
+          )
+        ) {
+          this.failed = true
+          this.error = "Direct connection geometry uses a forbidden wire layer"
+          return
+        }
         this.solved = true
         this.failed = false
         this.progress = 1

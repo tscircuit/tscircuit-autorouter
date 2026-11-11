@@ -258,11 +258,13 @@ export function buildHyperGraph(params: {
       graph,
       point: startPoint,
       layerCount: params.layerCount,
+      allowedLayers: connection.allowedLayers,
     })
     const endRegion = selectConnectionPointRegion({
       graph,
       point: endPoint,
       layerCount: params.layerCount,
+      allowedLayers: connection.allowedLayers,
     })
 
     assertDefined(

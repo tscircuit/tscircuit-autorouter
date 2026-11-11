@@ -36,6 +36,7 @@ import {
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 import { restorePipeline9TerminalApproaches } from "./restorePipeline9TerminalApproaches"
+import { createPipeline9WireLayerDrcEvaluator } from "./createPipeline9WireLayerDrcEvaluator"
 
 type RegionalB01RepairPhase =
   | "initialize"
@@ -583,12 +584,20 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.finishCleanup()
       return
     }
+    const wireLayerDrcEvaluator = createPipeline9WireLayerDrcEvaluator(
+      this.params.srj,
+    )
     this.safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...this.params.srj, traces: undefined },
       hdRoutes: cleanup.routes,
       connMap: this.params.connMap,
       effort: this.params.effort,
       drcEvaluator: this.params.drcEvaluator,
+      ...(wireLayerDrcEvaluator === undefined
+        ? {}
+        : {
+            referenceDrcEvaluator: wireLayerDrcEvaluator,
+          }),
       maxIterations: 8,
       enableBroadFallback: !this.candidateSearchBudgetExhausted,
       enableLargeBoardBroadFallback: false,

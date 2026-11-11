@@ -1,4 +1,7 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { getConnectionAllowedZ } from "lib/utils/getConnectionAllowedZ"
+import { createPipeline9WireLayerDrcEvaluator } from "./createPipeline9WireLayerDrcEvaluator"
+import { getPipeline9WireLayerErrors } from "./getPipeline9WireLayerErrors"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -614,7 +617,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
-        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+        const allowedZByName = getConnectionAllowedZ(cms.srjWithPointPairs!)
+        const routingNodes =
+          allowedZByName.size === 0
+            ? nodePortPointsSource
+            : nodePortPointsSource.map((node) => {
+                const allowedZByConnectionName: Record<string, number[]> = {}
+                for (const point of node.portPoints) {
+                  const allowedZ =
+                    allowedZByName.get(point.connectionName) ??
+                    (point.rootConnectionName === undefined
+                      ? undefined
+                      : allowedZByName.get(point.rootConnectionName))
+                  if (allowedZ !== undefined)
+                    allowedZByConnectionName[point.connectionName] = allowedZ
+                }
+                return Object.keys(allowedZByConnectionName).length === 0
+                  ? node
+                  : { ...node, allowedZByConnectionName }
+              })
+        cms.highDensityNodePortPoints = structuredClone(routingNodes)
         const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
           (trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
@@ -623,6 +645,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.layerCount,
               cms.viaDiameter,
               cms.connMap,
+              allowedZByName.get(trace.connection_name),
             ),
         )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
@@ -643,7 +666,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            nodePortPoints: nodePortPointsSource,
+            nodePortPoints: routingNodes,
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
               outline: cms.originalSrj.outline,
@@ -841,6 +864,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         const srjWithMaterializedPreloadedTraces =
           cms.getSrjWithMaterializedPreloadedTraces()
+        const wireLayerDrcEvaluator = createPipeline9WireLayerDrcEvaluator(
+          srjWithMaterializedPreloadedTraces,
+        )
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
@@ -856,6 +882,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
             deferTraceContactGuard: true,
+            ...(wireLayerDrcEvaluator === undefined
+              ? {}
+              : { referenceDrcEvaluator: wireLayerDrcEvaluator }),
           },
         ]
       },
@@ -1105,6 +1134,30 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             onlyConnectionNames,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          const allowedZByConnectionName = getConnectionAllowedZ({
+            ...cms.originalSrj,
+            connections: [
+              ...cms.originalSrj.connections,
+              ...cms.srjWithPointPairs!.connections,
+            ],
+          })
+          if (allowedZByConnectionName.size === 0) return
+          const errors = getPipeline9WireLayerErrors({
+            traces: [
+              ...cms.getPowerTraceExpansionFixedTraces(),
+              ...cms.powerTraceExpansionSolver!.getOutput(),
+            ],
+            allowedZByConnectionName,
+            layerCount: cms.originalSrj.layerCount,
+          })
+          if (errors.length > 0) {
+            cms.error = String(errors[0]!.message)
+            cms.failed = true
+          }
+        },
       },
     ),
   ]
@@ -1552,6 +1605,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
+    const allowedZByName = getConnectionAllowedZ(this.originalSrj)
     return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
         trace,
@@ -1559,6 +1613,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.originalSrj.layerCount,
         this.viaDiameter,
         this.connMap,
+        allowedZByName.get(trace.connection_name),
       ),
     )
   }

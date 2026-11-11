@@ -27,6 +27,8 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getConnectionAllowedZ } from "lib/utils/getConnectionAllowedZ"
+import { createPipeline9WireLayerDrcEvaluator } from "./createPipeline9WireLayerDrcEvaluator"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
@@ -825,6 +827,30 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
+    const policySrj = {
+      ...params.originalSrj,
+      connections: [
+        ...params.originalSrj.connections,
+        ...params.srjWithPointPairs.connections,
+      ],
+    }
+    const allowedZByConnectionName = getConnectionAllowedZ(policySrj)
+    if (allowedZByConnectionName.size > 0) {
+      const attachWireLayers = (route: HighDensityRoute): HighDensityRoute => {
+        const allowedZ =
+          allowedZByConnectionName.get(route.connectionName) ??
+          (route.rootConnectionName === undefined
+            ? undefined
+            : allowedZByConnectionName.get(route.rootConnectionName))
+        if (allowedZ === undefined) return route
+        return { ...route, allowedZ }
+      }
+      params = {
+        ...params,
+        newHdRoutes: params.newHdRoutes.map(attachWireLayers),
+        originalNewHdRoutes: params.originalNewHdRoutes?.map(attachWireLayers),
+      }
+    }
     if (params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)) {
       const holeClearance =
         params.originalSrj.minTraceToHoleEdgeClearance ?? 0.2
@@ -1029,6 +1055,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         (movableSection) => movableSection.syntheticConnectionName,
       ),
     )
+    for (const section of this.movablePreloadedSections) {
+      const allowedZ = allowedZByConnectionName.get(
+        section.originalTrace.connection_name,
+      )
+      if (allowedZ !== undefined) section.hdRoute.allowedZ = allowedZ
+    }
     const movablePreloadedTraceIds = new Set(
       this.movablePreloadedSections.map(
         (movableSection) => movableSection.originalTrace.pcb_trace_id,
@@ -1720,6 +1752,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
+      ...(allowedZByConnectionName.size > 0
+        ? {
+            referenceDrcEvaluator:
+              createPipeline9WireLayerDrcEvaluator(policySrj),
+          }
+        : {}),
       maxIterations: maxRepairIterations,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,

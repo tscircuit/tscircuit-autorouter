@@ -20,6 +20,8 @@ import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/create
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCopperDrcEvaluator"
+import { getConnectionAllowedZ } from "lib/utils/getConnectionAllowedZ"
+import { getPipeline9WireLayerErrors } from "./getPipeline9WireLayerErrors"
 
 type DrcError = Record<string, unknown>
 
@@ -51,6 +53,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): Pipeline9AutoroutingDrcEvaluator => {
+  const allowedZByConnectionName = getConnectionAllowedZ({
+    ...inputSrj,
+    connections: [...inputSrj.connections, ...srjWithPointPairs.connections],
+  })
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
@@ -109,6 +115,11 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
     const errors = [
+      ...getPipeline9WireLayerErrors({
+        traces,
+        allowedZByConnectionName,
+        layerCount: inputSrj.layerCount,
+      }),
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
       ...checkBoardTraceClearance(circuitJson, { board }),
