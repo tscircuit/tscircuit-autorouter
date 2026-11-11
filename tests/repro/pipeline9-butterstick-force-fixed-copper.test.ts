@@ -20,7 +20,10 @@ type ForceFixture = {
 }
 
 type BoardFixture = {
-  inputSrj: SimpleRouteJson & { layerCount: number }
+  inputSrj: SimpleRouteJson & {
+    layerCount: number
+    minViaHoleDiameter: number
+  }
   preloadedConnections: SimpleRouteConnection[]
   preloadedTraces: SimplifiedPcbTrace[]
 }
