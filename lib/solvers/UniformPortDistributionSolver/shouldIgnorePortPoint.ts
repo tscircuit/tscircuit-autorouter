@@ -1,3 +1,4 @@
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { PortPoint } from "lib/types/high-density-types"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { OwnerPair } from "./types"
@@ -5,7 +6,7 @@ import { OwnerPair } from "./types"
 interface ShouldIgnorePortPointParams {
   portPoint: PortPoint
   ownerNodeIds: OwnerPair
-  inputNodes: InputNodeWithPortPoints[]
+  inputNodeById: ReadonlyMap<CapacityMeshNodeId, InputNodeWithPortPoints>
 }
 
 /**
@@ -15,20 +16,17 @@ interface ShouldIgnorePortPointParams {
 export const shouldIgnorePortPoint = ({
   portPoint,
   ownerNodeIds,
-  inputNodes,
+  inputNodeById,
 }: ShouldIgnorePortPointParams): boolean => {
   for (const ownerNodeId of ownerNodeIds) {
-    const inputNode = inputNodes.find(
-      (n) => n.capacityMeshNodeId === ownerNodeId,
-    )
+    const inputNode = inputNodeById.get(ownerNodeId)
     if (inputNode?._containsTarget) return true
     const inputPortPoint = inputNode?.portPoints.find(
       (p) => p.portPointId === portPoint.portPointId,
     )
     if (
       inputPortPoint?.connectionNodeIds?.some(
-        (id) =>
-          inputNodes.find((n) => n.capacityMeshNodeId === id)?._containsTarget,
+        (id) => inputNodeById.get(id)?._containsTarget,
       )
     ) {
       return true

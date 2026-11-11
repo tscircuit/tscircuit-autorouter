@@ -1,6 +1,7 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
@@ -52,9 +53,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly inputNodeById = new Map<
+    CapacityMeshNodeId,
+    InputNodeWithPortPoints
+  >()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    for (const inputNode of input.inputNodesWithPortPoints) {
+      if (!this.inputNodeById.has(inputNode.capacityMeshNodeId)) {
+        this.inputNodeById.set(inputNode.capacityMeshNodeId, inputNode)
+      }
+    }
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -163,7 +173,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
+          inputNodeById: this.inputNodeById,
         })
       ) {
         family.push(portPoint)
