@@ -1,6 +1,7 @@
 import {
   type DifferentialPair,
   LengthMatchingSolver,
+  type PostProcessingError,
   PostProcessingSolver,
   type PostProcessingSolverOutput,
 } from "@tscircuit/length-matching-solver"
@@ -137,7 +138,8 @@ const assertBusLengthSkew = (
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
   private readonly differentialPairSolver: PostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
-  private output?: PostProcessingSolverOutput
+  private outputHdRoutes?: HighDensityRoute[]
+  private postProcessingErrors: PostProcessingError[] = []
 
   constructor(
     private readonly params: LengthMatchingPostProcessingSolverParams,
@@ -171,13 +173,15 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      this.output = this.differentialPairSolver.getOutput()
-      const { hdRoutes } = this.output
+      const { hdRoutes, postProcessingErrors } =
+        this.differentialPairSolver.getOutput()
+      this.postProcessingErrors = postProcessingErrors
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
       )
       if (differentialPairs.length === 0) {
+        this.outputHdRoutes = hdRoutes
         this.solved = true
         return
       }
@@ -204,19 +208,21 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       return
     }
     if (!this.busLengthMatchingSolver.solved) return
-    const hdRoutes =
+    this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
-    assertBusLengthSkew(this.params.buses, hdRoutes)
-    this.output!.hdRoutes = hdRoutes
+    assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
     this.solved = true
   }
 
   getOutput(): PostProcessingSolverOutput {
-    if (!this.solved || !this.output)
+    if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return { ...this.output }
+    return {
+      hdRoutes: this.outputHdRoutes,
+      postProcessingErrors: this.postProcessingErrors,
+    }
   }
 
   override visualize(): GraphicsObject {
