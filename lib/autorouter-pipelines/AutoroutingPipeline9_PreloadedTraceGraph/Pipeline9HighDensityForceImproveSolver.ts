@@ -23,7 +23,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
   private readonly inputSrj: SimpleRouteJson
-  private readonly fixedViaObstacleIndexes: ReadonlySet<number>
+  private readonly fixedCopperObstacleIndexes: ReadonlySet<number>
   private readonly evaluateFixedObstacles: ReturnType<
     typeof createFixedObstacleViolationEvaluator
   >
@@ -36,16 +36,10 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       originalSrj: params.inputSrj,
       representedPadObstacleIndexes,
     })
-    const fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
+    this.fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
       inputSrj: params.inputSrj,
       representedPadObstacleIndexes,
     })
-    this.fixedViaObstacleIndexes = new Set(
-      [...fixedCopperObstacleIndexes].filter((obstacleIndex) => {
-        const obstacle = params.inputSrj.obstacles[obstacleIndex]!
-        return obstacle.shape === "circle" && obstacle.layers.length > 1
-      }),
-    )
     this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
       srj: {
         ...params.inputSrj,
@@ -78,7 +72,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   }
 
   private validateImprovedSample(routeIndexes: number[]): void {
-    if (this.fixedViaObstacleIndexes.size === 0) return
+    if (this.fixedCopperObstacleIndexes.size === 0) return
     const originalRoutes = routeIndexes.map(
       (routeIndex) => this.originalHdRoutes[routeIndex],
     )
@@ -93,7 +87,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
         .filter(
           (violation) =>
             violation.kind === "via" &&
-            this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
+            this.fixedCopperObstacleIndexes.has(violation.obstacleIndex),
         )
         .map((violation) => violation.key),
     )
@@ -102,7 +96,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
     ).some(
       (violation) =>
         violation.kind === "via" &&
-        this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
+        this.fixedCopperObstacleIndexes.has(violation.obstacleIndex) &&
         !originalViolationKeys.has(violation.key),
     )
     if (!introducesViaClearanceViolation) return
