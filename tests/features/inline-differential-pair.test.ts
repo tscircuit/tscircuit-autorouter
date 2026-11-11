@@ -8,6 +8,7 @@ test("Pipeline9 routes both sections of an inline three-pad differential pair", 
   const lengthTolerance = 0.05
   const connections = ["D_P", "D_N"].map((name, memberIndex) => ({
     name,
+    path: [0, 1, 2].map((padIndex) => `${name}_${padIndex}`),
     pointsToConnect: [-6, 0, 6].map((x, padIndex) => ({
       x,
       y: memberIndex * (traceWidth + traceGap),

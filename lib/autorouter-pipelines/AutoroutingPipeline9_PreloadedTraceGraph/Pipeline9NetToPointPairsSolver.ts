@@ -14,14 +14,26 @@ export class Pipeline9NetToPointPairsSolver extends NetToPointPairsSolver2_OffBo
     srjWithEscapeVias: SimpleRouteJson
     colorMap: Record<string, string>
   }) {
+    // The path belongs to the input connection. Point-pair output carries
+    // only the endpoints of each routing job.
+    const srjWithEscapeVias = input.srjWithEscapeVias.connections.some(
+      (connection) => connection.path !== undefined,
+    )
+      ? {
+          ...input.srjWithEscapeVias,
+          connections: input.srjWithEscapeVias.connections.map(
+            ({ path, ...connection }) => connection,
+          ),
+        }
+      : input.srjWithEscapeVias
     super(
-      input.srjWithEscapeVias,
+      srjWithEscapeVias,
       input.colorMap,
-      getInitiallyConnectedMapFromSimpleRouteJson(input.srjWithEscapeVias),
+      getInitiallyConnectedMapFromSimpleRouteJson(srjWithEscapeVias),
     )
     this.pairPlan = planDifferentialPairSections(
       input.srjBeforeEscapeVias,
-      input.srjWithEscapeVias.connections,
+      srjWithEscapeVias.connections,
       this.unprocessedConnections,
     )
   }

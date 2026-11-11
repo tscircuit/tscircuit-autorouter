@@ -1,4 +1,8 @@
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type {
+  ConnectionPoint,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
 
 type ConnectionName = SimpleRouteConnection["name"]
@@ -6,6 +10,36 @@ type ConnectionName = SimpleRouteConnection["name"]
 type DifferentialPairSectionPlan = {
   sectionsByMergedConnection: Map<ConnectionName, SimpleRouteConnection[]>
   sectionNamesByMember: Map<ConnectionName, ConnectionName[]>
+}
+
+function getDifferentialPairPathPoints(
+  connection: SimpleRouteConnection,
+): ConnectionPoint[] {
+  const { name, path, pointsToConnect } = connection
+  if (!path) {
+    if (pointsToConnect.length > 2) {
+      throw new Error(
+        `Differential pair member "${name}" needs a path for its ${pointsToConnect.length} points`,
+      )
+    }
+    return pointsToConnect
+  }
+  if (path.length < 2 || new Set(path).size !== path.length) {
+    throw new Error(
+      `Differential pair member "${name}" needs at least two distinct point IDs in its path`,
+    )
+  }
+  return path.map((pointId) => {
+    const matchingPoints = pointsToConnect.filter(
+      (point) => point.pointId === pointId,
+    )
+    if (matchingPoints.length !== 1) {
+      throw new Error(
+        `Differential pair member "${name}" path point "${pointId}" must identify exactly one point in pointsToConnect`,
+      )
+    }
+    return matchingPoints[0]!
+  })
 }
 
 export function planDifferentialPairSections(
@@ -53,8 +87,10 @@ export function planDifferentialPairSections(
     const positive = declaredByName.get(positiveName)
     const negative = declaredByName.get(negativeName)
     if (!positive || !negative) continue
-    const pointCount = positive.pointsToConnect.length
-    const negativePointCount = negative.pointsToConnect.length
+    const positivePoints = getDifferentialPairPathPoints(positive)
+    const negativePoints = getDifferentialPairPathPoints(negative)
+    const pointCount = positivePoints.length
+    const negativePointCount = negativePoints.length
     const isInline = pointCount > 2 || negativePointCount > 2
     if (isInline && pointCount !== negativePointCount) {
       throw new Error(
@@ -64,10 +100,10 @@ export function planDifferentialPairSections(
 
     if (pointCount < 2 || negativePointCount < 2) continue
     const positiveGroup = mergedByPoint.get(
-      getPointKey(positive.pointsToConnect[0]!),
+      getPointKey(positivePoints[0]!),
     )
     const negativeGroup = mergedByPoint.get(
-      getPointKey(negative.pointsToConnect[0]!),
+      getPointKey(negativePoints[0]!),
     )
     if (!positiveGroup || !negativeGroup || positiveGroup === negativeGroup) {
       if (!isInline) continue
@@ -76,9 +112,9 @@ export function planDifferentialPairSections(
       )
     }
 
-    for (const [member, merged] of [
-      [positive, positiveGroup],
-      [negative, negativeGroup],
+    for (const [member, merged, points] of [
+      [positive, positiveGroup, positivePoints],
+      [negative, negativeGroup, negativePoints],
     ] as const) {
       // A two-terminal member only needs a plan when merging added taps.
       if (
@@ -86,7 +122,6 @@ export function planDifferentialPairSections(
         sectionNamesByMember.has(member.name)
       )
         continue
-      const points = member.pointsToConnect
       if (new Set(points.map(getPointKey)).size !== points.length) {
         throw new Error(
           `Differential pair member "${member.name}" repeats a point in its ordered path`,

@@ -5,10 +5,11 @@ import type { SimpleRouteJson } from "lib/types"
 test("retains declared inline sections while routing taps and escape vias", () => {
   const [positive, negative] = ["P", "N"].map((name, polarity) => ({
     name,
+    path: ["A", "B", "C"].map((pad) => `${name}.${pad}`),
     pointsToConnect: [
       { x: 0, y: 0, pad: "A" },
-      { x: 4, y: 4, pad: "B" },
       { x: 2, y: 0, pad: "C" },
+      { x: 4, y: 4, pad: "B" },
     ].map(({ x, y, pad }) => ({
       x,
       y: y + polarity * 0.6,
@@ -22,15 +23,14 @@ test("retains declared inline sections while routing taps and escape vias", () =
     bounds: { minX: -1, maxX: 7, minY: -1, maxY: 7 },
     obstacles: [],
     connections: [
-      positive!,
-      negative!,
       {
-        name: "TEST_POINT",
+        ...positive!,
         pointsToConnect: [
-          positive!.pointsToConnect[1]!,
+          ...positive!.pointsToConnect,
           { x: 5, y: 5, pointId: "TP", layer: "top" },
         ],
       },
+      negative!,
     ],
     differentialPairs: [{ connectionNames: ["P", "N"], lengthTolerance: 0.05 }],
   }
@@ -63,4 +63,16 @@ test("retains declared inline sections while routing taps and escape vias", () =
     "P.B/P.C",
     "P.B/TP",
   ])
+  expect(solver.newConnections.every((connection) => !connection.path)).toBe(true)
+
+  const inputWithoutPath = structuredClone(input)
+  delete inputWithoutPath.connections[0]!.path
+  expect(
+    () =>
+      new Pipeline9NetToPointPairsSolver({
+        srjBeforeEscapeVias: inputWithoutPath,
+        srjWithEscapeVias: inputWithoutPath,
+        colorMap: {},
+      }),
+  ).toThrow('Differential pair member "P" needs a path for its 4 points')
 })

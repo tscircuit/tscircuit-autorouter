@@ -203,6 +203,7 @@
     {
       "name": "source_trace_0",
       "source_trace_id": "source_trace_0",
+      "path": ["pcb_port_0", "pcb_port_2", "pcb_port_4"],
       "nominalTraceWidth": 0.15,
       "width": 0.15,
       "pointsToConnect": [
@@ -232,6 +233,7 @@
     {
       "name": "source_trace_1",
       "source_trace_id": "source_trace_1",
+      "path": ["pcb_port_1", "pcb_port_3", "pcb_port_5"],
       "nominalTraceWidth": 0.15,
       "width": 0.15,
       "pointsToConnect": [
