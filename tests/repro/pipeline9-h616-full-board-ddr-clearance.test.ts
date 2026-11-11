@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -50,6 +51,15 @@ test("routes H616 DDR controls beside completed data-byte copper", async (): Pro
     drcOptions: { traceClearance: 0.1, viaToPadClearance: 0.1 },
   }
   expect(evaluateRelaxedDrc(snapshotInput).errors.length).toBeLessThan(44)
+  const evaluate = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: referenceSrj,
+    srjWithPointPairs: snapshotInput.srjWithPointPairs,
+  })
+  expect(
+    evaluate(snapshotInput.routedTraces).errors.filter(
+      (error) => error.type === "pcb_placement_error",
+    ),
+  ).toEqual([])
   await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
     import.meta.path,
   )
