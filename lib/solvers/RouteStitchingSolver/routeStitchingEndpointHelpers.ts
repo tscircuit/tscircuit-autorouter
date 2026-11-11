@@ -1,5 +1,7 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
+import type { StitchClearanceMode } from "./SingleHighDensityRouteStitchSolver3"
 import {
   comparePoints,
   compareRoutes,
@@ -18,11 +20,18 @@ type EndpointEdge = {
   routeIndex: number | null
 }
 
+type EndpointPathState = {
+  hash: string
+  routeIndex: number | null
+  prev: EndpointPathState | null
+}
+
 export type CanStitchBetweenTerminals = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
+  stitchClearanceMode?: StitchClearanceMode
 }) => boolean
 
 /**
@@ -118,7 +127,7 @@ export class EndpointClusterIndex {
 }
 
 const addAdjacencyEdge = (
-  adjacency: Map<string, EndpointEdge[]>,
+  adjacency: Map<EndpointPathState["hash"], EndpointEdge[]>,
   fromHash: string,
   edge: EndpointEdge,
 ) => {
@@ -218,10 +227,78 @@ export const snapIslandEndpointToNearestTerminal = (params: {
     : params.islandEndpoint
 }
 
+type EndpointGapValidation = {
+  connectionName: string
+  pointsByHash: Map<EndpointPathState["hash"], Point3>
+  traceThickness: number
+  isStitchSegmentClear: IsStitchSegmentClear
+}
+
+const findEndpointRouteIndexes = (params: {
+  adjacency: Map<EndpointPathState["hash"], EndpointEdge[]>
+  startHash: string
+  endHash: string
+  gapValidation?: EndpointGapValidation
+}): number[] | null => {
+  const queue: EndpointPathState[] = [
+    { hash: params.startHash, routeIndex: null, prev: null },
+  ]
+  const visitedAfterRoute = new Set<string>([params.startHash])
+  let visitedAfterGap = visitedAfterRoute
+  if (params.gapValidation) visitedAfterGap = new Set<string>()
+  let endState: EndpointPathState | null = null
+
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    if (current.hash === params.endHash) {
+      endState = current
+      break
+    }
+
+    for (const edge of params.adjacency.get(current.hash) ?? []) {
+      const isGap = edge.routeIndex === null
+      if (isGap && params.gapValidation) {
+        // Consecutive gaps lose their relay point from selectedHdRoutes.
+        if (current.prev !== null && current.routeIndex === null) continue
+        if (
+          !params.gapValidation.isStitchSegmentClear({
+            connectionName: params.gapValidation.connectionName,
+            start: params.gapValidation.pointsByHash.get(current.hash)!,
+            end: params.gapValidation.pointsByHash.get(edge.nextHash)!,
+            traceThickness: params.gapValidation.traceThickness,
+          })
+        )
+          continue
+      }
+      let visited = visitedAfterRoute
+      if (isGap) visited = visitedAfterGap
+      if (visited.has(edge.nextHash)) continue
+      visited.add(edge.nextHash)
+      queue.push({
+        hash: edge.nextHash,
+        routeIndex: edge.routeIndex,
+        prev: current,
+      })
+    }
+  }
+
+  if (!endState) return null
+
+  const selectedRouteIndexesInReverse: number[] = []
+  let cursor = endState
+  while (cursor.prev !== null) {
+    if (cursor.routeIndex !== null) {
+      selectedRouteIndexesInReverse.push(cursor.routeIndex)
+    }
+    cursor = cursor.prev
+  }
+
+  return selectedRouteIndexesInReverse.reverse()
+}
+
 /**
- * Returns the route islands on the deterministic endpoint path between the
- * chosen terminals. If the subset cannot actually stitch to both terminals,
- * the full route set is returned instead.
+ * Keeps successful deterministic selections and repairs gap paths only when
+ * neither the selected subset nor the full collection reaches both terminals.
  */
 export const selectRoutesAlongEndpointPath = (params: {
   connectionName: string
@@ -230,7 +307,8 @@ export const selectRoutesAlongEndpointPath = (params: {
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-}) => {
+  isStitchSegmentClear: IsStitchSegmentClear
+}): HighDensityIntraNodeRoute[] => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
   const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
@@ -315,60 +393,72 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
-  const prevByHash = new Map<
-    string,
-    { prevHash: string; routeIndex: number | null }
-  >()
+  const routeIndexes = findEndpointRouteIndexes({
+    adjacency,
+    startHash,
+    endHash,
+  })
+  if (!routeIndexes) return canonicalHdRoutes
+  if (routeIndexes.length === 0) return params.hdRoutes
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
-    if (currentHash === endHash) break
-
-    for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
-      prevByHash.set(edge.nextHash, {
-        prevHash: currentHash,
-        routeIndex: edge.routeIndex,
-      })
-      queue.push(edge.nextHash)
-    }
-  }
-
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
-
-  const selectedRouteIndexesInReverse: number[] = []
-  let cursorHash = endHash
-  while (cursorHash !== startHash) {
-    const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
-    if (prev.routeIndex !== null) {
-      selectedRouteIndexesInReverse.push(prev.routeIndex)
-    }
-    cursorHash = prev.prevHash
-  }
-
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
-
-  const selectedHdRoutes = selectedRouteIndexesInReverse
-    .reverse()
-    .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+  const selectedHdRoutes = routeIndexes.map(
+    (routeIndex) => canonicalHdRoutes[routeIndex]!,
+  )
 
   if (
-    selectedHdRoutes.length > 0 &&
-    !params.canStitchBetweenTerminals({
+    params.canStitchBetweenTerminals({
       connectionName: params.connectionName,
       hdRoutes: selectedHdRoutes,
       start: params.start,
       end: params.end,
     })
-  ) {
-    return canonicalHdRoutes
-  }
+  )
+    return selectedHdRoutes
 
-  return selectedHdRoutes
+  if (
+    params.canStitchBetweenTerminals({
+      connectionName: params.connectionName,
+      hdRoutes: structuredClone(canonicalHdRoutes),
+      start: params.start,
+      end: params.end,
+      stitchClearanceMode: "prefer_clear",
+    })
+  )
+    return canonicalHdRoutes
+
+  const repairedRouteIndexes = findEndpointRouteIndexes({
+    adjacency,
+    startHash,
+    endHash,
+    gapValidation: {
+      connectionName: params.connectionName,
+      pointsByHash: new Map(
+        sortedEndpointClusters.map((endpoint) => [
+          endpoint.key,
+          endpoint.point,
+        ]),
+      ),
+      traceThickness: canonicalHdRoutes[0]!.traceThickness,
+      isStitchSegmentClear: params.isStitchSegmentClear,
+    },
+  })
+  if (!repairedRouteIndexes || repairedRouteIndexes.length === 0)
+    return canonicalHdRoutes
+
+  const repairedHdRoutes = repairedRouteIndexes.map(
+    (routeIndex) => canonicalHdRoutes[routeIndex]!,
+  )
+  if (
+    params.canStitchBetweenTerminals({
+      connectionName: params.connectionName,
+      hdRoutes: repairedHdRoutes,
+      start: params.start,
+      end: params.end,
+    })
+  )
+    return repairedHdRoutes
+
+  return canonicalHdRoutes
 }
 
 export const hasStitchableGapBetweenUnsolvedRoutes = (
