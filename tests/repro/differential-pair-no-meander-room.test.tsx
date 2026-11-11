@@ -1,17 +1,15 @@
 /** @jsxImportSource react-for-pipeline9-fixtures */
 import { expect, test } from "bun:test"
-import {
-  LengthMatchingSolver,
-  PostProcessingSolver,
-} from "@tscircuit/length-matching-solver"
+import { LengthMatchingSolver } from "@tscircuit/length-matching-solver"
 import { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
+import type { DifferentialPair } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import {
   RootCircuit,
   getSimpleRouteJsonFromCircuitJson,
 } from "../fixtures/pipeline9CoreRuntime.mjs"
 
-test("BUG: exhausted meander space returns solved with skew above tolerance instead of failure", async (): Promise<void> => {
+test("exhausted meander space propagates failure instead of accepting 9.6mm skew", async (): Promise<void> => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   // Board-world points in mm, +X right, +Y up, +Z above. The short lane has
@@ -83,13 +81,10 @@ test("BUG: exhausted meander space returns solved with skew above tolerance inst
     hdRoutes,
     differentialPairs: [
       {
-        connectionNames: [srj.connections[0].name, srj.connections[1].name] as [
-          string,
-          string,
-        ],
-        lengthTolerance: 0.1,
+        connectionNames: [[srj.connections[0].name], [srj.connections[1].name]],
+        maxLengthSkewMm: 0.1,
       },
-    ],
+    ] satisfies DifferentialPair[],
     obstacles: srj.obstacles,
     bounds: srj.bounds,
     layerCount: srj.layerCount,
@@ -103,35 +98,24 @@ test("BUG: exhausted meander space returns solved with skew above tolerance inst
     "no same-layer straight segment can tune",
   )
   expect(direct.failed).toBe(true)
-  const post = new PostProcessingSolver(params)
-  post.solve()
-  expect(post.getOutput().postProcessingErrors).toContainEqual(
-    expect.objectContaining({
-      stage: "lengthMatchingSolver",
-      reason: "no-meander-candidate",
-    }),
-  )
   const solver = new LengthMatchingPostProcessingSolver({
     ...params,
     connections: srj.connections,
     buses: [],
   })
-  solver.solve()
-  const lengths = solver.getOutput().hdRoutes.map((route) =>
-    route.route.slice(1).reduce((length, point, index) => {
-      const previous = route.route[index]
-      return length + Math.hypot(point.x - previous.x, point.y - previous.y)
-    }, 0),
+  expect(() => solver.solve()).toThrow("exceeds maxLengthSkewMm")
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.routingFailure).toMatchObject({
+    reason: "length_skew",
+    pairIndex: 0,
+  })
+  if (solver.routingFailure?.reason !== "length_skew")
+    throw new Error("Expected measured lane lengths")
+  expect(solver.routingFailure.laneLengthsMm[0]).toBeCloseTo(0.4)
+  expect(solver.routingFailure.laneLengthsMm[1]).toBeCloseTo(10)
+  expect(JSON.parse(JSON.stringify(solver.routingFailure))).toEqual(
+    solver.routingFailure,
   )
-  expect(lengths[0]).toBeCloseTo(0.4)
-  expect(lengths[1]).toBeCloseTo(10)
-  expect(Math.abs(lengths[0] - lengths[1])).toBeGreaterThan(
-    params.differentialPairs[0].lengthTolerance,
-  )
-  // BUG: the wrapper discards the diagnostic and accepts 9.6 mm skew with a
-  // 0.1 mm limit. The fix must flip these to failed=true, solved=false and
-  // propagate the unmet constraint; it must not return successful copper.
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.error).toBeNull()
+  expect(() => solver.getOutput()).toThrow("before completion")
 })

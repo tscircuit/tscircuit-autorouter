@@ -4,6 +4,7 @@ import {
   ConnectionPoint,
 } from "lib/types"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
 import { DSU } from "lib/utils/dsu"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
@@ -38,6 +39,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
   ) {
+    validateDifferentialPairs(ogSrj)
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
     )

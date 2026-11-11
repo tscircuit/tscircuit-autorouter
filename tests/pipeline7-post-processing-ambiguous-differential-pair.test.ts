@@ -1,3 +1,4 @@
+import { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 
@@ -9,7 +10,7 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
     bounds: { minX: 0, minY: 0, maxX: 20, maxY: 10 },
     obstacles: [],
     differentialPairs: [
-      { connectionNames: ["PAIR_P", "PAIR_N"], lengthTolerance: 0.01 },
+      { connectionNames: [["PAIR_P"], ["PAIR_N"]], maxLengthSkewMm: 0.01 },
     ],
     connections: [
       {
@@ -32,31 +33,37 @@ test("Pipeline7 rejects a differential pair member split across final routes", (
     (step) => step.solverName === "lengthMatchingPostProcessingSolver",
   )!
 
-  expect(() =>
-    lengthMatchingPostProcessingStep.getConstructorParams({
-      ...solver,
-      netToPointPairsSolver: {
-        newConnections: [
-          {
-            ...solver.srj.connections[0]!,
-            name: "PAIR_P_mst0",
-            __rootConnectionNames: ["PAIR_P"],
-          },
-          {
-            ...solver.srj.connections[0]!,
-            name: "PAIR_P_mst1",
-            __rootConnectionNames: ["PAIR_P"],
-          },
-          {
-            ...solver.srj.connections[1]!,
-            name: "PAIR_N_mst0",
-            __rootConnectionNames: ["PAIR_N"],
-          },
-        ],
-      },
-      exactGeometryDrcForceImproveSolver: { getOutput: () => [] },
-    } as any),
-  ).toThrow(
-    'Pipeline7: differential pair connection "PAIR_P" must resolve to exactly one final point-pair connection, got 2',
+  const [params] = lengthMatchingPostProcessingStep.getConstructorParams({
+    ...solver,
+    netToPointPairsSolver: {
+      newConnections: [
+        {
+          ...solver.srj.connections[0]!,
+          name: "PAIR_P_mst0",
+          __rootConnectionNames: ["PAIR_P"],
+        },
+        {
+          ...solver.srj.connections[0]!,
+          name: "PAIR_P_mst1",
+          __rootConnectionNames: ["PAIR_P"],
+        },
+        {
+          ...solver.srj.connections[1]!,
+          name: "PAIR_N_mst0",
+          __rootConnectionNames: ["PAIR_N"],
+        },
+      ],
+    },
+    exactGeometryDrcForceImproveSolver: { getOutput: () => [] },
+  } as any)
+  const post = new LengthMatchingPostProcessingSolver(
+    params as ConstructorParameters<
+      typeof LengthMatchingPostProcessingSolver
+    >[0],
   )
+  expect(() => post.solve()).toThrow(
+    'hop "PAIR_P" requires one original connection and one complete stitched route',
+  )
+  expect(post.failed).toBe(true)
+  expect(post.solved).toBe(false)
 })

@@ -54,10 +54,8 @@ test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
     ],
     differentialPairs: [
       {
-        connectionNames: ["data0", "data1"],
-        lengthTolerance: 0.05,
-        traceGap: 0.1,
-        maxUncoupledLength: 0.5,
+        connectionNames: [["data0"], ["data1"]],
+        maxLengthSkewMm: 0.05,
       },
     ],
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },

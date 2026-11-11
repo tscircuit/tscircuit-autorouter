@@ -7,7 +7,9 @@ import {
 } from "./pipeline9CoreRuntime.mjs"
 
 /** TSX pads in board-world mm, +X right, +Y up, +Z above. No pre-routed copper. */
-export async function getDifferentialPairEsdRepro(): Promise<SimpleRouteJson> {
+export async function getDifferentialPairEsdRepro(
+  mcuX: number = -3,
+): Promise<SimpleRouteJson> {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   circuit.add(
@@ -15,7 +17,7 @@ export async function getDifferentialPairEsdRepro(): Promise<SimpleRouteJson> {
       {[
         { name: "J1", x: -5, y: -3 },
         { name: "ESD", x: 5, y: -3 },
-        { name: "MCU", x: -3, y: -3 },
+        { name: "MCU", x: mcuX, y: -3 },
         { name: "TP", x: 5, y: 1 },
       ].map(({ name, x, y }) => (
         <chip
@@ -63,15 +65,19 @@ export async function getDifferentialPairEsdRepro(): Promise<SimpleRouteJson> {
     // Human-readable hop names; all geometry and pad identities come from TSX.
     connections: simpleRouteJson.connections.map((connection) => ({
       ...connection,
+      source_trace_id: connection.name,
       name: sourceTraces.find(
         (trace) => trace.source_trace_id === connection.name,
       )!.name!,
     })),
-    // Today's scalar API can only express separate section constraints.
-    // The fix must replace these with [["P:0", "P:1"], ["N:0", "N:1"]].
     differentialPairs: [
-      { connectionNames: ["P:0", "N:0"], lengthTolerance: 0.1 },
-      { connectionNames: ["P:1", "N:1"], lengthTolerance: 0.1 },
+      {
+        connectionNames: [
+          ["P:0", "P:1"],
+          ["N:0", "N:1"],
+        ],
+        maxLengthSkewMm: 0.1,
+      },
     ],
   }
 }

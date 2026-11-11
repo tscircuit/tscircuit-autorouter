@@ -51,6 +51,7 @@ export async function getT113BootRoutingResult(): Promise<BootRoutingResult> {
   const groundFanout = new FanoutSolver(
     {
       ...srj,
+      differentialPairs: undefined,
       connections: groundConnections,
       buses: groundBuses,
       traces: bootSignalTraces,

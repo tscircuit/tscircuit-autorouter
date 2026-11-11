@@ -1,3 +1,5 @@
+import type { RoutingFailure } from "lib/types/routingResult"
+import { getRoutingFailure } from "lib/utils/getRoutingFailure"
 import type { GraphicsObject } from "graphics-debug"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
 
@@ -13,6 +15,7 @@ export class BaseSolver {
   iterations = 0
   progress = 0
   error: string | null = null
+  routingFailure?: RoutingFailure | null = null
   activeSubSolver?: BaseSolver | null
   failedSubSolvers?: BaseSolver[]
   timeToSolve?: number
@@ -30,13 +33,14 @@ export class BaseSolver {
   }
 
   /** DO NOT OVERRIDE! Override _step() instead */
-  step() {
+  step(): void {
     if (this.solved) return
     if (this.failed) return
     this.iterations++
     try {
       this._step()
     } catch (e) {
+      this.routingFailure = getRoutingFailure(e)
       this.error = `${this.getSolverName()} error: ${e}`
       console.error(this.error)
       this.failed = true
@@ -48,6 +52,14 @@ export class BaseSolver {
     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
       this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
       this.failed = true
+    }
+    if (this.failed && !this.routingFailure) {
+      this.routingFailure = {
+        reason: "routing_failed",
+        message:
+          this.error ??
+          `${this.getSolverName()} failed without an error diagnostic`,
+      }
     }
     if ("computeProgress" in this) {
       // @ts-ignore

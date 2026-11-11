@@ -10447,12 +10447,14 @@
     "differentialPairs": [
       {
         "connectionNames": [
-          "source_trace_12",
-          "source_trace_13"
+          [
+            "source_trace_12"
+          ],
+          [
+            "source_trace_13"
+          ]
         ],
-        "lengthTolerance": 0.5,
-        "traceGap": 0.18,
-        "maxUncoupledLength": 3
+        "maxLengthSkewMm": 0.5
       }
     ],
     "layerCount": 2,

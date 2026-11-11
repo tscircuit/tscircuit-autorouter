@@ -5,12 +5,15 @@ import { getPowerTraceExpansionConnectionNames } from "lib/autorouter-pipelines/
 import type { SimpleRouteJson } from "lib/types"
 
 test("Pipeline7 selects only connections with a significant requested width increase", () => {
-  const createConnection = (name: string, nominalTraceWidth?: number) => ({
+  const createConnection = (
+    name: string,
+    nominalTraceWidth?: number,
+  ): SimpleRouteJson["connections"][number] => ({
     name,
     ...(nominalTraceWidth === undefined ? {} : { nominalTraceWidth }),
     pointsToConnect: [
-      { x: 0, y: 0, layer: "top" },
-      { x: 10, y: 0, layer: "top" },
+      { x: 0, y: name === "USB_N" ? 0.5 : 0, layer: "top" },
+      { x: 10, y: name === "USB_N" ? 0.5 : 0, layer: "top" },
     ],
   })
   const srj: SimpleRouteJson = {
@@ -19,7 +22,7 @@ test("Pipeline7 selects only connections with a significant requested width incr
     bounds: { minX: -1, minY: -1, maxX: 11, maxY: 1 },
     obstacles: [],
     differentialPairs: [
-      { connectionNames: ["USB_P", "USB_N"], lengthTolerance: 0.05 },
+      { connectionNames: [["USB_P"], ["USB_N"]], maxLengthSkewMm: 0.05 },
     ],
     connections: [
       createConnection("USB_P", 0.15),

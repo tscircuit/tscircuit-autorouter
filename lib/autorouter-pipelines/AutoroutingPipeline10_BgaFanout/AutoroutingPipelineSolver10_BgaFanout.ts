@@ -1,3 +1,4 @@
+import { DifferentialPairRoutingError } from "lib/utils/DifferentialPairRoutingError"
 import {
   FanoutSolver,
   type Bounds as FanoutBounds,
@@ -321,10 +322,18 @@ class FanoutStage extends BaseSolver {
 
   constructor(public readonly inputProblem: FanoutStageInput) {
     super()
-    this.fanoutSolver = new FanoutSolver(
-      inputProblem.inputSrj,
-      inputProblem.options,
-    )
+    const { differentialPairs, ...fanoutInput } = inputProblem.inputSrj
+    if (differentialPairs?.length)
+      throw new DifferentialPairRoutingError(
+        {
+          reason: "unsupported_routing_scope",
+          pairIndex: 0,
+          detail:
+            "Hops cannot span Pipeline10 fanout and global routing phases",
+        },
+        "Differential pair hops cannot span the Pipeline10 fanout and global routing phases",
+      )
+    this.fanoutSolver = new FanoutSolver(fanoutInput, inputProblem.options)
     this.activeSubSolver = this.fanoutSolver as unknown as BaseSolver
     this.MAX_ITERATIONS = this.fanoutSolver.MAX_ITERATIONS + 1
   }

@@ -10,7 +10,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     bounds: { minX: 0, minY: 0, maxX: 20, maxY: 10 },
     obstacles: [],
     differentialPairs: [
-      { connectionNames: ["PAIR_P", "PAIR_N"], lengthTolerance: 0.01 },
+      { connectionNames: [["PAIR_P"], ["PAIR_N"]], maxLengthSkewMm: 0.01 },
     ],
     connections: [
       {
@@ -54,14 +54,14 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     netToPointPairsSolver: {
       newConnections: solver.srj.connections.map((connection) => ({
         ...connection,
-        name: `${connection.name}_mst0`,
+        name: connection.name,
         __rootConnectionNames: [connection.name],
       })),
     },
     exactGeometryDrcForceImproveSolver: {
       getOutput: () => [
         {
-          connectionName: "PAIR_P_mst0",
+          connectionName: "PAIR_P",
           route: [
             { x: 1, y: 2, z: 0 },
             { x: 19, y: 2, z: 0 },
@@ -71,7 +71,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
           vias: [],
         },
         {
-          connectionName: "PAIR_N_mst0",
+          connectionName: "PAIR_N",
           route: [
             { x: 1, y: 6, z: 0 },
             { x: 19, y: 6, z: 0 },
@@ -88,6 +88,10 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   expect(Object.keys(lengthMatchingPostProcessingParams).sort()).toEqual(
     [
       "bounds",
+      "buses",
+      "connections",
+      "traces",
+      "obstacleMargin",
       "differentialPairs",
       "hdRoutes",
       "layerCount",
@@ -96,15 +100,15 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
   )
   expect(lengthMatchingPostProcessingParams.differentialPairs).toEqual([
     {
-      connectionNames: ["PAIR_P_mst0", "PAIR_N_mst0"],
-      lengthTolerance: 0.01,
+      connectionNames: [["PAIR_P"], ["PAIR_N"]],
+      maxLengthSkewMm: 0.01,
     },
   ])
   expect(
     lengthMatchingPostProcessingParams.hdRoutes.map(
       (route: any) => route.connectionName,
     ),
-  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
+  ).toEqual(["PAIR_P", "PAIR_N"])
 
   const lengthMatchingPostProcessingSolver = new (
     lengthMatchingPostProcessingStep!.solverClass as any
@@ -114,5 +118,5 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
     lengthMatchingPostProcessingSolver
       .getOutput()
       .hdRoutes.map((route: any) => route.connectionName),
-  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
+  ).toEqual(["PAIR_P", "PAIR_N"])
 })

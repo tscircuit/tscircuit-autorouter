@@ -13,7 +13,15 @@ const PATHING_ITERATION_BUDGET = 250_000
 const TARGET_CONNECTION_NAME = "DDR3_m2_fpga_ddr_dram_ba0"
 
 test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal regions", () => {
-  const inputSrj = structuredClone(sample007) as SimpleRouteJson
+  const pairedSrj = structuredClone(sample007) as SimpleRouteJson
+  expect(() =>
+    new AutoroutingPipelineSolver10_BgaFanout(pairedSrj).solveUntilStage(
+      "autoroutingPipelineSolver",
+    ),
+  ).toThrow("cannot span the Pipeline10 fanout and global routing phases")
+  // Fanout topology remains supported independently of pair length matching.
+  // The paired request above must fail before its owned hops can be split.
+  const { differentialPairs, ...inputSrj } = pairedSrj
   expect(inputSrj.minTraceToPadEdgeClearance).toBe(0.075)
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
     cacheProvider: null,

@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type {
+  DifferentialPair,
   Obstacle,
   SimpleRouteConnection,
   SimplifiedPcbTraces,
@@ -11,6 +12,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 export interface ConvertPipeline7HdRoutesOptions {
   connections: SimpleRouteConnection[]
   originalConnections: SimpleRouteConnection[]
+  differentialPairs?: DifferentialPair[]
   hdRoutes: HighDensityRoute[]
   layerCount: number
   obstacles: Obstacle[]
@@ -32,11 +34,17 @@ type PreparedConnection = {
 export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   connections,
   originalConnections,
+  differentialPairs,
   layerCount,
   obstacles,
   defaultViaHoleDiameter,
   connMap,
-}: StaticConvertPipeline7HdRoutesOptions) => {
+}: StaticConvertPipeline7HdRoutesOptions): ((
+  hdRoutes: HighDensityRoute[],
+) => SimplifiedPcbTraces) => {
+  const ownedNames = new Set(
+    (differentialPairs ?? []).flatMap((pair) => pair.connectionNames.flat()),
+  )
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
     string | undefined
@@ -51,7 +59,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   }
 
   const preparedConnections: PreparedConnection[] = connections.map(
-    (connection) => {
+    (connection): PreparedConnection => {
       if (connection.pointsToConnect.length !== 2) {
         throw new Error(
           `Expected Pipeline7 output connection "${connection.name}" to have two points, got ${connection.pointsToConnect.length}`,
@@ -61,14 +69,16 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       const [startPoint, endPoint] = connection.pointsToConnect
       return {
         connection,
-        connectsTo: [startPoint?.pointId, endPoint?.pointId].filter(
-          (pointId): pointId is string => Boolean(pointId),
-        ),
-        outputConnectionName:
-          connection.__netConnectionName ??
-          netConnectionNameByOriginalConnectionName.get(connection.name) ??
-          connection.__rootConnectionNames?.[0] ??
-          connection.name,
+        connectsTo: [
+          startPoint?.pointId ?? startPoint?.pcb_port_id,
+          endPoint?.pointId ?? endPoint?.pcb_port_id,
+        ].filter((pointId): pointId is string => Boolean(pointId)),
+        outputConnectionName: ownedNames.has(connection.name)
+          ? connection.name
+          : (connection.__netConnectionName ??
+            netConnectionNameByOriginalConnectionName.get(connection.name) ??
+            connection.__rootConnectionNames?.[0] ??
+            connection.name),
       }
     },
   )
@@ -127,6 +137,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
           connection_name: outputConnectionName,
+          ...(connection.source_trace_id
+            ? { source_trace_id: connection.source_trace_id }
+            : {}),
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
             connectionPoints: connection.pointsToConnect,
@@ -147,6 +160,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   connections,
   originalConnections,
+  differentialPairs,
   hdRoutes,
   layerCount,
   obstacles,
@@ -156,6 +170,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
     connections,
     originalConnections,
+    differentialPairs,
     layerCount,
     obstacles,
     defaultViaHoleDiameter,

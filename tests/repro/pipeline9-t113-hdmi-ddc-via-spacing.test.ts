@@ -14,7 +14,7 @@ import { stackSvgsHorizontally } from "stack-svgs"
 const fixtureDirectory =
   "../../fixtures/bug-reports/t113-linux-hdmi-ddc-via-spacing/"
 const expectedSrjSha256 =
-  "dc19c3abc1788919eea83e1fd7318d072776c3445ddb3208ff5885f66f64b11b"
+  "e41c80909b3031e0aadaa61b36411e4950aa3d02b9741e6e3b5f1c1c56a140ff"
 const expectedCircuitJsonSha256 =
   "b83ca178c2556cbe3950c4c6fe730c8953417a49fc2702415ad31b6684376ecb"
 

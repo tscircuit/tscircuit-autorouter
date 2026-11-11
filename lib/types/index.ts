@@ -4,3 +4,5 @@ export * from "./capacity-mesh-types"
 export * from "./high-density-router-types"
 export * from "./capacity-segment-to-point-types"
 export * from "./drc-types"
+
+export * from "./routingResult"

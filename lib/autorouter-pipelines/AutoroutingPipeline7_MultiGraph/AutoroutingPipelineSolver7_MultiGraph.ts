@@ -1,4 +1,8 @@
-import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
+import { removeOwnedRouteSelfContacts } from "lib/utils/removeOwnedRouteSelfContacts"
+import type { RouterResult } from "lib/types/routingResult"
+import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
+import { assertDifferentialPairOutput } from "lib/utils/assertDifferentialPairOutput"
+import { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -39,7 +43,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { createRoutingOwnership } from "lib/utils/createRoutingOwnership"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -232,7 +236,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
+  lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -321,9 +325,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
-          cms.connMap = getConnectivityMapFromSimpleRouteJson(
-            cms.srjWithPointPairs!,
-          )
+          cms.connMap = createRoutingOwnership(cms.srjWithPointPairs!).connMap
         },
       },
     ),
@@ -609,6 +611,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
+          ownedConnectionNames: new Set(
+            (cms.srj.differentialPairs ?? []).flatMap((pair) =>
+              pair.connectionNames.flat(),
+            ),
+          ),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
@@ -706,87 +713,20 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
-      DifferentialPairPostProcessingSolver,
+      LengthMatchingPostProcessingSolver,
       (cms) => {
-        const netToPointPairsSolver = cms.netToPointPairsSolver
-        if (!netToPointPairsSolver)
-          throw new Error(
-            "Pipeline7: length-matching post-processing requires NetToPointPairsSolver output",
-          )
-        const connections = netToPointPairsSolver.newConnections
-        const finalHdConnectionNames = new Map<string, string>()
-        for (const pair of cms.srj.differentialPairs ?? []) {
-          for (const connectionName of pair.connectionNames) {
-            const matchingConnections = connections.filter(
-              (connection) =>
-                connection.name === connectionName ||
-                connection.__rootConnectionNames?.includes(connectionName) ||
-                connection.__netConnectionName === connectionName,
-            )
-            if (matchingConnections.length !== 1)
-              throw new Error(
-                `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
-              )
-            finalHdConnectionNames.set(
-              connectionName,
-              matchingConnections[0]!.name,
-            )
-          }
-        }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
-        const differentialPairs = (cms.srj.differentialPairs ?? []).map(
-          (pair) => {
-            const connectionNames = pair.connectionNames.map(
-              (connectionName) => {
-                const finalHdConnectionName =
-                  finalHdConnectionNames.get(connectionName)
-                if (!finalHdConnectionName)
-                  throw new Error(
-                    `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
-                  )
-                return finalHdConnectionName
-              },
-            ) as [string, string]
-            if (connectionNames[0] === connectionNames[1])
-              throw new Error(
-                `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
-              )
-            if (pair.traceGap === undefined)
-              return {
-                connectionNames,
-                lengthTolerance: pair.lengthTolerance,
-                maxUncoupledLength: pair.maxUncoupledLength,
-              }
-            const pairRoutes = connectionNames.map((connectionName) => {
-              const matchingRoutes = hdRoutes.filter(
-                (route) => route.connectionName === connectionName,
-              )
-              if (matchingRoutes.length !== 1)
-                throw new Error(
-                  `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
-                )
-              return matchingRoutes[0]!
-            })
-            const centerlineDistance =
-              pair.traceGap +
-              pairRoutes.reduce(
-                (halfWidthTotal, route) =>
-                  halfWidthTotal + route.traceThickness / 2,
-                0,
-              )
-            return {
-              connectionNames,
-              lengthTolerance: pair.lengthTolerance,
-              maxUncoupledLength: pair.maxUncoupledLength,
-              minimumCenterlineDistance: centerlineDistance,
-              maximumCenterlineDistance: centerlineDistance,
-            }
-          },
-        )
         return [
           {
-            hdRoutes,
-            differentialPairs,
+            hdRoutes: removeOwnedRouteSelfContacts({
+              input: cms.originalSrj,
+              srjWithPointPairs: cms.srjWithPointPairs!,
+              hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+            }),
+            differentialPairs: cms.originalSrj.differentialPairs ?? [],
+            buses: cms.srj.buses ?? [],
+            connections: cms.originalSrj.connections,
+            traces: cms.originalSrj.traces,
+            obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
@@ -815,6 +755,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           },
         ]
       },
+      {
+        onSolved: (cms): void => {
+          assertDifferentialPairOutput(
+            cms.originalSrj,
+            cms.powerTraceExpansionSolver!.getOutput(),
+          )
+        },
+      },
     ),
   ]
 
@@ -823,6 +771,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    validateDifferentialPairs(srj)
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
@@ -861,12 +810,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {
-    this.srj = srj
+    const ownership = createRoutingOwnership(srj)
+    this.srj = ownership.srj
     const viaDimensions = getViaDimensions(this.srj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
-    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.connMap = ownership.connMap
     this.colorMap = getColorMap(this.srj, this.connMap)
   }
 
@@ -884,7 +834,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     )
   }
 
-  _step() {
+  _step(): void {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
@@ -902,6 +852,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
+        this.routingFailure = this.activeSubSolver.routingFailure
         this.error = this.activeSubSolver?.error
         this.failed = true
         this.activeSubSolver = null
@@ -1204,12 +1155,24 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
+      differentialPairs: this.originalSrj.differentialPairs,
       hdRoutes: this._getOutputHdRoutes(),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
+  }
+
+  getResult(): RouterResult {
+    if (this.failed) {
+      if (!this.routingFailure)
+        throw new Error("Failed router has no structured routingFailure")
+      return { status: "failed", failure: this.routingFailure }
+    }
+    if (!this.solved)
+      throw new Error("Cannot get router result before completion")
+    return { status: "solved", traces: this.getOutputSimplifiedPcbTraces() }
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

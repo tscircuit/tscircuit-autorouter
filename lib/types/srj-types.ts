@@ -101,13 +101,10 @@ export interface SimpleRouteJson {
 }
 
 export interface DifferentialPair {
-  connectionNames: [string, string]
-  /** Maximum permitted routed-length difference in millimeters. */
-  lengthTolerance: number
-  /** Resolved edge-to-edge copper gap in millimeters. */
-  traceGap?: number
-  /** Maximum permitted length routed without pair coupling, in millimeters. */
-  maxUncoupledLength?: number
+  /** Exact owned two-terminal copper hops in signal order, positive then negative. */
+  connectionNames: [[string, ...string[]], [string, ...string[]]]
+  /** Maximum absolute difference of summed planar copper lengths, in mm. */
+  maxLengthSkewMm: number
 }
 
 export type SimpleRouteBusTermination =
@@ -187,6 +184,7 @@ export interface SimpleRouteConnection {
 }
 
 export interface SimplifiedPcbTrace {
+  source_trace_id?: string
   type: "pcb_trace"
   pcb_trace_id: TraceId
   /** Preserve this preloaded trace's copper geometry throughout routing. */

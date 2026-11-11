@@ -147,6 +147,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   constructor(params: {
     connections: SimpleRouteConnection[]
+    ownedConnectionNames?: Set<string>
     hdRoutes: HighDensityIntraNodeRoute[]
     colorMap?: Record<string, string>
     layerCount: number
@@ -397,7 +398,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
       const sharedRootPathRoutes =
-        unsolvedRoutes.length > 1
+        unsolvedRoutes.length > 1 &&
+        !params.ownedConnectionNames?.has(connectionName)
           ? this.getSharedRootPathRoutes({
               connectionName,
               rootConnectionName:

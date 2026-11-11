@@ -1,16 +1,22 @@
+// TODO: replace the pinned matcher with a release containing length-matching-solver#89.
 import {
   LengthMatchingSolver,
-  PostProcessingSolver,
+  type LengthMatchingPair,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
+  ConnectionPoint,
   DifferentialPair,
   Obstacle,
   SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
+import { getHighDensityRouteLength } from "lib/utils/getHighDensityRouteLength"
+import { assertDifferentialPairRoutes } from "lib/utils/assertDifferentialPairRoutes"
+import { DifferentialPairRoutingError } from "lib/utils/DifferentialPairRoutingError"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { BaseSolver } from "./BaseSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
@@ -25,202 +31,195 @@ type LengthMatchingPostProcessingSolverParams = {
   obstacleMargin: number
 }
 
-const getLogicalConnectionLength = (
-  routes: HighDensityRoute[],
-  connectionName: string,
-): number | undefined => {
-  const matchingRoutes = routes.filter(
-    (route) =>
-      (route.rootConnectionName ?? route.connectionName) === connectionName,
-  )
-  if (matchingRoutes.length === 0) return undefined
-  return matchingRoutes.reduce(
-    (connectionLength, route) =>
-      connectionLength +
-      route.route.slice(1).reduce((routeLength, point, pointIndex) => {
-        const previousPoint = route.route[pointIndex]!
-        return (
-          routeLength +
-          Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
-        )
-      }, 0),
-    0,
-  )
-}
+type BusMember = { names: [string, ...string[]]; length: number }
 
-const getBusLengthMatchingPairs = (
-  buses: SimpleRouteBus[],
-  routes: HighDensityRoute[],
-): DifferentialPair[] =>
-  buses.flatMap((bus) => {
-    const maxLengthSkew = bus.maxLengthSkew
-    if (maxLengthSkew === undefined || bus.connectionNames.length < 2) return []
-    const memberLengths = bus.connectionNames.map((connectionName) => {
-      const length = getLogicalConnectionLength(routes, connectionName)
-      if (length === undefined)
-        throw new Error(
-          `Length matching: bus "${bus.busId}" has no routed geometry for connection "${connectionName}"`,
-        )
-      return { connectionName, length }
-    })
-    const longestMember = memberLengths.reduce((longest, member) =>
-      member.length > longest.length ? member : longest,
-    )
-    return memberLengths.flatMap((member): DifferentialPair[] =>
-      member.connectionName === longestMember.connectionName
-        ? []
-        : [
-            {
-              connectionNames: [
-                member.connectionName,
-                longestMember.connectionName,
-              ],
-              lengthTolerance: maxLengthSkew,
-            },
-          ],
-    )
-  })
-
-const getLogicalLengthMatchingConnections = (
-  buses: SimpleRouteBus[],
-  connections: SimpleRouteConnection[],
-): SimpleRouteConnection[] => {
-  const constrainedConnectionNames = new Set(
-    buses.flatMap((bus) =>
-      bus.maxLengthSkew === undefined ? [] : bus.connectionNames,
+/** Adapt existing bus roots to exact route memberships without changing roots. */
+const getBusLengthMatchingInput = (
+  params: LengthMatchingPostProcessingSolverParams,
+): { pairs: LengthMatchingPair[]; connections: SimpleRouteConnection[] } => {
+  const ownedNames = new Set(
+    params.differentialPairs.flatMap((pair): string[] =>
+      pair.connectionNames.flat(),
     ),
   )
-  return connections.flatMap((connection) => {
-    if (!constrainedConnectionNames.has(connection.name)) return []
-    const firstPoint = connection.pointsToConnect[0]
-    const lastPoint = connection.pointsToConnect.at(-1)
-    if (!firstPoint || !lastPoint || firstPoint === lastPoint)
-      throw new Error(
-        `Length matching: bus connection "${connection.name}" needs at least two points`,
-      )
-    return [
-      {
-        ...connection,
-        // The matcher tunes the sum of HD routes sharing this logical root.
-        // Its connection declarations only identify the root and its terminals.
-        pointsToConnect: [firstPoint, lastPoint],
-      },
-    ]
-  })
-}
-
-const assertBusLengthSkew = (
-  buses: SimpleRouteBus[],
-  routes: HighDensityRoute[],
-): void => {
-  for (const bus of buses) {
+  const connections = new Map<string, SimpleRouteConnection>()
+  const pairs: LengthMatchingPair[] = []
+  for (const bus of params.buses) {
     if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
       continue
-    const lengths = bus.connectionNames.map((connectionName) => {
-      const length = getLogicalConnectionLength(routes, connectionName)
-      if (length === undefined)
-        throw new Error(
-          `Length matching: bus "${bus.busId}" lost routed geometry for connection "${connectionName}"`,
-        )
-      return length
-    })
-    const routedSkew = Math.max(...lengths) - Math.min(...lengths)
-    if (routedSkew > bus.maxLengthSkew + 1e-6)
-      throw new Error(
-        `Length matching: bus "${bus.busId}" routed length skew ${routedSkew.toFixed(4)}mm exceeds ${bus.maxLengthSkew.toFixed(4)}mm`,
+    const members = bus.connectionNames.map((name): BusMember => {
+      const routes = params.hdRoutes.filter(
+        (route): boolean =>
+          (route.rootConnectionName ?? route.connectionName) === name,
       )
+      if (routes.length === 0)
+        throw new Error(
+          `Length matching: bus "${bus.busId}" has no routed geometry for connection "${name}"`,
+        )
+      for (const route of routes) {
+        if (ownedNames.has(route.connectionName))
+          throw new DifferentialPairRoutingError(
+            {
+              reason: "invalid_differential_pair",
+              pairIndex: params.differentialPairs.findIndex((pair): boolean =>
+                pair.connectionNames.flat().includes(route.connectionName),
+              ),
+              connectionName: route.connectionName,
+              detail: `Owned hop also belongs to length-matched bus "${bus.busId}"`,
+            },
+            `hop "${route.connectionName}" also belongs to length-matched bus "${bus.busId}"`,
+          )
+        if (route.route.length < 2)
+          throw new Error(
+            `Length matching: bus route "${route.connectionName}" is incomplete`,
+          )
+        connections.set(route.connectionName, {
+          name: route.connectionName,
+          pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+            (point): ConnectionPoint => ({
+              x: point.x,
+              y: point.y,
+              layer: mapZToLayerName(point.z, params.layerCount),
+            }),
+          ),
+        })
+      }
+      return {
+        names: routes.map((route): string => route.connectionName) as [
+          string,
+          ...string[],
+        ],
+        length: routes.reduce(
+          (total, route): number => total + getHighDensityRouteLength(route),
+          0,
+        ),
+      }
+    })
+    const longest = members.reduce(
+      (a, b): BusMember => (a.length > b.length ? a : b),
+    )
+    for (const member of members) {
+      if (member === longest) continue
+      pairs.push({
+        connectionNames: [member.names, longest.names],
+        maxLengthSkewMm: bus.maxLengthSkew,
+      })
+    }
   }
+  return { pairs, connections: [...connections.values()] }
 }
 
-/** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly differentialPairSolver: PostProcessingSolver
-  private busLengthMatchingSolver?: LengthMatchingSolver
-  private outputHdRoutes?: HighDensityRoute[]
+  private readonly matcher: LengthMatchingSolver
 
   constructor(
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new PostProcessingSolver({
-      hdRoutes: params.hdRoutes,
-      differentialPairs: params.differentialPairs,
-      traces: params.traces,
-      obstacles: params.obstacles,
-      bounds: params.bounds,
-      layerCount: params.layerCount,
-      minTraceToPadEdgeClearance: params.obstacleMargin,
+    const busInput = getBusLengthMatchingInput(params)
+    const ownedNames = new Set(
+      params.differentialPairs.flatMap((pair): string[] =>
+        pair.connectionNames.flat(),
+      ),
+    )
+    this.matcher = new LengthMatchingSolver({
+      ...params,
+      // Pathing recomputes electrical roots. Keep terminal obstacles in that
+      // same identity space so tuning can retain its own pad escape leads.
+      obstacles: params.obstacles.map(
+        (obstacle): Obstacle => ({
+          ...obstacle,
+          connectedTo: [
+            ...new Set([
+              ...obstacle.connectedTo,
+              ...params.hdRoutes.flatMap((route): string[] =>
+                route.rootConnectionName &&
+                obstacle.connectedTo.includes(route.connectionName)
+                  ? [route.rootConnectionName]
+                  : [],
+              ),
+            ]),
+          ],
+        }),
+      ),
+      originalConnections: [
+        ...params.connections.filter((connection): boolean =>
+          ownedNames.has(connection.name),
+        ),
+        ...busInput.connections,
+      ],
+      differentialPairs: [...params.differentialPairs, ...busInput.pairs],
     })
-    this.MAX_ITERATIONS =
-      this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
-  }
-
-  override getSolverName(): string {
-    return "LengthMatchingPostProcessingSolver"
+    this.MAX_ITERATIONS = this.matcher.MAX_ITERATIONS + 2
   }
 
   override _step(): void {
-    if (!this.differentialPairSolver.solved) {
-      this.differentialPairSolver.step()
-      if (this.differentialPairSolver.failed) {
-        this.failed = true
-        this.error = this.differentialPairSolver.error
-      }
-      return
-    }
-
-    if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
-      const differentialPairs = getBusLengthMatchingPairs(
-        this.params.buses,
-        hdRoutes,
+    if (this.iterations === 1)
+      assertDifferentialPairRoutes(this.params, this.params.hdRoutes, false)
+    try {
+      this.matcher.step()
+    } catch (error) {
+      // Convert an exhausted owned-pair search into final, measured lane data.
+      assertDifferentialPairRoutes(
+        this.params,
+        this.matcher.matchedHdRoutes,
+        true,
       )
-      if (differentialPairs.length === 0) {
-        this.outputHdRoutes = hdRoutes
-        this.solved = true
-        return
-      }
-      this.busLengthMatchingSolver = new LengthMatchingSolver({
-        hdRoutes,
-        originalConnections: getLogicalLengthMatchingConnections(
-          this.params.buses,
-          this.params.connections,
-        ),
-        differentialPairs,
-        traces: this.params.traces,
-        obstacles: this.params.obstacles,
-        bounds: this.params.bounds,
-        layerCount: this.params.layerCount,
-        obstacleMargin: this.params.obstacleMargin,
-      })
-      return
+      throw error
     }
-
-    this.busLengthMatchingSolver.step()
-    if (this.busLengthMatchingSolver.failed) {
+    if (this.matcher.failed) {
+      assertDifferentialPairRoutes(
+        this.params,
+        this.matcher.matchedHdRoutes,
+        true,
+      )
       this.failed = true
-      this.error = this.busLengthMatchingSolver.error
+      this.error = this.matcher.error
       return
     }
-    if (!this.busLengthMatchingSolver.solved) return
-    this.outputHdRoutes =
-      this.busLengthMatchingSolver.getOutput().matchedHdRoutes
-    assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
+    if (!this.matcher.solved) return
+    assertDifferentialPairRoutes(
+      this.params,
+      this.matcher.getOutput().matchedHdRoutes,
+      true,
+    )
+    for (const bus of this.params.buses) {
+      if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
+        continue
+      const lengths = bus.connectionNames.map((name): number => {
+        const routes = this.matcher
+          .getOutput()
+          .matchedHdRoutes.filter(
+            (route): boolean =>
+              (route.rootConnectionName ?? route.connectionName) === name,
+          )
+        if (routes.length === 0)
+          throw new Error(
+            `Length matching: bus "${bus.busId}" lost routed geometry for connection "${name}"`,
+          )
+        return routes.reduce(
+          (total, route): number => total + getHighDensityRouteLength(route),
+          0,
+        )
+      })
+      const skew = Math.max(...lengths) - Math.min(...lengths)
+      if (skew > bus.maxLengthSkew + 1e-6)
+        throw new Error(
+          `Length matching: bus "${bus.busId}" routed length skew ${skew.toFixed(4)}mm exceeds ${bus.maxLengthSkew.toFixed(4)}mm`,
+        )
+    }
     this.solved = true
   }
 
   getOutput(): { hdRoutes: HighDensityRoute[] } {
-    if (!this.solved || !this.outputHdRoutes)
+    if (!this.solved)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return { hdRoutes: this.outputHdRoutes }
+    return { hdRoutes: this.matcher.getOutput().matchedHdRoutes }
   }
 
   override visualize(): GraphicsObject {
-    return (
-      this.busLengthMatchingSolver?.visualize() ??
-      this.differentialPairSolver.visualize()
-    )
+    return this.matcher.visualize()
   }
 }
