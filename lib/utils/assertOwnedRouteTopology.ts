@@ -1,3 +1,4 @@
+import RBush from "rbush"
 import {
   doSegmentsIntersect,
   pointToSegmentDistance,
@@ -8,6 +9,7 @@ import type {
   Obstacle,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { isLocalRouteJoinContact } from "./isLocalRouteJoinContact"
 import { isLocalRouteViaContact } from "./isLocalRouteViaContact"
 import { DSU } from "./dsu"
 import { trimSegmentAtTerminal } from "./trimSegmentAtTerminal"
@@ -33,19 +35,29 @@ export const assertOwnedRouteTopology = (
     obstacles: Obstacle[]
     layerCount: number
   },
-  routes: HighDensityRoute[],
+  routedRoutes: HighDensityRoute[],
 ): void => {
-  const ownedNames = new Set(
-    input.differentialPairs.flatMap((pair): string[] =>
-      pair.connectionNames.flat(),
+  const pairIndexes = new Map(
+    input.differentialPairs.flatMap((pair, pairIndex) =>
+      pair.connectionNames.flat().map((name) => [name, pairIndex] as const),
     ),
   )
+  const ownedNames = new Set(pairIndexes.keys())
   if (ownedNames.size === 0) return
+  const connectionsByName = new Map(
+    input.connections.map((connection) => [connection.name, connection]),
+  )
+  const padsByPort = new Map<string, Obstacle[]>()
+  for (const obstacle of input.obstacles) {
+    for (const port of obstacle.connectedTo) {
+      const pads = padsByPort.get(port) ?? []
+      pads.push(obstacle)
+      padsByPort.set(port, pads)
+    }
+  }
   const failOwnership = (connectionName: string, message: string): never => {
-    const pairIndex = input.differentialPairs.findIndex((pair): boolean =>
-      pair.connectionNames.flat().includes(connectionName),
-    )
-    if (pairIndex < 0)
+    const pairIndex = pairIndexes.get(connectionName)
+    if (pairIndex === undefined)
       throw new Error(
         `Ownership diagnostic has no pair for "${connectionName}"`,
       )
@@ -54,6 +66,40 @@ export const assertOwnedRouteTopology = (
       message,
     )
   }
+  // Collinear control vertices do not create additional copper joins. Collapse
+  // them only for topology comparisons; measurement keeps the original geometry.
+  const routes = routedRoutes.map((hdRoute): HighDensityRoute => {
+    if (!ownedNames.has(hdRoute.connectionName)) return hdRoute
+    const route: HighDensityRoute["route"] = []
+    const viaLocations = new Set(hdRoute.vias.map((via) => `${via.x},${via.y}`))
+    for (const point of hdRoute.route) {
+      while (route.length >= 2) {
+        const start = route[route.length - 2]!
+        const middle = route[route.length - 1]!
+        const dx1 = middle.x - start.x
+        const dy1 = middle.y - start.y
+        const dx2 = point.x - middle.x
+        const dy2 = point.y - middle.y
+        if (
+          start.z !== middle.z ||
+          middle.z !== point.z ||
+          start.toNextSegmentType ||
+          middle.toNextSegmentType ||
+          middle.pcb_port_id ||
+          viaLocations.has(`${middle.x},${middle.y}`) ||
+          start.traceThickness !== middle.traceThickness ||
+          middle.traceThickness !== point.traceThickness ||
+          Math.abs(dx1 * dy2 - dy1 * dx2) >
+            1e-12 * Math.hypot(dx1, dy1) * Math.hypot(dx2, dy2) ||
+          dx1 * dx2 + dy1 * dy2 <= 0
+        )
+          break
+        route.pop()
+      }
+      route.push(point)
+    }
+    return { ...hdRoute, route }
+  })
   const segments: Segment[] = routes.flatMap((route, routeIndex): Segment[] =>
     route.route
       .slice(1)
@@ -104,15 +150,34 @@ export const assertOwnedRouteTopology = (
     ownedNames.has(route.connectionName) ? [] : [String(index)],
   )
   const ordinaryComponents = new DSU(ordinaryRouteIndexes)
-  for (const [index, first] of segments.entries()) {
+  // Index finite-width copper by layer. Ordinary/ordinary contacts are needed
+  // only to connect bypass components; distant copper never needs comparison.
+  const indexedSegments = segments.map((segment, index) => ({
+    minX: Math.min(segment.a.x, segment.b.x) - segment.width / 2,
+    minY: Math.min(segment.a.y, segment.b.y) - segment.width / 2,
+    maxX: Math.max(segment.a.x, segment.b.x) + segment.width / 2,
+    maxY: Math.max(segment.a.y, segment.b.y) + segment.width / 2,
+    segment,
+    index,
+  }))
+  const layers = Array.from(
+    { length: input.layerCount },
+    () => new RBush<(typeof indexedSegments)[number]>(),
+  )
+  for (const segment of indexedSegments)
+    layers[segment.segment.z]!.insert(segment)
+  for (const indexedFirst of indexedSegments) {
+    const { segment: first, index } = indexedFirst
     const firstRoute = routes[first.routeIndex]!
-    for (const second of segments.slice(index + 1)) {
+    for (const candidate of layers[first.z]!.search(indexedFirst)) {
+      if (candidate.index <= index) continue
+      const second = candidate.segment
       const secondRoute = routes[second.routeIndex]!
-      if (first.z !== second.z) continue
       if (
         !ownedNames.has(firstRoute.connectionName) &&
         !ownedNames.has(secondRoute.connectionName)
       ) {
+        if (first.routeIndex === second.routeIndex) continue
         if (
           doSegmentsIntersect(first.a, first.b, second.a, second.b) ||
           Math.min(
@@ -166,12 +231,10 @@ export const assertOwnedRouteTopology = (
         )
           continue
       }
-      const ownedConnection = input.connections.find(
-        (connection): boolean =>
-          connection.name ===
-          (ownedNames.has(firstRoute.connectionName)
-            ? firstRoute.connectionName
-            : secondRoute.connectionName),
+      const ownedConnection = connectionsByName.get(
+        ownedNames.has(firstRoute.connectionName)
+          ? firstRoute.connectionName
+          : secondRoute.connectionName,
       )
       if (!ownedConnection)
         return failOwnership(
@@ -196,10 +259,8 @@ export const assertOwnedRouteTopology = (
       let secondSegment: [Point, Point] | null = [second.a, second.b]
       // Use the pad's inscribed circle, or the trace junction for virtual terminals.
       for (const terminal of sharedTerminals) {
-        const pad = input.obstacles.find(
+        const pad = (padsByPort.get(terminal.pcb_port_id ?? "") ?? []).find(
           (obstacle): boolean =>
-            terminal.pcb_port_id !== undefined &&
-            obstacle.connectedTo.includes(terminal.pcb_port_id) &&
             Math.hypot(
               obstacle.center.x - terminal.x,
               obstacle.center.y - terminal.y,
@@ -225,9 +286,21 @@ export const assertOwnedRouteTopology = (
             pointToSegmentDistance(d, a, b),
           )
       if (
-        first.routeIndex === second.routeIndex && !first.isVia && !second.isVia
-          ? distance <= 1e-8
-          : distance < (first.width + second.width) / 2 - 1e-8
+        first.routeIndex === second.routeIndex &&
+        !first.isVia &&
+        !second.isVia &&
+        distance > 1e-8 &&
+        isLocalRouteJoinContact(
+          firstRoute,
+          first.pathStartIndex!,
+          second.pathStartIndex!,
+          (first.width + second.width) / 2,
+        )
+      )
+        continue
+      if (
+        distance <= 1e-8 ||
+        distance < (first.width + second.width) / 2 - 1e-8
       )
         failOwnership(
           ownedNames.has(firstRoute.connectionName)

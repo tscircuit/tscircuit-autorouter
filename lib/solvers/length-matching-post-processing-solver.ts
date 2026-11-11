@@ -110,7 +110,11 @@ const getBusLengthMatchingInput = (
 }
 
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly matcher: LengthMatchingSolver
+  private matcher: LengthMatchingSolver
+  private readonly matcherInput: ConstructorParameters<
+    typeof LengthMatchingSolver
+  >[0]
+  private readonly pendingBusPairs: LengthMatchingPair[]
 
   constructor(
     private readonly params: LengthMatchingPostProcessingSolverParams,
@@ -122,7 +126,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         pair.connectionNames.flat(),
       ),
     )
-    this.matcher = new LengthMatchingSolver({
+    this.matcherInput = {
       ...params,
       // Pathing recomputes electrical roots. Keep terminal obstacles in that
       // same identity space so tuning can retain its own pad escape leads.
@@ -148,9 +152,12 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         ),
         ...busInput.connections,
       ],
-      differentialPairs: [...params.differentialPairs, ...busInput.pairs],
-    })
-    this.MAX_ITERATIONS = this.matcher.MAX_ITERATIONS + 2
+      differentialPairs: params.differentialPairs,
+    }
+    this.pendingBusPairs = busInput.pairs
+    this.matcher = new LengthMatchingSolver(this.matcherInput)
+    this.MAX_ITERATIONS =
+      (busInput.pairs.length + 1) * (this.matcher.MAX_ITERATIONS + 2)
   }
 
   override _step(): void {
@@ -178,6 +185,18 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       return
     }
     if (!this.matcher.solved) return
+    // Ordinary bus members share a reference lane, whereas owned differential
+    // pairs must be disjoint. Tune each bus member against the reference in a
+    // separate run, retaining every route as clearance geometry between runs.
+    const busPair = this.pendingBusPairs.shift()
+    if (busPair) {
+      this.matcher = new LengthMatchingSolver({
+        ...this.matcherInput,
+        hdRoutes: this.matcher.getOutput().matchedHdRoutes,
+        differentialPairs: [busPair],
+      })
+      return
+    }
     assertDifferentialPairRoutes(
       this.params,
       this.matcher.getOutput().matchedHdRoutes,
@@ -203,7 +222,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         )
       })
       const skew = Math.max(...lengths) - Math.min(...lengths)
-      if (skew > bus.maxLengthSkew + 1e-6)
+      if (skew > bus.maxLengthSkew + 1e-9)
         throw new Error(
           `Length matching: bus "${bus.busId}" routed length skew ${skew.toFixed(4)}mm exceeds ${bus.maxLengthSkew.toFixed(4)}mm`,
         )

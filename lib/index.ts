@@ -128,3 +128,4 @@ export type {
   RouterResult,
 } from "./types/routingResult"
 export { getRoutingFailure } from "./utils/getRoutingFailure"
+export { getDifferentialPairRoutingFailure } from "./utils/getDifferentialPairRoutingFailure"
