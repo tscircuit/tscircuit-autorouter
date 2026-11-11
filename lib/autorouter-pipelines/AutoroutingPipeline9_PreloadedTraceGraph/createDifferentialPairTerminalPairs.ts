@@ -6,6 +6,7 @@ import { getPointKey } from "lib/utils/getPointKey"
 import type { PreloadedDifferentialPairSections } from "./applyDifferentialPairPaths"
 
 type TerminalPairs = NonNullable<DifferentialPair["terminalPairs"]>
+type TerminalAttachment = TerminalPairs[number][number]["connectedTo"][number]
 
 export function createDifferentialPairTerminalPairs(
   connections: SimpleRouteConnection[],
@@ -17,22 +18,28 @@ export function createDifferentialPairTerminalPairs(
 ) => TerminalPairs | undefined {
   const pointPairsByName = new Map<string, SimpleRouteConnection>()
   const routedNames = new Set(hdRoutes.map((route) => route.connectionName))
-  const routedConnectionsByPoint = new Map<string, string[]>()
-  const recordTerminals = (name: string, points: ConnectionPoint[]): void => {
+  const routedConnectionsByPoint = new Map<string, TerminalAttachment[]>()
+  const recordTerminals = (
+    attachment: TerminalAttachment,
+    points: ConnectionPoint[],
+  ): void => {
     for (const point of points) {
       const key = getPointKey(point)
       const attachedConnections = routedConnectionsByPoint.get(key) ?? []
-      attachedConnections.push(name)
+      attachedConnections.push(attachment)
       routedConnectionsByPoint.set(key, attachedConnections)
     }
   }
   for (const connection of connections) {
     pointPairsByName.set(connection.name, connection)
     if (routedNames.has(connection.name))
-      recordTerminals(connection.name, connection.pointsToConnect)
+      recordTerminals(
+        { connectionName: connection.name },
+        connection.pointsToConnect,
+      )
   }
   for (const { connection, pcbTraceId } of preloadedSections.values())
-    recordTerminals(pcbTraceId, connection.pointsToConnect)
+    recordTerminals({ pcbTraceId }, connection.pointsToConnect)
 
   const getEndpoints = (name: string): [ConnectionPoint, ConnectionPoint] => {
     const points = pointPairsByName.get(name)?.pointsToConnect
@@ -68,7 +75,11 @@ export function createDifferentialPairTerminalPairs(
       y: point.y,
       connectedTo: (
         routedConnectionsByPoint.get(getPointKey(point)) ?? []
-      ).filter((name) => !connectionNames.includes(name)),
+      ).filter(
+        (attachment) =>
+          !("connectionName" in attachment) ||
+          !connectionNames.includes(attachment.connectionName),
+      ),
     })
     const terminalPairs: TerminalPairs = [
       [terminal(positiveStart), terminal(negativeStart)],

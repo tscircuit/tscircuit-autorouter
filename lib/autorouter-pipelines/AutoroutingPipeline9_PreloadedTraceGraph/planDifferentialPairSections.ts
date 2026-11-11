@@ -8,7 +8,10 @@ import { getPointKey } from "lib/utils/getPointKey"
 type ConnectionName = SimpleRouteConnection["name"]
 
 type DifferentialPairSectionPlan = {
-  sectionsByMergedConnection: Map<ConnectionName, SimpleRouteConnection[]>
+  sectionsByMergedConnection: Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >
   sectionNamesByMember: Map<ConnectionName, ConnectionName[]>
 }
 
@@ -48,7 +51,7 @@ export function planDifferentialPairSections(
   mergedConnections: SimpleRouteConnection[],
 ): DifferentialPairSectionPlan {
   const sectionsByMergedConnection = new Map<
-    ConnectionName,
+    SimpleRouteConnection,
     SimpleRouteConnection[]
   >()
   const sectionNamesByMember = new Map<ConnectionName, ConnectionName[]>()
@@ -166,8 +169,8 @@ export function planDifferentialPairSections(
         member.name,
         sections.map((section) => section.name),
       )
-      sectionsByMergedConnection.set(merged.name, [
-        ...(sectionsByMergedConnection.get(merged.name) ?? []),
+      sectionsByMergedConnection.set(merged, [
+        ...(sectionsByMergedConnection.get(merged) ?? []),
         ...sections,
       ])
     }

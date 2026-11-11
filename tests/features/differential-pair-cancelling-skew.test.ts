@@ -33,10 +33,13 @@ test("Pipeline9 accepts cancelling section skews under the whole-path tolerance"
     solver.lengthMatchingPostProcessingSolver!.getOutput()
   expect(postProcessingErrors).toEqual([])
   const skews = [0, 1].map((section) => {
-    const [positiveLength, negativeLength] = ["P", "N"].map((name) => {
-      const { route } = hdRoutes.find(
-        (route) => route.connectionName === `${name}_pair_section${section}`,
+    const [positiveLength, negativeLength] = connections.map(({ path }) => {
+      const { name } = solver.srjWithPointPairs!.connections.find(
+        ({ pointsToConnect }) =>
+          pointsToConnect[0]?.pointId === path[section] &&
+          pointsToConnect[1]?.pointId === path[section + 1],
       )!
+      const { route } = hdRoutes.find((route) => route.connectionName === name)!
       return route.slice(1).reduce((length, point, index) => {
         const previous = route[index]!
         return length + distance(previous, point)

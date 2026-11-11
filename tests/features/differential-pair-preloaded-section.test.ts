@@ -5,6 +5,7 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 test("Pipeline9 preserves preloaded sections and matches length across the whole pair", () => {
   const lengthTolerance = 0.05
+  const sharedName = "unrelated_route"
   const connections = ["P", "N"].map((name, lane) => ({
     name,
     path: ["A", "B", "C"].map((pad) => `${name}.${pad}`),
@@ -29,7 +30,7 @@ test("Pipeline9 preserves preloaded sections and matches length across the whole
   ].map(
     (points, lane): SimplifiedPcbTrace => ({
       type: "pcb_trace",
-      pcb_trace_id: `fixed_${lane}`,
+      pcb_trace_id: lane === 0 ? sharedName : "fixed_negative",
       connection_name: connections[lane]!.name,
       isFixed: true,
       connectsTo: connections[lane]!.path.slice(0, 2),
@@ -47,7 +48,16 @@ test("Pipeline9 preserves preloaded sections and matches length across the whole
     minTraceToPadEdgeClearance: 0.1,
     bounds: { minX: -8, maxX: 8, minY: -4, maxY: 4 },
     obstacles: [],
-    connections,
+    connections: [
+      ...connections,
+      {
+        name: sharedName,
+        pointsToConnect: [
+          { x: -7, y: 2.8, layer: "top", pointId: "U.A" },
+          { x: -5.5, y: 2.8, layer: "top", pointId: "U.B" },
+        ],
+      },
+    ],
     traces: fixedTraces,
     differentialPairs: [{ connectionNames: ["P", "N"], lengthTolerance }],
   }
@@ -67,11 +77,14 @@ test("Pipeline9 preserves preloaded sections and matches length across the whole
         connection.pointsToConnect.map((point) => point.pointId).join("/"),
       )
       .sort(),
-  ).toEqual(["N.B/N.C", "P.B/P.C"])
+  ).toEqual(["N.B/N.C", "P.B/P.C", "U.A/U.B"])
   const { hdRoutes, postProcessingErrors } =
     solver.lengthMatchingPostProcessingSolver!.getOutput()
   expect(postProcessingErrors).toEqual([])
-  expect(hdRoutes).toHaveLength(2)
+  expect(hdRoutes).toHaveLength(3)
+  expect(hdRoutes.some((route) => route.connectionName === sharedName)).toBe(
+    true,
+  )
   const [positiveLength, negativeLength] = ["P", "N"].map((name) => {
     const { route } = hdRoutes.find(
       (route) => route.rootConnectionName === name,

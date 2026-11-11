@@ -59,9 +59,7 @@ export function applyDifferentialPairPaths({
   const sections = mergedConnections
     .slice()
     .reverse()
-    .flatMap(
-      (connection) => sectionsByMergedConnection.get(connection.name) ?? [],
-    )
+    .flatMap((connection) => sectionsByMergedConnection.get(connection) ?? [])
   const plannedConnectivity =
     getInitiallyConnectedMapFromSimpleRouteJson(routingSrj)
   const pathPointIds = new Set(
