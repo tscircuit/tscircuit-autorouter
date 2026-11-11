@@ -719,6 +719,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleTransitionThroughObstacleIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         obstacles: this.constructorParams.obstacles,
+        // Same-layer candidates fail before consulting any board obstacles.
+        deferObstacleLayers: true,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount,
         viaDiameter: this.constructorParams.viaDiameter,

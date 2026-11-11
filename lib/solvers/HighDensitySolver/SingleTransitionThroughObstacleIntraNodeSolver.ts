@@ -64,7 +64,15 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
 
   nodeWithPortPoints: NodeWithPortPoints
   routes: Route[]
-  obstacles: LayeredObstacle[]
+  private obstacleLayers: LayeredObstacle[] | (() => LayeredObstacle[])
+
+  get obstacles(): LayeredObstacle[] {
+    if (typeof this.obstacleLayers === "function") {
+      this.obstacleLayers = this.obstacleLayers()
+    }
+    return this.obstacleLayers
+  }
+
   viaDiameter: number
   traceThickness: number
   connMap?: ConnectivityMap
@@ -73,6 +81,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
     obstacles?: Obstacle[]
+    deferObstacleLayers?: boolean
     connMap?: ConnectivityMap
     layerCount?: number
     viaDiameter?: number
@@ -81,10 +90,11 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     super()
 
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.obstacles = createObjectsWithZLayers(
-      params.obstacles ?? [],
-      params.layerCount ?? 2,
-    )
+    const obstacles = params.obstacles ?? []
+    const layerCount = params.layerCount ?? 2
+    this.obstacleLayers = params.deferObstacleLayers
+      ? () => createObjectsWithZLayers(obstacles, layerCount)
+      : createObjectsWithZLayers(obstacles, layerCount)
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceThickness = params.traceThickness ?? 0.15
