@@ -568,14 +568,18 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private prepareSafeLayerRepair(): void {
     const cleanup = this.getCleanupOrThrow()
+    // Finish newly found routes after the regional search budget is exhausted.
+    const hasRepair =
+      cleanup.kind === "regular-candidate" || this.acceptedCandidateCount > 0
+    const skipForBudget = this.candidateSearchBudgetExhausted && !hasRepair
     const hasSafeLayerRepairableError = cleanup.errors.some(
       (error): boolean =>
         error.type === "pcb_trace_error" ||
         error.type === "pcb_pad_trace_clearance_error",
     )
     this.safeTraceLayerRepairSkippedForBudget =
-      hasSafeLayerRepairableError && this.candidateSearchBudgetExhausted
-    if (!hasSafeLayerRepairableError || this.candidateSearchBudgetExhausted) {
+      hasSafeLayerRepairableError && skipForBudget
+    if (!hasSafeLayerRepairableError || skipForBudget) {
       this.finishCleanup()
       return
     }
@@ -586,6 +590,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       effort: this.params.effort,
       drcEvaluator: this.params.drcEvaluator,
       maxIterations: 8,
+      enableBroadFallback: !this.candidateSearchBudgetExhausted,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: false,
       enablePostSolveClearanceRelaxation: false,

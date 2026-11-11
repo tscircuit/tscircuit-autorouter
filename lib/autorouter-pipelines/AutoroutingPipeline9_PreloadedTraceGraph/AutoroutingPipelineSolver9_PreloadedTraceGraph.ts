@@ -689,6 +689,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline9HighDensityForceImproveSolver,
       (cms) => [
         {
+          inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
@@ -1297,6 +1298,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   getCurrentPhase(): string {
     return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+  }
+
+  /** Per-connection solo search compute cost; known once port-point pathing starts. */
+  getComputeCostSummary() {
+    return this.portPointPathingSolver?.getComputeCostSummary()
   }
 
   visualize(): GraphicsObject {

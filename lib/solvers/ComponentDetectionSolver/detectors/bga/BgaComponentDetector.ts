@@ -1,4 +1,6 @@
+import { doBoundsOverlap, getBoundingBox } from "@tscircuit/math-utils"
 import type { Obstacle } from "lib/types"
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 import type { ComponentDetector, ComponentDetectorParams } from "../types"
 
 const MIN_BGA_AXIS_COUNT = 3
@@ -193,7 +195,17 @@ export function getBgaLikeObstacleSubset(
   let largestGrid: Obstacle[] = []
 
   for (const geometryGroup of geometryGroups.values()) {
-    const grid = findLargestCompleteGrid(geometryGroup)
+    let grid = findLargestCompleteGrid(geometryGroup)
+    if (isDirectBgaLikeComponent(geometryGroup)) {
+      const groupPads = new Set(geometryGroup)
+      const bounds = getBoundsForObstacles(geometryGroup)
+      const hasOtherPadsInGrid = memberObstacles.some(
+        (obstacle) =>
+          !groupPads.has(obstacle) &&
+          doBoundsOverlap(getBoundingBox(obstacle), bounds),
+      )
+      if (!hasOtherPadsInGrid) grid = geometryGroup
+    }
     if (grid.length > largestGrid.length) largestGrid = grid
   }
 

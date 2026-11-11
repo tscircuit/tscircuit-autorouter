@@ -1114,6 +1114,31 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 }
 
+const COMPUTE_COST_MAX_PAIRS = 25
+
+/** Hypergraph route search iterations. */
+export type Iterations = number
+
+/**
+ * Which connections were hardest to route in one stage: each pair's solo
+ * search iterations, highest first. Pairs at the top usually touch a badly
+ * placed part.
+ */
+export interface ComputeCostSummary {
+  readonly metric: "hypergraph_route_search_iterations"
+  /** Every pair that was measured, including those cut from topPairs. */
+  readonly measuredPairCount: number
+  /** The most expensive pairs, highest first; at most 25. */
+  readonly topPairs: readonly {
+    readonly connectionName: string
+    /** Every SRJ connection merged into this one. */
+    readonly rootConnectionNames: readonly string[]
+    /** Measured endpoints; null for synthetic points such as breakouts. */
+    readonly pcbPortIds: readonly [string | null, string | null]
+    readonly iterations: Iterations
+  }[]
+}
+
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1134,6 +1159,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
+  private simpleRouteConnectionById: Map<
+    string,
+    HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
+  >
+  private computeCostSummary?: ComputeCostSummary
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
@@ -1154,6 +1184,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connections.map((connection) => [
         connection.connectionId,
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
+      ]),
+    )
+    this.simpleRouteConnectionById = new Map(
+      connections.map((connection) => [
+        connection.connectionId,
+        connection.simpleRouteConnection,
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
@@ -1450,6 +1486,41 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.solved = this.tinyPipelineSolver.solved
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
+  }
+
+  /** Frozen once the solo pass has run; undefined before that or if it failed. */
+  getComputeCostSummary(): ComputeCostSummary | undefined {
+    if (this.computeCostSummary) return this.computeCostSummary
+    const iterations = this.duplicateCongestedPortReport?.routeSearchIterations
+    if (!iterations) return undefined
+    // Sections generated from earlier-stage copper have no SRJ connection.
+    const measured = Object.entries(iterations).filter(([connectionId]) =>
+      this.simpleRouteConnectionById.has(connectionId),
+    )
+    const topPairs = measured
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, COMPUTE_COST_MAX_PAIRS)
+      .map(([connectionId, n]) => {
+        const connection = this.simpleRouteConnectionById.get(connectionId)!
+        const [start, end] = connection.pointsToConnect
+        return Object.freeze({
+          connectionName: connection.name,
+          rootConnectionNames: Object.freeze([
+            ...(connection.__rootConnectionNames ?? [connection.name]),
+          ]),
+          pcbPortIds: Object.freeze([
+            start?.pcb_port_id ?? null,
+            end?.pcb_port_id ?? null,
+          ] as const),
+          iterations: n,
+        })
+      })
+    this.computeCostSummary = Object.freeze({
+      metric: "hypergraph_route_search_iterations" as const,
+      measuredPairCount: measured.length,
+      topPairs: Object.freeze(topPairs),
+    })
+    return this.computeCostSummary
   }
 
   getSolveGraphBenchmarkMetrics() {

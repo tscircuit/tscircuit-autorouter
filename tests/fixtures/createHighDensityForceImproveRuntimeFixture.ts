@@ -1,7 +1,7 @@
-import type { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import type { Pipeline9HighDensityForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver"
 
 type ForceParams = ConstructorParameters<
-  typeof HighDensityForceImproveSolver
+  typeof Pipeline9HighDensityForceImproveSolver
 >[0]
 type ForceRoute = ForceParams["hdRoutes"][number]
 
@@ -50,6 +50,13 @@ export function createHighDensityForceImproveRuntimeFixture(): ForceParams {
   unassigned.regionId = undefined
   for (const point of unassigned.route) point.x += 100
   return {
+    inputSrj: {
+      layerCount: 2,
+      minTraceWidth: 0.1,
+      bounds: { minX: -5, maxX: 110, minY: -5, maxY: 5 },
+      connections: [],
+      obstacles: [],
+    },
     nodeWithPortPoints: nodes,
     totalStepsPerNode: 1,
     nodeAssignmentMargin: 0.2,

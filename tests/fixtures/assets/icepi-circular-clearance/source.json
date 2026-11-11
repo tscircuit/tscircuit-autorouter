@@ -1,0 +1,14 @@
+{
+  "source": "../icepi-retained-vias/source.json",
+  "coreCapture": "tscircuit@0.0.3137 / @tscircuit/core@0.0.2322 / @tscircuit/capacity-autorouter@0.0.1069",
+  "autorouterCommit": "483ed02695071b9783afe0ea4d85178527c9c9f7",
+  "stage": "pipeline9JointDrcRepairSolver, before the first step",
+  "normalization": "Pipeline9 added only derived obstacle layer-index caches to the original Core SRJ. Native pad geometry, existing copper, connections and rules are unchanged.",
+  "captureSha256": "469fbdd3f22dad2ca32008132179c70b3fcb928c4bd3a3d798c487eb15f4801d",
+  "requestedSignals": 50,
+  "completedDataSignals": 16,
+  "remainingConnections": 34,
+  "pointPairedRepairRoutes": 36,
+  "rulesChanged": false,
+  "geometryChanged": false
+}

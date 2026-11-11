@@ -86,12 +86,12 @@ test("merges the real STMP157 remaining-routing mesh without retaining every ato
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(merger.solved).toBe(true)
   expect(merger.stats.atomicRegionCount).toBeLessThan(retainedRegionLimit)
-  expect(merger.getOutput()).toHaveLength(115881)
+  expect(merger.getOutput()).toHaveLength(115983)
   expect(
     createHash("sha256")
       .update(JSON.stringify(merger.getOutput()))
       .digest("hex"),
-  ).toBe("47d8fdefcebe030fe5155b4c2170bbdd23e7d154208f339d4b940b18285867fe")
+  ).toBe("3fa79d4b58c5b15affae7aa23bdb66b53935091fde25cf3b9dc51f9de61ab37c")
   await expect(getStmp157CompletedMeshSnapshotSvg(merger)).toMatchSvgSnapshot(
     import.meta.path,
     { svgName: "completed-topology", tolerance: 0 },

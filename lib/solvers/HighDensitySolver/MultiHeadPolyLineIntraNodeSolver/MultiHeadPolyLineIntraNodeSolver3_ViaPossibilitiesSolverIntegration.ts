@@ -250,6 +250,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       const newCandidate = canRejectBeforeScoring
         ? this.createInitialCandidateFromSeed(i, candidatePolylineHashes)
         : this.createInitialCandidateFromSeed(i)
+      if (this.failed) return
       if (!newCandidate) continue
       const newCandidatePolylineHash = hashPolyLines(newCandidate.polyLines)
       if (candidatePolylineHashes.has(newCandidatePolylineHash)) continue
