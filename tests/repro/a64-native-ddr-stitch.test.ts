@@ -10,7 +10,10 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 test("A64 native DDR stitching", async (): Promise<void> => {
-  const { inputSrj, stitchInput }: {
+  const {
+    inputSrj,
+    stitchInput,
+  }: {
     inputSrj: SimpleRouteJson
     stitchInput: ConstructorParameters<
       typeof MultipleHighDensityRouteStitchSolver3
