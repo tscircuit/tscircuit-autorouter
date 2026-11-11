@@ -1,9 +1,11 @@
 import { Worker } from "node:worker_threads"
 import { expect, test } from "bun:test"
-import type { DifferentialPairFailure, RoutingFailure, RouterResult } from "lib"
+import type { RouterResult } from "lib"
+import { assertDifferentialPairOutput } from "lib/utils/assertDifferentialPairOutput"
 import { getDifferentialPairEsdRepro } from "../fixtures/getDifferentialPairEsdRepro"
 
-test("async worker routing returns the plain differential failure and original pair index", async (): Promise<void> => {
+test("async worker routing preserves separate copper ownership through its result", async (): Promise<void> => {
+  const srj = await getDifferentialPairEsdRepro()
   const worker = new Worker(
     new URL("../fixtures/differentialPairResult.worker.ts", import.meta.url),
   )
@@ -11,23 +13,13 @@ test("async worker routing returns the plain differential failure and original p
     const result = await new Promise<RouterResult>((resolve, reject): void => {
       worker.once("message", resolve)
       worker.once("error", reject)
-      void getDifferentialPairEsdRepro().then((srj): void => {
-        worker.postMessage(srj)
-      }, reject)
+      worker.postMessage(srj)
     })
-    expect(result.status).toBe("failed")
-    if (result.status !== "failed")
-      throw new Error("Expected an owned-path failure")
-    const failure: RoutingFailure = result.failure
-    expect(failure.reason).toBe("ownership_violation")
-    if (failure.reason !== "ownership_violation")
-      throw new Error("Expected ownership failure")
-    expect(failure.pairIndex).toBe(0)
-    expect(failure.connectionName).toMatch(/^[PN]:[01]$/)
-    expect(failure).not.toBeInstanceOf(Error)
-    const pairFailure: DifferentialPairFailure =
-      failure as DifferentialPairFailure
-    expect(JSON.parse(JSON.stringify(pairFailure))).toEqual(result.failure)
+    expect(result.status).toBe("solved")
+    if (result.status !== "solved") throw new Error("Expected an owned path")
+    expect(() => assertDifferentialPairOutput(srj, result.traces)).not.toThrow()
+    expect(result.traces).toHaveLength(srj.connections.length)
+    expect(JSON.parse(JSON.stringify(result))).toEqual(result)
   } finally {
     await worker.terminate()
   }

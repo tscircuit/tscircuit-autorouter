@@ -42,7 +42,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { createRoutingOwnership } from "lib/utils/createRoutingOwnership"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -324,9 +324,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
-          cms.connMap = getConnectivityMapFromSimpleRouteJson(
-            cms.srjWithPointPairs!,
-          )
+          cms.connMap = createRoutingOwnership(cms.srjWithPointPairs!).connMap
         },
       },
     ),
@@ -807,12 +805,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {
-    this.srj = srj
+    const ownership = createRoutingOwnership(srj)
+    this.srj = ownership.srj
     const viaDimensions = getViaDimensions(this.srj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
-    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.connMap = ownership.connMap
     this.colorMap = getColorMap(this.srj, this.connMap)
   }
 
