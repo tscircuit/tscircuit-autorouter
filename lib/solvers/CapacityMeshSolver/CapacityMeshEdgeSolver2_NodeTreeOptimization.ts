@@ -1,5 +1,5 @@
+import Flatbush from "flatbush"
 import { CAPACITY_NODE_TREE_CELL_SIZE } from "lib/data-structures/CapacityNodeTree"
-import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import {
   areNodesBordering,
   NODE_BORDER_EPSILON,
@@ -7,42 +7,26 @@ import {
 import type { CapacityMeshNode } from "../../types/capacity-mesh-types"
 import { CapacityMeshEdgeSolver } from "./CapacityMeshEdgeSolver"
 
-type IndexedCapacityMeshNode = {
-  node: CapacityMeshNode
-  nodeIndex: number
-  minBucketX: number
-  minBucketY: number
-  maxBucketX: number
-  maxBucketY: number
-}
-
 export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEdgeSolver {
   override getSolverName(): string {
     return "CapacityMeshEdgeSolver2_NodeTreeOptimization"
   }
 
-  private nodeTree: FlatbushIndex<IndexedCapacityMeshNode>
+  private nodeTree: Flatbush | null
   private currentNodeIndex: number
   private edgeSet: Set<string>
 
   constructor(public nodes: CapacityMeshNode[]) {
     super(nodes)
     this.MAX_ITERATIONS = 10e6
-    this.nodeTree = new FlatbushIndex<IndexedCapacityMeshNode>(nodes.length)
-    for (const [nodeIndex, node] of nodes.entries()) {
-      const minX: number = node.center.x - node.width / 2
-      const minY: number = node.center.y - node.height / 2
-      const maxX: number = node.center.x + node.width / 2
-      const maxY: number = node.center.y + node.height / 2
-      const indexedNode: IndexedCapacityMeshNode = {
-        node,
-        nodeIndex,
-        minBucketX: Math.floor(minX / CAPACITY_NODE_TREE_CELL_SIZE),
-        minBucketY: Math.floor(minY / CAPACITY_NODE_TREE_CELL_SIZE),
-        maxBucketX: Math.floor(maxX / CAPACITY_NODE_TREE_CELL_SIZE),
-        maxBucketY: Math.floor(maxY / CAPACITY_NODE_TREE_CELL_SIZE),
-      }
-      this.nodeTree.insert(indexedNode, minX, minY, maxX, maxY)
+    this.nodeTree = new Flatbush(Math.max(1, nodes.length))
+    for (const node of nodes) {
+      this.nodeTree.add(
+        node.center.x - node.width / 2,
+        node.center.y - node.height / 2,
+        node.center.x + node.width / 2,
+        node.center.y + node.height / 2,
+      )
     }
     if (nodes.length > 0) this.nodeTree.finish()
     this.currentNodeIndex = 0
@@ -51,51 +35,62 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
 
   _step(): void {
     if (this.currentNodeIndex >= this.nodes.length) {
+      // The pipeline retains completed solvers; release private lookup state.
+      this.nodeTree = null
+      this.edgeSet.clear()
       this.handleTargetNodes()
       this.solved = true
       return
     }
 
     const A: CapacityMeshNode = this.nodes[this.currentNodeIndex]
-    const minBucketX: number = Math.floor(
-      (A.center.x - A.width) / CAPACITY_NODE_TREE_CELL_SIZE,
+    const cellSize: number = CAPACITY_NODE_TREE_CELL_SIZE
+    const minBucketX: number = Math.floor((A.center.x - A.width) / cellSize)
+    const minBucketY: number = Math.floor((A.center.y - A.height) / cellSize)
+    const maxBucketX: number = Math.floor((A.center.x + A.width) / cellSize)
+    const maxBucketY: number = Math.floor((A.center.y + A.height) / cellSize)
+    const adjacentNodeIndices: number[] = this.nodeTree!.search(
+      A.center.x - A.width / 2 - NODE_BORDER_EPSILON,
+      A.center.y - A.height / 2 - NODE_BORDER_EPSILON,
+      A.center.x + A.width / 2 + NODE_BORDER_EPSILON,
+      A.center.y + A.height / 2 + NODE_BORDER_EPSILON,
+      (nodeIndex: number): boolean => {
+        const B: CapacityMeshNode = this.nodes[nodeIndex]
+        return (
+          areNodesBordering(A, B) &&
+          Math.floor((B.center.x - B.width / 2) / cellSize) <= maxBucketX &&
+          Math.floor((B.center.x + B.width / 2) / cellSize) >= minBucketX &&
+          Math.floor((B.center.y - B.height / 2) / cellSize) <= maxBucketY &&
+          Math.floor((B.center.y + B.height / 2) / cellSize) >= minBucketY
+        )
+      },
     )
-    const minBucketY: number = Math.floor(
-      (A.center.y - A.height) / CAPACITY_NODE_TREE_CELL_SIZE,
-    )
-    const maxBucketX: number = Math.floor(
-      (A.center.x + A.width) / CAPACITY_NODE_TREE_CELL_SIZE,
-    )
-    const maxBucketY: number = Math.floor(
-      (A.center.y + A.height) / CAPACITY_NODE_TREE_CELL_SIZE,
-    )
-    const adjacentNodes: IndexedCapacityMeshNode[] = this.nodeTree
-      .search(
-        A.center.x - A.width / 2 - NODE_BORDER_EPSILON,
-        A.center.y - A.height / 2 - NODE_BORDER_EPSILON,
-        A.center.x + A.width / 2 + NODE_BORDER_EPSILON,
-        A.center.y + A.height / 2 + NODE_BORDER_EPSILON,
-      )
-      .filter(
-        (candidate): boolean =>
-          candidate.minBucketX <= maxBucketX &&
-          candidate.maxBucketX >= minBucketX &&
-          candidate.minBucketY <= maxBucketY &&
-          candidate.maxBucketY >= minBucketY &&
-          areNodesBordering(A, candidate.node),
-      )
     // Keep the first bucket encounter order of CapacityNodeTree so edge IDs and
     // the downstream routing order stay unchanged.
-    adjacentNodes.sort(
-      (a, b): number =>
-        Math.max(minBucketX, a.minBucketX) -
-          Math.max(minBucketX, b.minBucketX) ||
-        Math.max(minBucketY, a.minBucketY) -
-          Math.max(minBucketY, b.minBucketY) ||
-        a.nodeIndex - b.nodeIndex,
-    )
+    adjacentNodeIndices.sort((a: number, b: number): number => {
+      const nodeA: CapacityMeshNode = this.nodes[a]
+      const nodeB: CapacityMeshNode = this.nodes[b]
+      const minBucketAX: number = Math.floor(
+        (nodeA.center.x - nodeA.width / 2) / cellSize,
+      )
+      const minBucketAY: number = Math.floor(
+        (nodeA.center.y - nodeA.height / 2) / cellSize,
+      )
+      const minBucketBX: number = Math.floor(
+        (nodeB.center.x - nodeB.width / 2) / cellSize,
+      )
+      const minBucketBY: number = Math.floor(
+        (nodeB.center.y - nodeB.height / 2) / cellSize,
+      )
+      return (
+        Math.max(minBucketX, minBucketAX) - Math.max(minBucketX, minBucketBX) ||
+        Math.max(minBucketY, minBucketAY) - Math.max(minBucketY, minBucketBY) ||
+        a - b
+      )
+    })
 
-    for (const { node: B } of adjacentNodes) {
+    for (const nodeIndex of adjacentNodeIndices) {
+      const B: CapacityMeshNode = this.nodes[nodeIndex]
       const strawNodesWithSameParent =
         A._strawNode &&
         B._strawNode &&
