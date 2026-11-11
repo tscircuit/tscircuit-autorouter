@@ -6,6 +6,8 @@ import bugReport from "../../fixtures/bug-reports/bugreport80-75ab58/bugreport80
   type: "json",
 }
 
+// USB's two copper hops per lane are separated by the series resistor pads.
+// Match the complete signal paths, excluding the component gaps.
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test(
@@ -15,6 +17,7 @@ test(
     solver.solve()
 
     expect(solver.failed).toBe(false)
+    expect(solver.solved).toBe(true)
     // Large Pipeline7 boards can produce equivalent route variants across platforms.
     const snapshotPath =
       process.platform === "linux"

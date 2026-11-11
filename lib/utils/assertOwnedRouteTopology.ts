@@ -55,7 +55,11 @@ export const assertOwnedRouteTopology = (
       padsByPort.set(port, pads)
     }
   }
-  const failOwnership = (connectionName: string, message: string): never => {
+  const failOwnership = (
+    connectionName: string,
+    message: string,
+    selfContact?: DifferentialPairRoutingError["selfContact"],
+  ): never => {
     const pairIndex = pairIndexes.get(connectionName)
     if (pairIndex === undefined)
       throw new Error(
@@ -64,6 +68,7 @@ export const assertOwnedRouteTopology = (
     throw new DifferentialPairRoutingError(
       { reason: "ownership_violation", pairIndex, connectionName },
       message,
+      selfContact,
     )
   }
   // Collinear control vertices do not create additional copper joins. Collapse
@@ -307,6 +312,15 @@ export const assertOwnedRouteTopology = (
             ? firstRoute.connectionName
             : secondRoute.connectionName,
           `ownership violation: "${firstRoute.connectionName}" and "${secondRoute.connectionName}" share copper outside a declared terminal`,
+          first.routeIndex === second.routeIndex &&
+            !first.isVia &&
+            !second.isVia
+            ? {
+                routeIndex: first.routeIndex,
+                firstSegmentEnd: first.b,
+                secondSegmentStart: second.a,
+              }
+            : undefined,
         )
     }
   }

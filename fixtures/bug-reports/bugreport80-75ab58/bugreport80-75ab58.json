@@ -10055,17 +10055,16 @@
     "differentialPairs": [
       {
         "connectionNames": [
-          "source_trace_11",
-          "source_trace_12"
+          [
+            "source_trace_11",
+            "source_trace_13"
+          ],
+          [
+            "source_trace_12",
+            "source_trace_14"
+          ]
         ],
-        "lengthTolerance": 0.15
-      },
-      {
-        "connectionNames": [
-          "source_trace_13",
-          "source_trace_14"
-        ],
-        "lengthTolerance": 0.15
+        "maxLengthSkewMm": 0.15
       }
     ],
     "minViaPadDiameter": 0.3,

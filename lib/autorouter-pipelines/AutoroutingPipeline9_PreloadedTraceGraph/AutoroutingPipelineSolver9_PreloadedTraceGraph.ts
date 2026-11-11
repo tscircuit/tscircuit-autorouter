@@ -1,3 +1,4 @@
+import { removeOwnedRouteSelfContacts } from "lib/utils/removeOwnedRouteSelfContacts"
 import type { RouterResult } from "lib/types/routingResult"
 import { getRoutingFailure } from "lib/utils/getRoutingFailure"
 import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
@@ -1002,7 +1003,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         return [
           {
-            hdRoutes: cms.effortCleanupSolver!.getOutput(),
+            hdRoutes: removeOwnedRouteSelfContacts({
+              input: cms.originalSrj,
+              srjWithPointPairs: cms.srjWithPointPairs!,
+              hdRoutes: cms.effortCleanupSolver!.getOutput(),
+            }),
             differentialPairs: cms.originalSrj.differentialPairs ?? [],
             buses: cms.srj.buses ?? [],
             connections: cms.originalSrj.connections,

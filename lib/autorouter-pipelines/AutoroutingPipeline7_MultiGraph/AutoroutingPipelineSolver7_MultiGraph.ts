@@ -1,3 +1,4 @@
+import { removeOwnedRouteSelfContacts } from "lib/utils/removeOwnedRouteSelfContacts"
 import type { RouterResult } from "lib/types/routingResult"
 import { validateDifferentialPairs } from "lib/utils/validateDifferentialPairs"
 import { assertDifferentialPairOutput } from "lib/utils/assertDifferentialPairOutput"
@@ -716,7 +717,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => {
         return [
           {
-            hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+            hdRoutes: removeOwnedRouteSelfContacts({
+              input: cms.originalSrj,
+              srjWithPointPairs: cms.srjWithPointPairs!,
+              hdRoutes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+            }),
             differentialPairs: cms.originalSrj.differentialPairs ?? [],
             buses: cms.srj.buses ?? [],
             connections: cms.originalSrj.connections,
