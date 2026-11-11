@@ -10,7 +10,10 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  SingleHighDensityRouteStitchSolver3,
+  type StitchClearanceMode,
+} from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -58,7 +61,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+    stitchClearanceMode?: StitchClearanceMode
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
@@ -74,7 +78,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       ),
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "require_clear",
+      stitchClearanceMode: params.stitchClearanceMode ?? "require_clear",
     })
 
     while (
@@ -132,6 +136,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       endpointIndex: this.endpointIndex,
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
+      isStitchSegmentClear: (segment) =>
+        this.clearanceValidator.isSegmentClear(segment),
     })
 
     const includesSharedRootBridge = pathRoutes.some(
@@ -339,6 +345,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         endpointIndex: this.endpointIndex,
         canStitchBetweenTerminals: (selection) =>
           this.canStitchBetweenTerminals(selection),
+        isStitchSegmentClear: (segment) =>
+          this.clearanceValidator.isSegmentClear(segment),
       })
 
       this.unsolvedRoutes.push({
@@ -427,6 +435,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               endpointIndex: this.endpointIndex,
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
+              isStitchSegmentClear: (segment) =>
+                this.clearanceValidator.isSegmentClear(segment),
             }),
           start,
           end,

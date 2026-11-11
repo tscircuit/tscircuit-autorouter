@@ -31,6 +31,7 @@ test("endpoint paths retain a farther same-layer branch before a buried via", ()
     end: { x: 3, y: 0, z: 1 },
     endpointIndex: new EndpointClusterIndex(true),
     canStitchBetweenTerminals: () => true,
+    isStitchSegmentClear: () => true,
   })
 
   expect(selectedRoutes).toHaveLength(3)
