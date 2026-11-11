@@ -2,14 +2,14 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 routes both sections of an inline three-pad differential pair", () => {
+test("Pipeline9 routes all sections of an inline four-pad differential pair", () => {
   const traceWidth = 0.15
   const traceGap = 0.25
   const lengthTolerance = 0.05
   const connections = ["D_P", "D_N"].map((name, memberIndex) => ({
     name,
-    path: [0, 1, 2].map((padIndex) => `${name}_${padIndex}`),
-    pointsToConnect: [-6, 0, 6].map((x, padIndex) => ({
+    path: [0, 1, 2, 3].map((padIndex) => `${name}_${padIndex}`),
+    pointsToConnect: [-6, -2, 2, 6].map((x, padIndex) => ({
       x,
       y: memberIndex * (traceWidth + traceGap),
       layer: "top",
@@ -33,13 +33,11 @@ test("Pipeline9 routes both sections of an inline three-pad differential pair", 
   expect(solver.error).toBeNull()
   expect(solver.solved).toBe(true)
   const routes = solver._getOutputHdRoutes()
-  expect(routes).toHaveLength(4)
+  expect(routes).toHaveLength(6)
 
   const memberLengths = connections.map(({ name, pointsToConnect }) => {
-    const sections = routes.filter(
-      (route) => route.rootConnectionName === name,
-    )
-    expect(sections).toHaveLength(2)
+    const sections = routes.filter((route) => route.rootConnectionName === name)
+    expect(sections).toHaveLength(3)
     return pointsToConnect.slice(1).reduce((length, to, index) => {
       const from = pointsToConnect[index]!
       const section = sections.find(({ route }) => {

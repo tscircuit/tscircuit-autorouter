@@ -42,6 +42,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -61,7 +62,8 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
-import { Pipeline9NetToPointPairsSolver } from "./Pipeline9NetToPointPairsSolver"
+import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { applyDifferentialPairPaths } from "./applyDifferentialPairPaths"
 import { assertInlineDifferentialPairProcessing } from "./assertInlineDifferentialPairProcessing"
 import { resolveDifferentialPairSections } from "./resolveDifferentialPairSections"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
@@ -254,7 +256,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
-  netToPointPairsSolver?: Pipeline9NetToPointPairsSolver
+  netToPointPairsSolver?: NetToPointPairsSolver2_OffBoardConnection
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
@@ -302,6 +304,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
+  private differentialPairSectionNamesByMember: ReadonlyMap<string, string[]> =
+    new Map()
   originalSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -351,18 +355,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "netToPointPairsSolver",
-      Pipeline9NetToPointPairsSolver,
-      (cms) => [
-        {
-          srjBeforeEscapeVias: cms.srj,
-          srjWithEscapeVias: cms.srjWithEscapeViaLocations ?? cms.srj,
-          colorMap: cms.colorMap,
-        },
-      ],
+      NetToPointPairsSolver2_OffBoardConnection,
+      (cms) => {
+        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
+        return [
+          inputSrj,
+          cms.colorMap,
+          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+        ]
+      },
       {
         onSolved: (cms) => {
-          cms.srjWithPointPairs =
-            cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          const { srj, sectionNamesByMember } = applyDifferentialPairPaths({
+            inputSrj: cms.srj,
+            routingSrj: cms.srjWithEscapeViaLocations ?? cms.srj,
+            pointPairSrj: cms.netToPointPairsSolver!.getNewSimpleRouteJson(),
+          })
+          cms.srjWithPointPairs = srj
+          cms.differentialPairSectionNamesByMember = sectionNamesByMember
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -845,7 +855,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
-              connections: cms.netToPointPairsSolver?.newConnections ?? [],
+              connections: cms.srjWithPointPairs!.connections,
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
@@ -870,7 +880,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
             originalSrj: cms.originalSrj,
-            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
+            newConnections: cms.srjWithPointPairs!.connections,
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             originalNewHdRoutes:
               cms.globalDrcForceImproveSolver!.guardedInputHdRoutes,
@@ -904,7 +914,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
+              connections: cms.srjWithPointPairs!.connections,
               originalConnections: cms.originalSrj.connections,
               hdRoutes: canonicalizePipeline9HdRoutes(routes),
               layerCount: cms.srj.layerCount,
@@ -991,16 +1001,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
-        const netToPointPairsSolver = cms.netToPointPairsSolver
-        if (!netToPointPairsSolver)
+        if (!cms.srjWithPointPairs)
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
         const hdRoutes = cms.effortCleanupSolver!.getOutput()
         const differentialPairs = resolveDifferentialPairSections(
           cms.srj.differentialPairs ?? [],
-          netToPointPairsSolver.newConnections,
-          netToPointPairsSolver.differentialPairSectionNamesByMember,
+          cms.srjWithPointPairs.connections,
+          cms.differentialPairSectionNamesByMember,
           hdRoutes,
         )
         return [
@@ -1020,7 +1029,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           assertInlineDifferentialPairProcessing(
-            cms.netToPointPairsSolver!.differentialPairSectionNamesByMember,
+            cms.differentialPairSectionNamesByMember,
             cms.lengthMatchingPostProcessingSolver!.getOutput()
               .postProcessingErrors,
           )
@@ -1626,7 +1635,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
 
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
+      connections: this.srjWithPointPairs?.connections ?? [],
       originalConnections: this.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,

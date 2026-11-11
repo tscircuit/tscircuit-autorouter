@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
-import { Pipeline9NetToPointPairsSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9NetToPointPairsSolver"
+import { applyDifferentialPairPaths } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyDifferentialPairPaths"
+import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import type { SimpleRouteJson } from "lib/types"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 
 test("retains declared inline sections while routing taps and escape vias", () => {
   const [positive, negative] = ["P", "N"].map((name, polarity) => ({
@@ -42,14 +44,39 @@ test("retains declared inline sections while routing taps and escape vias", () =
     layer: "top",
     terminalVia: { toLayer: "bottom", viaDiameter: 0.5 },
   })
-  const solver = new Pipeline9NetToPointPairsSolver({
-    srjBeforeEscapeVias: input,
+  const solver = new NetToPointPairsSolver2_OffBoardConnection(
     srjWithEscapeVias,
-    colorMap: {},
-  })
+    {},
+    getInitiallyConnectedMapFromSimpleRouteJson(srjWithEscapeVias),
+  )
   solver.solve()
+  const pointPairSrj = solver.getNewSimpleRouteJson()
+  const { srj, sectionNamesByMember } = applyDifferentialPairPaths({
+    inputSrj: input,
+    routingSrj: srjWithEscapeVias,
+    pointPairSrj,
+  })
 
-  const routedLinks = solver.newConnections.map((connection) =>
+  expect(
+    solver.newConnections.some((connection) =>
+      ["P.A", "P.C"].every((pad) =>
+        connection.pointsToConnect.some((point) => point.pointId === pad),
+      ),
+    ),
+  ).toBe(true)
+  expect(
+    sectionNamesByMember
+      .get("P")!
+      .map((name) =>
+        srj.connections
+          .find((connection) => connection.name === name)!
+          .pointsToConnect.map((point) => point.pointId),
+      ),
+  ).toEqual([
+    ["P.A", "P.B"],
+    ["P.B", "P.C"],
+  ])
+  const routedLinks = srj.connections.map((connection) =>
     connection.pointsToConnect
       .map((point) => point.pointId)
       .sort()
@@ -63,16 +90,15 @@ test("retains declared inline sections while routing taps and escape vias", () =
     "P.B/P.C",
     "P.B/TP",
   ])
-  expect(solver.newConnections.every((connection) => !connection.path)).toBe(true)
+  expect(srj.connections.every((connection) => !connection.path)).toBe(true)
 
   const inputWithoutPath = structuredClone(input)
   delete inputWithoutPath.connections[0]!.path
-  expect(
-    () =>
-      new Pipeline9NetToPointPairsSolver({
-        srjBeforeEscapeVias: inputWithoutPath,
-        srjWithEscapeVias: inputWithoutPath,
-        colorMap: {},
-      }),
+  expect(() =>
+    applyDifferentialPairPaths({
+      inputSrj: inputWithoutPath,
+      routingSrj: srjWithEscapeVias,
+      pointPairSrj,
+    }),
   ).toThrow('Differential pair member "P" needs a path for its 4 points')
 })

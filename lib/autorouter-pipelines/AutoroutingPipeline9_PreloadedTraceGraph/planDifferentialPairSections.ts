@@ -99,12 +99,8 @@ export function planDifferentialPairSections(
     }
 
     if (pointCount < 2 || negativePointCount < 2) continue
-    const positiveGroup = mergedByPoint.get(
-      getPointKey(positivePoints[0]!),
-    )
-    const negativeGroup = mergedByPoint.get(
-      getPointKey(negativePoints[0]!),
-    )
+    const positiveGroup = mergedByPoint.get(getPointKey(positivePoints[0]!))
+    const negativeGroup = mergedByPoint.get(getPointKey(negativePoints[0]!))
     if (!positiveGroup || !negativeGroup || positiveGroup === negativeGroup) {
       if (!isInline) continue
       throw new Error(
@@ -133,6 +129,7 @@ export function planDifferentialPairSections(
           `Differential pair member "${member.name}" has no on-board routing connection`,
         )
       }
+      const { path, ...sectionConnection } = routingConnection
       let nominalTraceWidth = routingConnection.nominalTraceWidth
       for (const bus of srjBeforeEscapeVias.buses ?? []) {
         if (
@@ -150,7 +147,7 @@ export function planDifferentialPairSections(
           while (reservedNames.has(name)) name += "_"
           reservedNames.add(name)
           return {
-            ...routingConnection,
+            ...sectionConnection,
             name,
             nominalTraceWidth,
             pointsToConnect: [points[index]!, point],
