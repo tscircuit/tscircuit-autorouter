@@ -610,8 +610,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
           )
         }
-        const portPointPathingOutput =
-          portPointPathingSolver.getRoutedPortOutput()
+        const portPointPathingOutput = portPointPathingSolver.getOutput({
+          includeInputNodes: false,
+        })
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
