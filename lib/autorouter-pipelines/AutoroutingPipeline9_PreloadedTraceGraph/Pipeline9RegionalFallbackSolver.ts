@@ -41,6 +41,13 @@ const getPointToObstacleDistance = (
   point: { x: number; y: number },
   obstacle: Obstacle,
 ): number => {
+  if (obstacle.shape === "circle") {
+    return Math.max(
+      0,
+      Math.hypot(point.x - obstacle.center.x, point.y - obstacle.center.y) -
+        obstacle.width / 2,
+    )
+  }
   const rotationRadians =
     (-1 * (obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
   const offsetX = point.x - obstacle.center.x

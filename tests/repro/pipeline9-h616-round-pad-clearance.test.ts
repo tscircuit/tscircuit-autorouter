@@ -39,7 +39,7 @@ test("accepts the H616 via beside the corner of a circular BGA pad", async (): P
   expect(
     checkViaPadClearance(circuit, { minClearance: input.viaToPadClearance }),
   ).toEqual([])
-  expect(witness.accepted).toBeFalse()
+  expect(witness.accepted).toBeTrue()
   await expect(
     getRoundPadClearanceSnapshot({
       witness,
