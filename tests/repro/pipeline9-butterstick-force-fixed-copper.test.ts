@@ -20,7 +20,7 @@ type ForceFixture = {
 }
 
 type BoardFixture = {
-  inputSrj: SimpleRouteJson
+  inputSrj: SimpleRouteJson & { layerCount: number }
   preloadedConnections: SimpleRouteConnection[]
   preloadedTraces: SimplifiedPcbTrace[]
 }
@@ -28,25 +28,19 @@ type BoardFixture = {
 // Full native ButterStick input; the earlier data-byte copper remains fixed.
 // https://github.com/butterstick-fpga/butterstick-hardware/blob/0694ddfa9824a07f0c6c6981186e45f80187659c/hardware/ButterStick_r1.0/ButterStick.kicad_pcb
 test("ButterStick force improvement beside completed DDR data wires", async (): Promise<void> => {
+  const forceFixtureUrl = new URL(
+    "../fixtures/assets/butterstick-force-improvement.json.gz",
+    import.meta.url,
+  )
   const { solverParams, newConnections } = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/butterstick-force-improvement.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString("utf8"),
+    gunzipSync(new Uint8Array(readFileSync(forceFixtureUrl))).toString("utf8"),
   ) as ForceFixture
+  const boardFixtureUrl = new URL(
+    "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
+    import.meta.url,
+  )
   const { inputSrj, preloadedConnections, preloadedTraces } = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString("utf8"),
+    gunzipSync(new Uint8Array(readFileSync(boardFixtureUrl))).toString("utf8"),
   ) as BoardFixture
   const solver = new Pipeline9HighDensityForceImproveSolver(solverParams)
   solver.solve()
