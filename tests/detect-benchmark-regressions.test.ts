@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { createThreadComparisonReport } from "./fixtures/threadComparisonReport"
 import type { BenchmarkReport } from "../scripts/benchmark/benchmark-types"
 import {
   buildSummaryEntryMap,
@@ -31,6 +32,7 @@ const makeReport = ({
   ({
     version: 1,
     datasetName,
+    runtime: createThreadComparisonReport(1_000, 1).runtime,
     scenarioCount: 10,
     effortLabel,
     summary: [

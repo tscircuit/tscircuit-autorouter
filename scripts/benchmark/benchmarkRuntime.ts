@@ -1,4 +1,5 @@
 import * as os from "node:os"
+import { readFileSync } from "node:fs"
 import type { BenchmarkRuntimeMetadata } from "./benchmark-types"
 
 // Dataset 18 processes have measured peaks near 6 GiB. Leave room for each
@@ -50,6 +51,37 @@ export const getBenchmarkThreadConcurrency = (
   )
 }
 
+export const getBenchmarkCpuModel = (
+  models: string[],
+  cpuInfo: string,
+): string => {
+  const fields = new Map<string, string>()
+  for (const line of cpuInfo.split("\n")) {
+    const separator = line.indexOf(":")
+    if (separator < 0) continue
+    const key = line.slice(0, separator).trim()
+    if (!fields.has(key)) fields.set(key, line.slice(separator + 1).trim())
+  }
+  // Bun reports "unknown" for these ARM CPUs. Linux exposes the actual core
+  // identity even when the provider gives different generations one runner tag.
+  if (fields.has("CPU implementer") && fields.has("CPU part")) {
+    return [
+      "CPU implementer",
+      "CPU architecture",
+      "CPU part",
+      "CPU variant",
+      "CPU revision",
+    ]
+      .filter((key) => fields.has(key))
+      .map((key) => `${key}=${fields.get(key)}`)
+      .join("; ")
+  }
+  const model = models.find(
+    (value) => value.trim() && value.trim().toLowerCase() !== "unknown",
+  )
+  return model?.trim() || fields.get("model name") || "unknown"
+}
+
 export const getBenchmarkRuntimeMetadata = (
   requestedConcurrency: number,
   workerCount: number,
@@ -59,7 +91,10 @@ export const getBenchmarkRuntimeMetadata = (
     bunVersion: Bun.version,
     platform: process.platform,
     architecture: process.arch,
-    cpuModel: cpus[0]?.model ?? "unknown",
+    cpuModel: getBenchmarkCpuModel(
+      cpus.map((cpu) => cpu.model),
+      process.platform === "linux" ? readFileSync("/proc/cpuinfo", "utf8") : "",
+    ),
     logicalCpuCount: cpus.length,
     availableParallelism: os.availableParallelism(),
     memoryLimitBytes: getBenchmarkMemoryLimit(),

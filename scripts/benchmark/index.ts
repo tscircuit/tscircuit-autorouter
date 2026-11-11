@@ -1595,8 +1595,12 @@ export const runBenchmarkTasks = async (
         result.peakRssBytes === undefined
           ? ""
           : ` peakRss=${formatMemory(result.peakRssBytes)}`
+      const cpuSuffix =
+        result.cpuTimeMs === undefined
+          ? ""
+          : ` cpuTime=${formatTime(result.cpuTimeMs)}`
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${cpuSuffix}${suffix}`,
       )
 
       if (restartWorker) {

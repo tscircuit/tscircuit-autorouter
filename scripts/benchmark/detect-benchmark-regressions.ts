@@ -3,6 +3,7 @@
 import { existsSync } from "node:fs"
 import type { BenchmarkReport, SolverRunSummary } from "./benchmark-types"
 import { parseDatasetName } from "./scenarios"
+import { getBenchmarkHardware } from "./benchmark-hardware.js"
 
 // -----------------------------------------------------------------------------
 // Thresholds are strict on solve rate and lenient on timing so tiny noisy time
@@ -93,6 +94,7 @@ export interface RegressionReport {
   newDatasets: NewDatasetEntry[]
   comparedKeys: number
   baselineMissing: boolean
+  skippedTimingComparisons: NewDatasetEntry[]
 }
 
 /**
@@ -108,6 +110,7 @@ export interface BenchmarkSummaryEntry {
   p50TimeMs: number | null
   p95TimeMs: number | null
   avgVia: number | null
+  hardwareKey: string | null
 }
 
 interface RateLabelContext {
@@ -332,6 +335,7 @@ export const buildSummaryEntryMap = (
         p50TimeMs: summary.p50TimeMs,
         p95TimeMs: summary.p95TimeMs,
         avgVia: summary.avgVia,
+        hardwareKey: getBenchmarkHardware(report.runtime)?.key ?? null,
       }
 
       const baseKey = makeCompositeKey({
@@ -510,6 +514,7 @@ export const detectRegressions = ({
 }): RegressionReport => {
   const regressions: Regression[] = []
   const newDatasets: NewDatasetEntry[] = []
+  const skippedTimingComparisons: NewDatasetEntry[] = []
   let comparedKeys = 0
 
   for (const [key, baselineEntry] of baseline) {
@@ -553,27 +558,38 @@ export const detectRegressions = ({
     })
     if (drc) regressions.push(drc)
 
-    const p50 = detectIncreaseRegression({
-      entry,
-      baselineEntry,
-      metric: "p50TimeMs",
-      baselineValue: baselineEntry.p50TimeMs,
-      currentValue: entry.p50TimeMs,
-      increasePct: thresholds.p50IncreasePct,
-      minAbsoluteDelta: thresholds.minTimeDeltaMs,
-    })
-    if (p50) regressions.push(p50)
+    if (
+      entry.hardwareKey !== null &&
+      entry.hardwareKey === baselineEntry.hardwareKey
+    ) {
+      const p50 = detectIncreaseRegression({
+        entry,
+        baselineEntry,
+        metric: "p50TimeMs",
+        baselineValue: baselineEntry.p50TimeMs,
+        currentValue: entry.p50TimeMs,
+        increasePct: thresholds.p50IncreasePct,
+        minAbsoluteDelta: thresholds.minTimeDeltaMs,
+      })
+      if (p50) regressions.push(p50)
 
-    const p95 = detectIncreaseRegression({
-      entry,
-      baselineEntry,
-      metric: "p95TimeMs",
-      baselineValue: baselineEntry.p95TimeMs,
-      currentValue: entry.p95TimeMs,
-      increasePct: thresholds.p95IncreasePct,
-      minAbsoluteDelta: thresholds.minTimeDeltaMs,
-    })
-    if (p95) regressions.push(p95)
+      const p95 = detectIncreaseRegression({
+        entry,
+        baselineEntry,
+        metric: "p95TimeMs",
+        baselineValue: baselineEntry.p95TimeMs,
+        currentValue: entry.p95TimeMs,
+        increasePct: thresholds.p95IncreasePct,
+        minAbsoluteDelta: thresholds.minTimeDeltaMs,
+      })
+      if (p95) regressions.push(p95)
+    } else {
+      skippedTimingComparisons.push({
+        datasetName: entry.datasetName,
+        solverName: entry.solverName,
+        effortLabel: entry.effortLabel,
+      })
+    }
 
     const avgVia = detectIncreaseRegression({
       entry,
@@ -604,6 +620,7 @@ export const detectRegressions = ({
     newDatasets,
     comparedKeys,
     baselineMissing,
+    skippedTimingComparisons,
   }
 }
 
@@ -822,6 +839,11 @@ const renderHumanSummary = (report: RegressionReport): string => {
   lines.push(
     `Compared ${report.comparedKeys} dataset/solver key(s) against baseline.`,
   )
+  if (report.skippedTimingComparisons.length > 0) {
+    lines.push(
+      `Skipped timing comparisons for ${report.skippedTimingComparisons.length} row(s): hardware differs or is unrecorded. Quality metrics were still compared.`,
+    )
+  }
   if (!report.hasRegressions) {
     lines.push("No regressions detected. ✅")
   } else {
@@ -946,6 +968,7 @@ const runCli = async (args: string[]): Promise<number> => {
       newDatasets: [],
       comparedKeys: 0,
       baselineMissing: true,
+      skippedTimingComparisons: [],
     }
     await Bun.write(outPath, JSON.stringify(report, null, 2))
     await writeGithubOutput(false)

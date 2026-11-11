@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { createThreadComparisonReport } from "./fixtures/threadComparisonReport"
 import type {
   BenchmarkReport,
   WorkerResult,
@@ -28,6 +29,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
   ): BenchmarkReport => ({
     version: 1,
     datasetName: "srj18",
+    runtime: createThreadComparisonReport(1_000, 1).runtime,
     scenarioCount: 2,
     effortLabel: "1x effort",
     summary,

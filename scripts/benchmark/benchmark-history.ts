@@ -11,6 +11,7 @@ import {
 } from "node:fs/promises"
 import { join } from "node:path"
 import stableStringify from "fast-json-stable-stringify"
+import { getBenchmarkHardware } from "./benchmark-hardware.js"
 import type { BenchmarkStageTimingBreakdown } from "./benchmark-types"
 
 // Older benchmark artifacts predate avgVia, sampleNumber, stageTiming, and memory.
@@ -99,6 +100,8 @@ type DashboardPoint = {
   datasetName: string
   solverName: string
   effortLabel: string
+  hardwareKey: string | null
+  hardwareLabel: string
   completedRate: number | null
   relaxedDrcRate: number | null
   p50TimeMs: number | null
@@ -522,6 +525,7 @@ const makeDashboardPoint = (
   report: BenchmarkHistoryReport,
   summary: BenchmarkHistorySummary,
 ): DashboardPoint => {
+  const hardware = getBenchmarkHardware(report.runtime)
   const samples = normalizeSamplesOrThrow({ report, summary })
   const completedSamples = samples.filter((sample) => sample.didSolve)
   const solveTimes = completedSamples.map((sample) => sample.elapsedTimeMs)
@@ -543,6 +547,8 @@ const makeDashboardPoint = (
     datasetName: report.datasetName,
     solverName: summary.solverName,
     effortLabel: report.effortLabel,
+    hardwareKey: hardware?.key ?? null,
+    hardwareLabel: hardware?.label ?? "Unrecorded hardware",
     completedRate: parseRateLabelOrThrow({
       label: summary.completedRateLabel,
       context: `${report.datasetName} ${summary.solverName} completion`,

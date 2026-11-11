@@ -640,6 +640,7 @@ export const runTask = async (
 ): Promise<WorkerResultWithImage> => {
   const solver = createSolverForTask(task)
   const start = performance.now()
+  const cpuStart = process.cpuUsage()
   let solveError: string | undefined
 
   try {
@@ -658,6 +659,8 @@ export const runTask = async (
     }
   }
   const elapsedTimeMs = performance.now() - start
+  const cpuUsage = process.cpuUsage(cpuStart)
+  const cpuTimeMs = (cpuUsage.user + cpuUsage.system) / 1000
 
   const didSolve = Boolean(solver.solved)
   const routingMetrics = getRoutingBenchmarkMetrics(solver)
@@ -675,6 +678,7 @@ export const runTask = async (
       sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
+      cpuTimeMs,
       didTimeout: false,
       relaxedDrcPassed: false,
       stageTiming,
@@ -732,6 +736,7 @@ export const runTask = async (
       sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
+      cpuTimeMs,
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
@@ -748,6 +753,7 @@ export const runTask = async (
       sampleNumber: task.sampleNumber,
       elapsedTimeMs,
       didSolve,
+      cpuTimeMs,
       didTimeout: false,
       relaxedDrcPassed: false,
       stageTiming,

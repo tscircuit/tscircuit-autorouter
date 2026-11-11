@@ -128,6 +128,8 @@ export type WorkerResult<
   elapsedTimeMs: number
   /** Peak resident set size through routing completion in the isolated sample process. */
   peakRssBytes?: number
+  /** Process CPU time during the solve; compare with wall time to diagnose stalls. */
+  cpuTimeMs?: number
   /** Configured per-sample limit used to score unsuccessful runs in percentiles. */
   sampleTimeoutMs?: number
   didSolve: boolean

@@ -1,5 +1,6 @@
 import { getTraceLintTypes, TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
+import { getBenchmarkHardware } from "./benchmark-hardware.js"
 
 const formatTime = (timeMs) => {
   if (typeof timeMs !== "number" || !Number.isFinite(timeMs)) {
@@ -239,6 +240,10 @@ export const renderBenchmarkComparison = ({
       ? mainReport.summary.map((row) => [row.solverName, row])
       : [],
   )
+  const mainHardware = getBenchmarkHardware(mainReport?.runtime)
+  const prHardware = getBenchmarkHardware(prReport.runtime)
+  const timingsComparable =
+    mainHardware !== null && mainHardware.key === prHardware?.key
   const rows = []
   for (const prSummary of prReport.summary) {
     const mainSummary = mainSummaries.get(prSummary.solverName)
@@ -267,8 +272,12 @@ export const renderBenchmarkComparison = ({
         prSummary.solverName,
         percentile / 100,
       )
+      const timeChange =
+        mainTime !== null && prTime !== null && !timingsComparable
+          ? "n/a (hardware differs or is unrecorded)"
+          : formatRelativeDelta(mainTime, prTime)
       rows.push(
-        `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`,
+        `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${timeChange} |`,
       )
     }
     if (

@@ -4,6 +4,7 @@ const runRequests = new Map()
 const datasetSelect = getRequiredElement("dataset")
 const solverSelect = getRequiredElement("solver")
 const effortSelect = getRequiredElement("effort")
+const hardwareSelect = getRequiredElement("hardware")
 const sampleSelect = getRequiredElement("sample")
 const rangeSelect = getRequiredElement("range")
 const chart = getRequiredElement("chart")
@@ -312,7 +313,8 @@ function getBaseSeriesPoints() {
     (point) =>
       point.datasetName === datasetSelect.value &&
       point.solverName === solverSelect.value &&
-      point.effortLabel === effortSelect.value,
+      point.effortLabel === effortSelect.value &&
+      (point.hardwareKey ?? "") === hardwareSelect.value,
   )
 }
 
@@ -361,6 +363,7 @@ async function getVisiblePoints() {
 }
 
 async function getPreviousPoint(point) {
+  if (!point.hardwareKey) return null
   const points = await getScopedSeriesPoints()
   const pointIndex = points.findIndex((item) => item.runId === point.runId)
   return pointIndex > 0 ? points[pointIndex - 1] : null
@@ -405,7 +408,7 @@ function renderHeader() {
 async function renderHealth() {
   const points = await getScopedSeriesPoints()
   const latest = points[points.length - 1]
-  const previous = points[points.length - 2]
+  const previous = latest?.hardwareKey ? points[points.length - 2] : null
   const healthGrid = getRequiredElement("health-grid")
   const healthContext = getRequiredElement("health-context")
   if (!latest) {
@@ -707,7 +710,7 @@ async function renderChart() {
   }
   let segment = []
   const flushSegment = () => {
-    if (segment.length > 1) {
+    if (segment.length > 1 && hardwareSelect.value !== "") {
       chart.append(
         makeSvgElement("polyline", {
           points: segment.join(" "),
@@ -1246,6 +1249,7 @@ async function renderRunDetails() {
     ["Commit", "<code>" + escapeHtml(run.commitSha.slice(0, 10)) + "</code>"],
     ["Created", escapeHtml(formatDate(run.createdAt, true))],
     ["Runner", escapeHtml(run.runner)],
+    ["Hardware", escapeHtml(point.hardwareLabel ?? "Unrecorded hardware")],
     ["Dataset", escapeHtml(point.datasetName)],
     [
       "Solver / effort",
@@ -1392,6 +1396,7 @@ function updateHash() {
   parameters.set("dataset", datasetSelect.value)
   parameters.set("solver", solverSelect.value)
   parameters.set("effort", effortSelect.value)
+  parameters.set("hardware", hardwareSelect.value)
   if (sampleSelect.value) parameters.set("sample", sampleSelect.value)
   parameters.set("range", rangeSelect.value)
   parameters.set("metric", dashboardState.metricKey)
@@ -1440,6 +1445,7 @@ async function rebuildSeriesControls(
   preferredSolver,
   preferredEffort,
   preferredSample,
+  preferredHardware = null,
 ) {
   const solvers = uniqueSorted(
     dashboardData.points
@@ -1457,7 +1463,39 @@ async function rebuildSeriesControls(
       .map((point) => point.effortLabel),
   )
   setSelectOptions(effortSelect, efforts, preferredEffort)
+  rebuildHardwareOptions(preferredHardware)
   await rebuildSampleOptions(preferredSample)
+}
+
+function rebuildHardwareOptions(preferredHardware) {
+  const points = dashboardData.points.filter(
+    (point) =>
+      point.datasetName === datasetSelect.value &&
+      point.solverName === solverSelect.value &&
+      point.effortLabel === effortSelect.value,
+  )
+  const labels = new Map(
+    points.map((point) => [
+      point.hardwareKey ?? "",
+      point.hardwareLabel ?? "Unrecorded hardware",
+    ]),
+  )
+  const selected = points.find(
+    (point) => point.runId === dashboardState.selectedRunId,
+  )
+  const latestKnown = [...points].reverse().find((point) => point.hardwareKey)
+  const preferred =
+    preferredHardware !== null && labels.has(preferredHardware)
+      ? preferredHardware
+      : selected
+        ? selected.hardwareKey ?? ""
+        : latestKnown?.hardwareKey ?? ""
+  setSelectOptions(hardwareSelect, [...labels.keys()], preferred, (key) =>
+    labels.get(key),
+  )
+  getRequiredElement("hardware-context").textContent = hardwareSelect.value
+    ? "Timing trends and comparisons use the selected CPU and worker configuration."
+    : "Hardware was not recorded for these runs. Points are shown without a connecting trend or timing comparisons."
 }
 
 async function initializeControls() {
@@ -1471,6 +1509,7 @@ async function initializeControls() {
     initialHash.get("solver") ?? latestPoint?.solverName ?? null,
     initialHash.get("effort") ?? latestPoint?.effortLabel ?? null,
     initialHash.get("sample") ?? "",
+    initialHash.get("hardware"),
   )
   if (["20", "50", "100"].includes(initialHash.get("range"))) {
     rangeSelect.value = initialHash.get("range")
@@ -1624,7 +1663,17 @@ solverSelect.addEventListener("change", () => {
 effortSelect.addEventListener("change", () => {
   runDashboardTask(
     (async () => {
+      rebuildHardwareOptions(hardwareSelect.value)
       await rebuildSampleOptions("")
+      await renderDashboard(true)
+    })(),
+  )
+})
+hardwareSelect.addEventListener("change", () => {
+  runDashboardTask(
+    (async () => {
+      rebuildHardwareOptions(hardwareSelect.value)
+      await rebuildSampleOptions(sampleSelect.value)
       await renderDashboard(true)
     })(),
   )
