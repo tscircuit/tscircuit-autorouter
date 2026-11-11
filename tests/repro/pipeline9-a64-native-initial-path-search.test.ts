@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import type { BaseSolver } from "@tscircuit/solver-utils"
-import { getSvgFromGraphicsObject } from "graphics-debug"
+import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
@@ -36,7 +36,7 @@ test("A64 native DDR initial path search", async (): Promise<void> => {
   if (!initialSearch) throw new Error("A64 never reached path planning")
 
   expect(input.connections).toHaveLength(43)
-  const graphics = convertSrjToGraphicsObject(input)
+  const graphics: GraphicsObject = convertSrjToGraphicsObject(input)
   const plan = initialSearch.preview()
   graphics.title = plan.title
   graphics.lines = [...(graphics.lines ?? []), ...(plan.lines ?? [])]
