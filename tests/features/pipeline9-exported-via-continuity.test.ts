@@ -38,9 +38,7 @@ test("Pipeline9 exports exactly connected wires around an explicit endpoint via"
   pipeline.highDensityStitchSolver = {
     mergedHdRoutes: [hdRoute],
   } as NonNullable<typeof pipeline.highDensityStitchSolver>
-  pipeline.netToPointPairsSolver = {
-    newConnections: srj.connections,
-  } as NonNullable<typeof pipeline.netToPointPairsSolver>
+  pipeline.srjWithPointPairs = srj
   const original = structuredClone(hdRoute)
   const [trace] = pipeline.getNewTracesBeforePowerExpansion()
   const viaIndex = trace!.route.findIndex((point) => point.route_type === "via")

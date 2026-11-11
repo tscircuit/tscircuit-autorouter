@@ -1630,12 +1630,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
-    if (!this.highDensityRouteSolver) {
+    if (!this.highDensityRouteSolver || !this.srjWithPointPairs) {
       throw new Error("Cannot get new traces before high-density routing")
     }
 
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.srjWithPointPairs?.connections ?? [],
+      connections: this.srjWithPointPairs.connections,
       originalConnections: this.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
