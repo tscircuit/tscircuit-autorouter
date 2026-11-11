@@ -73,10 +73,6 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     return this.obstacleLayers
   }
 
-  set obstacles(value: LayeredObstacle[]) {
-    this.obstacleLayers = value
-  }
-
   viaDiameter: number
   traceThickness: number
   connMap?: ConnectivityMap
