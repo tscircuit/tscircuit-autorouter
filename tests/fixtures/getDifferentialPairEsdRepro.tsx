@@ -18,12 +18,30 @@ export async function getDifferentialPairEsdRepro(): Promise<SimpleRouteJson> {
         { name: "MCU", x: -3, y: -3 },
         { name: "TP", x: 5, y: 1 },
       ].map(({ name, x, y }) => (
-        <chip key={name} name={name} pcbX={x} pcbY={y}
+        <chip
+          key={name}
+          name={name}
+          pcbX={x}
+          pcbY={y}
           pinLabels={{ pin1: "DP", pin2: "DM" }}
-          footprint={<footprint>
-            <smtpad portHints={["pin1"]} pcbY={0.7} width={0.6} height={0.6} shape="rect" />
-            <smtpad portHints={["pin2"]} pcbY={-0.7} width={0.6} height={0.6} shape="rect" />
-          </footprint>}
+          footprint={
+            <footprint>
+              <smtpad
+                portHints={["pin1"]}
+                pcbY={0.7}
+                width={0.6}
+                height={0.6}
+                shape="rect"
+              />
+              <smtpad
+                portHints={["pin2"]}
+                pcbY={-0.7}
+                width={0.6}
+                height={0.6}
+                shape="rect"
+              />
+            </footprint>
+          }
         />
       ))}
       <trace name="P:0" from=".J1 > .DP" to=".ESD > .DP" />
@@ -36,14 +54,18 @@ export async function getDifferentialPairEsdRepro(): Promise<SimpleRouteJson> {
   await circuit.renderUntilSettled()
   const circuitJson = circuit.getCircuitJson() as CircuitJson
   const { simpleRouteJson } = getSimpleRouteJsonFromCircuitJson({ circuitJson })
-  const sourceTraces = circuitJson.filter((element) => element.type === "source_trace")
+  const sourceTraces = circuitJson.filter(
+    (element) => element.type === "source_trace",
+  )
   return {
     ...simpleRouteJson,
     traces: [],
     // Human-readable hop names; all geometry and pad identities come from TSX.
     connections: simpleRouteJson.connections.map((connection) => ({
       ...connection,
-      name: sourceTraces.find((trace) => trace.source_trace_id === connection.name)!.name!,
+      name: sourceTraces.find(
+        (trace) => trace.source_trace_id === connection.name,
+      )!.name!,
     })),
     // Today's scalar API can only express separate section constraints.
     // The fix must replace these with [["P:0", "P:1"], ["N:0", "N:1"]].
