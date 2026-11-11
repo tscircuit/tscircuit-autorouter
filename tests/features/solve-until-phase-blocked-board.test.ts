@@ -27,6 +27,31 @@ test("routing difficulty reaches a terminal solver before the high-density phase
       },
     ],
   }
+  // Step two enters this phase and also exhausts a one-iteration budget.
+  for (const budget of [1, 2]) {
+    const boundary = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      structuredClone(board),
+      {
+        effort: 0.1,
+        cacheProvider: null,
+      },
+    )
+    boundary.MAX_ITERATIONS = budget
+    if (budget === 1) {
+      expect(() =>
+        boundary.solveUntilPhase("componentDetectionSolver"),
+      ).toThrow("ran out of iterations")
+      // Asking again must propagate the same error without taking another step.
+      expect(() =>
+        boundary.solveUntilPhase("componentDetectionSolver"),
+      ).toThrow("ran out of iterations")
+    } else {
+      boundary.solveUntilPhase("componentDetectionSolver")
+    }
+    expect(boundary.failed).toBe(budget === 1)
+    expect(boundary.iterations).toBe(2)
+    expect(boundary.getCurrentPhase()).toBe("componentDetectionSolver")
+  }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(board, {
     effort: 0.1,
     cacheProvider: null,
