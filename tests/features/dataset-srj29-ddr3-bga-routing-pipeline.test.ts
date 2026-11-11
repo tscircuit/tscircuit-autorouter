@@ -25,7 +25,15 @@ function pointIsInsideComponent(
 }
 
 test("Pipeline 10 detects and fans out both SRJ29 BGAs before Pipeline 9", () => {
-  const inputSrj = sample001 as SimpleRouteJson
+  const pairedSrj = structuredClone(sample001) as SimpleRouteJson
+  expect(() =>
+    new AutoroutingPipelineSolver10_BgaFanout(pairedSrj).solveUntilStage(
+      "autoroutingPipelineSolver",
+    ),
+  ).toThrow("cannot span the Pipeline10 fanout and global routing phases")
+  // Exercise fanout geometry separately from the explicitly unsupported
+  // request to split owned pair copper across fanout and global routing.
+  const { differentialPairs, ...inputSrj } = pairedSrj
   const metadata = (inputSrj as SimpleRouteJson & { metadata: Srj29Metadata })
     .metadata
 
