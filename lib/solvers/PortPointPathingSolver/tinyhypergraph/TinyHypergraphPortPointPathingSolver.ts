@@ -50,6 +50,15 @@ import {
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
+type RoutedPortOutput = {
+  nodesWithPortPoints: NodeWithPortPoints[]
+  changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
+}
+
+type PortPointPathingOutput = RoutedPortOutput & {
+  inputNodeWithPortPoints: InputNodeWithPortPoints[]
+}
+
 type RouteMetadata = {
   connectionId: string
   isFixed?: boolean
@@ -1729,10 +1738,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  getRoutedPortOutput(): {
-    nodesWithPortPoints: NodeWithPortPoints[]
-    changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
-  } {
+  getRoutedPortOutput(): RoutedPortOutput {
     const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
@@ -1816,13 +1822,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     )
   }
 
-  getOutput(): {
-    nodesWithPortPoints: NodeWithPortPoints[]
-    inputNodeWithPortPoints: InputNodeWithPortPoints[]
-    changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
-  } {
-    const { nodesWithPortPoints, changedPreloadedTraceSections } =
-      this.getRoutedPortOutput()
+  getOutput(options: { includeInputNodes: false }): RoutedPortOutput
+  getOutput(options?: { includeInputNodes: true }): PortPointPathingOutput
+  getOutput(options?: { includeInputNodes: boolean }):
+    | RoutedPortOutput
+    | PortPointPathingOutput {
+    const routed = this.getRoutedPortOutput()
+    if (options?.includeInputNodes === false) return routed
+    const { nodesWithPortPoints, changedPreloadedTraceSections } = routed
     this.inputNodeWithPortPoints ??= buildInputNodesWithPortPoints(
       this.params,
       this.inputPortGraph,

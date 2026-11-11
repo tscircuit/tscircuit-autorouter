@@ -10,7 +10,8 @@ test("redistribution sees exactly the routed ports of the full pathing graph", (
   )
   pipeline.solveUntilPhase("uniformPortDistributionSolver")
   const pathing = pipeline.portPointPathingSolver!
-  const routed = pathing.getRoutedPortOutput()
+  const routed = pathing.getOutput({ includeInputNodes: false })
+  expect(routed).not.toHaveProperty("inputNodeWithPortPoints")
   const compact = pathing.getInputNodesForRoutedPorts(
     routed.nodesWithPortPoints,
   )
