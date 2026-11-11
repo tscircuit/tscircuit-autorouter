@@ -3,7 +3,10 @@ import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
-import type { DifferentialPair } from "@tscircuit/length-matching-solver"
+import type {
+  DifferentialPair,
+  DifferentialPairPath,
+} from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
@@ -65,8 +68,10 @@ import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepai
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { applyDifferentialPairPaths } from "./applyDifferentialPairPaths"
-import { assertInlineDifferentialPairProcessing } from "./assertInlineDifferentialPairProcessing"
+import {
+  applyDifferentialPairPaths,
+  type PreloadedDifferentialPairSections,
+} from "./applyDifferentialPairPaths"
 import { createDifferentialPairTerminalPairs } from "./createDifferentialPairTerminalPairs"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
@@ -308,6 +313,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithPointPairs?: SimpleRouteJson
   private differentialPairSectionNamesByMember: ReadonlyMap<string, string[]> =
     new Map()
+  private preloadedDifferentialPairSections: PreloadedDifferentialPairSections =
+    new Map()
   originalSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -368,13 +375,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          const { srj, sectionNamesByMember } = applyDifferentialPairPaths({
-            inputSrj: cms.srj,
-            routingSrj: cms.srjWithEscapeViaLocations ?? cms.srj,
-            pointPairSrj: cms.netToPointPairsSolver!.getNewSimpleRouteJson(),
-          })
+          const { srj, sectionNamesByMember, preloadedSections } =
+            applyDifferentialPairPaths({
+              inputSrj: cms.srj,
+              routingSrj: cms.srjWithEscapeViaLocations ?? cms.srj,
+              pointPairSrj: cms.netToPointPairsSolver!.getNewSimpleRouteJson(),
+            })
           cms.srjWithPointPairs = srj
           cms.differentialPairSectionNamesByMember = sectionNamesByMember
+          cms.preloadedDifferentialPairSections = preloadedSections
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -1033,9 +1042,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           }
         }
         const hdRoutes = cms.effortCleanupSolver!.getOutput()
+        const preloadedSections = cms.preloadedDifferentialPairSections
         const getTerminalPairs = finalHdConnectionNames.size
-          ? createDifferentialPairTerminalPairs(connections, hdRoutes)
+          ? createDifferentialPairTerminalPairs(
+              connections,
+              hdRoutes,
+              preloadedSections,
+            )
           : undefined
+        const differentialPairPaths: DifferentialPairPath[] = []
         const pairSections = (cms.srj.differentialPairs ?? []).flatMap(
           (pair) => {
             const [firstSections, secondSections] = pair.connectionNames.map(
@@ -1052,14 +1067,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               throw new Error(
                 `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves to different section counts`,
               )
-            return firstSections.map((firstSection, index) => ({
-              pair,
-              connectionNames: [firstSection, secondSections[index]!] as [
-                string,
-                string,
+            const sections = firstSections.map(
+              (firstSection, index): [string, string] => [
+                firstSection,
+                secondSections[index]!,
               ],
-              sectionCount: firstSections.length,
-            }))
+            )
+            if (
+              sections.length > 1 ||
+              sections.some((names) =>
+                names.some((name) => preloadedSections.has(name)),
+              )
+            ) {
+              differentialPairPaths.push({
+                connectionNames: pair.connectionNames,
+                lengthTolerance: pair.lengthTolerance,
+                sections: sections.map(
+                  (names) =>
+                    names.map((connectionName) => {
+                      const preloaded = preloadedSections.get(connectionName)
+                      return preloaded
+                        ? { pcbTraceId: preloaded.pcbTraceId }
+                        : { connectionName }
+                    }) as DifferentialPairPath["sections"][number],
+                ),
+              })
+            }
+            return sections.flatMap((connectionNames) =>
+              connectionNames.some((name) => preloadedSections.has(name))
+                ? []
+                : [{ pair, connectionNames, sectionCount: sections.length }],
+            )
           },
         )
         const differentialPairs = pairSections.map(
@@ -1070,8 +1108,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               )
             const resolvedPair: DifferentialPair = {
               connectionNames,
-              // Bounding each section's skew bounds the sum along the path.
-              lengthTolerance: pair.lengthTolerance / sectionCount,
+              lengthTolerance: pair.lengthTolerance,
             }
             const terminalPairs = getTerminalPairs?.(
               connectionNames,
@@ -1109,6 +1146,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             hdRoutes,
             differentialPairs,
+            ...(differentialPairPaths.length ? { differentialPairPaths } : {}),
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
             obstacles: cms.srj.obstacles,
@@ -1118,15 +1156,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
           },
         ]
-      },
-      {
-        onSolved: (cms) => {
-          assertInlineDifferentialPairProcessing(
-            cms.differentialPairSectionNamesByMember,
-            cms.lengthMatchingPostProcessingSolver!.getOutput()
-              .postProcessingErrors,
-          )
-        },
       },
     ),
     definePipelineStep(

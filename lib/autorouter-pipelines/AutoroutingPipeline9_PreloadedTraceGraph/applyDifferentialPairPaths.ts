@@ -1,11 +1,20 @@
 import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type {
+  ConnectionPoint,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
 import {
   areIdsInitiallyConnected,
   getInitiallyConnectedMapFromSimpleRouteJson,
 } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getPointKey } from "lib/utils/getPointKey"
 import { planDifferentialPairSections } from "./planDifferentialPairSections"
+
+export type PreloadedDifferentialPairSections = ReadonlyMap<
+  string,
+  { connection: SimpleRouteConnection; pcbTraceId: string }
+>
 
 /** Combine the declared sections with the links the ordinary net tree still needs. */
 export function applyDifferentialPairPaths({
@@ -19,9 +28,18 @@ export function applyDifferentialPairPaths({
 }): {
   srj: SimpleRouteJson
   sectionNamesByMember: ReadonlyMap<string, string[]>
+  preloadedSections: PreloadedDifferentialPairSections
 } {
+  const preloadedSections = new Map<
+    string,
+    { connection: SimpleRouteConnection; pcbTraceId: string }
+  >()
   if (!inputSrj.differentialPairs?.length) {
-    return { srj: pointPairSrj, sectionNamesByMember: new Map() }
+    return {
+      srj: pointPairSrj,
+      sectionNamesByMember: new Map(),
+      preloadedSections,
+    }
   }
 
   const mergedConnections = mergeConnections(
@@ -34,7 +52,7 @@ export function applyDifferentialPairPaths({
       mergedConnections,
     )
   if (sectionsByMergedConnection.size === 0) {
-    return { srj: pointPairSrj, sectionNamesByMember }
+    return { srj: pointPairSrj, sectionNamesByMember, preloadedSections }
   }
 
   const sections = mergedConnections
@@ -45,20 +63,47 @@ export function applyDifferentialPairPaths({
     )
   const plannedConnectivity =
     getInitiallyConnectedMapFromSimpleRouteJson(routingSrj)
-  for (const section of sections) {
+  const pathPointIds = new Set(
+    sections.flatMap((section) => section.pointsToConnect.map(getPointKey)),
+  )
+  const matchesEndpoint = (
+    point: ConnectionPoint,
+    endpoint: { x: number; y: number },
+  ): boolean => Math.hypot(point.x - endpoint.x, point.y - endpoint.y) <= 1e-8
+  const sectionsToRoute = sections.filter((section) => {
     const [from, to] = section.pointsToConnect
-    if (
-      areIdsInitiallyConnected(
-        plannedConnectivity,
-        getPointKey(from!),
-        getPointKey(to!),
+    const fromId = getPointKey(from!)
+    const toId = getPointKey(to!)
+    if (!areIdsInitiallyConnected(plannedConnectivity, fromId, toId))
+      return true
+
+    const matches = (routingSrj.traces ?? []).filter((trace) => {
+      const ids = trace.connectsTo ?? []
+      if (
+        !ids.includes(fromId) ||
+        !ids.includes(toId) ||
+        ids.some((id) => id !== fromId && id !== toId && pathPointIds.has(id))
       )
-    ) {
+        return false
+      const first = trace.route.find((entry) => entry.route_type === "wire")
+      const last = trace.route.findLast((entry) => entry.route_type === "wire")
+      return (
+        first !== undefined &&
+        last !== undefined &&
+        ((matchesEndpoint(from!, first) && matchesEndpoint(to!, last)) ||
+          (matchesEndpoint(from!, last) && matchesEndpoint(to!, first)))
+      )
+    })
+    if (matches.length !== 1)
       throw new Error(
-        `Differential pair section "${section.name}" already has copper and cannot be routed as a new paired section`,
+        `Differential pair section "${section.name}" is already connected and must resolve to one preloaded trace between its terminals, got ${matches.length}`,
       )
-    }
-  }
+    preloadedSections.set(section.name, {
+      connection: section,
+      pcbTraceId: matches[0]!.pcb_trace_id,
+    })
+    return false
+  })
   const pathRootNames = new Set(
     sections.flatMap((section) => section.__rootConnectionNames ?? []),
   )
@@ -71,7 +116,7 @@ export function applyDifferentialPairPaths({
       plannedConnectivity.addConnections([[from.pointId, to.pointId]])
     }
   }
-  for (const section of sections) {
+  for (const section of sectionsToRoute) {
     plannedConnectivity.addConnections([
       section.pointsToConnect.map(getPointKey),
     ])
@@ -102,10 +147,11 @@ export function applyDifferentialPairPaths({
   return {
     srj: {
       ...pointPairSrj,
-      connections: [...sections, ...retainedLinks].map(
+      connections: [...sectionsToRoute, ...retainedLinks].map(
         ({ path, ...connection }) => connection,
       ),
     },
     sectionNamesByMember,
+    preloadedSections,
   }
 }

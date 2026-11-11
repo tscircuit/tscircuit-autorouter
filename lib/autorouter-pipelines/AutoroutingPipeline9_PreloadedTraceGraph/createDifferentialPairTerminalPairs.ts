@@ -2,12 +2,14 @@ import type { DifferentialPair } from "@tscircuit/length-matching-solver"
 import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getPointKey } from "lib/utils/getPointKey"
+import type { PreloadedDifferentialPairSections } from "./applyDifferentialPairPaths"
 
 type TerminalPairs = NonNullable<DifferentialPair["terminalPairs"]>
 
 export function createDifferentialPairTerminalPairs(
   connections: SimpleRouteConnection[],
   hdRoutes: HighDensityRoute[],
+  preloadedSections: PreloadedDifferentialPairSections,
 ): (
   connectionNames: [string, string],
   isInline: boolean,
@@ -15,16 +17,21 @@ export function createDifferentialPairTerminalPairs(
   const pointPairsByName = new Map<string, SimpleRouteConnection>()
   const routedNames = new Set(hdRoutes.map((route) => route.connectionName))
   const routedConnectionsByPoint = new Map<string, string[]>()
-  for (const connection of connections) {
-    pointPairsByName.set(connection.name, connection)
-    if (!routedNames.has(connection.name)) continue
-    for (const point of connection.pointsToConnect) {
+  const recordTerminals = (name: string, points: ConnectionPoint[]): void => {
+    for (const point of points) {
       const key = getPointKey(point)
       const attachedConnections = routedConnectionsByPoint.get(key) ?? []
-      attachedConnections.push(connection.name)
+      attachedConnections.push(name)
       routedConnectionsByPoint.set(key, attachedConnections)
     }
   }
+  for (const connection of connections) {
+    pointPairsByName.set(connection.name, connection)
+    if (routedNames.has(connection.name))
+      recordTerminals(connection.name, connection.pointsToConnect)
+  }
+  for (const { connection, pcbTraceId } of preloadedSections.values())
+    recordTerminals(pcbTraceId, connection.pointsToConnect)
 
   const getEndpoints = (name: string): [ConnectionPoint, ConnectionPoint] => {
     const points = pointPairsByName.get(name)?.pointsToConnect

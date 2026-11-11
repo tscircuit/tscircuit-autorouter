@@ -1,5 +1,6 @@
 import {
   type DifferentialPair,
+  type DifferentialPairPath,
   LengthMatchingSolver,
   type PostProcessingError,
   PostProcessingSolver,
@@ -18,6 +19,7 @@ import { BaseSolver } from "./BaseSolver"
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
   differentialPairs: DifferentialPair[]
+  differentialPairPaths?: DifferentialPairPath[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
   traces?: SimplifiedPcbTraces
@@ -148,6 +150,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
+      differentialPairPaths: params.differentialPairPaths,
       traces: params.traces,
       obstacles: params.obstacles,
       bounds: params.bounds,
