@@ -181,6 +181,8 @@ export interface SimpleRouteConnection {
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number
   pointsToConnect: Array<ConnectionPoint>
+  /** Ordered point IDs from pointsToConnect for an explicitly declared path. */
+  path?: PointId[]
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]
