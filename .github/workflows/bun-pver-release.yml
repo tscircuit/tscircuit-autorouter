@@ -7,6 +7,10 @@ on:
       - '!version-bumps/**'
   workflow_dispatch:
 
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 permissions:
   contents: write
   id-token: write
@@ -21,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -32,7 +38,8 @@ jobs:
           package-manager-cache: false
       - run: npm install -g pver
       - run: bun install --frozen-lockfile
-      # npm prepublishOnly builds after pver has written the release version.
+      # pver syncs main before publishing. The publish hook reinstalls dependencies
+      # for that commit, then builds with the release version.
       - run: pver release --no-push-main
         env:
           GITHUB_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}

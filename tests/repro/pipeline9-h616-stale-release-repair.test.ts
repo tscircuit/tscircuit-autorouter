@@ -66,6 +66,7 @@ test("publishes the selected repair dependency on the H616 circuit", async (): P
   const drills = snapshot.errors.filter(
     (error) => error.type === "pcb_placement_error",
   )
+  expect(drills).toEqual([])
   const traces: SimplifiedPcbTrace[] = output.map((route, index) => ({
     type: "pcb_trace",
     pcb_trace_id: `${route.connectionName}_${index}`,
