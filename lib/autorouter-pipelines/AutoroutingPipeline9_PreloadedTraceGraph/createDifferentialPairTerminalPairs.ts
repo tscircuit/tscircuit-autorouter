@@ -1,4 +1,5 @@
 import type { DifferentialPair } from "@tscircuit/length-matching-solver"
+import { distance } from "@tscircuit/math-utils"
 import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getPointKey } from "lib/utils/getPointKey"
@@ -48,8 +49,6 @@ export function createDifferentialPairTerminalPairs(
     let [negativeStart, negativeEnd] = getEndpoints(connectionNames[1])
     if (!isInline) {
       // Preserve the terminal alignment of two-point pairs without a path.
-      const distance = (a: ConnectionPoint, b: ConnectionPoint): number =>
-        Math.hypot(a.x - b.x, a.y - b.y)
       const forward =
         distance(positiveStart, negativeStart) +
         distance(positiveEnd, negativeEnd)

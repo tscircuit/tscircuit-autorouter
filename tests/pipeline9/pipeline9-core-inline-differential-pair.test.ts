@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -34,7 +35,7 @@ test("Pipeline9 routes both sections of the three-header differential pair from 
 
     const length = wires.slice(1).reduce((sum, point, index) => {
       const previous = wires[index]!
-      return sum + Math.hypot(point.x - previous.x, point.y - previous.y)
+      return sum + distance(previous, point)
     }, 0)
     lengthsBySignal.set(
       trace.connection_name,

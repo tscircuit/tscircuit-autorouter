@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
@@ -62,9 +63,7 @@ test("Pipeline9 tunes a path with unequal lanes and an obstacle on one side", ()
           (length, { route }) =>
             route.slice(1).reduce((total, point, index) => {
               const previous = route[index]!
-              return (
-                total + Math.hypot(point.x - previous.x, point.y - previous.y)
-              )
+              return total + distance(previous, point)
             }, length),
           0,
         ),

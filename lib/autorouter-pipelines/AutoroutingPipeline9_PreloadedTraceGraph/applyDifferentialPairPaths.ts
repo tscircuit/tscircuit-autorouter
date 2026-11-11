@@ -1,3 +1,4 @@
+import { distance } from "@tscircuit/math-utils"
 import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
 import type {
   ConnectionPoint,
@@ -69,7 +70,7 @@ export function applyDifferentialPairPaths({
   const matchesEndpoint = (
     point: ConnectionPoint,
     endpoint: { x: number; y: number },
-  ): boolean => Math.hypot(point.x - endpoint.x, point.y - endpoint.y) <= 1e-8
+  ): boolean => distance(point, endpoint) <= 1e-8
   const sectionsToRoute = sections.filter((section) => {
     const [from, to] = section.pointsToConnect
     const fromId = getPointKey(from!)

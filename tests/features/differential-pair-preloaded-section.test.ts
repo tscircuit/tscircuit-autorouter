@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -77,7 +78,7 @@ test("Pipeline9 preserves preloaded sections and matches length across the whole
     )!
     return route.slice(1).reduce((length, point, index) => {
       const previous = route[index]!
-      return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+      return length + distance(previous, point)
     }, 0)
   })
   const preloadedSkew = 2 * Math.SQRT2 + 4 - 6

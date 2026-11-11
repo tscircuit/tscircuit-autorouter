@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 
@@ -38,7 +39,7 @@ test("Pipeline9 accepts cancelling section skews under the whole-path tolerance"
       )!
       return route.slice(1).reduce((length, point, index) => {
         const previous = route[index]!
-        return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+        return length + distance(previous, point)
       }, 0)
     })
     return positiveLength! - negativeLength!

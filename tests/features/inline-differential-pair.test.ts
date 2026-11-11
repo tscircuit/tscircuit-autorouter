@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 
@@ -53,7 +54,7 @@ test("Pipeline9 routes all sections of an inline four-pad differential pair", ()
       }
       return section!.route.slice(1).reduce((total, point, pointIndex) => {
         const previous = section!.route[pointIndex]!
-        return total + Math.hypot(point.x - previous.x, point.y - previous.y)
+        return total + distance(previous, point)
       }, length)
     }, 0)
   })
