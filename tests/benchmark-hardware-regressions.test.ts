@@ -22,20 +22,20 @@ test("timing regressions require matching hardware while quality regressions rem
   expect(
     result.regressions.some((entry) => entry.metric === "completedRate"),
   ).toBe(true)
-  expect(
-    result.regressions.some((entry) => entry.metric === "p50TimeMs"),
-  ).toBe(false)
+  expect(result.regressions.some((entry) => entry.metric === "p50TimeMs")).toBe(
+    false,
+  )
   expect(result.skippedTimingComparisons).toHaveLength(1)
   current.runtime = baseline.runtime
   result = compare()
-  expect(
-    result.regressions.some((entry) => entry.metric === "p50TimeMs"),
-  ).toBe(true)
+  expect(result.regressions.some((entry) => entry.metric === "p50TimeMs")).toBe(
+    true,
+  )
   expect(result.skippedTimingComparisons).toHaveLength(0)
   delete current.runtime
   result = compare()
   expect(result.skippedTimingComparisons).toHaveLength(1)
-  expect(
-    result.regressions.some((entry) => entry.metric === "p95TimeMs"),
-  ).toBe(false)
+  expect(result.regressions.some((entry) => entry.metric === "p95TimeMs")).toBe(
+    false,
+  )
 })

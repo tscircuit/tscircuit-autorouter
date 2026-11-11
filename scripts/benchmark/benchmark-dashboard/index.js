@@ -1488,8 +1488,8 @@ function rebuildHardwareOptions(preferredHardware) {
     preferredHardware !== null && labels.has(preferredHardware)
       ? preferredHardware
       : selected
-        ? selected.hardwareKey ?? ""
-        : latestKnown?.hardwareKey ?? ""
+        ? (selected.hardwareKey ?? "")
+        : (latestKnown?.hardwareKey ?? "")
   setSelectOptions(hardwareSelect, [...labels.keys()], preferred, (key) =>
     labels.get(key),
   )
