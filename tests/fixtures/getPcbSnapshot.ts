@@ -30,7 +30,6 @@ export function getPcbSnapshot(
       font_size: (srj.bounds.maxX - srj.bounds.minX) / 70,
       text,
       layer: "top",
-      color: "#ffffff",
       anchor_alignment: "center",
       anchor_position: {
         x: (srj.bounds.minX + srj.bounds.maxX) / 2,
