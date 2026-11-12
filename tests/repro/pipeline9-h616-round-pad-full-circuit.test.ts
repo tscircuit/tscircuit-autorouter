@@ -44,22 +44,6 @@ test("connects H616 C3 to U2 SVREF on the full reference PCB", async (): Promise
   const connections = pipeline.srjWithPointPairs!.connections.filter(
     (connection) => connection.__rootConnectionNames?.includes(svrefNetId),
   )
-  const connectionNames = new Set(
-    connections.map((connection) => connection.name),
-  )
-  const stitch = new MultipleHighDensityRouteStitchSolver3({
-    connections,
-    hdRoutes: pipeline.highDensityRouteSolver!.routes.filter((route) =>
-      connectionNames.has(route.connectionName),
-    ),
-    layerCount: fixture.srj.layerCount,
-    defaultViaDiameter: pipeline.viaDiameter,
-    preserveTerminalPcbPortIds: true,
-    preferSameLayerTerminalEndpoints: true,
-  })
-  stitch.solve()
-  expect(stitch.solved).toBeTrue()
-  expect(stitch.failed).toBeFalse()
   const c3 = fixture.circuitJson.find(
     (element) => element.type === "source_component" && element.name === "C3",
   )!
@@ -80,6 +64,21 @@ test("connects H616 C3 to U2 SVREF on the full reference PCB", async (): Promise
       ),
     ),
   )!
+  // Other SVREF branches are incomplete when the board router stops. Stitch
+  // the C3 branch checked here; the complete stitch replay has its own test.
+  const stitch = new MultipleHighDensityRouteStitchSolver3({
+    connections,
+    hdRoutes: pipeline.highDensityRouteSolver!.routes.filter(
+      (route) => route.connectionName === c3Connection.name,
+    ),
+    layerCount: fixture.srj.layerCount,
+    defaultViaDiameter: pipeline.viaDiameter,
+    preserveTerminalPcbPortIds: true,
+    preferSameLayerTerminalEndpoints: true,
+  })
+  stitch.solve()
+  expect(stitch.solved).toBeTrue()
+  expect(stitch.failed).toBeFalse()
   const c3Route = stitch.mergedHdRoutes.find(
     (route) => route.connectionName === c3Connection.name,
   )!

@@ -58,14 +58,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+    defaultTraceThickness?: number
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
-      defaultTraceThickness: this.defaultTraceThickness,
+      defaultTraceThickness:
+        params.defaultTraceThickness ?? this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,

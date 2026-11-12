@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { AnyCircuitElement } from "circuit-json"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import { RouteStitchClearanceValidator } from "lib/solvers/RouteStitchingSolver/route-stitch-clearance-validator"
 import type { SimpleRouteJson } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
@@ -11,7 +12,7 @@ import {
 } from "tests/fixtures/getH616TerminalStitchCircuit"
 import { getH616TerminalStitchPcbSvg } from "tests/fixtures/getH616TerminalStitchPcbSvg"
 
-test("reproduces the dropped C3 terminal path on the native H616 PCB", async (): Promise<void> => {
+test("preserves the C3 terminal path on the native H616 PCB", async (): Promise<void> => {
   // Full 125-component, 264-net native board from Allwinner_H616_Devboard,
   // commit 94fe1071ff3d7c2e6a227a3e4dfccb6acae305c4. Capture the real stitch
   // input after force improvement and repair, with all other routed nets.
@@ -40,6 +41,24 @@ test("reproduces the dropped C3 terminal path on the native H616 PCB", async ():
     ).toString("utf8"),
   ) as H616TerminalStitchFixture
   const solver = new MultipleHighDensityRouteStitchSolver3(fixture.input)
+  const originalRoutePieces = new Set(fixture.input.hdRoutes)
+  const clearance = new RouteStitchClearanceValidator({
+    hdRoutes: fixture.input.hdRoutes,
+  })
+  const gapPieces = solver.unsolvedRoutes.flatMap((route) =>
+    route.hdRoutes.filter((piece) => !originalRoutePieces.has(piece)),
+  )
+  expect(gapPieces.length).toBeGreaterThan(0)
+  for (const gap of gapPieces) {
+    expect(
+      clearance.isSegmentClear({
+        connectionName: gap.connectionName,
+        start: gap.route[0]!,
+        end: gap.route.at(-1)!,
+        traceThickness: gap.traceThickness,
+      }),
+    ).toBeTrue()
+  }
   solver.solve()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
@@ -81,7 +100,7 @@ test("reproduces the dropped C3 terminal path on the native H616 PCB", async ():
         point.z === mapLayerNameToZ(terminal.layer!, board.srj.layerCount),
     ),
   )
-  expect(connectsBothTerminals).toBeFalse()
+  expect(connectsBothTerminals).toBeTrue()
   const circuit = getH616TerminalStitchCircuit({
     board,
     fixture,
