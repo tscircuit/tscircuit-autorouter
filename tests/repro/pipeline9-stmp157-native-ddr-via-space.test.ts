@@ -22,16 +22,34 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
       ),
     ).toString("utf8"),
   )
+  const reference: SimpleRouteJson = JSON.parse(
+    gunzipSync(
+      Uint8Array.from(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/stmp157-native-ddr-via-space/physical-reference.srj.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString("utf8"),
+  )
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
   solver.solve()
 
   // On failure, only the previously completed data copper is publishable.
-  let output = input
+  let output = reference
   let status = "Remaining DDR routing failed"
   if (solver.solved) {
-    output = solver.getOutputSimpleRouteJson()
+    output = {
+      ...reference,
+      traces: [
+        ...reference.traces!,
+        ...solver.getOutputSimplifiedPcbTraces(),
+      ],
+    }
     status = "Remaining DDR routing completed"
   }
   const graphics = convertSrjToGraphicsObject(output)
