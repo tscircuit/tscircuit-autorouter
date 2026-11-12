@@ -1,11 +1,9 @@
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
-import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -18,8 +16,8 @@ import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -34,16 +32,16 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
-  convertSrjToGraphicsObject,
   type TraceColorMode,
+  convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -68,42 +66,44 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
-import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
-import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
-import {
-  getMaterializedPreloadedSectionHdRoutes,
-  removeChangedSectionsFromFixedHdRoutes,
-} from "./materializeHypergraphPreloadedTraceSections"
-import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
-import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
-import {
-  type PreparedPipeline9MutationSections,
-  applyPipeline9MutatedPreloadedSections,
-  preparePipeline9MutatedPreloadedSections,
-} from "./pipeline9MutatedPreloadedTraceSimplification"
-import {
-  convertPreloadedTraceToHdRoutes,
-  type PreloadedHighDensityRoute,
-} from "./convertPreloadedTraceToHdRoutes"
-import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
-import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
-import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import {
-  preparePipeline7PowerTraceExpansionInput,
   type Pipeline7PowerTraceExpansionInput,
+  preparePipeline7PowerTraceExpansionInput,
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
+import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
+import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
+import {
+  type PreloadedHighDensityRoute,
+  convertPreloadedTraceToHdRoutes,
+} from "./convertPreloadedTraceToHdRoutes"
+import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
+import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
+import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import {
+  getMaterializedPreloadedSectionHdRoutes,
+  removeChangedSectionsFromFixedHdRoutes,
+} from "./materializeHypergraphPreloadedTraceSections"
+import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import {
+  type PreparedPipeline9MutationSections,
+  applyPipeline9MutatedPreloadedSections,
+  preparePipeline9MutatedPreloadedSections,
+} from "./pipeline9MutatedPreloadedTraceSimplification"
+import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -666,6 +666,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            captureSearchDebug: cms.opts.captureSearchDebug ?? false,
           },
         ]
       },
@@ -1202,10 +1203,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           )
         }
         this.step()
-        if (
-          this.iterations % 1024 === 0 &&
-          performance.now() - lastYield >= 16
-        ) {
+        if (performance.now() - lastYield >= 16) {
           await new Promise<void>((resolve) => setTimeout(resolve, 0))
           lastYield = performance.now()
         }

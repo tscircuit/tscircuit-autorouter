@@ -4,6 +4,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { DEFAULT_MAX_GROWTH_ATTEMPTS } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
@@ -11,6 +12,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
@@ -33,6 +35,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   captureSearchDebug?: boolean
+  initialGrowthAttempts?: number
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -140,12 +143,119 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     )
   })
 
+type RegionalFallbackBounds = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const OBSTACLE_ENVELOPE_TOLERANCE = 1e-6
+
+const getRegionalFallbackMaxNodeBounds = ({
+  nodeWithPortPoints,
+  obstacleMargin,
+  viaToPadClearance,
+  traceWidth,
+  viaDiameter,
+}: {
+  nodeWithPortPoints: NodeWithPortPoints
+  obstacleMargin: number
+  viaToPadClearance?: number
+  traceWidth: number
+  viaDiameter: number
+}): RegionalFallbackBounds => {
+  const minNodeDimension = Math.min(
+    nodeWithPortPoints.width,
+    nodeWithPortPoints.height,
+  )
+  const growthAttemptsToFitVia =
+    minNodeDimension > 0
+      ? Math.max(0, Math.ceil(Math.log2(viaDiameter / minNodeDimension)))
+      : 0
+  let minimumPortGap = Number.POSITIVE_INFINITY
+  const ports = nodeWithPortPoints.portPoints
+  for (let i = 0; i < ports.length; i++) {
+    for (let j = i + 1; j < ports.length; j++) {
+      const a = ports[i]!
+      const b = ports[j]!
+      if (
+        a.z !== b.z ||
+        (a.rootConnectionName ?? a.connectionName) ===
+          (b.rootConnectionName ?? b.connectionName)
+      ) {
+        continue
+      }
+      const gap = Math.hypot(a.x - b.x, a.y - b.y)
+      if (gap > 1e-9) minimumPortGap = Math.min(minimumPortGap, gap)
+    }
+  }
+  const growthAttemptsToFitPorts = Math.max(
+    0,
+    Math.ceil(Math.log2(traceWidth / minimumPortGap)),
+  )
+  const maxScale =
+    2 **
+    (DEFAULT_MAX_GROWTH_ATTEMPTS +
+      Math.max(growthAttemptsToFitVia, growthAttemptsToFitPorts))
+  const nodeBounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+  const clearance =
+    Math.max(obstacleMargin, viaToPadClearance ?? 0) +
+    Math.max(traceWidth, viaDiameter) +
+    OBSTACLE_ENVELOPE_TOLERANCE
+  return {
+    minX:
+      nodeWithPortPoints.center.x +
+      (nodeBounds.minX - nodeWithPortPoints.center.x) * maxScale -
+      clearance,
+    maxX:
+      nodeWithPortPoints.center.x +
+      (nodeBounds.maxX - nodeWithPortPoints.center.x) * maxScale +
+      clearance,
+    minY:
+      nodeWithPortPoints.center.y +
+      (nodeBounds.minY - nodeWithPortPoints.center.y) * maxScale -
+      clearance,
+    maxY:
+      nodeWithPortPoints.center.y +
+      (nodeBounds.maxY - nodeWithPortPoints.center.y) * maxScale +
+      clearance,
+  }
+}
+
+const obstacleOverlapsRegionalBounds = (
+  obstacle: Obstacle,
+  bounds: RegionalFallbackBounds,
+): boolean => {
+  const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cos = Math.abs(Math.cos(rotationRadians))
+  const sin = Math.abs(Math.sin(rotationRadians))
+  const rawHalfWidth = obstacle.width / 2
+  const rawHalfHeight = obstacle.height / 2
+  const halfWidth = Math.max(
+    rawHalfWidth,
+    rawHalfWidth * cos + rawHalfHeight * sin,
+  )
+  const halfHeight = Math.max(
+    rawHalfHeight,
+    rawHalfWidth * sin + rawHalfHeight * cos,
+  )
+  return (
+    obstacle.center.x - halfWidth <= bounds.maxX &&
+    obstacle.center.x + halfWidth >= bounds.minX &&
+    obstacle.center.y - halfHeight <= bounds.maxY &&
+    obstacle.center.y + halfHeight >= bounds.minY
+  )
+}
+
 /** Runs the regular high-density cleanup pipeline for a B01 fallback region. */
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly params: Pipeline9RegionalFallbackSolverParams
   readonly highDensitySolver: HighDensitySolver
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
+  private readonly localObstacles: Obstacle[]
+  private readonly localBoardObstacles?: Obstacle[]
   private phase: RegionalFallbackPhase = "route"
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
@@ -156,6 +266,19 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
+    const maxNodeBounds = getRegionalFallbackMaxNodeBounds({
+      nodeWithPortPoints: params.nodeWithPortPoints,
+      obstacleMargin: params.obstacleMargin,
+      viaToPadClearance: params.viaToPadClearance,
+      traceWidth: params.traceWidth,
+      viaDiameter: params.viaDiameter,
+    })
+    this.localObstacles = params.obstacles.filter((obstacle) =>
+      obstacleOverlapsRegionalBounds(obstacle, maxNodeBounds),
+    )
+    this.localBoardObstacles = params.boardObstacles?.filter((obstacle) =>
+      obstacleOverlapsRegionalBounds(obstacle, maxNodeBounds),
+    )
     this.highDensitySolver = new HighDensitySolver({
       captureSearchDebug: params.captureSearchDebug,
       nodePortPoints: [params.nodeWithPortPoints],
@@ -166,13 +289,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
       nodePfById: params.nodePfById,
-      obstacles: params.obstacles,
+      obstacles: this.localObstacles,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
+      growShrinkInitialGrowthAttempts: params.initialGrowthAttempts,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
-        params.boardObstacles &&
+        this.localBoardObstacles &&
         params.movablePreloadedConnectionNames &&
         params.viaToPadClearance !== undefined
           ? (routes) => this.validateCandidateRoutes(routes)
@@ -186,12 +310,13 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return "Pipeline9RegionalFallbackSolver"
   }
 
+  getUnroutablePrefixGrowthAttempts(): number {
+    return this.highDensitySolver.lastUnroutablePrefixGrowthAttempts
+  }
+
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
-    const {
-      boardObstacles,
-      movablePreloadedConnectionNames,
-      viaToPadClearance,
-    } = this.params
+    const { movablePreloadedConnectionNames, viaToPadClearance } = this.params
+    const boardObstacles = this.localBoardObstacles
     if (
       !boardObstacles ||
       !movablePreloadedConnectionNames ||
@@ -265,7 +390,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: forceImprovedRoutes,
-        obstacles: this.params.obstacles,
+        obstacles: this.localObstacles,
         colorMap: this.params.colorMap,
         repairMargin: this.params.obstacleMargin,
         minimumTraceWidth: this.params.traceWidth,
