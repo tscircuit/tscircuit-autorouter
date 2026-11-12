@@ -18,9 +18,12 @@ test("routes the native H616 DDR clocks and remaining signals", async (): Promis
       ),
     ).toString("utf8"),
   ) as { srj: SimpleRouteJson; board: SimpleRouteJson }
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(fixture.srj, {
-    cacheProvider: null,
-  })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    fixture.srj,
+    {
+      cacheProvider: null,
+    },
+  )
   solver.solve()
   expect(solver.solved).toBeTrue()
 
