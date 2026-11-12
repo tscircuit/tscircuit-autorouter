@@ -56,15 +56,18 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
-// Finish Circuit JSON repairs before targeting projected earlier copper.
-// The reference score can be zero only when both groups are clear.
+// Prioritize Circuit JSON errors and physical shorts in earlier fixed copper.
+// A zero reference score still requires both groups to be clear.
 const prioritizeCircuitJsonDrcErrors = <T extends Record<string, unknown>>(
   errors: T[],
 ): T[] => {
-  const circuitJsonErrors = errors.filter(
-    (error) => error.drc_source !== "fixed_copper",
+  const prioritizedErrors = errors.filter(
+    (error): boolean =>
+      error.drc_source !== "fixed_copper" ||
+      (typeof error.actual_clearance === "number" &&
+        error.actual_clearance <= 0),
   )
-  return circuitJsonErrors.length > 0 ? circuitJsonErrors : errors
+  return prioritizedErrors.length > 0 ? prioritizedErrors : errors
 }
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
