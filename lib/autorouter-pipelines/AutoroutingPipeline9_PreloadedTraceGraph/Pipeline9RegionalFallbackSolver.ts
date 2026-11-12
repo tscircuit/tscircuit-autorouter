@@ -35,8 +35,6 @@ type Pipeline9RegionalFallbackSolverParams = {
   captureSearchDebug?: boolean
 }
 
-type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
-
 const getPointToObstacleDistance = (
   point: { x: number; y: number },
   obstacle: Obstacle,
@@ -146,7 +144,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly highDensitySolver: HighDensitySolver
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
-  private phase: RegionalFallbackPhase = "route"
+  private validatedRoutes?: HighDensityRoute[]
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
@@ -171,12 +169,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
+      growShrinkSolutionValidator: (routes): boolean =>
+        this.validateCandidateWithCleanup(routes),
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
@@ -215,97 +209,74 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return !hasViaConflict
   }
 
-  override _step(): void {
-    if (this.phase === "route") {
-      this.highDensitySolver.step()
-      if (this.highDensitySolver.failed) {
-        this.error = this.highDensitySolver.error
-        this.failed = true
-        return
-      }
-      if (!this.highDensitySolver.solved) return
-      const routedCandidate = materializePipeline9HdRouteVias(
-        this.highDensitySolver.routes,
+  private validateCandidateWithCleanup(routes: HighDensityRoute[]): boolean {
+    const routedCandidate = materializePipeline9HdRouteVias(routes)
+    if (!this.validateCandidateRoutes(routedCandidate)) return false
+
+    // Cleanup is part of a candidate: a legal raw route can move into a pad.
+    // Reject that candidate before the portfolio commits to its winner.
+    const forceImproveSolver = new HighDensityForceImproveSolver({
+      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      hdRoutes: routedCandidate,
+      colorMap: this.params.colorMap,
+      totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
+      nodeAssignmentMargin: this.params.obstacleMargin,
+    })
+    forceImproveSolver.solve()
+    if (forceImproveSolver.failed) {
+      throw new Error(
+        forceImproveSolver.error ?? "Regional force improvement failed",
       )
-      if (!this.validateCandidateRoutes(routedCandidate)) {
-        this.error =
-          "Pipeline9 regional route output failed its candidate validator"
-        this.failed = true
-        return
-      }
-      this.forceImproveSolver = new HighDensityForceImproveSolver({
-        nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: routedCandidate,
-        colorMap: this.params.colorMap,
-        totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
-        nodeAssignmentMargin: this.params.obstacleMargin,
-      })
-      this.activeSubSolver = this.forceImproveSolver
-      this.phase = "improve"
-      return
     }
+    const forceImprovedRoutes = forceImproveSolver.getOutput()
+    if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
+      this.stats.forceImproveCandidateRejectionCount =
+        Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
+      return false
+    }
+    const repairSolver = new Pipeline4HighDensityRepairSolver({
+      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      hdRoutes: forceImprovedRoutes,
+      obstacles: this.params.obstacles,
+      colorMap: this.params.colorMap,
+      repairMargin: this.params.obstacleMargin,
+      minimumTraceWidth: this.params.traceWidth,
+      connMap: this.params.connMap,
+    })
+    repairSolver.solve()
+    if (repairSolver.failed) {
+      throw new Error(repairSolver.error ?? "Regional repair failed")
+    }
+    const repairedRoutes = repairSolver.getOutput()
+    if (!this.validateCandidateRoutes(repairedRoutes)) {
+      this.stats.repairCandidateRejectionCount =
+        Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
+      return false
+    }
+    this.forceImproveSolver = forceImproveSolver
+    this.repairSolver = repairSolver
+    this.validatedRoutes = repairedRoutes
+    return true
+  }
 
-    if (this.phase === "improve") {
-      this.forceImproveSolver!.step()
-      if (this.forceImproveSolver!.failed) {
-        this.error = this.forceImproveSolver!.error
-        this.failed = true
-        return
-      }
-      if (!this.forceImproveSolver!.solved) return
-      const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
-      if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
-        this.stats.forceImproveCandidateRejectionCount =
-          Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional force-improve output failed its candidate validator"
-        this.failed = true
-        return
-      }
-      this.repairSolver = new Pipeline4HighDensityRepairSolver({
-        nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: forceImprovedRoutes,
-        obstacles: this.params.obstacles,
-        colorMap: this.params.colorMap,
-        repairMargin: this.params.obstacleMargin,
-        minimumTraceWidth: this.params.traceWidth,
-        connMap: this.params.connMap,
-      })
-      this.activeSubSolver = this.repairSolver
-      this.phase = "repair"
+  override _step(): void {
+    this.highDensitySolver.step()
+    if (this.highDensitySolver.failed) {
+      this.error = this.highDensitySolver.error
+      this.failed = true
       return
     }
-
-    if (this.phase === "repair") {
-      this.repairSolver!.step()
-      if (this.repairSolver!.failed) {
-        this.error = this.repairSolver!.error
-        this.failed = true
-        return
-      }
-      if (!this.repairSolver!.solved) return
-      const repairedRoutes = this.repairSolver!.getOutput()
-      if (!this.validateCandidateRoutes(repairedRoutes)) {
-        this.stats.repairCandidateRejectionCount =
-          Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional repair output failed its candidate validator"
-        this.failed = true
-        return
-      }
-      this.activeSubSolver = null
-      this.phase = "done"
-      this.solved = true
-      return
+    if (!this.highDensitySolver.solved) return
+    if (!this.validatedRoutes) {
+      throw new Error("Regional portfolio solved without a validated candidate")
     }
+    this.activeSubSolver = null
+    this.solved = true
   }
 
   getOutput(): HighDensityRoute[] {
-    return (
-      this.repairSolver?.getOutput() ??
-      this.forceImproveSolver?.getOutput() ??
-      this.highDensitySolver.routes
-    )
+    if (this.validatedRoutes) return this.validatedRoutes
+    return this.highDensitySolver.routes
   }
 
   override visualize(): GraphicsObject {

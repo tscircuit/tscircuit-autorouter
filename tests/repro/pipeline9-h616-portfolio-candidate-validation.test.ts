@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { checkPadTraceClearance } from "@tscircuit/checks"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { AnyCircuitElement } from "circuit-json"
@@ -8,6 +9,7 @@ import {
   doPipeline9RoutesHaveCopperConflict,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { SimpleRouteJson } from "lib/types"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { getH616PortfolioRegionFixture } from "tests/fixtures/getH616PortfolioRegionFixture"
 import { getH616SvrefCircuitSnapshots } from "tests/fixtures/getH616SvrefCircuitSnapshots"
 
@@ -35,13 +37,27 @@ test("routes the failed SVREF region in the full H616 circuit", async (): Promis
   )
   const solver = new Pipeline9HighDensitySolver(fixture.input)
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  expect(solver.routes.length).toBeGreaterThan(0)
   const fixedRoutes = solver.getUpdatedFixedHdRoutes()
-  for (const left of [
+  const changedRoutes = [
     ...solver.fixedRouteReplacements.values(),
     ...solver.routes,
-  ]) {
+  ]
+  const circuit = convertToCircuitJson(
+    fixture.srjWithPointPairs,
+    changedRoutes,
+    {
+      connectivityMaps: { source: solver.connMap, route: solver.connMap },
+    },
+  )
+  expect(
+    checkPadTraceClearance(circuit, {
+      minClearance: board.srj.minTraceToPadEdgeClearance,
+    }),
+  ).toEqual([])
+  for (const left of changedRoutes) {
     for (const right of [...fixedRoutes, ...solver.routes]) {
       if (arePipeline9RoutesOnSameNet(left, right, solver.connMap)) continue
       expect(

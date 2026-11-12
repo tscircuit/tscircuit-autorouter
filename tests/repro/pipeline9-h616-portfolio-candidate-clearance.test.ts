@@ -49,8 +49,8 @@ test("finds a legal H616 DDR via after rejecting the first portfolio candidate",
   if (!firstRejected || !lastRegional) {
     throw new Error("Expected a rejected H616 regional candidate")
   }
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
   const input = solver.solved ? lastRegional.params : firstRejected.input
   const routes = solver.solved ? lastRegional.getOutput() : firstRejected.routes
   const witness = getClosestRegionalViaPadWitness({
@@ -75,7 +75,7 @@ test("finds a legal H616 DDR via after rejecting the first portfolio candidate",
     checkViaPadClearance(circuit, {
       minClearance: fixture.input.viaToPadClearance,
     }).length,
-  ).toBeGreaterThan(0)
+  ).toBe(0)
   await expect(
     getRoundPadClearanceSnapshot({
       witness,

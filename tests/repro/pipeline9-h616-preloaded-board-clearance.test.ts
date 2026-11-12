@@ -7,7 +7,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getH616SvrefCircuitSnapshots } from "tests/fixtures/getH616SvrefCircuitSnapshots"
 
-test("captures H616 SVREF routing beside preloaded DDR copper", async (): Promise<void> => {
+test("routes H616 SVREF beside preloaded DDR copper", async (): Promise<void> => {
   // All 125 components and 264 nets from Kononenko-K/Allwinner_H616_Devboard,
   // commit 94fe1071ff3d7c2e6a227a3e4dfccb6acae305c4. Captured after the
   // three DDR phases in tscircuit 0.0.3164, before routing the other signals.
@@ -38,8 +38,11 @@ test("captures H616 SVREF routing beside preloaded DDR copper", async (): Promis
       pipeline.step()
     }
   }).not.toThrow()
-  expect(pipeline.solved).toBeFalse()
-  expect(pipeline.failed).toBeTrue()
+  expect(pipeline.solved).toBeTrue()
+  expect(pipeline.failed).toBeFalse()
+  expect(pipeline.highDensityRouteSolver!.stats.solvedNodeCount).toBe(
+    pipeline.highDensityRouteSolver!.stats.nodeCount,
+  )
   const svrefTrace = fixture.circuitJson.find(
     (element) =>
       element.type === "source_trace" && element.display_name === "/DRAM/SVREF",
