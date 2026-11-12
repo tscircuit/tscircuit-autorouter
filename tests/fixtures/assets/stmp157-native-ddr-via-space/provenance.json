@@ -1,0 +1,18 @@
+{
+  "board": "OLIMEX STMP157-OLinuXino-LIME2 rev B1",
+  "source": "https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/STMP157-OLinuXino-LIME2/1.%20Latest%20hardware%20revision/STMP157-OLinuXino-LIME2_Rev_B1/STMP157-OLinuXino-LIME2_Rev_B1.kicad_pcb",
+  "attribution": "OLIMEX Ltd.",
+  "license": "CC-BY-SA-3.0-US",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+  "capture": "Unchanged native TSX through published Core 0.0.2347 / Bus 0.0.54, with Core PR #5190 native fixed-trace handoff. Autorouter 0.0.1080.",
+  "inputSha256": "3616e3a842dcc556bdb3268f31d45e7c7f3763c5912b6921186754d13e31a0b8",
+  "scope": "32 completed data traces preserved as fixed copper; all 40 remaining DDR connections, all 710 component pad obstacles, original placements, widths, clearances and 8-layer stack. No input geometry or rules modified. Native input support merged in AR #3520 / Tiny #308. Existing copper from the source PCB was removed before the TSX routing experiment; the retained 32 data traces were produced by Core and Bus lanes.",
+  "rules": {
+    "traceWidthMm": 0.127,
+    "clearanceMm": 0.127,
+    "viaPadMm": 0.327,
+    "viaDrillMm": 0.2,
+    "allowViaInPad": false,
+    "allowBlindAndBuriedVias": false
+  }
+}
