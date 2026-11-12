@@ -53,7 +53,20 @@ function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
 }
 
 function getUniqueSortedAxisCoordinates(axisCoordinates: number[]): number[] {
-  return [...new Set(axisCoordinates)].sort((a, b) => a - b)
+  const sortedCoordinates = [...axisCoordinates].sort((a, b) => a - b)
+  const uniqueCoordinates: number[] = []
+
+  for (const coordinate of sortedCoordinates) {
+    const previousCoordinate = uniqueCoordinates[uniqueCoordinates.length - 1]
+    if (
+      previousCoordinate === undefined ||
+      coordinate - previousCoordinate > AXIS_EPSILON
+    ) {
+      uniqueCoordinates.push(coordinate)
+    }
+  }
+
+  return uniqueCoordinates
 }
 
 function roundCoordinate(coordinate: number): number {

@@ -1,112 +1,280 @@
-<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="topology_merge_24124
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="topology_merge_28865
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-8.08" data-y="1.994999999999986" x="40.00000000000023" y="492.5252525252525" width="107.47474747474598" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24125
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-8.08" data-y="2.3949999999999863" x="40.00000000000023" y="379.39393939393904" width="107.47474747474598" height="107.4747474747478" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24126
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-8.08" data-y="2.794999999999986" x="40.00000000000023" y="266.26262626262604" width="107.47474747474598" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24127
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-8.08" data-y="3.194999999999986" x="40.00000000000023" y="153.13131313131288" width="107.47474747474598" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24128
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-8.08" data-y="3.594999999999986" x="40.00000000000023" y="39.99999999999977" width="107.47474747474598" height="107.47474747474757" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24270
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.68" data-y="1.994999999999986" x="153.13131313131294" y="492.5252525252525" width="107.4747474747478" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24271
+component: yes" data-x="-8.08" data-y="1.994999999999986" x="40.000000000000455" y="480.0785854616901" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28866
 availableZ: 0
-component: yes" data-x="-7.68" data-y="2.3949999999999863" x="153.13131313131294" y="379.39393939393904" width="107.4747474747478" height="107.4747474747478" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24272
+component: yes" data-x="-8.08" data-y="2.3949999999999863" x="40.000000000000455" y="370.05893909626747" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28867
 availableZ: 1
-component: yes" data-x="-7.672" data-y="2.3869999999999862" x="155.39393939393858" y="381.6565656565654" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24273
+component: yes" data-x="-8.072000000000001" data-y="2.3869999999999862" x="42.20039292730871" y="372.25933202357595" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28868
 availableZ: 2
-component: yes" data-x="-7.664" data-y="2.3789999999999862" x="157.6565656565649" y="383.9191919191916" width="107.47474747474826" height="107.4747474747478" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24274
+component: yes" data-x="-8.064" data-y="2.3789999999999862" x="44.40078585461765" y="374.45972495088444" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28869
 availableZ: 3
-component: yes" data-x="-7.656" data-y="2.3709999999999862" x="159.91919191919123" y="386.18181818181785" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24275
+component: yes" data-x="-8.056000000000001" data-y="2.3709999999999862" x="46.60117878192591" y="376.6601178781928" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28870
 availableZ: 4
-component: yes" data-x="-7.648" data-y="2.3629999999999862" x="162.18181818181756" y="388.4444444444442" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24276
+component: yes" data-x="-8.048" data-y="2.3629999999999862" x="48.80157170923417" y="378.8605108055013" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28871
 availableZ: 5
-component: yes" data-x="-7.64" data-y="2.3549999999999858" x="164.4444444444439" y="390.7070707070706" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24277
+component: yes" data-x="-8.040000000000001" data-y="2.354999999999986" x="51.001964636542425" y="381.0609037328098" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28872
 availableZ: 6
-component: yes" data-x="-7.632" data-y="2.3469999999999858" x="166.70707070707022" y="392.96969696969694" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24278
+component: yes" data-x="-8.032" data-y="2.346999999999986" x="53.20235756385091" y="383.26129666011826" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28873
+availableZ: 7
+component: yes" data-x="-8.024000000000001" data-y="2.338999999999986" x="55.40275049115917" y="385.46168958742663" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28874
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.68" data-y="2.794999999999986" x="153.13131313131294" y="266.26262626262604" width="107.4747474747478" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24279
+component: yes" data-x="-8.08" data-y="2.794999999999986" x="40.000000000000455" y="260.03929273084526" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28875
 availableZ: 0
-component: yes" data-x="-7.68" data-y="3.194999999999986" x="153.13131313131294" y="153.13131313131288" width="107.4747474747478" height="107.47474747474769" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24280
+component: yes" data-x="-8.08" data-y="3.194999999999986" x="40.000000000000455" y="150.01964636542277" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28876
 availableZ: 1
-component: yes" data-x="-7.672" data-y="3.186999999999986" x="155.39393939393858" y="155.3939393939391" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24281
+component: yes" data-x="-8.072000000000001" data-y="3.186999999999986" x="42.20039292730871" y="152.22003929273131" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28877
 availableZ: 2
-component: yes" data-x="-7.664" data-y="3.178999999999986" x="157.6565656565649" y="157.65656565656542" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24282
+component: yes" data-x="-8.064" data-y="3.178999999999986" x="44.40078585461765" y="154.4204322200397" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28878
 availableZ: 3
-component: yes" data-x="-7.656" data-y="3.170999999999986" x="159.91919191919123" y="159.91919191919163" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24283
+component: yes" data-x="-8.056000000000001" data-y="3.170999999999986" x="46.60117878192591" y="156.62082514734817" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28879
 availableZ: 4
-component: yes" data-x="-7.648" data-y="3.162999999999986" x="162.18181818181756" y="162.18181818181796" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24284
+component: yes" data-x="-8.048" data-y="3.162999999999986" x="48.80157170923417" y="158.82121807465666" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28880
 availableZ: 5
-component: yes" data-x="-7.64" data-y="3.1549999999999856" x="164.4444444444439" y="164.4444444444444" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24285
+component: yes" data-x="-8.040000000000001" data-y="3.154999999999986" x="51.001964636542425" y="161.02161100196503" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28881
 availableZ: 6
-component: yes" data-x="-7.632" data-y="3.1469999999999856" x="166.70707070707022" y="166.70707070707073" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24286
+component: yes" data-x="-8.032" data-y="3.146999999999986" x="53.20235756385091" y="163.2220039292735" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28882
 availableZ: 7
-component: yes" data-x="-7.624" data-y="3.1389999999999856" x="168.96969696969654" y="168.96969696969694" width="107.47474747474826" height="107.47474747474746" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24287
+component: yes" data-x="-8.024000000000001" data-y="3.138999999999986" x="55.40275049115917" y="165.422396856582" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_28883
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.68" data-y="3.594999999999986" x="153.13131313131294" y="39.99999999999977" width="107.4747474747478" height="107.47474747474757" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="obstacle-pcb_component_2-pcb_component_2:-7.679999999999994:2.394999999999989:0.4:0.4:bottom-7--7.679999999999994-2.394999999999989
-availableZ: 7
-component: yes" data-x="-7.623999999999994" data-y="2.338999999999989" x="168.96969696969836" y="395.23232323232224" width="107.47474747474735" height="107.47474747474769" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24364
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.28" data-y="1.994999999999986" x="266.2626262626262" y="492.5252525252525" width="107.47474747474666" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24365
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.28" data-y="2.3949999999999863" x="266.2626262626262" y="379.39393939393904" width="107.47474747474666" height="107.4747474747478" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24366
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.28" data-y="2.794999999999986" x="266.2626262626262" y="266.26262626262604" width="107.47474747474666" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24367
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.28" data-y="3.194999999999986" x="266.2626262626262" y="153.13131313131288" width="107.47474747474666" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24368
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-7.28" data-y="3.594999999999986" x="266.2626262626262" y="39.99999999999977" width="107.47474747474666" height="107.47474747474757" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24504
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.880000000000001" data-y="1.994999999999986" x="379.3939393939387" y="492.5252525252525" width="107.47474747474803" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24505
+component: yes" data-x="-8.08" data-y="3.594999999999986" x="40.000000000000455" y="40.00000000000068" width="104.5186640471511" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29158
 availableZ: 0
-component: yes" data-x="-6.880000000000001" data-y="2.3949999999999863" x="379.3939393939387" y="379.39393939393904" width="107.47474747474803" height="107.4747474747478" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24506
+component: yes" data-x="-7.68" data-y="1.9949999999999886" x="150.0196463654229" y="480.07858546168933" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29159
 availableZ: 1
-component: yes" data-x="-6.872000000000001" data-y="2.3869999999999862" x="381.6565656565647" y="381.6565656565654" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24507
+component: yes" data-x="-7.672" data-y="1.9869999999999886" x="152.22003929273114" y="482.27897838899776" width="104.5186640471511" height="104.51866404715133" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29160
 availableZ: 2
-component: yes" data-x="-6.864000000000001" data-y="2.3789999999999862" x="383.919191919191" y="383.9191919191916" width="107.47474747474826" height="107.4747474747478" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24508
+component: yes" data-x="-7.664" data-y="1.9789999999999885" x="154.42043222003986" y="484.4793713163063" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29161
 availableZ: 3
-component: yes" data-x="-6.856000000000001" data-y="2.3709999999999862" x="386.18181818181733" y="386.18181818181785" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24509
+component: yes" data-x="-7.656" data-y="1.9709999999999885" x="156.6208251473481" y="486.67976424361467" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29162
 availableZ: 4
-component: yes" data-x="-6.848000000000001" data-y="2.3629999999999862" x="388.44444444444355" y="388.4444444444442" width="107.47474747474803" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24510
+component: yes" data-x="-7.648" data-y="1.9629999999999885" x="158.82121807465705" y="488.88015717092316" width="104.51866404715065" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29163
 availableZ: 5
-component: yes" data-x="-6.840000000000001" data-y="2.3549999999999858" x="390.70707070706976" y="390.7070707070706" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24511
+component: yes" data-x="-7.64" data-y="1.9549999999999885" x="161.02161100196508" y="491.08055009823164" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29164
 availableZ: 6
-component: yes" data-x="-6.832000000000001" data-y="2.3469999999999858" x="392.9696969696961" y="392.96969696969694" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24512
+component: yes" data-x="-7.632" data-y="1.9469999999999885" x="163.22200392927357" y="493.28094302554" width="104.51866404715065" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29165
 availableZ: 7
-component: yes" data-x="-6.824000000000001" data-y="2.3389999999999858" x="395.2323232323224" y="395.23232323232315" width="107.47474747474826" height="107.47474747474746" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24513
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.880000000000001" data-y="2.794999999999986" x="379.3939393939387" y="266.26262626262604" width="107.47474747474803" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24514
+component: yes" data-x="-7.624" data-y="1.9389999999999887" x="165.42239685658217" y="495.48133595284827" width="104.51866404715088" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29166
 availableZ: 0
-component: yes" data-x="-6.880000000000001" data-y="3.194999999999986" x="379.3939393939387" y="153.13131313131288" width="107.47474747474803" height="107.47474747474769" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24515
+component: yes" data-x="-7.68" data-y="2.394999999999989" x="150.0196463654229" y="370.0589390962667" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29167
 availableZ: 1
-component: yes" data-x="-6.872000000000001" data-y="3.186999999999986" x="381.6565656565647" y="155.3939393939391" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24516
+component: yes" data-x="-7.672" data-y="2.386999999999989" x="152.22003929273114" y="372.25933202357527" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29168
 availableZ: 2
-component: yes" data-x="-6.864000000000001" data-y="3.178999999999986" x="383.919191919191" y="157.65656565656542" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24517
+component: yes" data-x="-7.664" data-y="2.378999999999989" x="154.42043222003986" y="374.45972495088364" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29169
 availableZ: 3
-component: yes" data-x="-6.856000000000001" data-y="3.170999999999986" x="386.18181818181733" y="159.91919191919163" width="107.47474747474826" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24518
+component: yes" data-x="-7.656" data-y="2.370999999999989" x="156.6208251473481" y="376.66011787819207" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29170
 availableZ: 4
-component: yes" data-x="-6.848000000000001" data-y="3.162999999999986" x="388.44444444444355" y="162.18181818181796" width="107.47474747474803" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24519
+component: yes" data-x="-7.648" data-y="2.362999999999989" x="158.82121807465705" y="378.8605108055006" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29171
 availableZ: 5
-component: yes" data-x="-6.840000000000001" data-y="3.1549999999999856" x="390.70707070706976" y="164.4444444444444" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24520
+component: yes" data-x="-7.64" data-y="2.354999999999989" x="161.02161100196508" y="381.060903732809" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29172
 availableZ: 6
-component: yes" data-x="-6.832000000000001" data-y="3.1469999999999856" x="392.9696969696961" y="166.70707070707073" width="107.47474747474826" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24521
-availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.880000000000001" data-y="3.594999999999986" x="379.3939393939387" y="39.99999999999977" width="107.47474747474803" height="107.47474747474757" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="obstacle-pcb_component_2-pcb_component_2:-6.879999999999995:3.1949999999999887:0.4:0.4:bottom-7--6.879999999999995-3.1949999999999887
+component: yes" data-x="-7.632" data-y="2.346999999999989" x="163.22200392927357" y="383.26129666011747" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29173
+availableZ: 0
+component: yes" data-x="-7.68" data-y="2.794999999999989" x="150.0196463654229" y="260.0392927308446" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29174
+availableZ: 1
+component: yes" data-x="-7.672" data-y="2.786999999999989" x="152.22003929273114" y="262.23968565815295" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29175
+availableZ: 2
+component: yes" data-x="-7.664" data-y="2.778999999999989" x="154.42043222003986" y="264.44007858546144" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29176
+availableZ: 3
+component: yes" data-x="-7.656" data-y="2.770999999999989" x="156.6208251473481" y="266.6404715127699" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29177
+availableZ: 4
+component: yes" data-x="-7.648" data-y="2.762999999999989" x="158.82121807465705" y="268.8408644400784" width="104.51866404715065" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29178
+availableZ: 5
+component: yes" data-x="-7.64" data-y="2.754999999999989" x="161.02161100196508" y="271.0412573673868" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29179
+availableZ: 6
+component: yes" data-x="-7.632" data-y="2.746999999999989" x="163.22200392927357" y="273.24165029469526" width="104.51866404715065" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29180
 availableZ: 7
-component: yes" data-x="-6.8239999999999945" data-y="3.1389999999999887" x="395.23232323232435" y="168.96969696969592" width="107.47474747474757" height="107.47474747474769" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24604
+component: yes" data-x="-7.624" data-y="2.7389999999999888" x="165.42239685658217" y="275.44204322200375" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29181
+availableZ: 0
+component: yes" data-x="-7.68" data-y="3.1949999999999887" x="150.0196463654229" y="150.01964636542215" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29182
+availableZ: 1
+component: yes" data-x="-7.672" data-y="3.1869999999999887" x="152.22003929273114" y="152.22003929273052" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29183
+availableZ: 2
+component: yes" data-x="-7.664" data-y="3.1789999999999887" x="154.42043222003986" y="154.42043222003895" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29184
+availableZ: 3
+component: yes" data-x="-7.656" data-y="3.1709999999999887" x="156.6208251473481" y="156.6208251473475" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29185
+availableZ: 4
+component: yes" data-x="-7.648" data-y="3.1629999999999887" x="158.82121807465705" y="158.82121807465586" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29186
+availableZ: 5
+component: yes" data-x="-7.64" data-y="3.1549999999999887" x="161.02161100196508" y="161.0216110019643" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29187
+availableZ: 6
+component: yes" data-x="-7.632" data-y="3.1469999999999887" x="163.22200392927357" y="163.22200392927283" width="104.51866404715065" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29188
+availableZ: 7
+component: yes" data-x="-7.624" data-y="3.1389999999999887" x="165.42239685658217" y="165.4223968565812" width="104.51866404715088" height="104.51866404715145" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29189
+availableZ: 0
+component: yes" data-x="-7.68" data-y="3.5949999999999886" x="150.0196463654229" y="39.99999999999977" width="104.5186640471511" height="104.51866404715133" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29190
+availableZ: 1
+component: yes" data-x="-7.672" data-y="3.5869999999999886" x="152.22003929273114" y="42.20039292730826" width="104.5186640471511" height="104.51866404715133" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29191
+availableZ: 2
+component: yes" data-x="-7.664" data-y="3.5789999999999886" x="154.42043222003986" y="44.4007858546168" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29192
+availableZ: 3
+component: yes" data-x="-7.656" data-y="3.5709999999999886" x="156.6208251473481" y="46.60117878192517" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29193
+availableZ: 4
+component: yes" data-x="-7.648" data-y="3.5629999999999886" x="158.82121807465705" y="48.801571709233656" width="104.51866404715065" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29194
+availableZ: 5
+component: yes" data-x="-7.64" data-y="3.5549999999999886" x="161.02161100196508" y="51.0019646365422" width="104.5186640471511" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29195
+availableZ: 6
+component: yes" data-x="-7.632" data-y="3.5469999999999886" x="163.22200392927357" y="53.20235756385068" width="104.51866404715065" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29196
+availableZ: 7
+component: yes" data-x="-7.624" data-y="3.5389999999999886" x="165.42239685658217" y="55.40275049115894" width="104.51866404715088" height="104.51866404715133" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="obstacle-pcb_component_2-pcb_component_2:-7.679999999999994:2.394999999999989:0.4:0.4:bottom-7--7.679999999999994-2.394999999999989
+availableZ: 7
+component: yes" data-x="-7.623999999999994" data-y="2.338999999999989" x="165.4223968565833" y="385.46168958742595" width="104.51866404715133" height="104.51866404715145" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29406
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.48" data-y="1.994999999999986" x="492.52525252525254" y="492.5252525252525" width="107.47474747474666" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24605
+component: yes" data-x="-7.28" data-y="1.994999999999986" x="260.03929273084486" y="480.0785854616901" width="104.51866404715156" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29407
+availableZ: 0
+component: yes" data-x="-7.28" data-y="2.3949999999999863" x="260.03929273084486" y="370.05893909626747" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29408
+availableZ: 1
+component: yes" data-x="-7.272" data-y="2.3869999999999862" x="262.23968565815335" y="372.25933202357595" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29409
+availableZ: 2
+component: yes" data-x="-7.264" data-y="2.3789999999999862" x="264.4400785854617" y="374.45972495088444" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29410
+availableZ: 3
+component: yes" data-x="-7.256" data-y="2.3709999999999862" x="266.6404715127701" y="376.6601178781928" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29411
+availableZ: 4
+component: yes" data-x="-7.248" data-y="2.3629999999999862" x="268.8408644400786" y="378.8605108055013" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29412
+availableZ: 5
+component: yes" data-x="-7.24" data-y="2.354999999999986" x="271.04125736738706" y="381.0609037328098" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29413
+availableZ: 6
+component: yes" data-x="-7.232" data-y="2.346999999999986" x="273.24165029469555" y="383.26129666011826" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29414
+availableZ: 7
+component: yes" data-x="-7.224" data-y="2.338999999999986" x="275.44204322200414" y="385.46168958742663" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29415
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.48" data-y="2.3949999999999863" x="492.52525252525254" y="379.39393939393904" width="107.47474747474666" height="107.4747474747478" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24606
+component: yes" data-x="-7.28" data-y="2.794999999999986" x="260.03929273084486" y="260.03929273084526" width="104.51866404715156" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29416
+availableZ: 0
+component: yes" data-x="-7.28" data-y="3.194999999999986" x="260.03929273084486" y="150.01964636542277" width="104.51866404715156" height="104.51866404715156" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29417
+availableZ: 1
+component: yes" data-x="-7.272" data-y="3.186999999999986" x="262.23968565815335" y="152.22003929273131" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29418
+availableZ: 2
+component: yes" data-x="-7.264" data-y="3.178999999999986" x="264.4400785854617" y="154.4204322200397" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29419
+availableZ: 3
+component: yes" data-x="-7.256" data-y="3.170999999999986" x="266.6404715127701" y="156.62082514734817" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29420
+availableZ: 4
+component: yes" data-x="-7.248" data-y="3.162999999999986" x="268.8408644400786" y="158.82121807465666" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29421
+availableZ: 5
+component: yes" data-x="-7.24" data-y="3.154999999999986" x="271.04125736738706" y="161.02161100196503" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29422
+availableZ: 6
+component: yes" data-x="-7.232" data-y="3.146999999999986" x="273.24165029469555" y="163.2220039292735" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29423
+availableZ: 7
+component: yes" data-x="-7.224" data-y="3.138999999999986" x="275.44204322200414" y="165.422396856582" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29424
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.48" data-y="2.794999999999986" x="492.52525252525254" y="266.26262626262604" width="107.47474747474666" height="107.47474747474746" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24607
+component: yes" data-x="-7.28" data-y="3.594999999999986" x="260.03929273084486" y="40.00000000000068" width="104.51866404715156" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29693
+availableZ: 0
+component: yes" data-x="-6.880000000000001" data-y="1.9949999999999881" x="370.0589390962673" y="480.07858546168944" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29694
+availableZ: 1
+component: yes" data-x="-6.872000000000001" data-y="1.986999999999988" x="372.2593320235759" y="482.2789783889979" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29695
+availableZ: 2
+component: yes" data-x="-6.864000000000001" data-y="1.978999999999988" x="374.45972495088415" y="484.4793713163064" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29696
+availableZ: 3
+component: yes" data-x="-6.856000000000001" data-y="1.970999999999988" x="376.66011787819264" y="486.6797642436148" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29697
+availableZ: 4
+component: yes" data-x="-6.848000000000001" data-y="1.962999999999988" x="378.860510805501" y="488.88015717092327" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29698
+availableZ: 5
+component: yes" data-x="-6.840000000000001" data-y="1.954999999999988" x="381.0609037328095" y="491.08055009823175" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29699
+availableZ: 6
+component: yes" data-x="-6.832000000000001" data-y="1.946999999999988" x="383.261296660118" y="493.2809430255401" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29700
+availableZ: 7
+component: yes" data-x="-6.824000000000001" data-y="1.9389999999999883" x="385.4616895874266" y="495.4813359528486" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29701
+availableZ: 0
+component: yes" data-x="-6.880000000000001" data-y="2.3949999999999885" x="370.0589390962673" y="370.058939096267" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29702
+availableZ: 1
+component: yes" data-x="-6.872000000000001" data-y="2.3869999999999885" x="372.2593320235759" y="372.2593320235755" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29703
+availableZ: 2
+component: yes" data-x="-6.864000000000001" data-y="2.3789999999999885" x="374.45972495088415" y="374.45972495088387" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29704
+availableZ: 3
+component: yes" data-x="-6.856000000000001" data-y="2.3709999999999885" x="376.66011787819264" y="376.66011787819235" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29705
+availableZ: 4
+component: yes" data-x="-6.848000000000001" data-y="2.3629999999999884" x="378.860510805501" y="378.86051080550084" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29706
+availableZ: 5
+component: yes" data-x="-6.840000000000001" data-y="2.3549999999999884" x="381.0609037328095" y="381.0609037328092" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29707
+availableZ: 6
+component: yes" data-x="-6.832000000000001" data-y="2.3469999999999884" x="383.261296660118" y="383.2612966601177" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29708
+availableZ: 7
+component: yes" data-x="-6.824000000000001" data-y="2.3389999999999884" x="385.4616895874266" y="385.4616895874262" width="104.51866404715088" height="104.51866404715122" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29709
+availableZ: 0
+component: yes" data-x="-6.880000000000001" data-y="2.7949999999999884" x="370.0589390962673" y="260.0392927308447" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29710
+availableZ: 1
+component: yes" data-x="-6.872000000000001" data-y="2.7869999999999884" x="372.2593320235759" y="262.2396856581532" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29711
+availableZ: 2
+component: yes" data-x="-6.864000000000001" data-y="2.7789999999999884" x="374.45972495088415" y="264.44007858546155" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29712
+availableZ: 3
+component: yes" data-x="-6.856000000000001" data-y="2.7709999999999884" x="376.66011787819264" y="266.64047151277003" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29713
+availableZ: 4
+component: yes" data-x="-6.848000000000001" data-y="2.7629999999999884" x="378.860510805501" y="268.8408644400785" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29714
+availableZ: 5
+component: yes" data-x="-6.840000000000001" data-y="2.7549999999999883" x="381.0609037328095" y="271.0412573673869" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29715
+availableZ: 6
+component: yes" data-x="-6.832000000000001" data-y="2.7469999999999883" x="383.261296660118" y="273.2416502946954" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29716
+availableZ: 7
+component: yes" data-x="-6.824000000000001" data-y="2.7389999999999883" x="385.4616895874266" y="275.44204322200386" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29717
+availableZ: 0
+component: yes" data-x="-6.880000000000001" data-y="3.1949999999999887" x="370.0589390962673" y="150.01964636542215" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29718
+availableZ: 1
+component: yes" data-x="-6.872000000000001" data-y="3.1869999999999887" x="372.2593320235759" y="152.22003929273052" width="104.51866404715088" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29719
+availableZ: 2
+component: yes" data-x="-6.864000000000001" data-y="3.1789999999999887" x="374.45972495088415" y="154.42043222003895" width="104.51866404715088" height="104.51866404715156" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29720
+availableZ: 3
+component: yes" data-x="-6.856000000000001" data-y="3.1709999999999887" x="376.66011787819264" y="156.6208251473475" width="104.51866404715088" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29721
+availableZ: 4
+component: yes" data-x="-6.848000000000001" data-y="3.1629999999999887" x="378.860510805501" y="158.82121807465586" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29722
+availableZ: 5
+component: yes" data-x="-6.840000000000001" data-y="3.1549999999999887" x="381.0609037328095" y="161.0216110019643" width="104.5186640471511" height="104.51866404715156" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29723
+availableZ: 6
+component: yes" data-x="-6.832000000000001" data-y="3.1469999999999887" x="383.261296660118" y="163.22200392927283" width="104.5186640471511" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29724
+availableZ: 0
+component: yes" data-x="-6.880000000000001" data-y="3.5949999999999886" x="370.0589390962673" y="39.99999999999977" width="104.5186640471511" height="104.51866404715133" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29725
+availableZ: 1
+component: yes" data-x="-6.872000000000001" data-y="3.5869999999999886" x="372.2593320235759" y="42.20039292730826" width="104.51866404715088" height="104.51866404715133" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29726
+availableZ: 2
+component: yes" data-x="-6.864000000000001" data-y="3.5789999999999886" x="374.45972495088415" y="44.4007858546168" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29727
+availableZ: 3
+component: yes" data-x="-6.856000000000001" data-y="3.5709999999999886" x="376.66011787819264" y="46.60117878192517" width="104.51866404715088" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29728
+availableZ: 4
+component: yes" data-x="-6.848000000000001" data-y="3.5629999999999886" x="378.860510805501" y="48.801571709233656" width="104.5186640471511" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29729
+availableZ: 5
+component: yes" data-x="-6.840000000000001" data-y="3.5549999999999886" x="381.0609037328095" y="51.0019646365422" width="104.5186640471511" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29730
+availableZ: 6
+component: yes" data-x="-6.832000000000001" data-y="3.5469999999999886" x="383.261296660118" y="53.20235756385068" width="104.5186640471511" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29731
+availableZ: 7
+component: yes" data-x="-6.824000000000001" data-y="3.5389999999999886" x="385.4616895874266" y="55.40275049115894" width="104.51866404715088" height="104.51866404715133" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="obstacle-pcb_component_2-pcb_component_2:-6.879999999999995:3.1949999999999887:0.4:0.4:bottom-7--6.879999999999995-3.1949999999999887
+availableZ: 7
+component: yes" data-x="-6.8239999999999945" data-y="3.1389999999999887" x="385.4616895874278" y="165.4223968565812" width="104.51866404715156" height="104.51866404715145" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29947
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.48" data-y="3.194999999999986" x="492.52525252525254" y="153.13131313131288" width="107.47474747474666" height="107.47474747474769" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="topology_merge_24608
+component: yes" data-x="-6.48" data-y="1.994999999999986" x="480.0785854616895" y="480.0785854616901" width="104.51866404715156" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29948
+availableZ: 0
+component: yes" data-x="-6.48" data-y="2.3949999999999863" x="480.0785854616895" y="370.05893909626747" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29949
+availableZ: 1
+component: yes" data-x="-6.472" data-y="2.3869999999999862" x="482.278978388998" y="372.25933202357595" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29950
+availableZ: 2
+component: yes" data-x="-6.464" data-y="2.3789999999999862" x="484.4793713163066" y="374.45972495088444" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29951
+availableZ: 3
+component: yes" data-x="-6.456" data-y="2.3709999999999862" x="486.67976424361484" y="376.6601178781928" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29952
+availableZ: 4
+component: yes" data-x="-6.448" data-y="2.3629999999999862" x="488.8801571709233" y="378.8605108055013" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29953
+availableZ: 5
+component: yes" data-x="-6.44" data-y="2.354999999999986" x="491.0805500982317" y="381.0609037328098" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29954
+availableZ: 6
+component: yes" data-x="-6.432" data-y="2.346999999999986" x="493.2809430255402" y="383.26129666011826" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29955
+availableZ: 7
+component: yes" data-x="-6.424" data-y="2.338999999999986" x="495.48133595284867" y="385.46168958742663" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29956
 availableZ: 0,1,2,3,4,5,6,7
-component: yes" data-x="-6.48" data-y="3.594999999999986" x="492.52525252525254" y="39.99999999999977" width="107.47474747474666" height="107.47474747474757" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="bottom" data-x="-7.679999999999994" data-y="3.1949999999999887" x="150.30303030303162" y="150.3030303030293" width="113.13131313131316" height="113.13131313131328" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="bottom
-source_trace_56" data-x="-7.679999999999994" data-y="2.394999999999989" x="150.30303030303162" y="376.5656565656555" width="113.13131313131316" height="113.13131313131328" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="bottom
-source_trace_70" data-x="-6.879999999999995" data-y="3.1949999999999887" x="376.5656565656577" y="150.3030303030293" width="113.13131313131316" height="113.13131313131328" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.0035357142857142853"/></g><g><rect data-type="rect" data-label="bottom" data-x="-6.879999999999995" data-y="2.3949999999999885" x="376.5656565656577" y="376.56565656565573" width="113.13131313131316" height="113.13131313131328" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.0035357142857142853"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+component: yes" data-x="-6.48" data-y="2.794999999999986" x="480.0785854616895" y="260.03929273084526" width="104.51866404715156" height="104.51866404715122" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29957
+availableZ: 0
+component: yes" data-x="-6.48" data-y="3.194999999999986" x="480.0785854616895" y="150.01964636542277" width="104.51866404715156" height="104.51866404715156" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29958
+availableZ: 1
+component: yes" data-x="-6.472" data-y="3.186999999999986" x="482.278978388998" y="152.22003929273131" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29959
+availableZ: 2
+component: yes" data-x="-6.464" data-y="3.178999999999986" x="484.4793713163066" y="154.4204322200397" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29960
+availableZ: 3
+component: yes" data-x="-6.456" data-y="3.170999999999986" x="486.67976424361484" y="156.62082514734817" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29961
+availableZ: 4
+component: yes" data-x="-6.448" data-y="3.162999999999986" x="488.8801571709233" y="158.82121807465666" width="104.51866404715133" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29962
+availableZ: 5
+component: yes" data-x="-6.44" data-y="3.154999999999986" x="491.0805500982317" y="161.02161100196503" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29963
+availableZ: 6
+component: yes" data-x="-6.432" data-y="3.146999999999986" x="493.2809430255402" y="163.2220039292735" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29964
+availableZ: 7
+component: yes" data-x="-6.424" data-y="3.138999999999986" x="495.48133595284867" y="165.422396856582" width="104.51866404715156" height="104.51866404715145" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="topology_merge_29965
+availableZ: 0,1,2,3,4,5,6,7
+component: yes" data-x="-6.48" data-y="3.594999999999986" x="480.0785854616895" y="40.00000000000068" width="104.51866404715156" height="104.5186640471511" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="bottom" data-x="-7.679999999999994" data-y="3.1949999999999887" x="147.2691552062886" y="147.2691552062866" width="110.01964636542243" height="110.01964636542255" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="bottom
+source_trace_56" data-x="-7.679999999999994" data-y="2.394999999999989" x="147.2691552062886" y="367.3084479371313" width="110.01964636542243" height="110.01964636542243" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="bottom
+source_trace_70" data-x="-6.879999999999995" data-y="3.1949999999999887" x="367.3084479371332" y="147.2691552062866" width="110.01964636542243" height="110.01964636542255" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.003635714285714287"/></g><g><rect data-type="rect" data-label="bottom" data-x="-6.879999999999995" data-y="2.3949999999999885" x="367.3084479371332" y="367.3084479371314" width="110.01964636542243" height="110.01964636542243" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.003635714285714287"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
               document.currentScript.parentElement.addEventListener('mousemove', (e) => {
                 const svg = e.currentTarget;
                 const rect = svg.getBoundingClientRect();
@@ -128,7 +296,7 @@ source_trace_70" data-x="-6.879999999999995" data-y="3.1949999999999887" x="376.
                 v.setAttribute('y2', '640');
 
                 // Calculate real coordinates using inverse transformation
-                const matrix = {"a":282.82828282828285,"c":0,"e":2378.989898989899,"b":0,"d":-282.82828282828285,"f":1110.5050505050465};
+                const matrix = {"a":275.0491159135559,"c":0,"e":2314.6561886051077,"b":0,"d":-275.0491159135559,"f":1081.0609037328059};
                 // Manually invert and apply the affine transform
                 // Since we only use translate and scale, we can directly compute:
                 // x' = (x - tx) / sx
