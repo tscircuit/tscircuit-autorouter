@@ -49,7 +49,10 @@ test("captures H616 SVREF routing beside preloaded DDR copper", async (): Promis
   // completed PCB, and missing connections are never filled in for the SVG.
   const snapshots = getH616SvrefCircuitSnapshots({
     circuitJson: fixture.circuitJson,
-    pipeline,
+    originalSrj: pipeline.originalSrj,
+    srjWithPointPairs: pipeline.srjWithPointPairs!,
+    preloadedRoutes: pipeline.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+    hdRoutes: pipeline.highDensityRouteSolver!.routes,
     svrefTrace,
     regionalNode,
   })

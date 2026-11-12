@@ -94,7 +94,10 @@ test("connects H616 C3 to U2 SVREF on the full reference PCB", async (): Promise
   expect(connectsBothTerminals).toBeTrue()
   const snapshots = getH616SvrefCircuitSnapshots({
     circuitJson: fixture.circuitJson,
-    pipeline,
+    originalSrj: pipeline.originalSrj,
+    srjWithPointPairs: pipeline.srjWithPointPairs!,
+    preloadedRoutes: pipeline.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+    hdRoutes: pipeline.highDensityRouteSolver!.routes,
     svrefTrace,
   })
   await expect(snapshots.board).toMatchSvgSnapshot(import.meta.path, {
