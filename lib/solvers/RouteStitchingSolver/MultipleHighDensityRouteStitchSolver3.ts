@@ -150,6 +150,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   constructor(params: {
     connections: SimpleRouteConnection[]
     hdRoutes: HighDensityIntraNodeRoute[]
+    otherHdRoutes?: HighDensityIntraNodeRoute[]
+    minClearance?: number
     colorMap?: Record<string, string>
     layerCount: number
     defaultViaDiameter?: number
@@ -190,7 +192,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
-      hdRoutes: canonicalHdRoutes,
+      hdRoutes: [...canonicalHdRoutes, ...(params.otherHdRoutes ?? [])],
+      minClearance: params.minClearance,
     })
 
     const firstRoute = canonicalHdRoutes[0]

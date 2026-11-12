@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { AnyCircuitElement } from "circuit-json"
@@ -12,7 +13,7 @@ import {
 } from "tests/fixtures/getH616TerminalStitchCircuit"
 import { getH616TerminalStitchPcbSvg } from "tests/fixtures/getH616TerminalStitchPcbSvg"
 
-test("reproduces H616 SVREF stitching through an existing SA1 via", async (): Promise<void> => {
+test("keeps H616 SVREF stitches clear of the existing SA1 via", async (): Promise<void> => {
   const board = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -66,7 +67,7 @@ test("reproduces H616 SVREF stitching through an existing SA1 via", async (): Pr
         traceThickness: gap.traceThickness,
       }),
   )
-  expect(blockedGaps).toHaveLength(1)
+  expect(blockedGaps).toHaveLength(0)
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
@@ -113,6 +114,35 @@ test("reproduces H616 SVREF stitching through an existing SA1 via", async (): Pr
       element.type === "source_trace" && element.display_name === "/DRAM/SVREF",
   )!
   if (svref.type !== "source_trace") throw new Error("Missing native SVREF net")
+  const viaRoute = otherHdRoutes.find((route) => route.vias.includes(via))
+  if (!viaRoute) throw new Error("Missing SA1 via copper dimensions")
+  const svrefConnections = new Set(
+    fixture.input.connections
+      .filter((connection) =>
+        connection.__rootConnectionNames?.some((netId) =>
+          svref.connected_source_net_ids?.includes(netId),
+        ),
+      )
+      .map((connection) => connection.name),
+  )
+  const svrefRoutes = solver.mergedHdRoutes.filter((route) =>
+    svrefConnections.has(route.connectionName),
+  )
+  expect(svrefRoutes.length).toBeGreaterThan(0)
+  let minimumCopperGap = Infinity
+  for (const route of svrefRoutes) {
+    for (let index = 1; index < route.route.length; index++) {
+      const start = route.route[index - 1]!
+      const end = route.route[index]!
+      if (start.z !== end.z) continue
+      const copperGap =
+        pointToSegmentDistance(via, start, end) -
+        viaRoute.viaDiameter / 2 -
+        (start.traceThickness ?? route.traceThickness) / 2
+      minimumCopperGap = Math.min(minimumCopperGap, copperGap)
+    }
+  }
+  expect(minimumCopperGap).toBeGreaterThanOrEqual(0)
   const focusedNetIds = new Set([sa1.source_trace_id, svref.source_trace_id])
   const focusedTraceIds = new Set(
     circuit.flatMap((element) =>
