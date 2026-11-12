@@ -2,6 +2,7 @@ import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import type { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
@@ -9,10 +10,12 @@ export const getH616SvrefCircuitSnapshots = ({
   circuitJson,
   pipeline,
   svrefTrace,
+  regionalNode,
 }: {
   circuitJson: AnyCircuitElement[]
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph
   svrefTrace: SourceTrace
+  regionalNode?: NodeWithPortPoints
 }): { board: string; svref: string; srj: SimpleRouteJson } => {
   const highDensity = pipeline.highDensityRouteSolver!
   const preloadedRoutes = highDensity.getUpdatedFixedHdRoutes()
@@ -135,6 +138,26 @@ export const getH616SvrefCircuitSnapshots = ({
         fontSize: 0.5,
         color: "#334155",
         anchorSide: "bottom_center",
+      })
+    }
+  }
+  if (regionalNode) {
+    for (const graphics of [boardGraphics, ddrGraphics]) {
+      graphics.rects!.push({
+        center: regionalNode.center,
+        width: regionalNode.width,
+        height: regionalNode.height,
+        fill: "transparent",
+        stroke: "#0f766e",
+      })
+      graphics.texts ??= []
+      graphics.texts.push({
+        x: regionalNode.center.x - regionalNode.width / 2,
+        y: regionalNode.center.y + regionalNode.height / 2 + 0.25,
+        text: "SVREF repair region",
+        fontSize: 0.25,
+        color: "#0f766e",
+        anchorSide: "bottom_left",
       })
     }
   }
