@@ -72,22 +72,26 @@ export const getRoundPadClearanceSnapshot = ({
   witness,
   minClearance,
   viaHoleDiameter,
+  useCircularPadEdge = witness.accepted,
+  drawBoundingBox = true,
 }: {
   witness: ClearanceWitness
   minClearance: number
   viaHoleDiameter: number
+  useCircularPadEdge?: boolean
+  drawBoundingBox?: boolean
 }): string => {
   const { pad, via, accepted, circularGap, rectangleGap } = witness
   const color = accepted ? "#166534" : "#b91c1c"
-  const measurementLabel = accepted ? "Circular pad" : "Bounding box"
-  const measuredGap = accepted ? circularGap : rectangleGap
+  const measurementLabel = useCircularPadEdge ? "Circular pad" : "Bounding box"
+  const measuredGap = useCircularPadEdge ? circularGap : rectangleGap
   const padRadius = pad.width / 2
   const viaRadius = via.diameter / 2
   const centerDistance = Math.hypot(
     via.center.x - pad.center.x,
     via.center.y - pad.center.y,
   )
-  const padEdge = accepted
+  const padEdge = useCircularPadEdge
     ? {
         x:
           pad.center.x +
@@ -120,7 +124,9 @@ export const getRoundPadClearanceSnapshot = ({
   }
   const fontSize = pad.width / 7
   const minX = pad.center.x - padRadius
-  const maxY = via.center.y + viaRadius
+  const maxY = drawBoundingBox
+    ? via.center.y + viaRadius
+    : Math.max(pad.center.y + padRadius, via.center.y + viaRadius)
   return getSvgFromGraphicsObject(
     {
       circles: [
@@ -144,18 +150,22 @@ export const getRoundPadClearanceSnapshot = ({
         },
       ],
       lines: [
-        {
-          points: [
-            { x: pad.center.x - padRadius, y: pad.center.y - padRadius },
-            { x: pad.center.x + padRadius, y: pad.center.y - padRadius },
-            { x: pad.center.x + padRadius, y: pad.center.y + padRadius },
-            { x: pad.center.x - padRadius, y: pad.center.y + padRadius },
-            { x: pad.center.x - padRadius, y: pad.center.y - padRadius },
-          ],
-          strokeColor: "#64748b",
-          strokeWidth: pad.width / 100,
-          strokeDash: [pad.width / 30, pad.width / 30],
-        },
+        ...(drawBoundingBox
+          ? [
+              {
+                points: [
+                  { x: pad.center.x - padRadius, y: pad.center.y - padRadius },
+                  { x: pad.center.x + padRadius, y: pad.center.y - padRadius },
+                  { x: pad.center.x + padRadius, y: pad.center.y + padRadius },
+                  { x: pad.center.x - padRadius, y: pad.center.y + padRadius },
+                  { x: pad.center.x - padRadius, y: pad.center.y - padRadius },
+                ],
+                strokeColor: "#64748b",
+                strokeWidth: pad.width / 100,
+                strokeDash: [pad.width / 30, pad.width / 30],
+              },
+            ]
+          : []),
         {
           points: [padEdge, viaEdge],
           strokeColor: color,

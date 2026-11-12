@@ -1,50 +1,55 @@
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
-import type { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { SimpleRouteJson } from "lib/types"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 export const getH616SvrefCircuitSnapshots = ({
   circuitJson,
-  pipeline,
+  originalSrj,
+  srjWithPointPairs,
+  preloadedRoutes,
+  hdRoutes,
   svrefTrace,
   regionalNode,
 }: {
   circuitJson: AnyCircuitElement[]
-  pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph
+  originalSrj: SimpleRouteJson
+  srjWithPointPairs: SimpleRouteJson
+  preloadedRoutes: PreloadedHighDensityRoute[]
+  hdRoutes: HighDensityRoute[]
   svrefTrace: SourceTrace
   regionalNode?: NodeWithPortPoints
 }): { board: string; svref: string; srj: SimpleRouteJson } => {
-  const highDensity = pipeline.highDensityRouteSolver!
-  const preloadedRoutes = highDensity.getUpdatedFixedHdRoutes()
   const preloadedNetByRoute = new Map(
     preloadedRoutes.map((route) => [
       route.connectionName,
-      pipeline.originalSrj.traces![route.preloadedTraceIndex]!.connection_name,
+      originalSrj.traces![route.preloadedTraceIndex]!.connection_name,
     ]),
   )
   // Render the accepted routing-stage segments, including updated DDR copper.
   // The complete board is not solved yet; no missing segments are filled in.
   const srj: SimpleRouteJson = {
-    ...pipeline.srjWithPointPairs!,
-    traces: [...preloadedRoutes, ...highDensity.routes].map((route, index) => ({
+    ...srjWithPointPairs,
+    traces: [...preloadedRoutes, ...hdRoutes].map((route, index) => ({
       type: "pcb_trace",
       pcb_trace_id: `${route.connectionName}_${index}`,
       connection_name:
         preloadedNetByRoute.get(route.connectionName) ?? route.connectionName,
-      route: convertHdRouteToSimplifiedRoute(
-        route,
-        pipeline.originalSrj.layerCount,
-        { defaultViaHoleDiameter: pipeline.originalSrj.minViaHoleDiameter },
-      ),
+      route: convertHdRouteToSimplifiedRoute(route, originalSrj.layerCount, {
+        defaultViaHoleDiameter: originalSrj.minViaHoleDiameter,
+      }),
     })),
   }
   const boardGraphics: GraphicsObject = convertSrjToGraphicsObject(srj)
   boardGraphics.points = []
   const ddrNetNames = new Set(
-    pipeline.originalSrj.traces!.map((trace) => trace.connection_name),
+    originalSrj.traces!.map((trace) => trace.connection_name),
   )
   const sourcePortIds = new Set(svrefTrace.connected_source_port_ids)
   for (const element of circuitJson) {
