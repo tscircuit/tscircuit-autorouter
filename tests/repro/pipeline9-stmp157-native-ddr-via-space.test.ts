@@ -45,10 +45,7 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
   if (solver.solved) {
     output = {
       ...reference,
-      traces: [
-        ...reference.traces!,
-        ...solver.getOutputSimplifiedPcbTraces(),
-      ],
+      traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
     }
     status = "Remaining DDR routing completed"
   }

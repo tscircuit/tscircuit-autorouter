@@ -26,9 +26,9 @@ test("generates the native STMP157 DDR component mesh", async (): Promise<void> 
   )
   const detector = new ComponentDetectionSolver({ inputSrj: input })
   detector.solve()
-  const cpu = detector.getOutput().find(
-    (component) => component.componentId === "pcb_component_2",
-  )
+  const cpu = detector
+    .getOutput()
+    .find((component) => component.componentId === "pcb_component_2")
   if (!cpu) throw new Error("STMP157 CPU component was not detected")
   const topology = new BgaTopologyGeneratorSolver({
     inputSrj: input,
