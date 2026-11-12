@@ -37,7 +37,7 @@ test("captures H616 SVREF routing beside preloaded DDR copper", async (): Promis
       }
       pipeline.step()
     }
-  }).toThrow('could not promote fixed route "source_net_210_fixed_0_13"')
+  }).not.toThrow()
   expect(pipeline.solved).toBeFalse()
   expect(pipeline.failed).toBeTrue()
   const svrefTrace = fixture.circuitJson.find(
