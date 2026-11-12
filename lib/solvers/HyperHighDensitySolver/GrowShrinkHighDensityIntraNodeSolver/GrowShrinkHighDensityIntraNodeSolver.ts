@@ -20,6 +20,7 @@ export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
+    initialGrowthAttempts?: number
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
@@ -114,6 +115,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   growthAttempts = 0
   maxGrowthAttempts: number
   minimumGrowthAttempts: number
+  unroutablePrefixGrowthAttempts = 0
+  private skippedPrefixEnd = 0
+  private replayingSkippedPrefix = false
+  private hasValidatorRejectionSoFar = false
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -171,6 +176,19 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia,
       Math.max(growthAttemptsToFitVia, 0, growthAttemptsToFitPorts - 1),
     )
+    const requestedInitialGrowth = Math.max(
+      0,
+      Math.min(
+        this.maxGrowthAttempts,
+        Math.trunc(params.initialGrowthAttempts ?? 0),
+      ),
+    )
+    if (requestedInitialGrowth > 0) {
+      this.growthAttempts = requestedInitialGrowth
+      this.scaleFactor = 2 ** this.growthAttempts
+      this.skippedPrefixEnd = requestedInitialGrowth
+      this.unroutablePrefixGrowthAttempts = requestedInitialGrowth
+    }
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -201,8 +219,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
+    const {
+      growShrinkSolutionValidator: _,
+      initialGrowthAttempts: __,
+      ...portfolioParams
+    } = this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       priorityCoordinateScale:
@@ -236,6 +257,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams.growShrinkSolutionValidator &&
       !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
     ) {
+      this.hasValidatorRejectionSoFar = true
       solver.solved = false
       solver.failed = true
       solver.error = "High-density scale solution rejected by validator"
@@ -255,6 +277,30 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
         (this.maxGrowthAttempts + 1),
     )
+  }
+
+  private finishExhaustedGrowthAttempts() {
+    if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
+      this.solvedRoutes = createInvalidDirectConnectionRoutes(
+        this.nodeWithPortPoints,
+        this.constructorParams.traceWidth ?? 0.15,
+        this.constructorParams.viaDiameter ?? 0.3,
+      )
+      this.solved = true
+      this.failed = false
+      this.progress = 1
+      this.stats = {
+        ...this.stats,
+        invalidGeometryFallback: true,
+        reason: "growth attempts exhausted",
+        lastError: this.error,
+      }
+      this.error = null
+      return
+    }
+
+    this.failed = true
+    this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
   }
 
   _step() {
@@ -279,35 +325,46 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
 
-    if (this.growthAttempts >= this.maxGrowthAttempts) {
-      if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
-        this.solvedRoutes = createInvalidDirectConnectionRoutes(
-          this.nodeWithPortPoints,
-          this.constructorParams.traceWidth ?? 0.15,
-          this.constructorParams.viaDiameter ?? 0.3,
-        )
-        this.solved = true
-        this.failed = false
-        this.progress = 1
-        this.stats = {
-          ...this.stats,
-          invalidGeometryFallback: true,
-          reason: "growth attempts exhausted",
-          lastError: this.error,
-        }
-        this.error = null
+    if (this.replayingSkippedPrefix) {
+      const nextReplayAttempt = Math.max(
+        this.growthAttempts + 1,
+        this.minimumGrowthAttempts,
+      )
+      if (nextReplayAttempt >= this.skippedPrefixEnd) {
+        this.finishExhaustedGrowthAttempts()
         return
       }
-
-      this.failed = true
-      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
+      this.growthAttempts = nextReplayAttempt
+      this.scaleFactor = 2 ** this.growthAttempts
       return
     }
 
-    this.growthAttempts = Math.max(
+    const nextGrowthAttempt = Math.max(
       this.growthAttempts + 1,
       this.minimumGrowthAttempts,
     )
+    if (!this.hasValidatorRejectionSoFar) {
+      this.unroutablePrefixGrowthAttempts = Math.min(
+        this.maxGrowthAttempts,
+        nextGrowthAttempt,
+      )
+    }
+
+    if (this.growthAttempts >= this.maxGrowthAttempts) {
+      if (this.skippedPrefixEnd > 0) {
+        const firstReplayAttempt = Math.max(0, this.minimumGrowthAttempts)
+        if (firstReplayAttempt < this.skippedPrefixEnd) {
+          this.replayingSkippedPrefix = true
+          this.growthAttempts = firstReplayAttempt
+          this.scaleFactor = 2 ** this.growthAttempts
+          return
+        }
+      }
+      this.finishExhaustedGrowthAttempts()
+      return
+    }
+
+    this.growthAttempts = nextGrowthAttempt
     this.scaleFactor = 2 ** this.growthAttempts
   }
 

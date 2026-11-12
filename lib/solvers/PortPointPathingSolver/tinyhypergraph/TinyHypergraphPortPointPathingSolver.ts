@@ -1,9 +1,8 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
-import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
-import { BaseSolver } from "lib/solvers/BaseSolver"
+import type { GraphicsObject } from "graphics-debug"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -11,8 +10,8 @@ import type {
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   type CapacityMeshNodeId,
-  getConnectionPointLayers,
   type SimpleRouteConnection,
+  getConnectionPointLayers,
 } from "lib/types"
 import type {
   NodeWithPortPoints,
@@ -23,15 +22,17 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
-  orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  type TinyHyperGraphSectionPipelineInput,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
-  TinyHyperGraphSolver,
-  type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  TinyHyperGraphSolver,
   type TinyHyperGraphSolverOptions,
+  orderConnectionsByNetCardinality,
 } from "tiny-hypergraph/lib/index"
+import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
+import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
@@ -39,13 +40,12 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
-  getSerializedPreloadedTraceStats,
-  hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
   type PreloadedTraceConnectionMetadata,
   type PreloadedTraceSectionMetadata,
+  getSerializedPreloadedTraceStats,
+  hasPreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
@@ -1153,6 +1153,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
+          STATIC_REACHABILITY_PRECHECK_MAX_HOPS: Math.max(
+            16,
+            serializedGraph.ports.length * 2 + 1,
+          ),
         },
       },
     )

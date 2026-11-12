@@ -1,13 +1,12 @@
-import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
-  defaultB01Params,
-  HighDensitySolverB01,
+  type NodeWithPortPoints as B01NodeWithPortPoints,
   type HighDensityObstacle,
   type HighDensityRectObstacle,
   type HighDensityRouteObstacle,
-  type NodeWithPortPoints as B01NodeWithPortPoints,
+  HighDensitySolverB01,
+  defaultB01Params,
 } from "@tscircuit/high-density-b01"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -21,6 +20,8 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
+import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -29,11 +30,10 @@ import {
   getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
-  createRegionalFallbackProblem,
   type FixedRouteSection,
+  createRegionalFallbackProblem,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
-import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -70,6 +70,73 @@ type NodeBounds = {
   maxX: number
   minY: number
   maxY: number
+}
+
+const SPATIAL_INDEX_CELL_SIZE_MM = 4
+
+const getCellCoordinate = (value: number): number =>
+  Math.floor(value / SPATIAL_INDEX_CELL_SIZE_MM)
+
+const getCellKey = (cellX: number, cellY: number): string => `${cellX},${cellY}`
+
+const getBoundsCellKeys = (bounds: NodeBounds): string[] => {
+  const minCellX = getCellCoordinate(bounds.minX)
+  const maxCellX = getCellCoordinate(bounds.maxX)
+  const minCellY = getCellCoordinate(bounds.minY)
+  const maxCellY = getCellCoordinate(bounds.maxY)
+  const keys: string[] = []
+  for (let cellX = minCellX; cellX <= maxCellX; cellX++) {
+    for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
+      keys.push(getCellKey(cellX, cellY))
+    }
+  }
+  return keys
+}
+
+const getFixedRouteCopperBounds = (
+  route: PreloadedHighDensityRoute,
+): NodeBounds | null => {
+  if (route.route.length === 0) return null
+  const radius = Math.max(route.traceThickness, route.viaDiameter) / 2
+  let minX = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  for (const point of route.route) {
+    minX = Math.min(minX, point.x - radius)
+    maxX = Math.max(maxX, point.x + radius)
+    minY = Math.min(minY, point.y - radius)
+    maxY = Math.max(maxY, point.y + radius)
+  }
+  for (const via of route.vias) {
+    minX = Math.min(minX, via.x - radius)
+    maxX = Math.max(maxX, via.x + radius)
+    minY = Math.min(minY, via.y - radius)
+    maxY = Math.max(maxY, via.y + radius)
+  }
+  return { minX, maxX, minY, maxY }
+}
+
+const getObstacleEnvelopeBounds = (obstacle: Obstacle): NodeBounds => {
+  const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cos = Math.abs(Math.cos(rotationRadians))
+  const sin = Math.abs(Math.sin(rotationRadians))
+  const rawHalfWidth = obstacle.width / 2
+  const rawHalfHeight = obstacle.height / 2
+  const halfWidth = Math.max(
+    rawHalfWidth,
+    rawHalfWidth * cos + rawHalfHeight * sin,
+  )
+  const halfHeight = Math.max(
+    rawHalfHeight,
+    rawHalfWidth * sin + rawHalfHeight * cos,
+  )
+  return {
+    minX: obstacle.center.x - halfWidth,
+    maxX: obstacle.center.x + halfWidth,
+    minY: obstacle.center.y - halfHeight,
+    maxY: obstacle.center.y + halfHeight,
+  }
 }
 
 const getNodeBounds = (
@@ -430,12 +497,23 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackPromotedFixedRouteConnectionNames = new Set<string>()
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
+  private activeFallbackNode: NodeWithPortPoints | null = null
+  private activeFallbackPortCount = 0
+  private activeFallbackUnroutableGrowthAttempts = 0
 
   private asyncRunning = false
+  private readonly hasFixedFlaggedRoute: boolean
+  private readonly fixedRouteIndexByConnectionName = new Map<string, number>()
+  private readonly fixedRouteCellIndexes = new Map<string, Set<number>>()
+  private readonly fixedRouteCellKeysByIndex = new Map<number, string[]>()
+  private readonly obstacleCellIndexes = new Map<string, number[]>()
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
+    this.hasFixedFlaggedRoute = params.fixedHdRoutes.some(
+      (route) => route.isFixed === true,
+    )
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
@@ -456,6 +534,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    for (const [routeIndex, route] of this.fixedHdRoutes.entries()) {
+      this.fixedRouteIndexByConnectionName.set(route.connectionName, routeIndex)
+      this.indexFixedRouteAt(routeIndex, route)
+    }
+    for (const [obstacleIndex, obstacle] of this.obstacles.entries()) {
+      for (const cellKey of getBoundsCellKeys(
+        getObstacleEnvelopeBounds(obstacle),
+      )) {
+        const bucket = this.obstacleCellIndexes.get(cellKey)
+        if (bucket) {
+          bucket.push(obstacleIndex)
+        } else {
+          this.obstacleCellIndexes.set(cellKey, [obstacleIndex])
+        }
+      }
+    }
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -498,7 +592,19 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       }
       if (this.fixedHdRoutes.length > 0) {
-        this.solveUntilIteration(stopAtIteration)
+        this.asyncRunning = true
+        let lastYield = performance.now()
+        while (
+          !this.solved &&
+          !this.failed &&
+          this.iterations < stopAtIteration
+        ) {
+          this.step()
+          if (performance.now() - lastYield >= 16) {
+            await new Promise<void>((resolve) => setTimeout(resolve, 0))
+            lastYield = performance.now()
+          }
+        }
         return
       }
       while (
@@ -640,6 +746,98 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
+  private indexFixedRouteAt(
+    routeIndex: number,
+    route: PreloadedHighDensityRoute | null,
+  ): void {
+    const previousKeys = this.fixedRouteCellKeysByIndex.get(routeIndex)
+    if (previousKeys) {
+      for (const cellKey of previousKeys) {
+        const bucket = this.fixedRouteCellIndexes.get(cellKey)
+        if (!bucket) continue
+        bucket.delete(routeIndex)
+        if (bucket.size === 0) this.fixedRouteCellIndexes.delete(cellKey)
+      }
+      this.fixedRouteCellKeysByIndex.delete(routeIndex)
+    }
+    if (!route) return
+    const bounds = getFixedRouteCopperBounds(route)
+    if (!bounds) return
+    const keys = getBoundsCellKeys(bounds)
+    this.fixedRouteCellKeysByIndex.set(routeIndex, keys)
+    for (const cellKey of keys) {
+      let bucket = this.fixedRouteCellIndexes.get(cellKey)
+      if (!bucket) {
+        bucket = new Set<number>()
+        this.fixedRouteCellIndexes.set(cellKey, bucket)
+      }
+      bucket.add(routeIndex)
+    }
+  }
+
+  private reindexFixedRouteByConnectionName(connectionName: string): void {
+    const routeIndex = this.fixedRouteIndexByConnectionName.get(connectionName)
+    if (routeIndex === undefined) return
+    if (this.removedFixedRouteConnectionNames.has(connectionName)) {
+      this.indexFixedRouteAt(routeIndex, null)
+      return
+    }
+    const currentRoute =
+      this.fixedRouteReplacements.get(connectionName) ??
+      this.fixedHdRoutes[routeIndex]!
+    this.indexFixedRouteAt(routeIndex, currentRoute)
+  }
+
+  private getCandidateFixedHdRoutes(
+    bounds: NodeBounds,
+    extraConnectionNames?: ReadonlySet<string>,
+  ): PreloadedHighDensityRoute[] {
+    if (this.fixedHdRoutes.length === 0) return []
+    const candidateIndexes = new Set<number>()
+    for (const cellKey of getBoundsCellKeys(bounds)) {
+      const bucket = this.fixedRouteCellIndexes.get(cellKey)
+      if (!bucket) continue
+      for (const routeIndex of bucket) {
+        candidateIndexes.add(routeIndex)
+      }
+    }
+    if (extraConnectionNames) {
+      for (const connectionName of extraConnectionNames) {
+        const routeIndex =
+          this.fixedRouteIndexByConnectionName.get(connectionName)
+        if (routeIndex !== undefined) candidateIndexes.add(routeIndex)
+      }
+    }
+    if (candidateIndexes.size === 0) return []
+    return [...candidateIndexes]
+      .sort((left, right) => left - right)
+      .flatMap((routeIndex) => {
+        const baseRoute = this.fixedHdRoutes[routeIndex]!
+        if (this.removedFixedRouteConnectionNames.has(baseRoute.connectionName))
+          return []
+        return [
+          this.fixedRouteReplacements.get(baseRoute.connectionName) ??
+            baseRoute,
+        ]
+      })
+  }
+
+  private getCandidateBoardObstacles(bounds: NodeBounds): Obstacle[] {
+    if (this.obstacles.length === 0) return []
+    const candidateIndexes = new Set<number>()
+    for (const cellKey of getBoundsCellKeys(bounds)) {
+      const bucket = this.obstacleCellIndexes.get(cellKey)
+      if (!bucket) continue
+      for (const obstacleIndex of bucket) {
+        candidateIndexes.add(obstacleIndex)
+      }
+    }
+    if (candidateIndexes.size === 0) return []
+    return [...candidateIndexes]
+      .sort((left, right) => left - right)
+      .map((obstacleIndex) => this.obstacles[obstacleIndex]!)
+  }
+
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
     return this.fixedHdRoutes.flatMap((route) => {
       if (this.removedFixedRouteConnectionNames.has(route.connectionName)) {
@@ -665,6 +863,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackFixedRouteSections.clear()
     this.activeFallbackFixedObstacleRoutes = []
     this.activeFallbackPromotedFixedRouteConnectionNames.clear()
+    this.activeFallbackNode = null
+    this.activeFallbackPortCount = 0
+    this.activeFallbackUnroutableGrowthAttempts = 0
     this.activeFallbackReason = null
     this.activeNode = null
   }
@@ -717,7 +918,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
-      this.getUpdatedFixedHdRoutes(),
+      this.getCandidateFixedHdRoutes(
+        getNodeBounds(regionalNode, 1e-6),
+        promotedFixedRouteConnectionNames,
+      ),
       promotedFixedRouteConnectionNames,
     )
     const movableFixedRouteConnectionNames = new Set(
@@ -740,6 +944,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           connectionName,
         ),
     ).length
+    const isMonotonicPromotedRetry =
+      promotedFixedRouteConnectionNames.size > 0 &&
+      this.activeFallbackNode === this.activeNode &&
+      fallbackProblem.nodeWithPortPoints.portPoints.length >=
+        this.activeFallbackPortCount &&
+      [...this.activeFallbackPromotedFixedRouteConnectionNames].every(
+        (connectionName) =>
+          promotedFixedRouteConnectionNames.has(connectionName),
+      )
+    const initialGrowthAttempts = isMonotonicPromotedRetry
+      ? this.activeFallbackUnroutableGrowthAttempts
+      : 0
+    this.activeFallbackNode = this.activeNode
+    this.activeFallbackPortCount =
+      fallbackProblem.nodeWithPortPoints.portPoints.length
+    this.activeFallbackUnroutableGrowthAttempts = initialGrowthAttempts
     this.activeFallbackFixedRouteSections =
       fallbackProblem.fixedRouteSectionsByConnectionName
     this.activeFallbackFixedObstacleRoutes = fallbackProblem.fixedObstacleRoutes
@@ -753,6 +973,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
+      initialGrowthAttempts,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -928,6 +1149,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.failed = true
         return
       }
+      this.activeFallbackUnroutableGrowthAttempts =
+        this.activeFallbackSolver.getUnroutablePrefixGrowthAttempts()
       this.startRegionalFallback(promotedConnectionNames)
       return
     }
@@ -983,9 +1206,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     } of pendingFixedRouteReplacements) {
       this.fixedRouteReplacements.set(connectionName, replacement)
       this.preloadedTraceMutationMasks.set(connectionName, mutatedSegments)
+      this.reindexFixedRouteByConnectionName(connectionName)
       for (const sourceRoute of section.sourceRoutes.slice(1)) {
         this.removedFixedRouteConnectionNames.add(sourceRoute.connectionName)
         this.preloadedTraceMutationMasks.delete(sourceRoute.connectionName)
+        this.reindexFixedRouteByConnectionName(sourceRoute.connectionName)
       }
     }
 
@@ -1002,7 +1227,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         portPointsInPairs: [],
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
       },
-      this.getUpdatedFixedHdRoutes(),
+      this.getCandidateFixedHdRoutes(getNodeBounds(this.activeNode, 1e-6)),
     )
     const markedTraceIndexes = new Set<number>()
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
@@ -1144,6 +1369,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.activeFallbackFixedRouteSections.clear()
         this.activeFallbackFixedObstacleRoutes = []
         this.activeFallbackPromotedFixedRouteConnectionNames.clear()
+        this.activeFallbackNode = null
+        this.activeFallbackPortCount = 0
+        this.activeFallbackUnroutableGrowthAttempts = 0
         this.activeNode = null
         return
       }
@@ -1196,7 +1424,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
-    const fixedObstacles = this.getUpdatedFixedHdRoutes()
+    const fixedObstacles = this.getCandidateFixedHdRoutes(
+      getNodeBounds(node, this.obstacleMargin + routedCopperRadius + 1e-6),
+    )
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
       )
@@ -1208,7 +1438,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
+    const boardObstacles = (
+      this.includeBoardObstacles
+        ? this.getCandidateBoardObstacles(nodeBounds)
+        : []
+    )
       .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
       .map((obstacle) =>
         convertObstacleToB01Obstacle({
@@ -1237,7 +1471,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.connMap,
     )
     let obstacleClearanceMargin = 0.15
-    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
+    if (this.hasFixedFlaggedRoute) {
       obstacleClearanceMargin = this.obstacleMargin
     }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1

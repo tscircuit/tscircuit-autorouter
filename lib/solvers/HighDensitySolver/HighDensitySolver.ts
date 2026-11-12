@@ -65,9 +65,11 @@ export class HighDensitySolver extends BaseSolver {
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
+  growShrinkInitialGrowthAttempts?: number
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  lastUnroutablePrefixGrowthAttempts = 0
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
@@ -112,6 +114,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals = false,
     boardGeometry,
     preserveTerminalPcbPortIds,
+    growShrinkInitialGrowthAttempts,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
@@ -138,6 +141,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
+    growShrinkInitialGrowthAttempts?: number
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
@@ -173,6 +177,7 @@ export class HighDensitySolver extends BaseSolver {
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
+    this.growShrinkInitialGrowthAttempts = growShrinkInitialGrowthAttempts
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
@@ -329,6 +334,8 @@ export class HighDensitySolver extends BaseSolver {
 
   private recordResizeStats(solver: HighDensityIntraNodeSolver) {
     if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
+    this.lastUnroutablePrefixGrowthAttempts =
+      solver.unroutablePrefixGrowthAttempts
     this.stats.highDensityResizeCount =
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
   }
@@ -436,6 +443,7 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      initialGrowthAttempts: this.growShrinkInitialGrowthAttempts,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
