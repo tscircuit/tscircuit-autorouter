@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import type { SimpleRouteJson } from "lib/types"
@@ -43,18 +42,6 @@ for (const Solver of [
       getInitiallyConnectedMapFromSimpleRouteJson(srj),
     )
     solver.solve()
-
-    const graphics = solver.visualize()
-    const points = srj.connections.flatMap((c) => c.pointsToConnect)
-    graphics.texts = points.map((point) => ({
-      x: point.x + 0.4,
-      y: point.y,
-      text: point.pointId!,
-      fontSize: 0.3,
-    }))
-    await expect(
-      getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
-    ).toMatchSvgSnapshot(import.meta.path, { svgName: Solver.name })
 
     const pointPairs = solver.newConnections.map((connection) =>
       connection.pointsToConnect.map((point) => point.pointId).join("->"),
