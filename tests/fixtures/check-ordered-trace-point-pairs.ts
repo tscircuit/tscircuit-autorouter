@@ -49,4 +49,7 @@ export function checkOrderedTracePointPairs(
   expect(pointPairs).toContain("A->B")
   expect(pointPairs).toContain("B->C")
   expect(pointPairs).toHaveLength(3)
+  expect(solver.pathHopConnectionNames.get("trace_abc")).toEqual(
+    solver.newConnections.slice(0, 2).map((connection) => connection.name),
+  )
 }

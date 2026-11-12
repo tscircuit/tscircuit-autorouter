@@ -4,9 +4,6 @@ import { test } from "bun:test"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { checkOrderedTracePointPairs } from "../fixtures/check-ordered-trace-point-pairs"
 
-test.failing(
-  "NetToPointPairsSolver links trace path points in order",
-  (): void => {
-    checkOrderedTracePointPairs(NetToPointPairsSolver)
-  },
-)
+test("NetToPointPairsSolver links trace path points in order", (): void => {
+  checkOrderedTracePointPairs(NetToPointPairsSolver)
+})

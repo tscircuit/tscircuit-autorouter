@@ -6,8 +6,6 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
-import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
-import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -119,65 +117,22 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     return { pointsToConnect: [bestSourcePoint, bestTargetPoint] }
   }
 
-  _step() {
-    if (this.unprocessedConnections.length === 0) {
-      this.solved = true
-      return
-    }
-    const currentConnection = this.unprocessedConnections.pop()!
-
-    // This logic is copied from the parent class
-    const { zeroWeightEdges, arePointsConnected } =
-      getInitiallyConnectedStateForConnection(
-        currentConnection,
-        this.initiallyConnectedMap,
-      )
-
-    if (currentConnection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = currentConnection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
-        return
-      }
-      const optimizedConnection =
-        this._findBestConnectionPointsFromDisjointSets(
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
-        )
-      this.newConnections.push({
-        ...currentConnection,
-        pointsToConnect: optimizedConnection.pointsToConnect,
-        __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
-          currentConnection.name,
-        ],
-      })
-      return
-    }
-
-    const minimumSpanningTreeEdges = buildMinimumSpanningTree(
-      currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+  protected override emitConnection(
+    connection: SimpleRouteConnection,
+    pathEdge?: ReturnType<NetToPointPairsSolver["getPathEdges"]>[number],
+  ): void {
+    // Explicit paths select physical pads, not their off-board equivalents.
+    super.emitConnection(
+      pathEdge
+        ? connection
+        : {
+            ...connection,
+            ...this._findBestConnectionPointsFromDisjointSets(
+              connection.pointsToConnect[0]!,
+              connection.pointsToConnect[1]!,
+            ),
+          },
+      pathEdge,
     )
-
-    let mstEdgeIndex = 0
-    for (const mstEdge of minimumSpanningTreeEdges) {
-      if (arePointsConnected(mstEdge.from, mstEdge.to)) {
-        continue
-      }
-
-      const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
-        mstEdge.from,
-        mstEdge.to,
-      )
-
-      this.newConnections.push({
-        ...currentConnection,
-        pointsToConnect: optimizedMstEdge.pointsToConnect,
-        name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
-        __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
-          currentConnection.name,
-        ],
-        __netConnectionName: currentConnection.__netConnectionName,
-      })
-    }
   }
 }
