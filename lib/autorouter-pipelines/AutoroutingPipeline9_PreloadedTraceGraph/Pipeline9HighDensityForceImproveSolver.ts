@@ -22,6 +22,7 @@ type ViaClearanceViolationKey = string
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
+  private readonly viaClearance: number
   private readonly inputSrj: SimpleRouteJson
   private readonly fixedViaObstacleIndexes: ReadonlySet<number>
   private readonly evaluateFixedObstacles: ReturnType<
@@ -46,6 +47,11 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
         return obstacle.shape === "circle" && obstacle.layers.length > 1
       }),
     )
+    this.viaClearance = Math.max(
+      getViaToPadClearance(params.inputSrj) ??
+        RELAXED_DRC_OPTIONS.traceClearance,
+      params.inputSrj.defaultObstacleMargin ?? 0,
+    )
     this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
       srj: {
         ...params.inputSrj,
@@ -62,9 +68,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
         params.inputSrj.minTraceToPadEdgeClearance ??
         params.inputSrj.defaultObstacleMargin ??
         RELAXED_DRC_OPTIONS.traceClearance,
-      viaClearance:
-        getViaToPadClearance(params.inputSrj) ??
-        RELAXED_DRC_OPTIONS.traceClearance,
+      viaClearance: this.viaClearance,
     })
   }
 
@@ -87,25 +91,36 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       if (!route) throw new Error("Force improvement lost a node's candidate")
       return route
     })
-    // Existing via conflicts belong to repair; preserve previously clear pairs.
-    const originalViolationKeys = new Set<ViaClearanceViolationKey>(
+    // Preserve clear pairs, and never create or deepen a copper overlap.
+    const originalViolationSeverities = new Map<
+      ViaClearanceViolationKey,
+      number
+    >(
       this.evaluateFixedObstacles(originalRoutes)
         .filter(
           (violation) =>
             violation.kind === "via" &&
             this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
         )
-        .map((violation) => violation.key),
+        .map((violation): [ViaClearanceViolationKey, number] => [
+          violation.key,
+          violation.severity,
+        ]),
     )
-    const introducesViaClearanceViolation = this.evaluateFixedObstacles(
+    const hasUnsafeViaMove = this.evaluateFixedObstacles(
       candidateRoutes,
-    ).some(
-      (violation) =>
-        violation.kind === "via" &&
-        this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
-        !originalViolationKeys.has(violation.key),
-    )
-    if (!introducesViaClearanceViolation) return
+    ).some((violation): boolean => {
+      if (
+        violation.kind !== "via" ||
+        !this.fixedViaObstacleIndexes.has(violation.obstacleIndex)
+      )
+        return false
+      const originalSeverity = originalViolationSeverities.get(violation.key)
+      if (originalSeverity === undefined) return true
+      const allowedSeverity = Math.max(originalSeverity, this.viaClearance)
+      return violation.severity > allowedSeverity + 1e-8
+    })
+    if (!hasUnsafeViaMove) return
     // A node's routes move together; accepting only some can introduce peer shorts.
     for (const routeIndex of routeIndexes) {
       this.improvedRoutesByIndex.delete(routeIndex)
