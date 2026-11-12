@@ -22,7 +22,7 @@ export async function checkOrderedTracePathSnapshot(
   const links = connections.map(({ pointsToConnect }) =>
     pointsToConnect.map((point) => labels.get(point.pointId!)).join("-"),
   )
-  expect(links).toEqual(["A-C", "C-B"])
+  expect(links).toEqual(["C-A", "A-B"])
   console.log("Trace path actual links:", links)
   const traces = solver.getOutputSimplifiedPcbTraces()
   const copperLength = traces.reduce(
@@ -48,7 +48,7 @@ export async function checkOrderedTracePathSnapshot(
       [
         "tscircuit-autorouter: routes copper; checks trace path order",
         `Written path: C -> A -> B (${srj.connections[0]!.path!.length} pads)`,
-        `main: actual links ${links.join(", ")}; A-B is missing`,
+        `fixed: actual links ${links.join(", ")}; written order preserved`,
         `Pipeline 9 solved: ${traces.length} traces, ${copperLength.toFixed(3)} mm copper`,
       ],
       artwork as AnyCircuitElement[],
