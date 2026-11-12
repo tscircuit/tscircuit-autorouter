@@ -1,3 +1,4 @@
+import { stepUntilPhase } from "lib/utils/stepUntilPhase"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import type {
@@ -516,10 +517,8 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
-      this.step()
-    }
+  solveUntilPhase(phase: string): void {
+    stepUntilPhase(this, phase)
   }
 
   getCurrentPhase(): string {
