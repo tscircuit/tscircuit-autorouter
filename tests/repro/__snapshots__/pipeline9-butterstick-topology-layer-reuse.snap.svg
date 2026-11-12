@@ -1,0 +1,66 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="cmn_d_pcb_component_0_8_11_5.1_4.4_0.3999999999999989_0.40000000000000513_all
+availableZ: 0,1,2,3,4,5,6,7
+component: yes" data-x="5.1" data-y="4.4" x="182.49705440214325" y="513.5416243448567" width="86.45837565514148" height="86.45837565514319" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_171
+availableZ: 7
+component: no" data-x="5.6645999999999885" data-y="6.325399999999991" x="283.6533539186564" y="53.85609230894204" width="141.06366554260012" height="129.68756348271268" fill="rgba(255,0,0,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="bga-gapfill-2-no-obstacle-cmn_missing_pcb_component_0_10_13_5.5000000000000115_5.6_0.4_0.4_7
+availableZ: 7
+component: yes" data-x="5.556000000000007" data-y="5.903999999999994" x="286.24710518831364" y="180.44935603136582" width="86.45837565514444" height="68.25661235932057" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_0
+availableZ: 0
+component: yes" data-x="5.500000000000005" data-y="6.4" x="273.50587088123973" y="58.497541949373726" width="86.45837565514444" height="86.45837565514194" fill="rgba(0,200,200, 0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_1
+availableZ: 1
+component: yes" data-x="5.508000000000005" data-y="6.392" x="275.32604721082157" y="60.31771827895557" width="86.45837565514466" height="86.45837565514216" fill="rgba(0,0,200, 0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_2
+availableZ: 2
+component: yes" data-x="5.516000000000006" data-y="6.3839999999999995" x="277.14622354040387" y="62.13789460853775" width="86.45837565514444" height="86.45837565514216" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_3
+availableZ: 3
+component: yes" data-x="5.524000000000006" data-y="6.3759999999999994" x="278.9663998699858" y="63.95807093811948" width="86.45837565514444" height="86.45837565514216" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_4
+availableZ: 4
+component: yes" data-x="5.532000000000006" data-y="6.367999999999999" x="280.7865761995678" y="65.77824726770143" width="86.45837565514444" height="86.45837565514216" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_5
+availableZ: 5
+component: yes" data-x="5.540000000000006" data-y="6.359999999999999" x="282.60675252914973" y="67.59842359728339" width="86.45837565514444" height="86.45837565514216" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="cmn_missing_pcb_component_0_11_12_5.500000000000011_6.4_0.4_0.4_6
+availableZ: 6
+component: yes" data-x="5.548000000000007" data-y="6.3519999999999985" x="284.4269288587317" y="69.41859992686568" width="86.45837565514444" height="86.45837565514194" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g><rect data-type="rect" data-label="bga-gapfill-1-no-obstacle-cmn_v_pcb_component_0_11_14_6.300000000000011_6.8_0.4_0.3999999999999936_7
+availableZ: 7
+component: yes" data-x="6.026200000000004" data-y="6.626299999999994" x="415.4113679762696" y="40" width="42.0915776215877" height="20.47698370779426" fill="rgba(0,200,200,0.1)" stroke="black" stroke-width="0.004395178571428557"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":227.5220411977418,"c":0,"e":-934.6361678787691,"b":0,"d":-227.5220411977418,"f":1557.8677934424923};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
