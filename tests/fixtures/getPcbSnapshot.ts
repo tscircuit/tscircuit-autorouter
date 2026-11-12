@@ -22,9 +22,10 @@ export function getPcbSnapshot(
   circuitJson.push(board, ...artwork)
   notes.forEach((text, index) => {
     circuitJson.push({
-      type: "pcb_fabrication_note_text",
-      pcb_fabrication_note_text_id: `note_${index}`,
+      type: "pcb_silkscreen_text",
+      pcb_silkscreen_text_id: `note_${index}`,
       pcb_component_id: "pcb_component_0",
+      ccw_rotation: 0,
       font: "tscircuit2024",
       font_size: (srj.bounds.maxX - srj.bounds.minX) / 70,
       text,
