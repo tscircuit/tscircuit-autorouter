@@ -1,8 +1,8 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 
-const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
+const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 1024
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -14,6 +14,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private cachedFutureSegmentsLength = -1
+  private cachedViaFutureClearance = Number.NaN
   private readonly closestFuturePointCacheCoordinates = new Float64Array(
     CLOSEST_FUTURE_POINT_CACHE_SLOTS * 4,
   )
@@ -60,7 +62,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     }
     const pointKey = this.getNodeKey(node)
     const cacheSlot = Number.isSafeInteger(pointKey)
-      ? Math.abs(pointKey % CLOSEST_FUTURE_POINT_CACHE_SLOTS)
+      ? pointKey >= 0
+        ? pointKey & (CLOSEST_FUTURE_POINT_CACHE_SLOTS - 1)
+        : Math.abs(pointKey % CLOSEST_FUTURE_POINT_CACHE_SLOTS)
       : -1
     const coordinateIndex = cacheSlot * 4
     const viaPenaltyDistance = this.viaPenaltyDistance
@@ -86,9 +90,12 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     let pointIndex = 0
 
     for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      const penalty = node.z !== point.z ? viaPenaltyDistance : 0
+      if (penalty >= minDist) {
+        pointIndex++
+        continue
+      }
+      const dist = distance(node, point) + penalty
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
@@ -111,7 +118,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionSegments() {
-    if (this.futureConnectionSegmentsCache) {
+    if (
+      this.futureConnectionSegmentsCache &&
+      this.cachedFutureSegmentsLength === this.futureConnections.length
+    ) {
       return this.futureConnectionSegmentsCache
     }
     const segments: FutureConnectionSegment[] = []
@@ -140,10 +150,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           connectionName: futureConnection.connectionName,
           start,
           end,
+          minX: Math.min(start.x, end.x),
+          minY: Math.min(start.y, end.y),
+          maxX: Math.max(start.x, end.x),
+          maxY: Math.max(start.y, end.y),
         })
       }
     }
 
+    this.cachedFutureSegmentsLength = this.futureConnections.length
     this.futureConnectionSegmentsCache = segments
     return segments
   }
@@ -156,6 +171,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     for (const segment of this.getFutureConnectionSegments()) {
       if (
+        node.x + minCenterlineDistance <= segment.minX ||
+        node.y + minCenterlineDistance <= segment.minY ||
+        node.x - minCenterlineDistance >= segment.maxX ||
+        node.y - minCenterlineDistance >= segment.maxY
+      ) {
+        continue
+      }
+      if (
         pointToSegmentDistance(node, segment.start, segment.end) <
         minCenterlineDistance
       ) {
@@ -164,6 +187,29 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     }
 
     return false
+  }
+
+  protected override hasNativeViaObstacleHook(): boolean {
+    return (
+      this.isNodeTooCloseToObstacle ===
+        SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
+          .isNodeTooCloseToObstacle &&
+      this.isViaTooCloseToFutureConnectionTrace ===
+        SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
+          .isViaTooCloseToFutureConnectionTrace
+    )
+  }
+
+  protected override isAdditionalViaColumnBlocked(node: Node): boolean {
+    if (
+      this.cachedViaFutureClearance !==
+        this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE ||
+      this.cachedFutureSegmentsLength !== this.futureConnections.length
+    ) {
+      this.viaColumnClearanceCache.clear()
+      this.cachedViaFutureClearance = this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+    }
+    return this.isViaTooCloseToFutureConnectionTrace(node)
   }
 
   override isNodeTooCloseToObstacle(
@@ -195,10 +241,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return 1 - Math.exp((-goalDist / this.straightLineDistance) * 5)
   }
 
-  getFutureConnectionPenalty(node: Node, isVia: boolean) {
+  getFutureConnectionPenalty(
+    node: Node,
+    isVia: boolean,
+    precomputedGoalDist?: number,
+  ) {
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
-    const goalDist = distance(node, this.B)
+    const goalDist = precomputedGoalDist ?? distance(node, this.B)
     if (closestFuturePoint) {
       const distToFuturePoint = distance(node, closestFuturePoint)
       if (goalDist <= distToFuturePoint) return 0
@@ -215,8 +265,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   computeH(node: Node) {
-    const goalDist = distance(node, this.B) ** 1.6
-    const goalDistRatio = goalDist / this.straightLineDistance
+    const rawGoalDist = distance(node, this.B)
+    const goalDist = rawGoalDist ** 1.6
 
     // Base cost from original function
     const baseCost =
@@ -224,7 +274,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     return (
       baseCost +
-      this.getFutureConnectionPenalty(node, node.z !== node.parent?.z)
+      this.getFutureConnectionPenalty(
+        node,
+        node.z !== node.parent?.z,
+        rawGoalDist,
+      )
     )
   }
 
@@ -274,11 +328,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    const goalDist = distance(node, this.B) ** 1.6
+    const rawGoalDist = distance(node, this.B)
+    const goalDist = rawGoalDist ** 1.6
     const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
     const futureConnectionPenalty = this.getFutureConnectionPenalty(
       node,
       node.z !== node.parent?.z,
+      rawGoalDist,
     )
 
     node.g = baseG + futureConnectionPenalty
@@ -291,4 +347,8 @@ type FutureConnectionSegment = {
   connectionName: string
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
 }

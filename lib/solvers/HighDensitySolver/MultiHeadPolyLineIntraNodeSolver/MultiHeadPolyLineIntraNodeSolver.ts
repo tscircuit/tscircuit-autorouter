@@ -63,6 +63,19 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
   phase: "setup" | "solving" = "setup"
   progress = 0
+  private readonly minGapSegmentsWorkspace: Array<
+    Array<{
+      p1: MHPoint2
+      p2: MHPoint2
+      layer: number
+      minX: number
+      minY: number
+      maxX: number
+      maxY: number
+    }>
+  > = []
+  private readonly minGapViasWorkspace: Array<MHPoint2[]> = []
+  private readonly minGapAvailableZSet = new Set<number>()
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
@@ -154,90 +167,178 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    * [ p1 -> p2 , p1 -> p3, p2 -> p3 ]
    */
   computeMinGapBtwPolyLines(polyLines: PolyLine2[]) {
-    const minGaps = []
-    const polyLineSegmentsByLayer: Array<Map<number, [MHPoint2, MHPoint2][]>> =
-      []
-    const polyLineVias: Array<MHPoint2[]> = []
-    for (let i = 0; i < polyLines.length; i++) {
-      const polyLine = polyLines[i]
-      const path = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segmentsByLayer: Map<number, [MHPoint2, MHPoint2][]> = new Map(
-        this.availableZ.map((z) => [z, []]),
-      )
-      for (let i = 0; i < path.length - 1; i++) {
-        const segment: [MHPoint2, MHPoint2] = [path[i], path[i + 1]]
-        const layer = segment[0].z2
-        if (!segmentsByLayer.has(layer)) {
-          segmentsByLayer.set(layer, [])
-        }
-        segmentsByLayer.get(layer)!.push(segment)
-      }
-      polyLineSegmentsByLayer.push(segmentsByLayer)
-      polyLineVias.push(path.filter((p) => p.z1 !== p.z2))
+    const minGaps: number[] = []
+    const numPolyLines = polyLines.length
+    const hasAvailableZ = this.availableZ.length > 0
+    this.minGapAvailableZSet.clear()
+    for (let zIdx = 0; zIdx < this.availableZ.length; zIdx++) {
+      this.minGapAvailableZSet.add(this.availableZ[zIdx]!)
     }
 
-    for (let i = 0; i < polyLines.length; i++) {
-      const path1SegmentsByLayer = polyLineSegmentsByLayer[i]
-      const path1Vias = polyLineVias[i]
+    this.minGapSegmentsWorkspace.length = numPolyLines
+    this.minGapViasWorkspace.length = numPolyLines
+
+    for (let i = 0; i < numPolyLines; i++) {
+      const polyLine = polyLines[i]!
+      const mPoints = polyLine.mPoints
+      const totalSegments = mPoints.length + 1
+      let lineSegments = this.minGapSegmentsWorkspace[i]
+      if (!lineSegments) {
+        lineSegments = []
+        this.minGapSegmentsWorkspace[i] = lineSegments
+      }
+      let lineVias = this.minGapViasWorkspace[i]
+      if (!lineVias) {
+        lineVias = []
+        this.minGapViasWorkspace[i] = lineVias
+      }
+      let segCount = 0
+      let viaCount = 0
+      if (polyLine.start.z1 !== polyLine.start.z2) {
+        lineVias[viaCount++] = polyLine.start
+      }
+      for (let k = 0; k < totalSegments; k++) {
+        const p1 = k === 0 ? polyLine.start : mPoints[k - 1]!
+        const p2 = k === mPoints.length ? polyLine.end : mPoints[k]!
+        if (k > 0 && p1.z1 !== p1.z2) {
+          lineVias[viaCount++] = p1
+        }
+        const layer = p1.z2
+        if (this.minGapAvailableZSet.has(layer)) {
+          const minX = p1.x < p2.x ? p1.x : p2.x
+          const maxX = p1.x > p2.x ? p1.x : p2.x
+          const minY = p1.y < p2.y ? p1.y : p2.y
+          const maxY = p1.y > p2.y ? p1.y : p2.y
+          const existing = lineSegments[segCount]
+          if (existing) {
+            existing.p1 = p1
+            existing.p2 = p2
+            existing.layer = layer
+            existing.minX = minX
+            existing.minY = minY
+            existing.maxX = maxX
+            existing.maxY = maxY
+          } else {
+            lineSegments[segCount] = {
+              p1,
+              p2,
+              layer,
+              minX,
+              minY,
+              maxX,
+              maxY,
+            }
+          }
+          segCount++
+        }
+      }
+      if (polyLine.end.z1 !== polyLine.end.z2) {
+        lineVias[viaCount++] = polyLine.end
+      }
+      lineSegments.length = segCount
+      lineVias.length = viaCount
+    }
+
+    const traceWidth = this.traceWidth
+    const viaDiameter = this.viaDiameter
+    const viaSegClearance = traceWidth / 2 + viaDiameter / 2
+
+    for (let i = 0; i < numPolyLines; i++) {
+      const path1Segments = this.minGapSegmentsWorkspace[i]!
+      const path1Vias = this.minGapViasWorkspace[i]!
       // Start j from i + 1 to compare distinct pairs only once
-      for (let j = i + 1; j < polyLines.length; j++) {
+      for (let j = i + 1; j < numPolyLines; j++) {
         if (
           this.connMap?.areIdsConnected(
-            polyLines[i].connectionName,
-            polyLines[j].connectionName,
+            polyLines[i]!.connectionName,
+            polyLines[j]!.connectionName,
           )
         ) {
           continue
         }
-        const path2SegmentsByLayer = polyLineSegmentsByLayer[j]
-        const path2Vias = polyLineVias[j]
+        const path2Segments = this.minGapSegmentsWorkspace[j]!
+        const path2Vias = this.minGapViasWorkspace[j]!
 
         let minGap = 1
-        for (const zLayer of this.availableZ) {
-          const path1Segments = path1SegmentsByLayer.get(zLayer) ?? []
-          const path2Segments = path2SegmentsByLayer.get(zLayer) ?? []
-
+        if (hasAvailableZ) {
           // SEGMENT TO SEGMENT DISTANCES
-          for (const segment1 of path1Segments) {
-            for (const segment2 of path2Segments) {
-              minGap = Math.min(
-                minGap,
-                segmentToSegmentMinDistance(
-                  segment1[0],
-                  segment1[1],
-                  segment2[0],
-                  segment2[1],
-                ) - this.traceWidth,
-              )
+          for (let s1Idx = 0; s1Idx < path1Segments.length; s1Idx++) {
+            const s1 = path1Segments[s1Idx]!
+            for (let s2Idx = 0; s2Idx < path2Segments.length; s2Idx++) {
+              const s2 = path2Segments[s2Idx]!
+              if (s1.layer !== s2.layer) continue
+              const segThresh = minGap + traceWidth
+              if (
+                segThresh > 0 &&
+                (s1.maxX + segThresh < s2.minX ||
+                  s2.maxX + segThresh < s1.minX ||
+                  s1.maxY + segThresh < s2.minY ||
+                  s2.maxY + segThresh < s1.minY)
+              ) {
+                continue
+              }
+              const gap =
+                segmentToSegmentMinDistance(s1.p1, s1.p2, s2.p1, s2.p2) -
+                traceWidth
+              if (gap < minGap) minGap = gap
             }
           }
 
           // VIA TO SEGMENT DISTANCES
-          for (const via of path1Vias) {
-            for (const segment of path2Segments) {
-              minGap = Math.min(
-                minGap,
-                pointToSegmentDistance(via, segment[0], segment[1]) -
-                  this.traceWidth / 2 -
-                  this.viaDiameter / 2,
-              )
+          for (let vIdx = 0; vIdx < path1Vias.length; vIdx++) {
+            const via = path1Vias[vIdx]!
+            for (let s2Idx = 0; s2Idx < path2Segments.length; s2Idx++) {
+              const s2 = path2Segments[s2Idx]!
+              const vsThresh = minGap + viaSegClearance
+              if (
+                vsThresh > 0 &&
+                (via.x + vsThresh < s2.minX ||
+                  via.x - vsThresh > s2.maxX ||
+                  via.y + vsThresh < s2.minY ||
+                  via.y - vsThresh > s2.maxY)
+              ) {
+                continue
+              }
+              const gap =
+                pointToSegmentDistance(via, s2.p1, s2.p2) - viaSegClearance
+              if (gap < minGap) minGap = gap
             }
           }
-          for (const via of path2Vias) {
-            for (const segment of path1Segments) {
-              minGap = Math.min(
-                minGap,
-                pointToSegmentDistance(via, segment[0], segment[1]) -
-                  this.traceWidth / 2 -
-                  this.viaDiameter / 2,
-              )
+          for (let vIdx = 0; vIdx < path2Vias.length; vIdx++) {
+            const via = path2Vias[vIdx]!
+            for (let s1Idx = 0; s1Idx < path1Segments.length; s1Idx++) {
+              const s1 = path1Segments[s1Idx]!
+              const vsThresh = minGap + viaSegClearance
+              if (
+                vsThresh > 0 &&
+                (via.x + vsThresh < s1.minX ||
+                  via.x - vsThresh > s1.maxX ||
+                  via.y + vsThresh < s1.minY ||
+                  via.y - vsThresh > s1.maxY)
+              ) {
+                continue
+              }
+              const gap =
+                pointToSegmentDistance(via, s1.p1, s1.p2) - viaSegClearance
+              if (gap < minGap) minGap = gap
             }
           }
 
           // VIA TO VIA DISTANCES
-          for (const via1 of path1Vias) {
-            for (const via2 of path2Vias) {
-              minGap = Math.min(minGap, distance(via1, via2) - this.viaDiameter)
+          for (let v1Idx = 0; v1Idx < path1Vias.length; v1Idx++) {
+            const via1 = path1Vias[v1Idx]!
+            for (let v2Idx = 0; v2Idx < path2Vias.length; v2Idx++) {
+              const via2 = path2Vias[v2Idx]!
+              const vvThresh = minGap + viaDiameter
+              if (
+                vvThresh > 0 &&
+                (Math.abs(via1.x - via2.x) > vvThresh ||
+                  Math.abs(via1.y - via2.y) > vvThresh)
+              ) {
+                continue
+              }
+              const gap = distance(via1, via2) - viaDiameter
+              if (gap < minGap) minGap = gap
             }
           }
         }

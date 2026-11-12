@@ -1,9 +1,9 @@
 import { Point3, distance } from "@tscircuit/math-utils"
 import { ViaPossibilitiesSolver2 } from "lib/solvers/ViaPossibilitiesSolver/ViaPossibilitiesSolver2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
-import { MHPoint, PolyLine, Candidate } from "./types1"
-import { PolyLine2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "./MultiHeadPolyLineIntraNodeSolver2_Optimized"
+import { Candidate, MHPoint, PolyLine } from "./types1"
+import { PolyLine2 } from "./types2"
 
 const hashPolyLines = (polyLines: PolyLine2[]) => {
   return polyLines
@@ -235,22 +235,68 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
 
   setupInitialPolyLines(): void {
     this.candidates = []
-    const maxCandidatesToGenerate = Math.min(
-      2000,
-      factorial(this.uniqueConnections),
-    )
-    const candidatePolylineHashes = new Set<string>()
     const canRejectBeforeScoring =
       this.createInitialCandidateFromSeed ===
         nativeCreateInitialCandidateFromSeed &&
       this.computeMinGapBtwPolyLines === nativeComputeMinGapBtwPolyLines &&
       this.computeH === nativeComputeH &&
       this.computeG === nativeComputeG
+    const availableZKey = this.availableZ.join(",")
+    if (canRejectBeforeScoring) {
+      const cachedEntries = initialCandidateTemplatesByNode.get(
+        this.nodeWithPortPoints,
+      )
+      const matchingEntry = cachedEntries?.find(
+        (entry) =>
+          entry.connMap === this.connMap &&
+          entry.viaDiameter === this.viaDiameter &&
+          entry.traceWidth === this.traceWidth &&
+          entry.obstacleMargin === this.obstacleMargin &&
+          entry.segmentsPerPolyline === this.SEGMENTS_PER_POLYLINE &&
+          entry.uniqueConnections === this.uniqueConnections &&
+          entry.availableZKey === availableZKey &&
+          entry.portPointsRef === this.nodeWithPortPoints.portPoints &&
+          entry.portPointsLength === this.nodeWithPortPoints.portPoints.length,
+      )
+      if (matchingEntry) {
+        if (matchingEntry.failed) {
+          this.failed = true
+          this.error = matchingEntry.error
+          return
+        }
+        this.candidates = cloneCandidatesFromTemplate(matchingEntry.candidates)
+        return
+      }
+    }
+
+    const maxCandidatesToGenerate = Math.min(
+      2000,
+      factorial(this.uniqueConnections),
+    )
+    const candidatePolylineHashes = new Set<string>()
     for (let i = 0; i < maxCandidatesToGenerate; i++) {
       const newCandidate = canRejectBeforeScoring
         ? this.createInitialCandidateFromSeed(i, candidatePolylineHashes)
         : this.createInitialCandidateFromSeed(i)
-      if (this.failed) return
+      if (this.failed) {
+        if (canRejectBeforeScoring) {
+          saveInitialCandidateTemplate(this.nodeWithPortPoints, {
+            connMap: this.connMap,
+            viaDiameter: this.viaDiameter,
+            traceWidth: this.traceWidth,
+            obstacleMargin: this.obstacleMargin,
+            segmentsPerPolyline: this.SEGMENTS_PER_POLYLINE,
+            uniqueConnections: this.uniqueConnections,
+            availableZKey,
+            portPointsRef: this.nodeWithPortPoints.portPoints,
+            portPointsLength: this.nodeWithPortPoints.portPoints.length,
+            failed: true,
+            error: this.error,
+            candidates: [],
+          })
+        }
+        return
+      }
       if (!newCandidate) continue
       const newCandidatePolylineHash = hashPolyLines(newCandidate.polyLines)
       if (candidatePolylineHashes.has(newCandidatePolylineHash)) continue
@@ -258,6 +304,66 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       this.candidates.push(newCandidate)
     }
     this.candidates.sort((a, b) => a.f - b.f) // Sort in case we add more initial candidates later
+    if (canRejectBeforeScoring) {
+      saveInitialCandidateTemplate(this.nodeWithPortPoints, {
+        connMap: this.connMap,
+        viaDiameter: this.viaDiameter,
+        traceWidth: this.traceWidth,
+        obstacleMargin: this.obstacleMargin,
+        segmentsPerPolyline: this.SEGMENTS_PER_POLYLINE,
+        uniqueConnections: this.uniqueConnections,
+        availableZKey,
+        portPointsRef: this.nodeWithPortPoints.portPoints,
+        portPointsLength: this.nodeWithPortPoints.portPoints.length,
+        failed: false,
+        error: null,
+        candidates: cloneCandidatesFromTemplate(this.candidates),
+      })
+    }
+  }
+}
+
+type CachedInitialCandidateTemplate = {
+  connMap: MultiHeadPolyLineIntraNodeSolver["connMap"]
+  viaDiameter: number
+  traceWidth: number
+  obstacleMargin: number
+  segmentsPerPolyline: number
+  uniqueConnections: number
+  availableZKey: string
+  portPointsRef: MultiHeadPolyLineIntraNodeSolver["nodeWithPortPoints"]["portPoints"]
+  portPointsLength: number
+  failed: boolean
+  error: string | null
+  candidates: Candidate[]
+}
+
+const initialCandidateTemplatesByNode = new WeakMap<
+  MultiHeadPolyLineIntraNodeSolver["nodeWithPortPoints"],
+  CachedInitialCandidateTemplate[]
+>()
+
+const cloneCandidatesFromTemplate = (candidates: Candidate[]): Candidate[] =>
+  candidates.map((candidate) => ({
+    ...candidate,
+    minGaps: [...candidate.minGaps],
+    polyLines: candidate.polyLines.map((polyLine) => ({
+      ...polyLine,
+      start: { ...polyLine.start },
+      end: { ...polyLine.end },
+      mPoints: polyLine.mPoints.map((mp) => ({ ...mp })),
+    })),
+  }))
+
+const saveInitialCandidateTemplate = (
+  node: MultiHeadPolyLineIntraNodeSolver["nodeWithPortPoints"],
+  entry: CachedInitialCandidateTemplate,
+): void => {
+  const existing = initialCandidateTemplatesByNode.get(node)
+  if (existing) {
+    existing.push(entry)
+  } else {
+    initialCandidateTemplatesByNode.set(node, [entry])
   }
 }
 
