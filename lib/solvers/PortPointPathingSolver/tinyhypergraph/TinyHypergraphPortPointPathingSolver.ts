@@ -1148,14 +1148,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         routeSolveOptions: {
           ...getTinyViaSizeOptions(params.minViaPadDiameter),
           USE_SPARSE_CANDIDATE_STORAGE: false,
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: false,
-          GREEDY_FINAL_ROUTE_ITERS: 0,
-          MAX_ITERATIONS: Math.min(
-            Math.ceil(2_000_000 * getEffortScale(params.effort)),
-            Math.max(10_000, serializedGraph.ports.length),
-          ),
+          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+          GREEDY_FINAL_ROUTE_ITERS: 4,
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
+          STATIC_REACHABILITY_PRECHECK_MAX_HOPS: Math.max(
+            16,
+            serializedGraph.ports.length * 2 + 1,
+          ),
         },
       },
     )
