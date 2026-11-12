@@ -61,10 +61,10 @@ test("routes the H616 SVREF boundary beside a preloaded DDR via", async (): Prom
     connMap: new ConnectivityMap(fixture.netMap),
     obstacleMargin: pipeline.highDensityRouteSolver!.obstacleMargin,
   })
-  expect(() => solver.solve()).toThrow(
-    'could not promote fixed route "source_net_210_fixed_0_13"',
-  )
-  expect(solver.solved).toBeFalse()
+  expect(() => solver.solve()).not.toThrow()
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.routes).toHaveLength(1)
   const routes = [...solver.getUpdatedFixedHdRoutes(), ...solver.routes]
   const boardClearance = board.srj.minTraceToPadEdgeClearance!
   for (const [index, left] of routes.entries()) {
