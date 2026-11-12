@@ -15,7 +15,8 @@ export function checkOrderedUsbPairLanes({
     LengthMatchingSolver.prototype,
     "step",
   ).mockImplementation(function (this: LengthMatchingSolver) {
-    inputs.push(this.getConstructorParams()[0].differentialPairs)
+    const pairs = this.getConstructorParams()[0].differentialPairs
+    if (pairs?.length && !inputs.includes(pairs)) inputs.push(pairs)
     return realStep.call(this)
   })
   try {

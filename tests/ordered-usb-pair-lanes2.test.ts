@@ -4,9 +4,6 @@ import { test } from "bun:test"
 import { checkOrderedUsbPairLanes } from "./fixtures/check-ordered-usb-pair-lanes"
 import { orderedUsbPipelines } from "./fixtures/ordered-usb-pair"
 
-test.failing(
-  "Pipeline 9 sends exactly the ordered USB hops to the matcher",
-  (): void => {
-    checkOrderedUsbPairLanes(orderedUsbPipelines[1])
-  },
-)
+test("Pipeline 9 sends exactly the ordered USB hops to the matcher", (): void => {
+  checkOrderedUsbPairLanes(orderedUsbPipelines[1])
+})

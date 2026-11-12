@@ -1,6 +1,5 @@
 import { expect } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { getPcbSnapshot } from "./get-pcb-snapshot"
@@ -18,61 +17,43 @@ export async function checkOrderedUsbPairSnapshot(
   const solver = new Pipeline(structuredClone(orderedUsbPair), {
     cacheProvider: null,
   })
-  let error: Error | undefined
-  try {
-    solver.solve()
-  } catch (thrown) {
-    error = thrown as Error
-  }
+  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
   const connections = solver.netToPointPairsSolver!.newConnections
-  const positiveName = orderedUsbPair.differentialPairs![0]!.connectionNames[0]
-  const positivePairCount = connections.filter((connection) =>
-    connection.__rootConnectionNames?.includes(positiveName),
-  ).length
-  expect(error).toBeInstanceOf(Error)
-  expect(error!.message).toBe(
-    `Pipeline${number}: differential pair connection "${positiveName}" must resolve to exactly one final point-pair connection, got ${positivePairCount}`,
-  )
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output before solving is complete",
-  )
-  const lengths = getOrderedUsbLaneLengths(
-    solver._getOutputHdRoutes(),
-    connections,
-  )
-  expect(lengths.skew).toBeGreaterThan(
-    orderedUsbPair.differentialPairs![0]!.lengthTolerance,
-  )
-  console.log(
-    "Pipeline",
-    number,
-    "actual error:",
-    error!.message,
-    "lengths (mm):",
-    lengths,
-  )
-  // These are the pipeline's real intermediate traces, never final output.
-  const traces =
-    solver instanceof AutoroutingPipelineSolver7_MultiGraph
-      ? solver.getPrePowerTraceOutputSimplifiedPcbTraces()
-      : solver.getNewTracesBeforePowerExpansion()
-  expect(
-    getDrcErrors(convertToCircuitJson(solver.srjWithPointPairs!, traces))
-      .errors,
-  ).toHaveLength(0)
-  const [subject, reason] = error!.message.split(" must ")
+  const beforeRoutes = structuredClone(solver._getOutputHdRoutes())
+  const before = getOrderedUsbLaneLengths(beforeRoutes, connections)
+  solver.solve()
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  const afterRoutes = solver._getOutputHdRoutes()
+  const after = getOrderedUsbLaneLengths(afterRoutes, connections)
+  const tolerance = orderedUsbPair.differentialPairs![0]!.lengthTolerance
+  expect(before.skew).toBeGreaterThan(tolerance)
+  expect(after.skew).toBeLessThanOrEqual(tolerance)
+  expect(after.pHops[0]! - before.pHops[0]!).toBeCloseTo(before.skew, 6)
+  const meanderHop = after.laneNames[0]![0]!
+  for (const route of beforeRoutes) {
+    const matched = afterRoutes.find(
+      (output) => output.connectionName === route.connectionName,
+    )
+    if (route.connectionName === meanderHop) expect(matched).not.toEqual(route)
+    else expect(matched).toEqual(route)
+  }
+  const traces = solver.getOutputSimplifiedPcbTraces()
+  const errors = getDrcErrors(
+    convertToCircuitJson(solver.srjWithPointPairs!, traces),
+  ).errors
+  expect(errors).toHaveLength(0)
+  console.log("Pipeline", number, "lengths before/after (mm):", before, after)
   await expect(
     getPcbSnapshot(
       solver.srjWithPointPairs!,
       traces,
       [
         "tscircuit-autorouter: routes copper and length-matches differential pairs",
-        `main throws: ${subject}`,
-        `must ${reason}; no final output; matching never ran`,
-        `Copper at failure: D+ ${lengths.p.toFixed(3)} mm; D- ${lengths.n.toFixed(3)} mm; skew ${lengths.skew.toFixed(3)} mm`,
-        `TP1 stub ${lengths.tap.toFixed(3)} mm excluded from lane measurement`,
+        `Pipeline ${number} completed: meander on D+ J1->ESD; TP1 is not counted`,
+        `J1->ESD: ${before.pHops[0]!.toFixed(3)} -> ${after.pHops[0]!.toFixed(3)} mm; TP1 stub ${after.tap.toFixed(3)} mm unchanged`,
+        `D+ ${after.p.toFixed(3)} mm; D- ${after.n.toFixed(3)} mm; skew ${before.skew.toFixed(3)} -> ${after.skew.toFixed(3)} mm`,
+        `D+ ESD->MCU ${after.pHops[1]!.toFixed(3)} mm unchanged; DRC ${errors.length}; tolerance ${tolerance} mm`,
       ],
       artwork as AnyCircuitElement[],
     ),
