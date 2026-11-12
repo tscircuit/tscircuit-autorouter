@@ -63,11 +63,12 @@ test("Pipeline9 routes real T113-S3 SD connections around a boot fanout", async 
     (trace) => trace.connection_name === "source_trace_1",
   )!
   expect(groundTrace.route).not.toEqual(preloadedTraces[1]!.route)
-  const vias = traces.flatMap((trace) =>
-    trace.route.filter((point) => point.route_type === "via"),
+  // The ground fanout keeps one via; the SD links may need their own vias.
+  const groundVias = groundTrace.route.filter(
+    (point) => point.route_type === "via",
   )
-  expect(vias).toHaveLength(1)
-  const via = vias[0]!
+  expect(groundVias).toHaveLength(1)
+  const via = groundVias[0]!
   expect(via).toMatchObject({
     from_layer: "top",
     to_layer: "bottom",

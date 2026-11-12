@@ -370,7 +370,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                   ...new Set(
                     obstacle.connectedTo.flatMap((id) => {
                       const net = params.connMap?.getNetConnectedToId(id)
-                      return net ? [id, net] : [id]
+                      // Imported aliases can name an unrelated canonical net.
+                      return net ? [net] : [id]
                     }),
                   ),
                 ],
