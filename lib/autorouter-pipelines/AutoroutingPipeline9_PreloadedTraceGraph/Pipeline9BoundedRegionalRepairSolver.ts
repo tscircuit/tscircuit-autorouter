@@ -1,13 +1,12 @@
-import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import {
+  type Bounds,
+  type ExtractedRepairRegion,
+  NegotiateTraceClearanceSolver,
+  type NegotiatedClearanceResult,
   extractRepairRegion,
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
-  NegotiateTraceClearanceSolver,
-  type Bounds,
-  type ExtractedRepairRegion,
-  type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
@@ -15,18 +14,19 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
+import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
+import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
 import {
-  getPipeline9BoundedRepairAllowance,
   PIPELINE9_BOUNDED_REPAIR_BUDGET,
   type Pipeline9BoundedRegionalRepairParams,
   type Pipeline9BoundedRegionalRepairResult,
   type Pipeline9BoundedRepairBudget,
+  getPipeline9BoundedRepairAllowance,
 } from "./applyPipeline9BoundedRegionalRepairs"
-import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
-import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
-import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
 
 type DrcResult = ReturnType<DrcEvaluator>
@@ -596,9 +596,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : this.budget.pathGridSizeScale *
             (Math.min(...context.regionSizes) / size),
       allowLayerChanges: true,
-      traceClearance:
-        context.srj.minTraceToPadEdgeClearance ??
+      traceClearance: Math.max(
+        context.srj.minTraceToPadEdgeClearance ?? 0,
         RELAXED_DRC_OPTIONS.traceClearance,
+      ),
       viaClearance:
         context.srj.minPadEdgeToPadEdgeClearance ??
         RELAXED_DRC_OPTIONS.viaClearance,
