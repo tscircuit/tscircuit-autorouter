@@ -91,7 +91,7 @@ test("connects H616 C3 to U2 SVREF on the full reference PCB", async (): Promise
         point.z === mapLayerNameToZ(terminal.layer!, fixture.srj.layerCount),
     ),
   )
-  expect(connectsBothTerminals).toBeFalse()
+  expect(connectsBothTerminals).toBeTrue()
   const snapshots = getH616SvrefCircuitSnapshots({
     circuitJson: fixture.circuitJson,
     pipeline,
