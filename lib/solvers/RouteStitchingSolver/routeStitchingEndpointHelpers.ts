@@ -13,9 +13,63 @@ import {
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
 
+type EndpointHash = string
+
 type EndpointEdge = {
-  nextHash: string
+  nextHash: EndpointHash
   routeIndex: number | null
+}
+
+type EndpointPathEdge = {
+  fromHash: EndpointHash
+  toHash: EndpointHash
+  routeIndex: number | null
+}
+
+const getEndpointPath = (params: {
+  adjacency: Map<EndpointHash, EndpointEdge[]>
+  startHash: EndpointHash
+  endHash: EndpointHash
+}): EndpointPathEdge[] | undefined => {
+  const { adjacency, startHash, endHash } = params
+  const queue = [startHash]
+  const visitedHashes = new Set<EndpointHash>([startHash])
+  const prevByHash = new Map<
+    EndpointHash,
+    { prevHash: EndpointHash; routeIndex: number | null }
+  >()
+
+  while (queue.length > 0) {
+    const currentHash = queue.shift()!
+    if (currentHash === endHash) break
+
+    for (const edge of adjacency.get(currentHash) ?? []) {
+      if (visitedHashes.has(edge.nextHash)) continue
+      visitedHashes.add(edge.nextHash)
+      prevByHash.set(edge.nextHash, {
+        prevHash: currentHash,
+        routeIndex: edge.routeIndex,
+      })
+      queue.push(edge.nextHash)
+    }
+  }
+
+  if (!visitedHashes.has(endHash)) return undefined
+
+  const selectedEdgesInReverse: EndpointPathEdge[] = []
+  let cursorHash = endHash
+  while (cursorHash !== startHash) {
+    const prev = prevByHash.get(cursorHash)
+    if (!prev) throw new Error("Missing predecessor in stitch endpoint path")
+    selectedEdgesInReverse.push({
+      fromHash: prev.prevHash,
+      toHash: cursorHash,
+      routeIndex: prev.routeIndex,
+    })
+    cursorHash = prev.prevHash
+  }
+
+  return selectedEdgesInReverse.reverse()
 }
 
 export type CanStitchBetweenTerminals = (params: {
@@ -23,6 +77,7 @@ export type CanStitchBetweenTerminals = (params: {
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
+  defaultTraceThickness?: number
 }) => boolean
 
 /**
@@ -276,6 +331,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   const sortedEndpointClusters = [
     ...params.endpointIndex.getClusters(params.connectionName),
   ].sort((a, b) => comparePoints(a.point, b.point))
+  const gapTemplateRoute = canonicalHdRoutes[0]!
   for (let i = 0; i < sortedEndpointClusters.length; i++) {
     const endpointA = sortedEndpointClusters[i]!
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
@@ -315,46 +371,73 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
-  const prevByHash = new Map<
-    string,
-    { prevHash: string; routeIndex: number | null }
-  >()
-
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
-    if (currentHash === endHash) break
-
-    for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
-      prevByHash.set(edge.nextHash, {
-        prevHash: currentHash,
-        routeIndex: edge.routeIndex,
-      })
-      queue.push(edge.nextHash)
-    }
+  const initialEndpointPath = getEndpointPath({ adjacency, startHash, endHash })
+  if (!initialEndpointPath) return canonicalHdRoutes
+  const existingRoutePieces = initialEndpointPath.flatMap((edge) =>
+    edge.routeIndex === null ? [] : [canonicalHdRoutes[edge.routeIndex]!],
+  )
+  // Keep an already valid stitch. Gap-only vertices matter only when the
+  // original route pieces cannot represent the endpoint graph's full path.
+  if (
+    existingRoutePieces.length > 0 &&
+    params.canStitchBetweenTerminals({
+      connectionName: params.connectionName,
+      hdRoutes: existingRoutePieces,
+      start: params.start,
+      end: params.end,
+    })
+  ) {
+    return existingRoutePieces
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
-
-  const selectedRouteIndexesInReverse: number[] = []
-  let cursorHash = endHash
-  while (cursorHash !== startHash) {
-    const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
-    if (prev.routeIndex !== null) {
-      selectedRouteIndexesInReverse.push(prev.routeIndex)
-    }
-    cursorHash = prev.prevHash
+  if (
+    params.canStitchBetweenTerminals({
+      connectionName: params.connectionName,
+      hdRoutes: canonicalHdRoutes,
+      start: params.start,
+      end: params.end,
+    })
+  ) {
+    return canonicalHdRoutes
   }
 
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
-
-  const selectedHdRoutes = selectedRouteIndexesInReverse
-    .reverse()
-    .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+  const endpointPointByHash = new Map<EndpointHash, Point3>(
+    sortedEndpointClusters.map(({ key, point }) => [key, point]),
+  )
+  for (const [fromHash, edges] of adjacency) {
+    adjacency.set(
+      fromHash,
+      edges.filter(
+        (edge) =>
+          edge.routeIndex !== null ||
+          params.canStitchBetweenTerminals({
+            connectionName: params.connectionName,
+            hdRoutes: [],
+            start: endpointPointByHash.get(fromHash)!,
+            end: endpointPointByHash.get(edge.nextHash)!,
+            defaultTraceThickness: gapTemplateRoute.traceThickness,
+          }),
+      ),
+    )
+  }
+  const endpointPath = getEndpointPath({ adjacency, startHash, endHash })
+  if (!endpointPath) return canonicalHdRoutes
+  const selectedHdRoutes = endpointPath.map(
+    (edge): HighDensityIntraNodeRoute => {
+      if (edge.routeIndex !== null) return canonicalHdRoutes[edge.routeIndex]!
+      return {
+        connectionName: params.connectionName,
+        rootConnectionName: gapTemplateRoute.rootConnectionName,
+        traceThickness: gapTemplateRoute.traceThickness,
+        viaDiameter: gapTemplateRoute.viaDiameter,
+        route: [
+          endpointPointByHash.get(edge.fromHash)!,
+          endpointPointByHash.get(edge.toHash)!,
+        ],
+        vias: [],
+      }
+    },
+  )
 
   if (
     selectedHdRoutes.length > 0 &&
