@@ -52,7 +52,13 @@ export type BenchmarkStageTimingBreakdown = {
   stages: BenchmarkStageTiming[]
 }
 
+export type PortPointBudget = {
+  effort: number
+  maxIterations: number
+}
+
 export type WorkerProgress = {
+  portPointBudget?: PortPointBudget
   solverName: string
   scenarioName: string
   sampleNumber: number
@@ -104,6 +110,7 @@ export type TinyHypergraphBenchmarkMetrics = {
 }
 
 export type RoutingBenchmarkMetrics = {
+  portPointBudget?: PortPointBudget
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
@@ -126,6 +133,8 @@ export type WorkerResult<
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  /** Resolved scenario effort, including a CLI override, when recorded. */
+  requestedEffort?: number
   /** Peak resident set size through routing completion in the isolated sample process. */
   peakRssBytes?: number
   /** Configured per-sample limit used to score unsuccessful runs in percentiles. */

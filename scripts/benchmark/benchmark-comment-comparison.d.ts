@@ -14,3 +14,10 @@ export type BenchmarkComparisonInput = {
 export function renderBenchmarkComparison(
   input: BenchmarkComparisonInput,
 ): string[]
+
+export function getBenchmarkEffortRows(
+  columns: ReadonlyArray<{
+    report: BenchmarkReport | null
+    solverName: string
+  }>,
+): Array<{ metric: string; values: string[] }>

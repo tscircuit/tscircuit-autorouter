@@ -90,10 +90,11 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 
   expect(
     renderBenchmarkComparison({ mainReport, prReport }).join("\n"),
-  ).toContain(`Dataset: srj18 · Scenarios: 2 · Effort: 1x effort
+  ).toContain(`Dataset: srj18 · Scenarios: 2
 
 | Solver | Metric | Main | PR | Change |
 | --- | --- | ---: | ---: | ---: |
+| Pipeline7 | Requested effort | 1× | 1× | — |
 | Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% | +50.0 pp |
 | Pipeline7 | Relaxed DRC pass | 0.0% (🕒50.0%) | 50.0% | +50.0 pp |
 | Pipeline7 | DRC issues | 3 | 1 | -2 |
