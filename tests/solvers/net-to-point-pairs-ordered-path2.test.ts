@@ -2,7 +2,7 @@
 // even when a tap shares A and the shortest tree would skip A -> B.
 import { test } from "bun:test"
 import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { checkOrderedTracePointPairs } from "../fixtures/checkOrderedTracePointPairs"
+import { checkOrderedTracePointPairs } from "../fixtures/check-ordered-trace-point-pairs"
 
 test.failing(
   "NetToPointPairsSolver2_OffBoardConnection links trace path points in order",

@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
-import { getPcbSnapshot } from "./getPcbSnapshot"
+import { getPcbSnapshot } from "./get-pcb-snapshot"
 import capturedSrj from "./ordered-trace-path.srj.json" with { type: "json" }
 import artwork from "./ordered-trace-path.artwork.json" with { type: "json" }
 
