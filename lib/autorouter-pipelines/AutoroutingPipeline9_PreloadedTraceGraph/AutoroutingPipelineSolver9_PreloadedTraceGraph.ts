@@ -283,6 +283,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
+  traceWidthRefinementSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   preloadedTraceGraphSolver?: PreloadedTraceGraphSolver
   componentDetectionSolver?: ComponentDetectionSolver
@@ -1010,6 +1011,30 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "traceWidthRefinementSolver",
+      TraceWidthSolver,
+      (cms) => [
+        {
+          ...cms.traceWidthSolver!.input,
+          refineExistingRoutes: true,
+          hdRoutes: cms.effortCleanupSolver!.getOutput(),
+          otherHdRoutes: cms.getUpdatedPreloadedTraces().flatMap(
+            (trace, index): HighDensityRoute[] =>
+              convertPreloadedTraceToHdRoutes(
+                trace,
+                index,
+                cms.srj.layerCount,
+                cms.viaDiameter,
+                cms.connMap,
+              ).map((route): HighDensityRoute => ({
+                ...route,
+                rootConnectionName: trace.connection_name,
+              })),
+          ),
+        },
+      ],
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (
@@ -1020,7 +1045,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
+        const hdRoutes = cms.traceWidthRefinementSolver!.getHdRoutesWithWidths()
         const { differentialPairs, differentialPairLanes } =
           getDifferentialPairsForPostProcessing({
             pipelineName: "Pipeline9",
@@ -1292,7 +1317,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
     const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
-    const traceWidthViz = this.traceWidthSolver?.visualize()
+    const traceWidthViz = (
+      this.traceWidthRefinementSolver ?? this.traceWidthSolver
+    )?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
@@ -1506,6 +1533,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.traceWidthRefinementSolver?.solved
+        ? this.traceWidthRefinementSolver.getHdRoutesWithWidths()
+        : undefined) ??
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
         : undefined) ??
