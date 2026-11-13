@@ -14,6 +14,9 @@ test("existing plane access requires physical connectivity, layer reach and the 
     "vias outside plane",
     "separate plane islands",
     "coincident GND trace vias",
+    "coincident net-only trace vias",
+    "coincident net-only aliased trace vias",
+    "coincident net-only wrong-net trace vias",
     "connected remote trace vias",
     "chained remote trace vias",
     "externally connected remote trace vias",
@@ -63,17 +66,23 @@ test("existing plane access requires physical connectivity, layer reach and the 
       const chained = scenario === "chained remote trace vias"
       const external = scenario === "externally connected remote trace vias"
       const startsAtRemotePoint = unconnected || chained || external
+      const netOnly = scenario.includes("net-only")
+      const wrongNet = scenario.includes("wrong-net")
+      const aliased = scenario.includes("aliased")
       const blind = scenario === "blind trace vias miss plane"
       const explicitSpan = scenario === "explicit trace span reaches inner4"
       input.allowBlindAndBuriedVias = blind || explicitSpan
       if (scenario.includes("inner4")) plane.layers = ["inner4"]
+      if (aliased) {
+        input.connections[0]!.__rootConnectionNames = ["GND", "GND_ALIAS"]
+      }
       input.traces = input.connections[0]!.pointsToConnect.map((point) => ({
         type: "pcb_trace",
         pcb_trace_id: `existing-${point.pointId}`,
-        connection_name: "GND",
-        connectsTo: [
-          startsAtRemotePoint ? `remote-${point.pointId}` : point.pointId!,
-        ],
+        connection_name: wrongNet ? "VCC" : aliased ? "GND_ALIAS" : "GND",
+        connectsTo: netOnly
+          ? []
+          : [startsAtRemotePoint ? `remote-${point.pointId}` : point.pointId!],
         isFixed: true,
         route: [
           {
@@ -146,7 +155,7 @@ test("existing plane access requires physical connectivity, layer reach and the 
           (point) => [point.pointId!, `remote-${point.pointId}`],
         )
       }
-      connected = !unconnected && !blind
+      connected = !unconnected && !blind && !wrongNet
     }
     if (scenario === "merged connections") {
       input.connections.push({
