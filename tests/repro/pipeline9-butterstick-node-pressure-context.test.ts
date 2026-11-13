@@ -74,6 +74,7 @@ test("ButterStick routes one native cell with its pressure context", async (): P
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(solver.routes).toHaveLength(1)
+  expect(solver.nodePfById.size).toBe(1)
   expect(
     solver.nodeSolveMetadataById.get(node.capacityMeshNodeId)?.nodePf,
   ).toBe(0)
@@ -143,7 +144,7 @@ test("ButterStick routes one native cell with its pressure context", async (): P
           }),
           fill: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
             ? "#ea580c40"
-            : "transparent",
+            : "#94a3b820",
           stroke: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
             ? "#c2410c"
             : "#94a3b8",
