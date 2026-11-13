@@ -94,6 +94,7 @@ import {
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
@@ -375,14 +376,43 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "topologyPlanningSolver",
       MultiGraphTopologyPlannerSolver,
-      (cms) => [
-        {
-          inputSrj: cms.srjWithPointPairs!,
-          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
-          viaDiameter: cms.viaDiameter,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        },
-      ],
+      (cms) => {
+        const srj = cms.srjWithPointPairs!
+        let topologySrj = srj
+        const isolatedTraces = srj.traces?.filter(
+          (trace) => trace.isFixed && !trace.connectsTo?.length,
+        )
+        if (isolatedTraces?.length) {
+          // No active connection can land on this copper. Reserve its footprint
+          // in the mesh before choosing boundary ports for the new routes.
+          const netId = (name: string): string =>
+            cms.connMap.getNetConnectedToId(name) ?? name
+          const activeNets = new Set(
+            srj.connections.map((conn) => netId(conn.name)),
+          )
+          const fixedCopper = isolatedTraces.filter(
+            (trace) => !activeNets.has(netId(trace.connection_name)),
+          )
+          if (fixedCopper.length > 0) {
+            const envelopes = getObstaclesFromSrjTraces({
+              ...srj,
+              traces: fixedCopper,
+            })
+            topologySrj = {
+              ...srj,
+              obstacles: [...srj.obstacles, ...envelopes],
+            }
+          }
+        }
+        return [
+          {
+            inputSrj: topologySrj,
+            componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
+            viaDiameter: cms.viaDiameter,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          },
+        ]
+      },
       {
         onSolved: (cms) => {
           const output = cms.topologyPlanningSolver!.getOutput()
