@@ -10,7 +10,10 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
   const { inputSrj, cpuGroundPointIds, cpuPads } = JSON.parse(
     gunzipSync(
       readFileSync(
-        new URL("./assets/stm32-existing-plane-vias.srj.json.gz", import.meta.url),
+        new URL(
+          "./assets/stm32-existing-plane-vias.srj.json.gz",
+          import.meta.url,
+        ),
       ),
     ).toString(),
   ) as {
