@@ -7,6 +7,8 @@ import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmen
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 
+const CRAMPED_PORT_COST = 1000
+
 type SingleTargetNecessaryCrampedPortPointSolverInput = {
   target: CapacityMeshNode
   mapOfCapacityMeshNodeIdToSegmentPortPoints: Map<
@@ -32,7 +34,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     if (this.input.depthLimit < 1) {
       throw new Error("Depth limit must be at least 1")
     }
-    this._setup()
+    this.setup()
   }
 
   override getSolverName() {
@@ -71,8 +73,8 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return
     }
 
-    while (this.queue.length > 0) {
-      this.currentExploredPortPoints = this.queue.shift()!
+    for (let index = 0; index < this.queue.length; index++) {
+      this.currentExploredPortPoints = this.queue[index]!
       const bestKnownCandidate = this.visitedExploredPortPoints.get(
         this.currentExploredPortPoints.port,
       )
@@ -85,56 +87,42 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         continue
       }
 
-      const nextNodes = this.currentExploredPortPoints.port.nodeIds.map(
-        (nodeId) => {
-          const cmNode = this.input.mapOfCapacityMeshNodeIdToRef.get(nodeId)
-          if (!cmNode) {
-            throw new Error(
-              `Could not find capacity mesh node for id ${nodeId}`,
-            )
+      const parent = this.currentExploredPortPoints
+      const depth = parent.depth + 1
+      for (const nodeId of parent.port.nodeIds) {
+        if (!this.input.mapOfCapacityMeshNodeIdToRef.has(nodeId)) {
+          throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
+        }
+        const ports =
+          this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(nodeId)
+        if (!ports) continue
+        for (const port of ports) {
+          if (this.input.shouldIgnoreCrampedPortPoints && port.cramped) continue
+          const crampedCount =
+            parent.countOfCrampedPortPointsInPath + (port.cramped ? 1 : 0)
+          const existing = this.visitedExploredPortPoints.get(port)
+          const cost = depth + crampedCount * CRAMPED_PORT_COST
+          if (existing && this.getCandidateCost(existing) <= cost) continue
+          const candidate = {
+            port,
+            depth,
+            parent,
+            countOfCrampedPortPointsInPath: crampedCount,
           }
-          return cmNode
-        },
-      )
-
-      const nextPorts = nextNodes.flatMap(
-        (node) =>
-          this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
-            node.capacityMeshNodeId,
-          ) ?? [],
-      )
-
-      for (const nextPort of nextPorts) {
-        if (this.input.shouldIgnoreCrampedPortPoints && nextPort.cramped) {
-          continue
+          this.visitedExploredPortPoints.set(port, candidate)
+          this.queue.push(candidate)
         }
-
-        const nextCandidate: ExploredPortPoint = {
-          port: nextPort,
-          depth: this.currentExploredPortPoints.depth + 1,
-          parent: this.currentExploredPortPoints,
-          countOfCrampedPortPointsInPath:
-            this.currentExploredPortPoints.countOfCrampedPortPointsInPath +
-            (nextPort.cramped ? 1 : 0),
-        }
-        const existingCandidate = this.visitedExploredPortPoints.get(nextPort)
-        if (
-          existingCandidate &&
-          this.getCandidateCost(existingCandidate) <=
-            this.getCandidateCost(nextCandidate)
-        ) {
-          continue
-        }
-        this.visitedExploredPortPoints.set(nextPort, nextCandidate)
-        this.queue.push(nextCandidate)
       }
     }
-
+    this.queue.length = 0
     this.solved = true
   }
 
   private getCandidateCost(candidate: ExploredPortPoint): number {
-    return candidate.depth + candidate.countOfCrampedPortPointsInPath * 1000
+    return (
+      candidate.depth +
+      candidate.countOfCrampedPortPointsInPath * CRAMPED_PORT_COST
+    )
   }
 
   getOutput() {

@@ -39,6 +39,9 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
       this.nodeTree = null
       this.edgeSet.clear()
       this.handleTargetNodes()
+      // Later stages retain the edges and visualize from nodes and edges.
+      this.nodeTree.buckets.clear()
+      this.edgeSet.clear()
       this.solved = true
       return
     }
