@@ -101,23 +101,11 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
     })
     expect(connectivity.connMap.areAllIdsConnected(portIds)).toBeTrue()
   }
-  const focusedSourceTraceIds = new Set(
-    circuit.flatMap((element) =>
-      element.type === "source_trace" &&
-      ["RAM_D7", "RAM_CS#"].includes(element.display_name ?? "")
-        ? [element.source_trace_id]
-        : [],
-    ),
-  )
-  expect(focusedSourceTraceIds.size).toBe(2)
   const contacts = checkEachPcbTraceNonOverlapping(circuit, {
     minClearance: srj.minTraceToPadEdgeClearance,
   }).filter((error) => error.message.includes("accidental contact"))
   expect(contacts.some((error) => error.message.includes("RAM_D7"))).toBeFalse()
-  const originalContact = checkEachPcbTraceNonOverlapping(fixture.circuitJson, {
-    minClearance: srj.minTraceToPadEdgeClearance,
-  }).find((error) => error.message.includes("RAM_D7 overlaps"))
-  if (!originalContact?.center) throw new Error("Missing native D7 contact")
+  expect(contacts.some((error) => error.message.includes("RAM_D6"))).toBeTrue()
   const renderOptions = {
     backgroundColor: "white",
     colorOverrides: {
@@ -144,41 +132,70 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
       height: 1000,
     }),
   ).toMatchSvgSnapshot(import.meta.path, { scale: 1 })
-  const focusedTraceIds = new Set(
-    circuit.flatMap((element) =>
-      element.type === "pcb_trace" &&
-      element.source_trace_id !== undefined &&
-      focusedSourceTraceIds.has(element.source_trace_id)
-        ? [element.pcb_trace_id]
-        : [],
-    ),
-  )
-  const focusedCircuit = circuit
-    .filter((element) => {
-      if (element.type === "pcb_trace") {
-        return focusedTraceIds.has(element.pcb_trace_id)
-      }
-      if (element.type === "pcb_via") {
-        return focusedTraceIds.has(element.pcb_trace_id!)
-      }
-      return true
-    })
-    .map((element): AnyCircuitElement => {
-      if (element.type !== "pcb_board") return element
-      return {
-        ...element,
-        center: originalContact.center!,
-        width: 2,
-        height: 2,
-        outline: undefined,
-      }
-    })
-  await expect(
-    convertCircuitJsonToPcbSvg(focusedCircuit, {
-      ...renderOptions,
-      width: 900,
-      height: 900,
-      drawPaddingOutsideBoard: false,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "d7-cs", scale: 1 })
+  for (const focus of [
+    {
+      sourceNames: ["RAM_D7", "RAM_CS#"],
+      contactTrace: "RAM_D7",
+      svgName: "d7-cs",
+    },
+    {
+      sourceNames: ["RAM_D6", "RAM_UDQS-"],
+      contactTrace: "RAM_D6",
+      svgName: "d6-udqs",
+    },
+  ]) {
+    const focusedSourceTraceIds = new Set(
+      circuit.flatMap((element) =>
+        element.type === "source_trace" &&
+        focus.sourceNames.includes(element.display_name ?? "")
+          ? [element.source_trace_id]
+          : [],
+      ),
+    )
+    expect(focusedSourceTraceIds.size).toBe(2)
+    const originalContact = checkEachPcbTraceNonOverlapping(
+      fixture.circuitJson,
+      {
+        minClearance: srj.minTraceToPadEdgeClearance,
+      },
+    ).find((error) => error.message.includes(`${focus.contactTrace} overlaps`))
+    if (!originalContact?.center) throw new Error("Missing native DDR contact")
+    const focusedTraceIds = new Set(
+      circuit.flatMap((element) =>
+        element.type === "pcb_trace" &&
+        element.source_trace_id !== undefined &&
+        focusedSourceTraceIds.has(element.source_trace_id)
+          ? [element.pcb_trace_id]
+          : [],
+      ),
+    )
+    const focusedCircuit = circuit
+      .filter((element) => {
+        if (element.type === "pcb_trace") {
+          return focusedTraceIds.has(element.pcb_trace_id)
+        }
+        if (element.type === "pcb_via") {
+          return focusedTraceIds.has(element.pcb_trace_id!)
+        }
+        return true
+      })
+      .map((element): AnyCircuitElement => {
+        if (element.type !== "pcb_board") return element
+        return {
+          ...element,
+          center: originalContact.center!,
+          width: 2,
+          height: 2,
+          outline: undefined,
+        }
+      })
+    await expect(
+      convertCircuitJsonToPcbSvg(focusedCircuit, {
+        ...renderOptions,
+        width: 900,
+        height: 900,
+        drawPaddingOutsideBoard: false,
+      }),
+    ).toMatchSvgSnapshot(import.meta.path, { svgName: focus.svgName, scale: 1 })
+  }
 })
