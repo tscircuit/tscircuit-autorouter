@@ -15,6 +15,11 @@ test("numerical bridges follow active escapes across multiple gaps without openi
     ["escaped-corner", 20, 1, false],
     ["escaped-outside", 21, 1, false],
     ["redundant-gap", 21.0005, 0, false],
+    ["pocket-pad", 30, 0, true],
+    ["closed-pocket", 30, 1, false],
+    ["pocket-dead-end", 30, 2, false],
+    ["pocket-gap", 31.0005, 0, false],
+    ["pocket-outside", 32.0005, 0, false],
   ]
   const nodes: CapacityMeshNode[] = placements.map(([id, x, y, target]) => ({
     capacityMeshNodeId: id,
@@ -45,6 +50,13 @@ test("numerical bridges follow active escapes across multiple gaps without openi
               { x: 21, y: 1, layer: "top" },
             ],
           },
+          {
+            name: "escape-closed-pocket",
+            pointsToConnect: [
+              { x: 30, y: 0, layer: "top" },
+              { x: 32.0005, y: 0, layer: "top" },
+            ],
+          },
         ]
       : []
     const solver = new AvailableSegmentPointSolver({
@@ -73,6 +85,13 @@ test("numerical bridges follow active escapes across multiple gaps without openi
     expect(
       solver.getAvailablePortCountForEdge("escaped-corner", "escaped-outside"),
     ).toBeGreaterThan(0)
+    // An ordinary port into a closed pocket does not reach the destination.
+    expect(
+      solver.getAvailablePortCountForEdge("pocket-pad", "closed-pocket"),
+    ).toBeGreaterThan(0)
+    expect(
+      solver.getAvailablePortCountForEdge("pocket-pad", "pocket-gap") > 0,
+    ).toBe(hasActiveConnection)
     const retainedPorts = solver
       .getOutput()
       .flatMap((segment) => segment.portPoints)
