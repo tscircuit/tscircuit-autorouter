@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { AnyCircuitElement } from "circuit-json"
-import { PcbConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { removeChangedSectionsFromFixedHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializeHypergraphPreloadedTraceSections"
@@ -79,6 +78,20 @@ test("Glider DDR via outside the shared routing cell", async (): Promise<void> =
     fixedHdRoutes: fixedRoutes,
     sections,
   })
+  const port = fixture.graph.ports[0]!.d
+  const targetVia = trace.route
+    .filter((point) => point.route_type === "via")
+    .sort(
+      (left, right) =>
+        Math.hypot(left.x - port.x, left.y - port.y) -
+        Math.hypot(right.x - port.x, right.y - port.y),
+    )[0]
+  if (!targetVia) throw new Error("Missing native DDR via beside the boundary")
+  expect(
+    retainedRoutes.some((route) =>
+      route.vias.some((via) => via.x === targetVia.x && via.y === targetVia.y),
+    ),
+  ).toBeFalse()
   const retainedTraces: SimplifiedPcbTrace[] = retainedRoutes.map(
     (route, index) => ({
       type: "pcb_trace",
@@ -108,16 +121,6 @@ test("Glider DDR via outside the shared routing cell", async (): Promise<void> =
       element.display_name === "/fpga_ddr/DRAM_LDQSP",
   )
   if (source?.type !== "source_trace") throw new Error("Missing native DDR net")
-  const portIds = circuit.flatMap((element) =>
-    element.type === "pcb_port" &&
-    source.connected_source_port_ids.includes(element.source_port_id)
-      ? [element.pcb_port_id]
-      : [],
-  )
-  expect(portIds).toHaveLength(2)
-  expect(
-    new PcbConnectivityMap(circuit).connMap.areAllIdsConnected(portIds),
-  ).toBeFalse()
   const renderOptions = {
     backgroundColor: "white",
     renderSolderMask: false,
