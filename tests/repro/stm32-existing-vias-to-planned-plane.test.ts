@@ -30,11 +30,14 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
   const output = solver.getOutputSimpleRouteJson()
   const map = getInitiallyConnectedMapFromSimpleRouteJson(output)
   const firstGroundGroup = map.getNetConnectedToId(cpuGroundPointIds[0]!)
-  const recognized = cpuGroundPointIds.filter(
-    (id) =>
-      firstGroundGroup !== undefined &&
-      map.getNetConnectedToId(id) === firstGroundGroup,
-  ).length
+  const recognizedPointIds = new Set(
+    cpuGroundPointIds.filter(
+      (id) =>
+        firstGroundGroup !== undefined &&
+        map.getNetConnectedToId(id) === firstGroundGroup,
+    ),
+  )
+  const recognized = recognizedPointIds.size
   expect(cpuGroundPointIds).toHaveLength(104)
   expect(cpuPads).toHaveLength(354)
   // Reproduction: all 104 through-vias exist, but no group links their endpoints.
@@ -60,6 +63,7 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
   const cpuNewVias = solver.createdEscapeVias.filter((via) =>
     groundIds.has(via.sourcePointId!),
   )
+  expect(cpuNewVias).toHaveLength(0)
   const plane = inputSrj.obstacles.find(
     (obstacle) => obstacle.isCopperPour && obstacle.layers.includes("inner1"),
   )!
@@ -71,6 +75,15 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
         center: pad,
         radius: pad.radius,
         fill: "#d1d5db",
+        stroke: "none",
+      })),
+      // These outer rings visualize solver bookkeeping, not extra copper.
+      ...existingVias.map((via, index) => ({
+        center: via.center,
+        radius: via.width / 2 + 0.08,
+        fill: recognizedPointIds.has(groundPoints[index]!.pointId!)
+          ? "#15803d"
+          : "#dc2626",
         stroke: "none",
       })),
       ...existingVias.map((via) => ({
@@ -96,14 +109,14 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
       {
         x: 0,
         y: 32.3,
-        text: `ACTUAL: ${recognized} / 104 existing endpoints recognized together through GND`,
-        fontSize: 0.48,
+        text: `${recognized} / 104 recognized through the ground plane`,
+        fontSize: 0.75,
       },
       {
         x: 0,
         y: 31.2,
-        text: "EXPECTED: all 104 reach the same planned inner1 plane",
-        fontSize: 0.48,
+        text: "Same pads and vias; the change is recognition of existing connections",
+        fontSize: 0.43,
       },
       {
         x: 0,
@@ -114,13 +127,19 @@ test("STM32 ground escape vias are not recognized as access to the planned plane
       {
         x: 0,
         y: 7.8,
-        text: `Orange = ${cpuNewVias.length} additional via plans for these already-accessible endpoints`,
+        text: "STATUS RINGS: red = unrecognized; green = recognized (not copper)",
         fontSize: 0.43,
       },
       {
         x: 0,
         y: 6.7,
-        text: "Complete captured board input; STM32 view only; plane-access stage only",
+        text: `New via plans: ${cpuNewVias.length}. Zero before and after on this dense STM32 capture.`,
+        fontSize: 0.4,
+      },
+      {
+        x: 0,
+        y: 5.6,
+        text: "Complete board input; STM32 view only; plane-access stage only",
         fontSize: 0.4,
       },
     ],
