@@ -108,6 +108,7 @@ export class TraceWidthSolver extends BaseSolver {
   obstacleGeometry: "bounds" | "physical"
   refineExistingRoutes: boolean
   hdRouteSHI: HighDensityRouteSpatialIndex
+  private needsClearanceIndex = true
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
 
@@ -144,17 +145,29 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    if (this.obstacles.length > 0) {
-      this.obstacleSHI = new ObstacleSpatialHashIndex(
-        "flatbush",
-        this.obstacles,
-      )
+    if (this.refineExistingRoutes) {
+      this.needsClearanceIndex = this.hdRoutes.some((route): boolean => {
+        const nominalWidth = this.getNominalTraceWidthForRoute(route)
+        if (nominalWidth === undefined) return false
+        return route.route.some(
+          (point): boolean =>
+            (point.traceThickness ?? route.traceThickness) < nominalWidth,
+        )
+      })
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-      ...this.hdRoutes,
-      ...(input.otherHdRoutes ?? []),
-    ])
+    // Copying or narrowing existing copper needs no clearance searches.
+    let indexedRoutes: HighDensityRoute[] = []
+    if (this.needsClearanceIndex) {
+      indexedRoutes = [...this.hdRoutes, ...(input.otherHdRoutes ?? [])]
+      if (this.obstacles.length > 0) {
+        this.obstacleSHI = new ObstacleSpatialHashIndex(
+          "flatbush",
+          this.obstacles,
+        )
+      }
+    }
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(indexedRoutes)
   }
 
   private getNominalTraceWidthForRoute(
@@ -880,8 +893,10 @@ export class TraceWidthSolver extends BaseSolver {
     if (!this.currentTrace) return
 
     this.processedRoutes.push(routeWithWidth)
-    this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)
-    this.hdRouteSHI.addRoute(routeWithWidth)
+    if (this.needsClearanceIndex) {
+      this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)
+      this.hdRouteSHI.addRoute(routeWithWidth)
+    }
     this.currentTrace = null
     this.cursorPosition = null
     this.hasInsufficientClearance = false
