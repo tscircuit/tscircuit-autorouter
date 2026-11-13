@@ -604,6 +604,10 @@ const rebuildPreloadedTraceFromSections = ({
   }
   rebuiltRoute.push(...originalTrace.route.slice(originalRoutePosition))
 
+  if (JSON.stringify(rebuiltRoute) === JSON.stringify(originalTrace.route)) {
+    return originalTrace
+  }
+
   return {
     ...originalTrace,
     __replaces_pcb_trace_id: originalTrace.pcb_trace_id,

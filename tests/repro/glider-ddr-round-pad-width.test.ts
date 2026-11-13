@@ -30,6 +30,18 @@ test("Glider DDR width selection beside round BGA pads", async (): Promise<void>
   solver.solve()
   expect(solver.solved).toBe(true)
 
+  for (const name of [
+    "source_trace_0",
+    "source_trace_7",
+    "source_trace_45",
+    "source_trace_48",
+  ]) {
+    const route = solver
+      .getHdRoutesWithWidths()
+      .find((route) => route.connectionName === name)
+    expect(route?.traceThickness).toBe(0.127)
+  }
+
   await expect(
     getSvgFromGraphicsObject(solver.visualize(), {
       backgroundColor: "white",
