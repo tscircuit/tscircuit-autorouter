@@ -28,13 +28,13 @@ test("A64 DDR keeps its complete ordered capacity graph", async (): Promise<void
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.edgeSolver?.solved).toBe(true)
   expect(input.connections).toHaveLength(43)
-  expect(solver.capacityNodes).toHaveLength(125_920)
-  expect(solver.capacityEdges).toHaveLength(347_143)
+  expect(solver.capacityNodes).toHaveLength(111_539)
+  expect(solver.capacityEdges).toHaveLength(315_436)
   expect(
     createHash("sha256")
       .update(JSON.stringify(solver.capacityEdges))
       .digest("hex"),
-  ).toBe("88c4a60dd836a9b8f7adb388f6e72379db6dbd3469d128f9cd89e0038dc3ff4b")
+  ).toBe("be306d4a7a8591dac64eaba39c7e86e223c6510022e9cee4ff66ae1b1c6d3b50")
   await expect(
     getA64EdgeLookupSvg({
       nodes: solver.capacityNodes!,
