@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
+import { createPreloadedInnerLayerPortValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedInnerLayerPortValidator"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -53,6 +54,12 @@ test("routes the H616 ZQ1 crossing beside existing DDR copper", async (): Promis
   const uniform = new UniformPortDistributionSolver({
     ...fixture.uniformInput,
     obstacles: fixture.obstacles,
+    isPortPointClear: createPreloadedInnerLayerPortValidator({
+      srj: fixture.board.srj,
+      connMap,
+      traceWidth: fixture.highDensityInput.traceWidth,
+      viaDiameter: fixture.highDensityInput.viaDiameter,
+    }),
   })
   uniform.solve()
   const node = uniform
@@ -99,7 +106,7 @@ test("routes the H616 ZQ1 crossing beside existing DDR copper", async (): Promis
       )
     }
   }
-  expect(minimumCopperGap).toBeLessThan(0)
+  expect(minimumCopperGap).toBeGreaterThan(0)
   const solver = new Pipeline9HighDensitySolver({
     ...fixture.highDensityInput,
     nodePortPoints: [node],
@@ -107,9 +114,9 @@ test("routes the H616 ZQ1 crossing beside existing DDR copper", async (): Promis
     connMap,
   })
   solver.solve()
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.routes).toHaveLength(0)
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.routes).toHaveLength(1)
   for (const route of solver.routes) {
     for (const fixed of solver.getUpdatedFixedHdRoutes()) {
       expect(

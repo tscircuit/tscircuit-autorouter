@@ -21,6 +21,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { createPreloadedInnerLayerPortValidator } from "./createPreloadedInnerLayerPortValidator"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -594,6 +595,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          isPortPointClear: createPreloadedInnerLayerPortValidator({
+            srj: cms.srj,
+            connMap: cms.connMap,
+            traceWidth: cms.minTraceWidth,
+            viaDiameter: cms.viaDiameter,
+          }),
         },
       ],
     ),

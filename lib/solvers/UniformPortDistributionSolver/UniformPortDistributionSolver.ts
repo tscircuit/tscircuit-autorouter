@@ -31,6 +31,9 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  isPortPointClear?: (
+    point: NodeWithPortPoints["portPoints"][number],
+  ) => boolean
 }
 
 /**
@@ -185,6 +188,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
+    // Keep a valid planned crossing when centering would overlap fixed copper.
+    for (const point of redistributed) {
+      if (
+        !this.input.preserveSolitaryPorts ||
+        portCountByLayer.get(point.z) !== 1 ||
+        !this.input.isPortPointClear ||
+        this.input.isPortPointClear(point)
+      ) {
+        continue
+      }
+      const original = familyRaw.find(
+        (candidate) => candidate.portPointId === point.portPointId,
+      )!
+      if (this.input.isPortPointClear(original)) {
+        point.x = original.x
+        point.y = original.y
+      }
+    }
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }
 
