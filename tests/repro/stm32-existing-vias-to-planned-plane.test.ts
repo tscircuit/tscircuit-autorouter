@@ -45,7 +45,7 @@ test("STM32 ground escape vias are recognized as access to the planned plane", a
   const recognized = recognizedPointIds.size
   expect(cpuGroundPointIds).toHaveLength(104)
   expect(cpuPads).toHaveLength(354)
-  expect(recognized).toBe(0)
+  expect(recognized).toBe(104)
 
   const groundIds = new Set(cpuGroundPointIds)
   const groundPoints = inputSrj.connections.flatMap((connection) =>
