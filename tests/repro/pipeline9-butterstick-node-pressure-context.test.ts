@@ -135,36 +135,42 @@ test("ButterStick routes one native cell with its pressure context", async (): P
         fill: "#16a34a26",
         stroke: "#15803d",
       },
-      ...foreignCells.map((foreignCell): Rect => ({
-        ...createRectFromCapacityNode(foreignCell, {
-          rectMargin: 0.001,
-          zOffset: 0,
+      ...foreignCells.map(
+        (foreignCell): Rect => ({
+          ...createRectFromCapacityNode(foreignCell, {
+            rectMargin: 0.001,
+            zOffset: 0,
+          }),
+          fill: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
+            ? "#ea580c40"
+            : "transparent",
+          stroke: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
+            ? "#c2410c"
+            : "#94a3b8",
         }),
-        fill: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
-          ? "#ea580c40"
-          : "transparent",
-        stroke: solver.nodePfById.has(foreignCell.capacityMeshNodeId)
-          ? "#c2410c"
-          : "#94a3b8",
-      })),
+      ),
     ],
     circles: [
       ...copper.circles.filter(({ center }): boolean => inView(center)),
       ...pads
         .filter(({ shape }): boolean => shape === "circle")
-        .map(({ center, width }): Circle => ({
-          center,
-          radius: width / 2,
-          fill: "#ef444480",
-        })),
+        .map(
+          ({ center, width }): Circle => ({
+            center,
+            radius: width / 2,
+            fill: "#ef444480",
+          }),
+        ),
     ],
     lines: [
       ...copper.lines.filter(({ points }): boolean => points.every(inView)),
-      ...solver.routes.map((route): Line => ({
-        points: route.route,
-        strokeColor: "#166534",
-        strokeWidth: route.traceThickness,
-      })),
+      ...solver.routes.map(
+        (route): Line => ({
+          points: route.route,
+          strokeColor: "#166534",
+          strokeWidth: route.traceThickness,
+        }),
+      ),
     ],
     texts: [
       {
