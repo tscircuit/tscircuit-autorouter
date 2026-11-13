@@ -31,6 +31,11 @@ export type {
 
 const WORKING_NODE_RELEASE_THRESHOLD = 50_000
 
+type TopologyMergingSourceSetKey = string
+type LayerTopologySelection = ReturnType<
+  typeof getLayerTopologiesForCoveredNodes
+>
+
 export class TopologyMergingSolver extends BaseSolver {
   private readonly preparedNodes: PreparedTopologyMergingNode[]
   private readonly preparedNodeBySourceKey: Map<
@@ -46,6 +51,10 @@ export class TopologyMergingSolver extends BaseSolver {
   private horizontalRegionByBucket = new Map<
     HorizontalTopologyMergingBucketKey,
     TopologyMergingRegion
+  >()
+  private layerTopologiesBySources = new Map<
+    TopologyMergingSourceSetKey,
+    LayerTopologySelection
   >()
   private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
@@ -181,6 +190,7 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   private releaseTopologyScratch(): void {
+    this.layerTopologiesBySources.clear()
     // Keep small meshes on their existing garbage-collection schedule.
     const workingNodeCount =
       this.preparedNodes.length + this.atomicRegions.length
@@ -216,6 +226,10 @@ export class TopologyMergingSolver extends BaseSolver {
       HorizontalTopologyMergingBucketKey,
       TopologyMergingRegion
     >()
+    const nextLayerTopologiesBySources = new Map<
+      TopologyMergingSourceSetKey,
+      LayerTopologySelection
+    >()
 
     for (let yIndex = 0; yIndex < yCoordinates.length - 1; yIndex++) {
       const minY = yCoordinates[yIndex]!
@@ -228,13 +242,28 @@ export class TopologyMergingSolver extends BaseSolver {
       )
       if (coveringNodes.length === 0) continue
 
-      const { layerTopologies, overruledTargetSourceKeys } =
-        getLayerTopologiesForCoveredNodes({
+      const sourceSetKey: TopologyMergingSourceSetKey = JSON.stringify(
+        coveringNodes.map(({ groupIndex, sourceKey }): [number, string] => [
+          groupIndex,
+          sourceKey,
+        ]),
+      )
+      // Neighboring X slabs often cover the same source nodes. Keep only
+      // the current and previous slab's pure layer selections.
+      let layerTopologySelection =
+        nextLayerTopologiesBySources.get(sourceSetKey) ??
+        this.layerTopologiesBySources.get(sourceSetKey)
+      if (!layerTopologySelection) {
+        layerTopologySelection = getLayerTopologiesForCoveredNodes({
           coveringNodes,
           nodeGroups: this.inputProblem.nodeGroups,
           layerCount: this.inputProblem.layerCount,
           allowBlindAndBuriedVias: this.inputProblem.allowBlindAndBuriedVias,
         })
+      }
+      nextLayerTopologiesBySources.set(sourceSetKey, layerTopologySelection)
+      const { layerTopologies, overruledTargetSourceKeys } =
+        layerTopologySelection
       for (const sourceKey of overruledTargetSourceKeys) {
         this.overruledTargetSourceKeys.add(sourceKey)
       }
@@ -269,5 +298,6 @@ export class TopologyMergingSolver extends BaseSolver {
       }
     }
     this.horizontalRegionByBucket = nextHorizontalRegionByBucket
+    this.layerTopologiesBySources = nextLayerTopologiesBySources
   }
 }
