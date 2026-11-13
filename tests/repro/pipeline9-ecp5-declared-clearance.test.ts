@@ -105,7 +105,7 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
     minClearance: srj.minTraceToPadEdgeClearance,
   }).filter((error) => error.message.includes("accidental contact"))
   expect(contacts.some((error) => error.message.includes("RAM_D7"))).toBeFalse()
-  expect(contacts.some((error) => error.message.includes("RAM_D6"))).toBeTrue()
+  expect(contacts).toEqual([])
   const renderOptions = {
     backgroundColor: "white",
     colorOverrides: {
