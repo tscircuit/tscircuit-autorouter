@@ -1,8 +1,22 @@
 import { expect, spyOn, test } from "bun:test"
-import type { GraphicsObject, Rect, Text } from "graphics-debug"
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
+import {
+  type Circle,
+  type GraphicsObject,
+  getSvgFromGraphicsObject,
+  type Line,
+  type Rect,
+  type Text,
+} from "graphics-debug"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import * as topologyRegions from "lib/solvers/TopologyMergingSolver/topology-merging-regions"
-import type { CapacityMeshNode } from "lib/types"
+import type {
+  CapacityMeshNode,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
 // Native board: https://github.com/butterstick-fpga/butterstick-hardware/blob/0694ddfa9824a07f0c6c6981186e45f80187659c/hardware/ButterStick_r1.0/ButterStick.kicad_pcb
@@ -164,75 +178,206 @@ test("ButterStick keeps native layers while reusing repeated slab coverage", asy
     (total, { calculations }): number => total + calculations,
     0,
   )
+  // Reuse the existing native circuit fixture for physical context only.
+  // The focused solver still receives exactly the same twelve mesh regions.
+  const fixtureUrl = new URL(
+    "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
+    import.meta.url,
+  )
+  const { inputSrj, preloadedTraces } = JSON.parse(
+    gunzipSync(new Uint8Array(readFileSync(fixtureUrl))).toString("utf8"),
+  ) as { inputSrj: SimpleRouteJson; preloadedTraces: SimplifiedPcbTrace[] }
+  const inNativeView = ({ x, y }: { x: number; y: number }): boolean => {
+    const minX = 3.3
+    const maxX = 6.7
+    const minY = 3.5
+    const maxY = 7.7
+    return x >= minX && x <= maxX && y >= minY && y <= maxY
+  }
+  const nativePads = inputSrj.obstacles.filter(
+    (obstacle): boolean =>
+      Boolean(obstacle.circuitJsonMetadata?.pcb_smtpad_id) &&
+      inNativeView(obstacle.center),
+  )
+  expect(
+    nativePads.find(
+      ({ circuitJsonMetadata }): boolean =>
+        circuitJsonMetadata?.pcb_smtpad_id === "pcb_smtpad_575",
+    ),
+  ).toMatchObject({ center: globalPad.center, layers: ["bottom"] })
+  const copper = convertSrjToGraphicsObject({
+    ...inputSrj,
+    obstacles: nativePads.filter(({ shape }): boolean => shape !== "circle"),
+    connections: [],
+    traces: preloadedTraces,
+  })
   const graphics: GraphicsObject = {
     coordinateSystem: "cartesian",
-    rects: cellSlabs.map(
-      ({ minX, maxX, calculations }): Rect => ({
-        ...createRectFromCapacityNode(
-          {
-            ...freeCell,
-            center: { x: (minX + maxX) / 2, y: freeCell.center.y },
-            width: maxX - minX,
-          },
-          { rectMargin: 0.001, zOffset: 0 },
+    circles: [
+      ...copper.circles.filter(({ center }): boolean => inNativeView(center)),
+      ...nativePads
+        .filter(({ shape }): boolean => shape === "circle")
+        .map(
+          ({ center, width }): Circle => ({
+            center,
+            radius: width / 2,
+            fill: "rgba(255,0,0,0.5)",
+            layer: "z0",
+          }),
         ),
-        fill: calculations > 0 ? "#ffedd5" : "#dcfce7",
-        stroke: calculations > 0 ? "#c2410c" : "#15803d",
-      }),
-    ),
+    ],
+    rects: [
+      ...copper.rects,
+      ...output
+        .filter(({ _containsObstacle }): boolean => !_containsObstacle)
+        .map(
+          (node): Rect => ({
+            ...createRectFromCapacityNode(node, {
+              rectMargin: 0.01,
+              zOffset: 0,
+            }),
+            stroke: "rgba(0,140,170,0.5)",
+          }),
+        ),
+      ...cellSlabs.map(
+        ({ minX, maxX, calculations }): Rect => ({
+          ...createRectFromCapacityNode(
+            {
+              ...freeCell,
+              center: { x: (minX + maxX) / 2, y: freeCell.center.y },
+              width: maxX - minX,
+            },
+            { rectMargin: 0.001, zOffset: 0 },
+          ),
+          fill: calculations > 0 ? "#ea580c26" : "#16a34a4d",
+          stroke: calculations > 0 ? "#c2410c" : "#15803d",
+        }),
+      ),
+    ],
     lines: [
+      ...copper.lines.flatMap(({ points, ...line }): Line[] => {
+        const segments: Line[] = []
+        for (let index = 1; index < points.length; index++) {
+          const start = points[index - 1]!
+          const end = points[index]!
+          if (inNativeView(start) && inNativeView(end)) {
+            segments.push({ ...line, points: [start, end] })
+          }
+        }
+        return segments
+      }),
       {
         points: [
-          { x: padEdgeX, y: 4.18 },
-          { x: padEdgeX, y: 4.72 },
+          { x: padEdgeX, y: 4.2 },
+          { x: padEdgeX, y: 6.71 },
         ],
         strokeColor: "#475569",
         strokeDash: "4 3",
-        strokeWidth: 0.002,
+        strokeWidth: 0.012,
+      },
+      ...cellSlabs.map(
+        ({ minX, maxX }, index): Line => ({
+          points: [
+            { x: (minX + maxX) / 2, y: freeCell.center.y },
+            { x: index === 0 ? 4.5 : 6.0, y: 4.8 },
+          ],
+          strokeColor: "#64748b",
+          strokeWidth: 0.006,
+        }),
+      ),
+      {
+        points: [
+          {
+            x: globalPad.center.x + globalPad.width / 2,
+            y: globalPad.center.y,
+          },
+          { x: 6.4, y: 6.75 },
+        ],
+        strokeColor: "#475569",
+        strokeWidth: 0.007,
       },
     ],
     texts: [
       {
         x: 5.1,
-        y: 5.02,
-        text: "ButterStick: repeated layer selection",
-        fontSize: 0.032,
+        y: 8.4,
+        text: "ButterStick native DDR region",
+        fontSize: 0.18,
       },
       {
         x: 5.1,
-        y: 4.92,
-        text: `Cell layer calculations: ${cellCalculations}`,
-        fontSize: 0.042,
+        y: 8.05,
+        text: "Top pads red / bottom pads blue / native copper",
+        fontSize: 0.11,
+      },
+      ...nativePads
+        .filter(({ shape }): boolean => shape === "circle")
+        .map(
+          ({ center, circuitJsonMetadata }): Text => ({
+            x: center.x,
+            y: center.y,
+            text: circuitJsonMetadata!.source_port_name!.replace("BALL_", ""),
+            fontSize: 0.09,
+          }),
+        ),
+      {
+        x: 6.4,
+        y: 6.9,
+        text: "Bottom pad 575",
+        fontSize: 0.11,
       },
       {
-        x: 5.1,
-        y: 4.76,
-        text: `Distant pad edge: X = ${padEdgeX.toFixed(3)} mm`,
-        fontSize: 0.026,
+        x: 5.85,
+        y: 5.85,
+        text: "Pad edge",
+        fontSize: 0.12,
+      },
+      {
+        x: 5.85,
+        y: 5.6,
+        text: `X = ${padEdgeX.toFixed(3)} mm`,
+        fontSize: 0.11,
+      },
+      {
+        x: 4.35,
+        y: 5.85,
+        text: `Cell calculations: ${cellCalculations}`,
+        fontSize: 0.13,
+      },
+      {
+        x: 4.35,
+        y: 5.6,
+        text: `12 regions: ${totalCalculations} calculations`,
+        fontSize: 0.11,
       },
       ...cellSlabs.map(
-        ({ minX, maxX, calculations }, index): Text => ({
-          x: (minX + maxX) / 2,
-          y: 4.4,
-          text: calculations > 0 ? "CALCULATE" : "REUSE",
-          rotation: index === 0 ? 0 : 90,
-          fontSize: 0.025,
+        ({ calculations }, index): Text => ({
+          x: index === 0 ? 4.5 : 6.0,
+          y: 4.95,
+          text: calculations > 0 ? "Calculate layers" : "Reuse layers",
+          fontSize: 0.12,
           color: calculations > 0 ? "#9a3412" : "#166534",
         }),
       ),
       {
         x: 5.1,
-        y: 4.08,
-        text: "Native cell: 0.40 x 0.40 mm; layers 0-7 preserved",
-        fontSize: 0.026,
+        y: 3.1,
+        text: "Native cell: 0.40 x 0.40 mm / layers 0-7",
+        fontSize: 0.11,
       },
       {
         x: 5.1,
-        y: 3.99,
-        text: `Full 12-node repro: ${totalCalculations} layer calculations`,
-        fontSize: 0.026,
+        y: 2.8,
+        text: "Copper and merged mesh stay identical.",
+        fontSize: 0.11,
       },
     ],
   }
-  await expect(graphics).toMatchGraphicsSvg(import.meta.path)
+  await expect(
+    getSvgFromGraphicsObject(graphics, {
+      backgroundColor: "white",
+      svgWidth: 800,
+      svgHeight: 900,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
