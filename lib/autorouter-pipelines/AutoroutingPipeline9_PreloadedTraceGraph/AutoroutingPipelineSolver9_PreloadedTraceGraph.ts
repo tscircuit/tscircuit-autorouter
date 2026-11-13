@@ -844,6 +844,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
+        obstacleGeometry: "bounds",
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
@@ -1016,6 +1017,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           ...cms.traceWidthSolver!.input,
+          obstacleGeometry: "physical",
           refineExistingRoutes: true,
           hdRoutes: cms.effortCleanupSolver!.getOutput(),
           otherHdRoutes: cms.getUpdatedPreloadedTraces().flatMap(
