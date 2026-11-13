@@ -254,6 +254,8 @@ interface Edge<T extends Point> {
 
 interface BuildMinimumSpanningTreeOptions<T extends Point> {
   extraEdges?: Edge<T>[]
+  /** Include these edges before choosing the shortest remaining links. */
+  requiredEdges?: Edge<T>[]
 }
 
 // Main function to build a minimum spanning tree using Kruskal's algorithm
@@ -308,7 +310,10 @@ export function buildMinimumSpanningTree<T extends Point>(
 
     // Apply Kruskal's algorithm
     const disjointSet = new DisjointSet(pointsCopy)
-    const mstEdges: Edge<T>[] = []
+    const mstEdges: Edge<T>[] = [...(opts.requiredEdges ?? [])]
+    for (const edge of mstEdges) {
+      disjointSet.union(edge.from, edge.to)
+    }
 
     for (const edge of edges) {
       if (disjointSet.union(edge.from, edge.to)) {

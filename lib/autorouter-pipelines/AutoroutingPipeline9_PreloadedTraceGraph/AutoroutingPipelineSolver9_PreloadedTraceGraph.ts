@@ -68,10 +68,7 @@ import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepai
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import {
-  applyDifferentialPairPaths,
-  type PreloadedDifferentialPairSections,
-} from "./applyDifferentialPairPaths"
+import { resolveDifferentialPairSections } from "./resolveDifferentialPairSections"
 import { createDifferentialPairTerminalPairs } from "./createDifferentialPairTerminalPairs"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
@@ -311,10 +308,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  private differentialPairSectionNamesByMember: ReadonlyMap<string, string[]> =
-    new Map()
-  private preloadedDifferentialPairSections: PreloadedDifferentialPairSections =
-    new Map()
   originalSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -366,7 +359,33 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
-        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
+        const routingSrj = cms.srjWithEscapeViaLocations ?? cms.srj
+        const pairNames = new Set(
+          cms.srj.differentialPairs?.flatMap((pair) => pair.connectionNames),
+        )
+        // Two-terminal pair declarations also constrain their trunk when a
+        // net contains taps or escape points.
+        const pathsByName = new Map(
+          cms.srj.connections
+            .filter(
+              (connection) =>
+                pairNames.has(connection.name) &&
+                !connection.path &&
+                connection.pointsToConnect.length === 2 &&
+                connection.pointsToConnect.every((point) => point.pointId),
+            )
+            .map((connection) => [
+              connection.name,
+              connection.pointsToConnect.map((point) => point.pointId!),
+            ]),
+        )
+        const inputSrj = {
+          ...routingSrj,
+          connections: routingSrj.connections.map((connection) => {
+            const path = pathsByName.get(connection.name)
+            return path ? { ...connection, path } : connection
+          }),
+        }
         return [
           inputSrj,
           cms.colorMap,
@@ -375,15 +394,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          const { srj, sectionNamesByMember, preloadedSections } =
-            applyDifferentialPairPaths({
-              inputSrj: cms.srj,
-              routingSrj: cms.srjWithEscapeViaLocations ?? cms.srj,
-              pointPairSrj: cms.netToPointPairsSolver!.getNewSimpleRouteJson(),
-            })
-          cms.srjWithPointPairs = srj
-          cms.differentialPairSectionNamesByMember = sectionNamesByMember
-          cms.preloadedDifferentialPairSections = preloadedSections
+          cms.srjWithPointPairs =
+            cms.netToPointPairsSolver?.getNewSimpleRouteJson()
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -866,7 +878,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
-              connections: cms.srjWithPointPairs!.connections,
+              connections: cms.netToPointPairsSolver?.newConnections ?? [],
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
@@ -891,7 +903,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
             originalSrj: cms.originalSrj,
-            newConnections: cms.srjWithPointPairs!.connections,
+            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             originalNewHdRoutes:
               cms.globalDrcForceImproveSolver!.guardedInputHdRoutes,
@@ -925,7 +937,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.srjWithPointPairs!.connections,
+              connections: cms.netToPointPairsSolver!.newConnections,
               originalConnections: cms.originalSrj.connections,
               hdRoutes: canonicalizePipeline9HdRoutes(routes),
               layerCount: cms.srj.layerCount,
@@ -1012,38 +1024,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
-        if (!cms.srjWithPointPairs)
+        const netToPointPairsSolver = cms.netToPointPairsSolver
+        if (!netToPointPairsSolver)
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const connections = cms.srjWithPointPairs.connections
-        const finalHdConnectionNames = new Map<string, string[]>()
-        for (const pair of cms.srj.differentialPairs ?? []) {
-          for (const connectionName of pair.connectionNames) {
-            const sectionNames =
-              cms.differentialPairSectionNamesByMember.get(connectionName)
-            if (sectionNames) {
-              finalHdConnectionNames.set(connectionName, sectionNames)
-              continue
-            }
-            const matchingConnections = connections.filter(
-              (connection) =>
-                connection.name === connectionName ||
-                connection.__rootConnectionNames?.includes(connectionName) ||
-                connection.__netConnectionName === connectionName,
-            )
-            if (matchingConnections.length !== 1)
-              throw new Error(
-                `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
-              )
-            finalHdConnectionNames.set(connectionName, [
-              matchingConnections[0]!.name,
-            ])
-          }
-        }
+        const connections = netToPointPairsSolver.newConnections
+        const { sectionsByMember, preloadedSections } =
+          resolveDifferentialPairSections(
+            { ...cms.srj, traces: cms.getUpdatedPreloadedTraces() },
+            connections,
+          )
         const hdRoutes = cms.effortCleanupSolver!.getOutput()
-        const preloadedSections = cms.preloadedDifferentialPairSections
-        const getTerminalPairs = finalHdConnectionNames.size
+        const getTerminalPairs = sectionsByMember.size
           ? createDifferentialPairTerminalPairs(
               connections,
               hdRoutes,
@@ -1054,50 +1047,42 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const pairSections = (cms.srj.differentialPairs ?? []).flatMap(
           (pair) => {
             const [firstSections, secondSections] = pair.connectionNames.map(
-              (connectionName) => {
-                const sectionNames = finalHdConnectionNames.get(connectionName)
-                if (!sectionNames)
-                  throw new Error(
-                    `Pipeline9: differential pair connection "${connectionName}" is missing from final routed output`,
-                  )
-                return sectionNames
-              },
-            ) as [string[], string[]]
+              (connectionName) => sectionsByMember.get(connectionName)!,
+            )
             if (firstSections.length !== secondSections.length)
               throw new Error(
                 `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves to different section counts`,
               )
             const sections = firstSections.map(
-              (firstSection, index): [string, string] => [
+              (
+                firstSection,
+                index,
+              ): DifferentialPairPath["sections"][number] => [
                 firstSection,
                 secondSections[index]!,
               ],
             )
             if (
               sections.length > 1 ||
-              sections.some((names) =>
-                names.some((name) => preloadedSections.has(name)),
+              sections.some((members) =>
+                members.some((member) => "pcbTraceId" in member),
               )
             ) {
               differentialPairPaths.push({
                 connectionNames: pair.connectionNames,
                 lengthTolerance: pair.lengthTolerance,
-                sections: sections.map(
-                  (names) =>
-                    names.map((connectionName) => {
-                      const preloaded = preloadedSections.get(connectionName)
-                      return preloaded
-                        ? { pcbTraceId: preloaded.pcbTraceId }
-                        : { connectionName }
-                    }) as DifferentialPairPath["sections"][number],
-                ),
+                sections,
               })
             }
-            return sections.flatMap((connectionNames) =>
-              connectionNames.some((name) => preloadedSections.has(name))
-                ? []
-                : [{ pair, connectionNames, sectionCount: sections.length }],
-            )
+            return sections.flatMap(([first, second]) => {
+              if (!("connectionName" in first) || !("connectionName" in second))
+                return []
+              const connectionNames: [string, string] = [
+                first.connectionName,
+                second.connectionName,
+              ]
+              return [{ pair, connectionNames, sectionCount: sections.length }]
+            })
           },
         )
         const differentialPairs = pairSections.map(
@@ -1752,12 +1737,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
-    if (!this.highDensityRouteSolver || !this.srjWithPointPairs) {
+    if (!this.highDensityRouteSolver) {
       throw new Error("Cannot get new traces before high-density routing")
     }
 
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.srjWithPointPairs.connections,
+      connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,

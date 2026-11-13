@@ -1,11 +1,18 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { distance } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import {
+  ConnectionPoint,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
+import { getPointKey } from "lib/utils/getPointKey"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
+import { getConnectionPathPoints } from "./getConnectionPathPoints"
 
 type ConnectionName = SimpleRouteConnection["name"]
 
@@ -30,6 +37,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  protected readonly pathEdgesByConnection: Map<
+    SimpleRouteConnection,
+    ReturnType<typeof buildMinimumSpanningTree<ConnectionPoint>>
+  > = new Map()
 
   constructor(
     public ogSrj: SimpleRouteJson,
@@ -70,6 +81,38 @@ export class NetToPointPairsSolver extends BaseSolver {
     )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
+    if (!connectionsWithBusTraceWidths.some((connection) => connection.path))
+      return
+    const mergedByPoint = new Map(
+      this.unprocessedConnections.flatMap((connection) =>
+        connection.pointsToConnect.map((point) => [
+          getPointKey(point),
+          connection,
+        ]),
+      ),
+    )
+    for (const connection of connectionsWithBusTraceWidths) {
+      if (!connection.path) continue
+      const points = getConnectionPathPoints(connection)
+      const merged = mergedByPoint.get(getPointKey(points[0]!))!
+      const edges = this.pathEdgesByConnection.get(merged) ?? []
+      for (let index = 1; index < points.length; index++) {
+        const from = points[index - 1]!
+        const to = points[index]!
+        if (
+          edges.some(
+            (edge) =>
+              (getPointKey(edge.from) === getPointKey(from) &&
+                getPointKey(edge.to) === getPointKey(to)) ||
+              (getPointKey(edge.from) === getPointKey(to) &&
+                getPointKey(edge.to) === getPointKey(from)),
+          )
+        )
+          continue
+        edges.push({ from, to, weight: distance(from, to) })
+      }
+      this.pathEdgesByConnection.set(merged, edges)
+    }
   }
 
   _step() {
@@ -77,7 +120,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.solved = true
       return
     }
-    const connection = this.unprocessedConnections.pop()!
+    const mergedConnection = this.unprocessedConnections.pop()!
+    const requiredEdges = this.pathEdgesByConnection.get(mergedConnection) ?? []
+    const { path, ...connection } = mergedConnection
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -86,12 +131,15 @@ export class NetToPointPairsSolver extends BaseSolver {
       )
 
     if (connection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = connection.pointsToConnect
+      const [startPoint, endPoint] = requiredEdges.length
+        ? [requiredEdges[0]!.from, requiredEdges[0]!.to]
+        : connection.pointsToConnect
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
       this.newConnections.push({
         ...connection,
+        pointsToConnect: [startPoint!, endPoint!],
         __rootConnectionNames: connection.__rootConnectionNames ?? [
           connection.name,
         ],
@@ -101,6 +149,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
+      requiredEdges,
     })
 
     let mstIdx = 0

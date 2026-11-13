@@ -124,7 +124,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       this.solved = true
       return
     }
-    const currentConnection = this.unprocessedConnections.pop()!
+    const mergedConnection = this.unprocessedConnections.pop()!
+    const requiredEdges = this.pathEdgesByConnection.get(mergedConnection) ?? []
+    const { path, ...currentConnection } = mergedConnection
 
     // This logic is copied from the parent class
     const { zeroWeightEdges, arePointsConnected } =
@@ -134,15 +136,19 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       )
 
     if (currentConnection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = currentConnection.pointsToConnect
+      const [startPoint, endPoint] = requiredEdges.length
+        ? [requiredEdges[0]!.from, requiredEdges[0]!.to]
+        : currentConnection.pointsToConnect
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
       const optimizedConnection =
-        this._findBestConnectionPointsFromDisjointSets(
-          currentConnection.pointsToConnect[0],
-          currentConnection.pointsToConnect[1],
-        )
+        requiredEdges.length > 0
+          ? { pointsToConnect: [startPoint!, endPoint!] }
+          : this._findBestConnectionPointsFromDisjointSets(
+              startPoint!,
+              endPoint!,
+            )
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
@@ -155,7 +161,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
+      { extraEdges: zeroWeightEdges, requiredEdges },
     )
 
     let mstEdgeIndex = 0
@@ -164,10 +170,12 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         continue
       }
 
-      const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
-        mstEdge.from,
-        mstEdge.to,
-      )
+      const optimizedMstEdge = requiredEdges.includes(mstEdge)
+        ? { pointsToConnect: [mstEdge.from, mstEdge.to] }
+        : this._findBestConnectionPointsFromDisjointSets(
+            mstEdge.from,
+            mstEdge.to,
+          )
 
       this.newConnections.push({
         ...currentConnection,

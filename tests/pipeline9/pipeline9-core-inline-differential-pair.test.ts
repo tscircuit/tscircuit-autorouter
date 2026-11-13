@@ -13,6 +13,9 @@ test("Pipeline9 routes both sections of the three-header differential pair from 
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  expect(solver.srjWithPointPairs!.connections).toEqual(
+    solver.netToPointPairsSolver!.newConnections,
+  )
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   expect(

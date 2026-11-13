@@ -3,7 +3,7 @@ import { distance } from "@tscircuit/math-utils"
 import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getPointKey } from "lib/utils/getPointKey"
-import type { PreloadedDifferentialPairSections } from "./applyDifferentialPairPaths"
+import type { PreloadedDifferentialPairSections } from "./resolveDifferentialPairSections"
 
 type TerminalPairs = NonNullable<DifferentialPair["terminalPairs"]>
 type TerminalAttachment = TerminalPairs[number][number]["connectedTo"][number]

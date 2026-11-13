@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { applyDifferentialPairPaths } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyDifferentialPairPaths"
 import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import type { SimpleRouteJson } from "lib/types"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -50,12 +49,7 @@ test("retains declared inline sections while routing taps and escape vias", () =
     getInitiallyConnectedMapFromSimpleRouteJson(srjWithEscapeVias),
   )
   solver.solve()
-  const pointPairSrj = solver.getNewSimpleRouteJson()
-  const { srj, sectionNamesByMember } = applyDifferentialPairPaths({
-    inputSrj: input,
-    routingSrj: srjWithEscapeVias,
-    pointPairSrj,
-  })
+  const srj = solver.getNewSimpleRouteJson()
 
   expect(
     solver.newConnections.some((connection) =>
@@ -63,19 +57,7 @@ test("retains declared inline sections while routing taps and escape vias", () =
         connection.pointsToConnect.some((point) => point.pointId === pad),
       ),
     ),
-  ).toBe(true)
-  expect(
-    sectionNamesByMember
-      .get("P")!
-      .map((name) =>
-        srj.connections
-          .find((connection) => connection.name === name)!
-          .pointsToConnect.map((point) => point.pointId),
-      ),
-  ).toEqual([
-    ["P.A", "P.B"],
-    ["P.B", "P.C"],
-  ])
+  ).toBe(false)
   const routedLinks = srj.connections.map((connection) =>
     connection.pointsToConnect
       .map((point) => point.pointId)
@@ -91,14 +73,16 @@ test("retains declared inline sections while routing taps and escape vias", () =
     "P.B/TP",
   ])
   expect(srj.connections.every((connection) => !connection.path)).toBe(true)
+  expect(srj.connections).toEqual(solver.newConnections)
 
-  const inputWithoutPath = structuredClone(input)
-  delete inputWithoutPath.connections[0]!.path
-  expect(() =>
-    applyDifferentialPairPaths({
-      inputSrj: inputWithoutPath,
-      routingSrj: srjWithEscapeVias,
-      pointPairSrj,
-    }),
-  ).toThrow('Differential pair member "P" needs a path for its 4 points')
+  const invalidPathInput = structuredClone(input)
+  invalidPathInput.connections[0]!.path!.push("missing")
+  expect(
+    () =>
+      new NetToPointPairsSolver2_OffBoardConnection(
+        invalidPathInput,
+        {},
+        getInitiallyConnectedMapFromSimpleRouteJson(invalidPathInput),
+      ),
+  ).toThrow('path point "missing" must identify exactly one point')
 })
