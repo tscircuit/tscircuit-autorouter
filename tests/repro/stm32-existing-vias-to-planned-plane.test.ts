@@ -9,10 +9,12 @@ import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initi
 test("STM32 ground escape vias are not recognized as access to the planned plane", async (): Promise<void> => {
   const { inputSrj, cpuGroundPointIds, cpuPads } = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "./assets/stm32-existing-plane-vias.srj.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "./assets/stm32-existing-plane-vias.srj.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString(),
