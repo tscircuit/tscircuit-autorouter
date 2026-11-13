@@ -79,6 +79,7 @@ test("Glider DDR via outside the shared routing cell", async (): Promise<void> =
     fixedHdRoutes: fixedRoutes,
     sections,
   })
+  expect(retainedRoutes).toEqual(fixedRoutes)
   const port = fixture.graph.ports[0]!.d
   const targetVia = trace.route
     .filter((point) => point.route_type === "via")
@@ -92,7 +93,7 @@ test("Glider DDR via outside the shared routing cell", async (): Promise<void> =
     retainedRoutes.some((route) =>
       route.vias.some((via) => via.x === targetVia.x && via.y === targetVia.y),
     ),
-  ).toBeFalse()
+  ).toBeTrue()
   const retainedTraces: SimplifiedPcbTrace[] = retainedRoutes.map(
     (route, index) => ({
       type: "pcb_trace",
