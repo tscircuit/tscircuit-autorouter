@@ -43,6 +43,11 @@ type TaperRoutePointEntry = {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
+  otherHdRoutes?: HighDensityRoute[]
+  /** Rectangular routing envelopes or the finished pad's physical shape. */
+  obstacleGeometry?: "bounds" | "physical"
+  /** Try the requested width while preserving repaired copper if it cannot fit. */
+  refineExistingRoutes?: boolean
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -100,6 +105,8 @@ export class TraceWidthSolver extends BaseSolver {
 
   obstacles: Obstacle[] = []
   obstacleSHI?: ObstacleSpatialHashIndex
+  obstacleGeometry: "bounds" | "physical"
+  refineExistingRoutes: boolean
   hdRouteSHI: HighDensityRouteSpatialIndex
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
@@ -110,6 +117,8 @@ export class TraceWidthSolver extends BaseSolver {
 
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
+    this.obstacleGeometry = input.obstacleGeometry ?? "physical"
+    this.refineExistingRoutes = input.refineExistingRoutes ?? false
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
     this.nominalTraceWidth = 0
@@ -142,7 +151,10 @@ export class TraceWidthSolver extends BaseSolver {
       )
     }
 
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+      ...this.hdRoutes,
+      ...(input.otherHdRoutes ?? []),
+    ])
   }
 
   private getNominalTraceWidthForRoute(
@@ -173,24 +185,45 @@ export class TraceWidthSolver extends BaseSolver {
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
       if (nominalTraceWidth === undefined) {
-        const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
-        this.processedRoutes.push(
-          this.createRouteWithWidth(nextTrace, traceWidth),
-        )
+        let routeWithWidth = nextTrace
+        if (!this.refineExistingRoutes) {
+          const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
+          routeWithWidth = this.createRouteWithWidth(nextTrace, traceWidth)
+        }
+        this.processedRoutes.push(routeWithWidth)
         this.currentTrace = null
         return
       }
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
-      if (this.currentTrace.route.length < 2) {
-        // Trace is too short to process, just pass it through with minTraceWidth
-        this.processedRoutes.push(
-          this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
+      const alreadyMeetsRequestedWidth =
+        this.refineExistingRoutes &&
+        nextTrace.route.every(
+          (point): boolean =>
+            (point.traceThickness ?? nextTrace.traceThickness) >=
+            nominalTraceWidth,
         )
-        this.currentTrace = null
+      if (alreadyMeetsRequestedWidth) {
+        this.finalizeCurrentTrace(
+          this.createRouteWithWidth(nextTrace, nominalTraceWidth),
+        )
+        return
+      }
+      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth]
+      if (!this.refineExistingRoutes) {
+        const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
+        this.TRACE_WIDTH_SCHEDULE.push(midWidth)
+      }
+      if (this.currentTrace.route.length < 2) {
+        let routeWithWidth = this.currentTrace
+        if (!this.refineExistingRoutes) {
+          routeWithWidth = this.createRouteWithWidth(
+            routeWithWidth,
+            this.minTraceWidth,
+          )
+        }
+        this.finalizeCurrentTrace(routeWithWidth)
         return
       }
 
@@ -223,11 +256,20 @@ export class TraceWidthSolver extends BaseSolver {
           this.TRACE_WIDTH_SCHEDULE[this.currentScheduleIndex]!
         this.initializeCursor()
       } else {
-        // Exhausted all widths in schedule, use minTraceWidth as fallback
-        this.finalizeCurrentTrace(this.minTraceWidth)
+        // Refinement rejects an unsafe widening without changing repaired copper.
+        let routeWithWidth = this.currentTrace
+        if (!this.refineExistingRoutes) {
+          routeWithWidth = this.createRouteWithWidth(
+            routeWithWidth,
+            this.minTraceWidth,
+          )
+        }
+        this.finalizeCurrentTrace(routeWithWidth)
       }
     } else if (!stepped) {
-      this.finalizeCurrentTrace(this.currentTargetWidth)
+      this.finalizeCurrentTrace(
+        this.createRouteWithWidth(this.currentTrace, this.currentTargetWidth),
+      )
     }
   }
 
@@ -386,13 +428,35 @@ export class TraceWidthSolver extends BaseSolver {
     for (const obstacle of this.obstacles) {
       if (obstacle.ccwRotationDegrees) nearbyObstacles.add(obstacle)
     }
+    const terminalPortIds = [
+      this.currentTrace.startPcbPortId,
+      this.currentTrace.endPcbPortId,
+    ]
+    const hasTerminalPortIds = terminalPortIds.some(
+      (id): boolean => id !== undefined,
+    )
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
-        continue
+      // Internal component connections do not assign copper to unused pads.
+      const isUnassignedPad =
+        this.refineExistingRoutes &&
+        hasTerminalPortIds &&
+        obstacle.netIsAssignable === true &&
+        !obstacle.connectedTo.some(
+          (id): boolean => terminalPortIds.includes(id),
+        )
       if (
-        obstacle.obstacleId &&
-        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+        !isUnassignedPad &&
+        (isObstacleConnectedToRoute(
+          obstacle,
+          this.currentTrace,
+          this.connMap,
+        ) ||
+          (obstacle.obstacleId &&
+            this.connMap?.areIdsConnected(
+              rootConnectionName,
+              obstacle.obstacleId,
+            )))
       )
         continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
@@ -413,8 +477,11 @@ export class TraceWidthSolver extends BaseSolver {
         y:
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
+      const isRoundObstacle =
+        obstacle.shape === "circle" &&
+        (this.obstacleGeometry === "physical" || obstacle.isNonPlatedHole)
       const physicalClearance =
-        obstacle.isNonPlatedHole && obstacle.shape === "circle"
+        isRoundObstacle
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,
@@ -807,15 +874,10 @@ export class TraceWidthSolver extends BaseSolver {
   }
 
   /**
-   * Finalizes the current trace with the given width
+   * Commits a selected route and updates the copper used by later width choices.
    */
-  private finalizeCurrentTrace(traceWidth: number) {
+  private finalizeCurrentTrace(routeWithWidth: HighDensityRoute): void {
     if (!this.currentTrace) return
-
-    const routeWithWidth = this.createRouteWithWidth(
-      this.currentTrace,
-      traceWidth,
-    )
 
     this.processedRoutes.push(routeWithWidth)
     this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)
@@ -829,6 +891,8 @@ export class TraceWidthSolver extends BaseSolver {
     const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) => w.toFixed(2)).join(
       ", ",
     )
+    let fallbackLabel = `${this.minTraceWidth.toFixed(2)}mm`
+    if (this.refineExistingRoutes) fallbackLabel = "existing copper"
 
     const visualization: GraphicsObject & {
       lines: NonNullable<GraphicsObject["lines"]>
@@ -841,7 +905,7 @@ export class TraceWidthSolver extends BaseSolver {
       circles: [],
       rects: [],
       coordinateSystem: "cartesian",
-      title: `Trace Width Solver (schedule: [${scheduleStr}]mm, fallback: ${this.minTraceWidth.toFixed(2)}mm, margin: ${this.obstacleMargin.toFixed(2)}mm)`,
+      title: `Trace Width Solver (schedule: [${scheduleStr}]mm, fallback: ${fallbackLabel}, margin: ${this.obstacleMargin.toFixed(2)}mm)`,
     }
 
     // Build set of colliding obstacle IDs for quick lookup
