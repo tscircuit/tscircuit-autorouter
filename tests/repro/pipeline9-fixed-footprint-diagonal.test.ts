@@ -14,8 +14,9 @@ test("route R1 to R2 around a fixed 45-degree footprint trace", async (): Promis
   expect(solver.solved, solver.error ?? "").toBe(true)
   const output = solver.getOutputSimpleRouteJson()
   expect(output.traces).toHaveLength(2)
-  expect(output.traces?.find((t) => t.pcb_trace_id === fixed.pcb_trace_id))
-    .toEqual(fixed)
+  expect(
+    output.traces?.find((t) => t.pcb_trace_id === fixed.pcb_trace_id),
+  ).toEqual(fixed)
   expect(output.obstacles).toHaveLength(srj.obstacles.length)
   const routed = solver.getOutputSimplifiedPcbTraces()
   expect(routed).toHaveLength(1)
@@ -34,8 +35,10 @@ test("route R1 to R2 around a fixed 45-degree footprint trace", async (): Promis
       const distance = minimumDistanceBetweenSegments(a, a, start, end)
       minGap = Math.min(minGap, distance - (diameter + start.width) / 2)
     } else if (
-      a.route_type === "wire" && b?.route_type === "wire" &&
-      a.layer === "top" && b.layer === "top"
+      a.route_type === "wire" &&
+      b?.route_type === "wire" &&
+      a.layer === "top" &&
+      b.layer === "top"
     ) {
       const distance = minimumDistanceBetweenSegments(a, b, start, end)
       minGap = Math.min(minGap, distance - (a.width + start.width) / 2)
@@ -52,11 +55,15 @@ test("route R1 to R2 around a fixed 45-degree footprint trace", async (): Promis
   // Both ends of the standalone input trace are deliberately unconnected.
   const { errors } = evaluateRelaxedDrc(drcInput)
   expect(errors).toHaveLength(2)
-  expect(errors).toEqual(expect.arrayContaining(
-    ["start", "end"].map((endpoint) => expect.objectContaining({
-      pcb_trace_error_id: `disconnected_endpoint_${fixed.pcb_trace_id}_${endpoint}`,
-    })),
-  ))
+  for (const endpoint of ["start", "end"]) {
+    expect(errors).toContainEqual(
+      expect.objectContaining({
+        pcb_trace_error_id: `disconnected_endpoint_${fixed.pcb_trace_id}_${endpoint}`,
+      }),
+    )
+  }
   const svg = getBugReportSnapshotSvg(drcInput)
-  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(import.meta.path)
+  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
