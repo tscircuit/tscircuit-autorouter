@@ -13,6 +13,10 @@ test("route R1 to R2 around a fixed 45-degree footprint trace", async (): Promis
   expect(solver.error).toContain("immutable fixed route conflict")
   expect(solver.failed).toBe(true)
   expect(srj.traces).toEqual([fixed])
-  const svg = getSvgFromGraphicsObject(convertSrjToGraphicsObject(srj), { backgroundColor: "white" })
-  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(import.meta.path)
+  const svg = getSvgFromGraphicsObject(convertSrjToGraphicsObject(srj), {
+    backgroundColor: "white",
+  })
+  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
