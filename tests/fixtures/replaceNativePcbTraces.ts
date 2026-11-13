@@ -1,9 +1,10 @@
-import type { AnyCircuitElement, SourceTrace } from "circuit-json"
+import type { AnyCircuitElement, PcbPort, SourceTrace } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 
 type PcbTraceId = string
 type SourceTraceId = string
+const PORT_POSITION_TOLERANCE_MM = 1e-6
 
 /** Replace routed nets while retaining native pads, components and fixed copper. */
 export const replaceNativePcbTraces = ({
@@ -68,5 +69,42 @@ export const replaceNativePcbTraces = ({
           },
     )
   }
-  return circuit
+  return circuit.map((element): AnyCircuitElement => {
+    if (element.type !== "pcb_trace") return element
+    const source = circuitJson.find(
+      (source) =>
+        source.type === "source_trace" &&
+        source.source_trace_id === element.source_trace_id,
+    )
+    if (source?.type !== "source_trace") {
+      throw new Error("Missing native source for PCB port binding")
+    }
+    const nativePorts = circuitJson.filter(
+      (port): port is PcbPort =>
+        port.type === "pcb_port" &&
+        source.connected_source_port_ids.includes(port.source_port_id),
+    )
+    return {
+      ...element,
+      route: element.route.map((point, pointIndex) => {
+        if (point.route_type !== "wire") return point
+        const nativePort = nativePorts.find(
+          (port) =>
+            port.layers.includes(point.layer) &&
+            Math.hypot(port.x - point.x, port.y - point.y) <=
+              PORT_POSITION_TOLERANCE_MM,
+        )
+        // Bind only actual geometric terminal contacts to native port IDs.
+        return {
+          ...point,
+          start_pcb_port_id:
+            pointIndex === 0 ? nativePort?.pcb_port_id : undefined,
+          end_pcb_port_id:
+            pointIndex === element.route.length - 1
+              ? nativePort?.pcb_port_id
+              : undefined,
+        }
+      }),
+    }
+  })
 }

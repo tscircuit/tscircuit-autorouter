@@ -6,7 +6,10 @@ import {
   checkTracesAreContiguous,
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import {
+  ConnectivityMap,
+  PcbConnectivityMap,
+} from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
@@ -20,6 +23,8 @@ type Ecp5DdrFixture = {
   input: Omit<JointRepairInput, "srj" | "connMap" | "mutatedPreloadedTraceIds">
   netMap: ConnectivityMap["netMap"]
 }
+type SourcePortId = string
+type PcbPortId = string
 
 test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
   // Native 163-component, 170-net board. Captured at joint DDR repair in
@@ -68,6 +73,34 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
     circuit.filter((element) => element.type === "source_trace"),
   ).toHaveLength(170)
   expect(checkTracesAreContiguous(circuit)).toEqual([])
+  const routedSourceTraceIds = new Set(
+    circuit.flatMap((element) =>
+      element.type === "pcb_trace" ? [element.source_trace_id] : [],
+    ),
+  )
+  const routedSources = circuit.filter(
+    (element) =>
+      element.type === "source_trace" &&
+      routedSourceTraceIds.has(element.source_trace_id),
+  )
+  expect(routedSources).toHaveLength(50)
+  const pcbPorts = new Map<SourcePortId, PcbPortId>(
+    circuit.flatMap((element) =>
+      element.type === "pcb_port"
+        ? [[element.source_port_id, element.pcb_port_id]]
+        : [],
+    ),
+  )
+  const connectivity = new PcbConnectivityMap(circuit)
+  for (const source of routedSources) {
+    if (source.type !== "source_trace") throw new Error("Expected DDR net")
+    const portIds = source.connected_source_port_ids.map((sourcePortId) => {
+      const pcbPortId = pcbPorts.get(sourcePortId)
+      if (!pcbPortId) throw new Error(`Missing native port ${sourcePortId}`)
+      return pcbPortId
+    })
+    expect(connectivity.connMap.areAllIdsConnected(portIds)).toBeTrue()
+  }
   const focusedSourceTraceIds = new Set(
     circuit.flatMap((element) =>
       element.type === "source_trace" &&
