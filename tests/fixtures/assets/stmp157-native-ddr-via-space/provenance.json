@@ -1,0 +1,19 @@
+{
+  "board": "OLIMEX STMP157-OLinuXino-LIME2 rev B1",
+  "source": "https://github.com/OLIMEX/OLINUXINO/blob/85eee9c17ee13af65617d73bdd94de7ec49cfb42/HARDWARE/STMP157-OLinuXino-LIME2/1.%20Latest%20hardware%20revision/STMP157-OLinuXino-LIME2_Rev_B1/STMP157-OLinuXino-LIME2_Rev_B1.kicad_pcb",
+  "attribution": "OLIMEX Ltd.",
+  "license": "CC-BY-SA-3.0-US",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+  "capture": "Unchanged native TSX through tscircuit 0.0.3168, published Core 0.0.2354, bundled Bus 0.0.55 and autorouter 0.0.1085. Default RootCircuit(); no experimental handoff or geometry adapter.",
+  "inputSha256": "eac604c2b8f93a52dec20277e5ac223b9240ee46414780b7e5a586f1410a1dcd",
+  "scope": "Actual remaining-phase input: all 40 connections and 3449 obstacles, including Core's rasterized data copper. The physical reference is the unchanged preceding phase output with 32 completed data traces and 710 pad obstacles. Original placements, widths, clearances and eight-layer stack are preserved. Existing source-PCB copper was removed before the original TSX experiment; these data traces were routed by Core and Bus lanes.",
+  "rules": {
+    "traceWidthMm": 0.127,
+    "clearanceMm": 0.127,
+    "viaPadMm": 0.327,
+    "viaDrillMm": 0.2,
+    "allowViaInPad": false,
+    "allowBlindAndBuriedVias": false
+  },
+  "physicalReferenceSha256": "30bb987a8305b4d777f9f0420f3507f67b872e32403c24bbb45b776d64b5c0c4"
+}
