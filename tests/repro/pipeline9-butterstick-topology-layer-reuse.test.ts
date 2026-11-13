@@ -1,6 +1,9 @@
-import { expect, test } from "bun:test"
+import { expect, spyOn, test } from "bun:test"
+import type { GraphicsObject, Rect, Text } from "graphics-debug"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import * as topologyRegions from "lib/solvers/TopologyMergingSolver/topology-merging-regions"
 import type { CapacityMeshNode } from "lib/types"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
 // Native board: https://github.com/butterstick-fpga/butterstick-hardware/blob/0694ddfa9824a07f0c6c6981186e45f80187659c/hardware/ButterStick_r1.0/ButterStick.kicad_pcb
 // These nodes retain the published Pipeline9 topology's bounds and metadata.
@@ -82,7 +85,45 @@ test("ButterStick keeps native layers while reusing repeated slab coverage", asy
       },
     ],
   })
-  solver.solve()
+  const padEdgeX = globalPad.center.x - globalPad.width / 2
+  const cellMinX = freeCell.center.x - freeCell.width / 2
+  const cellMaxX = freeCell.center.x + freeCell.width / 2
+  const xCoordinates = topologyRegions.getCanonicalCoordinates(
+    solver.inputProblem.nodeGroups.flatMap(({ nodes }): number[] =>
+      nodes.flatMap(({ center, width }): number[] => [
+        center.x - width / 2,
+        center.x + width / 2,
+      ]),
+    ),
+  )
+  const cellSlabs: { minX: number; maxX: number; calculations: number }[] = []
+  // Observe actual work per slab so the same repro shows the fix automatically.
+  const layerSelections = spyOn(
+    topologyRegions,
+    "getLayerTopologiesForCoveredNodes",
+  )
+  let totalCalculations: number
+  try {
+    for (let xIndex = 0; xIndex < xCoordinates.length - 1; xIndex++) {
+      const callStart = layerSelections.mock.calls.length
+      solver.step()
+      const minX = xCoordinates[xIndex]!
+      const maxX = xCoordinates[xIndex + 1]!
+      const x = (minX + maxX) / 2
+      if (x < cellMinX || x > cellMaxX) continue
+      const calculations = layerSelections.mock.calls
+        .slice(callStart)
+        .filter(([{ coveringNodes }]): boolean =>
+          coveringNodes.some(({ node }): boolean => node === freeCell),
+        ).length
+      cellSlabs.push({ minX, maxX, calculations })
+    }
+    solver.solve()
+    totalCalculations = layerSelections.mock.calls.length
+  } finally {
+    layerSelections.mockRestore()
+  }
+  expect(cellSlabs).toHaveLength(2)
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const output = solver.getOutput()
@@ -119,5 +160,79 @@ test("ButterStick keeps native layers while reusing repeated slab coverage", asy
       ),
     ).toMatchObject({ availableZ: [z] })
   }
-  await expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
+  const cellCalculations = cellSlabs.reduce(
+    (total, { calculations }): number => total + calculations,
+    0,
+  )
+  const graphics: GraphicsObject = {
+    coordinateSystem: "cartesian",
+    rects: cellSlabs.map(
+      ({ minX, maxX, calculations }): Rect => ({
+        ...createRectFromCapacityNode(
+          {
+            ...freeCell,
+            center: { x: (minX + maxX) / 2, y: freeCell.center.y },
+            width: maxX - minX,
+          },
+          { rectMargin: 0.001, zOffset: 0 },
+        ),
+        fill: calculations > 0 ? "#ffedd5" : "#dcfce7",
+        stroke: calculations > 0 ? "#c2410c" : "#15803d",
+      }),
+    ),
+    lines: [
+      {
+        points: [
+          { x: padEdgeX, y: 4.18 },
+          { x: padEdgeX, y: 4.72 },
+        ],
+        strokeColor: "#475569",
+        strokeDash: "4 3",
+        strokeWidth: 0.002,
+      },
+    ],
+    texts: [
+      {
+        x: 5.1,
+        y: 5.02,
+        text: "ButterStick: repeated layer selection",
+        fontSize: 0.032,
+      },
+      {
+        x: 5.1,
+        y: 4.92,
+        text: `Cell layer calculations: ${cellCalculations}`,
+        fontSize: 0.042,
+      },
+      {
+        x: 5.1,
+        y: 4.76,
+        text: `Distant pad edge: X = ${padEdgeX.toFixed(3)} mm`,
+        fontSize: 0.026,
+      },
+      ...cellSlabs.map(
+        ({ minX, maxX, calculations }, index): Text => ({
+          x: (minX + maxX) / 2,
+          y: 4.4,
+          text: calculations > 0 ? "CALCULATE" : "REUSE",
+          rotation: index === 0 ? 0 : 90,
+          fontSize: 0.025,
+          color: calculations > 0 ? "#9a3412" : "#166534",
+        }),
+      ),
+      {
+        x: 5.1,
+        y: 4.08,
+        text: "Native cell: 0.40 x 0.40 mm; layers 0-7 preserved",
+        fontSize: 0.026,
+      },
+      {
+        x: 5.1,
+        y: 3.99,
+        text: `Full 12-node repro: ${totalCalculations} layer calculations`,
+        fontSize: 0.026,
+      },
+    ],
+  }
+  await expect(graphics).toMatchGraphicsSvg(import.meta.path)
 })
