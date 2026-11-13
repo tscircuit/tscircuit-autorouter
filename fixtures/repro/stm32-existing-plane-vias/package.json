@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "bun render.tsx"
+  },
+  "dependencies": {
+    "tscircuit": "0.0.3163"
+  }
+}
