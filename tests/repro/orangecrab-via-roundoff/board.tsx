@@ -8,7 +8,7 @@ const phases = [...bytes, "remaining"]
 /** Native board-world millimeters: +X right, +Y up, +Z above, right-handed. */
 export const board = (
   <board
-    title={source.title}
+    title="ECP5 DDR3"
     width={source.width}
     height={source.height}
     layers={source.layers}
@@ -58,7 +58,7 @@ export const board = (
     <pcbnotetext
       pcbY={source.height / 2 - 0.8}
       fontSize={0.5}
-      text={`${source.title}: 50 DDR nets requested`}
+      text={`ECP5 DDR3: ${source.traces.length} DDR nets requested`}
     />
     <pcbnotetext
       pcbY={-source.height / 2 + 0.8}

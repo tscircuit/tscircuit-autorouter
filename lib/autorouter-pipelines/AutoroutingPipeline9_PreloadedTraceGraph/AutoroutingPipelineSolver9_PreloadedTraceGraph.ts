@@ -722,6 +722,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
+          otherHdRoutes: cms
+            .highDensityRouteSolver!.getUpdatedFixedHdRoutes()
+            .map(
+              (route): HighDensityRoute => ({
+                ...route,
+                rootConnectionName:
+                  cms.originalSrj.traces![route.preloadedTraceIndex]!
+                    .connection_name,
+              }),
+            ),
+          minClearance:
+            cms.srj.minTraceToPadEdgeClearance ?? cms.srj.defaultObstacleMargin,
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
