@@ -18,6 +18,7 @@ import {
   areIdsInitiallyConnected,
   getInitiallyConnectedMapFromSimpleRouteJson,
 } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -110,6 +111,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
   createdEscapeVias: EscapeViaMetadata[]
   nextEscapeViaIndex = 0
   private readonly initiallyConnectedMap: ConnectivityMap
+  private readonly connMap: ConnectivityMap
 
   constructor(
     public readonly ogSrj: SimpleRouteJson,
@@ -136,6 +138,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.createdEscapeVias = []
     this.initiallyConnectedMap =
       getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(ogSrj)
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -931,9 +934,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
             trace.pcb_trace_id,
           ),
       )
-      const sameNet =
-        connectionNetIds.has(trace.connection_name) ||
-        trace.connectsTo?.some((id) => connectionNetIds.has(id))
+      const sameNet = this.connMap.areIdsConnected(
+        point.pointId,
+        trace.pcb_trace_id,
+      )
       if (!physicallyConnected && !sameNet) continue
 
       for (const via of trace.route) {
