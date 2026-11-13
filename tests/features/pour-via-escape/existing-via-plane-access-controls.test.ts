@@ -15,6 +15,8 @@ test("existing plane access requires physical connectivity, layer reach and the 
     "separate plane islands",
     "coincident GND trace vias",
     "connected remote trace vias",
+    "chained remote trace vias",
+    "externally connected remote trace vias",
     "unconnected remote same-net vias",
     "blind trace vias miss plane",
     "through trace vias reach inner4",
@@ -58,6 +60,9 @@ test("existing plane access requires physical connectivity, layer reach and the 
       input.obstacles = [plane]
       const remote = scenario.includes("remote")
       const unconnected = scenario === "unconnected remote same-net vias"
+      const chained = scenario === "chained remote trace vias"
+      const external = scenario === "externally connected remote trace vias"
+      const startsAtRemotePoint = unconnected || chained || external
       const blind = scenario === "blind trace vias miss plane"
       const explicitSpan = scenario === "explicit trace span reaches inner4"
       input.allowBlindAndBuriedVias = blind || explicitSpan
@@ -66,13 +71,15 @@ test("existing plane access requires physical connectivity, layer reach and the 
         type: "pcb_trace",
         pcb_trace_id: `existing-${point.pointId}`,
         connection_name: "GND",
-        connectsTo: [unconnected ? `remote-${point.pointId}` : point.pointId!],
+        connectsTo: [
+          startsAtRemotePoint ? `remote-${point.pointId}` : point.pointId!,
+        ],
         isFixed: true,
         route: [
           {
             route_type: "wire",
             x: point.x,
-            y: unconnected ? 0.4 : 0,
+            y: startsAtRemotePoint ? 0.4 : 0,
             layer: "inner3",
             width: 0.15,
           },
@@ -106,6 +113,39 @@ test("existing plane access requires physical connectivity, layer reach and the 
           },
         ],
       }))
+      if (chained) {
+        for (const point of input.connections[0]!.pointsToConnect) {
+          input.traces.push({
+            type: "pcb_trace",
+            pcb_trace_id: `link-${point.pointId}`,
+            connection_name: "GND",
+            connectsTo: [point.pointId!, `remote-${point.pointId}`],
+            isFixed: true,
+            route: [
+              {
+                route_type: "wire",
+                x: point.x,
+                y: point.y,
+                layer: "inner3",
+                width: 0.15,
+              },
+              {
+                route_type: "wire",
+                x: point.x,
+                y: 0.4,
+                layer: "inner3",
+                width: 0.15,
+              },
+            ],
+          })
+        }
+      }
+      if (external) {
+        const connection = input.connections[0]!
+        connection.externallyConnectedPointIds = connection.pointsToConnect.map(
+          (point) => [point.pointId!, `remote-${point.pointId}`],
+        )
+      }
       connected = !unconnected && !blind
     }
     if (scenario === "merged connections") {

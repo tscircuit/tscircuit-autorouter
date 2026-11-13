@@ -4,6 +4,7 @@ import {
   getSegmentIntersection,
   pointToBoxDistance,
 } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
   type ConnectionPoint,
@@ -13,6 +14,10 @@ import {
   getConnectionPointLayers,
   isSingleLayerConnectionPoint,
 } from "lib/types"
+import {
+  areIdsInitiallyConnected,
+  getInitiallyConnectedMapFromSimpleRouteJson,
+} from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -104,6 +109,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
   escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
   createdEscapeVias: EscapeViaMetadata[]
   nextEscapeViaIndex = 0
+  private readonly initiallyConnectedMap: ConnectivityMap
 
   constructor(
     public readonly ogSrj: SimpleRouteJson,
@@ -128,6 +134,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.outputSrj = ogSrj
     this.escapeViaMetadataByPointId = new Map()
     this.createdEscapeVias = []
+    this.initiallyConnectedMap =
+      getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -914,8 +922,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
     }
 
     for (const trace of this.ogSrj.traces ?? []) {
-      const physicallyConnected = trace.connectsTo?.some((id) =>
-        pointIds.has(id),
+      const physicallyConnected = Array.from(pointIds).some(
+        (id) =>
+          id !== undefined &&
+          areIdsInitiallyConnected(
+            this.initiallyConnectedMap,
+            id,
+            trace.pcb_trace_id,
+          ),
       )
       const sameNet =
         connectionNetIds.has(trace.connection_name) ||
