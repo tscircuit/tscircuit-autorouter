@@ -46,7 +46,8 @@ test("Glider DDR via outside the shared routing cell", async (): Promise<void> =
   expect(stats.preloadedAssignmentCount).toBe(1)
   const sections: ChangedPreloadedTraceSection[] = []
   for (const connection of fixture.graph.connections ?? []) {
-    if (!hasPreloadedTraceSectionMetadata(connection)) continue
+    if (!hasPreloadedTraceSectionMetadata(connection) || connection.isFixed)
+      continue
     const section = connection.preloadedTraceSection
     sections.push({
       connectionName: connection.connectionId,
