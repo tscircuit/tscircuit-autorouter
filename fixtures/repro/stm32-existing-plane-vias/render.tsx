@@ -33,7 +33,8 @@ const autorouter: AutorouterProp = {
 }
 circuit.add(<Stm32ExistingPlaneVias autorouter={autorouter} />)
 await circuit.renderUntilSettled()
-if (!capturedInput) throw new Error("Native dogbone did not reach board routing")
+if (!capturedInput)
+  throw new Error("Native dogbone did not reach board routing")
 const json = circuit.getCircuitJson()
 const cpu = json.find(
   (element) => element.type === "source_component" && element.name === "U70",
@@ -42,15 +43,19 @@ if (cpu?.type !== "source_component") {
   throw new Error("STM32 source component missing")
 }
 const pcbCpu = json.find(
-  (element) => element.type === "pcb_component" &&
+  (element) =>
+    element.type === "pcb_component" &&
     element.source_component_id === cpu.source_component_id,
 )
 if (pcbCpu?.type !== "pcb_component") {
   throw new Error("STM32 PCB component missing")
 }
 const cpuPads = json
-  .filter((element) => element.type === "pcb_smtpad" &&
-    element.pcb_component_id === pcbCpu.pcb_component_id)
+  .filter(
+    (element) =>
+      element.type === "pcb_smtpad" &&
+      element.pcb_component_id === pcbCpu.pcb_component_id,
+  )
   .map((pad) => {
     if (pad.type !== "pcb_smtpad" || pad.shape !== "circle") {
       throw new Error("Expected circular STM32 pads")
@@ -70,15 +75,22 @@ const output = new URL(
   "../../../tests/repro/assets/stm32-existing-plane-vias.srj.json.gz",
   import.meta.url,
 )
-writeFileSync(output, gzipSync(JSON.stringify({
-  provenance: {
-    source: "fixtures/repro/stm32-existing-plane-vias/board.tsx",
-    runtime: "tscircuit@0.0.3163",
-    note: "Full STM32 footprint and motherboard GND connections; other subsystems omitted. Native dogbone then unmodified remaining-routing input; no saved routing.",
-  },
-  inputSrj: capturedInput,
-  cpuGroundPointIds,
-  cpuPads,
-  cpuTraces,
-})))
-console.log(`Generated ${output.pathname}: ${cpuPads.length} pads, ${exits.length} native ground escapes`)
+writeFileSync(
+  output,
+  gzipSync(
+    JSON.stringify({
+      provenance: {
+        source: "fixtures/repro/stm32-existing-plane-vias/board.tsx",
+        runtime: "tscircuit@0.0.3163",
+        note: "Full STM32 footprint and motherboard GND connections; other subsystems omitted. Native dogbone then unmodified remaining-routing input; no saved routing.",
+      },
+      inputSrj: capturedInput,
+      cpuGroundPointIds,
+      cpuPads,
+      cpuTraces,
+    }),
+  ),
+)
+console.log(
+  `Generated ${output.pathname}: ${cpuPads.length} pads, ${exits.length} native ground escapes`,
+)
