@@ -13,10 +13,12 @@ test("Glider DDR width selection beside round BGA pads", async (): Promise<void>
   const capture: { input: SimpleRouteJson; params: TraceWidthSolverInput } =
     JSON.parse(
       gunzipSync(
-        readFileSync(
-          new URL(
-            "../fixtures/assets/glider-ddr-round-pad-width/width-input.json.gz",
-            import.meta.url,
+        Uint8Array.from(
+          readFileSync(
+            new URL(
+              "../fixtures/assets/glider-ddr-round-pad-width/width-input.json.gz",
+              import.meta.url,
+            ),
           ),
         ),
       ).toString("utf8"),
