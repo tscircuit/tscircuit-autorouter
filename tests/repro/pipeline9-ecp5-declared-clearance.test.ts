@@ -113,7 +113,7 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
   const contacts = checkEachPcbTraceNonOverlapping(circuit, {
     minClearance: srj.minTraceToPadEdgeClearance,
   }).filter((error) => error.message.includes("accidental contact"))
-  expect(contacts.some((error) => error.message.includes("RAM_D7"))).toBeTrue()
+  expect(contacts.some((error) => error.message.includes("RAM_D7"))).toBeFalse()
   const originalContact = checkEachPcbTraceNonOverlapping(fixture.circuitJson, {
     minClearance: srj.minTraceToPadEdgeClearance,
   }).find((error) => error.message.includes("RAM_D7 overlaps"))
