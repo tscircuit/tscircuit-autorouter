@@ -10,7 +10,7 @@ import {
 } from "tests/fixtures/getH616JointRepairCircuit"
 import { getH616JointRepairPcbSvg } from "tests/fixtures/getH616JointRepairPcbSvg"
 
-test("H616 skips regional clearance repair after repairing trace contacts", async (): Promise<void> => {
+test("H616 continues clearance repair after repairing trace contacts", async (): Promise<void> => {
   const fixture: H616JointRepairFixture = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -30,35 +30,51 @@ test("H616 skips regional clearance repair after repairing trace contacts", asyn
       fixture.jointRepairInput.mutatedPreloadedTraceIds,
     ),
   })
+  while (!solver.solved && !solver.failed && !solver.regionalB01RepairSolver) {
+    solver.step()
+  }
+  expect(solver.regionalB01RepairSolver).toBeDefined()
+  const contactRepairCircuit = getH616JointRepairCircuit({ fixture, solver })
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(solver.regionalB01RepairSolver).toBeUndefined()
-  expect(solver.stats.postExactReferenceAccepted).toBeFalse()
-  expect(solver.stats.postExactReferenceDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.stats.regionalB01RepairAcceptedCount).toBeGreaterThan(0)
   const circuitJson = getH616JointRepairCircuit({ fixture, solver })
-  const drcErrors = getDrcErrors(circuitJson, {
-    traceClearance:
-      fixture.jointRepairInput.originalSrj.minTraceToPadEdgeClearance,
-    viaToPadClearance:
-      fixture.jointRepairInput.originalSrj.minViaEdgeToPadEdgeClearance,
-    includeTraceContinuity: false,
-  }).errors
-  expect(drcErrors.length).toBeGreaterThan(0)
+  // Use the native board's declared copper clearances in both evaluations.
+  const circuits = [contactRepairCircuit, circuitJson]
+  const [contactRepairErrors, drcErrors] = circuits.map(
+    (circuit) =>
+      getDrcErrors(circuit, {
+        traceClearance:
+          fixture.jointRepairInput.originalSrj.minTraceToPadEdgeClearance,
+        viaToPadClearance:
+          fixture.jointRepairInput.originalSrj.minViaEdgeToPadEdgeClearance,
+        includeTraceContinuity: false,
+      }).errors,
+  )
+  expect(drcErrors!.length).toBeLessThan(contactRepairErrors!.length)
   expect(
     circuitJson.filter((element) => element.type === "pcb_component"),
   ).toEqual(
     fixture.circuitJson.filter((element) => element.type === "pcb_component"),
   )
+  const outputConnectionNames = solver
+    .getOutput()
+    .map((route) => route.connectionName)
+  expect(outputConnectionNames.sort()).toEqual(
+    fixture.jointRepairInput.newHdRoutes
+      .map((route) => route.connectionName)
+      .sort(),
+  )
   const svg = getH616JointRepairPcbSvg({
     circuitJson,
-    drcErrorCount: drcErrors.length,
+    drcErrorCount: drcErrors!.length,
   })
   await expect(svg).toMatchSvgSnapshot(import.meta.path, { scale: 1 })
 
   const focused = getH616JointRepairPcbSvg({
     circuitJson,
-    drcErrorCount: drcErrors.length,
+    drcErrorCount: drcErrors!.length,
     focused: true,
   })
   await expect(focused).toMatchSvgSnapshot(import.meta.path, {

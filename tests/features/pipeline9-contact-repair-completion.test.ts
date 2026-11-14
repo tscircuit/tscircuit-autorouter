@@ -21,7 +21,7 @@ type ContactFixture = {
   netMap: ConnectivityMap["netMap"]
 }
 
-test("contact repair skips regional clearance repair", async (): Promise<void> => {
+test("contact repair continues regional repair without increasing board DRC", async (): Promise<void> => {
   const fixture: ContactFixture = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -41,28 +41,49 @@ test("contact repair skips regional clearance repair", async (): Promise<void> =
       fixture.jointParams.mutatedPreloadedTraceIds,
     ),
   })
-  solver.solve()
-  const input = solver.params
-  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-    connections: input.newConnections,
-    originalConnections: input.originalSrj.connections,
-    hdRoutes: canonicalizePipeline9HdRoutes(solver.getOutput()),
-    layerCount: input.layerCount,
-    obstacles: input.obstacles,
-    defaultViaHoleDiameter: input.defaultViaHoleDiameter,
-    connMap: input.connMap,
-  })
-  const evaluation = {
-    inputSrj: input.originalSrj,
-    srjWithPointPairs: input.srjWithPointPairs,
-    routedTraces: [...solver.getMutatedPreloadedTraces(), ...traces],
+  while (!solver.solved && !solver.failed && !solver.regionalB01RepairSolver) {
+    solver.step()
   }
-  const { errors } = evaluateRelaxedDrc(evaluation)
+  expect(solver.regionalB01RepairSolver).toBeDefined()
+  const candidates = [
+    {
+      hdRoutes: structuredClone(solver.getOutput()),
+      mutatedPreloadedTraces: structuredClone(
+        solver.getMutatedPreloadedTraces(),
+      ),
+    },
+  ]
+  solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(solver.regionalB01RepairSolver).toBeUndefined()
-  expect(errors.length).toBeGreaterThan(0)
-  await expect(getBugReportSnapshotSvg(evaluation)).toMatchSvgSnapshot(
+  candidates.push({
+    hdRoutes: solver.getOutput(),
+    mutatedPreloadedTraces: solver.getMutatedPreloadedTraces(),
+  })
+  const input = solver.params
+  const evaluations = candidates.map((candidate) => ({
+    inputSrj: input.originalSrj,
+    srjWithPointPairs: input.srjWithPointPairs,
+    routedTraces: [
+      ...candidate.mutatedPreloadedTraces,
+      ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
+        connections: input.newConnections,
+        originalConnections: input.originalSrj.connections,
+        hdRoutes: canonicalizePipeline9HdRoutes(candidate.hdRoutes),
+        layerCount: input.layerCount,
+        obstacles: input.obstacles,
+        defaultViaHoleDiameter: input.defaultViaHoleDiameter,
+        connMap: input.connMap,
+      }),
+    ],
+  }))
+  const [contactRepairErrors, regionalRepairErrors] = evaluations.map(
+    (evaluation) => evaluateRelaxedDrc(evaluation).errors,
+  )
+  expect(regionalRepairErrors!.length).toBeLessThan(
+    contactRepairErrors!.length,
+  )
+  await expect(getBugReportSnapshotSvg(evaluations[1]!)).toMatchSvgSnapshot(
     import.meta.path,
   )
 })

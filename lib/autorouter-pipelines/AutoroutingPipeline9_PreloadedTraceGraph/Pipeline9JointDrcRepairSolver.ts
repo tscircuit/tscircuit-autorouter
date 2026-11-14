@@ -1780,6 +1780,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 trace contact repair published a new short")
       }
       this.stats = { ...this.stats, ...solver.stats }
+      const referenceDrc = this.cachedReferenceDrcEvaluator!({
+        traces: [],
+        routes: this.combinedOutput,
+        hdRoutes: this.combinedOutput,
+      })
+      const referenceDrcErrors = Array.isArray(referenceDrc)
+        ? referenceDrc
+        : referenceDrc.errors
+      this.stats.postTraceContactReferenceDrcIssueCount =
+        referenceDrcErrors.length
+      if (
+        referenceDrcErrors.length > 0 &&
+        this.regionalB01Params &&
+        !this.regionalB01RepairSolver
+      ) {
+        // Contact repair does not replace the remaining clearance repair stages.
+        this.regionalB01Params = {
+          ...this.regionalB01Params,
+          routes: this.combinedOutput,
+          initialErrors: getPipeline9DrcErrors(
+            this.drcEvaluator!,
+            this.combinedOutput,
+          ),
+        }
+        const regionalB01RepairStepIndex = this.pipelineDef.findIndex(
+          (stage) => stage.solverName === "regionalB01RepairSolver",
+        )
+        if (regionalB01RepairStepIndex < 0) {
+          throw new Error("Pipeline9 regional B01 repair stage is missing")
+        }
+        this.traceContactRepairSolver = undefined
+        this.activeSubSolver = null
+        this.currentPipelineStepIndex = regionalB01RepairStepIndex
+        return
+      }
       this.activeSubSolver = null
       this.solved = true
       return
