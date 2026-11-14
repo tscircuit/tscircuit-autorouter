@@ -39,6 +39,7 @@ type OrderedTracePort = {
 }
 
 type PreloadedAssignmentSegment = {
+  isFixed: boolean
   regionId: string
   from: OrderedTracePort
   to: OrderedTracePort
@@ -52,6 +53,7 @@ export type SerializedPreloadedTraceStats = {
 
 const PRELOADED_TRACE_CONNECTION_PREFIX = "__tscircuit_preloaded_trace__:"
 const ROUTE_POSITION_TOLERANCE = 1e-6
+const TRACE_POINT_TOLERANCE_MM = 1e-6
 
 export const hasPreloadedTraceSectionMetadata = (
   metadata: unknown,
@@ -106,11 +108,15 @@ const getSharedRegionIds = (
   )
 }
 
-const chooseAssignmentRegionId = (
-  orderedPorts: OrderedTracePort[],
-  pairIndex: number,
-  previousRegionId?: string,
-) => {
+const chooseAssignmentRegionId = ({
+  orderedPorts,
+  pairIndex,
+  previousRegionId,
+}: {
+  orderedPorts: OrderedTracePort[]
+  pairIndex: number
+  previousRegionId?: string
+}): string | undefined => {
   const from = orderedPorts[pairIndex]!
   const to = orderedPorts[pairIndex + 1]!
   const sharedRegionIds = getSharedRegionIds(from.port, to.port)
@@ -239,16 +245,38 @@ export const serializePreloadedTraceAssignments = (
         previousRegionId = undefined
         continue
       }
-      const regionId = chooseAssignmentRegionId(
+      const regionId = chooseAssignmentRegionId({
         orderedPorts,
         pairIndex,
         previousRegionId,
-      )
+      })
       if (!regionId) {
         previousRegionId = undefined
         continue
       }
-      segments.push({ regionId, from, to })
+      const geometry = regionById.get(regionId)?.d
+      const isCollapsedLayerTransition =
+        from.assignment.z !== to.assignment.z &&
+        typeof from.port.d?.x === "number" &&
+        typeof from.port.d?.y === "number" &&
+        from.port.d.x === to.port.d?.x &&
+        from.port.d.y === to.port.d?.y
+      // Keep the graph's original connectivity without asking high-density
+      // routing to reconstruct this via inside the neighboring cell.
+      const isFixed =
+        fixedTraceIds.has(traceId) ||
+        Boolean(
+          isCollapsedLayerTransition &&
+            geometry?.center &&
+            [from.assignment.tracePoint, to.assignment.tracePoint].some(
+              (point) =>
+                Math.abs(point.x - geometry.center.x) >
+                  geometry.width / 2 + TRACE_POINT_TOLERANCE_MM ||
+                Math.abs(point.y - geometry.center.y) >
+                  geometry.height / 2 + TRACE_POINT_TOLERANCE_MM,
+            ),
+        )
+      segments.push({ regionId, from, to, isFixed })
       previousRegionId = regionId
     }
 
@@ -257,7 +285,8 @@ export const serializePreloadedTraceAssignments = (
       const currentRun = contiguousRuns.at(-1)
       if (
         !currentRun ||
-        currentRun.at(-1)!.to.port.portId !== segment.from.port.portId
+        currentRun.at(-1)!.to.port.portId !== segment.from.port.portId ||
+        currentRun[0]!.isFixed !== segment.isFixed
       ) {
         contiguousRuns.push([segment])
       } else {
@@ -292,7 +321,7 @@ export const serializePreloadedTraceAssignments = (
       const connection: SerializedConnection &
         PreloadedTraceConnectionMetadata = {
         connectionId,
-        ...(fixedTraceIds.has(traceId) && { isFixed: true }),
+        ...(firstSegment.isFixed && { isFixed: true }),
         mutuallyConnectedNetworkId: fixedNetIdByTraceId.get(traceId) ?? traceId,
         startRegionId: getEndpointRegionId(firstPort, firstSegment.regionId),
         endRegionId: getEndpointRegionId(lastPort, lastSegment.regionId),
