@@ -19,7 +19,7 @@ import {
 } from "tests/fixtures/applyNativeRepair"
 import { createPipeline9TestRuntime } from "tests/fixtures/createPipeline9TestRuntime"
 
-test("iMX6 DDR repair retains the native board copper", async (): Promise<void> => {
+test("iMX6 DDR repair uses the board copper clearance", async (): Promise<void> => {
   const fixture = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -52,6 +52,7 @@ test("iMX6 DDR repair retains the native board copper", async (): Promise<void> 
     hdRoutes,
     obstacles: sample.clearanceObstacles,
     repairMargin: sample.minClearance,
+    minClearance: sample.minClearance,
   })
   expect(solver.sampleEntries.map((entry) => entry.routeIndexes)).toEqual([
     [0, 1, 2],
@@ -98,8 +99,8 @@ test("iMX6 DDR repair retains the native board copper", async (): Promise<void> 
     circuit.filter((element) => element.type === "source_trace"),
   ).toHaveLength(588)
   const options = { minClearance: sample.minClearance }
-  expect(checkViaTraceClearance(circuit, options)).toHaveLength(4)
-  expect(checkViasInPads(circuit)).toHaveLength(1)
+  expect(checkViaTraceClearance(circuit, options)).toHaveLength(3)
+  expect(checkViasInPads(circuit)).toHaveLength(0)
   for (const check of [
     checkEachPcbTraceNonOverlapping,
     checkPadTraceClearance,
