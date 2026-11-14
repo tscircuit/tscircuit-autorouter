@@ -1,0 +1,12 @@
+bun test v1.4.3 (c6da4a4d3)
+
+::group::tests/repro/pipeline9-orangecrab-through-vias.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-orangecrab-through-vias.snap.svg
+(pass) routes OrangeCrab remaining signals without shorting through-vias to another DDR net [37844.97ms]
+
+::endgroup::
+
+ 1 pass
+ 0 fail
+ 11 expect() calls
+Ran 1 test across 1 file. [38.12s]
