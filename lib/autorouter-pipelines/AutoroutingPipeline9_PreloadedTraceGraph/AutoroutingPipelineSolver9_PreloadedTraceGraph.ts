@@ -1008,14 +1008,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
-            refineTraceWidths: (routes: HighDensityRoute[]): HighDensityRoute[] =>
+            refineTraceWidths: (
+              routes: HighDensityRoute[],
+            ): HighDensityRoute[] =>
               cms.traceWidthSolver!.refineWidths({
                 hdRoutes: routes,
                 otherHdRoutes: otherHdRoutes.map(
                   (route): HighDensityRoute => ({
                     ...route,
                     rootConnectionName:
-                      preloadedTraces[route.preloadedTraceIndex]!.connection_name,
+                      preloadedTraces[route.preloadedTraceIndex]!
+                        .connection_name,
                   }),
                 ),
               }),

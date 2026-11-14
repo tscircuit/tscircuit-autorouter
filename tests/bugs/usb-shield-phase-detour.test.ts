@@ -65,7 +65,9 @@ test("routes the USB shield through both MIDI keyboard phases", async (): Promis
   expect(phase1.solved).toBeTrue()
   const output = phase1.getOutputSimpleRouteJson()
   expect(
-    output.traces!.filter((trace) => trace.pcb_trace_id === shield.pcb_trace_id),
+    output.traces!.filter(
+      (trace) => trace.pcb_trace_id === shield.pcb_trace_id,
+    ),
   ).toEqual([
     {
       ...shield,

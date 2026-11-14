@@ -454,8 +454,8 @@ export class TraceWidthSolver extends BaseSolver {
         this.refiningWidths &&
         terminalPortIds.length > 0 &&
         obstacle.netIsAssignable === true &&
-        !obstacle.connectedTo.some(
-          (id): boolean => terminalPortIds.includes(id),
+        !obstacle.connectedTo.some((id): boolean =>
+          terminalPortIds.includes(id),
         )
       if (
         !isUnassignedPad &&
