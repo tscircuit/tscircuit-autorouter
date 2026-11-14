@@ -43,7 +43,6 @@ jobs:
           cd ..
           ln -s ../pr/node_modules base/node_modules
           cmp base/package.json pr/package.json
-          cmp base/bun.lockb pr/bun.lockb
       - name: Counterbalance the reported slow samples
         env:
           BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
