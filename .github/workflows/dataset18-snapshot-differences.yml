@@ -1,0 +1,55 @@
+name: Inspect dataset18 snapshot differences
+on:
+  push:
+    branches: [codex/dataset18-svg-differences-20261114]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          run-id: 43634931113
+          github-token: ${{ github.token }}
+          path: flat
+      - uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          run-id: 43635856065
+          github-token: ${{ github.token }}
+          path: slow
+      - name: Compare exact SVG element attributes
+        run: |
+          python3 - <<'PY'
+          import json, re
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          groups = {}
+          for folder in ('flat/base', 'flat/pr', 'slow/base', 'slow/pr'):
+              source = Path(folder)
+              report = json.loads((source/'benchmark-result.json').read_text())
+              svgs = re.findall(r'<svg\b[\s\S]*?</svg>', (source/'benchmark-snapshots.html').read_text())
+              groups[folder] = {row['scenarioName']: list(ET.fromstring(svg).iter()) for row, svg in zip(report['snapshots'], svgs, strict=True)}
+          differences = []
+          for sample in groups['flat/base']:
+              before = groups['flat/base'][sample]
+              for folder in ('flat/pr', 'slow/base', 'slow/pr'):
+                  after = groups[folder][sample]
+                  if len(before) != len(after):
+                      print('ELEMENT_COUNT', sample, folder, len(before), len(after))
+                  changed = []
+                  for index, (a, b) in enumerate(zip(before, after)):
+                      if a.tag != b.tag or a.attrib != b.attrib or a.text != b.text:
+                          changed.append({'index':index,'tag':a.tag,'base':a.attrib,'other':b.attrib,'baseText':a.text,'otherText':b.text})
+                  if changed:
+                      differences.append({'sample':sample,'folder':folder,'changes':changed})
+                      print('SVG_DIFFERENCES', sample, folder, len(changed), json.dumps(changed[:6]))
+          Path('differences.json').write_text(json.dumps(differences, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dataset18-svg-differences
+          path: differences.json
