@@ -28,7 +28,9 @@ test("H616 DDR keeps a clear clock span below its requested width", async (): Pr
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.inputSrj),
   })
   solver.solve()
-  const routes = solver.refineWidths({ hdRoutes: solver.getHdRoutesWithWidths() })
+  const routes = solver.refineWidths({
+    hdRoutes: solver.getHdRoutesWithWidths(),
+  })
   expect(solver.solved).toBe(true)
   const target = routes.find(
     (route) => route.connectionName === fixture.focus.connectionName,
