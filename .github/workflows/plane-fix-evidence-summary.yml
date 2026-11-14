@@ -1,0 +1,39 @@
+name: Read existing plane-routing evidence
+on:
+  push:
+    branches: [codex/plane-fix-evidence-summary-20261114]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    env:
+      INCLUDE_FULL: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: connected-plane-demands
+          run-id: 43624755059
+          github-token: ${{ github.token }}
+          path: evidence-demands
+      - uses: actions/download-artifact@v4
+        if: env.INCLUDE_FULL == 'true'
+        with:
+          name: full-board-plane-intent-results
+          run-id: 43623212516
+          github-token: ${{ github.token }}
+          path: evidence-control
+      - uses: actions/download-artifact@v4
+        if: env.INCLUDE_FULL == 'true'
+        with:
+          name: connected-plane-full
+          run-id: 43624755059
+          github-token: ${{ github.token }}
+          path: evidence-fixed
+      - run: python3 experiments/full-board-priority-analysis/summarizePlaneEvidence.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plane-evidence-summary
+          path: plane-evidence-summary.json
