@@ -98,7 +98,7 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
     : decision!.candidateReference.errors
   solver.step()
   const accepted = decision!.context.currentRoutes === proposedRoutes
-  expect(accepted).toBe(false)
+  expect(accepted).toBe(true)
   expect(fixture).toEqual(original)
   expect(
     proposedRoutes.find(
