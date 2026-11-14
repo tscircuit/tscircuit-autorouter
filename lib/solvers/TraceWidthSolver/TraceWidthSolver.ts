@@ -193,7 +193,13 @@ export class TraceWidthSolver extends BaseSolver {
         this.finalizeCurrentTrace(nominalWidth)
         widthsChanged = true
       } else {
-        this.processedRoutes.push(route)
+        const refined = this.refineLayerWidths(route, nominalWidth)
+        this.processedRoutes.push(refined)
+        if (refined !== route) {
+          this.hdRouteSHI.removeRoute(route.connectionName)
+          this.hdRouteSHI.addRoute(refined)
+          widthsChanged = true
+        }
         this.currentTrace = null
       }
     }
@@ -201,6 +207,64 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRoutesWithWidths = this.processedRoutes
     if (!widthsChanged) return hdRoutes
     return this.hdRoutesWithWidths
+  }
+
+  /** Via boundaries let each layer keep its own clearance-limited width. */
+  private refineLayerWidths(
+    route: HighDensityRoute,
+    nominalWidth: number,
+  ): HighDensityRoute {
+    let widenedPoints: RoutePoint[] | undefined
+    for (let start = 0; start < route.route.length; ) {
+      let end = start
+      while (
+        end + 1 < route.route.length &&
+        route.route[end + 1]!.z === route.route[start]!.z
+      ) {
+        end++
+      }
+      if (end > start) {
+        const points = route.route.slice(start, end + 1)
+        const spanWidth = Math.max(
+          nominalWidth,
+          ...points.map((point) => point.traceThickness ?? route.traceThickness),
+        )
+        this.currentTargetWidth = spanWidth
+        const clearance = spanWidth / 2 + this.obstacleMargin
+        const canWiden =
+          points.some(
+            (point): boolean =>
+              (point.traceThickness ?? route.traceThickness) < nominalWidth,
+          ) &&
+          points.slice(1).every((point, index): boolean => {
+            const previous = points[index]!
+            if (previous.insideJumperPad && point.insideJumperPad) return true
+            if (previous.toNextSegmentType === "through_obstacle") return true
+            return this.getClearanceForSegment(previous, point) >= clearance
+          })
+        if (canWiden) {
+          widenedPoints ??= route.route.map((point) => ({
+            ...point,
+            traceThickness: point.traceThickness ?? route.traceThickness,
+          }))
+          for (let index = start; index <= end; index++) {
+            widenedPoints[index]!.traceThickness = Math.max(
+              widenedPoints[index]!.traceThickness!,
+              nominalWidth,
+            )
+          }
+        }
+      }
+      start = end + 1
+    }
+    if (!widenedPoints) return route
+    return {
+      ...route,
+      route: widenedPoints,
+      traceThickness: Math.max(
+        ...widenedPoints.map((point) => point.traceThickness!),
+      ),
+    }
   }
 
   private getNominalTraceWidthForRoute(

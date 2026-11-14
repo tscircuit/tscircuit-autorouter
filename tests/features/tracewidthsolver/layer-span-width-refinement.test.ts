@@ -6,7 +6,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 
-test("a narrow surface escape also narrows a clear interconnect layer", async (): Promise<void> => {
+test("a narrow surface escape does not narrow a clear interconnect layer", async (): Promise<void> => {
   const input: SimpleRouteJson = {
     bounds: { minX: -1, maxX: 13, minY: -2, maxY: 2 },
     layerCount: 2,
@@ -80,7 +80,7 @@ test("a narrow surface escape also narrows a clear interconnect layer", async ()
   expect(
     wires
       .filter((point) => point.layer === "bottom")
-      .every((point) => point.width === 0.1),
+      .every((point) => point.width === 0.2),
   ).toBe(true)
   expect(refined!.route.map(({ x, y, z }) => ({ x, y, z }))).toEqual(route.route)
   expect(refined!.vias).toEqual(route.vias)

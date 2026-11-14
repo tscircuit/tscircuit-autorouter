@@ -10,7 +10,7 @@ import {
   type H616WidthFixture,
 } from "tests/fixtures/getH616WidthCircuit"
 
-test("H616 DDR keeps a clear clock span below its requested width", async (): Promise<void> => {
+test("H616 DDR restores clear layer spans without changing its native placement", async (): Promise<void> => {
   const fixture: H616WidthFixture = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -34,7 +34,7 @@ test("H616 DDR keeps a clear clock span below its requested width", async (): Pr
     (route) => route.connectionName === fixture.focus.connectionName,
   )
   expect(target?.route[fixture.focus.pointIndex]?.traceThickness).toBe(
-    fixture.inputSrj.minTraceWidth,
+    fixture.focus.requestedWidth,
   )
   const circuit = getH616WidthCircuit({ fixture, hdRoutes: routes })
   expect(
