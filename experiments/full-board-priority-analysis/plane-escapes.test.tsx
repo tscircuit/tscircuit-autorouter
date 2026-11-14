@@ -20,6 +20,7 @@ test("full-board plane phase retains both terminals and joins them through fresh
   expect(json.filter((e) => e.type === "source_net")).toHaveLength(1)
   expect(json.filter((e) => e.type === "pcb_copper_pour").length).toBeGreaterThan(0)
   expect(json.filter((e) => e.type === "pcb_via").length).toBeGreaterThanOrEqual(2)
+  expect(json.filter((e) => e.type === "pcb_trace")).toHaveLength(2)
   const modulePath = new URL("./patched-core/find-floating-copper.js", import.meta.url).href
   const { findFloatingCopper } = await import(modulePath)
   const ports = new Map(json.filter((e) => e.type === "pcb_port").map((p) => [p.source_port_id,p]))

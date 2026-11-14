@@ -1,0 +1,55 @@
+name: Connected plane escape routing
+on:
+  push:
+    branches: [codex/connected-plane-escape-benchmark-20261114]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [demands, full]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 24040b0bf0b10c493f56766ee29eb554907c4fae
+          path: .plane-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install workspace router dependencies
+        run: bun install --ignore-scripts
+      - name: Install pinned circuit dependencies
+        working-directory: experiments/full-board-priority-analysis
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build source core
+        run: |
+          cd .plane-core
+          bun install --frozen-lockfile --ignore-scripts
+          cd ../experiments/full-board-priority-analysis
+          bun build-core.ts ../../.plane-core
+      - name: Prepare the unchanged baseline escape solver
+        if: matrix.kind == 'demands'
+        run: git show c591de445efc25c305ac2967d3340cde7b6897c2:lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts > lib/solvers/EscapeViaLocationSolver/BaselineEscapeViaLocationSolver.ts
+      - name: Compare requested plane routes on identical inputs
+        if: matrix.kind == 'demands'
+        working-directory: experiments/full-board-priority-analysis
+        run: bun plane-demands.tsx ../../plane-demand-results
+      - name: Route all six complete boards
+        if: matrix.kind == 'full'
+        working-directory: experiments/full-board-priority-analysis
+        run: bun plane-suite.ts ../../connected-plane-results phased
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: connected-plane-${{ matrix.kind }}
+          path: |
+            plane-demand-results
+            connected-plane-results
+          retention-days: 14

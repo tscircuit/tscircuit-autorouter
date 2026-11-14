@@ -1,1 +1,1 @@
-export { RootCircuit, SOLVERS } from "@tscircuit/core"
+export { RootCircuit, SOLVERS, getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"

@@ -21,8 +21,8 @@ const missingCopper: { name: string; members: number }[] = []
 const pours = json.filter((e) => e.type === "pcb_copper_pour")
 let copperConnectedPortGroups: string[][] = []
 if (pours.length > 0) {
-  if (!process.env.FULL_BOARD_COPPER_MODULE) throw new Error("Actual pour geometry requires the copper connectivity checker")
-  const { findFloatingCopper } = await import(process.env.FULL_BOARD_COPPER_MODULE)
+  const modulePath = process.env.FULL_BOARD_COPPER_MODULE ?? new URL("./patched-core/find-floating-copper.js", import.meta.url).href
+  const { findFloatingCopper } = await import(modulePath)
   copperConnectedPortGroups = findFloatingCopper(json).copperConnectedPointGroups
 }
 

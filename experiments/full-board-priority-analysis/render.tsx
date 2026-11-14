@@ -23,7 +23,7 @@ const progress = {
   id, mode, status: "running", renderCompleted: false, elapsedMs: 0,
   phases: [] as { name: string; solver: string; status: string; connections: number; startedMs: number; elapsedMs?: number }[],
   errors: [] as string[], stage: "initializing", initialCopperElements: null as number | null,
-  runtime: { tscircuit: "0.0.3180", core: "0.0.2372", fanout: "0.0.84", busLanes: "core-bundled", autorouter: "workspace Pipeline 9", routerCommit: "c591de445efc25c305ac2967d3340cde7b6897c2" },
+  runtime: { tscircuit: "0.0.3180", core: "0.0.2372", fanout: "0.0.84", busLanes: "core-bundled", autorouter: "workspace Pipeline 9", routerCommit: process.env.FULL_BOARD_ROUTER_COMMIT ?? "workspace checkout; see runtime.mjs" },
   planeIntent: { enabled: mode !== "legacy", zones: source.planeIntent.zones.length, importedSavedCopper: source.planeIntent.savedCopperImported },
 }
 const diagnostics = {

@@ -8,9 +8,14 @@ mkdirSync(output, { recursive: true })
 const coreModule = join(import.meta.dir,"patched-core/index.js")
 const copperModule = join(import.meta.dir,"patched-core/find-floating-copper.js")
 const environment = { ...process.env, FULL_BOARD_CORE_MODULE: coreModule, FULL_BOARD_COPPER_MODULE: copperModule }
+const revision=Bun.spawnSync(["git","rev-parse","HEAD"],{cwd:import.meta.dir})
+if(revision.exitCode!==0)throw new Error("Cannot record the benchmark revision")
+const routerCommit=new TextDecoder().decode(revision.stdout).trim()
+environment.FULL_BOARD_ROUTER_COMMIT=routerCommit
 writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,cpu:cpus()[0].model,cpus:cpus().length,memory:totalmem(),concurrency:2,
-  routerCommit:"c591de445efc25c305ac2967d3340cde7b6897c2",coreBase:"40b8f45f0e3d55dcaa13a8389db4c4f1003019aa",coreFix:"24040b0",routingBudgetMs:600000,hardProcessBudgetMs:660000},null,2))
-const queue: Task[] = ["phased","fanout"].flatMap((mode)=>["h616","icepi","glider","orangecrab","butterstick","imx6"].map((id)=>({id,mode:mode as Task["mode"]})))
+  routerCommit,coreBase:"40b8f45f0e3d55dcaa13a8389db4c4f1003019aa",coreFix:"24040b0",routingBudgetMs:600000,hardProcessBudgetMs:660000},null,2))
+const modes=process.argv[3]==="phased"?["phased"]:["phased","fanout"]
+const queue: Task[] = modes.flatMap((mode)=>["h616","icepi","glider","orangecrab","butterstick","imx6"].map((id)=>({id,mode:mode as Task["mode"]})))
 const rows: unknown[] = []
 async function worker(): Promise<void> {
   while (queue.length) {

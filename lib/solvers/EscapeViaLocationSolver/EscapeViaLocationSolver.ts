@@ -25,6 +25,7 @@ import {
 import { BaseSolver } from "../BaseSolver"
 import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
+import { getConnectedCopperPourRepresentatives } from "./getConnectedCopperPourRepresentatives"
 
 const ESCAPE_POINT_ID_PREFIX = "escape-via:"
 const GEOMETRIC_TOLERANCE = 1e-4
@@ -698,6 +699,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     point: ConnectionPoint
     pointIndex: number
     matchingCopperPours: Obstacle[]
+    connectedPourRepresentatives: Map<Obstacle, Obstacle>
     connectionNetIds: Set<string>
     sourceObstacle?: Obstacle
   }): EscapeViaCandidate | null {
@@ -706,6 +708,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       point,
       pointIndex,
       matchingCopperPours,
+      connectedPourRepresentatives,
       connectionNetIds,
       sourceObstacle: sourceObstacleOverride,
     } = params
@@ -732,7 +735,11 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-      const targetPourKey = getObstacleKey(copperPour)
+      const representativePour = connectedPourRepresentatives.get(copperPour)
+      if (!representativePour) {
+        throw new Error("Missing connected copper pour region")
+      }
+      const targetPourKey = getObstacleKey(representativePour)
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
@@ -917,6 +924,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (matchingCopperPours.length === 0) {
         continue
       }
+      const connectedPourRepresentatives =
+        getConnectedCopperPourRepresentatives(matchingCopperPours)
 
       const groupedEscapePointIds = new Map<string, string[]>()
       const representativeConnectionNameByPourKey = new Map<string, string>()
@@ -933,6 +942,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
           point,
           pointIndex: pointOwner.pointIndex,
           matchingCopperPours,
+          connectedPourRepresentatives,
           connectionNetIds,
           sourceObstacle,
         })
