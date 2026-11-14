@@ -25,16 +25,75 @@ const formatMemory = (byteCount) => {
   return `${mebibytes.toFixed(1)} MiB`
 }
 
-const formatSolverDisplayName = (solverName, effortLabel) => {
-  const solver = String(solverName ?? "").replace(
-    /^AutoroutingPipelineSolver(\d+).*$/,
-    "Pipeline$1",
-  )
-  const match = String(effortLabel ?? "").match(/^(\d+)x effort$/)
-  if (!match)
-    return `${solver}${effortLabel === "mixed effort" ? "(mixed)" : ""}`
-  const effort = Number.parseInt(match[1], 10)
-  return `${solver}${Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ""}`
+// Budgets may vary with board size even when all samples request one effort.
+const formatRecordedRange = (values, unit) => {
+  const recorded = values.filter(Number.isFinite)
+  if (recorded.length === 0) return "n/a"
+  const sorted = recorded.sort((a, b) => a - b)
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  const range =
+    first === last ? `${first}${unit}` : `${first}${unit}–${last}${unit}`
+  return recorded.length === values.length
+    ? range
+    : `${range} (${recorded.length}/${values.length} samples)`
+}
+
+export const getBenchmarkEffortRows = (columns) => {
+  const cells = columns.map(({ report, solverName }) => {
+    const tests = (report?.tests ?? []).filter(
+      (test) => test.solverName === solverName,
+    )
+    const requested = tests.map((test) => test.requestedEffort)
+    const budgets = tests.map((test) => test.routingMetrics?.portPointBudget)
+    // A version 1 artifact may only have the overall label. Only use it for a
+    // solver present in that run, and never infer its internal stage budget.
+    const historicalLabel =
+      tests.length ||
+      report?.summary?.some((row) => row.solverName === solverName)
+        ? report?.effortLabel
+        : undefined
+    const numericLabel = /^(\d+(?:\.\d+)?)x effort$/.exec(historicalLabel ?? "")
+    let requestedLabel = numericLabel
+      ? `${numericLabel[1]}×`
+      : historicalLabel === "mixed effort"
+        ? "mixed"
+        : "n/a"
+    if (requested.some(Number.isFinite))
+      requestedLabel = formatRecordedRange(requested, "×")
+    return {
+      requested: requestedLabel,
+      effort: formatRecordedRange(
+        budgets.map((budget) => budget?.effort),
+        "×",
+      ),
+      limit: formatRecordedRange(
+        budgets.map((budget) => budget?.maxIterations),
+        "",
+      ),
+    }
+  })
+  const rows = [
+    { metric: "Requested effort", values: cells.map((cell) => cell.requested) },
+  ]
+  if (
+    cells.some((cell) => cell.limit !== "n/a") ||
+    columns.some(({ solverName }) =>
+      /Pipeline(?:Solver)?9(?:_|$)/.test(solverName),
+    )
+  ) {
+    rows.push(
+      {
+        metric: "Port-point budget effort",
+        values: cells.map((cell) => cell.effort),
+      },
+      {
+        metric: "Port-point iteration limit",
+        values: cells.map((cell) => cell.limit),
+      },
+    )
+  }
+  return rows
 }
 
 const parsePercentLabel = (label) => {
@@ -149,6 +208,12 @@ const renderNetworkedColdHotComparison = (report) => {
   const coldDrcIssues = getDrcIssueCount(report, NETWORKED_COLD_NAME)
   const hotDrcIssues = getDrcIssueCount(report, NETWORKED_HOT_NAME)
   const rows = [
+    ...getBenchmarkEffortRows(
+      [coldSummary, hotSummary].map(({ solverName }) => ({
+        report,
+        solverName,
+      })),
+    ).map(({ metric, values }) => `| ${metric} | ${values.join(" | ")} | — |`),
     `| Completion | ${coldSummary.completedRateLabel} | ${hotSummary.completedRateLabel} | ${formatPercentPointDelta(coldSummary.completedRateLabel, hotSummary.completedRateLabel)} |`,
     `| Relaxed DRC pass | ${coldSummary.relaxedDrcRateLabel} | ${hotSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(coldSummary.relaxedDrcRateLabel, hotSummary.relaxedDrcRateLabel)} |`,
     `| DRC issues | ${coldDrcIssues ?? "n/a"} | ${hotDrcIssues ?? "n/a"} | ${formatCountDelta(coldDrcIssues, hotDrcIssues)} |`,
@@ -242,10 +307,16 @@ export const renderBenchmarkComparison = ({
   const rows = []
   for (const prSummary of prReport.summary) {
     const mainSummary = mainSummaries.get(prSummary.solverName)
-    const solver = formatSolverDisplayName(
-      prSummary.solverName,
-      prReport.effortLabel,
+    const solver = prSummary.solverName.replace(
+      /^AutoroutingPipelineSolver(\d+).*$/,
+      "Pipeline$1",
     )
+    for (const { metric, values } of getBenchmarkEffortRows([
+      { report: mainReport, solverName: prSummary.solverName },
+      { report: prReport, solverName: prSummary.solverName },
+    ])) {
+      rows.push(`| ${solver} | ${metric} | ${values.join(" | ")} | — |`)
+    }
     const mainTimeouts = getTimeoutCount(mainReport, prSummary.solverName)
     const prTimeouts = getTimeoutCount(prReport, prSummary.solverName)
     const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
@@ -294,7 +365,7 @@ export const renderBenchmarkComparison = ({
   }
 
   return [
-    `Dataset: ${prReport.datasetName} · Scenarios: ${prReport.scenarioCount} · Effort: ${prReport.effortLabel}`,
+    `Dataset: ${prReport.datasetName} · Scenarios: ${prReport.scenarioCount}`,
     "",
     "| Solver | Metric | Main | PR | Change |",
     "| --- | --- | ---: | ---: | ---: |",

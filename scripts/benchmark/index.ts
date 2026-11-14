@@ -1224,6 +1224,9 @@ export const createFailedResult = (
   sampleNumber: task.sampleNumber,
   elapsedTimeMs,
   peakRssBytes: latestProgress?.peakRssBytes,
+  routingMetrics: latestProgress?.portPointBudget
+    ? { portPointBudget: latestProgress.portPointBudget }
+    : undefined,
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
@@ -1337,7 +1340,11 @@ const executeTaskOnWorker = (
       slot.child.removeListener("exit", onExit)
       signal?.removeEventListener("abort", onAbort)
       resolve({
-        result: { ...result, sampleTimeoutMs: taskTimeoutMs },
+        result: {
+          ...result,
+          requestedEffort: getTaskEffort(request.task),
+          sampleTimeoutMs: taskTimeoutMs,
+        },
         restartWorker,
       })
     }

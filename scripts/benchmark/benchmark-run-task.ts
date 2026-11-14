@@ -14,6 +14,7 @@ import type {
   BenchmarkSnapshotWithImage,
   BenchmarkTask,
   RoutingBenchmarkMetrics,
+  PortPointBudget,
   TinyHypergraphBenchmarkMetrics,
   WorkerProgress,
   WorkerResultWithImage,
@@ -59,6 +60,8 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
   portPointPathingSolver?: {
+    MAX_ITERATIONS?: number
+    getConstructorParams?: () => readonly unknown[]
     getSolveGraphBenchmarkMetrics?: () =>
       | TinyHypergraphBenchmarkMetrics
       | undefined
@@ -346,6 +349,28 @@ const getFailureInfo = (
   }
 }
 
+// Read the measured revision's live stage. In versions with separate search
+// and iteration-budget effort, only the latter controls this limit.
+const getPortPointBudget = (
+  solver: SolverInstance,
+): PortPointBudget | undefined => {
+  const stage = solver.portPointPathingSolver
+  if (
+    !stage?.getSolveGraphBenchmarkMetrics ||
+    stage.MAX_ITERATIONS === undefined
+  )
+    return undefined
+  const params = stage.getConstructorParams?.()[0]
+  if (!params || typeof params !== "object" || !("effort" in params))
+    return undefined
+  const effort =
+    "iterationBudgetEffort" in params
+      ? (params.iterationBudgetEffort ?? params.effort)
+      : params.effort
+  if (typeof effort !== "number" || !Number.isFinite(effort)) return undefined
+  return { effort, maxIterations: stage.MAX_ITERATIONS }
+}
+
 const getProgressInfo = (
   task: BenchmarkTask,
   solver: SolverInstance,
@@ -360,6 +385,7 @@ const getProgressInfo = (
     sampleNumber: task.sampleNumber,
     elapsedTimeMs,
     phaseName: pipelineStep?.solverName,
+    portPointBudget: getPortPointBudget(solver),
     phaseSolverName:
       pipelineStep?.solverClass?.name ?? getSolverInstanceName(activeSubSolver),
     solverProgress: solver.progress,
@@ -426,6 +452,7 @@ export const getRoutingBenchmarkMetrics = (
     }
   }
   return {
+    portPointBudget: getPortPointBudget(solver),
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,

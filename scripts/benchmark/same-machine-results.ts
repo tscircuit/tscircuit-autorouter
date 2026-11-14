@@ -1,3 +1,4 @@
+import { getBenchmarkEffortRows } from "./benchmark-comment-comparison.js"
 import { getTraceLintTypes, TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
 import { readFile, writeFile } from "node:fs/promises"
@@ -281,6 +282,14 @@ export const renderSameMachineBenchmarkResults = ({
         cells.push(delta)
       }
       lines.push(`| ${cells.join(" | ")} |`)
+    }
+    for (const { metric, values } of getBenchmarkEffortRows(
+      columns.map(({ report }) => ({
+        report,
+        solverName: prSummary.solverName,
+      })),
+    )) {
+      appendRow(metric, values, "—")
     }
     const completion = summaries.map((row) => row.completedRateLabel)
     const drcPass = summaries.map((row) => row.relaxedDrcRateLabel)
