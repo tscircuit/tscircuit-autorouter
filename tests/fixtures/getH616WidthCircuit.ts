@@ -46,8 +46,10 @@ export function getH616WidthCircuit({
     ),
   )
   const circuit = nativeCircuit.filter((element) => {
-    if (element.type === "pcb_trace") return !replacedIds.has(element.pcb_trace_id)
-    if (element.type === "pcb_via") return !replacedIds.has(element.pcb_trace_id!)
+    if (element.type === "pcb_trace")
+      return !replacedIds.has(element.pcb_trace_id)
+    if (element.type === "pcb_via")
+      return !replacedIds.has(element.pcb_trace_id!)
     return true
   })
   const byId = new Map(traces.map((trace) => [trace.pcb_trace_id, trace]))

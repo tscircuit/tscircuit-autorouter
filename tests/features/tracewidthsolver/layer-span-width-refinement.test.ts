@@ -82,9 +82,17 @@ test("a narrow surface escape does not narrow a clear interconnect layer", async
       .filter((point) => point.layer === "bottom")
       .every((point) => point.width === 0.2),
   ).toBe(true)
-  expect(refined!.route.map(({ x, y, z }) => ({ x, y, z }))).toEqual(route.route)
+  expect(refined!.route.map(({ x, y, z }) => ({ x, y, z }))).toEqual(
+    route.route,
+  )
   expect(refined!.vias).toEqual(route.vias)
-  const snapshot = { inputSrj: input, srjWithPointPairs: input, routedTraces: traces }
+  const snapshot = {
+    inputSrj: input,
+    srjWithPointPairs: input,
+    routedTraces: traces,
+  }
   expect(evaluateRelaxedDrc(snapshot).errors).toEqual([])
-  await expect(getBugReportSnapshotSvg(snapshot)).toMatchSvgSnapshot(import.meta.path)
+  await expect(getBugReportSnapshotSvg(snapshot)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
