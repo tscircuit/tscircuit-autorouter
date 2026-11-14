@@ -15,8 +15,7 @@ export function getH616JointRepairPcbSvg({
   let viewCircuit = circuitJson
   if (focused) {
     const ramSource = circuitJson.find(
-      (element) =>
-        element.type === "source_component" && element.name === "U2",
+      (element) => element.type === "source_component" && element.name === "U2",
     )
     if (!ramSource || ramSource.type !== "source_component") {
       throw new Error("Missing native RAM source component")
