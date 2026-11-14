@@ -1,0 +1,32 @@
+name: Full-board routing priority analysis
+on:
+  push:
+    branches:
+      - codex/full-board-priority-analysis-20261114
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostics:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install workspace solver dependencies
+        run: bun install --ignore-scripts
+      - name: Install pinned full-board runtime
+        working-directory: experiments/full-board-priority-analysis
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Rerun six boards and controlled failure replays
+        working-directory: experiments/full-board-priority-analysis
+        run: bun suite.ts ../../analysis-results
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-board-priority-analysis
+          path: analysis-results
+          retention-days: 7
