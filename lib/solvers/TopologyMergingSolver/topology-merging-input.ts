@@ -20,6 +20,7 @@ export function prepareTopologyMergingInput(
 
   const preparedNodes: PreparedTopologyMergingNode[] = []
   const preparedNodeBySourceKey = new Map<string, PreparedTopologyMergingNode>()
+  const useLayerBitmask = inputProblem.layerCount <= 30
   for (
     let groupIndex = 0;
     groupIndex < inputProblem.nodeGroups.length;
@@ -27,15 +28,41 @@ export function prepareTopologyMergingInput(
   ) {
     const group = inputProblem.nodeGroups[groupIndex]!
     for (const node of group.nodes) {
+      const sourceKey = `${group.groupId}:${node.capacityMeshNodeId}`
+      const singleSourceKeys = [sourceKey]
+      let layerMask: number | undefined
+      if (useLayerBitmask) {
+        layerMask = 0
+        for (const z of node.availableZ) {
+          layerMask |= 1 << z
+        }
+      }
       const preparedNode: PreparedTopologyMergingNode = {
-        sourceKey: `${group.groupId}:${node.capacityMeshNodeId}`,
+        sourceKey,
         groupIndex,
         node,
         bounds: getCapacityMeshNodeBounds(node),
+        layerMask,
+        singleSourceKeys,
+        passthroughSignature: JSON.stringify({
+          mode: "passthrough",
+          sourceKeys: singleSourceKeys,
+        }),
+        targetPassthroughSignature: JSON.stringify({
+          mode: "target-passthrough",
+          sourceKeys: singleSourceKeys,
+        }),
       }
       preparedNodes.push(preparedNode)
       preparedNodeBySourceKey.set(preparedNode.sourceKey, preparedNode)
     }
+  }
+
+  const localeSortedNodes = [...preparedNodes].sort((a, b) =>
+    a.sourceKey.localeCompare(b.sourceKey),
+  )
+  for (let rank = 0; rank < localeSortedNodes.length; rank++) {
+    localeSortedNodes[rank]!.localeRank = rank
   }
 
   return { preparedNodes, preparedNodeBySourceKey }
