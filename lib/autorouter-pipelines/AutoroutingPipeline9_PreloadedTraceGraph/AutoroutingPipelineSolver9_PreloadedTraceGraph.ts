@@ -224,6 +224,88 @@ function mergeComponentSharedEdgeSegments({
   })
 }
 
+type DifferentialPairPointPairValidationParams = {
+  srj: SimpleRouteJson
+  pointPairConnections: SimpleRouteConnection[]
+  pathHopsByConnectionName?: NetToPointPairsSolver["pathHopsByConnectionName"]
+}
+
+function getDifferentialPairPointPairValidationError({
+  srj,
+  pointPairConnections,
+  pathHopsByConnectionName,
+}: DifferentialPairPointPairValidationParams): string | null {
+  const differentialPairs = srj.differentialPairs
+  if (!differentialPairs || differentialPairs.length === 0) return null
+
+  const sourceConnectionByName = new Map<string, SimpleRouteConnection>()
+  for (const connection of srj.connections) {
+    sourceConnectionByName.set(connection.name, connection)
+  }
+
+  for (const pair of differentialPairs) {
+    const pairLabel = pair.connectionNames.join("/")
+    const resolvedMemberHops: string[][] = []
+    for (const connectionName of pair.connectionNames) {
+      const sourceConnection = sourceConnectionByName.get(connectionName)
+      if (sourceConnection?.path) {
+        if (sourceConnection.path.length < 2) {
+          return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" connection "${connectionName}" needs at least two path points`
+        }
+        const hops = pathHopsByConnectionName?.get(connectionName)
+        if (!hops) {
+          return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" connection "${connectionName}" hop ${sourceConnection.path[0]} -> ${sourceConnection.path[1]} is missing from NetToPointPairsSolver output`
+        }
+        const hopNames: string[] = []
+        for (const hop of hops) {
+          if (hop.emittedConnectionName === undefined) {
+            return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" connection "${connectionName}" hop ${hop.fromPointId} -> ${hop.toPointId} is missing from NetToPointPairsSolver output`
+          }
+          hopNames.push(hop.emittedConnectionName)
+        }
+        resolvedMemberHops.push(hopNames)
+        continue
+      }
+
+      const matchingConnections = pointPairConnections.filter(
+        (connection) =>
+          connection.name === connectionName ||
+          connection.__rootConnectionNames?.includes(connectionName) ||
+          connection.__netConnectionName === connectionName,
+      )
+      if (matchingConnections.length !== 1) {
+        const terminalCount = sourceConnection?.pointsToConnect.length ?? 0
+        const resolvedNamesSummary =
+          matchingConnections.length > 0
+            ? ` (${matchingConnections.map((c) => c.name).join(", ")})`
+            : ""
+        return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" connection "${connectionName}" (${terminalCount} terminals) must resolve to exactly one final point-pair connection, got ${matchingConnections.length}${resolvedNamesSummary}; split multi-terminal differential nets into two-terminal point-to-point connections`
+      }
+      resolvedMemberHops.push([matchingConnections[0]!.name])
+    }
+    const positiveHops = resolvedMemberHops[0]!
+    const negativeHops = resolvedMemberHops[1]!
+    if (positiveHops.length !== negativeHops.length) {
+      return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" paths have different numbers of hops`
+    }
+    if (
+      positiveHops.length === 1 &&
+      negativeHops.length === 1 &&
+      positiveHops[0] === negativeHops[0]
+    ) {
+      return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" resolves both members to "${positiveHops[0]}"`
+    }
+    if (
+      new Set([...positiveHops, ...negativeHops]).size !==
+      positiveHops.length + negativeHops.length
+    ) {
+      return `Pipeline9 [netToPointPairsSolver]: differential pair "${pairLabel}" must have distinct lane hops`
+    }
+  }
+
+  return null
+}
+
 function definePipelineStep<
   T extends new (
     ...args: any[]
@@ -370,6 +452,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
           )
+          const differentialPairError =
+            getDifferentialPairPointPairValidationError({
+              srj: cms.srj,
+              pointPairConnections:
+                cms.netToPointPairsSolver?.newConnections ?? [],
+              pathHopsByConnectionName:
+                cms.netToPointPairsSolver?.pathHopsByConnectionName,
+            })
+          if (differentialPairError) {
+            cms.error = differentialPairError
+            cms.failed = true
+          }
         },
       },
     ),
@@ -1210,6 +1304,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.startTimeOfPhase[pipelineStepDef.solverName]
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
+        if (this.failed) {
+          return
+        }
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error

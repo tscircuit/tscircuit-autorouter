@@ -21,6 +21,11 @@ export type PreparedTopologyMergingNode = {
   groupIndex: number
   node: CapacityMeshNode
   bounds: Bounds
+  localeRank?: number
+  layerMask?: number
+  singleSourceKeys?: string[]
+  passthroughSignature?: string
+  targetPassthroughSignature?: string
 }
 
 export type TopologyMergingMode =
@@ -36,6 +41,7 @@ export type TopologyMergingRegion = {
   sourceKeys: string[]
   topologyMode: TopologyMergingMode
   topologySignature: string
+  mergeKey?: string
 }
 
 export type HorizontalTopologyMergingBucketKey = string
