@@ -5,7 +5,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPoin
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { existingPlaneVias } from "tests/fixtures/existing-plane-vias"
 
-test("existing through-vias are overlooked when planning access to GND", async (): Promise<void> => {
+test("existing through-vias are reused when planning access to GND", async (): Promise<void> => {
   const input = structuredClone(existingPlaneVias)
   const escapeSolver = new EscapeViaLocationSolver(input)
   escapeSolver.solve()
@@ -18,9 +18,8 @@ test("existing through-vias are overlooked when planning access to GND", async (
   )
   pairs.solve()
   expect(pairs.solved).toBeTrue()
-  // Reproduction assertions: the fix must change both counts to zero.
-  expect(escapeSolver.createdEscapeVias).toHaveLength(2)
-  expect(pairs.newConnections).toHaveLength(2)
+  expect(escapeSolver.createdEscapeVias).toHaveLength(0)
+  expect(pairs.newConnections).toHaveLength(0)
   expect(input).toEqual(existingPlaneVias)
 
   const plane = input.obstacles[0]!
