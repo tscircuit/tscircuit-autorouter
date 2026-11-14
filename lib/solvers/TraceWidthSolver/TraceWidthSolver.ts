@@ -46,7 +46,6 @@ export interface TraceWidthSolverInput {
   otherHdRoutes?: HighDensityRoute[]
   /** Keep repaired copper when its requested width cannot fit safely. */
   refineExistingRoutes?: boolean
-  obstacleGeometry?: "bounds" | "physical"
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -466,9 +465,7 @@ export class TraceWidthSolver extends BaseSolver {
         y:
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
-      const isRoundObstacle =
-        obstacle.shape === "circle" &&
-        (obstacle.isNonPlatedHole || this.input.obstacleGeometry !== "bounds")
+      const isRoundObstacle = obstacle.shape === "circle"
       const physicalClearance =
         isRoundObstacle
           ? segmentToCircleMinDistance(start, end, {
