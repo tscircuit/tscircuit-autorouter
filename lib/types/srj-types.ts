@@ -200,6 +200,11 @@ export interface SimpleRouteConnection {
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number
   pointsToConnect: Array<ConnectionPoint>
+  /**
+   * Point IDs in the order the trace was written. Consecutive IDs are routed
+   * as point pairs: path[0] -> path[1], path[1] -> path[2], ...
+   */
+  path?: PointId[]
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]

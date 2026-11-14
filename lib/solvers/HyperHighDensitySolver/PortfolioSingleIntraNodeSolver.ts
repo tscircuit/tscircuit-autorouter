@@ -38,8 +38,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
-/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
+type IntraNodePortfolioSolver =
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
   | SingleTransitionCrossingRouteSolver
@@ -48,7 +47,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | HighDensitySolverA13
-> {
+
+/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<IntraNodePortfolioSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
@@ -57,6 +58,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -129,12 +131,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    const solutionValidator = opts.solutionValidator
+    if (solutionValidator) {
+      this.candidateValidator = (candidate): boolean =>
+        solutionValidator(this.getCandidateRoutes(candidate))
+    }
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -748,16 +756,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     })
   }
 
-  onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
+  private getCandidateRoutes(
+    solver: SupervisedSolver<IntraNodePortfolioSolver>,
+  ): HighDensityIntraNodeRoute[] {
     let routes: HighDensityIntraNodeRoute[]
+    const candidateSolver = solver.solver
     if (
-      (solver.solver as any) instanceof HighDensitySolverA01 ||
-      (solver.solver as any) instanceof HighDensityA03Solver ||
-      (solver.solver as any) instanceof HighDensitySolverA13
+      candidateSolver instanceof HighDensitySolverA01 ||
+      candidateSolver instanceof HighDensityA03Solver ||
+      candidateSolver instanceof HighDensitySolverA13
     ) {
-      routes = (solver.solver as any).getOutput()
+      routes = candidateSolver.getOutput()
     } else {
-      routes = solver.solver.solvedRoutes
+      routes = candidateSolver.solvedRoutes
     }
     const routesWithRootConnectionNames = routes.map((route) => {
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
@@ -772,9 +783,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    return repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+  }
+
+  onSolve(solver: SupervisedSolver<IntraNodePortfolioSolver>): void {
+    this.solvedRoutes = this.getCandidateRoutes(solver)
   }
 }

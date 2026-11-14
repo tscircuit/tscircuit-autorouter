@@ -33,6 +33,7 @@ export class HyperParameterSupervisorSolver<
 
   supervisedSolvers?: Array<SupervisedSolver<T>>
   winningSolver?: T
+  candidateValidator?: (candidate: SupervisedSolver<T>) => boolean
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
     throw new Error("Not implemented")
@@ -165,6 +166,15 @@ export class HyperParameterSupervisorSolver<
     supervisedSolver.f = this.computeF(supervisedSolver.g, supervisedSolver.h)
 
     if (supervisedSolver.solver.solved) {
+      if (this.candidateValidator?.(supervisedSolver) === false) {
+        supervisedSolver.solver.solved = false
+        supervisedSolver.solver.failed = true
+        supervisedSolver.solver.error =
+          "Candidate solution rejected by validator"
+        this.stats.candidateRejections =
+          Number(this.stats.candidateRejections ?? 0) + 1
+        return
+      }
       this.solved = true
       this.winningSolver = supervisedSolver.solver
       this.onSolve?.(supervisedSolver)

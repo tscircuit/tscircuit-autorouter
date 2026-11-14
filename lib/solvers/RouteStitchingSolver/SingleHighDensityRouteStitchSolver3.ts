@@ -381,6 +381,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+      if (
+        (this.mergedHdRoute.startPcbPortId &&
+          this.mergedHdRoute.route[0].z !== this.start.z) ||
+        (this.mergedHdRoute.endPcbPortId && lastMergedPoint.z !== this.end.z)
+      ) {
+        this.failed = true
+        this.error = `Route stitching did not reach the PCB terminal layers for "${this.mergedHdRoute.connectionName}"`
+        return
+      }
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 

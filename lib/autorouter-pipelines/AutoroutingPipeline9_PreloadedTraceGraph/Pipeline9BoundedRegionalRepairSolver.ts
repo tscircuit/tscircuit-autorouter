@@ -719,6 +719,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ) ||
       getNewViaPadViolations({
         srj: context.srj,
+        viaClearance: context.srj.minViaEdgeToPadEdgeClearance,
         previousRoutes: context.currentRoutes,
         routes: candidateRoutes,
       }).length > 0

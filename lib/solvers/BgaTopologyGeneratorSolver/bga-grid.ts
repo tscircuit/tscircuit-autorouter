@@ -29,6 +29,31 @@ type BgaSlot = {
   obstacle?: Obstacle
 }
 
+function getAlignedAxisPairCount({
+  axisCoordinates,
+  pitch,
+}: {
+  axisCoordinates: number[]
+  pitch: number
+}): number {
+  let alignedPairCount = 0
+  for (let leftIndex = 0; leftIndex < axisCoordinates.length; leftIndex++) {
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < axisCoordinates.length;
+      rightIndex++
+    ) {
+      const distance =
+        axisCoordinates[rightIndex]! - axisCoordinates[leftIndex]!
+      const nearestGridDistance = Math.round(distance / pitch) * pitch
+      if (Math.abs(distance - nearestGridDistance) <= AXIS_EPSILON) {
+        alignedPairCount++
+      }
+    }
+  }
+  return alignedPairCount
+}
+
 function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
   const positiveDiffs: number[] = []
 
@@ -47,9 +72,29 @@ function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
     .sort((a, b) => a - b)
   const medianIndex = Math.floor(adjacentDiffs.length / 2)
 
-  return adjacentDiffs.length % 2 === 0
-    ? (adjacentDiffs[medianIndex - 1]! + adjacentDiffs[medianIndex]!) / 2
-    : adjacentDiffs[medianIndex]!
+  let pitch = adjacentDiffs[medianIndex]!
+  if (adjacentDiffs.length % 2 === 0) {
+    pitch = (adjacentDiffs[medianIndex - 1]! + pitch) / 2
+  }
+  let bestPairCount = getAlignedAxisPairCount({ axisCoordinates, pitch })
+  const totalPairCount =
+    (axisCoordinates.length * (axisCoordinates.length - 1)) / 2
+  if (bestPairCount === totalPairCount) return pitch
+
+  // Off-grid package fiducials can introduce a smaller spacing. Change the
+  // estimate only when another observed pitch explains more coordinate pairs.
+  const candidatePitches = [...new Set(positiveDiffs)].sort((a, b) => a - b)
+  for (const candidatePitch of candidatePitches) {
+    const pairCount = getAlignedAxisPairCount({
+      axisCoordinates,
+      pitch: candidatePitch,
+    })
+    if (pairCount > bestPairCount) {
+      pitch = candidatePitch
+      bestPairCount = pairCount
+    }
+  }
+  return pitch
 }
 
 function getUniqueSortedAxisCoordinates(axisCoordinates: number[]): number[] {

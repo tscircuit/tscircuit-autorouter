@@ -58,14 +58,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+    defaultTraceThickness?: number
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
-      defaultTraceThickness: this.defaultTraceThickness,
+      defaultTraceThickness:
+        params.defaultTraceThickness ?? this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
@@ -148,6 +150,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   constructor(params: {
     connections: SimpleRouteConnection[]
     hdRoutes: HighDensityIntraNodeRoute[]
+    otherHdRoutes?: HighDensityIntraNodeRoute[]
+    minClearance?: number
     colorMap?: Record<string, string>
     layerCount: number
     defaultViaDiameter?: number
@@ -188,7 +192,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
-      hdRoutes: canonicalHdRoutes,
+      hdRoutes: [...canonicalHdRoutes, ...(params.otherHdRoutes ?? [])],
+      minClearance: params.minClearance,
     })
 
     const firstRoute = canonicalHdRoutes[0]

@@ -192,6 +192,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         ) ||
         getNewViaPadViolations({
           srj,
+          viaClearance: srj.minViaEdgeToPadEdgeClearance,
           previousRoutes: params.previousRoutes ?? canonicalRoutes,
           routes: state.candidate,
         }).length > 0

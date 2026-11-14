@@ -201,7 +201,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
+    const { growShrinkSolutionValidator, ...portfolioParams } =
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
@@ -214,6 +214,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      solutionValidator: growShrinkSolutionValidator
+        ? (routes): boolean =>
+            growShrinkSolutionValidator(this.getUnscaledRoutes(routes))
+        : undefined,
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
@@ -221,32 +225,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
   }
 
-  private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
-    const solvedRoutes =
-      this.scaleFactor === 1
-        ? solver.solvedRoutes
-        : solver.solvedRoutes.map((route) =>
-            scaleRoute(
-              route,
-              this.nodeWithPortPoints.center,
-              1 / this.scaleFactor,
-            ),
-          )
-    if (
-      this.constructorParams.growShrinkSolutionValidator &&
-      !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
-    ) {
-      solver.solved = false
-      solver.failed = true
-      solver.error = "High-density scale solution rejected by validator"
-      return false
-    }
+  private getUnscaledRoutes(
+    routes: HighDensityIntraNodeRoute[],
+  ): HighDensityIntraNodeRoute[] {
+    if (this.scaleFactor === 1) return routes
+    return routes.map((route) =>
+      scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+    )
+  }
+
+  private acceptSolution(solver: PortfolioSingleIntraNodeSolver): void {
     this.winningSolver = solver
     this.error = null
-    this.solvedRoutes = solvedRoutes
+    this.solvedRoutes = this.getUnscaledRoutes(solver.solvedRoutes)
     this.solved = true
     this.failed = false
-    return true
   }
 
   computeProgress() {
@@ -265,10 +258,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver!.step()
 
     if (this.activeSubSolver!.solved) {
-      if (this.acceptSolution(this.activeSubSolver!)) {
-        this.activeSubSolver = null
-        return
-      }
+      this.acceptSolution(this.activeSubSolver!)
+      this.activeSubSolver = null
+      return
     }
 
     if (!this.activeSubSolver!.failed) {

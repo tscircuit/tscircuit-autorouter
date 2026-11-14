@@ -718,11 +718,37 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ? normalizedNode.availableZ
         : Array.from({ length: this.layerCount }, (_, z) => z),
     }
-    const fallbackProblem = createRegionalFallbackProblem(
+    const fixedHdRoutes = this.getUpdatedFixedHdRoutes()
+    let fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
-      this.getUpdatedFixedHdRoutes(),
+      fixedHdRoutes,
       promotedFixedRouteConnectionNames,
     )
+    // Conflict checks include the copper clearance envelope. A promoted
+    // centerline that only touches the node needs that same envelope to
+    // produce a movable section instead of an isolated zero-length slice.
+    if (
+      [...promotedFixedRouteConnectionNames].some(
+        (connectionName) =>
+          ![
+            ...fallbackProblem.fixedRouteSectionsByConnectionName.values(),
+          ].some((section) =>
+            section.sourceRoutes.some(
+              (route) => route.connectionName === connectionName,
+            ),
+          ),
+      )
+    ) {
+      const regionalMargin =
+        this.obstacleMargin + Math.max(this.traceWidth, this.viaDiameter) / 2
+      regionalNode.width += regionalMargin * 2
+      regionalNode.height += regionalMargin * 2
+      fallbackProblem = createRegionalFallbackProblem(
+        regionalNode,
+        fixedHdRoutes,
+        promotedFixedRouteConnectionNames,
+      )
+    }
     const movableFixedRouteConnectionNames = new Set(
       [...fallbackProblem.fixedRouteSectionsByConnectionName.values()].flatMap(
         (section) => section.sourceRoutes.map((route) => route.connectionName),
@@ -998,7 +1024,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const postSpliceProblem = createRegionalFallbackProblem(
       {
         ...normalizePipeline9NodeRootConnectionNames(
-          this.activeNode,
+          this.activeFallbackSolver.params.nodeWithPortPoints,
           this.connMap,
         ),
         portPoints: [],

@@ -216,8 +216,8 @@ export const getPipeline9FixedRouteObstacles = ({
 }
 
 export const arePipeline9RoutesOnSameNet = (
-  left: HighDensityRoute,
-  right: HighDensityRoute,
+  left: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
+  right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
   connMap: ConnectivityMap,
 ): boolean => {
   const leftIds = [left.connectionName, left.rootConnectionName].filter(
