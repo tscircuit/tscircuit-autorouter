@@ -841,6 +841,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
+      {
+        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        obstacles: cms.srj.obstacles,
+        connMap: cms.connMap,
+        colorMap: cms.colorMap,
+        minTraceWidth: cms.minTraceWidth,
+        connection: cms.srjWithPointPairs!.connections,
+        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+        layerCount: cms.srj.layerCount,
+      },
+    ]),
     definePipelineStep(
       "globalDrcForceImproveSolver",
       GlobalDrcForceImproveSolver,
@@ -850,18 +863,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
-            // Repair keeps the board minimum before final width selection.
             hdRoutes: lockHdRouteTerminals({
               hdRoutes: canonicalizePipeline9HdRoutes(
-                cms.traceSimplificationSolver!.simplifiedHdRoutes.map(
-                  (route): HighDensityRoute => ({
-                    ...route,
-                    traceThickness: Math.max(
-                      route.traceThickness,
-                      cms.minTraceWidth,
-                    ),
-                  }),
-                ),
+                cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
               connections: cms.netToPointPairsSolver?.newConnections ?? [],
             }),
@@ -915,6 +919,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline9EffortCleanupSolver,
       (cms) => {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
+        const otherHdRoutes = preloadedTraces.flatMap((trace, index) =>
+          convertPreloadedTraceToHdRoutes(
+            trace,
+            index,
+            cms.srj.layerCount,
+            cms.viaDiameter,
+            cms.connMap,
+          ),
+        )
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = canonicalizePipeline9HdRoutes(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
@@ -964,15 +977,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               layerCount: cms.srj.layerCount,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
               minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-              otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
-                convertPreloadedTraceToHdRoutes(
-                  trace,
-                  index,
-                  cms.srj.layerCount,
-                  cms.viaDiameter,
-                  cms.connMap,
-                ),
-              ),
+              otherHdRoutes,
               enableCrossingViaReduction: true,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
@@ -1001,40 +1006,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
+            refineTraceWidths: (routes: HighDensityRoute[]): HighDensityRoute[] =>
+              cms.traceWidthSolver!.refineWidths({
+                hdRoutes: routes,
+                otherHdRoutes: otherHdRoutes.map(
+                  (route): HighDensityRoute => ({
+                    ...route,
+                    rootConnectionName:
+                      preloadedTraces[route.preloadedTraceIndex]!.connection_name,
+                  }),
+                ),
+              }),
           },
         ]
       },
-    ),
-    definePipelineStep(
-      "traceWidthSolver",
-      TraceWidthSolver,
-      (cms) => [
-        {
-          obstacles: cms.srj.obstacles,
-          connMap: cms.connMap,
-          colorMap: cms.colorMap,
-          minTraceWidth: cms.minTraceWidth,
-          connection: cms.srjWithPointPairs!.connections,
-          obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-          minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
-          layerCount: cms.srj.layerCount,
-          refineExistingRoutes: true,
-          hdRoutes: cms.effortCleanupSolver!.getOutput(),
-          otherHdRoutes: cms.getUpdatedPreloadedTraces().flatMap(
-            (trace, index): HighDensityRoute[] =>
-              convertPreloadedTraceToHdRoutes(
-                trace,
-                index,
-                cms.srj.layerCount,
-                cms.viaDiameter,
-                cms.connMap,
-              ).map((route): HighDensityRoute => ({
-                ...route,
-                rootConnectionName: trace.connection_name,
-              })),
-          ),
-        },
-      ],
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
@@ -1047,7 +1032,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const hdRoutes = cms.traceWidthSolver!.getHdRoutesWithWidths()
+        const hdRoutes = cms.effortCleanupSolver!.getOutput()
         const { differentialPairs, differentialPairLanes } =
           getDifferentialPairsForPostProcessing({
             pipelineName: "Pipeline9",
@@ -1533,14 +1518,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
-      (this.traceWidthSolver?.solved
-        ? this.traceWidthSolver.getHdRoutesWithWidths()
-        : undefined) ??
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
         : undefined) ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
+      this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )

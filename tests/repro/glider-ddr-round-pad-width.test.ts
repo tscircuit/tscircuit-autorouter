@@ -29,7 +29,7 @@ test("Glider DDR width selection beside round BGA pads", async (): Promise<void>
   })
   solver.solve()
   expect(solver.solved).toBe(true)
-
+  solver.refineWidths({ hdRoutes: solver.getHdRoutesWithWidths() })
   for (const name of [
     "source_trace_0",
     "source_trace_7",
