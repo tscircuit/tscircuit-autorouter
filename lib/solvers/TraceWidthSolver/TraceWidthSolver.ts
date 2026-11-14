@@ -43,9 +43,6 @@ type TaperRoutePointEntry = {
 
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
-  otherHdRoutes?: HighDensityRoute[]
-  /** Keep repaired copper when its requested width cannot fit safely. */
-  refineExistingRoutes?: boolean
   connection: SimpleRouteConnection[]
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
@@ -76,6 +73,7 @@ export class TraceWidthSolver extends BaseSolver {
 
   hdRoutes: HighDensityRoute[]
   hdRoutesWithWidths: HighDensityRoute[] = []
+  private refiningWidths = false
 
   nominalTraceWidth: number
   minTraceWidth: number
@@ -103,11 +101,11 @@ export class TraceWidthSolver extends BaseSolver {
 
   obstacles: Obstacle[] = []
   obstacleSHI?: ObstacleSpatialHashIndex
-  hdRouteSHI?: HighDensityRouteSpatialIndex
+  hdRouteSHI: HighDensityRouteSpatialIndex
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
 
-  constructor(readonly input: TraceWidthSolverInput) {
+  constructor(input: TraceWidthSolverInput) {
     super()
     this.MAX_ITERATIONS = 1e6
 
@@ -137,6 +135,72 @@ export class TraceWidthSolver extends BaseSolver {
         connection.nominalTraceWidth,
       )
     }
+
+    if (this.obstacles.length > 0) {
+      this.obstacleSHI = new ObstacleSpatialHashIndex(
+        "flatbush",
+        this.obstacles,
+      )
+    }
+
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
+  }
+
+  refineWidths({
+    hdRoutes,
+    otherHdRoutes = [],
+  }: {
+    hdRoutes: HighDensityRoute[]
+    otherHdRoutes?: HighDensityRoute[]
+  }): HighDensityRoute[] {
+    if (!this.solved) {
+      throw new Error("Width refinement requires completed width selection")
+    }
+    this.refiningWidths = true
+    this.hdRoutes = hdRoutes
+    this.processedRoutes = []
+    let indexReady = false
+    let widthsChanged = false
+    for (const route of hdRoutes) {
+      const nominalWidth = this.getNominalTraceWidthForRoute(route)
+      if (nominalWidth === undefined || route.route.length < 2) {
+        this.processedRoutes.push(route)
+        continue
+      }
+      const hasRequestedWidth = route.route.every(
+        (point): boolean =>
+          (point.traceThickness ?? route.traceThickness) >= nominalWidth,
+      )
+      if (hasRequestedWidth) {
+        this.processedRoutes.push(route)
+        continue
+      }
+      if (!indexReady) {
+        this.hdRouteSHI = new HighDensityRouteSpatialIndex([
+          ...hdRoutes,
+          ...otherHdRoutes,
+        ])
+        indexReady = true
+      }
+      this.currentTrace = route
+      this.nominalTraceWidth = nominalWidth
+      this.currentTargetWidth = nominalWidth
+      this.TRACE_WIDTH_SCHEDULE = [nominalWidth]
+      this.lastCollidingObstacles = []
+      this.lastCollidingRoutes = []
+      const requiredClearance = nominalWidth / 2 + this.obstacleMargin
+      if (this.getMinimumRouteClearance() >= requiredClearance) {
+        this.finalizeCurrentTrace(nominalWidth)
+        widthsChanged = true
+      } else {
+        this.processedRoutes.push(route)
+        this.currentTrace = null
+      }
+    }
+    this.refiningWidths = false
+    this.hdRoutesWithWidths = this.processedRoutes
+    if (!widthsChanged) return hdRoutes
+    return this.hdRoutesWithWidths
   }
 
   private getNominalTraceWidthForRoute(
@@ -167,10 +231,6 @@ export class TraceWidthSolver extends BaseSolver {
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
       if (nominalTraceWidth === undefined) {
-        if (this.input.refineExistingRoutes) {
-          this.processedRoutes.push(nextTrace)
-          return
-        }
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
           this.createRouteWithWidth(nextTrace, traceWidth),
@@ -181,29 +241,9 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.nominalTraceWidth = nominalTraceWidth
-      if (
-        this.input.refineExistingRoutes &&
-        nextTrace.route.every(
-          (point): boolean =>
-            (point.traceThickness ?? nextTrace.traceThickness) >=
-            nominalTraceWidth,
-        )
-      ) {
-        this.processedRoutes.push(nextTrace)
-        this.currentTrace = null
-        return
-      }
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth]
-      if (!this.input.refineExistingRoutes) {
-        const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-        this.TRACE_WIDTH_SCHEDULE.push(midWidth)
-      }
+      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
+      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
       if (this.currentTrace.route.length < 2) {
-        if (this.input.refineExistingRoutes) {
-          this.processedRoutes.push(this.currentTrace)
-          this.currentTrace = null
-          return
-        }
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(
           this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
@@ -241,14 +281,7 @@ export class TraceWidthSolver extends BaseSolver {
           this.TRACE_WIDTH_SCHEDULE[this.currentScheduleIndex]!
         this.initializeCursor()
       } else {
-        // Repair can leave legal necks below the board default. Keep those
-        // widths when no checked candidate fits instead of widening them.
-        if (this.input.refineExistingRoutes) {
-          this.processedRoutes.push(this.currentTrace)
-          this.currentTrace = null
-          this.cursorPosition = null
-          return
-        }
+        // Exhausted all widths in schedule, use minTraceWidth as fallback
         this.finalizeCurrentTrace(this.minTraceWidth)
       }
     } else if (!stepped) {
@@ -386,18 +419,6 @@ export class TraceWidthSolver extends BaseSolver {
 
   private getClearanceForSegment(start: Point3D, end: Point3D): number {
     if (!this.currentTrace) return Infinity
-    if (!this.hdRouteSHI) {
-      this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-        ...this.hdRoutes,
-        ...(this.input.otherHdRoutes ?? []),
-      ])
-      if (this.obstacles.length > 0) {
-        this.obstacleSHI = new ObstacleSpatialHashIndex(
-          "flatbush",
-          this.obstacles,
-        )
-      }
-    }
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
@@ -430,7 +451,7 @@ export class TraceWidthSolver extends BaseSolver {
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
       const isUnassignedPad =
-        this.input.refineExistingRoutes &&
+        this.refiningWidths &&
         terminalPortIds.length > 0 &&
         obstacle.netIsAssignable === true &&
         !obstacle.connectedTo.some(
@@ -465,9 +486,9 @@ export class TraceWidthSolver extends BaseSolver {
         y:
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
-      const isRoundObstacle = obstacle.shape === "circle"
       const physicalClearance =
-        isRoundObstacle
+        obstacle.shape === "circle" &&
+        (obstacle.isNonPlatedHole || this.refiningWidths)
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,
@@ -871,8 +892,8 @@ export class TraceWidthSolver extends BaseSolver {
     )
 
     this.processedRoutes.push(routeWithWidth)
-    this.hdRouteSHI?.removeRoute(routeWithWidth.connectionName)
-    this.hdRouteSHI?.addRoute(routeWithWidth)
+    this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)
+    this.hdRouteSHI.addRoute(routeWithWidth)
     this.currentTrace = null
     this.cursorPosition = null
     this.hasInsufficientClearance = false

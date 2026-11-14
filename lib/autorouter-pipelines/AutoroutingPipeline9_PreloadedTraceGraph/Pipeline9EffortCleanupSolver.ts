@@ -12,6 +12,7 @@ type CleanupParams = {
   viaRemovalPasses?: 1 | 2
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
+  refineTraceWidths?: (routes: HighDensityRoute[]) => HighDensityRoute[]
 }
 
 /** Post-repair cleanup commits only valid improvements, including at default effort. */
@@ -103,7 +104,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.viaRemovalSolver = this.createViaRemovalSolver()
         return
       }
-      this.solved = true
+      this.finish()
       return
     }
     const simplifier = this.simplifier
@@ -133,7 +134,18 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    this.solved = simplifier.solved
+    if (simplifier.solved) this.finish()
+  }
+
+  private finish(): void {
+    if (this.params.refineTraceWidths) {
+      const refined = this.params.refineTraceWidths(this.bestRoutes)
+      if (refined !== this.bestRoutes) {
+        this.bestRoutes = refined
+        this.bestCost = this.params.getCost(refined)
+      }
+    }
+    this.solved = true
   }
 
   getOutput(): HighDensityRoute[] {
