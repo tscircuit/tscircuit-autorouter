@@ -213,6 +213,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
   readonly minClearance?: number
+  readonly viaCopperClearance?: number
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -234,6 +235,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     repairMargin?: number
     minimumTraceWidth?: number
     minClearance?: number
+    viaCopperClearance?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
@@ -241,6 +243,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
     this.minClearance = params.minClearance
+    this.viaCopperClearance = params.viaCopperClearance
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -306,6 +309,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       )
     }
     if (params.hdRoutes.length > 0) routeIndex.finish()
+    const fixedCopperClearance =
+      this.viaCopperClearance !== undefined &&
+      this.viaCopperClearance > (this.minClearance ?? 0.1)
+        ? Math.max(0.1, this.viaCopperClearance)
+        : 0.1
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
@@ -320,7 +328,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         )
         const bounds = getNodeBounds(
           node,
-          Math.max(this.repairMargin, copperRadius + 0.1),
+          Math.max(this.repairMargin, copperRadius + fixedCopperClearance),
         )
         const ownedIndexes = new Set(routeIndexes)
         return {
@@ -328,6 +336,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           routeIndexes,
           sample: {
             minClearance: params.minClearance,
+            viaCopperClearance: params.viaCopperClearance,
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
               center: node.center,
@@ -534,6 +543,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
         minClearance: this.minClearance,
+        viaCopperClearance: this.viaCopperClearance,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
