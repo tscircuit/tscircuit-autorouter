@@ -7,14 +7,14 @@ import type { SimpleRouteJson } from "lib/types"
 
 const file = process.env.SRJ_FILE
 if (!file) throw new Error("Set SRJ_FILE to the original #2868 attachment JSON")
-const bytes = readFileSync(file)
-const sha256 = createHash("sha256").update(bytes).digest("hex")
+const inputText = readFileSync(file, "utf8")
+const sha256 = createHash("sha256").update(inputText).digest("hex")
 if (
   sha256 !== "471334fad7b86e550ad1e5b9aae796665957512c78d6cc58f58fd2f8f11d28ca"
 ) {
   throw new Error(`Unexpected issue fixture SHA-256: ${sha256}`)
 }
-const input = JSON.parse(bytes.toString("utf8")) as SimpleRouteJson
+const input = JSON.parse(inputText) as SimpleRouteJson
 const results: {
   net: string
   terminals: number
@@ -27,7 +27,7 @@ for (const connection of input.connections) {
   for (const point of connection.pointsToConnect) {
     const key = `${point.x},${point.y}`
     const layers = byCoordinate.get(key) ?? new Set<string>()
-    layers.add("layer" in point ? point.layer : "multilayer")
+    layers.add("layer" in point ? (point.layer ?? "unknown") : "multilayer")
     byCoordinate.set(key, layers)
   }
   if (![...byCoordinate.values()].some((layers) => layers.size > 1)) continue
