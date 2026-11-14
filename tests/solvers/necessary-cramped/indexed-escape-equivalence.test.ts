@@ -83,3 +83,72 @@ for (const layerCount of [2, 6]) {
     }
   }
 }
+
+// Dense overlapping nodes mimic refined capacity meshes, where a single
+// electrical endpoint may land inside more than one graph node. The indexed
+// lookup must still produce exactly the same accepted crossing set.
+for (const layerCount of [2, 6]) {
+  for (const seed of [1, 5, 11, 19, 29, 43, 67, 101, 149, 211, 307, 401]) {
+    test(`overlapping destination nodes retain baseline reachability: layerCount=${layerCount}, seed=${seed}`, () => {
+      const nodes: CapacityMeshNode[] = Array.from({ length: 9 }, (_, i) => ({
+        capacityMeshNodeId: `dense-n${i}`,
+        center: { x: i * 0.73 - 2.5, y: ((i * seed) % 3) * 0.13 },
+        width: 1.6,
+        height: 1.4,
+        layer: "z0",
+        availableZ: layerCount === 6 ? [0, 1, 2, 3, 4, 5] : [0],
+        _containsTarget: i === 0 || i === 8,
+        _containsObstacle:
+          i === 0 || i === 8 || (i > 1 && i < 8 && (i + seed) % 7 === 0),
+        _connectedTo: i === 0 || i === 8 ? ["GND"] : ["OTHER"],
+      }))
+      const nodeMap = new Map(nodes.map((n) => [n.capacityMeshNodeId, n]))
+      const portsByNodeId = new Map<string, SegmentPortPoint[]>()
+      for (let i = 0; i < nodes.length - 1; i++) {
+        const ids = [`dense-n${i}`, `dense-n${i + 1}`] as [string, string]
+        const port: SegmentPortPoint = {
+          segmentPortPointId: `dense-port${i}`,
+          x: (nodes[i]!.center.x + nodes[i + 1]!.center.x) / 2,
+          y: 0,
+          nodeIds: ids,
+          edgeId: `dense-e${i}`,
+          availableZ: [0],
+          connectionName: null,
+          distToCentermostPortOnZ: 0,
+          cramped: (i + seed) % 3 === 0,
+        }
+        for (const id of ids) {
+          if (!portsByNodeId.has(id)) portsByNodeId.set(id, [])
+          portsByNodeId.get(id)!.push(port)
+        }
+      }
+      const connections: SimpleRouteJson["connections"] = [
+        {
+          name: "GND",
+          pointsToConnect: [
+            { x: nodes[0]!.center.x, y: nodes[0]!.center.y, layer: "top" },
+            { x: nodes[8]!.center.x, y: nodes[8]!.center.y, layer: "top" },
+          ],
+        },
+      ]
+      const escapeIndex: ConnectionEscapeIndex = {
+        layerCount,
+        nodeTree: new CapacityNodeTree(nodes),
+        freeSpaceComponentIds: new Map(),
+      }
+      for (const allowCrampedPortPoints of [true, false]) {
+        const args = {
+          target: nodes[0]!,
+          nodes,
+          nodeMap,
+          portsByNodeId,
+          connections,
+          allowCrampedPortPoints,
+        }
+        expect(
+          summarize(getConnectionEscapePortPoints({ ...args, escapeIndex })),
+        ).toEqual(summarize(getConnectionEscapePortPoints(args)))
+      }
+    })
+  }
+}
