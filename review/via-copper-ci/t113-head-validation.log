@@ -1,0 +1,12 @@
+bun test v1.4.3 (c6da4a4d3)
+
+::group::tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-t113-hdmi-ddc-via-spacing-linux-board-and-drills.snap.svg
+(pass) repairs T113 HDMI 1.8 V same-net drill spacing [48820.01ms]
+
+::endgroup::
+
+ 1 pass
+ 0 fail
+ 17 expect() calls
+Ran 1 test across 1 file. [49.08s]

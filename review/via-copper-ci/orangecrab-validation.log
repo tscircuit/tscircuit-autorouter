@@ -1,12 +1,30 @@
 bun test v1.4.3 (c6da4a4d3)
 
-::group::tests/repro/pipeline9-orangecrab-through-vias.test.ts:
-Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-orangecrab-through-vias.snap.svg
-(pass) routes OrangeCrab remaining signals without shorting through-vias to another DDR net [37844.97ms]
+::group::tests/repro/pipeline9-orangecrab-via-roundoff.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-orangecrab-via-roundoff.snap.svg
+(pass) native OrangeCrab routes all 50 DDR nets without physical DRC errors [24.48ms]
 
 ::endgroup::
 
- 1 pass
+::group::tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-imx6-ddr-fixed-copper.snap.svg
+(pass) routes the i.MX6 DDR board beside completed data-byte copper [52876.36ms]
+
+::endgroup::
+
+::group::tests/repro/pipeline9-glider-dqs-fixed-copper.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-glider-dqs-fixed-copper.snap.svg
+(pass) routes the Glider DDR board with completed data-byte copper [14529.86ms]
+
+::endgroup::
+
+::group::tests/repro/pipeline9-orangecrab-through-vias.test.ts:
+Updating SVG snapshot at /home/runner/work/tscircuit-autorouter/tscircuit-autorouter/candidate/tests/repro/__snapshots__/pipeline9-orangecrab-through-vias.snap.svg
+(pass) routes OrangeCrab remaining signals without shorting through-vias to another DDR net [54547.43ms]
+
+::endgroup::
+
+ 4 pass
  0 fail
- 11 expect() calls
-Ran 1 test across 1 file. [38.12s]
+ 95 expect() calls
+Ran 4 tests across 4 files. [180.82s]
