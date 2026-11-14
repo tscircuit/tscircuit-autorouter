@@ -77,8 +77,11 @@ export function createComponentObstacleSrj({
   detectedComponents: DetectedComponent[]
   inputSrj: SimpleRouteJson
 }): SimpleRouteJson {
+  // The original global obstacle collection is replaced by the component
+  // bounds: cloning it first duplicates every large connectedTo array.
+  const inputWithoutObstacles = { ...inputSrj, obstacles: [] }
   return {
-    ...structuredClone(inputSrj),
+    ...structuredClone(inputWithoutObstacles),
     obstacles: [
       ...inputSrj.obstacles.filter(
         (obstacle) =>
