@@ -26,15 +26,13 @@ export type H616JointRepairFixture = {
  * Native right-handed PCB points: millimeters, X right/Y up/Z above.
  * Coordinates are passed through without a transform.
  */
-export function getH616AcceptedJointRepairCircuit({
+export function getH616JointRepairCircuit({
   fixture,
   solver,
 }: {
   fixture: H616JointRepairFixture
   solver: Pipeline9JointDrcRepairSolver
 }): AnyCircuitElement[] {
-  // Core retains earlier accepted phases when the next routing phase fails.
-  if (!solver.solved) return fixture.circuitJson
   const input = solver.params
   const traces = [
     ...solver.getUpdatedPreloadedTraces(),

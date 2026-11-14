@@ -3,12 +3,10 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 
 export function getH616JointRepairPcbSvg({
   circuitJson,
-  phaseAccepted,
   drcErrorCount,
   focused = false,
 }: {
   circuitJson: AnyCircuitElement[]
-  phaseAccepted: boolean
   drcErrorCount: number
   focused?: boolean
 }): string {
@@ -41,14 +39,7 @@ export function getH616JointRepairPcbSvg({
         : element,
     )
   }
-  const status = phaseAccepted
-    ? "Remaining phase accepted"
-    : "Remaining phase rejected"
-  const statusColor = phaseAccepted
-    ? drcErrorCount > 0
-      ? "#b91c1c"
-      : "#166534"
-    : "#92400e"
+  const statusColor = drcErrorCount > 0 ? "#b91c1c" : "#166534"
   return convertCircuitJsonToPcbSvg(viewCircuit, {
     width: 1000,
     height: focused ? 1000 : 2200,
@@ -65,6 +56,6 @@ export function getH616JointRepairPcbSvg({
     },
   }).replace(
     "</svg>",
-    `<rect x="15" y="8" width="970" height="42" rx="4" fill="white" stroke="${statusColor}"/><text x="500" y="35" text-anchor="middle" font-family="sans-serif" font-size="22" fill="${statusColor}">${status}; accepted PCB DRC: ${drcErrorCount}</text></svg>`,
+    `<rect x="15" y="8" width="970" height="42" rx="4" fill="white" stroke="${statusColor}"/><text x="500" y="35" text-anchor="middle" font-family="sans-serif" font-size="22" fill="${statusColor}">PCB DRC errors: ${drcErrorCount}</text></svg>`,
   )
 }

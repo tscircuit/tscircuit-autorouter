@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import { canonicalizePipeline9HdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 
 type JointRepairInput = ConstructorParameters<
   typeof Pipeline9JointDrcRepairSolver
@@ -19,7 +21,7 @@ type ContactFixture = {
   netMap: ConnectivityMap["netMap"]
 }
 
-test("contact repair reports completion with unresolved joint DRC", (): void => {
+test("contact repair skips regional clearance repair", async (): Promise<void> => {
   const fixture: ContactFixture = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -44,22 +46,23 @@ test("contact repair reports completion with unresolved joint DRC", (): void => 
   const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
     connections: input.newConnections,
     originalConnections: input.originalSrj.connections,
-    hdRoutes: solver.getOutput(),
+    hdRoutes: canonicalizePipeline9HdRoutes(solver.getOutput()),
     layerCount: input.layerCount,
     obstacles: input.obstacles,
     defaultViaHoleDiameter: input.defaultViaHoleDiameter,
     connMap: input.connMap,
   })
-  const evaluateDrc = createPipeline9AutoroutingDrcEvaluator({
-    inputSrj: {
-      ...input.originalSrj,
-      traces: solver.getUpdatedPreloadedTraces(),
-    },
+  const evaluation = {
+    inputSrj: input.originalSrj,
     srjWithPointPairs: input.srjWithPointPairs,
-    includeBoardClearance: true,
-  })
-  const { errors } = evaluateDrc(traces)
+    routedTraces: [...solver.getMutatedPreloadedTraces(), ...traces],
+  }
+  const { errors } = evaluateRelaxedDrc(evaluation)
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  expect(solver.regionalB01RepairSolver).toBeUndefined()
   expect(errors.length).toBeGreaterThan(0)
+  await expect(getBugReportSnapshotSvg(evaluation)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
