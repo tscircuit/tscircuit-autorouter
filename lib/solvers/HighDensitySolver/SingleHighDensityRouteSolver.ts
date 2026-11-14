@@ -46,6 +46,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   straightLineDistance: number
 
   viaDiameter: number
+  viaHoleDiameter?: number
+  minTraceToHoleEdgeClearance?: number
   traceThickness: number
   obstacleMargin: number
   layerCount: number
@@ -113,6 +115,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     A: { x: number; y: number; z: number }
     B: { x: number; y: number; z: number }
     viaDiameter?: number
+    viaHoleDiameter?: number
+    minTraceToHoleEdgeClearance?: number
     traceThickness?: number
     obstacleMargin?: number
     layerCount?: number
@@ -143,6 +147,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
+    this.viaHoleDiameter = opts.viaHoleDiameter
+    this.minTraceToHoleEdgeClearance = opts.minTraceToHoleEdgeClearance
     this.traceThickness = opts.traceThickness ?? 0.15
     this.obstacleMargin = opts.obstacleMargin ?? 0.15
     this.layerCount = opts.layerCount ?? 2
@@ -293,8 +299,27 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    const traceProximity = this.traceThickness + margin
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    const viaHoleRadius = Math.min(
+      (this.viaHoleDiameter ?? this.viaDiameter * 0.5) / 2,
+      this.viaDiameter / 2,
+    )
+    const traceProximity =
+      isVia && this.minTraceToHoleEdgeClearance !== undefined
+        ? Math.max(
+            this.traceThickness + margin,
+            viaHoleRadius +
+              this.minTraceToHoleEdgeClearance +
+              this.traceThickness / 2,
+          )
+        : this.traceThickness + margin
+    const viaClearanceRadius =
+      !isVia && this.minTraceToHoleEdgeClearance !== undefined
+        ? Math.max(
+            this.viaDiameter / 2 + margin,
+            viaHoleRadius + this.minTraceToHoleEdgeClearance,
+          )
+        : this.viaDiameter / 2 + margin
+    const viaProximity = viaClearanceRadius + this.traceThickness / 2
     // Planar point clearance is independent of the parent. Supplied queries
     // must cover the full point rectangle before their result can be reused.
     const canCachePlanarPoint =
