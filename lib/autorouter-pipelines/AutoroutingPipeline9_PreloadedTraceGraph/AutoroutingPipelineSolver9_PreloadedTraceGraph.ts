@@ -1,4 +1,6 @@
+import { assertTracesAvoidViaKeepouts } from "lib/utils/assertTracesAvoidViaKeepouts"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
+import { splitNodesAtViaKeepouts } from "lib/utils/splitNodesAtViaKeepouts"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -261,6 +263,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
+  static readonly supportsViaKeepouts = true
+
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -437,7 +441,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+          cms.capacityNodes = splitNodesAtViaKeepouts(
+            cms.nodeDimensionSubdivisionSolver!.outputNodes,
+            cms.srj.viaKeepouts ?? [],
+            cms.viaDiameter,
+            cms.srj.layerCount,
+            cms.srj.allowBlindAndBuriedVias,
+          )
         },
       },
     ),
@@ -547,6 +557,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            preserveMultilayerTerminalAccess: Boolean(
+              cms.srj.viaKeepouts?.length,
+            ),
             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -662,6 +675,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
+            preserveNodeLayerConstraints: Boolean(cms.srj.viaKeepouts?.length),
             viaDiameter: cms.viaDiameter,
             viaHoleDiameter: cms.viaHoleDiameter,
             minViaHoleEdgeToViaHoleEdgeClearance:
@@ -1688,12 +1702,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
+    const traces = [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertTracesAvoidViaKeepouts(traces, this.originalSrj)
+    return traces
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1709,6 +1725,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertTracesAvoidViaKeepouts(traces, this.originalSrj)
     return {
       ...this.originalSrj,
       traces,
