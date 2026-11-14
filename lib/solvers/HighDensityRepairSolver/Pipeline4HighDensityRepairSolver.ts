@@ -212,6 +212,7 @@ const getAdjacentObstacles = (
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
+  readonly minClearance?: number
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -232,12 +233,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
+    minClearance?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
+    this.minClearance = params.minClearance
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -324,6 +327,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           node,
           routeIndexes,
           sample: {
+            minClearance: params.minClearance,
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
               center: node.center,
@@ -362,6 +366,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               )
               .map((obstacle) => ({
                 type: obstacle.type,
+                shape: obstacle.shape,
                 center: obstacle.center,
                 width: obstacle.width,
                 height: obstacle.height,
@@ -528,6 +533,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
+        minClearance: this.minClearance,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
