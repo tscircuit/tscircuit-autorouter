@@ -855,7 +855,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 cms.traceSimplificationSolver!.simplifiedHdRoutes.map(
                   (route): HighDensityRoute => ({
                     ...route,
-                    traceThickness: Math.max(route.traceThickness, cms.minTraceWidth),
+                    traceThickness: Math.max(
+                      route.traceThickness,
+                      cms.minTraceWidth,
+                    ),
                   }),
                 ),
               ),
