@@ -841,19 +841,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
-      {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.srj.obstacles,
-        connMap: cms.connMap,
-        colorMap: cms.colorMap,
-        minTraceWidth: cms.minTraceWidth,
-        connection: cms.srjWithPointPairs!.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
-        layerCount: cms.srj.layerCount,
-      },
-    ]),
     definePipelineStep(
       "globalDrcForceImproveSolver",
       GlobalDrcForceImproveSolver,
@@ -865,7 +852,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             srj: srjWithMaterializedPreloadedTraces as any,
             hdRoutes: lockHdRouteTerminals({
               hdRoutes: canonicalizePipeline9HdRoutes(
-                cms.traceWidthSolver!.getHdRoutesWithWidths(),
+                cms.traceSimplificationSolver!.simplifiedHdRoutes.map(
+                  (route): HighDensityRoute => ({
+                    ...route,
+                    traceThickness: Math.max(route.traceThickness, cms.minTraceWidth),
+                  }),
+                ),
               ),
               connections: cms.netToPointPairsSolver?.newConnections ?? [],
             }),
@@ -1010,6 +1002,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "traceWidthSolver",
+      TraceWidthSolver,
+      (cms) => [
+        {
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          minTraceWidth: cms.minTraceWidth,
+          connection: cms.srjWithPointPairs!.connections,
+          obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+          layerCount: cms.srj.layerCount,
+          refineExistingRoutes: true,
+          hdRoutes: cms.effortCleanupSolver!.getOutput(),
+          otherHdRoutes: cms.getUpdatedPreloadedTraces().flatMap(
+            (trace, index): HighDensityRoute[] =>
+              convertPreloadedTraceToHdRoutes(
+                trace,
+                index,
+                cms.srj.layerCount,
+                cms.viaDiameter,
+                cms.connMap,
+              ).map((route): HighDensityRoute => ({
+                ...route,
+                rootConnectionName: trace.connection_name,
+              })),
+          ),
+        },
+      ],
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (
@@ -1020,7 +1043,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
+        const hdRoutes = cms.traceWidthSolver!.getHdRoutesWithWidths()
         const { differentialPairs, differentialPairLanes } =
           getDifferentialPairsForPostProcessing({
             pipelineName: "Pipeline9",
@@ -1506,6 +1529,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.traceWidthSolver?.solved
+        ? this.traceWidthSolver.getHdRoutesWithWidths()
+        : undefined) ??
       (this.effortCleanupSolver?.solved
         ? this.effortCleanupSolver.getOutput()
         : undefined) ??
