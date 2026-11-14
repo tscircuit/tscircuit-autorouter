@@ -9,7 +9,7 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -32,7 +32,7 @@ jobs:
           source=Path('/tmp/via-copper-ci')
           output=Path('review/via-copper-ci')
           output.mkdir(parents=True,exist_ok=True)
-          stems=['bugreport107-board-1726-linux','pipeline9-t113-hdmi-ddc-via-spacing-linux-board-and-drills','pipeline9-orangecrab-through-vias']
+          stems=['bugreport107-board-1726-linux','pipeline9-t113-hdmi-ddc-via-spacing-linux-board-and-drills','pipeline9-orangecrab-through-vias','pipeline9-orangecrab-via-roundoff','pipeline9-imx6-ddr-fixed-copper','pipeline9-glider-dqs-fixed-copper','pipeline9-imx6-published-ddr-clearance']
           for stem in stems:
               for suffix in ['.received.svg','.snap.svg','.diff.png']:
                   matches=list(source.rglob(stem+suffix))
@@ -60,9 +60,64 @@ jobs:
       - name: Install exact candidate dependencies
         working-directory: candidate
         run: bun install
-      - name: Verify OrangeCrab assertions beyond its changed snapshot
+      - name: Install native OrangeCrab renderer dependencies
         working-directory: candidate
-        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-orangecrab-through-vias.test.ts --timeout 9999999 > /tmp/orangecrab-via-copper-validation.log 2>&1
+        run: bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff
+      - name: Verify all blocked assertions in isolated checkout
+        working-directory: candidate
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-orangecrab-through-vias.test.ts tests/repro/pipeline9-orangecrab-via-roundoff.test.ts tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts tests/repro/pipeline9-glider-dqs-fixed-copper.test.ts --timeout 9999999 > /tmp/orangecrab-via-copper-validation.log 2>&1
+      - uses: actions/checkout@v4
+        if: always()
+        with:
+          ref: 903ebd04e6ed5c3abfd143880abe8bfeb04e7437
+          path: base
+      - name: Install base dependencies
+        if: always()
+        working-directory: base
+        run: bun install
+      - name: Instrument only temporary T113 test copies
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          extra = '''
+            const declaredReview = evaluateRelaxedDrc({
+              inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces,
+              includeBoardClearance: true,
+              drcOptions: {traceClearance:input.minTraceToPadEdgeClearance,viaClearance:input.minViaHoleEdgeToViaHoleEdgeClearance,viaToPadClearance:input.minViaEdgeToPadEdgeClearance},
+            })
+            const summarizeReview = (errors: typeof drc.errors): Record<string,number> => errors.reduce((counts:Record<string,number>,error)=>{counts[error.type]=(counts[error.type]??0)+1;return counts},{})
+            const wireReview = routedTraces.reduce((total,trace)=>total+trace.route.reduce((length,point,index)=>{const previous=trace.route[index-1];return length+(previous?.route_type==="wire"&&point.route_type==="wire"&&previous.layer===point.layer?Math.hypot(point.x-previous.x,point.y-previous.y):0)},0),0)
+            writeReview(new URL("./__snapshots__/t113-via-copper-review.json",import.meta.url),JSON.stringify({relaxed:summarizeReview(drc.errors),declared:summarizeReview(declaredReview.errors),traces:routedTraces.length,vias:drc.circuitJson.filter(e=>e.type==="pcb_via").length,wireLengthMm:wireReview},null,2))
+          '''
+          for directory in ['base','candidate']:
+              p=Path(directory)/'tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts'
+              s=p.read_text()
+              needle='  const viaErrors = drc.errors.filter('
+              assert s.count(needle)==1
+              p.write_text('import { writeFileSync as writeReview } from "node:fs"\n'+s.replace(needle,extra+'\n'+needle))
+          PY
+      - name: Verify T113 base and record every DRC category
+        if: always()
+        working-directory: base
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts --timeout 9999999 > /tmp/t113-base-validation.log 2>&1
+      - name: Verify T113 head and record every DRC category
+        if: always()
+        working-directory: candidate
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts --timeout 9999999 > /tmp/t113-head-validation.log 2>&1
+      - name: Collect small T113 comparison evidence
+        if: always()
+        run: |
+          for revision in base candidate; do
+            if [ -f "$revision/tests/repro/__snapshots__/t113-via-copper-review.json" ]; then
+              cp "$revision/tests/repro/__snapshots__/t113-via-copper-review.json" "review/via-copper-ci/t113-$revision.json"
+            fi
+          done
+          for revision in base head; do
+            if [ -f "/tmp/t113-$revision-validation.log" ]; then
+              cp "/tmp/t113-$revision-validation.log" "review/via-copper-ci/t113-$revision-validation.log"
+            fi
+          done
       - name: Save validation log
         if: always()
         run: |
