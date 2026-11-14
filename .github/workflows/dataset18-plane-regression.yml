@@ -1,0 +1,68 @@
+name: Investigate dataset18 plane PR timings
+on:
+  push:
+    branches: [codex/dataset18-plane-regression-20261114]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          run-id: 43634931113
+          github-token: ${{ github.token }}
+          path: investigation/flat
+      - uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          run-id: 43635856065
+          github-token: ${{ github.token }}
+          path: investigation/slow
+      - name: Inspect both original comparisons
+        run: python3 experiments/dataset18-plane-regression/summarize.py investigation/flat investigation/slow
+      - uses: actions/checkout@v4
+        with:
+          ref: ac6932e392e2db45cba0bd39a94e509c38330fc5
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: 51aa640f2abe1fc7681df5e460ce923c04e9bd49
+          path: pr
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Share identical installed dependencies
+        run: |
+          cd pr
+          bun install --frozen-lockfile
+          cd ..
+          ln -s ../pr/node_modules base/node_modules
+          cmp base/package.json pr/package.json
+          cmp base/bun.lock pr/bun.lock
+      - name: Counterbalance the reported slow samples
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for pass in base-1 pr-1 pr-2 base-2; do
+            revision="${pass%-*}"
+            mkdir -p "investigation/abba/$pass"
+            (
+              cd "$revision"
+              bash ./benchmark.sh --pipeline 9 --dataset 18 --sample-numbers 4,16 --concurrency 1 --sample-timeout 240s
+            )
+            cp "$revision/benchmark-result.json" "investigation/abba/$pass/benchmark-result.json"
+            cp "$revision/benchmark-snapshots.html" "investigation/abba/$pass/benchmark-snapshots.html"
+          done
+      - name: Summarize counterbalanced results
+        run: python3 experiments/dataset18-plane-regression/summarize.py investigation/abba
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dataset18-plane-regression
+          path: investigation
+          retention-days: 14
