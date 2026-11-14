@@ -19,7 +19,9 @@ const fixture = JSON.parse(
     ),
   ).toString(),
 )
-const hash = createHash("sha256").update(JSON.stringify(fixture.srj)).digest("hex")
+const hash = createHash("sha256")
+  .update(JSON.stringify(fixture.srj))
+  .digest("hex")
 const autorouter = {
   local: true,
   groupMode: "subcircuit",
@@ -42,7 +44,10 @@ const autorouter = {
       start() {
         solver.solve()
         if (solver.failed) {
-          events.emit("error", { type: "error", error: new Error(solver.error) })
+          events.emit("error", {
+            type: "error",
+            error: new Error(solver.error),
+          })
           return
         }
         events.emit("complete", {
