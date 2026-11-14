@@ -309,6 +309,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       )
     }
     if (params.hdRoutes.length > 0) routeIndex.finish()
+    const fixedCopperClearance =
+      this.viaCopperClearance !== undefined &&
+      this.viaCopperClearance > (this.minClearance ?? 0.1)
+        ? Math.max(0.1, this.viaCopperClearance)
+        : 0.1
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
@@ -323,7 +328,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         )
         const bounds = getNodeBounds(
           node,
-          Math.max(this.repairMargin, copperRadius + 0.1),
+          Math.max(this.repairMargin, copperRadius + fixedCopperClearance),
         )
         const ownedIndexes = new Set(routeIndexes)
         return {
