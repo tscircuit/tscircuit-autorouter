@@ -3,6 +3,7 @@ import base64
 import io
 import json
 import os
+import math
 from pathlib import Path
 import zipfile
 
@@ -28,11 +29,20 @@ for board_id in ["orangecrab", "h616", "butterstick", "glider", "imx6", "icepi"]
     after_points = {p["pointId"] for c in after["connections"] for p in c["pointsToConnect"] if p.get("pointId")}
     newly_missing = sorted((original_points - after_points) - (original_points - before_points))
     assert not newly_missing, f"Lost source terminals: {board_id}"
+    before_length = sum(math.hypot(c["pointsToConnect"][1]["x"]-c["pointsToConnect"][0]["x"],
+                                   c["pointsToConnect"][1]["y"]-c["pointsToConnect"][0]["y"])
+                        for c in before["connections"])
+    after_length = sum(math.hypot(c["pointsToConnect"][1]["x"]-c["pointsToConnect"][0]["x"],
+                                  c["pointsToConnect"][1]["y"]-c["pointsToConnect"][0]["y"])
+                       for c in after["connections"])
     audits.append({"id": board_id, "identicalOriginalAndEscapeObstacles": True,
                    "identicalConstraintsOutsideRequestedConnections": True,
                    "originalPointIds": len(original_points),
                    "missingBefore": len(original_points-before_points),
                    "missingAfter": len(original_points-after_points),
+                   "requestedPlanarDistanceMmBefore": before_length,
+                   "requestedPlanarDistanceMmAfter": after_length,
+                   "allPourRectsAxisAligned": all(not obstacle.get("ccwRotationDegrees",0) for obstacle in original["obstacles"] if obstacle.get("isCopperPour")),
                    "newlyMissingTerminals": newly_missing})
 result = {"demandRows": rows, "physicalGeometryAudits": audits}
 
