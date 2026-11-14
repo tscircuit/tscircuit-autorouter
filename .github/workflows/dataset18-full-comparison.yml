@@ -1,0 +1,70 @@
+name: Repeat full dataset18 base and PR comparison
+on:
+  push:
+    branches: [codex/dataset18-full-comparison-20261114]
+permissions:
+  contents: read
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        order: [abba, baab]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ac6932e392e2db45cba0bd39a94e509c38330fc5
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: 51aa640f2abe1fc7681df5e460ce923c04e9bd49
+          path: pr
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install one dependency tree for the identical package manifests
+        run: |
+          cmp base/package.json pr/package.json
+          cd pr
+          bun install
+          cd ..
+          ln -s ../pr/node_modules base/node_modules
+      - name: Run all 16 samples four times with three sample workers
+        env:
+          PASS_ORDER: ${{ matrix.order }}
+        run: |
+          if [ "$PASS_ORDER" = abba ]; then
+            passes='base-1 pr-1 pr-2 base-2'
+          else
+            passes='pr-1 base-1 base-2 pr-2'
+          fi
+          for pass in $passes; do
+            revision="${pass%-*}"
+            output="$GITHUB_WORKSPACE/full-results/$PASS_ORDER/$pass"
+            mkdir -p "$output"
+            python3 experiments/dataset18-plane-regression/host-state.py > "$output/host-start.json"
+            echo "FULL_PASS_START $PASS_ORDER $pass"
+            (
+              cd "$revision"
+              /usr/bin/time --verbose --output "$output/time.txt" \
+                bash ./benchmark.sh --pipeline 9 --dataset 18 --concurrency 3
+            )
+            python3 experiments/dataset18-plane-regression/host-state.py > "$output/host-end.json"
+            cp "$revision/benchmark-result.json" "$output/benchmark-result.json"
+            cp "$revision/benchmark-snapshots.html" "$output/benchmark-snapshots.html"
+            python3 experiments/dataset18-plane-regression/full-summary.py "$GITHUB_WORKSPACE/full-results/$PASS_ORDER"
+            echo "FULL_PASS_END $PASS_ORDER $pass"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dataset18-full-${{ matrix.order }}
+          path: full-results
+          retention-days: 14
