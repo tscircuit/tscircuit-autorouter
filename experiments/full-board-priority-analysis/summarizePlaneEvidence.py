@@ -6,7 +6,14 @@ import os
 from pathlib import Path
 import zipfile
 
-root = Path("evidence-demands")
+def artifact_root(folder):
+    summaries = list(Path(folder).rglob("summary.json"))
+    if len(summaries) != 1:
+        raise ValueError(f"Expected one artifact summary in {folder}, got {len(summaries)}")
+    return summaries[0].parent
+
+
+root = artifact_root("evidence-demands")
 rows = json.loads((root / "summary.json").read_text())
 audits = []
 for board_id in ["orangecrab", "h616", "butterstick", "glider", "imx6", "icepi"]:
@@ -30,14 +37,14 @@ for board_id in ["orangecrab", "h616", "butterstick", "glider", "imx6", "icepi"]
 result = {"demandRows": rows, "physicalGeometryAudits": audits}
 
 if os.environ.get("INCLUDE_FULL") == "true":
-    for label in ["control", "fixed"]:
-        folder = Path(f"evidence-{label}")
+    folders = {label: artifact_root(f"evidence-{label}") for label in ["control", "fixed"]}
+    for label, folder in folders.items():
         result[label] = {"environment": json.loads((folder/"environment.json").read_text()),
                          "cases": json.loads((folder/"summary.json").read_text())}
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for label in ["control", "fixed"]:
-            for file in Path(f"evidence-{label}").rglob("pcb.svg"):
+        for label, folder in folders.items():
+            for file in folder.rglob("pcb.svg"):
                 archive.writestr(f"{label}/{file.parent.name}/pcb.svg", file.read_bytes())
     print("PLANE_PCB_ZIP_BEGIN")
     encoded = base64.b64encode(stream.getvalue()).decode()
