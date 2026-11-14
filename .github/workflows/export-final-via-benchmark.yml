@@ -1,0 +1,41 @@
+name: Export final via-minimum benchmark
+on:
+  push:
+    branches: [evidence/ddr-via-copper-review]
+    paths: [.github/workflows/export-final-via-benchmark.yml]
+permissions:
+  actions: read
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 43618437144
+          name: same-machine-benchmark-srj18
+          path: /tmp/final-via-benchmark
+      - name: Extract final matched-case measurements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,statistics
+          result={'runId':43618437144,'base':'903ebd04e6ed5c3abfd143880abe8bfeb04e7437','head':'4dc6209c79eba8de316480eedb2a7b0ca999fce2','reports':{}}
+          for path in Path('/tmp/final-via-benchmark').rglob('benchmark-result.json'):
+              report=json.loads(path.read_text())
+              tests=report['tests']
+              rows=[{k:v for k,v in row.items() if not isinstance(v,(dict,list))} for row in tests]
+              result['reports'][str(path.relative_to('/tmp/final-via-benchmark'))]={'summary':report['summary'],'meanElapsedMs':statistics.mean(row['elapsedTimeMs'] for row in tests if row['didSolve']),'rows':rows}
+          output=Path('review/via-copper-ci/final-dataset18-summary.json')
+          output.write_text(json.dumps(result,indent=2))
+          print(json.dumps({k:v['meanElapsedMs'] for k,v in result['reports'].items()}))
+          PY
+      - name: Publish only the small measured summary
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add review/via-copper-ci/final-dataset18-summary.json
+          git commit -m "docs: record final paired via-minimum benchmark"
+          git push origin HEAD:evidence/ddr-via-copper-review
