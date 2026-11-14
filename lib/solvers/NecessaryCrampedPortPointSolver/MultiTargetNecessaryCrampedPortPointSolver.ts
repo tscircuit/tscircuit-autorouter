@@ -15,6 +15,8 @@ import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 import { getConnectionEscapePortPoints } from "../AvailableSegmentPointSolver/getConnectionEscapePortPoints"
+import type { ConnectionEscapeIndex } from "../AvailableSegmentPointSolver/getConnectionEscapeIndex"
+import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
@@ -38,6 +40,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
   private crampedPortPointsToKeep: Set<SegmentPortPoint> = new Set()
   private candidatesAtDepth: ExploredPortPoint[] = []
+  private escapeIndex?: ConnectionEscapeIndex
   private isRunningCrampedPass = false
   private filteredOutput?: SharedEdgeSegment[]
 
@@ -104,6 +107,21 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         }
       }
     }
+    // Keep the original BFS reachability semantics (no precomputed free-space
+    // shortcut), but index destination-containing nodes spatially once.
+    // The old code scans every capacity mesh node for every terminal target.
+    if (this.input.preserveConnectionReachability) {
+      const nodes = this.input.capacityMeshNodes
+      this.escapeIndex = {
+        layerCount: nodes.reduce(
+          (count, node) =>
+            Math.max(count, ...node.availableZ.map((z) => z + 1)),
+          1,
+        ),
+        nodeTree: new CapacityNodeTree(nodes),
+        freeSpaceComponentIds: new Map(),
+      }
+    }
   }
 
   override _step(): void {
@@ -141,6 +159,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
             nodeMap: this.nodeMap,
             portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
             connections: this.input.simpleRouteJson.connections,
+            escapeIndex: this.escapeIndex,
           }) !== undefined
         if (
           areAllCandidatesBlocked ||
