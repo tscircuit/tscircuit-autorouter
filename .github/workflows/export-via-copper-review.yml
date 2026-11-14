@@ -1,0 +1,79 @@
+name: Export via-copper review
+on:
+  push:
+    branches: [evidence/ddr-via-copper-review]
+    paths: [.github/workflows/export-via-copper-review.yml]
+permissions:
+  actions: read
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 43613420906
+          pattern: diff-png-and-snap-svg-artifacts-node*
+          path: /tmp/via-copper-ci
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 43613480936
+          name: same-machine-benchmark-srj18
+          path: /tmp/via-copper-benchmark
+      - name: Collect selected CI images and small benchmark summaries
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,statistics
+          source=Path('/tmp/via-copper-ci')
+          output=Path('review/via-copper-ci')
+          output.mkdir(parents=True,exist_ok=True)
+          stems=['bugreport107-board-1726-linux','pipeline9-t113-hdmi-ddc-via-spacing-linux-board-and-drills','pipeline9-orangecrab-through-vias']
+          for stem in stems:
+              for suffix in ['.received.svg','.snap.svg','.diff.png']:
+                  matches=list(source.rglob(stem+suffix))
+                  if not matches: raise RuntimeError('Missing selected artifact: '+stem+suffix)
+                  data=matches[0].read_bytes()
+                  (output/(stem+suffix)).write_bytes(data)
+                  if suffix.endswith('.svg'):
+                      print(stem+suffix,'computed DRC overlays:',re.findall(r'Relaxed DRC errors: (\d+)',data.decode()))
+          summaries={}
+          for path in Path('/tmp/via-copper-benchmark').rglob('benchmark-result.json'):
+              report=json.loads(path.read_text())
+              tests=report.get('tests',[])
+              elapsed=[row['elapsedTimeMs'] for row in tests if isinstance(row.get('elapsedTimeMs'),(int,float))]
+              rows=[{k:v for k,v in row.items() if not isinstance(v,(dict,list))} for row in tests]
+              summaries[str(path.relative_to('/tmp/via-copper-benchmark'))]={'keys':list(report),'testKeys':list(tests[0]) if tests else [],'summary':report.get('summary'),'meanElapsedMs':statistics.mean(elapsed) if elapsed else None,'rows':rows}
+          (output/'dataset18-summary.json').write_text(json.dumps(summaries,indent=2))
+          PY
+      - uses: actions/checkout@v4
+        with:
+          ref: f96aa9688266b7e1aa225358bd6575a5bcb121b2
+          path: candidate
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.4.3
+      - name: Install exact candidate dependencies
+        working-directory: candidate
+        run: bun install
+      - name: Verify OrangeCrab assertions beyond its changed snapshot
+        working-directory: candidate
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-orangecrab-through-vias.test.ts --timeout 9999999 > /tmp/orangecrab-via-copper-validation.log 2>&1
+      - name: Save validation log
+        if: always()
+        run: |
+          if [ -f /tmp/orangecrab-via-copper-validation.log ]; then
+            cp /tmp/orangecrab-via-copper-validation.log review/via-copper-ci/orangecrab-validation.log
+          fi
+      - name: Publish only selected review evidence
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f review/via-copper-ci
+          git commit -m "docs: export selected via-copper routing evidence"
+          git push origin HEAD:evidence/ddr-via-copper-review
