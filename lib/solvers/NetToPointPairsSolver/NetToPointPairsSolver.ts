@@ -166,6 +166,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
+      // Coincident pads on different copper layers are separate electrical terminals.
+      // Coordinate-only union keys silently drop a necessary interlayer route.
+      getPointKey: (point) =>
+        `${point.x},${point.y},${"layer" in point ? point.layer : "multi"}`,
       extraEdges: [...pathEdges, ...zeroWeightEdges],
     })
 

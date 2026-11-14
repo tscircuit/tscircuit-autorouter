@@ -178,12 +178,16 @@ class KDTree {
 }
 
 // Disjoint Set (Union-Find) data structure for Kruskal's algorithm
-export class DisjointSet {
+export class DisjointSet<T extends Point = Point> {
   private parent: Map<PointKey, PointKey> = new Map()
   private rank: Map<PointKey, number> = new Map()
   componentCount: number
 
-  constructor(points: Point[]) {
+  constructor(
+    points: T[],
+    private readonly getPointKey: (point: T) => PointKey = (point) =>
+      `${point.x},${point.y}`,
+  ) {
     // Initialize each point as a separate set
     for (const point of points) {
       const key = this.pointToKey(point)
@@ -193,11 +197,11 @@ export class DisjointSet {
     this.componentCount = this.parent.size
   }
 
-  private pointToKey(point: Point): PointKey {
-    return `${point.x},${point.y}`
+  private pointToKey(point: T): PointKey {
+    return this.getPointKey(point)
   }
 
-  find(point: Point): PointKey {
+  find(point: T): PointKey {
     const key = this.pointToKey(point)
     if (!this.parent.has(key)) {
       throw new Error(`Point ${key} not found in DisjointSet`)
@@ -219,7 +223,7 @@ export class DisjointSet {
     return root
   }
 
-  union(pointA: Point, pointB: Point): boolean {
+  union(pointA: T, pointB: T): boolean {
     const rootA = this.find(pointA)
     const rootB = this.find(pointB)
 
@@ -254,6 +258,8 @@ interface Edge<T extends Point> {
 
 interface BuildMinimumSpanningTreeOptions<T extends Point> {
   extraEdges?: Edge<T>[]
+  /** Distinguish terminals that share XY but are not physically connected (e.g. top/bottom pads). */
+  getPointKey?: (point: T) => PointKey
 }
 
 // Main function to build a minimum spanning tree using Kruskal's algorithm
@@ -283,7 +289,7 @@ export function buildMinimumSpanningTree<T extends Point>(
 
       for (const neighbor of neighbors) {
         // Skip self
-        if (point.x === neighbor.x && point.y === neighbor.y) {
+        if (point === neighbor) {
           continue
         }
 
@@ -307,7 +313,7 @@ export function buildMinimumSpanningTree<T extends Point>(
     edges.sort((a, b) => a.weight - b.weight)
 
     // Apply Kruskal's algorithm
-    const disjointSet = new DisjointSet(pointsCopy)
+    const disjointSet = new DisjointSet(pointsCopy, opts.getPointKey)
     const mstEdges: Edge<T>[] = []
 
     for (const edge of edges) {
