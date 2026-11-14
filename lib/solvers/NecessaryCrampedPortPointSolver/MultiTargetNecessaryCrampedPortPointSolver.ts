@@ -98,12 +98,16 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           if (!cmNode) {
             throw new Error(`Could not find capacity mesh node for id ${id}`)
           }
-          const existingSegmentPortPoints =
-            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
-          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
-            ...existingSegmentPortPoints,
-            segmentPortPoint,
-          ])
+          let nodePortPoints =
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id)
+          if (!nodePortPoints) {
+            nodePortPoints = []
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(
+              id,
+              nodePortPoints,
+            )
+          }
+          nodePortPoints.push(segmentPortPoint)
         }
       }
     }
