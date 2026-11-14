@@ -73,9 +73,12 @@ export function createComponentSrj({
     inputSrj.defaultObstacleMargin ?? 0.15,
     inputSrj.minTraceWidth * 2,
   )
-  const memberConnectionIds = new Set(
-    component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
-  )
+  const memberConnectionIds = new Set<string>()
+  for (const obstacle of component.memberObstacles) {
+    for (const connectionId of obstacle.connectedTo) {
+      memberConnectionIds.add(connectionId)
+    }
+  }
   const connectedPoints = inputSrj.connections.flatMap((connection) =>
     connection.pointsToConnect.filter((point) => {
       const pointIds = [point.pointId, point.pcb_port_id].filter(
@@ -108,8 +111,11 @@ export function createComponentSrj({
     )
     .map((obstacle) => ({ ...obstacle }))
 
+  // Component-local topology uses only the spatial subset of obstacles.
+  // Do not deep-clone the global obstacle list before replacing it.
+  const inputWithoutObstacles = { ...inputSrj, obstacles: [] }
   return {
-    ...structuredClone(inputSrj),
+    ...structuredClone(inputWithoutObstacles),
     bounds: componentBounds,
     obstacles: componentObstacles,
   }
