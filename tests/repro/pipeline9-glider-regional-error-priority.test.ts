@@ -2,10 +2,7 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import {
-  getSvgFromGraphicsObject,
-  type GraphicsObject,
-} from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
@@ -82,9 +79,7 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
           (error): boolean => error.drc_source !== "fixed_copper",
         ) &&
         errors.length > 0 &&
-        errors.every(
-          (error): boolean => error.drc_source === "fixed_copper",
-        )
+        errors.every((error): boolean => error.drc_source === "fixed_copper")
       ) {
         decision = state
         break
@@ -135,9 +130,8 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
   const candidateFull = evaluate(convert(proposedRoutes)).errors
   expect(candidateFull.length).toBeLessThan(currentFull.length)
   const fixedCount = (errors: DrcError[]): number =>
-    errors.filter(
-      (error): boolean => error.drc_source === "fixed_copper",
-    ).length
+    errors.filter((error): boolean => error.drc_source === "fixed_copper")
+      .length
   expect(fixedCount(candidateFull)).toBe(fixedCount(currentFull))
 
   const graphics: GraphicsObject = {
@@ -236,9 +230,7 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
   const phase = (errors: DrcError[]): string =>
     errors.length === 0
       ? "clear"
-      : errors.some(
-            (error): boolean => error.drc_source !== "fixed_copper",
-          )
+      : errors.some((error): boolean => error.drc_source !== "fixed_copper")
         ? "circuit errors"
         : "fixed copper"
   label(0, 23.1, "Glider · native regional repair priorities", 0.56, "#0f172a")
