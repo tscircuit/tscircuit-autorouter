@@ -39,7 +39,7 @@ export const getH616TerminalStitchPcbSvg = ({
       boardOutline: "#475569",
       silkscreen: { top: "#334155", bottom: "#334155" },
     },
-    renderSolderMask: false,
+    showSolderMask: false,
     drawPaddingOutsideBoard: !focused,
     shouldDrawErrors: false,
     shouldDrawRatsNest: false,
