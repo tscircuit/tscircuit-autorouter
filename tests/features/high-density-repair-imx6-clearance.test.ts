@@ -114,7 +114,7 @@ test("iMX6 DDR repair retains the native board copper", async (): Promise<void> 
     width: 1400,
     height: 1000,
     backgroundColor: "white",
-    showSolderMask: false,
+    renderSolderMask: false,
     shouldDrawErrors: false,
     shouldDrawRatsNest: false,
     includeVersion: false,
@@ -122,10 +122,25 @@ test("iMX6 DDR repair retains the native board copper", async (): Promise<void> 
   await expect(
     convertCircuitJsonToPcbSvg(circuit, renderOptions),
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
+  const viewport = { minX: -5.6, maxX: -3.8, minY: -13.05, maxY: -11.7 }
+  const focusedCircuit = circuit.map((element) =>
+    element.type === "pcb_board"
+      ? {
+          ...element,
+          center: {
+            x: (viewport.minX + viewport.maxX) / 2,
+            y: (viewport.minY + viewport.maxY) / 2,
+          },
+          width: viewport.maxX - viewport.minX,
+          height: viewport.maxY - viewport.minY,
+          outline: undefined,
+        }
+      : element,
+  )
   await expect(
-    convertCircuitJsonToPcbSvg(circuit, {
+    convertCircuitJsonToPcbSvg(focusedCircuit, {
       ...renderOptions,
-      viewport: { minX: -5.6, maxX: -3.8, minY: -13.05, maxY: -11.7 },
+      drawPaddingOutsideBoard: false,
     }),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "ba2-address",

@@ -34,7 +34,7 @@ const renderPcbCloseup = (
       height: (bounds.maxY - bounds.minY) * scale,
       drawPaddingOutsideBoard: false,
       includeVersion: false,
-      showSolderMask: false,
+      renderSolderMask: false,
       shouldDrawErrors: false,
     },
   )
