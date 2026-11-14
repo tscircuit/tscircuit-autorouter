@@ -25,7 +25,8 @@ const diagnostics = {
   pipelineLastState: null as unknown,
   phaseInputs: [] as unknown[],
 }
-let lastDiagnosticWrite = 0, lastBusStage = ""
+let lastDiagnosticWrite = 0
+const lastBusStages = new WeakMap<object,string>()
 function saveDiagnostics(): void {
   writeFileSync(join(output,"diagnostics.json"),JSON.stringify(diagnostics,null,2))
   lastDiagnosticWrite = performance.now()
@@ -35,12 +36,15 @@ const originalBusStep = busPrototype.step
 busPrototype.step = function (...args: unknown[]): unknown {
   const stage = this.phase
   const phase = progress.phases.findLast((p) => p.status === "running")?.name ?? "bus"
-  if (stage !== lastBusStage || performance.now()-lastDiagnosticWrite > 1000) {
-    if (stage !== lastBusStage) diagnostics.timeline.push({phase,stage,atMs:performance.now()-started})
+  const stageChanged = stage !== lastBusStages.get(this)
+  if(stageChanged) {
+    diagnostics.timeline.push({phase,stage,atMs:performance.now()-started})
+    lastBusStages.set(this,stage)
+  }
+  if (performance.now()-lastDiagnosticWrite > 1000) {
     diagnostics.busLastState = {phase,stage,iterations:this.iterations,maxIterations:this.MAX_ITERATIONS,failureCode:this.failureCode,
       native:this.stats?.nativeSingleCarrier,groups:this.stats?.nativeGroups,
       child:this.child?{phase:this.child.phase,iterations:this.child.iterations,failureCode:this.child.failureCode}:null}
-    lastBusStage = stage
     saveDiagnostics()
   }
   const begin = performance.now()

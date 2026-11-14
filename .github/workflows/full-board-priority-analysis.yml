@@ -1,8 +1,8 @@
-name: Full-board routing priority analysis
+name: Full-board observer-corrected rerun
 on:
   push:
     branches:
-      - codex/full-board-priority-analysis-20261114
+      - codex/full-board-observer-check-20261114
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Rerun six boards and controlled failure replays
         working-directory: experiments/full-board-priority-analysis
-        run: bun suite.ts ../../analysis-results
+        run: bun suite.ts ../../analysis-results observer-corrected
       - name: Upload diagnostic evidence
         if: always()
         uses: actions/upload-artifact@v4

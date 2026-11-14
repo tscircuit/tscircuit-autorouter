@@ -4,12 +4,14 @@ import { cpus, availableParallelism, totalmem } from "node:os"
 
 type Task = { id: string; kind: "full" | "board" | "bus"; variant: string; limitSeconds: number }
 const output = resolve(process.argv[2] ?? "analysis-results")
+const corrected = process.argv[3] === "observer-corrected"
 mkdirSync(output, { recursive: true })
-writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,platform:process.platform,cpu:cpus()[0].model,cpus:cpus().length,availableParallelism:availableParallelism(),memory:totalmem(),solverCommit:"c591de445efc25c305ac2967d3340cde7b6897c2",concurrency:4},null,2))
-const full: Task[] = ["h616","icepi","orangecrab","glider","butterstick","imx6"].map((id)=>({id,kind:"full",variant:"baseline",limitSeconds:600}))
+writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,platform:process.platform,cpu:cpus()[0].model,cpus:cpus().length,availableParallelism:availableParallelism(),memory:totalmem(),solverCommit:"c591de445efc25c305ac2967d3340cde7b6897c2",concurrency:corrected?2:4,observerCorrected:corrected},null,2))
+const full: Task[] = (corrected?["butterstick","imx6"]:["h616","icepi","orangecrab","glider","butterstick","imx6"]).map((id)=>({id,kind:"full",variant:"baseline",limitSeconds:600}))
 const diagnostic: Task[] = []
 for (const id of ["h616","icepi","glider"]) for (const variant of ["baseline","compact_aliases","without_ground","without_large_nets"]) diagnostic.push({id,kind:"board",variant,limitSeconds:190})
 for (const id of ["butterstick","imx6"]) for (const variant of ["baseline","compact_aliases"]) diagnostic.push({id,kind:"bus",variant,limitSeconds:190})
+if(corrected)diagnostic.length=0
 const rows: unknown[] = []
 async function pool(queue: Task[]): Promise<void> {
   while (queue.length) {
