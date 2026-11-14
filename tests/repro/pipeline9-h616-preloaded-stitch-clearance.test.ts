@@ -186,7 +186,7 @@ test("keeps H616 SVREF stitches clear of the existing SA1 via", async (): Promis
       },
     },
     drawPaddingOutsideBoard: false,
-    renderSolderMask: false,
+    showSolderMask: false,
     shouldDrawErrors: false,
     shouldDrawRatsNest: false,
     includeVersion: false,
