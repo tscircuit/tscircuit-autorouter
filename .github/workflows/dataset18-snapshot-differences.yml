@@ -24,15 +24,17 @@ jobs:
       - name: Compare exact SVG element attributes
         run: |
           python3 - <<'PY'
-          import json, re
+          import hashlib, json, re
           import xml.etree.ElementTree as ET
           from pathlib import Path
           groups = {}
           for folder in ('flat/base', 'flat/pr', 'slow/base', 'slow/pr'):
               source = Path(folder)
               report = json.loads((source/'benchmark-result.json').read_text())
-              svgs = re.findall(r'<svg\b[\s\S]*?</svg>', (source/'benchmark-snapshots.html').read_text())
-              groups[folder] = {row['scenarioName']: list(ET.fromstring(svg).iter()) for row, svg in zip(report['snapshots'], svgs, strict=True)}
+              cards = re.findall(r'<section class="snapshot">([\s\S]*?)</section>', (source/'benchmark-snapshots.html').read_text())
+              svgs = {re.search(r'<dt>Scenario</dt><dd>([^<]+)</dd>', card)[1]: re.search(r'<svg\b[\s\S]*?</svg>', card)[0] for card in cards}
+              groups[folder] = {sample:list(ET.fromstring(svg).iter()) for sample, svg in svgs.items()}
+              print('SVG_HASHES', folder, json.dumps({sample:hashlib.sha256(svg.encode()).hexdigest() for sample, svg in svgs.items()}))
           differences = []
           for sample in groups['flat/base']:
               before = groups['flat/base'][sample]

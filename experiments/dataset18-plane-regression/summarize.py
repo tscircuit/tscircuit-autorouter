@@ -25,10 +25,10 @@ for argument in sys.argv[1:]:
         label = str(path.parent.relative_to(directory))
         report = json.loads(path.read_text())
         html_path = path.with_name("benchmark-snapshots.html")
-        images = re.findall(r"<svg\b[\s\S]*?</svg>", html_path.read_text())
+        cards = re.findall(r'<section class="snapshot">([\s\S]*?)</section>', html_path.read_text())
         image_hashes = {
-            row["scenarioName"]: hashlib.sha256(image.encode()).hexdigest()
-            for row, image in zip(report["snapshots"], images, strict=True)
+            re.search(r"<dt>Scenario</dt><dd>([^<]+)</dd>", card)[1]: hashlib.sha256(re.search(r"<svg\b[\s\S]*?</svg>", card)[0].encode()).hexdigest()
+            for card in cards
         }
         report["svgHashes"] = image_hashes
         reports[label] = report
