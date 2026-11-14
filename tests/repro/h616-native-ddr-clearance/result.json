@@ -1,7 +1,7 @@
 {
   "connected": 53,
   "requested": 53,
-  "physicalFindings": 4,
-  "widthWarnings": 8,
+  "physicalFindings": 0,
+  "widthWarnings": 10,
   "inputSha256": "01dde3209db033ca6708a09bd5352951c5183172d2b6826abd046c99a4dd8270"
 }
