@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: connected-plane-escape-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   benchmark:
     strategy:
@@ -36,7 +39,9 @@ jobs:
           bun build-core.ts ../../.plane-core
       - name: Prepare the unchanged baseline escape solver
         if: matrix.kind == 'demands'
-        run: git show c591de445efc25c305ac2967d3340cde7b6897c2:lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts > lib/solvers/EscapeViaLocationSolver/BaselineEscapeViaLocationSolver.ts
+        run: |
+          git fetch --depth 1 origin c591de445efc25c305ac2967d3340cde7b6897c2
+          git show c591de445efc25c305ac2967d3340cde7b6897c2:lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts > lib/solvers/EscapeViaLocationSolver/BaselineEscapeViaLocationSolver.ts
       - name: Compare requested plane routes on identical inputs
         if: matrix.kind == 'demands'
         working-directory: experiments/full-board-priority-analysis
