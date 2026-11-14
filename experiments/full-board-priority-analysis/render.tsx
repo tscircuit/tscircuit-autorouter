@@ -1,7 +1,8 @@
 import { EventEmitter } from "node:events"
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { RootCircuit, SOLVERS, type GenericLocalAutorouter } from "@tscircuit/core"
+import type { GenericLocalAutorouter } from "@tscircuit/core"
+import { RootCircuit, SOLVERS } from "./core-runtime.mjs"
 import type { AutoroutingPhaseProps } from "@tscircuit/props"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { NativeFullBoard, type FullBoardSource } from "./native-full-board"
@@ -11,12 +12,19 @@ const [id, output, mode = "fanout"] = process.argv.slice(2)
 const source: FullBoardSource = JSON.parse(readFileSync(new URL(`./${id}/source.json`, import.meta.url), "utf8"))
 mkdirSync(output, { recursive: true })
 const circuit = new RootCircuit()
+// Fanout follow-up stages must use the same workspace router as explicit phases.
+Object.assign(SOLVERS, { AutoroutingPipelineSolver9_PreloadedTraceGraph })
 const started = performance.now()
+const routingBudgetMs = Number(process.env.FULL_BOARD_ROUTING_BUDGET_MS ?? "600000")
+function checkRoutingBudget(): void {
+  if (performance.now()-started > routingBudgetMs) throw new Error("Full-board routing budget exhausted")
+}
 const progress = {
   id, mode, status: "running", renderCompleted: false, elapsedMs: 0,
   phases: [] as { name: string; solver: string; status: string; connections: number; startedMs: number; elapsedMs?: number }[],
   errors: [] as string[], stage: "initializing", initialCopperElements: null as number | null,
   runtime: { tscircuit: "0.0.3180", core: "0.0.2372", fanout: "0.0.84", busLanes: "core-bundled", autorouter: "workspace Pipeline 9", routerCommit: "c591de445efc25c305ac2967d3340cde7b6897c2" },
+  planeIntent: { enabled: mode !== "legacy", zones: source.planeIntent.zones.length, importedSavedCopper: source.planeIntent.savedCopperImported },
 }
 const diagnostics = {
   timeline: [] as { phase: string; stage: string; atMs: number }[],
@@ -34,6 +42,7 @@ function saveDiagnostics(): void {
 const busPrototype = SOLVERS.BusLanesPipelineSolver.prototype as any
 const originalBusStep = busPrototype.step
 busPrototype.step = function (...args: unknown[]): unknown {
+  checkRoutingBudget()
   const stage = this.phase
   const phase = progress.phases.findLast((p) => p.status === "running")?.name ?? "bus"
   const stageChanged = stage !== lastBusStages.get(this)
@@ -50,6 +59,12 @@ busPrototype.step = function (...args: unknown[]): unknown {
   const begin = performance.now()
   try { return originalBusStep.apply(this,args) }
   finally { diagnostics.busStageMs[`${phase}/${stage}`]=(diagnostics.busStageMs[`${phase}/${stage}`]??0)+performance.now()-begin }
+}
+const fanoutPrototype = SOLVERS.FanoutSolver.prototype
+const originalFanoutStep = fanoutPrototype.step
+fanoutPrototype.step = function (...args: Parameters<typeof originalFanoutStep>): ReturnType<typeof originalFanoutStep> {
+  checkRoutingBudget()
+  return originalFanoutStep.apply(this,args)
 }
 
 function save(includeSvg = false): void {
@@ -74,6 +89,7 @@ const algorithmFn: AutoroutingPhaseProps["algorithmFn"] = async (input): Promise
   let timer: ReturnType<typeof setTimeout> | undefined
   const step = (): void => {
     try {
+      checkRoutingBudget()
       const until = performance.now() + 25
       while (!solver.solved && !solver.failed && performance.now() < until) solver.step()
       progress.stage = solver.getCurrentPhase()
@@ -145,7 +161,7 @@ circuit.on("asyncEffect:end", (event: any) => {
 })
 const heartbeat = setInterval(() => save(), 2000)
 try {
-  circuit.add(<NativeFullBoard source={source} algorithmFn={algorithmFn} geometryOnly={mode === "geometry"} fanout={mode === "fanout"} />)
+  circuit.add(<NativeFullBoard source={source} algorithmFn={algorithmFn} geometryOnly={mode === "geometry"} fanout={mode === "fanout"} planes={mode !== "legacy"} />)
   await circuit.renderUntilSettled()
   progress.renderCompleted = true
   for (const element of circuit.getCircuitJson()) {

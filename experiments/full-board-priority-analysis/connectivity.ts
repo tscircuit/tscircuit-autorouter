@@ -6,7 +6,7 @@ export function areTracePortsConnected(trace: SourceTrace, routes: PCBTrace[], p
 }
 
 /** Routes must already be restricted to the requested electrical net. */
-export function arePortsConnected(sourcePortIds: SourcePortId[], routes: PCBTrace[], ports: Map<SourcePortId, PCBPort>, vias: PCBVia[]): boolean {
+export function arePortsConnected(sourcePortIds: SourcePortId[], routes: PCBTrace[], ports: Map<SourcePortId, PCBPort>, vias: PCBVia[], copperConnectedPortGroups: string[][] = []): boolean {
   const nodes: { x: number; y: number; layer: string }[] = []
   const links: number[][] = []
   const segments: [number, number][] = []
@@ -51,6 +51,7 @@ export function arePortsConnected(sourcePortIds: SourcePortId[], routes: PCBTrac
     }
   }
   const terminals: number[] = []
+  const nodeByPcbPort = new Map<string, number>()
   let missingPort = false
   for (const id of sourcePortIds) {
     const port: any = ports.get(id)
@@ -66,8 +67,15 @@ export function arePortsConnected(sourcePortIds: SourcePortId[], routes: PCBTrac
       link(portNodes[0],current)
     }
     terminals.push(portNodes[0])
+    nodeByPcbPort.set(port.pcb_port_id, portNodes[0])
+  }
+  // These groups are computed from actual pad, trace, via and pour polygons.
+  // A shared source net or a declared zone alone never adds a graph edge.
+  for (const group of copperConnectedPortGroups) {
+    const members = group.flatMap((id) => nodeByPcbPort.has(id) ? [nodeByPcbPort.get(id)!] : [])
+    for (const member of members) link(members[0], member)
   }
   const visited = new Set<number>(), queue = terminals.length ? [terminals[0]] : []
   while (queue.length) { const current = queue.pop()!; if (visited.has(current)) continue; visited.add(current); queue.push(...links[current]) }
-  return routes.length > 0 && !missingPort && terminals.length >= 2 && terminals.every((n) => visited.has(n))
+  return !missingPort && terminals.length >= 2 && terminals.every((n) => visited.has(n))
 }

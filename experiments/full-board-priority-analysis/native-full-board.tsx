@@ -1,5 +1,5 @@
 import type { ReactElement } from "react"
-import type { BoardProps, BusProps, AutoroutingPhaseProps } from "@tscircuit/props"
+import type { BoardProps, BusProps, AutoroutingPhaseProps, CopperPourProps, FanoutPourNetMap } from "@tscircuit/props"
 import { NativePart, type NativePartData } from "./native-part"
 
 export type FullBoardSource = {
@@ -13,6 +13,23 @@ export type FullBoardSource = {
   rules: { widths: number[]; appliedGlobalClearance: number; viaPad: number; viaDrill: number }
   parts: NativePartData[]
   nets: { name: string; nativeName: string; members: string[]; width: number; escapeWidth: number; clearance: number; group: string; routable: boolean; isGround: boolean }[]
+  planeIntent: {
+    zones: {
+      name: string
+      nativeName: string
+      netName: string
+      layer: string
+      priority: number
+      clearance: number
+      useThermalReliefs: boolean
+      unbroken: boolean
+      sourceOutlines: { x: number; y: number }[][]
+      outlines: { x: number; y: number }[][]
+    }[]
+    savedCopperImported: boolean
+    skippedTeardrops: number
+    sourceKeepouts: number
+  }
 }
 
 function getNearestExternalMember(source: FullBoardSource, member: string, members: string[]): string {
@@ -34,22 +51,41 @@ function getNearestExternalMember(source: FullBoardSource, member: string, membe
 }
 
 /** Full native net membership, not an ordered daisy chain. The source contains
- * no routed copper. Core generates BGA fanout, then byte buses, then remaining
- * DDR signals, then every other board net including the power distribution.
+ * no routed copper. Authored zones become fresh pours. Plane escapes precede
+ * byte buses, remaining DDR signals and the rest of the board.
  */
 export function NativeFullBoard({
   source,
   geometryOnly = false,
   fanout = false,
+  planes = true,
   algorithmFn,
 }: {
   source: FullBoardSource
   geometryOnly?: boolean
   fanout?: boolean
+  planes?: boolean
   algorithmFn?: AutoroutingPhaseProps["algorithmFn"]
 }): ReactElement {
   const bytes = [...new Set(source.nets.map((net) => net.group))].filter((group) => group.startsWith("byte")).sort()
-  const phases = [...bytes, "ddr_remaining", "board"]
+  const zones = planes ? source.planeIntent.zones : []
+  const planeNets = new Set(zones.filter((zone) => zone.unbroken && zone.outlines.length > 0).map((zone) => zone.netName))
+  const phases = [...(planeNets.size ? ["plane_escape"] : []), ...bytes, "ddr_remaining", "board"]
+  const phaseForNet = (net: FullBoardSource["nets"][number]): string =>
+    net.group === "board" && planeNets.has(net.name) ? "plane_escape" : net.group
+  const planeLayers = new Map<string, { layer: keyof FanoutPourNetMap; area: number }>()
+  for (const zone of zones.filter((zone) => zone.unbroken)) {
+    const area = zone.outlines.reduce((total, outline) => total + Math.abs(outline.reduce((sum, p, i) => {
+      const next = outline[(i+1)%outline.length]
+      return sum+p.x*next.y-next.x*p.y
+    }, 0))/2, 0)
+    if (area > (planeLayers.get(zone.netName)?.area ?? 0)) planeLayers.set(zone.netName, { layer: zone.layer as keyof FanoutPourNetMap, area })
+  }
+  const fanoutPourNetMap: FanoutPourNetMap = {}
+  for (const [name, { layer }] of planeLayers) {
+    const previous = fanoutPourNetMap[layer]
+    fanoutPourNetMap[layer] = previous === undefined ? name : [...(Array.isArray(previous) ? previous : [previous]), name]
+  }
   return (
     <board
       title={`${source.title} — full circuit`}
@@ -80,23 +116,41 @@ export function NativeFullBoard({
             name={`FANOUT_${part.name}`}
             pcbX={part.x}
             pcbY={part.y}
-            padding={1}
+            padding={0.3}
             autorouter="fanout"
+            fanoutPourNetMap={fanoutPourNetMap}
             fanoutRoutingLayers={source.signalLayers as BusProps["pcbAllowedLayers"]}
           >
             <NativePart part={{ ...part, x: 0, y: 0 }} />
-            {source.nets.filter((net) => net.routable).flatMap((net) =>
+            {source.nets.filter((net) => net.routable && planeNets.has(net.name)).flatMap((net) =>
               net.members.filter((member) => member.startsWith(prefix)).map((member) => (
                 <trace
                   key={member}
                   name={`ESC_${part.name}_${member.slice(prefix.length)}`}
                   from={member}
-                  to={getNearestExternalMember(source, member, net.members)}
+                  to={`net.${net.name}`}
                   thickness={net.escapeWidth}
                 />
               )),
             )}
           </fanout>
+        )
+      })}
+      {fanout && source.parts.flatMap((part) => {
+        const isBga = (/bga/i.test(part.footprint) || part.pads.filter((pad) => /^[A-Z]+\d+$/.test(pad.nativePin)).length >= 64) && Object.keys(part.pinLabels).length >= 64
+        if (!isBga) return []
+        const prefix = `.${part.name} > .`
+        return source.nets.filter((net) => net.routable && !planeNets.has(net.name)).flatMap((net) =>
+          net.members.filter((member) => member.startsWith(prefix)).map((member) => (
+            <trace
+              key={member}
+              name={`ESC_${part.name}_${member.slice(prefix.length)}`}
+              from={member}
+              to={getNearestExternalMember(source, member, net.members)}
+              thickness={net.escapeWidth}
+              routingPhaseIndex={phases.indexOf(phaseForNet(net))}
+            />
+          )),
         )
       })}
       {phases.map((group, phaseIndex) => (
@@ -115,9 +169,22 @@ export function NativeFullBoard({
           connectsTo={net.members}
           nominalTraceWidth={net.width}
           isGroundNet={net.isGround}
-          routingPhaseIndex={net.routable ? phases.indexOf(net.group) : undefined}
+          routingPhaseIndex={net.routable ? phases.indexOf(phaseForNet(net)) : undefined}
         />
       ))}
+      {zones.flatMap((zone) => zone.outlines.map((outline, index) => (
+        <copperpour
+          key={`${zone.name}_${index}`}
+          name={`${zone.name}_${index}`}
+          connectsTo={`net.${zone.netName}`}
+          layer={zone.layer as CopperPourProps["layer"]}
+          outline={outline}
+          clearance={zone.clearance}
+          boardEdgeMargin={source.rules.appliedGlobalClearance}
+          unbroken={zone.unbroken}
+          useThermalReliefs={zone.useThermalReliefs}
+        />
+      )))}
       {bytes.map((group) => (
         <bus
           key={group}

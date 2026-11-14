@@ -18,6 +18,13 @@ const ports = new Map(json.filter((e) => e.type === "pcb_port").map((e) => [e.so
 const geometryErrors: string[] = []
 const membershipErrors: string[] = []
 const missingCopper: { name: string; members: number }[] = []
+const pours = json.filter((e) => e.type === "pcb_copper_pour")
+let copperConnectedPortGroups: string[][] = []
+if (pours.length > 0) {
+  if (!process.env.FULL_BOARD_COPPER_MODULE) throw new Error("Actual pour geometry requires the copper connectivity checker")
+  const { findFloatingCopper } = await import(process.env.FULL_BOARD_COPPER_MODULE)
+  copperConnectedPortGroups = findFloatingCopper(json).copperConnectedPointGroups
+}
 
 for (const part of source.parts) {
   const component = components.get(part.name)
@@ -61,7 +68,7 @@ for (const net of source.nets) {
   const ids = new Set(sourceTraces.filter((t) => t.subcircuit_connectivity_map_key === key).map((t) => t.source_trace_id))
   ids.add(emitted.source_net_id)
   const netRoutes = routes.filter((route) => ids.has(route.source_trace_id) || route.subcircuit_connectivity_map_key === key)
-  if (expectedPorts.some((p) => !p) || !arePortsConnected(expectedPorts.map((p) => p.source_port_id), netRoutes, ports, vias)) missingCopper.push({ name: net.nativeName, members: net.members.length })
+  if (expectedPorts.some((p) => !p) || !arePortsConnected(expectedPorts.map((p) => p.source_port_id), netRoutes, ports, vias, copperConnectedPortGroups)) missingCopper.push({ name: net.nativeName, members: net.members.length })
 }
 const options = { minClearance: source.rules.appliedGlobalClearance }
 const findings = {
@@ -82,10 +89,10 @@ const assessment = {
   nets: sourceNets.size, expectedNets: source.nets.length,
   routableNets: source.nets.filter((net) => net.routable).length,
   connectedNets: source.nets.filter((net) => net.routable).length-missingCopper.length,
-  pcbTraces: routes.length, vias: vias.length,
+  pcbTraces: routes.length, vias: vias.length, copperPours: pours.length,
   geometryErrors, membershipErrors, missingCopper,
   findings: Object.fromEntries(Object.entries(findings).map(([name, values]) => [name, values.filter((v) => v.type.endsWith("_error")).length])),
-  connectivityPolicy: "Conservative copper continuity at native port centers, including vias and T junctions. Fanout stubs alone do not count as complete nets.",
+  connectivityPolicy: "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets.",
 }
 writeFileSync(join(folder, "assessment.json"), JSON.stringify(assessment, null, 2))
 writeFileSync(join(folder, "findings.json"), JSON.stringify(findings, null, 2))

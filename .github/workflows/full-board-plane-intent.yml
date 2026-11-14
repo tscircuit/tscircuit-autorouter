@@ -1,0 +1,43 @@
+name: Full boards with fresh planes and fanout ownership
+on:
+  push:
+    branches: [codex/plane-aware-full-board-routing-20261114]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 24040b0bf0b10c493f56766ee29eb554907c4fae
+          path: .plane-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install workspace router dependencies
+        run: bun install --ignore-scripts
+      - name: Install pinned circuit dependencies
+        working-directory: experiments/full-board-priority-analysis
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build source core with the fanout fix
+        working-directory: .plane-core
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          bun build lib/index.ts --target bun --outdir ../experiments/full-board-priority-analysis/patched-core --external @tscircuit/capacity-autorouter --external react --external react/jsx-runtime --external react/jsx-dev-runtime
+          bun build lib/utils/copper-pour-connectivity/find-floating-copper.ts --target bun --outdir ../experiments/full-board-priority-analysis/patched-core
+          cp node_modules/manifold-3d/manifold.wasm ../experiments/full-board-priority-analysis/patched-core/manifold.wasm
+          git rev-parse HEAD
+      - name: Route all six boards with fresh planes, with and without upfront BGA fanout
+        working-directory: experiments/full-board-priority-analysis
+        run: bun plane-suite.ts ../../plane-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-board-plane-intent-results
+          path: plane-results
+          retention-days: 14

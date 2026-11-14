@@ -6,6 +6,7 @@ interface NativeElements {
   trace: Props.TraceProps & Attributes
   net: Props.NetProps & Attributes
   bus: Props.BusProps & Attributes
+  copperpour: Props.CopperPourProps & Attributes
   fanout: Props.BreakoutProps & Attributes
   footprint: Props.FootprintProps & Attributes
   platedhole: Props.PlatedHoleProps & Attributes
