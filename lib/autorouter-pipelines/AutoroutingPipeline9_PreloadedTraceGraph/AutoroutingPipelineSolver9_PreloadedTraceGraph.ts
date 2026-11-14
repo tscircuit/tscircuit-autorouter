@@ -714,6 +714,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           minimumTraceWidth: cms.srj.minTraceWidth,
           minClearance: cms.srj.minTraceToPadEdgeClearance,
           viaCopperClearance: cms.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
+          layerCount: cms.srj.layerCount,
+          allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
           connMap: cms.connMap,
         },
       ],

@@ -5,6 +5,7 @@ import { HighDensityRepairSolver } from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
+  HdRouteVia as RepairVia,
 } from "high-density-repair02"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
@@ -122,11 +123,17 @@ const findNodeIndexForRoute = (
   return -1
 }
 
-const toRepairRoute = (
-  route: HighDensityRoute,
-  connMap?: ConnectivityMap,
-  minimumTraceWidth?: number,
-): RepairHdRoute => ({
+const toRepairRoute = ({
+  route,
+  connMap,
+  minimumTraceWidth,
+  viaLayerSpan,
+}: {
+  route: HighDensityRoute
+  connMap?: ConnectivityMap
+  minimumTraceWidth?: number
+  viaLayerSpan: Pick<RepairVia, "minZ" | "maxZ">
+}): RepairHdRoute => ({
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
   rootConnectionName:
@@ -144,6 +151,7 @@ const toRepairRoute = (
     minimumTraceWidth ?? route.traceThickness,
   ),
   vias: route.vias.map((via) => ({
+    ...viaLayerSpan,
     x: via.x,
     y: via.y,
     diameter: route.viaDiameter,
@@ -214,6 +222,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly minimumTraceWidth?: number
   readonly minClearance?: number
   readonly viaCopperClearance?: number
+  readonly layerCount?: number
+  readonly allowBlindAndBuriedVias?: boolean
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -236,6 +246,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     minimumTraceWidth?: number
     minClearance?: number
     viaCopperClearance?: number
+    layerCount?: number
+    allowBlindAndBuriedVias?: boolean
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
@@ -244,6 +256,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.minimumTraceWidth = params.minimumTraceWidth
     this.minClearance = params.minClearance
     this.viaCopperClearance = params.viaCopperClearance
+    this.layerCount = params.layerCount
+    this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -278,15 +292,29 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     const layeredObstacles = createObjectsWithZLayers(
       params.obstacles,
-      Math.max(
-        2,
-        ...params.nodeWithPortPoints.flatMap(
-          (node) => node.availableZ?.map((z) => z + 1) ?? [],
+      params.layerCount ??
+        Math.max(
+          2,
+          ...params.nodeWithPortPoints.flatMap(
+            (node) => node.availableZ?.map((z) => z + 1) ?? [],
+          ),
         ),
-      ),
     )
+    const viaLayerSpan: Pick<RepairVia, "minZ" | "maxZ"> = {}
+    if (
+      params.layerCount !== undefined &&
+      params.allowBlindAndBuriedVias === false
+    ) {
+      viaLayerSpan.minZ = 0
+      viaLayerSpan.maxZ = params.layerCount - 1
+    }
     const repairRoutes = params.hdRoutes.map((route) =>
-      toRepairRoute(route, params.connMap, params.minimumTraceWidth),
+      toRepairRoute({
+        route,
+        connMap: params.connMap,
+        minimumTraceWidth: params.minimumTraceWidth,
+        viaLayerSpan,
+      }),
     )
     const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
       params.hdRoutes.length,
@@ -544,6 +572,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         minimumTraceWidth: this.minimumTraceWidth,
         minClearance: this.minClearance,
         viaCopperClearance: this.viaCopperClearance,
+        layerCount: this.layerCount,
+        allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
