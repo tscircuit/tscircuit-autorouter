@@ -5,9 +5,10 @@
     "render": "bun --tsconfig-override ../../../tsconfig.json render.mjs"
   },
   "dependencies": {
-    "circuit-to-svg": "0.0.457",
+    "circuit-json-to-connectivity-map": "0.0.36",
+    "circuit-to-svg": "0.0.458",
     "react": "19.3.1",
     "transformation-matrix": "3.1.0",
-    "tscircuit": "0.0.3125"
+    "tscircuit": "0.0.3181"
   }
 }
