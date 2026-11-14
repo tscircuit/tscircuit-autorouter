@@ -1,0 +1,46 @@
+name: Export movable-peer CI review
+on:
+  push:
+    branches: [evidence/movable-peer-ci-review]
+    paths: [.github/workflows/export-movable-peer-review.yml]
+permissions:
+  actions: read
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 43569488217
+          pattern: diff-png-and-snap-svg-artifacts-node*
+          path: /tmp/movable-peer-review
+      - name: Collect only the four failed snapshots
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, shutil
+          source = Path("/tmp/movable-peer-review")
+          output = Path("review/movable-peer-ci")
+          output.mkdir(parents=True, exist_ok=True)
+          stems = ["pipeline9-imx6-ddr-fixed-copper", "pipeline9-imx6-published-ddr-clearance", "bugreport107-board-1726-linux", "bugreport109-book-reading-clip-lamp-linux"]
+          for stem in stems:
+              for suffix in [".received.svg", ".snap.svg", ".diff.png"]:
+                  matches = list(source.rglob(stem + suffix))
+                  if not matches:
+                      raise RuntimeError("Missing artifact: " + stem + suffix)
+                  data = matches[0].read_bytes()
+                  if suffix.endswith(".svg"):
+                      print(stem + suffix, "DRC counts:", re.findall(r"Relaxed DRC errors: (\d+)", data.decode()))
+                  destination = output / (stem + suffix)
+                  destination.write_bytes(data)
+          PY
+      - name: Publish review images on this evidence branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add review/movable-peer-ci
+          git commit -m "docs: export exact failed routing snapshots for review"
+          git push origin HEAD:evidence/movable-peer-ci-review
