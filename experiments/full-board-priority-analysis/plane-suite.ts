@@ -14,8 +14,9 @@ const routerCommit=new TextDecoder().decode(revision.stdout).trim()
 environment.FULL_BOARD_ROUTER_COMMIT=routerCommit
 writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,cpu:cpus()[0].model,cpus:cpus().length,memory:totalmem(),concurrency:2,
   routerCommit,coreBase:"40b8f45f0e3d55dcaa13a8389db4c4f1003019aa",coreFix:"24040b0",routingBudgetMs:600000,hardProcessBudgetMs:660000},null,2))
-const modes=process.argv[3]==="phased"?["phased"]:["phased","fanout"]
-const queue: Task[] = modes.flatMap((mode)=>["h616","icepi","glider","orangecrab","butterstick","imx6"].map((id)=>({id,mode:mode as Task["mode"]})))
+const modes=process.argv[3]==="phased"?["phased"]:process.argv[3]==="fanout"?["fanout"]:["phased","fanout"]
+const boards=process.argv[4]?.split(",")??["h616","icepi","glider","orangecrab","butterstick","imx6"]
+const queue: Task[] = modes.flatMap((mode)=>boards.map((id)=>({id,mode:mode as Task["mode"]})))
 const rows: unknown[] = []
 async function worker(): Promise<void> {
   while (queue.length) {

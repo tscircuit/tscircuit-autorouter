@@ -29,17 +29,27 @@ function copperRectsTouch(first: Obstacle, second: Obstacle): boolean {
         Math.abs(axis.x * secondAxes[1].x + axis.y * secondAxes[1].y)
     const separation = Math.abs(
       (second.center.x - first.center.x) * axis.x +
-      (second.center.y - first.center.y) * axis.y,
+        (second.center.y - first.center.y) * axis.y,
     )
     const overlap = firstRadius + secondRadius - separation
     if (overlap < -tolerance) return false
-    if (
-      overlap <= tolerance &&
-      !contactAxes.some(
-        (other) => Math.abs(other.x * axis.x + other.y * axis.y) > 1 - tolerance,
+    // A rotated vertex touching an edge is still a point contact. A shared
+    // edge requires this contact normal to be a side normal of both boxes.
+    if (overlap <= tolerance) {
+      const firstHasEdge = firstAxes.some(
+        (other) => Math.abs(other.x * axis.y - other.y * axis.x) <= tolerance,
       )
-    ) {
-      contactAxes.push(axis)
+      const secondHasEdge = secondAxes.some(
+        (other) => Math.abs(other.x * axis.y - other.y * axis.x) <= tolerance,
+      )
+      if (!firstHasEdge || !secondHasEdge) return false
+      if (
+        !contactAxes.some(
+          (other) => Math.abs(other.x * axis.y - other.y * axis.x) <= tolerance,
+        )
+      ) {
+        contactAxes.push(axis)
+      }
     }
   }
   return contactAxes.length < 2
@@ -70,9 +80,14 @@ export function getConnectedCopperPourRepresentatives(
       const secondRoot = root(second)
       if (firstRoot === secondRoot) continue
       if (copperRectsTouch(firstPour, secondPour)) {
-        parents[Math.max(firstRoot, secondRoot)] = Math.min(firstRoot, secondRoot)
+        parents[Math.max(firstRoot, secondRoot)] = Math.min(
+          firstRoot,
+          secondRoot,
+        )
       }
     }
   }
-  return new Map(copperPours.map((pour, index) => [pour, copperPours[root(index)]]))
+  return new Map(
+    copperPours.map((pour, index) => [pour, copperPours[root(index)]]),
+  )
 }

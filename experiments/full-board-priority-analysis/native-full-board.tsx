@@ -116,7 +116,7 @@ export function NativeFullBoard({
             name={`FANOUT_${part.name}`}
             pcbX={part.x}
             pcbY={part.y}
-            padding={0.3}
+            padding={0.7}
             autorouter="fanout"
             fanoutPourNetMap={fanoutPourNetMap}
             fanoutRoutingLayers={source.signalLayers as BusProps["pcbAllowedLayers"]}

@@ -1,0 +1,40 @@
+name: Validate fanout spacing on the tightest native BGA pairs
+on:
+  push:
+    branches: [codex/fanout-padding-validation-20261114]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 24040b0bf0b10c493f56766ee29eb554907c4fae
+          path: .plane-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install router and circuit dependencies
+        run: |
+          bun install --ignore-scripts
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+      - name: Build source core
+        run: |
+          cd .plane-core
+          bun install --frozen-lockfile --ignore-scripts
+          cd ../experiments/full-board-priority-analysis
+          bun build-core.ts ../../.plane-core
+      - name: Route H616 and ButterStick with 0.7 mm fanout padding
+        working-directory: experiments/full-board-priority-analysis
+        run: bun plane-suite.ts ../../fanout-padding-results fanout h616,butterstick
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fanout-padding-results
+          path: fanout-padding-results
+          retention-days: 14
