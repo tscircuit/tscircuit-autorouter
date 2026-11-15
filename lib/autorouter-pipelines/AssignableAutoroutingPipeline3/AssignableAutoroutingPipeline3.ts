@@ -69,6 +69,7 @@ import { PortPointOffboardPathFragmentSolver } from "../AssignableAutoroutingPip
 import { RelateNodesToOffBoardConnectionsSolver } from "../AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
 import { SimpleHighDensitySolver } from "../AssignableAutoroutingPipeline2/SimpleHighDensitySolver"
 import { updateConnMapWithOffboardObstacleConnections } from "../AssignableAutoroutingPipeline2/updateConnMapWithOffboardObstacleConnections"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -798,14 +799,19 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.srj,
+      outputTraces: traces,
+    })
   }
 
   /**

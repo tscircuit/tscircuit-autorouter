@@ -7,6 +7,7 @@ import type { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import {
   ApplyTraceSimplificationSolver,
   type ApplyTraceSimplificationSolverInput,
@@ -121,7 +122,14 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
     if (!this.validateTraceSimplificationSolver?.solved) {
       throw new Error("Pipeline 11 simplification has not solved yet")
     }
-    return this.validateTraceSimplificationSolver.getOutput()
+    const output = this.validateTraceSimplificationSolver.getOutput()
+    return {
+      ...output,
+      traces: materializeAndValidateGeneratedThroughVias({
+        srj: this.inputProblem.inputSrj,
+        outputTraces: output.traces ?? [],
+      }),
+    }
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
