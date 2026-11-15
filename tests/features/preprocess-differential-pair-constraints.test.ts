@@ -52,19 +52,23 @@ test("both preprocessors reject invalid pair constraints and preserve valid decl
       field: "lengthTolerance",
     },
     {
-      serialized: '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"traceGap":-0.1}]',
+      serialized:
+        '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"traceGap":-0.1}]',
       field: "traceGap",
     },
     {
-      serialized: '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"traceGap":1e999}]',
+      serialized:
+        '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"traceGap":1e999}]',
       field: "traceGap",
     },
     {
-      serialized: '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"maxUncoupledLength":-1}]',
+      serialized:
+        '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"maxUncoupledLength":-1}]',
       field: "maxUncoupledLength",
     },
     {
-      serialized: '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"maxUncoupledLength":1e999}]',
+      serialized:
+        '[{"connectionNames":["D+","D-"],"lengthTolerance":0.1,"maxUncoupledLength":1e999}]',
       field: "maxUncoupledLength",
     },
     {
@@ -79,8 +83,8 @@ test("both preprocessors reject invalid pair constraints and preserve valid decl
       serialized: '[{"connectionNames":["D+",""],"lengthTolerance":0.1}]',
       field: "non-empty",
     },
-    { serialized: '[null]', field: "two distinct" },
-    { serialized: 'null', field: "must be an array" },
+    { serialized: "[null]", field: "two distinct" },
+    { serialized: "null", field: "must be an array" },
   ]
   for (const declaration of invalidDeclarations) {
     const invalidInput: SimpleRouteJson = {

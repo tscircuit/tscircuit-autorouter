@@ -35,7 +35,9 @@ test("preprocessing rejects the native AM62L input with missing pair tolerances"
       'Differential pair "DQS0/DQS0_n" lengthTolerance must be a non-negative finite number',
     )
     expect(solver.outputSrj).toBeUndefined()
-    expect(() => solver.getOutputSimpleRouteJson()).toThrow("has not solved yet")
+    expect(() => solver.getOutputSimpleRouteJson()).toThrow(
+      "has not solved yet",
+    )
     preflightResults.push({
       label,
       solved: solver.solved,
