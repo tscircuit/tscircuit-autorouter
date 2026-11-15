@@ -17,3 +17,7 @@ Uncompressed remaining-phase SRJ SHA-256:
 
 The generated SVG overlays the first global search's own preview on the captured
 board. Its colored lines are coarse path plans, not completed PCB copper.
+
+Reverified with `tscircuit@0.0.3188`, `@tscircuit/core@0.0.2380`, and
+`@tscircuit/capacity-autorouter@0.0.1097`: the remaining-phase SRJ has the
+same SHA-256 above. The real board and its 43 remaining nets are unchanged.
