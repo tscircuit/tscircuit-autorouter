@@ -12,6 +12,7 @@ import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
+import { isPipeline9DrcImprovement } from "./isPipeline9DrcImprovement"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
@@ -212,21 +213,9 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-    const currentHasCircuitJsonErrors = errors.some(
-      (error): boolean => error.drc_source !== "fixed_copper",
-    )
-    const candidateHasCircuitJsonErrors = candidateErrors.some(
-      (error): boolean => error.drc_source !== "fixed_copper",
-    )
-    // Clearing prioritized errors can reveal inherited fixed-copper contacts.
-    // Keep that progress so regional repair can resolve the remaining contacts.
     const canPublish = params.allowPartialRepair
       ? canPublishIndependentClearanceRepairs(errors, candidateErrors)
-      : !(
-          (candidateHasCircuitJsonErrors && !currentHasCircuitJsonErrors) ||
-          (candidateHasCircuitJsonErrors === currentHasCircuitJsonErrors &&
-            candidateErrors.length >= errors.length)
-        )
+      : isPipeline9DrcImprovement({ currentErrors: errors, candidateErrors })
     this.state = {
       phase: "finished",
       output: canPublish ? state.candidate : params.routes,

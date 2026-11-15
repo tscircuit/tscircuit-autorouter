@@ -25,6 +25,7 @@ import {
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
+import { isPipeline9DrcImprovement } from "./isPipeline9DrcImprovement"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
 import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
@@ -763,18 +764,11 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-    const currentHasCircuitJsonErrors = context.currentErrors.some(
-      (error): boolean => error.drc_source !== "fixed_copper",
-    )
-    const candidateHasCircuitJsonErrors = candidateErrors.some(
-      (error): boolean => error.drc_source !== "fixed_copper",
-    )
-    // Clearing the prioritized errors can reveal inherited fixed contacts.
-    // Compare priority before count so that this progress is not rejected.
     if (
-      (candidateHasCircuitJsonErrors && !currentHasCircuitJsonErrors) ||
-      (candidateHasCircuitJsonErrors === currentHasCircuitJsonErrors &&
-        candidateErrors.length >= context.currentErrors.length)
+      !isPipeline9DrcImprovement({
+        currentErrors: context.currentErrors,
+        candidateErrors,
+      })
     ) {
       this.state = { phase: "select-region", context }
       return

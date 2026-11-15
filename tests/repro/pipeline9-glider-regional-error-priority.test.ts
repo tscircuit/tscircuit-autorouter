@@ -5,31 +5,15 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
-import type { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
+import { isPipeline9DrcImprovement } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9DrcImprovement"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type DrcError = Record<string, unknown>
 type Point = { x: number; y: number }
-type ProposalState = {
-  phase: string
-  context: {
-    currentRoutes: HighDensityRoute[]
-    currentErrors: DrcError[]
-  }
-  candidateRoutes: HighDensityRoute[]
-  candidateReference: DrcError[] | { errors: DrcError[] }
-}
-type RegionalRepairControl = {
-  state: {
-    phase: string
-    context: ProposalState["context"]
-    solver?: Pipeline9ClearanceProjectionSolver
-    candidateRoutes?: HighDensityRoute[]
-  }
-  prepareRegions(context: ProposalState["context"]): void
-}
 
 test("Glider circuit repair priorities", async (): Promise<void> => {
   const fixture = JSON.parse(
@@ -76,59 +60,48 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
   ) {
     joint.step()
   }
-  const solver = joint.initialBoundedRegionalRepairSolver!
-  const control = solver as unknown as RegionalRepairControl
+  const solver = joint.initialBoundedRegionalRepairSolver
+  if (!solver) throw new Error("Glider did not start initial regional repair")
   while (
-    control.state.phase !== "initial-projection" &&
+    !(solver.activeSubSolver instanceof Pipeline9ClearanceProjectionSolver) &&
     !solver.solved &&
     !solver.failed
   ) {
     solver.step()
   }
-  // Initial projection now bypasses regional acceptance; replay its real proposal
-  // through production physical, reference and acceptance stages to cover that policy.
-  const originalContext = { ...control.state.context }
-  const projection = control.state.solver!
+  const projection = solver.activeSubSolver
+  if (!(projection instanceof Pipeline9ClearanceProjectionSolver)) {
+    throw new Error("Glider did not start clearance projection")
+  }
+  const currentRoutes = projection.params.routes
+  const currentReference = getPipeline9DrcErrors(
+    projection.params.drcEvaluator,
+    currentRoutes,
+  )
+  // Use the real native proposal after the projection's physical guards.
   projection.solve()
-  const projectedRoutes = projection.getOutput()
-  solver.step()
-  control.prepareRegions(originalContext)
-  control.state = {
-    phase: "candidate-physical",
-    context: control.state.context,
-    candidateRoutes: projectedRoutes,
-  }
-  let decision: ProposalState | undefined
-  while (!solver.solved && !solver.failed) {
-    const state = control.state as ProposalState
-    if (state.phase === "accept-candidate") {
-      const errors = Array.isArray(state.candidateReference)
-        ? state.candidateReference
-        : state.candidateReference.errors
-      if (
-        state.context.currentErrors.some(
-          (error): boolean => error.drc_source !== "fixed_copper",
-        ) &&
-        errors.length > 0 &&
-        errors.every((error): boolean => error.drc_source === "fixed_copper")
-      ) {
-        decision = state
-        break
-      }
-    }
-    solver.step()
-  }
-  expect(solver.failed).toBe(false)
-  expect(decision).toBeDefined()
-  // This phase follows the actual merge and physical candidate guards.
-  const currentRoutes = decision!.context.currentRoutes
-  const proposedRoutes = decision!.candidateRoutes
-  const currentReference = decision!.context.currentErrors
-  const candidateReference = Array.isArray(decision!.candidateReference)
-    ? decision!.candidateReference
-    : decision!.candidateReference.errors
-  solver.step()
-  const accepted = decision!.context.currentRoutes === proposedRoutes
+  expect(projection.failed).toBe(false)
+  expect(projection.solved).toBe(true)
+  const proposedRoutes = projection.getOutput()
+  const candidateReference = getPipeline9DrcErrors(
+    projection.params.drcEvaluator,
+    proposedRoutes,
+  )
+  expect(
+    currentReference.some(
+      (error): boolean => error.drc_source !== "fixed_copper",
+    ),
+  ).toBe(true)
+  expect(candidateReference.length).toBeGreaterThan(currentReference.length)
+  expect(
+    candidateReference.every(
+      (error): boolean => error.drc_source === "fixed_copper",
+    ),
+  ).toBe(true)
+  const accepted = isPipeline9DrcImprovement({
+    currentErrors: currentReference,
+    candidateErrors: candidateReference,
+  })
   expect(accepted).toBe(true)
   expect(fixture).toEqual(original)
   expect(
