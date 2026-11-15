@@ -7,6 +7,8 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import inputFixture from "../../fixtures/repro/sepic-converter/sepic-converter.srj.json"
 
+// Captured phase-0 input from https://tscircuit.com/gokul/sepic-converter.
+// tscircuit 0.0.3186 / core 0.0.2374, beta_pipeline9, parts engine disabled.
 test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearance", async (): Promise<void> => {
   const input = structuredClone(inputFixture) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
@@ -56,7 +58,11 @@ test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearanc
       (point) => point.route_type === "wire" && point.layer === "bottom",
     )
     expect(bottomWires.length).toBeGreaterThan(1)
-    expect(bottomWires.every((point) => point.route_type === "wire" && point.width === width)).toBe(true)
+    expect(
+      bottomWires.every(
+        (point) => point.route_type === "wire" && point.width === width,
+      ),
+    ).toBe(true)
   }
 
   // Crop the emitted copper, without changing its geometry or widths.
