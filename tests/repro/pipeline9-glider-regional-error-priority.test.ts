@@ -5,7 +5,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
-import { isPipeline9DrcImprovement } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9DrcImprovement"
+import { isPipeline9DrcPriorityImprovement } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9DrcPriorityImprovement"
 import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
@@ -98,7 +98,7 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
       (error): boolean => error.drc_source === "fixed_copper",
     ),
   ).toBe(true)
-  const accepted = isPipeline9DrcImprovement({
+  const accepted = isPipeline9DrcPriorityImprovement({
     currentErrors: currentReference,
     candidateErrors: candidateReference,
   })

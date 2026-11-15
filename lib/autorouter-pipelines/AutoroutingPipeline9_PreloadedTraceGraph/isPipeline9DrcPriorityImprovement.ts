@@ -1,7 +1,7 @@
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 /** Compare reference errors after the physical candidate guards have passed. */
-export const isPipeline9DrcImprovement = ({
+export const isPipeline9DrcPriorityImprovement = ({
   currentErrors,
   candidateErrors,
 }: {

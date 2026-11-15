@@ -12,7 +12,7 @@ import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
-import { isPipeline9DrcImprovement } from "./isPipeline9DrcImprovement"
+import { isPipeline9DrcPriorityImprovement } from "./isPipeline9DrcPriorityImprovement"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
@@ -215,7 +215,10 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       : candidateReference.errors
     const canPublish = params.allowPartialRepair
       ? canPublishIndependentClearanceRepairs(errors, candidateErrors)
-      : isPipeline9DrcImprovement({ currentErrors: errors, candidateErrors })
+      : isPipeline9DrcPriorityImprovement({
+          currentErrors: errors,
+          candidateErrors,
+        })
     this.state = {
       phase: "finished",
       output: canPublish ? state.candidate : params.routes,

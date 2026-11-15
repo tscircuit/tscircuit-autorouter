@@ -25,7 +25,7 @@ import {
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
-import { isPipeline9DrcImprovement } from "./isPipeline9DrcImprovement"
+import { isPipeline9DrcPriorityImprovement } from "./isPipeline9DrcPriorityImprovement"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
 import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
@@ -765,7 +765,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ? candidateReference
       : candidateReference.errors
     if (
-      !isPipeline9DrcImprovement({
+      !isPipeline9DrcPriorityImprovement({
         currentErrors: context.currentErrors,
         candidateErrors,
       })
