@@ -499,9 +499,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackPromotedFixedRouteConnectionNames = new Set<string>()
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
-  private activeFallbackNode: NodeWithPortPoints | null = null
-  private activeFallbackPortCount = 0
-  private activeFallbackUnroutableGrowthAttempts = 0
 
   private asyncRunning = false
   private readonly hasFixedFlaggedRoute: boolean
@@ -865,9 +862,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackFixedRouteSections.clear()
     this.activeFallbackFixedObstacleRoutes = []
     this.activeFallbackPromotedFixedRouteConnectionNames.clear()
-    this.activeFallbackNode = null
-    this.activeFallbackPortCount = 0
-    this.activeFallbackUnroutableGrowthAttempts = 0
     this.activeFallbackReason = null
     this.activeNode = null
   }
@@ -974,22 +968,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           connectionName,
         ),
     ).length
-    const isMonotonicPromotedRetry =
-      promotedFixedRouteConnectionNames.size > 0 &&
-      this.activeFallbackNode === this.activeNode &&
-      fallbackProblem.nodeWithPortPoints.portPoints.length >=
-        this.activeFallbackPortCount &&
-      [...this.activeFallbackPromotedFixedRouteConnectionNames].every(
-        (connectionName) =>
-          promotedFixedRouteConnectionNames.has(connectionName),
-      )
-    const initialGrowthAttempts = isMonotonicPromotedRetry
-      ? this.activeFallbackUnroutableGrowthAttempts
-      : 0
-    this.activeFallbackNode = this.activeNode
-    this.activeFallbackPortCount =
-      fallbackProblem.nodeWithPortPoints.portPoints.length
-    this.activeFallbackUnroutableGrowthAttempts = initialGrowthAttempts
     this.activeFallbackFixedRouteSections =
       fallbackProblem.fixedRouteSectionsByConnectionName
     this.activeFallbackFixedObstacleRoutes = fallbackProblem.fixedObstacleRoutes
@@ -1003,7 +981,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
-      initialGrowthAttempts,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -1181,8 +1158,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.activeFallbackUnroutableGrowthAttempts =
-        this.activeFallbackSolver.getUnroutablePrefixGrowthAttempts()
       this.startRegionalFallback(promotedConnectionNames)
       return
     }
@@ -1259,7 +1234,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         portPointsInPairs: [],
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
       },
-      this.getCandidateFixedHdRoutes(getNodeBounds(this.activeNode, 1e-6)),
+      this.getCandidateFixedHdRoutes(
+        getNodeBounds(
+          this.activeFallbackSolver.params.nodeWithPortPoints,
+          1e-6,
+        ),
+      ),
     )
     const markedTraceIndexes = new Set<number>()
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
@@ -1401,9 +1381,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.activeFallbackFixedRouteSections.clear()
         this.activeFallbackFixedObstacleRoutes = []
         this.activeFallbackPromotedFixedRouteConnectionNames.clear()
-        this.activeFallbackNode = null
-        this.activeFallbackPortCount = 0
-        this.activeFallbackUnroutableGrowthAttempts = 0
         this.activeNode = null
         return
       }
