@@ -1,0 +1,37 @@
+name: Collect latest full-board artifacts for local review
+on:
+  push:
+    branches: [codex/latest-board-evidence-20261115]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  collect:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [h616]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: latest-full-${{ matrix.board }}
+          run-id: 43686065138
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Export exact result artifacts
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          python3 - <<'PY'
+          import base64, io, json, os, zipfile
+          from pathlib import Path
+          stream = io.BytesIO()
+          with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              for path in Path('evidence').rglob('*'):
+                  if path.is_file(): archive.writestr(str(path.relative_to('evidence')), path.read_bytes())
+          print('FULL_BOARD_ZIP_BEGIN')
+          encoded = base64.b64encode(stream.getvalue()).decode()
+          for index in range(0,len(encoded),8000): print(encoded[index:index+8000])
+          print('FULL_BOARD_ZIP_END')
+          PY
