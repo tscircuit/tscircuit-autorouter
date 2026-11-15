@@ -75,6 +75,9 @@ test("captures H616 ordinary signals beside previously routed DDR copper", async
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(fixture).toEqual(original)
+  expect(
+    solver.stats.boundedRegionalRepairAcceptedRegionCount,
+  ).toBeGreaterThan(0)
   const hdRoutes = solver.getOutput()
   for (const route of fixture.routes) {
     const output = hdRoutes.find(
@@ -130,7 +133,7 @@ test("captures H616 ordinary signals beside previously routed DDR copper", async
     includeBoardClearance: true,
   })
   expect(evaluate([]).errors).toEqual([])
-  expect(evaluate(traces).errors).toHaveLength(5)
+  expect(evaluate(traces).errors).toEqual([])
   const allTraces = combinePreloadedAndRoutedTraces(
     originalSrj.traces ?? [],
     traces,
@@ -153,7 +156,7 @@ test("captures H616 ordinary signals beside previously routed DDR copper", async
     ...checkEachPcbTraceNonOverlapping(circuitJson),
     ...checkViaPadClearance(circuitJson),
   ].length
-  expect(errorCount).toBe(4)
+  expect(errorCount).toBe(0)
   await expect(
     getH616StagedClearancePcbSvg({ circuitJson, errorCount }),
   ).toMatchSvgSnapshot(import.meta.path, { scale: 1 })
