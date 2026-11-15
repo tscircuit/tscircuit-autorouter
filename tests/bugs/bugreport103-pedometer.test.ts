@@ -34,7 +34,11 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
   expect(tinySolver.solved).toBe(true)
   expect(tinySolver.iterations).toBe(tinySolver.MAX_ITERATIONS)
   expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).toBe(true)
-  expect(tinySolver.getOutput().solvedRoutes).toHaveLength(230)
+  // Connected plane strips remove 38 redundant bridges before graph routing.
+  expect(tinySolver.problem.routeNet).toHaveLength(192)
+  expect(tinySolver.getOutput().solvedRoutes).toHaveLength(
+    tinySolver.problem.routeNet.length,
+  )
   expect(tinySolver.state.unroutedRoutes).toEqual([])
   for (
     let regionId = 0;
