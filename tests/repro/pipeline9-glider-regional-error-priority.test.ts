@@ -5,6 +5,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import type { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -19,6 +20,15 @@ type ProposalState = {
   }
   candidateRoutes: HighDensityRoute[]
   candidateReference: DrcError[] | { errors: DrcError[] }
+}
+type RegionalRepairControl = {
+  state: {
+    phase: string
+    context: ProposalState["context"]
+    solver?: Pipeline9ClearanceProjectionSolver
+    candidateRoutes?: HighDensityRoute[]
+  }
+  prepareRegions(context: ProposalState["context"]): void
 }
 
 test("Glider circuit repair priorities", async (): Promise<void> => {
@@ -67,9 +77,30 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
     joint.step()
   }
   const solver = joint.initialBoundedRegionalRepairSolver!
+  const control = solver as unknown as RegionalRepairControl
+  while (
+    control.state.phase !== "initial-projection" &&
+    !solver.solved &&
+    !solver.failed
+  ) {
+    solver.step()
+  }
+  // Initial projection now bypasses regional acceptance; replay its real proposal
+  // through production physical, reference and acceptance stages to cover that policy.
+  const originalContext = { ...control.state.context }
+  const projection = control.state.solver!
+  projection.solve()
+  const projectedRoutes = projection.getOutput()
+  solver.step()
+  control.prepareRegions(originalContext)
+  control.state = {
+    phase: "candidate-physical",
+    context: control.state.context,
+    candidateRoutes: projectedRoutes,
+  }
   let decision: ProposalState | undefined
   while (!solver.solved && !solver.failed) {
-    const state = (solver as unknown as { state: ProposalState }).state
+    const state = control.state as ProposalState
     if (state.phase === "accept-candidate") {
       const errors = Array.isArray(state.candidateReference)
         ? state.candidateReference
