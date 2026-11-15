@@ -47,7 +47,7 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
       ...reference,
       traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
     }
-    status = "Remaining DDR routing completed"
+    status = "Remaining DDR copper generated (DRC unqualified)"
   }
   const graphics = convertSrjToGraphicsObject(output)
   graphics.points = []
