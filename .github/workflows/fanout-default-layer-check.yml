@@ -1,0 +1,85 @@
+name: Validate explicit fanout layers without changing default routing
+on:
+  push:
+    branches: [codex/fanout-default-layer-check-20261115]
+permissions:
+  contents: read
+jobs:
+  full-board:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: a518c7951eba97c713372a1be76feec2575fab1d
+          path: .fixed-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned dependencies
+        run: |
+          bun install --ignore-scripts
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          cd ../../.fixed-core
+          bun install --ignore-scripts
+      - name: Fresh route and physical assessment
+        env:
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+          FULL_BOARD_VARIANT: explicit_fanout_layers_only
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          bun build-core.ts ../../.fixed-core
+          bun plane-suite.ts ../../scoped-results fanout
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scoped-fanout-${{ matrix.board }}
+          path: scoped-results
+          retention-days: 14
+  ddr-sample:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: a518c7951eba97c713372a1be76feec2575fab1d
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned core dependencies
+        working-directory: fixed
+        run: bun install --ignore-scripts
+      - name: Route and assess the original DDR sample
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          bun "$GITHUB_WORKSPACE/fixed/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
+            --core "$GITHUB_WORKSPACE/fixed" --circuit "$BOARD_ID" \
+            --out "$GITHUB_WORKSPACE/results" --timeout 600
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          result=json.loads(Path('results/results.json').read_text())
+          print('DDR_REGRESSION_RESULT fixed',json.dumps(result,separators=(',',':')))
+          assert len(result['cases'])==1
+          assert result['cases'][0]['status']=='passed'
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scoped-ddr-${{ matrix.board }}
+          path: results
+          retention-days: 14
