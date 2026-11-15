@@ -37,7 +37,7 @@ async function worker(): Promise<void> {
     const timer=setTimeout(()=>{timedOut=true;child.kill("SIGKILL")},660000)
     const exitCode=await child.exited
     clearTimeout(timer);clearInterval(memory);closeSync(log)
-    const processResult={...task,exitCode,timedOut,wallMs:performance.now()-started,peakRssMb:peakRssKb/1024}
+    const processResult={...task,variant:process.env.FULL_BOARD_VARIANT,exitCode,timedOut,wallMs:performance.now()-started,peakRssMb:peakRssKb/1024}
     writeFileSync(join(folder,"process.json"),JSON.stringify(processResult,null,2))
     const auditLog=openSync(join(folder,"audit.log"),"w")
     const audit=Bun.spawn([process.execPath,"assess.ts",task.id,folder],{cwd:import.meta.dir,env:environment,stdout:auditLog,stderr:auditLog})

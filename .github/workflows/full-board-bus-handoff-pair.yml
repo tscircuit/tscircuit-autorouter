@@ -1,0 +1,54 @@
+name: Compare the plated-hole bus handoff fix on six full boards
+on:
+  push:
+    branches: [codex/full-board-bus-handoff-pair-20261115]
+permissions:
+  contents: read
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [h616, orangecrab, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 73cb1683773bf1d92753f8baf8050ba76a9d5cec
+          path: .base-core
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: dba3a4014a2d90ba0dbfc85b6cb5813097f8a452
+          path: .fixed-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install matching dependencies before either run
+        run: |
+          bun install --ignore-scripts
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          cd ../../.base-core
+          bun install --ignore-scripts
+          cd ..
+          cmp .base-core/package.json .fixed-core/package.json
+          ln -s ../.base-core/node_modules .fixed-core/node_modules
+      - name: Route identical full boards on released core and patched core
+        env:
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          for variant in base fixed; do
+            bun build-core.ts "../../.$variant-core"
+            FULL_BOARD_VARIANT="$variant" bun plane-suite.ts "../../paired-results/$variant"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-board-bus-handoff-${{ matrix.board }}
+          path: paired-results
+          retention-days: 14
