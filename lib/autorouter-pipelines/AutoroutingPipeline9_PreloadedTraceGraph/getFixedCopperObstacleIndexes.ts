@@ -11,9 +11,9 @@ export function getFixedCopperObstacleIndexes({
   for (const [obstacleIndex, obstacle] of inputSrj.obstacles.entries()) {
     if (
       !representedPadObstacleIndexes.has(obstacleIndex) &&
-      obstacle.connectedTo.length > 0 &&
       !obstacle.isCopperPour &&
-      !obstacle.isNonPlatedHole
+      !obstacle.isNonPlatedHole &&
+      !obstacle.isFanoutSourceKeepout
     ) {
       fixedCopperObstacleIndexes.add(obstacleIndex)
     }
