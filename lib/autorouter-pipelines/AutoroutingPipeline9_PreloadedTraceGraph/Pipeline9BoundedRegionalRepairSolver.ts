@@ -763,7 +763,19 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-    if (candidateErrors.length >= context.currentErrors.length) {
+    const currentHasCircuitJsonErrors = context.currentErrors.some(
+      (error): boolean => error.drc_source !== "fixed_copper",
+    )
+    const candidateHasCircuitJsonErrors = candidateErrors.some(
+      (error): boolean => error.drc_source !== "fixed_copper",
+    )
+    // Clearing the prioritized errors can reveal inherited fixed contacts.
+    // Compare priority before count so that this progress is not rejected.
+    if (
+      (candidateHasCircuitJsonErrors && !currentHasCircuitJsonErrors) ||
+      (candidateHasCircuitJsonErrors === currentHasCircuitJsonErrors &&
+        candidateErrors.length >= context.currentErrors.length)
+    ) {
       this.state = { phase: "select-region", context }
       return
     }
