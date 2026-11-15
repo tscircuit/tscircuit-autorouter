@@ -83,7 +83,7 @@ test("Glider projection priority", async (): Promise<void> => {
   joint.solve()
   expect(joint.failed).toBe(false)
   expect(joint.solved).toBe(true)
-  expect(joint.stats.initialBoundedRegionalRepairAccepted).toBe(false)
+  expect(joint.stats.initialBoundedRegionalRepairAccepted).toBe(true)
   expect(evaluate(convert(joint.getOutput())).errors).toEqual([])
   expect(fixture).toEqual(original)
   const firstPass = joint.initialBoundedRegionalRepairSolver!
