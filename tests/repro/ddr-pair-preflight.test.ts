@@ -14,7 +14,7 @@ test("preprocessing admits the native AM62L input with missing pair tolerances",
       import.meta.url,
     ),
   )
-  expect(createHash("sha256").update(fixtureBytes).digest("hex")).toBe(
+  expect(createHash("sha256").update(fixtureBytes.toString("utf8")).digest("hex")).toBe(
     "38c774814decccc3182fdad3735e77489a0cd7a6b3770793a55ae37608ccfd67",
   )
   const inputSrj: SimpleRouteJson = JSON.parse(fixtureBytes.toString())
