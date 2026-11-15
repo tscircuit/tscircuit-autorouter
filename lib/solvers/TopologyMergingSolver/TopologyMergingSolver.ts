@@ -33,6 +33,8 @@ export type {
 const WORKING_NODE_RELEASE_THRESHOLD = 50_000
 
 type TopologyMergingSourceSetKey = string
+type MinY = TopologyMergingRegion["bounds"]["minY"]
+type MaxY = TopologyMergingRegion["bounds"]["maxY"]
 type LayerTopologySelection = ReturnType<
   typeof getLayerTopologiesForCoveredNodes
 >
@@ -59,7 +61,7 @@ export class TopologyMergingSolver extends BaseSolver {
   >()
   private readonly horizontalBucketKeysByTopology = new WeakMap<
     TopologyMergingLayerTopology,
-    Map<number, Map<number, HorizontalTopologyMergingBucketKey>>
+    Map<MinY, Map<MaxY, HorizontalTopologyMergingBucketKey>>
   >()
   private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
@@ -323,13 +325,13 @@ export class TopologyMergingSolver extends BaseSolver {
       keysByMaxY = new Map()
       keysByMinY.set(region.bounds.minY, keysByMaxY)
     }
-    const cachedKey = keysByMaxY.get(region.bounds.maxY)
-    if (cachedKey !== undefined) return cachedKey
+    const cachedBucketKey = keysByMaxY.get(region.bounds.maxY)
+    if (cachedBucketKey !== undefined) return cachedBucketKey
 
     // Slab selections are immutable. Reuse the exact serialized key while
     // weak ownership releases keys for selections no longer in the slab cache.
-    const key = getHorizontalMergeBucketKey(region)
-    keysByMaxY.set(region.bounds.maxY, key)
-    return key
+    const bucketKey = getHorizontalMergeBucketKey(region)
+    keysByMaxY.set(region.bounds.maxY, bucketKey)
+    return bucketKey
   }
 }
