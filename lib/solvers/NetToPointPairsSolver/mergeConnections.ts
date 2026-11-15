@@ -89,6 +89,9 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
+    const hasSourceTraceMetadata = simpleRouteConnectionGroup.some(
+      (connection) => connection.source_trace_id !== undefined,
+    )
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -126,36 +129,21 @@ export function mergeConnections(
       }
 
       if (simpleRouteConnection.nominalTraceWidth !== undefined) {
-        nominalTraceWidth =
-          nominalTraceWidth === undefined
-            ? simpleRouteConnection.nominalTraceWidth
-            : Math.max(
-                nominalTraceWidth,
-                simpleRouteConnection.nominalTraceWidth,
-              )
+        if (hasSourceTraceMetadata) {
+          if (nominalTraceWidth === undefined) {
+            nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+          }
+        } else {
+          nominalTraceWidth =
+            nominalTraceWidth === undefined
+              ? simpleRouteConnection.nominalTraceWidth
+              : Math.max(
+                  nominalTraceWidth,
+                  simpleRouteConnection.nominalTraceWidth,
+                )
+        }
       }
     })
-
-    const definedWidthConnections = simpleRouteConnectionGroup.filter(
-      (connection) => connection.nominalTraceWidth !== undefined,
-    )
-    if (definedWidthConnections.length > 0) {
-      const explicitTraceConnections = definedWidthConnections.filter(
-        (connection) => !/^source_net_\d+$/.test(connection.name),
-      )
-      const widthPool =
-        explicitTraceConnections.length > 0
-          ? explicitTraceConnections
-          : definedWidthConnections
-      const widths = widthPool.map(
-        (connection) => connection.nominalTraceWidth!,
-      )
-      const minWidth = Math.min(...widths)
-      const maxWidth = Math.max(...widths)
-      const minWidthCount = widths.filter((width) => width === minWidth).length
-      nominalTraceWidth =
-        minWidthCount >= 2 && minWidth < maxWidth ? minWidth : maxWidth
-    }
 
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
