@@ -18,10 +18,12 @@ type H616ReachabilityFixture = {
 test("captures H616 ordinary-signal routing around preloaded DDR traces", async (): Promise<void> => {
   const fixture = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/h616-preload-reachability.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/h616-preload-reachability.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString("utf8"),
@@ -33,7 +35,9 @@ test("captures H616 ordinary-signal routing around preloaded DDR traces", async 
   expect(solver.error).toContain("Static reachability precheck failed")
   expect(solver.error).toContain("source_net_1_mst0")
   expect(fixture).toEqual(original)
-  const routedTraces = solver.solved ? solver.getOutputSimplifiedPcbTraces() : []
+  const routedTraces = solver.solved
+    ? solver.getOutputSimplifiedPcbTraces()
+    : []
   const evaluate = createPipeline9AutoroutingDrcEvaluator({
     inputSrj: fixture.srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
