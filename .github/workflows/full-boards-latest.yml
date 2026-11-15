@@ -1,0 +1,45 @@
+name: Fresh routing of six full boards on latest merged solvers
+on:
+  push:
+    branches: [codex/full-boards-latest-20261115]
+permissions:
+  contents: read
+jobs:
+  route:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 73cb1683773bf1d92753f8baf8050ba76a9d5cec
+          path: .latest-core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install current solver and circuit dependencies
+        run: |
+          bun install --ignore-scripts
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          cd ../../.latest-core
+          bun install --ignore-scripts
+      - name: Build the current released core source
+        working-directory: experiments/full-board-priority-analysis
+        run: bun build-core.ts ../../.latest-core
+      - name: Run the full board with fresh planes and with fresh BGA fanout
+        env:
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+        working-directory: experiments/full-board-priority-analysis
+        run: bun plane-suite.ts ../../latest-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-full-${{ matrix.board }}
+          path: latest-results
+          retention-days: 14
