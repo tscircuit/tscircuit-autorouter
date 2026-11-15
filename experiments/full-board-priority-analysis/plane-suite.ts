@@ -7,7 +7,7 @@ const output = resolve(process.argv[2])
 mkdirSync(output, { recursive: true })
 const coreModule = join(import.meta.dir,"patched-core/index.js")
 const copperModule = join(import.meta.dir,"patched-core/find-floating-copper.js")
-const environment = { ...process.env, FULL_BOARD_CORE_MODULE: coreModule, FULL_BOARD_COPPER_MODULE: copperModule }
+const environment: NodeJS.ProcessEnv = { ...process.env, FULL_BOARD_CORE_MODULE: coreModule, FULL_BOARD_COPPER_MODULE: copperModule }
 const revision=Bun.spawnSync(["git","rev-parse","HEAD"],{cwd:import.meta.dir})
 if(revision.exitCode!==0)throw new Error("Cannot record the benchmark revision")
 const routerCommit=new TextDecoder().decode(revision.stdout).trim()
