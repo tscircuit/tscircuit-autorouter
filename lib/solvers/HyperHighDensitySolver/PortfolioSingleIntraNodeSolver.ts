@@ -93,6 +93,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return solvedSegmentCount
   }
 
+  private getEffectiveTraceViaDiameter(margin = 0.1): number {
+    const viaDiameter = this.constructorParams.viaDiameter ?? 0.3
+    const minTraceToHoleEdgeClearance =
+      this.constructorParams.minTraceToHoleEdgeClearance
+    if (minTraceToHoleEdgeClearance === undefined) return viaDiameter
+    const viaHoleDiameter = Math.min(
+      this.constructorParams.viaHoleDiameter ?? viaDiameter * 0.5,
+      viaDiameter,
+    )
+    return Math.max(
+      viaDiameter,
+      viaHoleDiameter + 2 * Math.max(0, minTraceToHoleEdgeClearance - margin),
+    )
+  }
+
   private getNodeSegmentCount(): number {
     this.nodeSegmentCount ??= Math.max(
       1,
@@ -661,6 +676,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         1,
         Math.round(50_000_000 * this.effort),
       )
+      const effectiveViaDiameter =
+        this.getEffectiveTraceViaDiameter(traceMargin)
       const solver = new HighDensitySolverA13WithDrcValidation({
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
@@ -668,7 +685,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         layerCount: this.constructorParams.layerCount ?? 2,
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaDiameter: effectiveViaDiameter,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         traceMargin,
@@ -683,10 +700,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
+      const effectiveViaDiameter =
+        this.getEffectiveTraceViaDiameter(traceMargin)
       const solver = new HighDensitySolverA01({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaDiameter: effectiveViaDiameter,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
@@ -714,13 +733,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             this.constructorParams.allowBlindAndBuriedVias,
         })
       }
+      const effectiveViaDiameter =
+        this.getEffectiveTraceViaDiameter(traceMargin)
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
         staticSegmentValidator,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaDiameter: effectiveViaDiameter,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin,
         traceThickness,
@@ -732,19 +753,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        viaDiameter: this.constructorParams.viaDiameter,
+        viaDiameter: this.getEffectiveTraceViaDiameter(0.1),
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return new SingleTransitionCrossingRouteSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        viaDiameter: this.constructorParams.viaDiameter,
+        viaDiameter: this.getEffectiveTraceViaDiameter(0.1),
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        viaDiameter: this.constructorParams.viaDiameter,
+        viaDiameter: this.getEffectiveTraceViaDiameter(0.1),
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -753,7 +774,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         obstacles: this.constructorParams.obstacles,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount,
-        viaDiameter: this.constructorParams.viaDiameter,
+        viaDiameter: this.getEffectiveTraceViaDiameter(0.1),
         traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
@@ -762,7 +783,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
         hyperParameters: hyperParameters,
-        viaDiameter: this.constructorParams.viaDiameter,
+        viaDiameter: this.getEffectiveTraceViaDiameter(0.1),
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
@@ -794,14 +815,26 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     } else {
       routes = candidateSolver.solvedRoutes
     }
+    const nominalViaDiameter =
+      this.constructorParams.minTraceToHoleEdgeClearance !== undefined
+        ? this.constructorParams.viaDiameter
+        : undefined
     const routesWithRootConnectionNames = routes.map((route) => {
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
         (p) => p.connectionName === route.connectionName,
       )
-      if (matchingPortPoint?.rootConnectionName) {
+      if (
+        nominalViaDiameter !== undefined ||
+        matchingPortPoint?.rootConnectionName
+      ) {
         return {
           ...route,
-          rootConnectionName: matchingPortPoint.rootConnectionName,
+          ...(nominalViaDiameter !== undefined
+            ? { viaDiameter: nominalViaDiameter }
+            : {}),
+          ...(matchingPortPoint?.rootConnectionName
+            ? { rootConnectionName: matchingPortPoint.rootConnectionName }
+            : {}),
         }
       }
       return route
