@@ -230,8 +230,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   }
 
   private initialize(): void {
-    const { originalSrj, routes, syntheticConnectionNames } = this.params
-    if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
+    const { originalSrj, routes } = this.params
+    if (originalSrj.traces?.length) {
       this.finish()
       return
     }
