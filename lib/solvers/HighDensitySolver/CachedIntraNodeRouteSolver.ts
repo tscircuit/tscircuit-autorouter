@@ -199,6 +199,17 @@ export class CachedIntraNodeRouteSolver
       traceWidth: roundCoord(this.traceWidth),
       viaDiameter: roundCoord(this.viaDiameter),
       obstacleMargin: roundCoord(this.obstacleMargin),
+      ...(this.minTraceToHoleEdgeClearance !== undefined
+        ? {
+            minTraceToHoleEdgeClearance: roundCoord(
+              this.minTraceToHoleEdgeClearance,
+            ),
+            viaHoleDiameter:
+              this.viaHoleDiameter !== undefined
+                ? roundCoord(this.viaHoleDiameter)
+                : undefined,
+          }
+        : {}),
       normalizedConnMap,
     }
 
