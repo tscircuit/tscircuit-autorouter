@@ -15,7 +15,7 @@ environment.FULL_BOARD_ROUTER_COMMIT=routerCommit
 const coreBuild = JSON.parse(readFileSync(join(import.meta.dir,"patched-core/build.json"),"utf8"))
 writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,cpu:cpus()[0].model,cpus:cpus().length,memory:totalmem(),concurrency:2,
   routerCommit,...coreBuild,routingBudgetMs:600000,hardProcessBudgetMs:660000},null,2))
-const modes=process.argv[3]==="phased"?["phased"]:["phased","fanout"]
+const modes=process.argv[3]==="phased"?["phased"]:process.argv[3]==="fanout"?["fanout"]:["phased","fanout"]
 const ids=process.env.FULL_BOARD_CASE_IDS ? process.env.FULL_BOARD_CASE_IDS.split(",") : ["h616","icepi","glider","orangecrab","butterstick","imx6"]
 const queue: Task[] = modes.flatMap((mode)=>ids.map((id)=>({id,mode:mode as Task["mode"]})))
 const rows: unknown[] = []
