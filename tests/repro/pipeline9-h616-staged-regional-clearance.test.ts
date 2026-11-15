@@ -120,7 +120,7 @@ test("captures H616 ordinary signals beside previously routed DDR copper", async
       hdRoutes,
       layerCount: srj.layerCount,
       obstacles: srj.obstacles,
-      defaultViaHoleDiameter: srj.minViaHoleDiameter,
+      defaultViaHoleDiameter: srj.minViaHoleDiameter!,
       connMap,
     }),
   })
