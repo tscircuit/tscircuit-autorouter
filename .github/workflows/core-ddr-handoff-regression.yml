@@ -1,0 +1,59 @@
+name: Check the six passing DDR samples against the handoff fix
+on:
+  push:
+    branches: [codex/core-ddr-handoff-regression-20261115]
+permissions:
+  contents: read
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 73cb1683773bf1d92753f8baf8050ba76a9d5cec
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: dba3a4014a2d90ba0dbfc85b6cb5813097f8a452
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install identical dependencies
+        run: |
+          cd base
+          bun install --ignore-scripts
+          cd ..
+          cmp base/package.json fixed/package.json
+          ln -s ../base/node_modules fixed/node_modules
+      - name: Fresh solves and physical assessments on both revisions
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for variant in base fixed; do
+            bun "$GITHUB_WORKSPACE/base/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
+              --core "$GITHUB_WORKSPACE/$variant" --circuit "$BOARD_ID" \
+              --out "$GITHUB_WORKSPACE/results/$variant" --timeout 120
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for variant in ('base','fixed'):
+              result=json.loads(Path(f'results/{variant}/results.json').read_text())
+              print('DDR_REGRESSION_RESULT',variant,json.dumps(result,separators=(',',':')))
+              assert len(result['cases'])==1
+              assert all(case['status']=='passed' for case in result['cases']), variant
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ddr-handoff-${{ matrix.board }}
+          path: results
+          retention-days: 14
