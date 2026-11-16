@@ -1,0 +1,73 @@
+name: Isolate layer-cost and KD-tree effects on the complete dataset18
+on:
+  push:
+    branches: [codex/ddr-pairing-ablation]
+permissions:
+  contents: read
+jobs:
+  dataset18:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [axes_only, layer_only, weights_only]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b1611294ca4088368bd8c23787bd9dcec05a0a8a
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - name: Isolate one experimental policy
+        env:
+          POLICY: ${{ matrix.policy }}
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          policy=os.environ['POLICY']
+          p=Path('lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts')
+          s=p.read_text()
+          axis='const axis = depth % 2 === 0 ? "x" : "y"'
+          assert s.count(axis)==3
+          if policy!='axes_only':
+              first=s.index(axis)+len(axis)
+              s=s[:first]+s[first:].replace(axis,'const axis = depth % 2 ? "x" : "y"')
+          if policy=='weights_only':
+              s=s.replace('new KDTree(pointsCopy, opts.getAdditionalEdgeCost)','new KDTree(pointsCopy)')
+          p.write_text(s)
+          if policy=='axes_only':
+              p=Path('lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts')
+              s=p.read_text()
+              start=s.index('      getAdditionalEdgeCost: (from, to): number =>')
+              end=s.index('    })',start)
+              s=s[:start]+s[end:]
+              p.write_text(s)
+          PYCODE
+          git diff -- lib/solvers/NetToPointPairsSolver
+      - name: Benchmark all 16 samples
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pairing-ablation-${{ matrix.policy }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
+            benchmark-snapshots.html
+          retention-days: 14
+      - name: Export measured report
+        if: always()
+        env:
+          POLICY: ${{ matrix.policy }}
+        run: |
+          python3 - <<'PYCODE'
+          import json,os
+          from pathlib import Path
+          p=Path('benchmark-result.json')
+          if p.exists(): print('ABLATION_RESULT',os.environ['POLICY'],json.dumps(json.loads(p.read_text()),separators=(',',':')))
+          PYCODE
