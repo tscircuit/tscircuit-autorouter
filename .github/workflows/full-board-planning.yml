@@ -85,7 +85,7 @@ jobs:
         include:
           - { board: icepi, cohort: original }
           - { board: glider, cohort: spaced }
-          - { board: imx6, cohort: spaced }
+          - { board: butterstick, cohort: original }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache

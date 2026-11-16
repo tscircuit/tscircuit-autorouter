@@ -391,5 +391,111 @@
       "coarse-diagnostics.json": "8c9dd7fccb7e9b2515574063622d037d12528ca3c569caca0a858a4ae70363c5"
     },
     "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+  },
+  "butterstick-original": {
+    "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+    "implementationHashes": [
+      {
+        "name": "board.tsx",
+        "sha256": "b9a3357323a0ac2fa987aae7640ed955943579de4a2948ea3408f4e6ffa89a41"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+      },
+      {
+        "name": "native-part.tsx",
+        "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "Net-(L3-Pad1)",
+      "Net-(L4-Pad1)",
+      "Net-(L5-Pad1)",
+      "Net-(L6-Pad1)",
+      "Net-(L7-Pad1)",
+      "Net-(L8-Pad1)",
+      "Net-(L9-Pad1)",
+      "P_1V2_A",
+      "P_1V2_T"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": 0,
+      "connectedNets": 9,
+      "requestedRoutableNets": 317,
+      "listedFindingCount": 1,
+      "sharedDrcErrorCount": 0,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "plane_escape",
+        "status": "failed",
+        "connections": 12,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "iteration_limit",
+    "coarseConfiguration": {
+      "plane_escape": {
+        "MAX_ITERATIONS": 4000000,
+        "denseWorkspaceSupported": false,
+        "fixedRouteCount": null,
+        "hookInstalledAtIteration": 0,
+        "initialAssignmentCount": null,
+        "outsideInRouting": false,
+        "partialRipEligibilityCount": 642,
+        "partialRipEnabled": false,
+        "pathingEffort": 1,
+        "pathingFlags": {
+          "FORCE_CENTER_FIRST": true,
+          "RIPPING_ENABLED": true,
+          "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
+          "USE_PREPARED_PORT_POINT_ROUTING": true,
+          "USE_SELECTIVE_RERIP_ROUTING": true
+        },
+        "portCount": 260906,
+        "regionCount": 73062,
+        "reportedPreloadedAssignmentCount": 0,
+        "routeCount": 642,
+        "serializedConnectionCount": 642,
+        "serializedPortCount": 284308,
+        "solveGraphOptions": {
+          "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+          "DISTANCE_TO_COST": 0.05,
+          "GREEDY_FINAL_ROUTE_ITERS": 4,
+          "MAX_ITERATIONS": 4000000,
+          "OUTSIDE_IN_ROUTING": false,
+          "OWNED_REGIONAL_HOP_FRONTIER": true,
+          "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_ENABLED": false,
+          "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+          "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+          "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+          "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+          "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+          "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+          "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+          "RIP_THRESHOLD_END": 0.8,
+          "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+          "RIP_THRESHOLD_START": 0.05,
+          "USE_SPARSE_CANDIDATE_STORAGE": false,
+          "minViaPadDiameter": 0.4
+        }
+      }
+    },
+    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "56b5d4c2d7657e89910445344479252c9406144ca81e3fcc79fca4b23eddd2fa",
+      "assessment.json": "ea78d2d6885c589e0fdf994e52b31556379e42e4de9d1ae943f34af4ec6084fd",
+      "reported-summary.json": "c702c272a4c6e8ccb31108c6657def34dd71e0578ce73b908ef199280c66efe0",
+      "coarse-diagnostics.json": "842af54408200cf5e4f8e5a5ee135e05be04231fbff6804f99ac1c7c302e2da0"
+    },
+    "fullPublishedReferenceSha256": "df0f72c16cb8b9dd28ff77cb81c092af0a19f93c9d877282bb3c6c56a5d3f09e"
   }
 }
