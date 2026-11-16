@@ -10,7 +10,7 @@ const copperModule = join(import.meta.dir,"patched-core/find-floating-copper.js"
 const environment: NodeJS.ProcessEnv = { ...process.env, FULL_BOARD_CORE_MODULE: coreModule, FULL_BOARD_COPPER_MODULE: copperModule }
 const revision=Bun.spawnSync(["git","rev-parse","HEAD"],{cwd:import.meta.dir})
 if(revision.exitCode!==0)throw new Error("Cannot record the benchmark revision")
-const routerCommit=new TextDecoder().decode(revision.stdout).trim()
+const routerCommit=process.env.FULL_BOARD_ROUTER_COMMIT ?? new TextDecoder().decode(revision.stdout).trim()
 environment.FULL_BOARD_ROUTER_COMMIT=routerCommit
 const coreBuild = JSON.parse(readFileSync(join(import.meta.dir,"patched-core/build.json"),"utf8"))
 writeFileSync(join(output,"environment.json"),JSON.stringify({bun:Bun.version,arch:process.arch,cpu:cpus()[0].model,cpus:cpus().length,memory:totalmem(),concurrency:2,
