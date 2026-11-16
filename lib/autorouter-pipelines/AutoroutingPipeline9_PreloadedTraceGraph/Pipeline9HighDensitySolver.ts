@@ -1200,7 +1200,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeB01Solver) {
       this.activeB01Solver.step()
       if (this.activeB01Solver.failed) {
-        this.failedSolvers.push(this.activeB01Solver)
+        if (this.params.captureSearchDebug !== false) {
+          this.failedSolvers.push(this.activeB01Solver)
+        }
         this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
         this.activeB01Solver = null
         if (!this.enableRegionalFallback) {
