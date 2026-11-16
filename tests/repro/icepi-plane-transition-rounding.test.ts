@@ -47,11 +47,9 @@ test("captures iCE/Pi plane transitions at the simplification boundary", async (
   } catch (error) {
     rejection = error
   }
-  expect(rejection).toBeInstanceOf(Error)
-  expect((rejection as Error).message).toContain(
-    "could not find transition layers for via",
-  )
-  expect(merger.failed).toBe(true)
+  expect(rejection).toBeUndefined()
+  expect(merger.failed).toBe(false)
+  expect(merger.solved).toBe(true)
   expect(routes).toEqual(fixture.stitchedRoutes)
   const graphics = merger.visualize()
   graphics.rects ??= []
