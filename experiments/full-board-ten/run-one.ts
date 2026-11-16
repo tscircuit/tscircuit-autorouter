@@ -30,7 +30,25 @@ closeSync(log)
 const busObserverPath = join(output, "bus-negotiation-observer.json")
 if (existsSync(busObserverPath)) {
   const report = JSON.parse(readFileSync(busObserverPath, "utf8"))
-  const { searchSummary, ...summary } = report.summary
+  const { searchSummary } = report.summary
+  const summary = {
+    counts: report.summary.counts,
+    pipelineAttempts: report.summary.pipelineAttempts.map(row => ({ pipelineId: row.pipelineId, attempt: row.attempt, phase: row.phase })),
+    invocationCount: report.summary.invocations.length,
+    nullReasonCounts: report.summary.invocations.reduce((counts, row) => {
+      for (const reason of row.nullReasons) {
+        const key = typeof reason === "string" ? reason : reason.reason
+        counts[key] = (counts[key] ?? 0) + 1
+      }
+      return counts
+    }, {}),
+    coverage: report.summary.coverage,
+    observerError: report.summary.observerError,
+    observerCompletedWithoutError: report.summary.observerCompletedWithoutError,
+    observedCompletedNull: report.summary.observedCompletedNull,
+    observedBoundedResult: report.summary.observedBoundedResult,
+    limits: report.summary.limits,
+  }
   const totals = new Map<string, { nativeNet: string; stage: string; searches: number; solved: number; interruptedBeforeCancel: number; failedByReason: Record<string, number> }>()
   for (const row of searchSummary) {
     const key = `${row.nativeNet}|${row.stage}`
@@ -116,7 +134,7 @@ if (existsSync(compressedCircuit)) {
   // The raw file was created above solely for the unchanged original assessors.
   unlinkSync(rawCircuit)
   const findings = join(output, "findings.json")
-  if (existsSync(findings) && task.experiment === "bus-observer") {
+  if (existsSync(findings) && task.experiment === "bus-antipad-candidate") {
     const viaPadErrors = JSON.parse(readFileSync(findings, "utf8")).viaPad
     const selectedErrors = viaPadErrors.slice(0, 4)
     const ids = new Set<string>(selectedErrors.flatMap(error => error.pcb_pad_ids))

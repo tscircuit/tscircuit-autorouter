@@ -9,7 +9,7 @@ import { instrumentCore2392, ORIGINAL_CORE_SHA256 } from "./instrument-core2392.
 const root = resolve(process.argv[2])
 const manifestPath = join(root, "runtime-manifest.json")
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
-if (manifest.mainVersion !== "0.0.3198" || manifest.experiment !== "bus-observer" || manifest.coreObserver) {
+if (manifest.mainVersion !== "0.0.3198" || !["bus-observer", "bus-antipad-candidate"].includes(manifest.experiment) || manifest.coreObserver) {
   throw new Error("Expected a fresh published3198 bus-observer benchmark runtime")
 }
 const core = manifest.packages.find(item => item.name === "@tscircuit/core")

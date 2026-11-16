@@ -1,8 +1,8 @@
-name: Published3198 H616 bus failure observation
+name: Published3198 H616 bus antipad candidate
 
 on:
   push:
-    branches: [bench/full-board-bus-diagnostic-3198]
+    branches: [bench/full-board-bus-antipad-3198]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: bus-observer, cohorts: "original" }
+          - { board: h616, experiment: bus-antipad-candidate, cohorts: "original" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -80,6 +80,9 @@ jobs:
       - name: Install the isolated observation copy after preparing the original assessor
         run: bun experiments/full-board-bus-diagnostic/install-observer.mjs "$FULL_BOARD_ROOT"
 
+      - name: Apply the isolated bus antipad candidate
+        run: bun experiments/full-board-bus-diagnostic/install-antipad-candidate.mjs "$FULL_BOARD_ROOT"
+
       - name: Run original full circuit
         id: original
         if: contains(matrix.cohorts, 'original')
@@ -125,9 +128,9 @@ jobs:
         if: always()
         run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
 
-      - name: Require the observed result to match the latest published control
+      - name: Compare physical completion against the latest published control
         if: always()
-        run: python3 experiments/full-board-bus-diagnostic/check-parity.py "$FULL_BOARD_ROOT"
+        run: python3 experiments/full-board-bus-diagnostic/compare-candidate.py "$FULL_BOARD_ROOT"
 
       - name: Preserve small reports and provenance
         if: always()
@@ -143,7 +146,8 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
             .full-board-run/bus-observer-proof.json
-            .full-board-run/bus-observer-parity.json
+            .full-board-run/bus-antipad-candidate-proof.json
+            .full-board-run/bus-antipad-comparison.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json

@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 15263,
-      "sha256": "ffe21013ea545dc4c61ee5c30ba32515c6f1e4c3b7d61a40747325588783bcad"
+      "bytes": 15304,
+      "sha256": "72417087163690ef7e594aeb32af2b5920d4d0e06b00c0c9e74ccb7fb1e7d650"
     },
     {
       "name": "run-one.ts",
-      "bytes": 15345,
-      "sha256": "80ccc5c3c4e52dcbea48076c54190ba021c928550e0f36a2a5a37db3f4e589ae"
+      "bytes": 16209,
+      "sha256": "18612a04408606d9803aee7548ea64ef392466e4f5f82feca6346f278f90d5de"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -51,5 +51,12 @@
     "instrumentedCoreSha256": "76197e17b2d765dda6f5b354b477f7e0d82e5cff729c8768811b49fd9a6956a9",
     "boundedChecksPassed": 14,
     "independentReview": "clear"
+  },
+  "busAntipadCandidate": {
+    "installerSha256": "57ff83afab96c4bcae63f2b9bce6d9e01479e919fa55056489f06ad81f7e20ad",
+    "observedCoreSha256": "f4bebcada3969ca01df1d68f2e36228631de6d8f7fb81c45413a423bd053797b",
+    "boundedControlsPassed": 10,
+    "scope": "Intermediate via-pour interactions only; planar carrier and physical copper checks retained",
+    "nativeCompletionProven": false
   }
 }

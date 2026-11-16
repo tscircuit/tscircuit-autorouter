@@ -60,8 +60,8 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// The diagnostic Core copy only observes existing bus decisions; its exact
-// source changes and original published identity are recorded in the manifest.
+// The isolated Core copy carries the explicit bus candidate and observer.
+// Its exact source changes and original published identity are in the manifest.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const runtimeIdentity = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
 const expectedRuntime = runtimeIdentity.packages
@@ -82,7 +82,7 @@ function readablePackage(folder: string, name: string): boolean {
   try { return JSON.parse(readFileSync(join(folder, "package.json"), "utf8")).name === name }
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
-if (!runtimeIdentity.coreObserver || task.id !== "h616" || task.cohort !== "original") throw new Error("This diagnostic only observes the native H616 original board")
+if (!runtimeIdentity.coreObserver || !runtimeIdentity.coreAntipadCandidate || task.id !== "h616" || task.cohort !== "original") throw new Error("This diagnostic only observes the native H616 original board")
 let activeByte0 = false
 const busObserver = createBus58NegotiationObserver({ isActive: () => activeByte0 })
 busObserver.install()
