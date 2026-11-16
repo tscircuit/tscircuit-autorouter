@@ -109,19 +109,10 @@ test("full motherboard reuses existing vias when planning plane connections", as
         fill: "none",
         stroke: "#475569",
       },
-      ...board.rects.map((rect) => ({
-        ...rect,
-        label: undefined,
-        fill: "#cbd5e1",
-        stroke: "none",
-      })),
+      ...board.rects,
     ],
     lines: [
-      ...board.lines.map((line) => ({
-        ...line,
-        label: undefined,
-        strokeColor: "#2563eb",
-      })),
+      ...board.lines,
       ...groundPairs.map((connection) => ({
         points: connection.pointsToConnect,
         strokeColor: "#db2777",
@@ -143,7 +134,7 @@ test("full motherboard reuses existing vias when planning plane connections", as
       {
         x: 0,
         y: 58,
-        text: "Complete 154 x 97 mm board / 6 copper layers / components on top",
+        text: "154 x 97 mm / 6 copper layers / components on top / routing incomplete",
         fontSize: 1.8,
       },
       { x: -63, y: 51, text: "PD INPUT", fontSize: 1.5 },
@@ -174,7 +165,7 @@ test("full motherboard reuses existing vias when planning plane connections", as
       {
         x: 0,
         y: -76,
-        text: "PINK = GND requests, not copper / BLUE = existing dogbone copper / ORANGE = new GND via plans",
+        text: "Layer colors = pads and existing copper / PINK dashed = GND requests / ORANGE = new GND via plans",
         fontSize: 1.6,
       },
       {
