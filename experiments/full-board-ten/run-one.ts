@@ -58,6 +58,7 @@ if (existsSync(compressedCircuit)) {
   auditExitCode = await audit.exited
   clearTimeout(auditTimer)
   closeSync(auditLog)
+  if (auditExitCode !== 0) console.error(`FULL_BOARD_ASSESSMENT_ERROR ${task.id} ${task.cohort}\n${readFileSync(join(output, "audit.log"), "utf8")}`)
   // The raw file was created above solely for the unchanged original assessors.
   unlinkSync(rawCircuit)
   const findings = join(output, "findings.json")
@@ -70,6 +71,7 @@ const assessment = existsSync(assessmentPath) ? JSON.parse(readFileSync(assessme
 const assessmentReady = auditExitCode === 0 && !auditTimedOut && assessment !== null
 let connectedNets: number | null = null
 if (assessmentReady) {
+  console.log(`FULL_BOARD_ASSESSMENT ${JSON.stringify({ id: task.id, cohort: task.cohort, assessment })}`)
   if (typeof assessment.connectedNets !== "number") throw new Error("Assessor omitted physical net completion count")
   connectedNets = assessment.connectedNets
   if (task.cohort === "original" && assessment.routableNets !== task.expectedRoutableNets) throw new Error("Original requested-net denominator changed")

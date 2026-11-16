@@ -22,6 +22,8 @@ const coreBytes = readFileSync(coreEntry)
 if (!coreBytes.includes(Buffer.from("var findFloatingCopper ="))) throw new Error("Published Core changed helper layout; inspect before running")
 const helperRoot = join(output, "assessment-core")
 mkdirSync(helperRoot, { recursive: true })
+// Give the copied bundle its own scope instead of the checkout's AR self-reference.
+writeFileSync(join(helperRoot, "package.json"), JSON.stringify({ name: "published-core-assessment", private: true, type: "module" }, null, 2))
 const tail = "\nexport { findFloatingCopper as benchmarkFindFloatingCopper };\n"
 const files: any[] = []
 for (const name of readdirSync(dirname(coreEntry)).filter(name => name.endsWith(".js"))) {
