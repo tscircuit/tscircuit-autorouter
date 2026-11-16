@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createHighDensityDiagnostics } from "./createHighDensityDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -124,6 +125,40 @@ const finishCoarseDiagnostics = (): void => {
   if (report) coarseReports.push(report)
   if (coarseReports.length) atomic("coarse-diagnostics.json", JSON.stringify({ reports: coarseReports }, null, 2))
 }
+const highDensityTarget = executionMode === "full" && task.cohort === "spaced"
+  ? ({ h616: "topology_merge_7204", icepi: "topology_merge_17108" } as Record<string, string>)[task.id]
+  : undefined
+let highDensityObserver: ReturnType<typeof createHighDensityDiagnostics> | undefined
+progress.highDensityInstrumentation = { enabled: Boolean(highDensityTarget), phase: "other_signals", targetNodeId: highDensityTarget ?? null }
+const finishHighDensityDiagnostics = (): void => {
+  highDensityObserver?.finish()
+  highDensityObserver = undefined
+}
+const saveHighDensityDiagnostics = (report: Record<string, any>, event: string): void => {
+  const artifact = "hd-diagnostics.json"
+  atomic(artifact, JSON.stringify({ ...report, provenance: { runtime: progress.runtime, sourceSha256: task.sourceSha256, phaseInputSha256: running()?.inputSha256 ?? null } }, null, 2))
+  if (!["b01-outcome", "regional-outcome", "finished"].includes(event)) return
+  const attempts = event === "b01-outcome" ? report.b01Attempts : report.regionalAttempts
+  const attempt = event === "finished" ? undefined : attempts.at(-1)
+  const packet = { board: task.id, cohort: task.cohort, phase: report.phase, targetNodeId: report.targetNodeId, event, artifact, attempt }
+  const bytes = JSON.stringify(packet)
+  if (event !== "finished" && Buffer.byteLength(bytes) <= 24000) {
+    console.log(`FULL_BOARD_HD_PACKET ${bytes}`)
+  } else {
+    const final = attempt?.final
+    const node = attempt?.constructorParams.nodeWithPortPoints
+    console.log(`FULL_BOARD_HD_SUMMARY ${JSON.stringify({
+      ...packet, attempt: undefined, packetBytes: Buffer.byteLength(bytes), packetSha256: sha(bytes),
+      completePacketInArtifact: event !== "finished", targetObserved: report.targetObserved ?? null,
+      b01Attempts: report.b01Attempts.length, regionalAttempts: report.regionalAttempts.length,
+      outcome: final ? { name: final.name, iterations: final.iterations, maxIterations: final.maxIterations, maxRips: final.maxRips, error: final.error, stats: final.stats } : null,
+      node: node ? { center: node.center, width: node.width, height: node.height, availableZ: node.availableZ, portPointCount: node.portPoints.length, pairedPortCount: node.portPointsInPairs?.length ?? null } : null,
+      obstacleCount: attempt?.constructorParams.obstacles?.length ?? null,
+      boardObstacleCount: attempt?.constructorParams.boardObstacles?.length ?? null,
+      highDensity: report.highDensityFinal ?? null,
+    })}`)
+  }
+}
 for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:error"] as const) {
   circuit.on(eventName, (event: any): void => {
     if (event.cacheStatus && event.cacheStatus !== "disabled") throw new Error(`Unexpected routing cache status ${event.cacheStatus}`)
@@ -139,6 +174,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       atomic(`phase-${index}-input.srj.json.gz`, gzipSync(inputBytes, { level: 1 }))
       progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason })
     } else {
+      if (highDensityObserver) finishHighDensityDiagnostics()
       const phase = running()
       if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs }
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))
@@ -160,6 +196,14 @@ circuit.on("solver:started", (event: any): void => {
   const options = event.solverParams?.options
   if (options?.cacheProvider) throw new Error("Unexpected solver cache provider")
   const phaseName = running()?.name
+  if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && highDensityTarget && phaseName === "other_signals") {
+    if (highDensityObserver) throw new Error("HD target phase started twice")
+    highDensityObserver = createHighDensityDiagnostics({
+      pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
+      targetNodeId: highDensityTarget, targetPhase: "other_signals", onSnapshot: saveHighDensityDiagnostics,
+    })
+    highDensityObserver.onSolverStarted(event, phaseName)
+  }
   if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && targetPhase && (targetPhase === "*" || phaseName === targetPhase)) {
     finishCoarseDiagnostics()
     coarseObserver = createCoarseRoutingDiagnostics({
@@ -181,6 +225,7 @@ const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
   finishCoarseDiagnostics()
+  finishHighDensityDiagnostics()
   save(true)
   process.exit(124)
 }, 900000)
@@ -198,6 +243,7 @@ try {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
   finishCoarseDiagnostics()
+  finishHighDensityDiagnostics()
   save(true)
   try {
     atomic("pcb.svg.gz", gzipSync(convertCircuitJsonToPcbSvg(circuit.getCircuitJson(), { width: 1600, height: 1100, backgroundColor: "white", shouldDrawRatsNest: false, shouldDrawErrors: false, showPcbGroups: false }), { level: 1 }))
