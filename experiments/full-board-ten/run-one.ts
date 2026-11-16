@@ -1,7 +1,8 @@
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs"
+import { dirname, join, resolve } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHash } from "node:crypto"
+import { collectGliderQualityDiagnostics } from "./collectGliderQualityDiagnostics"
 
 const [caseFile, outputArg, executionMode = "full"] = process.argv.slice(2)
 if (!caseFile || !outputArg) throw new Error("Usage: run-one.ts CASE.json OUTPUT")
@@ -45,6 +46,15 @@ if (existsSync(diagnosticPath)) {
       neverSuccessfullyRoutedCount: report.final.neverSuccessfullyRouted.length, candidateQueueLength: report.final.candidateQueueLength,
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
+  const wanted = ["acceptedBestSolutionOnTimeout", "acceptedGreedyFinalRouteOnTimeout", "finalRoutingStrategy", "greedyFinalRouteIter", "greedyFinalRouteRemainingRouteCount", "greedyFinalRouteMaxIterations", "greedyFinalRouteAttemptCount", "neverSuccessfullyRoutedRouteCount", "maxRegionCost", "totalRegionCost", "bestRegionCost", "bestMaxRegionCost", "bestTotalRegionCost"]
+  const acceptance = diagnostic.reports.map((report: any) => {
+    const stats = report.final?.stats
+    return { phase: report.phase, recordedStatsAvailable: Boolean(stats && typeof stats === "object" && Object.keys(stats).length),
+      values: Object.fromEntries(wanted.filter(key => stats && Object.hasOwn(stats, key)).map(key => [key, stats[key]])),
+      absentKeys: wanted.filter(key => !stats || !Object.hasOwn(stats, key)) }
+  })
+  writeFileSync(join(output, "acceptance-stats.json"), JSON.stringify(acceptance, null, 2))
+  console.log(`BUDGET_EXISTING_ACCEPTANCE_STATS ${JSON.stringify({ id: task.id, cohort: task.cohort, reports: acceptance, interpretation: "Stored parent stats only. Child cap is not actual child work; configured attempts are not actual attempts; iter0 is ambiguous without finalRoutingStrategy." })}`)
 }
 if (task.budgetDiagnostic) {
   const proof = task.budgetDiagnostic
@@ -136,3 +146,21 @@ const result = {
 }
 writeFileSync(join(output, "result.json"), JSON.stringify(result, null, 2))
 console.log(`FULL_BOARD_CASE_RESULT ${JSON.stringify(result)}`)
+
+if (task.id === "glider" && task.cohort === "spaced" && assessmentReady) {
+  let quality: Record<string, any>
+  try {
+    const mapEntry = realpathSync(Bun.resolveSync("circuit-json-to-connectivity-map", import.meta.dir))
+    const checksEntry = realpathSync(Bun.resolveSync("@tscircuit/checks", import.meta.dir))
+    if (realpathSync(Bun.resolveSync("circuit-json-to-connectivity-map", dirname(checksEntry))) !== mapEntry) throw new Error("Checker and quality canonical helpers differ")
+    const circuit = JSON.parse(gunzipSync(readFileSync(compressedCircuit)).toString())
+    const findings = JSON.parse(gunzipSync(readFileSync(join(output, "findings.json.gz"))).toString())
+    quality = collectGliderQualityDiagnostics(circuit, findings, assessment)
+    quality.canonicalMapEntrySha256 = createHash("sha256").update(readFileSync(mapEntry)).digest("hex")
+  } catch (error) {
+    quality = { status: "diagnostic-error", message: error instanceof Error ? error.message : String(error), countsUnchanged: assessment.findings }
+  }
+  writeFileSync(join(output, "quality-diagnostics.json"), JSON.stringify(quality, null, 2))
+  const packet = JSON.stringify({ id: task.id, cohort: task.cohort, quality })
+  console.log(`GLIDER_QUALITY_DIAGNOSTIC ${Buffer.byteLength(packet) < 24 * 1024 ? packet : JSON.stringify({ id: task.id, cohort: task.cohort, status: "packet-size-error", countsUnchanged: assessment.findings })}`)
+}

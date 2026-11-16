@@ -1,0 +1,59 @@
+{
+  "frozen": true,
+  "base": "4534c46e1840b0bcf0f392f475508f43ad9cf6e9",
+  "branch": "bench/glider-budget-quality-3200",
+  "routingOverrideSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+  "cases": [
+    "glider/spaced",
+    "imx6/spaced"
+  ],
+  "limitsMs": [
+    1800000,
+    1860000,
+    180000
+  ],
+  "sourceRuntimeAndAssessmentChanged": false,
+  "routingChangedFromReference": false,
+  "checks": {
+    "metadataParityRoundtrip": true,
+    "missingStoredStatsRejected": true,
+    "actualViaInPadIdSchemaResolved": true,
+    "collectorInputUnchanged": true,
+    "sixSyntheticRepresentatives": true,
+    "syntheticPacketBytes": 9548,
+    "pythonYamlAndBunSyntax": true,
+    "diffCheck": true
+  },
+  "files": [
+    {
+      "name": ".github/workflows/full-board-ten.yml",
+      "bytes": 5507,
+      "sha256": "a9de978ce2d18047aa845bf7cd2d1e56a8c321c16c30ba3562fff3ad7e88e2bb"
+    },
+    {
+      "name": "experiments/full-board-ten/run-one.ts",
+      "bytes": 14661,
+      "sha256": "ac2abfd572cdd6f026e7d8143f7f00839c0b689da44c0bfc94a757ee02b3039a"
+    },
+    {
+      "name": "experiments/full-board-ten/harness-provenance.json",
+      "bytes": 4029,
+      "sha256": "b9af53509dc460f90d662735bcc9a3d236948baefd3029ea107ee1f5284aafbb"
+    },
+    {
+      "name": "experiments/full-board-ten/collectGliderQualityDiagnostics.ts",
+      "bytes": 10298,
+      "sha256": "c1ac397d1d1541444670cb7687b74a75fc2d79456552e93b4522997c4c023086"
+    },
+    {
+      "name": "experiments/full-board-ten/check-budget-quality-parity.py",
+      "bytes": 4892,
+      "sha256": "e905da628ef7fa6b11a39fe4dc7a30068c45cd9e4af39306b17c171692944a50"
+    },
+    {
+      "name": "experiments/full-board-ten/quality-reference.json",
+      "bytes": 19268,
+      "sha256": "070427c8cec5ae43d68d8415f9e945e3a786c552b5f26a378663081d5fa33e3a"
+    }
+  ]
+}

@@ -1,0 +1,561 @@
+{
+  "referenceRunId": 43915799056,
+  "referenceHead": "4534c46e1840b0bcf0f392f475508f43ad9cf6e9",
+  "cases": {
+    "glider": {
+      "requestedNets": 356,
+      "connectedNets": 332,
+      "unconnectedNativeNamesSha256": "fc6d3ec8d757c7e1586a927c26a5865d7fbdfedb63ac3e66138f1595151ac1d5",
+      "pcbTraces": 528,
+      "vias": 658,
+      "wireLengthMm": 8212.910580816959,
+      "findings": {
+        "missing_traces": 0,
+        "disconnected_ports": 707,
+        "trace_overlap": 29,
+        "pad_trace": 13,
+        "via_trace": 45,
+        "via_pad": 25,
+        "via_spacing": 23,
+        "contiguous": 0,
+        "via_in_pad": 8,
+        "hole_trace": 0,
+        "width": 0
+      },
+      "sourceCounts": {
+        "source_component": 379,
+        "source_net": 356,
+        "pcb_smtpad": 1679,
+        "pcb_plated_hole": 11,
+        "pcb_hole": 10
+      },
+      "lastError": "fQ ran out of iterations (capacity-autorouter@0.0.1107)",
+      "lastPhase": "power",
+      "routingSourceSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+      "limitsMs": [
+        1800000,
+        1860000,
+        180000
+      ],
+      "coarseProjection": [
+        {
+          "id": "glider",
+          "cohort": "spaced",
+          "phase": "other_signals",
+          "inputNetCount": 283,
+          "innerHookInstalled": true,
+          "configured": {
+            "className": "fQ",
+            "hookInstalledAtIteration": 0,
+            "routeCount": 539,
+            "portCount": 103408,
+            "regionCount": 25609,
+            "serializedPortCount": 120962,
+            "serializedConnectionCount": 539,
+            "MAX_ITERATIONS": 4000000,
+            "solveGraphOptions": {
+              "DISTANCE_TO_COST": 0.05,
+              "RIP_THRESHOLD_START": 0.05,
+              "RIP_THRESHOLD_END": 0.8,
+              "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+              "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+              "GREEDY_FINAL_ROUTE_ITERS": 4,
+              "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+              "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+              "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+              "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+              "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+              "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+              "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+              "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+              "minViaPadDiameter": 0.45,
+              "OWNED_REGIONAL_HOP_FRONTIER": true,
+              "USE_SPARSE_CANDIDATE_STORAGE": false,
+              "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+              "MAX_ITERATIONS": 4000000,
+              "PARTIAL_RIP_ENABLED": false,
+              "OUTSIDE_IN_ROUTING": false
+            },
+            "partialRipEnabled": false,
+            "outsideInRouting": false,
+            "initialAssignmentCount": 882,
+            "fixedRouteCount": 3,
+            "reportedPreloadedAssignmentCount": 882,
+            "partialRipEligibilityCount": 882,
+            "pathingEffort": 1,
+            "pathingFlags": {
+              "FORCE_CENTER_FIRST": true,
+              "RIPPING_ENABLED": true,
+              "USE_SELECTIVE_RERIP_ROUTING": true,
+              "USE_PREPARED_PORT_POINT_ROUTING": true,
+              "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true
+            },
+            "denseWorkspaceSupported": true
+          },
+          "lifecycleCounts": {
+            "pathFoundCalls": 1014,
+            "pathsCommitted": 506,
+            "goalApproachesQueued": 506,
+            "rejectedGoalApproaches": 2,
+            "nonfiniteGoalApproachesWithoutPriorGoal": 0,
+            "rejectionsWithExistingGoalCandidate": 2,
+            "exhaustedSearches": 3,
+            "globalResets": 1,
+            "finalAcceptances": 1
+          },
+          "firstExhaustedSearch": {
+            "iteration": 2315818,
+            "route": {
+              "routeId": 383,
+              "netId": 191,
+              "connectionId": "source_net_186",
+              "connectionName": "source_net_186",
+              "rootConnectionNames": [
+                "source_net_186"
+              ],
+              "portIds": [
+                100792,
+                100793
+              ],
+              "portPoints": [
+                {
+                  "x": -13,
+                  "y": -9.400000000000006,
+                  "z": 0
+                },
+                {
+                  "x": 10.862499999999997,
+                  "y": -5.899999999999997,
+                  "z": 0
+                }
+              ],
+              "terminalCount": 2,
+              "terminals": [
+                {
+                  "pointId": "pcb_port_1133",
+                  "pcbPortId": "pcb_port_1133",
+                  "x": -13,
+                  "y": -9.400000000000006,
+                  "layers": null
+                },
+                {
+                  "pointId": "pcb_port_1448",
+                  "pcbPortId": "pcb_port_1448",
+                  "x": 10.862499999999997,
+                  "y": -5.899999999999997,
+                  "layers": null
+                }
+              ]
+            },
+            "queueLength": 0,
+            "recovery": {
+              "event": "onOutOfCandidates",
+              "iteration": 2315818,
+              "routeId": 383,
+              "ripCount": 1,
+              "selectiveRipCount": 1,
+              "selectivelyRippedRouteCount": 1,
+              "globalReripCount": 0,
+              "alternateBlockerSearchCount": 0,
+              "alternateOwnerCount": 0,
+              "failedOwnerPairCount": 1,
+              "maxFailedOwnerPairCount": 1,
+              "failedOwnerPairs": [
+                {
+                  "failedRouteId": 383,
+                  "ownerRouteId": 517,
+                  "count": 1
+                }
+              ],
+              "lastDirectOwnerRouteIds": [
+                517
+              ],
+              "lastRepeatedOwnerRouteIds": [],
+              "lastAlternateOwnerRouteIds": [],
+              "lastRippedRouteIds": [
+                517
+              ],
+              "lastRelaxedSearchExpandedLabelCount": 287,
+              "lastAlternateSearchExpandedLabelCount": 0,
+              "lastFailedRouteId": 383
+            }
+          },
+          "firstRejectedGoalApproach": {
+            "iteration": 810247,
+            "route": {
+              "routeId": 77,
+              "netId": 10,
+              "connectionId": "source_net_158_mst0",
+              "connectionName": "source_net_158_mst0",
+              "rootConnectionNames": [
+                "source_net_158"
+              ],
+              "portIds": [
+                100180,
+                100181
+              ],
+              "portPoints": [
+                {
+                  "x": 16.499999999999996,
+                  "y": -8.737499999999997,
+                  "z": 0
+                },
+                {
+                  "x": 16.9,
+                  "y": -8.737499999999997,
+                  "z": 0
+                }
+              ],
+              "terminalCount": 2,
+              "terminals": [
+                {
+                  "pointId": "pcb_port_1410",
+                  "pcbPortId": "pcb_port_1410",
+                  "x": 16.499999999999996,
+                  "y": -8.737499999999997,
+                  "layers": null
+                },
+                {
+                  "pointId": "pcb_port_1411",
+                  "pcbPortId": "pcb_port_1411",
+                  "x": 16.9,
+                  "y": -8.737499999999997,
+                  "layers": null
+                }
+              ]
+            },
+            "candidatePortId": 78018,
+            "regionId": 20377,
+            "queueLength": 13,
+            "cost": 0.036230945465232575,
+            "previousGoalCost": 0.036230945465232575,
+            "region": {
+              "regionId": 20377,
+              "serializedRegionId": "cmn_2449",
+              "center": {
+                "x": 16.9,
+                "y": -8.737499999999997
+              },
+              "width": 0.20000000000000284,
+              "height": 0.875,
+              "sourceBounds": null,
+              "sourceCenter": {
+                "x": 16.9,
+                "y": -8.737499999999997
+              },
+              "sourceWidth": 0.20000000000000284,
+              "sourceHeight": 0.875,
+              "availableZMask": 1,
+              "reservedNetId": 10,
+              "incidentPortCount": 8,
+              "ports": [
+                {
+                  "portId": 77108,
+                  "serializedPortId": "ce65569_pp0_z0::0",
+                  "x": 16.9,
+                  "y": -9.174999999999999,
+                  "z": 0,
+                  "nativeAngle": 31500,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    19957,
+                    20377
+                  ]
+                },
+                {
+                  "portId": 77121,
+                  "serializedPortId": "ce65598_pp0_z0::0",
+                  "x": 16.9,
+                  "y": -8.299999999999997,
+                  "z": 0,
+                  "nativeAngle": 13500,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    19967,
+                    20377
+                  ]
+                },
+                {
+                  "portId": 78017,
+                  "serializedPortId": "ce66506_pp0_z0::0",
+                  "x": 16.799999999999997,
+                  "y": -8.979999999999997,
+                  "z": 0,
+                  "nativeAngle": 24994,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    20328,
+                    20377
+                  ]
+                },
+                {
+                  "portId": 78018,
+                  "serializedPortId": "ce66506_pp1_z0::0",
+                  "x": 16.799999999999997,
+                  "y": -8.494999999999997,
+                  "z": 0,
+                  "nativeAngle": 20006,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    20328,
+                    20377
+                  ]
+                },
+                {
+                  "portId": 78263,
+                  "serializedPortId": "ce66650_pp0_z0::0",
+                  "x": 17,
+                  "y": -8.979999999999997,
+                  "z": 0,
+                  "nativeAngle": 2006,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    20377,
+                    20402
+                  ]
+                },
+                {
+                  "portId": 78264,
+                  "serializedPortId": "ce66650_pp1_z0::0",
+                  "x": 17,
+                  "y": -8.494999999999997,
+                  "z": 0,
+                  "nativeAngle": 6994,
+                  "assignmentNetId": -1,
+                  "reservationNetId": -1,
+                  "incidentRegions": [
+                    20377,
+                    20402
+                  ]
+                },
+                {
+                  "portId": 100181,
+                  "serializedPortId": "tiny-terminal:end-port:source_net_158_mst0",
+                  "x": 16.9,
+                  "y": -8.737499999999997,
+                  "z": 0,
+                  "nativeAngle": 4500,
+                  "assignmentNetId": -1,
+                  "reservationNetId": 10,
+                  "incidentRegions": [
+                    20377,
+                    24814
+                  ]
+                },
+                {
+                  "portId": 100187,
+                  "serializedPortId": "tiny-terminal:end-port:source_net_158_mst3",
+                  "x": 16.9,
+                  "y": -8.737499999999997,
+                  "z": 0,
+                  "nativeAngle": 4500,
+                  "assignmentNetId": -1,
+                  "reservationNetId": 10,
+                  "incidentRegions": [
+                    20377,
+                    24820
+                  ]
+                }
+              ],
+              "omittedPortCount": 0,
+              "segmentCount": 0,
+              "foreignSegmentCount": 0,
+              "omittedSegmentCount": 0,
+              "segments": []
+            }
+          },
+          "firstNonfiniteGoalApproachWithoutPriorGoal": null,
+          "final": {
+            "iterations": 4000000,
+            "MAX_ITERATIONS": 4000000,
+            "currentRoute": null,
+            "pendingRouteCount": 0,
+            "neverAttemptedCount": 63,
+            "iterationsSincePreviousRouteEvent": 97063,
+            "neverSuccessfullyRoutedCount": 0,
+            "candidateQueueLength": 0,
+            "bestCompleteSnapshotPresent": true,
+            "selectiveRerip": {
+              "selectiveRipCount": 3,
+              "selectivelyRippedRouteCount": 3,
+              "globalReripCount": 0,
+              "alternateBlockerSearchCount": 0,
+              "alternateOwnerCount": 0,
+              "failedOwnerPairCount": 3,
+              "maxFailedOwnerPairCount": 1,
+              "failedOwnerPairs": [
+                {
+                  "failedRouteId": 383,
+                  "ownerRouteId": 517,
+                  "count": 1
+                },
+                {
+                  "failedRouteId": 388,
+                  "ownerRouteId": 76,
+                  "count": 1
+                },
+                {
+                  "failedRouteId": 399,
+                  "ownerRouteId": 80,
+                  "count": 1
+                }
+              ],
+              "lastDirectOwnerRouteIds": [
+                80
+              ],
+              "lastRepeatedOwnerRouteIds": [],
+              "lastAlternateOwnerRouteIds": [],
+              "lastRippedRouteIds": [
+                80
+              ],
+              "lastRelaxedSearchExpandedLabelCount": 1994,
+              "lastAlternateSearchExpandedLabelCount": 0,
+              "lastFailedRouteId": 399
+            }
+          }
+        }
+      ],
+      "renderExitCode": 0
+    },
+    "imx6": {
+      "requestedNets": 404,
+      "connectedNets": 53,
+      "unconnectedNativeNamesSha256": "8987463aa95e5621a8d4161b44c0d53b4d94cfe6aee6a07966b7b3b042c13883",
+      "pcbTraces": 66,
+      "vias": 141,
+      "wireLengthMm": 1442.0517484294624,
+      "findings": {
+        "contiguous": 0,
+        "disconnected_ports": 1556,
+        "hole_trace": 0,
+        "missing_traces": 0,
+        "pad_trace": 0,
+        "trace_overlap": 0,
+        "via_in_pad": 0,
+        "via_pad": 0,
+        "via_spacing": 0,
+        "via_trace": 0,
+        "width": 0
+      },
+      "sourceCounts": {
+        "source_component": 498,
+        "source_net": 404,
+        "pcb_smtpad": 1835,
+        "pcb_plated_hole": 59,
+        "pcb_hole": 10
+      },
+      "lastError": "fQ ran out of iterations (capacity-autorouter@0.0.1107)",
+      "lastPhase": "other_signals",
+      "routingSourceSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+      "limitsMs": [
+        1800000,
+        1860000,
+        180000
+      ],
+      "coarseProjection": [
+        {
+          "cohort": "spaced",
+          "configured": {
+            "MAX_ITERATIONS": 4000000,
+            "className": "fQ",
+            "denseWorkspaceSupported": false,
+            "fixedRouteCount": null,
+            "hookInstalledAtIteration": 0,
+            "initialAssignmentCount": null,
+            "outsideInRouting": false,
+            "partialRipEligibilityCount": 49,
+            "partialRipEnabled": false,
+            "pathingEffort": 1,
+            "pathingFlags": {
+              "FORCE_CENTER_FIRST": true,
+              "RIPPING_ENABLED": true,
+              "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
+              "USE_PREPARED_PORT_POINT_ROUTING": true,
+              "USE_SELECTIVE_RERIP_ROUTING": true
+            },
+            "portCount": 181105,
+            "regionCount": 45817,
+            "reportedPreloadedAssignmentCount": 0,
+            "routeCount": 49,
+            "serializedConnectionCount": 49,
+            "serializedPortCount": 214805,
+            "solveGraphOptions": {
+              "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+              "DISTANCE_TO_COST": 0.05,
+              "GREEDY_FINAL_ROUTE_ITERS": 4,
+              "MAX_ITERATIONS": 4000000,
+              "OUTSIDE_IN_ROUTING": false,
+              "OWNED_REGIONAL_HOP_FRONTIER": true,
+              "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+              "PARTIAL_RIP_ENABLED": false,
+              "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+              "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+              "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+              "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+              "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+              "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+              "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+              "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+              "RIP_THRESHOLD_END": 0.8,
+              "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+              "RIP_THRESHOLD_START": 0.05,
+              "USE_SPARSE_CANDIDATE_STORAGE": false,
+              "minViaPadDiameter": 0.4
+            }
+          },
+          "final": {
+            "MAX_ITERATIONS": 4000000,
+            "bestCompleteSnapshotPresent": true,
+            "candidateQueueLength": 0,
+            "currentRoute": null,
+            "iterations": 4000000,
+            "iterationsSincePreviousRouteEvent": 33757,
+            "neverAttemptedCount": 10,
+            "neverSuccessfullyRoutedCount": 1,
+            "pendingRouteCount": 0,
+            "selectiveRerip": {
+              "alternateBlockerSearchCount": 0,
+              "alternateOwnerCount": 0,
+              "failedOwnerPairCount": 0,
+              "failedOwnerPairs": [],
+              "globalReripCount": 0,
+              "lastAlternateOwnerRouteIds": [],
+              "lastAlternateSearchExpandedLabelCount": 0,
+              "lastDirectOwnerRouteIds": [],
+              "lastRelaxedSearchExpandedLabelCount": 0,
+              "lastRepeatedOwnerRouteIds": [],
+              "lastRippedRouteIds": [],
+              "maxFailedOwnerPairCount": 0,
+              "selectiveRipCount": 0,
+              "selectivelyRippedRouteCount": 0
+            }
+          },
+          "firstExhaustedSearch": null,
+          "firstNonfiniteGoalApproachWithoutPriorGoal": null,
+          "firstRejectedGoalApproach": null,
+          "id": "imx6",
+          "innerHookInstalled": true,
+          "inputNetCount": 37,
+          "lifecycleCounts": {
+            "exhaustedSearches": 0,
+            "finalAcceptances": 1,
+            "globalResets": 0,
+            "goalApproachesQueued": 38,
+            "nonfiniteGoalApproachesWithoutPriorGoal": 0,
+            "pathFoundCalls": 76,
+            "pathsCommitted": 38,
+            "rejectedGoalApproaches": 0,
+            "rejectionsWithExistingGoalCandidate": 0
+          },
+          "phase": "remaining"
+        }
+      ],
+      "renderExitCode": 0
+    }
+  }
+}

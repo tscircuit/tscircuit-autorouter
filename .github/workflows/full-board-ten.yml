@@ -1,8 +1,8 @@
-name: Published3200 matched long-window budget diagnostic
+name: Published3200 bounded budget quality diagnostics
 
 on:
   push:
-    branches: [bench/full-board-budget-window-3200]
+    branches: [bench/glider-budget-quality-3200]
 
 permissions:
   contents: read
@@ -14,11 +14,9 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 2
       matrix:
         include:
-          - { board: glider, experiment: published, cohorts: "spaced" }
-          - { board: imx6, experiment: published, cohorts: "spaced" }
           - { board: glider, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
           - { board: imx6, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
     env:
@@ -94,6 +92,10 @@ jobs:
           "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
           "$FULL_BOARD_ROOT/results/$BOARD/spaced"
 
+      - name: Validate diagnostic outcome parity only
+        if: ${{ always() && steps.budget.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/check-budget-quality-parity.py "$FULL_BOARD_ROOT" "$BOARD"
+
       - name: Preserve spaced geometry and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -125,13 +127,11 @@ jobs:
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
             .full-board-run/budget-sufficiency-diagnostic-proof.json
+            .full-board-run/results/${{ matrix.board }}/spaced/quality-diagnostics.json
+            .full-board-run/results/${{ matrix.board }}/spaced/quality-parity.json
             experiments/full-board-budget-3200/candidate-proof.json
             experiments/full-board-budget-3200/experiment.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

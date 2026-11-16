@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11926,
-      "sha256": "741042e9259017ce060d3cb423244c05a3dbd9e62a0243d3cf337423db7afda4"
+      "bytes": 14661,
+      "sha256": "ac2abfd572cdd6f026e7d8143f7f00839c0b689da44c0bfc94a757ee02b3039a"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -65,9 +65,25 @@
       "name": "report.py",
       "bytes": 4607,
       "sha256": "a72d3bf9a2b9b190bd9275ef2eb017fbf92ed44ff18a53a023e0ecbd4b2bebe6"
+    },
+    {
+      "name": "collectGliderQualityDiagnostics.ts",
+      "bytes": 10298,
+      "sha256": "c1ac397d1d1541444670cb7687b74a75fc2d79456552e93b4522997c4c023086"
+    },
+    {
+      "name": "check-budget-quality-parity.py",
+      "bytes": 4892,
+      "sha256": "e905da628ef7fa6b11a39fe4dc7a30068c45cd9e4af39306b17c171692944a50"
+    },
+    {
+      "name": "quality-reference.json",
+      "bytes": 19268,
+      "sha256": "070427c8cec5ae43d68d8415f9e945e3a786c552b5f26a378663081d5fa33e3a"
     }
   ],
-  "diagnosticInstrumentation": "Inherited published-instance lifecycle observer, identical in all four lanes. The observer adds no routing behavior. Matched external-window changes and the budget-lane-only source override are declared separately; timings include observation overhead.",
+  "diagnosticInstrumentation": "Inherited published-instance lifecycle observer unchanged. Two frozen3200 budget lanes forward already-captured final parent stats after routing. Glider adds post-assessment bounded real finding witnesses and identifier/source ownership census; no live solver reads or altered routing decisions.",
   "budgetSufficiencyDiagnostic": "Budget lanes double one original solveGraph coefficient2M\u21924M, preserving existing scaling/derived formulas; published lanes retain original source. All four lanes now use matched1800/1860/180second capture/hard/assessment limits, versus prior900/960/180. No live guard, new observer, weights, legality, effort or solver change. No production fix claim.",
-  "windowComparisonDiagnostic": "The shared harness window is deliberately changed to1800/1860/180seconds in all four lanes. The unchanged AR applier field externalDeadlinesChanged:false describes only the routing-module patch, not the harness. Prior900/960runs are context only."
+  "windowComparisonDiagnostic": "The shared harness window is deliberately changed to1800/1860/180seconds in all four lanes. The unchanged AR applier field externalDeadlinesChanged:false describes only the routing-module patch, not the harness. Prior900/960runs are context only.",
+  "qualityDiagnostic": "Glider and iMX spaced, exact original1800/1860/180second limits and budget-module override. Interpretation requires exact native membership, copper counts/wire length, findings, source counts, phase/error and compact coarse configuration/state/lifecycle parity to run43915799056. Original assessment and all findings remain unchanged; this is not a production qualification."
 }
