@@ -33,6 +33,9 @@ jobs:
       - name: Install each router with its pinned simplifier
         run: |
           for folder in base fixed core; do (cd "$folder" && bun install --ignore-scripts); done
+          for folder in base fixed; do
+            (cd "$folder" && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          done
           cd experiments/full-board-priority-analysis
           bun install --frozen-lockfile --ignore-scripts
           bun build-core.ts ../../core
@@ -44,11 +47,11 @@ jobs:
         run: |
           for variant in base fixed; do
             export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
-            export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/$variant/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts"
+            export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/$variant/benchmark-runtime/pipeline9.js"
             export FULL_BOARD_ROUTER_COMMIT="$(git -C "../../$variant" rev-parse HEAD)"
             BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
               --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
-              --out "$GITHUB_WORKSPACE/results/$variant/ddr" --timeout 600
+              --out "$GITHUB_WORKSPACE/results/$variant/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/$variant/ddr/$BOARD_ID/"*.log; exit 1; }
             FULL_BOARD_VARIANT="$variant" bun plane-suite.ts "../../results/$variant/full"
           done
       - uses: actions/upload-artifact@v4
@@ -75,6 +78,7 @@ jobs:
           print('PAIRED_BOARD_EVIDENCE_END')
           PY
   dataset18:
+    if: false # Existing run 43816095736 is already comparing the same pinned revisions.
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 90
     steps:
