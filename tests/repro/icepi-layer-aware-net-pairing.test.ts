@@ -61,7 +61,7 @@ test("routes the iCE/Pi ground pairing cutout", async (): Promise<void> => {
         getConnectionPointLayers(to!).includes(layer),
       ),
   ).length
-  expect(layerChanges).toBe(2)
+  expect(layerChanges).toBe(1)
   const drcInput = {
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -90,5 +90,5 @@ test("routes the iCE/Pi ground pairing cutout", async (): Promise<void> => {
     drcInput.routedTraces
       .flatMap((trace) => trace.route)
       .filter((point) => point.route_type === "via"),
-  ).toHaveLength(2)
+  ).toHaveLength(1)
 })

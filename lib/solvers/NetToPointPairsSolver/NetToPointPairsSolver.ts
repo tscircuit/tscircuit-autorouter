@@ -5,6 +5,7 @@ import {
   PointId,
   SimpleRouteConnection,
   SimpleRouteJson,
+  getConnectionPointLayers,
 } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
@@ -165,8 +166,16 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
+    // Break nearly equal XY choices without buying fewer vias with long detours.
+    const layerChangeCost = this.ogSrj.minTraceWidth * 0.05
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: [...pathEdges, ...zeroWeightEdges],
+      getAdditionalEdgeCost: (from, to): number =>
+        getConnectionPointLayers(from).some((layer) =>
+          getConnectionPointLayers(to).includes(layer),
+        )
+          ? 0
+          : layerChangeCost,
     })
 
     let mstIdx = 0
