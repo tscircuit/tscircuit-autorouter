@@ -14,6 +14,10 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import {
+  type ConnectionEscapeIndex,
+  getConnectionEscapeIndex,
+} from "../AvailableSegmentPointSolver/getConnectionEscapeIndex"
 import { getConnectionEscapePortPoints } from "../AvailableSegmentPointSolver/getConnectionEscapePortPoints"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
@@ -40,6 +44,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
   private filteredOutput?: SharedEdgeSegment[]
+  private escapeIndex?: ConnectionEscapeIndex
 
   override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
     null
@@ -104,6 +109,14 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         }
       }
     }
+
+    if (this.input.preserveConnectionReachability) {
+      this.escapeIndex = getConnectionEscapeIndex({
+        nodes: this.input.capacityMeshNodes,
+        nodeMap: this.nodeMap,
+        portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+      })
+    }
   }
 
   override _step(): void {
@@ -141,6 +154,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
             nodeMap: this.nodeMap,
             portsByNodeId: this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
             connections: this.input.simpleRouteJson.connections,
+            escapeIndex: this.escapeIndex,
           }) !== undefined
         if (
           areAllCandidatesBlocked ||
