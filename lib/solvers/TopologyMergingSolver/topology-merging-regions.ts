@@ -10,15 +10,15 @@ import type {
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
 export function getCanonicalCoordinates(values: number[]): number[] {
-  const sortedValues = [...values].sort((a, b) => a - b)
-  const coordinates: number[] = []
+  if (values.length === 0) return []
+  const sortedValues = Float64Array.from(values)
+  sortedValues.sort()
+  const coordinates: number[] = [sortedValues[0]!]
 
-  for (const value of sortedValues) {
-    const previousValue = coordinates[coordinates.length - 1]
-    if (
-      previousValue === undefined ||
-      Math.abs(value - previousValue) > TOPOLOGY_MERGING_EPSILON
-    ) {
+  for (let index = 1; index < sortedValues.length; index++) {
+    const value = sortedValues[index]!
+    const previousValue = coordinates[coordinates.length - 1]!
+    if (Math.abs(value - previousValue) > TOPOLOGY_MERGING_EPSILON) {
       coordinates.push(value)
     }
   }
@@ -61,6 +61,76 @@ export function compactTopologyMergingRegions(
   }
 }
 
+export function compactClosedAtomicRegions({
+  regions,
+  openRegions,
+  preparedNodeBySourceKey,
+  completedBeforeX,
+}: {
+  regions: TopologyMergingRegion[]
+  openRegions: ReadonlySet<TopologyMergingRegion>
+  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  completedBeforeX: number
+}): TopologyMergingRegion[] {
+  const openMergeKeys = new Set<string>()
+  for (const openRegion of openRegions) {
+    openMergeKeys.add(getRegionMergeKey(openRegion))
+  }
+
+  const preservedRegions: TopologyMergingRegion[] = []
+  const candidateGroupsByMergeKey = new Map<string, TopologyMergingRegion[]>()
+  for (const region of regions) {
+    const mergeKey = getRegionMergeKey(region)
+    if (
+      openRegions.has(region) ||
+      region.topologyMode === "target-passthrough" ||
+      region.topologyMode === "free" ||
+      openMergeKeys.has(mergeKey)
+    ) {
+      preservedRegions.push(region)
+      continue
+    }
+    let bucket = candidateGroupsByMergeKey.get(mergeKey)
+    if (!bucket) {
+      bucket = []
+      candidateGroupsByMergeKey.set(mergeKey, bucket)
+    }
+    bucket.push(region)
+  }
+
+  const cutoffMaxX = completedBeforeX - TOPOLOGY_MERGING_EPSILON
+  for (const bucket of candidateGroupsByMergeKey.values()) {
+    if (bucket.length < 2) {
+      preservedRegions.push(...bucket)
+      continue
+    }
+    const representativeSourceKeys = bucket[0]!.sourceKeys
+    // Non-free signatures embed their exact sourceKeys list, so once any
+    // participating source node ends before completedBeforeX, no later X-slab
+    // can emit another cell with this mergeKey.
+    let isMergeKeyCompleted = false
+    for (const sourceKey of representativeSourceKeys) {
+      const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+      if (preparedNode && preparedNode.bounds.maxX < cutoffMaxX) {
+        isMergeKeyCompleted = true
+        break
+      }
+    }
+    if (isMergeKeyCompleted) {
+      preservedRegions.push(...compactTopologyMergingRegions(bucket))
+    } else {
+      preservedRegions.push(...bucket)
+    }
+  }
+
+  return preservedRegions
+}
+
+const EMPTY_OVERRULED_SOURCE_KEYS: string[] = []
+const scratchNodesOnLayer: PreparedTopologyMergingNode[] = []
+const scratchTargetObstacleNodes: PreparedTopologyMergingNode[] = []
+const scratchGlobalTargetObstacleNodes: PreparedTopologyMergingNode[] = []
+
 export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
@@ -75,37 +145,87 @@ export function getLayerTopologiesForCoveredNodes({
   layerTopologies: TopologyMergingLayerTopology[]
   overruledTargetSourceKeys: string[]
 } {
+  let isLocaleOrdered = true
+  for (let index = 1; index < coveringNodes.length; index++) {
+    const previousRank = coveringNodes[index - 1]!.localeRank
+    const currentRank = coveringNodes[index]!.localeRank
+    if (
+      previousRank === undefined ||
+      currentRank === undefined ||
+      previousRank > currentRank
+    ) {
+      isLocaleOrdered = false
+      break
+    }
+  }
+  const orderedCoveringNodes = isLocaleOrdered
+    ? coveringNodes
+    : [...coveringNodes].sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))
+
   const layerTopologyBySignature = new Map<
     string,
     TopologyMergingLayerTopology
   >()
-  const overruledTargetSourceKeys = new Set<string>()
+  let overruledTargetSourceKeys: Set<string> | null = null
+  const useLayerBitmask = layerCount <= 30
   let previousFreeLayer = -2
   let freeRunStart = 0
   for (let z = 0; z < layerCount; z++) {
-    const nodesOnLayer = coveringNodes
-      .filter(({ node }) => node.availableZ.includes(z))
-      .sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))
-    if (nodesOnLayer.length === 0) continue
+    scratchNodesOnLayer.length = 0
+    scratchTargetObstacleNodes.length = 0
+    scratchGlobalTargetObstacleNodes.length = 0
+    let firstActiveGroupIndex = -1
+    let hasMultipleActiveGroups = false
+    let firstTargetGroupIndex = -1
+    let hasMultipleTargetGroups = false
+    let isFreeSpace = allowBlindAndBuriedVias
+    const layerBit = useLayerBitmask ? 1 << z : 0
 
-    const activeGroupIndexes = new Set(
-      nodesOnLayer.map(({ groupIndex }) => groupIndex),
-    )
-    const targetObstacleNodes = nodesOnLayer.filter(
-      ({ node }) => node._containsObstacle && node._containsTarget,
-    )
-    const globalTargetObstacleNodes = targetObstacleNodes.filter(
-      ({ groupIndex }) => !nodeGroups[groupIndex]!.isComponent,
-    )
-    const targetGroupIndexes = new Set(
-      targetObstacleNodes.map(({ groupIndex }) => groupIndex),
-    )
+    for (let index = 0; index < orderedCoveringNodes.length; index++) {
+      const preparedNode = orderedCoveringNodes[index]!
+      const onLayer =
+        useLayerBitmask && preparedNode.layerMask !== undefined
+          ? (preparedNode.layerMask & layerBit) !== 0
+          : preparedNode.node.availableZ.includes(z)
+      if (!onLayer) continue
+
+      scratchNodesOnLayer.push(preparedNode)
+      if (firstActiveGroupIndex === -1) {
+        firstActiveGroupIndex = preparedNode.groupIndex
+      } else if (preparedNode.groupIndex !== firstActiveGroupIndex) {
+        hasMultipleActiveGroups = true
+      }
+
+      const { node } = preparedNode
+      if (node._containsObstacle && node._containsTarget) {
+        scratchTargetObstacleNodes.push(preparedNode)
+        if (!nodeGroups[preparedNode.groupIndex]!.isComponent) {
+          scratchGlobalTargetObstacleNodes.push(preparedNode)
+        }
+        if (firstTargetGroupIndex === -1) {
+          firstTargetGroupIndex = preparedNode.groupIndex
+        } else if (preparedNode.groupIndex !== firstTargetGroupIndex) {
+          hasMultipleTargetGroups = true
+        }
+      }
+      if (
+        isFreeSpace &&
+        (node._containsObstacle ||
+          node._containsTarget ||
+          node._isVirtualOffboard)
+      ) {
+        isFreeSpace = false
+      }
+    }
+    if (scratchNodesOnLayer.length === 0) continue
+
     const topologyMode: TopologyMergingMode =
-      targetObstacleNodes.length > 0
-        ? globalTargetObstacleNodes.length > 0 || targetGroupIndexes.size === 1
+      scratchTargetObstacleNodes.length > 0
+        ? scratchGlobalTargetObstacleNodes.length > 0 ||
+          !hasMultipleTargetGroups
           ? "target-passthrough"
           : "target-merged"
-        : activeGroupIndexes.size === 1
+        : !hasMultipleActiveGroups
           ? "passthrough"
           : "merged"
     // Global target obstacles own this layer here, so component targets
@@ -113,61 +233,113 @@ export function getLayerTopologiesForCoveredNodes({
     // source bounds later.
     if (
       topologyMode === "target-passthrough" &&
-      globalTargetObstacleNodes.length > 0
+      scratchGlobalTargetObstacleNodes.length > 0
     ) {
-      for (const { sourceKey, groupIndex } of targetObstacleNodes) {
+      for (let index = 0; index < scratchTargetObstacleNodes.length; index++) {
+        const { sourceKey, groupIndex } = scratchTargetObstacleNodes[index]!
         if (nodeGroups[groupIndex]!.isComponent) {
+          overruledTargetSourceKeys ??= new Set<string>()
           overruledTargetSourceKeys.add(sourceKey)
         }
       }
     }
-    const isFreeSpace =
-      allowBlindAndBuriedVias &&
-      nodesOnLayer.every(
-        ({ node }) =>
-          !node._containsObstacle &&
-          !node._containsTarget &&
-          !node._isVirtualOffboard,
-      )
     if (isFreeSpace) {
       if (z !== previousFreeLayer + 1) freeRunStart = z
       previousFreeLayer = z
     }
-    const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
-      topologyMode,
-      nodesOnLayer,
-      targetObstacleNodes,
-      globalTargetObstacleNodes,
-    })
 
-    for (const sourceKeys of sourceKeyGroups) {
-      // Clear space has no source-node boundary. Join its adjacent
-      // layers and cells while retaining every source for provenance.
-      const topologySignature = isFreeSpace
-        ? `free:${freeRunStart}`
-        : JSON.stringify({ mode: topologyMode, sourceKeys })
-      const existingTopology = layerTopologyBySignature.get(topologySignature)
-      if (existingTopology) {
-        if (existingTopology.availableZ.at(-1) !== z) {
-          existingTopology.availableZ.push(z)
+    if (
+      topologyMode === "target-passthrough" ||
+      topologyMode === "passthrough"
+    ) {
+      const authoritativeNodes =
+        topologyMode === "target-passthrough"
+          ? scratchGlobalTargetObstacleNodes.length > 0
+            ? scratchGlobalTargetObstacleNodes
+            : scratchTargetObstacleNodes
+          : scratchNodesOnLayer
+      for (let index = 0; index < authoritativeNodes.length; index++) {
+        const preparedNode = authoritativeNodes[index]!
+        const sourceKeys = preparedNode.singleSourceKeys ?? [
+          preparedNode.sourceKey,
+        ]
+        const topologySignature = isFreeSpace
+          ? `free:${freeRunStart}`
+          : topologyMode === "target-passthrough"
+            ? (preparedNode.targetPassthroughSignature ??
+              JSON.stringify({ mode: "target-passthrough", sourceKeys }))
+            : (preparedNode.passthroughSignature ??
+              JSON.stringify({ mode: "passthrough", sourceKeys }))
+        const existingTopology = layerTopologyBySignature.get(topologySignature)
+        if (existingTopology) {
+          if (
+            existingTopology.availableZ[
+              existingTopology.availableZ.length - 1
+            ] !== z
+          ) {
+            existingTopology.availableZ.push(z)
+          }
+          if (isFreeSpace) {
+            existingTopology.sourceKeys = [
+              ...new Set([...existingTopology.sourceKeys, ...sourceKeys]),
+            ].sort()
+          }
+        } else {
+          layerTopologyBySignature.set(topologySignature, {
+            availableZ: [z],
+            sourceKeys,
+            topologyMode: isFreeSpace ? "free" : topologyMode,
+            topologySignature,
+          })
         }
+      }
+      continue
+    }
+
+    const sourceNodesForMode =
+      topologyMode === "target-merged"
+        ? scratchTargetObstacleNodes
+        : scratchNodesOnLayer
+    const sourceKeys = sourceNodesForMode
+      .map(({ sourceKey }) => sourceKey)
+      .sort()
+    // Clear space has no source-node boundary. Join its adjacent
+    // layers and cells while retaining every source for provenance.
+    const topologySignature = isFreeSpace
+      ? `free:${freeRunStart}`
+      : JSON.stringify({ mode: topologyMode, sourceKeys })
+    const existingTopology = layerTopologyBySignature.get(topologySignature)
+    if (existingTopology) {
+      if (
+        existingTopology.availableZ[existingTopology.availableZ.length - 1] !==
+        z
+      ) {
+        existingTopology.availableZ.push(z)
+      }
+      if (isFreeSpace) {
         existingTopology.sourceKeys = [
           ...new Set([...existingTopology.sourceKeys, ...sourceKeys]),
         ].sort()
-      } else {
-        layerTopologyBySignature.set(topologySignature, {
-          availableZ: [z],
-          sourceKeys,
-          topologyMode: isFreeSpace ? "free" : topologyMode,
-          topologySignature,
-        })
       }
+    } else {
+      layerTopologyBySignature.set(topologySignature, {
+        availableZ: [z],
+        sourceKeys,
+        topologyMode: isFreeSpace ? "free" : topologyMode,
+        topologySignature,
+      })
     }
   }
 
+  scratchNodesOnLayer.length = 0
+  scratchTargetObstacleNodes.length = 0
+  scratchGlobalTargetObstacleNodes.length = 0
+
   return {
-    layerTopologies: [...layerTopologyBySignature.values()],
-    overruledTargetSourceKeys: [...overruledTargetSourceKeys],
+    layerTopologies: Array.from(layerTopologyBySignature.values()),
+    overruledTargetSourceKeys: overruledTargetSourceKeys
+      ? Array.from(overruledTargetSourceKeys)
+      : EMPTY_OVERRULED_SOURCE_KEYS,
   }
 }
 
@@ -231,28 +403,28 @@ export function restoreAuthoritativeTargetRegions({
 }
 
 function getRegionMergeKey(region: TopologyMergingRegion): string {
-  return JSON.stringify({
-    availableZ: region.availableZ,
-    topologySignature: region.topologySignature,
-  })
+  if (region.mergeKey !== undefined) {
+    return region.mergeKey
+  }
+  const mergeKey = `${region.availableZ.join(",")}\0${region.topologySignature}`
+  region.mergeKey = mergeKey
+  return mergeKey
 }
 
 export function getHorizontalMergeBucketKey(
   region: TopologyMergingRegion,
 ): HorizontalTopologyMergingBucketKey {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minY: region.bounds.minY.toPrecision(15),
-    maxY: region.bounds.maxY.toPrecision(15),
-  })
+  const mergeKey = getRegionMergeKey(region)
+  const minYKey = region.bounds.minY.toPrecision(15)
+  const maxYKey = region.bounds.maxY.toPrecision(15)
+  return `${mergeKey}\0${minYKey}\0${maxYKey}`
 }
 
 function getVerticalMergeBucketKey(region: TopologyMergingRegion): string {
-  return JSON.stringify({
-    mergeKey: getRegionMergeKey(region),
-    minX: region.bounds.minX.toPrecision(15),
-    maxX: region.bounds.maxX.toPrecision(15),
-  })
+  const mergeKey = getRegionMergeKey(region)
+  const minXKey = region.bounds.minX.toPrecision(15)
+  const maxXKey = region.bounds.maxX.toPrecision(15)
+  return `${mergeKey}\0${minXKey}\0${maxXKey}`
 }
 
 function compactRegionsInDirection(
@@ -266,14 +438,23 @@ function compactRegionsInDirection(
       direction === "horizontal"
         ? getHorizontalMergeBucketKey(region)
         : getVerticalMergeBucketKey(region)
-    const bucket = regionsByMergeBucket.get(bucketKey) ?? []
+    let bucket = regionsByMergeBucket.get(bucketKey)
+    if (!bucket) {
+      bucket = []
+      regionsByMergeBucket.set(bucketKey, bucket)
+    }
     bucket.push(region)
-    regionsByMergeBucket.set(bucketKey, bucket)
   }
 
-  return [...regionsByMergeBucket.values()].flatMap((bucket) =>
-    mergeRegionRun(bucket, direction),
-  )
+  const compacted: TopologyMergingRegion[] = []
+  for (const bucket of regionsByMergeBucket.values()) {
+    if (bucket.length === 1) {
+      compacted.push(bucket[0]!)
+      continue
+    }
+    compacted.push(...mergeRegionRun(bucket, direction))
+  }
+  return compacted
 }
 
 function mergeRegionRun(
@@ -301,15 +482,23 @@ function mergeRegionRun(
       mergedRegions.push({
         ...region,
         bounds: { ...region.bounds },
-        availableZ: [...region.availableZ],
-        sourceKeys: [...region.sourceKeys],
+        availableZ:
+          region.topologyMode === "free"
+            ? [...region.availableZ]
+            : region.availableZ,
+        sourceKeys:
+          region.topologyMode === "free"
+            ? [...region.sourceKeys]
+            : region.sourceKeys,
       })
       continue
     }
 
-    previousRegion.sourceKeys = [
-      ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
-    ].sort()
+    if (previousRegion.topologyMode === "free") {
+      previousRegion.sourceKeys = [
+        ...new Set([...previousRegion.sourceKeys, ...region.sourceKeys]),
+      ].sort()
+    }
     if (direction === "horizontal") {
       previousRegion.bounds.maxX = region.bounds.maxX
     } else {
@@ -318,31 +507,4 @@ function mergeRegionRun(
   }
 
   return mergedRegions
-}
-
-function getSourceKeyGroupsForTopologyMode({
-  topologyMode,
-  nodesOnLayer,
-  targetObstacleNodes,
-  globalTargetObstacleNodes,
-}: {
-  topologyMode: TopologyMergingMode
-  nodesOnLayer: PreparedTopologyMergingNode[]
-  targetObstacleNodes: PreparedTopologyMergingNode[]
-  globalTargetObstacleNodes: PreparedTopologyMergingNode[]
-}): string[][] {
-  if (topologyMode === "target-passthrough") {
-    const authoritativeNodes =
-      globalTargetObstacleNodes.length > 0
-        ? globalTargetObstacleNodes
-        : targetObstacleNodes
-    return authoritativeNodes.map(({ sourceKey }) => [sourceKey])
-  }
-  if (topologyMode === "target-merged") {
-    return [targetObstacleNodes.map(({ sourceKey }) => sourceKey).sort()]
-  }
-  if (topologyMode === "passthrough") {
-    return nodesOnLayer.map(({ sourceKey }) => [sourceKey])
-  }
-  return [nodesOnLayer.map(({ sourceKey }) => sourceKey).sort()]
 }
