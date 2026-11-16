@@ -1,0 +1,35 @@
+name: Collect the two native changed routing snapshots for review
+on:
+  push:
+    branches: [codex/ddr-layer-snapshot-review]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 43896745769
+          github-token: ${{ github.token }}
+          pattern: diff-png-and-snap-svg-artifacts-node*
+          path: evidence
+      - name: Export only the changed native SVGs
+        run: |
+          python3 - <<'PYCODE'
+          import io,zipfile,base64
+          from pathlib import Path
+          names=['bugreport107-board-1726-linux','pipeline9-t113-hdmi-ddc-via-spacing-linux-board-and-drills']
+          files=[p for p in Path('evidence').rglob('*.received.svg') if any(n in p.name for n in names)]
+          assert len(files)==2, [str(p) for p in files]
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in files:
+                  z.writestr(p.name,p.read_bytes())
+                  print('REVIEW_NATIVE_SVG',p.name,p.stat().st_size)
+          print('TIE_REVIEW_SVGS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for off in range(0,len(encoded),8000): print(encoded[off:off+8000])
+          print('TIE_REVIEW_SVGS_END')
+          PYCODE
