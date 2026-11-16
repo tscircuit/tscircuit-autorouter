@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  SameNetViaMergerSolver,
-  TraceSimplificationSolver,
-} from "@tscircuit/trace-simplification-solver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
@@ -32,18 +29,10 @@ test("captures iCE/Pi plane transitions at the simplification boundary", async (
   const [params] = step.getConstructorParams(pipeline) as ConstructorParameters<
     typeof TraceSimplificationSolver
   >
-  const merger = new SameNetViaMergerSolver({
-    inputHdRoutes: [...params.hdRoutes],
-    obstacles: [...params.obstacles],
-    otherHdRoutes: [],
-    connMap: params.connMap,
-    netByConnectionName: params.netByConnectionName,
-    colorMap: params.colorMap,
-    layerCount: params.layerCount,
-  })
+  const simplifier = new TraceSimplificationSolver(params)
   let rejection: unknown
   try {
-    merger.solve()
+    simplifier.solve()
   } catch (error) {
     rejection = error
   }
@@ -51,9 +40,9 @@ test("captures iCE/Pi plane transitions at the simplification boundary", async (
   expect((rejection as Error).message).toContain(
     "could not find transition layers for via",
   )
-  expect(merger.failed).toBe(true)
+  expect(simplifier.failed).toBe(true)
   expect(routes).toEqual(fixture.stitchedRoutes)
-  const graphics = merger.visualize()
+  const graphics = simplifier.visualize()
   graphics.rects ??= []
   graphics.rects.push({
     center: { x: 14.5, y: 0.5 },
@@ -66,7 +55,7 @@ test("captures iCE/Pi plane transitions at the simplification boundary", async (
   graphics.texts.push({
     x: 14.5,
     y: 3.3,
-    text: `iCE/Pi +1V5: via merger ${merger.solved ? "solved" : "failed"}`,
+    text: `iCE/Pi +1V5: simplification ${simplifier.solved ? "solved" : "failed"}`,
     fontSize: 0.13,
   })
   await expect(
