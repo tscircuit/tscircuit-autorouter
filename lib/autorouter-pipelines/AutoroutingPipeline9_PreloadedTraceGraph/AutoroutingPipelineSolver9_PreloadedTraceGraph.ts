@@ -1688,32 +1688,52 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getPowerTraceExpansionFixedTraces(): SimplifiedPcbTraces {
-    if (!this.powerTraceExpansionSolver) {
+  private getPowerTraceExpansionOutput(): {
+    fixedTraces: SimplifiedPcbTraces
+    routedTraces: SimplifiedPcbTraces
+  } {
+    const expansionSolver = this.powerTraceExpansionSolver
+    if (!expansionSolver) {
       throw new Error(
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return (
-      this.powerTraceExpansionSolver
-        .inputSrj as Pipeline7PowerTraceExpansionInput
-    ).fixedTraces
+    const { fixedTraces } =
+      expansionSolver.inputSrj as Pipeline7PowerTraceExpansionInput
+    const routedTraces = expansionSolver.getOutput().map(
+      (trace): SimplifiedPcbTraces[number] => {
+        if (trace.__replaces_pcb_trace_id || trace.route_thickness_mode) {
+          return trace
+        }
+        const hasWidthTransition = trace.route.some((point, index) => {
+          const previous = trace.route[index - 1]
+          return (
+            point.route_type === "wire" &&
+            previous?.route_type === "wire" &&
+            point.layer === previous.layer &&
+            point.width !== previous.width
+          )
+        })
+        // Preserve vertex widths when Core reverses a trace to match the
+        // source trace's endpoint order.
+        return hasWidthTransition
+          ? { ...trace, route_thickness_mode: "interpolated" }
+          : trace
+      },
+    )
+    return { fixedTraces, routedTraces }
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
-      throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
-      )
-    }
+    const { fixedTraces, routedTraces } = this.getPowerTraceExpansionOutput()
     return [
-      ...this.getPowerTraceExpansionFixedTraces().filter(
+      ...fixedTraces.filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...routedTraces,
     ]
   }
 
@@ -1721,18 +1741,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
-      throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
-      )
-    }
-    const traces = [
-      ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    const { fixedTraces, routedTraces } = this.getPowerTraceExpansionOutput()
     return {
       ...this.originalSrj,
-      traces,
+      traces: [...fixedTraces, ...routedTraces],
     }
   }
 }

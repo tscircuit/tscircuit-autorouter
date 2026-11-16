@@ -82,10 +82,11 @@ test("Pipeline 9 routes the NEMA 23 stepper controller", async (): Promise<void>
       error.type === "pcb_trace_error" &&
       error.pcb_trace_error_id.startsWith("max_via_count_exceeded_"),
   )
-  expect(lengthErrors.length).toBeGreaterThan(0)
-  expect(viaCountErrors.length).toBeGreaterThan(0)
+  expect(lengthErrors.length).toBeLessThanOrEqual(5)
+  expect(viaCountErrors.length).toBeLessThanOrEqual(4)
   const otherErrors =
     errors.length - lengthErrors.length - viaCountErrors.length
+  expect(otherErrors).toBe(0)
   const errorSummary = [
     `${lengthErrors.length} trace length`,
     `${viaCountErrors.length} via count`,

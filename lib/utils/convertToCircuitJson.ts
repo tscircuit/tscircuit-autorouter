@@ -27,6 +27,9 @@ function convertSimplifiedPcbTraceToCircuitJson(
     type: "pcb_trace",
     pcb_trace_id: simplifiedTrace.pcb_trace_id,
     source_trace_id: connectionName,
+    ...(simplifiedTrace.route_thickness_mode !== undefined && {
+      route_thickness_mode: simplifiedTrace.route_thickness_mode,
+    }),
     route: simplifiedTrace.route
       .map((segment) => {
         if (segment.route_type === "wire") {
