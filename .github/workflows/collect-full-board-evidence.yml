@@ -1,0 +1,38 @@
+name: Collect compact full-board review evidence
+on:
+  push:
+    branches: [codex/full-boards-evidence-20261116]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  collect:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [imx6, butterstick]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: merged-full-${{ matrix.board }}
+          run-id: 43810629603
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Export measured outcomes and native PCB SVGs
+        run: |
+          python3 - <<'PY'
+          import base64, io, zipfile
+          from pathlib import Path
+          names = {'summary.json','environment.json','progress.json','assessment.json','diagnostics.json','results.json','process.json','pcb.svg'}
+          stream = io.BytesIO()
+          with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              for path in Path('evidence').rglob('*'):
+                  if path.is_file() and path.name in names:
+                      archive.writestr(str(path.relative_to('evidence')), path.read_bytes())
+          encoded = base64.b64encode(stream.getvalue()).decode()
+          print('COMPACT_BOARD_EVIDENCE_BEGIN')
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('COMPACT_BOARD_EVIDENCE_END')
+          PY
