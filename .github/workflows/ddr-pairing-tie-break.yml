@@ -1,0 +1,74 @@
+name: Compare conservative layer tie-break costs against baseline
+on:
+  push:
+    branches: [codex/ddr-pairing-tie-break]
+permissions:
+  contents: read
+jobs:
+  dataset18:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [tie_005, tie_025, baseline]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b1611294ca4088368bd8c23787bd9dcec05a0a8a
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - name: Isolate one experimental policy
+        env:
+          POLICY: ${{ matrix.policy }}
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          policy=os.environ['POLICY']
+          p=Path('lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts')
+          s=p.read_text()
+          axis='const axis = depth % 2 === 0 ? "x" : "y"'
+          assert s.count(axis)==3
+          if policy=='baseline':
+              import subprocess
+              for path in ['lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts','lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts']:
+                  Path(path).write_text(subprocess.check_output(['git','show','544fb5cba6f4985d1fd236bcabdd0a377b792427:'+path],text=True))
+          else:
+              first=s.index(axis)+len(axis)
+              s=s[:first]+s[first:].replace(axis,'const axis = depth % 2 ? "x" : "y"')
+              p.write_text(s)
+              p=Path('lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts')
+              s=p.read_text()
+              coefficient='0.05' if policy=='tie_005' else '0.25'
+              s=s.replace('getViaDimensions(this.ogSrj).padDiameter','this.ogSrj.minTraceWidth * '+coefficient)
+              p.write_text(s)
+          PYCODE
+          git diff -- lib/solvers/NetToPointPairsSolver
+      - name: Benchmark all 16 samples
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pairing-tie-break-${{ matrix.policy }}
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
+            benchmark-snapshots.html
+          retention-days: 14
+      - name: Export measured report
+        if: always()
+        env:
+          POLICY: ${{ matrix.policy }}
+        run: |
+          python3 - <<'PYCODE'
+          import json,os
+          from pathlib import Path
+          p=Path('benchmark-result.json')
+          if p.exists(): print('ABLATION_RESULT',os.environ['POLICY'],json.dumps(json.loads(p.read_text()),separators=(',',':')))
+          PYCODE
