@@ -48,8 +48,8 @@
     },
     {
       "name": "createHighDensityWitnessDiagnostics.ts",
-      "bytes": 19383,
-      "sha256": "a8092e8a639a18b88a5e9273d163fba2fbe12e781d07548869fb83e8d85c3398"
+      "bytes": 27371,
+      "sha256": "a197f3305a76187ddd6c73951f0fa186db177aa7ac78a3cb9918090d00568c91"
     },
     {
       "name": "installHighDensityWitnessHooks.ts",
@@ -86,5 +86,5 @@
     "renderWallMsBoundary": "worker exit, before controller restoration or verification I/O",
     "neutralAssessment": "Original Core helper prepared before observer selection; helper-local AR alias remains original; original runtime AR alias restored before unchanged assessment."
   },
-  "nativeParityStatus": "Not measured by this held diagnostic. Compare native connected-net names and actual copper/physical results with frozen3207 after the run; a valid witness packet alone does not prove routing parity."
+  "nativeParityStatus": "First observer run43969811980 retained byte-identical routed and unrouted circuit gzip versus frozen3207, but exceeded the witness packet budget. Compact packet rerun must independently reconfirm native parity; witness validity alone does not prove it."
 }
