@@ -26,7 +26,7 @@ function getNativeCopperOwner({
   if (owners.length === 0 || (!net && owners.length !== 1)) {
     throw new Error(`Missing unambiguous native owner for ${connectionName}`)
   }
-  if (!net) return owners[0]!
+  if (owners.length === 1) return owners[0]!
   // Core also routes source nets whose members each attach one native port.
   return {
     ...owners[0]!,
