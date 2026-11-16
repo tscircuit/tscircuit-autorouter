@@ -95,23 +95,25 @@ export function getH616PowerCrossingSnapshots({
         { x: minX, y: minY },
       ],
     },
-    ...[-1, 1].map((direction): AnyCircuitElement => ({
-      type: "pcb_silkscreen_path",
-      pcb_silkscreen_path_id: `crossing_${direction}`,
-      pcb_component_id: cpu.pcb_component_id,
-      layer: "top",
-      stroke_width: srj.minTraceWidth / 3,
-      route: [
-        {
-          x: crossing.x - markerRadius,
-          y: crossing.y - direction * markerRadius,
-        },
-        {
-          x: crossing.x + markerRadius,
-          y: crossing.y + direction * markerRadius,
-        },
-      ],
-    })),
+    ...[-1, 1].map(
+      (direction): AnyCircuitElement => ({
+        type: "pcb_silkscreen_path",
+        pcb_silkscreen_path_id: `crossing_${direction}`,
+        pcb_component_id: cpu.pcb_component_id,
+        layer: "top",
+        stroke_width: srj.minTraceWidth / 3,
+        route: [
+          {
+            x: crossing.x - markerRadius,
+            y: crossing.y - direction * markerRadius,
+          },
+          {
+            x: crossing.x + markerRadius,
+            y: crossing.y + direction * markerRadius,
+          },
+        ],
+      }),
+    ),
   ]
   const replayCircuit = [...circuitJson, ...regionalCopper, ...annotations]
   const renderOptions = {

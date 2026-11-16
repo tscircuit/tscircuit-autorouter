@@ -57,11 +57,13 @@ test("H616 ground crossings beside completed DDR copper", async (): Promise<void
   })
   distribution.solve()
   expect(distribution.solved).toBeTrue()
-  const node = distribution.getOutput().find(
-    (candidate) =>
-      candidate.capacityMeshNodeId ===
-      fixture.b01.nodeWithPortPoints.capacityMeshNodeId,
-  )!
+  const node = distribution
+    .getOutput()
+    .find(
+      (candidate) =>
+        candidate.capacityMeshNodeId ===
+        fixture.b01.nodeWithPortPoints.capacityMeshNodeId,
+    )!
   const normalizedNode = normalizePipeline9NodeRootConnectionNames(
     node,
     connMap,
@@ -104,7 +106,9 @@ test("H616 ground crossings beside completed DDR copper", async (): Promise<void
     pointToSegmentDistance(crossing, ddrWire.route[0]!, ddrWire.route[1]!) -
     (ddrWire.traceThickness + fixture.srj.minTraceWidth) / 2
   expect(
-    fixture.circuitJson.filter((element) => element.type === "source_component"),
+    fixture.circuitJson.filter(
+      (element) => element.type === "source_component",
+    ),
   ).toHaveLength(125)
   const snapshots = getH616PowerCrossingSnapshots({
     circuitJson: fixture.circuitJson,
