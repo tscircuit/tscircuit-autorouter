@@ -1,8 +1,8 @@
-name: Published3203 full-board ten-case benchmark
+name: Published3203 iMX6 spaced CPU profile
 
 on:
   push:
-    branches: [bench/full-board-ten-3203-20261116]
+    branches: [bench/imx6-bus-cpu-profile-3203]
 
 permissions:
   contents: read
@@ -14,14 +14,10 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: imx6, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -29,6 +25,7 @@ jobs:
       BOARD: ${{ matrix.board }}
       FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
       FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_CPU_PROFILE: "1"
 
     steps:
       - name: Checkout benchmark controller
@@ -80,25 +77,19 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
-
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
+      - name: Set diagnostic capture window
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path(os.environ["FULL_BOARD_ROOT"]) / "cases/imx6-spaced.json"
+          task = json.loads(path.read_text())
+          assert (task["id"], task["cohort"], task["experiment"]) == ("imx6", "spaced", "published")
+          assert [task[key] for key in ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"]] == [900000, 960000, 180000]
+          task.update(captureDeadlineMs=1800000, hardDeadlineMs=1860000)
+          path.write_text(json.dumps(task, indent=2) + "\n")
+          print("Diagnostic capture/hard/assessment windows: 1800/1860/180 seconds; solver budgets unchanged")
+          PY
 
       - name: Run spaced full circuit
         id: spaced
@@ -107,6 +98,12 @@ jobs:
         run: >-
           bun experiments/full-board-ten/run-one.ts
           "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+
+      - name: Summarize render-worker CPU samples
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        run: >-
+          python3 experiments/full-board-ten/summarize-cpu-profile.py
           "$FULL_BOARD_ROOT/results/$BOARD/spaced"
 
       - name: Preserve spaced geometry and diagnostics

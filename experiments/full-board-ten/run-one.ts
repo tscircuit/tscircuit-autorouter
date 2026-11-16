@@ -7,14 +7,23 @@ const [caseFile, outputArg, executionMode = "full"] = process.argv.slice(2)
 if (!caseFile || !outputArg) throw new Error("Usage: run-one.ts CASE.json OUTPUT")
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
 const task = JSON.parse(readFileSync(caseFile, "utf8"))
+for (const key of ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"]) {
+  if (!Number.isFinite(task[key]) || task[key] <= 0) throw new Error(`Invalid task deadline ${key}`)
+}
+if (task.hardDeadlineMs <= task.captureDeadlineMs) throw new Error("Hard deadline must exceed capture deadline")
+const cpuProfile = process.env.FULL_BOARD_CPU_PROFILE === "1"
+if (cpuProfile && (Bun.version !== "1.4.3" || task.id !== "imx6" || task.cohort !== "spaced" || executionMode !== "full" || task.experiment !== "published")) throw new Error("CPU diagnostic requires Bun1.4.3 and published iMX6 spaced")
 const output = resolve(outputArg)
 mkdirSync(output, { recursive: true })
+const profileDirectory = join(output, "cpu-profile")
+if (cpuProfile) mkdirSync(profileDirectory)
 const environment = { ...process.env }
 delete environment.FULL_BOARD_CORE_MODULE
 delete environment.FULL_BOARD_COPPER_MODULE
 const started = performance.now()
 const log = openSync(join(output, "worker.log"), "w")
-const worker = Bun.spawn([process.execPath, join(import.meta.dir, "render-published.tsx"), resolve(caseFile), output, executionMode], { cwd: import.meta.dir, env: environment, stdout: log, stderr: log })
+const profileArgs = cpuProfile ? ["--cpu-prof", `--cpu-prof-dir=${profileDirectory}`, "--cpu-prof-name=render.cpuprofile"] : []
+const worker = Bun.spawn([process.execPath, ...profileArgs, join(import.meta.dir, "render-published.tsx"), resolve(caseFile), output, executionMode], { cwd: import.meta.dir, env: environment, stdout: log, stderr: log })
 let peakRssKb = 0, hardTimedOut = false
 const sample = setInterval((): void => {
   try {
@@ -22,7 +31,7 @@ const sample = setInterval((): void => {
     if (match) peakRssKb = Math.max(peakRssKb, Number(match[1]))
   } catch (error: any) { if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error }
 }, 1000)
-const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
+const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, task.hardDeadlineMs)
 const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
@@ -42,7 +51,7 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: task.captureDeadlineMs, hardDeadlineMs: task.hardDeadlineMs, assessmentDeadlineMs: task.assessmentDeadlineMs, cpuProfile: cpuProfile ? { scope: "render-worker-only", bunVersion: Bun.version, file: "cpu-profile/render.cpuprofile", samplingInterval: "Bun default, no override", routingChanged: false } : null, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false
@@ -69,7 +78,7 @@ if (existsSync(compressedCircuit)) {
   }
   const auditLog = openSync(join(output, "audit.log"), "w")
   const audit = Bun.spawn(args, { cwd: task.assessmentRoot, env: auditEnvironment, stdout: auditLog, stderr: auditLog })
-  const auditTimer = setTimeout((): void => { auditTimedOut = true; audit.kill("SIGKILL") }, 180000)
+  const auditTimer = setTimeout((): void => { auditTimedOut = true; audit.kill("SIGKILL") }, task.assessmentDeadlineMs)
   auditExitCode = await audit.exited
   clearTimeout(auditTimer)
   closeSync(auditLog)
