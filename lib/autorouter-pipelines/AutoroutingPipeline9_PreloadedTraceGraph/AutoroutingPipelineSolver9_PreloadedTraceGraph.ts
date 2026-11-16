@@ -1700,8 +1700,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const { fixedTraces } =
       expansionSolver.inputSrj as Pipeline7PowerTraceExpansionInput
-    const routedTraces = expansionSolver.getOutput().map(
-      (trace): SimplifiedPcbTraces[number] => {
+    const routedTraces = expansionSolver
+      .getOutput()
+      .map((trace): SimplifiedPcbTraces[number] => {
         if (trace.__replaces_pcb_trace_id || trace.route_thickness_mode) {
           return trace
         }
@@ -1719,8 +1720,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return hasWidthTransition
           ? { ...trace, route_thickness_mode: "interpolated" }
           : trace
-      },
-    )
+      })
     return { fixedTraces, routedTraces }
   }
 

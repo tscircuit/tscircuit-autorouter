@@ -68,7 +68,7 @@ class KDTree {
       return best
     }
 
-    const axis = depth % 2 === 0 ? "x" : "y"
+    const axis = depth % 2 ? "x" : "y"
     const currentDistance = this.distance(queryPoint, node.point)
 
     if (currentDistance < bestDistance) {
@@ -132,7 +132,7 @@ class KDTree {
       return
     }
 
-    const axis = depth % 2 === 0 ? "x" : "y"
+    const axis = depth % 2 ? "x" : "y"
     const currentDistance = this.distance(queryPoint, node.point)
 
     // Add current node to neighbors
