@@ -1,0 +1,37 @@
+{
+  "id": "icepi",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 182434.94806999998,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 28566.965897000002,
+      "elapsedMs": 152468.527162
+    }
+  ],
+  "errors": [
+    "PreparedPortPointRoutingSolver ran out of iterations",
+    "Error: PreparedPortPointRoutingSolver ran out of iterations",
+    "PreparedPortPointRoutingSolver ran out of iterations"
+  ],
+  "stage": "portPointPathingSolver",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "core": "0.0.2399",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "c38befed91f3ee10f9103d32fbe460f830e60026"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 36,
+    "importedSavedCopper": false
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "imx6",
+  "mode": "fanout",
+  "status": "running",
+  "renderCompleted": false,
+  "elapsedMs": 546368.584333,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "running",
+      "connections": 32,
+      "startedMs": 546290.200308
+    }
+  ],
+  "errors": [],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "core": "0.0.2399",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "c38befed91f3ee10f9103d32fbe460f830e60026"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 61,
+    "importedSavedCopper": false
+  }
+}

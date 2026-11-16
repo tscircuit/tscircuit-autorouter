@@ -1,0 +1,62 @@
+{
+  "dataset": "srj23",
+  "sample": 50,
+  "traceCount": 13,
+  "routedTracesIdentical": true,
+  "pointPairedInputIdentical": true,
+  "traceSha256": "90e1262610e267d6ce3eb5150a935fa7cf45b13ab52c59c788d8b090a1d683c6",
+  "beforeErrors": [
+    {
+      "type": "pcb_trace_error",
+      "error_type": "pcb_trace_error",
+      "message": "PCB trace unnamed trace overlaps with pcb_plated_hole \"unnamed through-hole pad\" (accidental contact)",
+      "pcb_trace_id": "source_net_5_mst0_0_routed",
+      "center": {
+        "x": -2.8810755003678854,
+        "y": 2.994240886372369
+      },
+      "source_trace_id": "",
+      "pcb_trace_error_id": "overlap_source_net_5_mst0_0_routed_pcb_plated_hole_11",
+      "pcb_component_ids": [],
+      "pcb_port_ids": [
+        "pcb_port_32",
+        "pcb_port_6",
+        "pcb_port_35"
+      ]
+    }
+  ],
+  "afterErrors": [
+    {
+      "type": "pcb_trace_error",
+      "error_type": "pcb_trace_error",
+      "message": "PCB trace unnamed trace overlaps with pcb_plated_hole \"unnamed through-hole pad\" (accidental contact)",
+      "pcb_trace_id": "source_net_5_mst0_0_routed",
+      "center": {
+        "x": -2.8810755003678854,
+        "y": 2.994240886372369
+      },
+      "source_trace_id": "",
+      "pcb_trace_error_id": "overlap_source_net_5_mst0_0_routed_pcb_plated_hole_11",
+      "pcb_component_ids": [],
+      "pcb_port_ids": [
+        "pcb_port_32",
+        "pcb_port_6",
+        "pcb_port_35"
+      ]
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_plated_hole_10_source_net_2_mst0_0_routed",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad unnamed through-hole pad and trace unnamed trace are too close (clearance: 0.024mm, minimum: 0.1mm)",
+      "pcb_pad_id": "pcb_plated_hole_10",
+      "pcb_trace_id": "source_net_2_mst0_0_routed",
+      "minimum_clearance": 0.1,
+      "actual_clearance": 0.023702609587495746,
+      "center": {
+        "x": -2.8856844360972165,
+        "y": 1.9426583412557399
+      }
+    }
+  ]
+}

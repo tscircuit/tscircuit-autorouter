@@ -1,0 +1,38 @@
+{
+  "id": "imx6",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 643594.140231,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 32,
+      "startedMs": 534411.151316,
+      "elapsedMs": 106780.00068199995
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "core": "0.0.2399",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "c5059c7e768ed23ba29eea7271423a778d7f1027"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 61,
+    "importedSavedCopper": false
+  }
+}

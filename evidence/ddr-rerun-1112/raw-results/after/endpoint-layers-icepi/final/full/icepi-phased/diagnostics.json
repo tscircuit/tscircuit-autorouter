@@ -1,0 +1,59 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": {
+    "phase": "plane_escape",
+    "stage": "portPointPathingSolver",
+    "iterations": 2147516,
+    "times": {
+      "preprocessSimpleRouteJsonSolver": 685.0092370000057,
+      "componentDetectionSolver": 15.637436000004527,
+      "escapeViaLocationSolver": 11005.528676000002,
+      "netToPointPairsSolver": 332.2286099999983,
+      "topologyPlanningSolver": 5634.328698000005,
+      "topologyMergingSolver": 9863.628687999997,
+      "nodeDimensionSubdivisionSolver": 41.51375199999893,
+      "edgeSolver": 4767.575305000006,
+      "availableSegmentPointSolver": 1460.7712039999897,
+      "necessaryCrampedPortPointSolver": 5441.808569000001,
+      "preloadedTraceGraphSolver": 32.95906600001035,
+      "portPointPathingSolver": 0
+    },
+    "active": null,
+    "joint": null,
+    "jointChild": null,
+    "jointGrandchild": null,
+    "prepared": {
+      "name": "PreparedPortPointRoutingSolver",
+      "iterations": 2000000,
+      "maxIterations": 2000000,
+      "stats": {
+        "neverSuccessfullyRoutedRouteCount": 1,
+        "greedyFinalRouteAttemptCount": 4,
+        "greedyFinalRouteRemainingRouteCount": 399,
+        "greedyFinalRouteMaxIterations": 50000
+      },
+      "error": "PreparedPortPointRoutingSolver ran out of iterations",
+      "failed": true,
+      "solved": false,
+      "state": {
+        "currentRouteId": 160,
+        "currentRouteNetId": 0,
+        "candidateBestCostGeneration": 162,
+        "goalPortId": 125130,
+        "ripCount": 0
+      }
+    }
+  },
+  "fanoutLastState": null,
+  "phaseInputs": [
+    {
+      "name": "plane_escape",
+      "connections": 8,
+      "terminals": 567,
+      "obstacles": 2038,
+      "aliases": 674092
+    }
+  ]
+}

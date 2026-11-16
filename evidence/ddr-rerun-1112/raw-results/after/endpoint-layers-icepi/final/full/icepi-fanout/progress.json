@@ -1,0 +1,37 @@
+{
+  "id": "icepi",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 509491.764308,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 32,
+      "startedMs": 263468.549304,
+      "elapsedMs": 244623.52133300004
+    }
+  ],
+  "errors": [
+    "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "core": "0.0.2399",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "c38befed91f3ee10f9103d32fbe460f830e60026"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 36,
+    "importedSavedCopper": false
+  }
+}

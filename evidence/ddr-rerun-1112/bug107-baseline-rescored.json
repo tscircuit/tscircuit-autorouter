@@ -1,0 +1,120 @@
+{
+  "traceCount": 763,
+  "reportedIssues": 6,
+  "byType": {
+    "pcb_trace_error": 2,
+    "pcb_via_trace_clearance_error": 2,
+    "pcb_pad_trace_clearance_error": 1,
+    "pcb_pad_pad_clearance_error": 1
+  },
+  "drcNetGroups": 191,
+  "errors": [
+    {
+      "type": "pcb_trace_error",
+      "error_type": "pcb_trace_error",
+      "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+      "pcb_trace_id": "source_trace_64__source_net_64_mst115_0",
+      "center": {
+        "x": -14.299999999999999,
+        "y": 13.723999999999998
+      },
+      "source_trace_id": "",
+      "pcb_trace_error_id": "overlap_source_trace_64__source_net_64_mst115_0_pcb_smtpad_965",
+      "pcb_component_ids": [],
+      "pcb_port_ids": [
+        "pcb_port_664",
+        "pcb_port_998",
+        "pcb_port_997"
+      ]
+    },
+    {
+      "type": "pcb_trace_error",
+      "error_type": "pcb_trace_error",
+      "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+      "pcb_trace_id": "source_trace_64__source_net_64_mst173_0",
+      "center": {
+        "x": -14.299999999999999,
+        "y": 13.724000000000016
+      },
+      "source_trace_id": "",
+      "pcb_trace_error_id": "overlap_source_trace_64__source_net_64_mst173_0_pcb_smtpad_965",
+      "pcb_component_ids": [],
+      "pcb_port_ids": [
+        "pcb_port_998",
+        "pcb_port_67",
+        "pcb_port_997"
+      ]
+    },
+    {
+      "type": "pcb_via_trace_clearance_error",
+      "pcb_via_trace_clearance_error_id": "via_trace_clearance_via_105_source_trace_64__source_net_64_mst165_0",
+      "error_type": "pcb_via_trace_clearance_error",
+      "message": "Via unnamed via and trace unnamed trace are too close (clearance: 0.001mm, minimum: 0.1mm)",
+      "pcb_via_id": "via_105",
+      "pcb_trace_id": "source_trace_64__source_net_64_mst165_0",
+      "minimum_clearance": 0.1,
+      "actual_clearance": 0.0010000000000000286,
+      "center": {
+        "x": -12.303466662736488,
+        "y": -7.840489957243955
+      }
+    },
+    {
+      "type": "pcb_via_trace_clearance_error",
+      "pcb_via_trace_clearance_error_id": "via_trace_clearance_via_606_source_trace_64__source_net_64_mst133_0",
+      "error_type": "pcb_via_trace_clearance_error",
+      "message": "Via unnamed via and trace unnamed trace are too close (clearance: 0.001mm, minimum: 0.1mm)",
+      "pcb_via_id": "via_606",
+      "pcb_trace_id": "source_trace_64__source_net_64_mst133_0",
+      "minimum_clearance": 0.1,
+      "actual_clearance": 0.001000000000000209,
+      "center": {
+        "x": -8.44053070724095,
+        "y": 6.449510210485322
+      }
+    },
+    {
+      "type": "pcb_pad_trace_clearance_error",
+      "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_pcb_plated_hole_23_source_trace_21__source_net_21_mst3_0",
+      "error_type": "pcb_pad_trace_clearance_error",
+      "message": "Pad unnamed through-hole pad and trace unnamed trace are too close (clearance: 0.093mm, minimum: 0.1mm)",
+      "pcb_pad_id": "pcb_plated_hole_23",
+      "pcb_trace_id": "source_trace_21__source_net_21_mst3_0",
+      "minimum_clearance": 0.1,
+      "actual_clearance": 0.0925412285350176,
+      "center": {
+        "x": -7.790196020534806,
+        "y": 18.436073145206777
+      }
+    },
+    {
+      "type": "pcb_pad_pad_clearance_error",
+      "pcb_pad_pad_clearance_error_id": "via_pad_clearance_via_100_pcb_smtpad_971",
+      "error_type": "pcb_pad_pad_clearance_error",
+      "message": "Via unnamed via and pad unnamed SMD pad are too close (clearance: 0mm, minimum: 0.15mm)",
+      "pcb_pad_ids": [
+        "via_100",
+        "pcb_smtpad_971"
+      ],
+      "minimum_clearance": 0.15,
+      "actual_clearance": 0,
+      "center": {
+        "x": -12.313936087902219,
+        "y": -6.550000000000001
+      },
+      "pcb_via_ids": [
+        "via_100"
+      ],
+      "pcb_trace_id": "source_trace_150__source_net_150_0"
+    }
+  ],
+  "originalCheckerReportedIssues": 0,
+  "correctedCheckerReportedIssues": 6,
+  "afterRerouteCorrectedCheckerReportedIssues": 0,
+  "beforeViaEntries": 729,
+  "afterViaEntries": 745,
+  "originalRoutedInputSha256": "21282b899076266afd640a54d2b8c0f90e5ca8e297fbeb6caac8696c9c614f48",
+  "beforeSource": "c5059c7e768ed23ba29eea7271423a778d7f1027",
+  "afterSource": "c38befed91f3ee10f9103d32fbe460f830e60026",
+  "baselineSvgMatchesPublishedSnapshotPixels": true
+}

@@ -1,0 +1,45 @@
+{
+  "id": "h616",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 252217.490551,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "completed",
+      "connections": 2,
+      "startedMs": 2357.755789,
+      "elapsedMs": 90329.785804
+    },
+    {
+      "name": "byte0",
+      "solver": "BusLanesPipelineSolver",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 92920.208442,
+      "elapsedMs": 157356.029424
+    }
+  ],
+  "errors": [
+    "Generated native surface approaches could not satisfy full-path geometry and matching",
+    "Error: Generated native surface approaches could not satisfy full-path geometry and matching",
+    "Generated native surface approaches could not satisfy full-path geometry and matching"
+  ],
+  "stage": "none",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "core": "0.0.2399",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "c5059c7e768ed23ba29eea7271423a778d7f1027"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 5,
+    "importedSavedCopper": false
+  }
+}

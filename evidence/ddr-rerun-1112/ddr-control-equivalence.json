@@ -1,0 +1,56 @@
+{
+  "orangecrab": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  },
+  "h616": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  },
+  "butterstick": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  },
+  "glider": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  },
+  "imx6": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  },
+  "icepi": {
+    "requestedNets": true,
+    "connectedNets": true,
+    "pcbTraces": true,
+    "vias": true,
+    "wireLengthMm": true,
+    "findings": true,
+    "geometryErrors": true
+  }
+}

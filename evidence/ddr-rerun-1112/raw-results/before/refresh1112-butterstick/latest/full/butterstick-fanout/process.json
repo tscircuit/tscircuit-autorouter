@@ -1,0 +1,9 @@
+{
+  "id": "butterstick",
+  "mode": "fanout",
+  "variant": "latest",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 603948.0242399999,
+  "peakRssMb": 2005.5234375
+}

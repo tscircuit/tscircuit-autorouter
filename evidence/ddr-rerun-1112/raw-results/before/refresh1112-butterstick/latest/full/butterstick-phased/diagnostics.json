@@ -1,0 +1,39 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": {
+    "phase": "plane_escape",
+    "stage": "portPointPathingSolver",
+    "iterations": 4185705,
+    "times": {
+      "preprocessSimpleRouteJsonSolver": 1147.2274280000056,
+      "componentDetectionSolver": 18.12989699999889,
+      "escapeViaLocationSolver": 27554.352179999994,
+      "netToPointPairsSolver": 432.75914999999804,
+      "topologyPlanningSolver": 12781.434254999993,
+      "topologyMergingSolver": 34439.85399999999,
+      "nodeDimensionSubdivisionSolver": 68.32663199999661,
+      "edgeSolver": 14136.783503999992,
+      "availableSegmentPointSolver": 2136.150191000008,
+      "necessaryCrampedPortPointSolver": 99583.67476,
+      "preloadedTraceGraphSolver": 47.28648399998201,
+      "portPointPathingSolver": 0
+    },
+    "active": null,
+    "joint": null,
+    "jointChild": null,
+    "jointGrandchild": null,
+    "prepared": null
+  },
+  "fanoutLastState": null,
+  "phaseInputs": [
+    {
+      "name": "plane_escape",
+      "connections": 12,
+      "terminals": 642,
+      "obstacles": 2733,
+      "aliases": 1342203
+    }
+  ]
+}

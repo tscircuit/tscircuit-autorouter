@@ -1,0 +1,23 @@
+{
+  "requestedNets": 53,
+  "connectedNets": 53,
+  "unconnectedNets": [],
+  "pcbTraces": 57,
+  "vias": 94,
+  "wireLengthMm": 665.8867346982487,
+  "findings": {
+    "missing_traces": 0,
+    "disconnected_ports": 0,
+    "trace_overlap": 0,
+    "pad_trace": 0,
+    "via_trace": 0,
+    "via_pad": 0,
+    "via_spacing": 0,
+    "contiguous": 0,
+    "via_in_pad": 0,
+    "hole_trace": 0,
+    "width": 0
+  },
+  "geometryErrors": [],
+  "validationMs": 409.90855399999987
+}
