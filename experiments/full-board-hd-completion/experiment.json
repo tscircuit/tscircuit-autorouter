@@ -1,0 +1,74 @@
+{
+  "issue": "inactive_net_obstacle_clearance",
+  "frozen": true,
+  "patchTarget": "autorouter",
+  "autorouterCommit": "adb881cb67ae777a13ae3f7e76bdbc6d61f542ab",
+  "tinyCommit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "dataset18Commit": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "expectedLockSha256": "0a3887cace32cc804a5bf0ccdd8c4a5936cb81f8785c1e3b3372076468d0d322",
+  "sourceGraphSeedRun": 43840051309,
+  "files": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": "75dbe4f280ce243da899793d35d732c5820d254b2d2c1830cbf253938ada059a",
+      "afterSha256": "a7869f1573044d6e9872e2a5d39300c27eff04528d09acc3bdf6b19894e123ae"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": "8c73f86a73a30be9ccfd488792494bbebc6cbe7f9ebe5684499a689557235e53",
+      "afterSha256": "bea76e5ac12eeafdb00a3efb04f39ec2288b0c6a46b7da2ce1d14e28b111e206"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createInactiveNetObstacleEdgeBlocker.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": null,
+      "afterSha256": "7acfbe2d0a75b83914fa3f5bc209c3ebf5e207e1867af28f75c92eaab27071d6"
+    },
+    {
+      "path": "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": "60ea9b8c70cc9dbdadf1aead0dd25a86d113ac9fe3e18c7287ed531419cf07c8",
+      "afterSha256": "dbc5ac6c8018508ca46f7f2552c563b70ab1ca5e40604a7a3ee360b0c5fc30fc"
+    },
+    {
+      "path": "lib/utils/getPointToObstacleDistance.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": null,
+      "afterSha256": "2debc41d463c051a9f3e99b8a29186eab4741f17d3b3a4c8be0e801b985e0dff"
+    },
+    {
+      "path": "tests/features/h616-inactive-pad-crossing.test.ts",
+      "role": "test",
+      "bundled": false,
+      "beforeSha256": null,
+      "afterSha256": "bf064d916ff753ec232bef5ff260ed763cb257a3a139de8e3548d19f98b4a72f"
+    }
+  ],
+  "independentReview": "Independent review cleared after original-obstacle geometry override; originalSrj already has board-valid obstacle layers; no Tiny/Core/KD/MST modifications.",
+  "candidate": "Remove only a whole shared-edge layer certified inside one inactive-net obstacle clearance envelope using original board geometry; active/preloaded canonical nets are excluded. No MST/KD/Tiny/Core/budget changes.",
+  "testFiles": [
+    "tests/features/h616-inactive-pad-crossing.test.ts",
+    "tests/solvers/available-segment-point-active-gap-components.test.ts",
+    "tests/solvers/available-segment-point-adjacency-tolerance.test.ts",
+    "tests/solvers/available-segment-point-closed-pocket.test.ts",
+    "tests/solvers/available-segment-point-component-escape.test.ts",
+    "tests/solvers/available-segment-point-numerical-gap-priority.test.ts",
+    "tests/bugs/necessary-cramped-port-point-solver-no-duplicate-explosion.test.ts"
+  ],
+  "sourceFreezeSha256": "da13bfb28cacb5b6abe6c36d7b513e5385abc518fbd61f9a4287292e9ffa3f19",
+  "localValidation": {
+    "focusedTests": 7,
+    "expectCalls": 98,
+    "focusedTypeScript": true,
+    "privateGeometryAndActualPipelineStageChecks": 16,
+    "buildPerformedLocally": false,
+    "dependencyCaveat": "Local focused tests used existing shared dependencies; official matched builds will use the frozen AR1103 graph."
+  }
+}

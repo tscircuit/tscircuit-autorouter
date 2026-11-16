@@ -1,0 +1,237 @@
+{
+  "h616-spaced": {
+    "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+    "implementationHashes": [
+      {
+        "name": "h616.tsx",
+        "sha256": "dca85fe287be5a6a3ebe839211a0c7f296f47cec64c8432d3ec22afc824808bf"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+      },
+      {
+        "name": "peripheral-layout.ts",
+        "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "/DRAM/DQ0",
+      "/DRAM/DQ1",
+      "/DRAM/DQ10",
+      "/DRAM/DQ11",
+      "/DRAM/DQ12",
+      "/DRAM/DQ13",
+      "/DRAM/DQ14",
+      "/DRAM/DQ15",
+      "/DRAM/DQ2",
+      "/DRAM/DQ3",
+      "/DRAM/DQ4",
+      "/DRAM/DQ5",
+      "/DRAM/DQ6",
+      "/DRAM/DQ7",
+      "/DRAM/DQ8",
+      "/DRAM/DQ9",
+      "/DRAM/SA0",
+      "/DRAM/SA1",
+      "/DRAM/SA10",
+      "/DRAM/SA11",
+      "/DRAM/SA12",
+      "/DRAM/SA13",
+      "/DRAM/SA14",
+      "/DRAM/SA15",
+      "/DRAM/SA2",
+      "/DRAM/SA3",
+      "/DRAM/SA4",
+      "/DRAM/SA5",
+      "/DRAM/SA6",
+      "/DRAM/SA7",
+      "/DRAM/SA8",
+      "/DRAM/SA9",
+      "/DRAM/SBA0",
+      "/DRAM/SBA1",
+      "/DRAM/SBA2",
+      "/DRAM/SCAS",
+      "/DRAM/SCKE0",
+      "/DRAM/SCKE1",
+      "/DRAM/SCKN",
+      "/DRAM/SCKP",
+      "/DRAM/SCS0",
+      "/DRAM/SCS1",
+      "/DRAM/SDQM0",
+      "/DRAM/SDQM1",
+      "/DRAM/SDQS0N",
+      "/DRAM/SDQS0P",
+      "/DRAM/SDQS1N",
+      "/DRAM/SDQS1P",
+      "/DRAM/SODT0",
+      "/DRAM/SODT1",
+      "/DRAM/SRAS",
+      "/DRAM/SRST",
+      "/DRAM/SWE"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": null,
+      "connectedNets": 53,
+      "requestedRoutableNets": 121,
+      "listedFindingCount": 487,
+      "sharedDrcErrorCount": 3,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "byte0",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "byte1",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "remaining",
+        "status": "completed",
+        "connections": 37,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      },
+      {
+        "name": "other_signals",
+        "status": "failed",
+        "connections": 56,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_116; regional fallback failed: Failed to solve 1 nodes, topology_merge_7204. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, MultiHeadPolyLineIntraNodeSolver3 ran out of iterations (MAX_ITERATIONS=1000), Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore. (capacity-autorouter@0.0.1103)",
+    "coarseConfiguration": {},
+    "source": "Actual published Main3197/Core2390/Eval1784/AR1103/checks279 completed cloud case; full result.lastError retained, timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "0ff2b26dc19e39c4f240de34a0720e2a5c3bb4b43bf5743ceca313b4f08d4319",
+      "assessment.json": "9fee54d47324712390e782da7684e66d13c17942663821490ecab8a7d2a0f11c",
+      "reported-summary.json": "d8f47553b370f524a56a7d69bbe7f225acd0e1dcdb00a10daca0ae95f3ee4f97"
+    },
+    "fullPublishedReferenceSha256": "00e23355307cf5f028b5fffc564f1d460f08001ca422044eb978c5d896822097"
+  },
+  "icepi-spaced": {
+    "sourceSha256": "c27dd280882cfa15a3516a9c60796c83f47ff380505a212d2d1672ea4b61f375",
+    "implementationHashes": [
+      {
+        "name": "icepi.tsx",
+        "sha256": "4371f08988c20f95ecfae9ab47531a90ea38b40976769f8f5d7ffdc40d60e975"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+      },
+      {
+        "name": "peripheral-layout.ts",
+        "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "/DDR3/A0",
+      "/DDR3/A1",
+      "/DDR3/A10",
+      "/DDR3/A11",
+      "/DDR3/A12",
+      "/DDR3/A13",
+      "/DDR3/A14",
+      "/DDR3/A15",
+      "/DDR3/A2",
+      "/DDR3/A3",
+      "/DDR3/A4",
+      "/DDR3/A5",
+      "/DDR3/A6",
+      "/DDR3/A7",
+      "/DDR3/A8",
+      "/DDR3/A9",
+      "/DDR3/BA0",
+      "/DDR3/BA1",
+      "/DDR3/BA2",
+      "/DDR3/CKE",
+      "/DDR3/CLK+",
+      "/DDR3/CLK-",
+      "/DDR3/DQ0",
+      "/DDR3/DQ1",
+      "/DDR3/DQ10",
+      "/DDR3/DQ11",
+      "/DDR3/DQ12",
+      "/DDR3/DQ13",
+      "/DDR3/DQ14",
+      "/DDR3/DQ15",
+      "/DDR3/DQ2",
+      "/DDR3/DQ3",
+      "/DDR3/DQ4",
+      "/DDR3/DQ5",
+      "/DDR3/DQ6",
+      "/DDR3/DQ7",
+      "/DDR3/DQ8",
+      "/DDR3/DQ9",
+      "/DDR3/DQM0",
+      "/DDR3/DQM1",
+      "/DDR3/DQS0+",
+      "/DDR3/DQS0-",
+      "/DDR3/DQS1+",
+      "/DDR3/DQS1-",
+      "/DDR3/ODT",
+      "/DDR3/~{CAS}",
+      "/DDR3/~{CS}",
+      "/DDR3/~{RAS}",
+      "/DDR3/~{RESET}",
+      "/DDR3/~{WE}"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": null,
+      "connectedNets": 50,
+      "requestedRoutableNets": 230,
+      "listedFindingCount": 1046,
+      "sharedDrcErrorCount": 0,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "byte0",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "byte1",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "remaining",
+        "status": "completed",
+        "connections": 34,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      },
+      {
+        "name": "other_signals",
+        "status": "failed",
+        "connections": 166,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst6; regional fallback failed: Failed to solve 1 nodes, topology_merge_17108. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore. (capacity-autorouter@0.0.1103)",
+    "coarseConfiguration": {},
+    "source": "Actual published Main3197/Core2390/Eval1784/AR1103/checks279 completed cloud case; full result.lastError retained, timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "94e418e62c48d37c4ce9a9f665fc6fc86e1a01eefd07b9cf55c532edadd56713",
+      "assessment.json": "014e04f0b866ee15715a1068cf0f923db32015e5e8a7d6ed8dd930ad0b9d0899",
+      "reported-summary.json": "2f1bfaced860943d53e18c2e815e7ac1b7de22c8ffa8002651c1e5de1f3c7b2f"
+    },
+    "fullPublishedReferenceSha256": "38a5bebc5a282541fb6f1dc48521b0d619157e023cc583b872b9c5952610ea42"
+  }
+}

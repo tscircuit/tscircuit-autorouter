@@ -38,8 +38,8 @@ def connected_names(packet: dict, reference: dict, cohort: str) -> list[str] | N
 def published_parity(packet: dict, reference: dict, cohort: str) -> dict:
     progress, result = packet["progress"], packet["result"]
     phases = [{key: row[key] for key in ["name", "status", "connections", "solver"]} for row in progress["phases"]]
-    error = str(progress["errors"][0]) if progress["errors"] else None
-    blocker = "iteration_limit" if error and "ran out of iterations" in error else error
+    error = result.get("lastError")
+    blocker = error
     configs = {row["phase"]: {key: value for key, value in row["configured"].items() if key != "className"} for row in packet["diagnostics"]["reports"] if row.get("configured")}
     checks = {
         "sourceSha256": progress["sourceSha256"] == reference["sourceSha256"],
@@ -47,7 +47,7 @@ def published_parity(packet: dict, reference: dict, cohort: str) -> dict:
         "countsAndListedFindings": {key: result.get(key) for key in reference["counts"]} == reference["counts"],
         "namedPhysicalConnectivity": connected_names(packet, reference, cohort) == reference["connectedNativeNetNames"],
         "phaseOrderAndOutcome": phases == reference["phases"],
-        "firstBlockerClass": blocker == reference["blockerClass"],
+        "lastBlockerClass": blocker == reference["blockerClass"],
         "nativeCoarseOptionsAndDimensions": configs == reference["coarseConfiguration"],
     }
     return {"matchesAvailablePublishedEvidence": all(checks.values()), "checks": checks,
