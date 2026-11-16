@@ -173,6 +173,130 @@
         }
       ],
       "sha256": "5f4412c80e7feeaca193977bb22dabc779c8e0549154328a6e98b114a2fbf8df"
+    },
+    {
+      "id": "sample007",
+      "board": "SEPIC buck-boost converter",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/5548af181cda76191e83e48a7fec2f31c102d066/fixtures/repro/sepic-converter/board.tsx",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3810",
+        "capture": "Generated from the pinned TSX repro with renderSepicRepro, capturing the input to Pipeline 9"
+      },
+      "capture": "Full two-layer board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_0",
+          "widthMm": 1.2,
+          "label": "VIN"
+        },
+        {
+          "connection": "source_net_1",
+          "widthMm": 1,
+          "label": "VOUT"
+        },
+        {
+          "connection": "source_net_2",
+          "widthMm": 1.2,
+          "label": "SW"
+        },
+        {
+          "connection": "source_net_5",
+          "widthMm": 1.2,
+          "label": "GND"
+        }
+      ],
+      "sha256": "7d8b8d8b5b25372d1874d36bfce6f363de21763bff1fa207c750dba5fa6c9e8a"
+    },
+    {
+      "id": "sample008",
+      "board": "NEMA 23 stepper controller",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/5548af181cda76191e83e48a7fec2f31c102d066/fixtures/bug-reports/nema-23-stepper-controller/nema-23-stepper-controller.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3843"
+      },
+      "capture": "Full four-layer board with 124 connections, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_0",
+          "widthMm": 0.3,
+          "label": "GND"
+        },
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.3,
+          "label": "V3V3"
+        },
+        {
+          "connection": "source_net_48",
+          "widthMm": 0.25,
+          "label": "VM"
+        },
+        {
+          "connection": "source_net_49",
+          "widthMm": 0.25,
+          "label": "VCP"
+        }
+      ],
+      "sha256": "678ff77b8a87ad808d2c1d6ae440bccbd69c768b5454b3c0be602a8da90e64e3"
+    },
+    {
+      "id": "sample009",
+      "board": "T113-S3 Linux board",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/5548af181cda76191e83e48a7fec2f31c102d066/fixtures/bug-reports/t113-linux-exact-pipeline9-root/t113-linux-exact.srj.json.gz",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/2576"
+      },
+      "capture": "Final routing phase, with 342 preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_15",
+          "widthMm": 0.4,
+          "label": "V5VIN"
+        },
+        {
+          "connection": "source_net_16",
+          "widthMm": 0.4,
+          "label": "V1V8_FIRST"
+        },
+        {
+          "connection": "source_net_19",
+          "widthMm": 0.4,
+          "label": "V1V5_DRAM"
+        }
+      ],
+      "sha256": "e5f04d3b3453cee022b1c6b2a2beaf948a548b1b689dab1e4309a2399b014155"
+    },
+    {
+      "id": "sample010",
+      "board": "Motherboard power-distribution phase",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/5548af181cda76191e83e48a7fec2f31c102d066/fixtures/bug-reports/bugreport110-motherboard-power-phase/input.srj.json.gz",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3343"
+      },
+      "capture": "Power-distribution phase, with 638 preloaded traces and two copper-pour reservations",
+      "widthTargets": [
+        {
+          "connection": "source_net_18",
+          "widthMm": 2.5
+        },
+        {
+          "connection": "source_net_20",
+          "widthMm": 2.5
+        },
+        {
+          "connection": "source_net_131",
+          "widthMm": 0.6
+        },
+        {
+          "connection": "source_net_166",
+          "widthMm": 0.6
+        },
+        {
+          "connection": "source_net_167",
+          "widthMm": 2.5
+        }
+      ],
+      "sha256": "fe668fa67c67bad115236aa21ab18cb0f7853b2b49da7b0131218a807f7043fb"
     }
   ]
 }
