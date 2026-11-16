@@ -29,9 +29,9 @@ test("captures iCE/Pi plane transitions at the simplification boundary", async (
   const step = pipeline.pipelineDef.find(
     (candidate) => candidate.solverName === "traceSimplificationSolver",
   )!
-  const [params] = step.getConstructorParams(
-    pipeline,
-  ) as ConstructorParameters<typeof TraceSimplificationSolver>
+  const [params] = step.getConstructorParams(pipeline) as ConstructorParameters<
+    typeof TraceSimplificationSolver
+  >
   const merger = new SameNetViaMergerSolver({
     inputHdRoutes: [...params.hdRoutes],
     obstacles: [...params.obstacles],
