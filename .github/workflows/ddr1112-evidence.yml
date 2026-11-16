@@ -6,6 +6,29 @@ permissions:
   contents: read
   actions: read
 jobs:
+  routed-snapshot:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 43968901837
+          github-token: ${{ github.token }}
+          name: diff-png-and-snap-svg-artifacts-node1
+          path: snapshots
+      - name: Export the validated received native PCB SVG
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('snapshots').rglob('*bugreport107*.svg'):
+                  archive.writestr(path.name,path.read_bytes())
+          print('DDR1112_BUG107_NATIVE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('DDR1112_BUG107_NATIVE_END')
+          PY
   collect:
     runs-on: ubuntu-24.04
     steps:
