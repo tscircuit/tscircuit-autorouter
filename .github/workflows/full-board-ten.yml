@@ -1,8 +1,8 @@
-name: Published3207 full-board ten-case benchmark
+name: Published3207 initial route queue qualification
 
 on:
   push:
-    branches: [bench/full-board-ten-3207-20261116]
+    branches: [bench/full-board-initial-queue-order-3207]
 
 permissions:
   contents: read
@@ -14,14 +14,10 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: icepi, experiment: initial-queue-order-diagnostic, cohorts: "original" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -80,9 +76,15 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
+      - name: Install the diagnostic after preparing the original assessor
+        id: candidate
+        run: >-
+          python3 experiments/full-board-ten/initial-queue-order-runtime.py install
+          "$FULL_BOARD_ROOT" "$BOARD" "$FULL_BOARD_COHORTS"
+
       - name: Run original full circuit
         id: original
-        if: matrix.experiment == 'published'
+        if: contains(matrix.cohorts, 'original')
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -90,7 +92,7 @@ jobs:
           "$FULL_BOARD_ROOT/results/$BOARD/original"
 
       - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
+        if: ${{ always() && contains(matrix.cohorts, 'original') }}
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
@@ -102,7 +104,7 @@ jobs:
 
       - name: Run spaced full circuit
         id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.candidate.outcome == 'success' && contains(matrix.cohorts, 'spaced') }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -110,7 +112,7 @@ jobs:
           "$FULL_BOARD_ROOT/results/$BOARD/spaced"
 
       - name: Preserve spaced geometry and diagnostics
-        if: always()
+        if: ${{ always() && contains(matrix.cohorts, 'spaced') }}
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
@@ -119,6 +121,10 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
+
+      - name: Verify original packages and neutral assessment after the run
+        if: ${{ always() && steps.candidate.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/initial-queue-order-runtime.py verify "$FULL_BOARD_ROOT"
 
       - name: Publish compact result notices and summary
         id: report
@@ -138,6 +144,8 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
+            .full-board-run/initial-queue-order-*.json
+            experiments/full-board-ten/initial-queue-order-anchor.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json

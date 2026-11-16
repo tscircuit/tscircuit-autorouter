@@ -1,10 +1,13 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
+import { serialize } from "node:v8"
 
 type RuntimeObject = Record<string, any>
 type DiagnosticOptions = {
   pipelineClass: { prototype: RuntimeObject }
   registeredPipelineClass: unknown
   targetPhase: string | undefined
+  verifyInitialQueueOrder?: boolean
   onSnapshot: (report: RuntimeObject) => void
 }
 
@@ -106,6 +109,59 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
     assert(report && pathing)
     const { problem, topology } = solver
     const routeCount = requiredNumber(problem.routeCount, "problem.routeCount")
+    if (options.verifyInitialQueueOrder) {
+      assert.equal(solver.iterations, 0, "Initial queue observer must precede routing")
+      assert.equal(solver._setupDone, false, "Initial queue observer must precede setup")
+      assert(routeCount <= 4096, "Initial queue ledger exceeds the diagnostic bound")
+      const descriptor = Object.getOwnPropertyDescriptor(solver, "_setup")
+      const setup = solver._setup
+      assert.equal(typeof setup, "function")
+      solver._setup = function (this: RuntimeObject, ...args: unknown[]): unknown {
+        assert.equal(this, solver)
+        assert.equal(report!.initialQueueOrder, undefined, "Initial setup ran more than once")
+        const beforeIds: number[] = [...this.state.unroutedRoutes]
+        const problemBefore = serialize(problem)
+        const topologyBefore = serialize(topology)
+        let result: unknown
+        try { result = Reflect.apply(setup, this, args) }
+        finally { restoreMethod(this, "_setup", descriptor) }
+        assert.equal(this.problem, problem)
+        assert.equal(this.topology, topology)
+        const problemAfter = serialize(problem)
+        const topologyAfter = serialize(topology)
+        assert(problemBefore.equals(problemAfter), "Initial scheduling changed canonical problem data")
+        assert(topologyBefore.equals(topologyAfter), "Initial scheduling changed canonical topology data")
+        const afterIds: number[] = [...this.state.unroutedRoutes]
+        assert.equal(new Set(beforeIds).size, beforeIds.length)
+        assert(beforeIds.every(id => Number.isInteger(id) && id >= 0 && id < routeCount))
+        assert.deepEqual([...afterIds].sort((a, b) => a - b), [...beforeIds].sort((a, b) => a - b), "Initial scheduling changed pending route IDs")
+        assert.deepEqual(afterIds.map(id => problem.routeNet[id]), beforeIds.map(id => problem.routeNet[id]), "Initial scheduling changed physical-net slots")
+        const sameLayer = (id: number): boolean => topology.portZ[problem.routeStartPort[id]] === topology.portZ[problem.routeEndPort[id]]
+        for (const netId of new Set(beforeIds.map(id => problem.routeNet[id]))) {
+          const beforeNet = beforeIds.filter(id => problem.routeNet[id] === netId)
+          const expected = [...beforeNet.filter(sameLayer), ...beforeNet.filter(id => !sameLayer(id))]
+          assert.deepEqual(afterIds.filter(id => problem.routeNet[id] === netId), expected, "Initial scheduling must preserve order within each endpoint-layer class")
+        }
+        const pending = new Set(beforeIds)
+        const excludedIds = Array.from({ length: routeCount }, (_, id) => id).filter(id => !pending.has(id))
+        assert(excludedIds.every(id => !afterIds.includes(id)), "Initial scheduling reintroduced excluded fixed/preloaded routes")
+        const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex")
+        report!.initialQueueOrder = {
+          verified: true, hookBeforeFirstSetup: true, routeCount,
+          beforeIds, afterIds, excludedIds,
+          sameLayerCount: beforeIds.filter(sameLayer).length,
+          crossLayerCount: beforeIds.filter(id => !sameLayer(id)).length,
+          changedSlots: afterIds.filter((id, index) => id !== beforeIds[index]).length,
+          problemBeforeSha256: digest(problemBefore), problemAfterSha256: digest(problemAfter),
+          topologyBeforeSha256: digest(topologyBefore), topologyAfterSha256: digest(topologyAfter),
+          canonicalDataExact: true, queuedIdPermutation: true, netSlotsStable: true,
+          layerClassOrderStable: true, excludedRoutesRemainExcluded: true,
+        }
+        options.onSnapshot(report!)
+        return result
+      }
+      restorations.push(() => restoreMethod(solver, "_setup", descriptor))
+    }
     assert.equal(solver.routeAttemptCountByRouteId.length, routeCount)
     assert.equal(solver.routeSuccessCountByRouteId.length, routeCount)
     const pipeline = pathing.tinyPipelineSolver
@@ -286,6 +342,7 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
       restorations.push(() => restoreMethod(prototype, "step", descriptor))
     },
     finish(): RuntimeObject | null {
+      if (options.verifyInitialQueueOrder && inner) assert.equal(report?.initialQueueOrder?.verified, true, "Native initial queue policy was not observed")
       if (report && finalSnapshot) report.final = finalSnapshot()
       if (report) report.innerHookInstalled = Boolean(inner)
       for (const restore of restorations.reverse()) restore()

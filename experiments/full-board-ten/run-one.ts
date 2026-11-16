@@ -1,5 +1,5 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHash } from "node:crypto"
 
@@ -44,6 +44,11 @@ if (existsSync(diagnosticPath)) {
 }
 const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
+
+if (task.autorouterInitialQueueOrder) {
+  const restore = Bun.spawnSync(["python3", join(import.meta.dir, "initial-queue-order-runtime.py"), "restore", dirname(task.runtimeManifestPath)], { stdout: "inherit", stderr: "inherit" })
+  if (restore.exitCode !== 0) throw new Error("Original autorouter/assessment integrity restoration failed")
+}
 
 let auditExitCode: number | null = null, auditTimedOut = false
 let emittedCounts: Record<string, number> | null = null

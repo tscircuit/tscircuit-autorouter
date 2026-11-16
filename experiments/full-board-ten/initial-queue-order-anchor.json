@@ -1,0 +1,25 @@
+{
+  "originalAutorouterSHA256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
+  "unchangedCoreSHA256": "5ad80904e4fec447cccd9e12146b9260d82f97b58427a36d7c2934bdf0343385",
+  "expectedCandidateAutorouterSHA256": "c2ac41c70438b1478201457a799c03b7bd823e74da2f86c2219a1948ed255461",
+  "replacements": [
+    {
+      "name": "order-initial-prepared-pending-routes-within-net-slots",
+      "old": "xQ=class extends pQ{geometry=new _Q(this.topology);workspace=new mQ(this.geometry);asyncRunning=!1;_step(){",
+      "new": "xQ=class extends pQ{geometry=new _Q(this.topology);workspace=new mQ(this.geometry);asyncRunning=!1;_setup() {\n        super._setup();\n        const { state, problem, topology } = this;\n        const pendingRoutesByNet = new Map();\n        for (const routeId of state.unroutedRoutes) {\n            const netId = problem.routeNet[routeId];\n            let pendingRoutes = pendingRoutesByNet.get(netId);\n            if (!pendingRoutes) {\n                pendingRoutes = { routeIds: [], nextRouteIndex: 0 };\n                pendingRoutesByNet.set(netId, pendingRoutes);\n            }\n            pendingRoutes.routeIds.push(routeId);\n        }\n        for (const { routeIds } of pendingRoutesByNet.values()) {\n            routeIds.sort((leftRouteId, rightRouteId) => {\n                const leftCrossesLayer = topology.portZ[problem.routeStartPort[leftRouteId]] !==\n                    topology.portZ[problem.routeEndPort[leftRouteId]];\n                const rightCrossesLayer = topology.portZ[problem.routeStartPort[rightRouteId]] !==\n                    topology.portZ[problem.routeEndPort[rightRouteId]];\n                return Number(leftCrossesLayer) - Number(rightCrossesLayer);\n            });\n        }\n        // Keep each net's existing slots, and preserve order within each layer class.\n        state.unroutedRoutes = state.unroutedRoutes.map((routeId) => {\n            const pendingRoutes = pendingRoutesByNet.get(problem.routeNet[routeId]);\n            const nextRouteId = pendingRoutes.routeIds[pendingRoutes.nextRouteIndex];\n            pendingRoutes.nextRouteIndex++;\n            return nextRouteId;\n        });\n    }_step(){",
+      "byteOffset": 2070198,
+      "oldSHA256": "b20c0a8917d37f1b6b778283ad2d28ebbc963cb569d4e506f881d0c45a322924",
+      "newSHA256": "b820d02adbfaa24e5ff97641583b38794ddc3c3d7b0f859467b4297f62a17bae"
+    }
+  ],
+  "source": {
+    "repository": "tscircuit/tiny-hypergraph",
+    "commit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+    "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
+    "insertionAfterLine": 38,
+    "method": "PreparedPortPointRoutingSolver._setup",
+    "baseSHA256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79",
+    "candidateSHA256": "8966fc73c65189432c0263541ccd3d07a71cbf9a1c8b0910661fc1fc90e72f53"
+  },
+  "scope": "Diagnostic only: pairs whose selected endpoints share a layer first, within each physical net's existing pending queue slots during Prepared main initial setup. This does not constrain the routed layers. Canonical routes/endpoints/topology unchanged; fixed/preloaded already removed; resets/fallback initializers/budgets unchanged."
+}

@@ -90,7 +90,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: Boolean(task.autorouterInitialQueueOrder), cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -165,6 +165,7 @@ circuit.on("solver:started", (event: any): void => {
     coarseObserver = createCoarseRoutingDiagnostics({
       pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
       targetPhase: phaseName,
+      verifyInitialQueueOrder: Boolean(task.autorouterInitialQueueOrder),
       onSnapshot: report => atomic("coarse-diagnostics.json", JSON.stringify({ reports: [...coarseReports, report] }, null, 2)),
     })
     coarseObserver.onSolverStarted(event, phaseName)

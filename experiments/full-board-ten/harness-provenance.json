@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14632,
+      "sha256": "2b1b19e562c02f1e9734f961bd0f3d60e1ce2c3c66e311556c5153b57a3ed3f0"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11097,
+      "sha256": "d06061415137b099873f172167f2efc6aab52fa01a5cad39a7225b718ead6b0d"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -38,9 +38,21 @@
     },
     {
       "name": "createCoarseRoutingDiagnostics.ts",
-      "bytes": 18242,
-      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+      "bytes": 22282,
+      "sha256": "84db32dccb2c721466f27d4834ee62945e2e951c45ac5881c44fd92d151a2528"
+    },
+    {
+      "name": "initial-queue-order-runtime.py",
+      "bytes": 12025,
+      "sha256": "3d6232d4087316150fa3682972966e3603fab93991f8d814133f8c0c63840676"
+    },
+    {
+      "name": "initial-queue-order-anchor.json",
+      "bytes": 3212,
+      "sha256": "0a01a93cfb3bca2de3333eb532ef02d710ca9f19aa4e5d62aa4e83806abd8e53"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead. Bounded first-setup queue ledger verifies exact canonical problem/topology bytes, pending-ID permutation, physical-net slots, stable layer classes, and exclusion of preloaded/fixed routes; it retains hashes and route IDs only. No timing improvement is claimed.",
+  "baseControllerCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+  "candidateExperiment": "initial-queue-order-diagnostic"
 }
