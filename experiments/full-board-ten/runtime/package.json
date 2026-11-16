@@ -41,13 +41,13 @@
     "@tscircuit/alphabet": "0.0.25",
     "@tscircuit/krt-wasm": "^0.1.1",
     "@tscircuit/miniflex": "^0.0.4",
-    "@tscircuit/runframe": "^0.0.3251",
+    "@tscircuit/runframe": "^0.0.3254",
     "circuit-json-to-bpc": "^0.0.13",
     "@tscircuit/matchpack": "^0.0.100",
     "@tscircuit/soup-util": "^0.0.41",
     "circuit-json-to-gltf": "^0.0.164",
     "@tscircuit/math-utils": "0.0.39",
-    "circuit-json-to-spice": "^0.0.45",
+    "circuit-json-to-spice": "^0.0.47",
     "kicad-to-circuit-json": "^0.0.149",
     "transformation-matrix": "^2.16.1",
     "@tscircuit/footprinter": "^0.0.451",
@@ -74,9 +74,9 @@
     "@jscad/modeling": "^2.13.0",
     "react-reconciler": "^0.32.0",
     "@tscircuit/mm": "0.0.9",
-    "tscircuit": "0.0.3193",
-    "@tscircuit/core": "0.0.2386",
-    "@tscircuit/eval": "0.0.1781",
-    "@tscircuit/capacity-autorouter": "0.0.1101"
+    "tscircuit": "0.0.3195",
+    "@tscircuit/core": "0.0.2388",
+    "@tscircuit/eval": "0.0.1783",
+    "@tscircuit/capacity-autorouter": "0.0.1102"
   }
 }
