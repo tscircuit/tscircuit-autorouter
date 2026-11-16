@@ -1,0 +1,2047 @@
+{
+  "versions": {
+    "tscircuit": "0.0.3205",
+    "core": "0.0.2398",
+    "autorouter": "0.0.1111",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.58"
+  },
+  "routerBefore": "5548af181cda76191e83e48a7fec2f31c102d066",
+  "coreCommit": "d524d0a297a35de7c2b5a3e3f44ffa070004bb56",
+  "benchmarkRouterAfter": "e4fa998c4caf738283eedff3fa9987baf3c20d0a",
+  "finalFixCommit": "7b72b104507af4b862aea89ae83ef30c25c01a6d",
+  "baselineRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43947641756",
+  "finalRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43951456533",
+  "reproPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3868",
+  "fixPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3869",
+  "worker": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bun": "1.4.3",
+  "routingBudgetSeconds": 600,
+  "concurrency": 2,
+  "selectedFix": "Canonicalize stitched layer transitions before TraceSimplificationSolver so via merging receives exactly co-located XY points.",
+  "capturedFailure": "Three actual iCE/Pi +1V5 routes, with a transition differing by about 1.3e-12 mm in XY, fail via merging. The full simplification replay now solves.",
+  "boards": [
+    {
+      "id": "orangecrab",
+      "title": "OrangeCrab rev 0.2.1 ECP5 DDR3",
+      "sourceSha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9",
+      "tsxSha256": "d3bc43b615d1be58effb969775b478d8e7e4066d8aaaa19d5689388ddf55a307",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 152,
+            "traces": 0,
+            "vias": 0,
+            "pours": 29,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 11,
+                "startedMs": 6271.388206,
+                "elapsedMs": 593830.615386
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 602331.2259190001,
+            "peakRssMb": 3904.234375,
+            "timedOut": false,
+            "lastPipelineStage": "powerTraceExpansionSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 355.4600450000007,
+              "componentDetectionSolver": 16.432048999999097,
+              "escapeViaLocationSolver": 4380.6274630000025,
+              "netToPointPairsSolver": 176.31182900000204,
+              "topologyPlanningSolver": 5818.402701999999,
+              "topologyMergingSolver": 7657.023610999997,
+              "nodeDimensionSubdivisionSolver": 44.48620999999912,
+              "edgeSolver": 2771.491054000002,
+              "availableSegmentPointSolver": 467.52230099999724,
+              "necessaryCrampedPortPointSolver": 21495.466993000002,
+              "preloadedTraceGraphSolver": 24.420938000002934,
+              "portPointPathingSolver": 21047.126607000006,
+              "uniformPortDistributionSolver": 371.82835499999055,
+              "highDensityRouteSolver": 23670.806817000004,
+              "highDensityForceImproveSolver": 5051.492150999999,
+              "highDensityRepairSolver": 16637.421013000014,
+              "highDensityStitchSolver": 616.462709000014,
+              "traceSimplificationSolver": 7083.281940999994,
+              "mutatedPreloadedTraceSimplificationSolver": 45.36198299998068,
+              "traceWidthSolver": 945.3434249999991,
+              "globalDrcForceImproveSolver": 1042.4387879999995,
+              "pipeline9JointDrcRepairSolver": 390950.204462,
+              "effortCleanupSolver": 2466.883759999997,
+              "lengthMatchingPostProcessingSolver": 88.64295100001618,
+              "powerTraceExpansionSolver": 0
+            },
+            "svg": "orangecrab-phased-before.pcb.svg",
+            "svgSha256": "df1118dd7fd68a491847bef0c9248161117e21c14672edfb0885a0f5f73b8126"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 152,
+            "traces": 0,
+            "vias": 0,
+            "pours": 29,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 11,
+                "startedMs": 6502.870917,
+                "elapsedMs": 593509.799061
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 602347.94652,
+            "peakRssMb": 3722.96484375,
+            "timedOut": false,
+            "lastPipelineStage": "powerTraceExpansionSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 363.4180400000005,
+              "componentDetectionSolver": 22.934903000001214,
+              "escapeViaLocationSolver": 5344.853382000001,
+              "netToPointPairsSolver": 208.533661999998,
+              "topologyPlanningSolver": 5644.968946000001,
+              "topologyMergingSolver": 7583.102056,
+              "nodeDimensionSubdivisionSolver": 30.01575799999773,
+              "edgeSolver": 2305.7588609999984,
+              "availableSegmentPointSolver": 439.96109199999773,
+              "necessaryCrampedPortPointSolver": 20813.734799000005,
+              "preloadedTraceGraphSolver": 26.7556889999978,
+              "portPointPathingSolver": 19641.424241000008,
+              "uniformPortDistributionSolver": 363.5347890000121,
+              "highDensityRouteSolver": 23970.616903999995,
+              "highDensityForceImproveSolver": 5053.906245000006,
+              "highDensityRepairSolver": 17298.032175999993,
+              "highDensityStitchSolver": 546.6561719999881,
+              "traceSimplificationSolver": 6795.2043330000015,
+              "mutatedPreloadedTraceSimplificationSolver": 56.5325840000005,
+              "traceWidthSolver": 1021.444061999995,
+              "globalDrcForceImproveSolver": 1004.223949999985,
+              "pipeline9JointDrcRepairSolver": 409306.951066,
+              "effortCleanupSolver": 2724.2763030000497,
+              "lengthMatchingPostProcessingSolver": 91.40679999999702,
+              "powerTraceExpansionSolver": 0
+            },
+            "svg": "orangecrab-phased-after.pcb.svg",
+            "svgSha256": "df1118dd7fd68a491847bef0c9248161117e21c14672edfb0885a0f5f73b8126"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 152,
+            "traces": 0,
+            "vias": 0,
+            "pours": 29,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 273,
+                "startedMs": 63271.975422,
+                "elapsedMs": 536737.29613
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 602324.567356,
+            "peakRssMb": 1585.03125,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "orangecrab-fanout-before.pcb.svg",
+            "svgSha256": "01e063405910ea4a3f15545aa05a31dc50e3c2dca96174a3c43ca90a5ddf48d5"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 152,
+            "traces": 0,
+            "vias": 0,
+            "pours": 52,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 273,
+                "startedMs": 62645.872156,
+                "elapsedMs": 537363.884709
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 619245.740949,
+            "peakRssMb": 1559.390625,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "orangecrab-fanout-after.pcb.svg",
+            "svgSha256": "1f5a1a0e9954140f9a12edf1d40cfd3ab86f946ff2bc33e0cd402dc96d5648f3"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 81577.417238,
+          "assessment": {
+            "requestedNets": 50,
+            "connectedNets": 50,
+            "unconnectedNets": [],
+            "pcbTraces": 52,
+            "vias": 111,
+            "wireLengthMm": 872.4153882881975,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 440.155213
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 81266.027874,
+          "assessment": {
+            "requestedNets": 50,
+            "connectedNets": 50,
+            "unconnectedNets": [],
+            "pcbTraces": 52,
+            "vias": 111,
+            "wireLengthMm": 872.4153882881975,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 455.02818
+          }
+        }
+      }
+    },
+    {
+      "id": "h616",
+      "title": "Allwinner H616 Devboard DDR3",
+      "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+      "tsxSha256": "8e27fcf9bc39d35c97a584a6a4aa6b624ebe14f589b12c5a45e3287e8fb36ace",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 2,
+            "requestedNets": 121,
+            "traces": 221,
+            "vias": 140,
+            "pours": 17,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 1,
+              "padTrace": 0,
+              "viaTrace": 1,
+              "viaPad": 1,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "completed",
+                "connections": 2,
+                "startedMs": 2434.330298,
+                "elapsedMs": 90299.831707
+              },
+              {
+                "name": "byte0",
+                "solver": "BusLanesPipelineSolver",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 92957.797378,
+                "elapsedMs": 158724.723826
+              }
+            ],
+            "errors": [
+              "Generated native surface approaches could not satisfy full-path geometry and matching",
+              "Error: Generated native surface approaches could not satisfy full-path geometry and matching"
+            ],
+            "wallMs": 255362.22176800002,
+            "peakRssMb": 2449.3359375,
+            "timedOut": false,
+            "lastPipelineStage": "none",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 105.29625899999974,
+              "componentDetectionSolver": 23.61450800000057,
+              "escapeViaLocationSolver": 2566.426689,
+              "netToPointPairsSolver": 119.36839300000065,
+              "topologyPlanningSolver": 2206.3257379999995,
+              "topologyMergingSolver": 2722.558778999999,
+              "nodeDimensionSubdivisionSolver": 22.760764000002382,
+              "edgeSolver": 631.9925570000014,
+              "availableSegmentPointSolver": 203.8571379999994,
+              "necessaryCrampedPortPointSolver": 892.967901,
+              "preloadedTraceGraphSolver": 11.544590000001335,
+              "portPointPathingSolver": 7125.282025,
+              "uniformPortDistributionSolver": 109.93434300000081,
+              "highDensityRouteSolver": 3798.6492,
+              "highDensityForceImproveSolver": 841.4862309999953,
+              "highDensityRepairSolver": 373.2287720000022,
+              "highDensityStitchSolver": 62.396299,
+              "traceSimplificationSolver": 669.9027040000001,
+              "mutatedPreloadedTraceSimplificationSolver": 17.92233600000327,
+              "traceWidthSolver": 229.70476199999393,
+              "globalDrcForceImproveSolver": 310.55028799999855,
+              "pipeline9JointDrcRepairSolver": 37256.585702,
+              "effortCleanupSolver": 221.81000500000664,
+              "lengthMatchingPostProcessingSolver": 42.45138299999235,
+              "powerTraceExpansionSolver": 13457.281619999994
+            },
+            "svg": "h616-phased-before.pcb.svg",
+            "svgSha256": "4cdd8322e73cc277eaef90bcffca521f50b77d5b0c958d8ca4806f6a47db1d2c"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 2,
+            "requestedNets": 121,
+            "traces": 221,
+            "vias": 140,
+            "pours": 17,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 1,
+              "padTrace": 0,
+              "viaTrace": 1,
+              "viaPad": 1,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "completed",
+                "connections": 2,
+                "startedMs": 2469.62255,
+                "elapsedMs": 86711.379402
+              },
+              {
+                "name": "byte0",
+                "solver": "BusLanesPipelineSolver",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 89419.934125,
+                "elapsedMs": 161624.989586
+              }
+            ],
+            "errors": [
+              "Generated native surface approaches could not satisfy full-path geometry and matching",
+              "Error: Generated native surface approaches could not satisfy full-path geometry and matching"
+            ],
+            "wallMs": 254706.884173,
+            "peakRssMb": 3247.86328125,
+            "timedOut": false,
+            "lastPipelineStage": "none",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 102.97982899999988,
+              "componentDetectionSolver": 10.389557000000423,
+              "escapeViaLocationSolver": 2691.442174,
+              "netToPointPairsSolver": 120.97089500000038,
+              "topologyPlanningSolver": 2225.876905000001,
+              "topologyMergingSolver": 2710.2649679999995,
+              "nodeDimensionSubdivisionSolver": 13.413259999997535,
+              "edgeSolver": 600.7521429999979,
+              "availableSegmentPointSolver": 188.35854800000016,
+              "necessaryCrampedPortPointSolver": 969.5047919999997,
+              "preloadedTraceGraphSolver": 11.544458000000304,
+              "portPointPathingSolver": 6667.905684000001,
+              "uniformPortDistributionSolver": 97.88679799999954,
+              "highDensityRouteSolver": 3682.8707619999986,
+              "highDensityForceImproveSolver": 586.6382719999965,
+              "highDensityRepairSolver": 393.48330500000156,
+              "highDensityStitchSolver": 86.11886700000468,
+              "traceSimplificationSolver": 607.5554469999988,
+              "mutatedPreloadedTraceSimplificationSolver": 17.874414999998407,
+              "traceWidthSolver": 228.93473699999595,
+              "globalDrcForceImproveSolver": 291.66692299999704,
+              "pipeline9JointDrcRepairSolver": 35210.802129,
+              "effortCleanupSolver": 217.08862199999567,
+              "lengthMatchingPostProcessingSolver": 48.30222300000605,
+              "powerTraceExpansionSolver": 13087.458016000004
+            },
+            "svg": "h616-phased-after.pcb.svg",
+            "svgSha256": "4cdd8322e73cc277eaef90bcffca521f50b77d5b0c958d8ca4806f6a47db1d2c"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 0,
+            "requestedNets": 121,
+            "traces": 0,
+            "vias": 0,
+            "pours": 231,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 174,
+                "startedMs": 55537.830192,
+                "elapsedMs": 544483.325098
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 616521.363623,
+            "peakRssMb": 1904.6484375,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "h616-fanout-before.pcb.svg",
+            "svgSha256": "b57362fd83014062fc661182a4daf346c1fe9bd07ba6c3d9dfc174d756ec0f83"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 0,
+            "requestedNets": 121,
+            "traces": 0,
+            "vias": 0,
+            "pours": 17,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 174,
+                "startedMs": 52207.651843,
+                "elapsedMs": 547797.621665
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 602218.490747,
+            "peakRssMb": 2285.85546875,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "h616-fanout-after.pcb.svg",
+            "svgSha256": "61f318fbf9180669267e3ceb07f0d604e3dd77c7523fd7f956854b7c06624a90"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 42452.80992,
+          "assessment": {
+            "requestedNets": 53,
+            "connectedNets": 53,
+            "unconnectedNets": [],
+            "pcbTraces": 57,
+            "vias": 94,
+            "wireLengthMm": 665.8867346982487,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 405.24423
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 42007.838236999996,
+          "assessment": {
+            "requestedNets": 53,
+            "connectedNets": 53,
+            "unconnectedNets": [],
+            "pcbTraces": 57,
+            "vias": 94,
+            "wireLengthMm": 665.8867346982487,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 416.4040479999999
+          }
+        }
+      }
+    },
+    {
+      "id": "butterstick",
+      "title": "ButterStick r1.0",
+      "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+      "tsxSha256": "b9a3357323a0ac2fa987aae7640ed955943579de4a2948ea3408f4e6ffa89a41",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 9,
+            "requestedNets": 317,
+            "traces": 0,
+            "vias": 0,
+            "pours": 39,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 12,
+                "startedMs": 28690.620066,
+                "elapsedMs": 363899.61746100005
+              }
+            ],
+            "errors": [
+              "PreparedPortPointRoutingSolver ran out of iterations",
+              "Error: PreparedPortPointRoutingSolver ran out of iterations"
+            ],
+            "wallMs": 396445.924496,
+            "peakRssMb": 5385.09765625,
+            "timedOut": false,
+            "lastPipelineStage": "portPointPathingSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 1238.8899880000026,
+              "componentDetectionSolver": 31.252542000001995,
+              "escapeViaLocationSolver": 29562.175100000008,
+              "netToPointPairsSolver": 441.09660799999256,
+              "topologyPlanningSolver": 13446.203152000002,
+              "topologyMergingSolver": 35224.516563,
+              "nodeDimensionSubdivisionSolver": 70.12898300000234,
+              "edgeSolver": 14350.311875,
+              "availableSegmentPointSolver": 2166.4779670000135,
+              "necessaryCrampedPortPointSolver": 105707.557883,
+              "preloadedTraceGraphSolver": 53.2048000000068,
+              "portPointPathingSolver": 0
+            },
+            "svg": "butterstick-phased-before.pcb.svg",
+            "svgSha256": "b03c51df26018fae600eee5a16bb8538867b209e77fab4b3a2a1f9a5ce63a92a"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 9,
+            "requestedNets": 317,
+            "traces": 0,
+            "vias": 0,
+            "pours": 39,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 12,
+                "startedMs": 27306.681597,
+                "elapsedMs": 352802.43962200003
+              }
+            ],
+            "errors": [
+              "PreparedPortPointRoutingSolver ran out of iterations",
+              "Error: PreparedPortPointRoutingSolver ran out of iterations"
+            ],
+            "wallMs": 384132.375312,
+            "peakRssMb": 5169.56640625,
+            "timedOut": false,
+            "lastPipelineStage": "portPointPathingSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 1238.9476299999951,
+              "componentDetectionSolver": 17.503149999996822,
+              "escapeViaLocationSolver": 23100.016446,
+              "netToPointPairsSolver": 424.8458699999974,
+              "topologyPlanningSolver": 12668.023014999992,
+              "topologyMergingSolver": 35084.811942,
+              "nodeDimensionSubdivisionSolver": 103.78801200000453,
+              "edgeSolver": 13673.041211000003,
+              "availableSegmentPointSolver": 2117.123072999995,
+              "necessaryCrampedPortPointSolver": 106468.30902799999,
+              "preloadedTraceGraphSolver": 50.8988379999937,
+              "portPointPathingSolver": 0
+            },
+            "svg": "butterstick-phased-after.pcb.svg",
+            "svgSha256": "b03c51df26018fae600eee5a16bb8538867b209e77fab4b3a2a1f9a5ce63a92a"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 9,
+            "requestedNets": 317,
+            "traces": 0,
+            "vias": 0,
+            "pours": 39,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 91,
+                "startedMs": 359402.15246899996,
+                "elapsedMs": 242745.34854500007
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 606388.6588059999,
+            "peakRssMb": 1876.94921875,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "butterstick-fanout-before.pcb.svg",
+            "svgSha256": "391f73a88151e6c0ae09c3eb4e2cba6d9f4416105c8a552d0a79b4a0b484a116"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 9,
+            "requestedNets": 317,
+            "traces": 0,
+            "vias": 0,
+            "pours": 39,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 91,
+                "startedMs": 320449.20306900004,
+                "elapsedMs": 279558.647199
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 604109.0619590001,
+            "peakRssMb": 1950.48828125,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "butterstick-fanout-after.pcb.svg",
+            "svgSha256": "391f73a88151e6c0ae09c3eb4e2cba6d9f4416105c8a552d0a79b4a0b484a116"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 383784.033222,
+          "assessment": {
+            "requestedNets": 55,
+            "connectedNets": 55,
+            "unconnectedNets": [],
+            "pcbTraces": 104,
+            "vias": 179,
+            "wireLengthMm": 1771.609784412268,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 928.2167959999999
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 352064.482737,
+          "assessment": {
+            "requestedNets": 55,
+            "connectedNets": 55,
+            "unconnectedNets": [],
+            "pcbTraces": 104,
+            "vias": 179,
+            "wireLengthMm": 1771.609784412268,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 955.5363300000001
+          }
+        }
+      }
+    },
+    {
+      "id": "glider",
+      "title": "Glider mainboard",
+      "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+      "tsxSha256": "e66945b0ad64f60f0bcbbf2245ea38bf4b4a0d776d5d50acac1b993c755c7a56",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 1,
+            "requestedNets": 356,
+            "traces": 537,
+            "vias": 318,
+            "pours": 1,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 15,
+              "padTrace": 6,
+              "viaTrace": 8,
+              "viaPad": 2,
+              "viaSpacing": 1,
+              "contiguous": 0,
+              "viaInPad": 1,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "completed",
+                "connections": 5,
+                "startedMs": 10262.140978,
+                "elapsedMs": 404672.812762
+              },
+              {
+                "name": "byte0",
+                "solver": "BusLanesPipelineSolver",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 416170.080334,
+                "elapsedMs": 183861.8772820001
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 615853.820476,
+            "peakRssMb": 5201.91796875,
+            "timedOut": false,
+            "lastPipelineStage": "none",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 864.8581849999991,
+              "componentDetectionSolver": 72.54771400000027,
+              "escapeViaLocationSolver": 18539.797358000003,
+              "netToPointPairsSolver": 485.68804799999634,
+              "topologyPlanningSolver": 6782.522675,
+              "topologyMergingSolver": 11445.729533999998,
+              "nodeDimensionSubdivisionSolver": 45.07930400000623,
+              "edgeSolver": 8200.140315999997,
+              "availableSegmentPointSolver": 761.819267999992,
+              "necessaryCrampedPortPointSolver": 3747.0872850000014,
+              "preloadedTraceGraphSolver": 29.60853500000667,
+              "portPointPathingSolver": 18725.141533,
+              "uniformPortDistributionSolver": 578.3468639999919,
+              "highDensityRouteSolver": 24522.952640000003,
+              "highDensityForceImproveSolver": 5046.054562000005,
+              "highDensityRepairSolver": 4739.213033999986,
+              "highDensityStitchSolver": 565.1644249999954,
+              "traceSimplificationSolver": 4964.704682999989,
+              "mutatedPreloadedTraceSimplificationSolver": 63.444673000019975,
+              "traceWidthSolver": 2475.2269510000187,
+              "globalDrcForceImproveSolver": 344.40640199999325,
+              "pipeline9JointDrcRepairSolver": 216849.69874999998,
+              "effortCleanupSolver": 1133.6753589999862,
+              "lengthMatchingPostProcessingSolver": 119.96002100000624,
+              "powerTraceExpansionSolver": 31889.989587999997
+            },
+            "svg": "glider-phased-before.pcb.svg",
+            "svgSha256": "e8dfadcd3a6cf9a07e1e5306ebd8249d7898e5a038ee3d0e231b223b48f98e7a"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 1,
+            "requestedNets": 356,
+            "traces": 537,
+            "vias": 318,
+            "pours": 1,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 15,
+              "padTrace": 6,
+              "viaTrace": 8,
+              "viaPad": 2,
+              "viaSpacing": 1,
+              "contiguous": 0,
+              "viaInPad": 1,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "completed",
+                "connections": 5,
+                "startedMs": 10827.316576,
+                "elapsedMs": 391760.134986
+              },
+              {
+                "name": "byte0",
+                "solver": "BusLanesPipelineSolver",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 403696.435888,
+                "elapsedMs": 196338.85763599997
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 618442.55771,
+            "peakRssMb": 5581.0234375,
+            "timedOut": false,
+            "lastPipelineStage": "none",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 997.4691249999996,
+              "componentDetectionSolver": 75.75984900000185,
+              "escapeViaLocationSolver": 19336.296072999998,
+              "netToPointPairsSolver": 427.40582999999606,
+              "topologyPlanningSolver": 6693.482079999994,
+              "topologyMergingSolver": 10704.907898999998,
+              "nodeDimensionSubdivisionSolver": 26.72117799999978,
+              "edgeSolver": 7597.532565000001,
+              "availableSegmentPointSolver": 685.4451560000016,
+              "necessaryCrampedPortPointSolver": 3724.3124959999986,
+              "preloadedTraceGraphSolver": 31.07117300000391,
+              "portPointPathingSolver": 16792.58726500001,
+              "uniformPortDistributionSolver": 615.9802839999902,
+              "highDensityRouteSolver": 24068.53082,
+              "highDensityForceImproveSolver": 4883.541618999996,
+              "highDensityRepairSolver": 4790.154859000002,
+              "highDensityStitchSolver": 412.98780199998873,
+              "traceSimplificationSolver": 4679.987497000024,
+              "mutatedPreloadedTraceSimplificationSolver": 65.73422899999423,
+              "traceWidthSolver": 2175.2476940000197,
+              "globalDrcForceImproveSolver": 305.14350500001456,
+              "pipeline9JointDrcRepairSolver": 207847.26912300003,
+              "effortCleanupSolver": 1085.7869090000167,
+              "lengthMatchingPostProcessingSolver": 82.38856699998723,
+              "powerTraceExpansionSolver": 33622.18625799997
+            },
+            "svg": "glider-phased-after.pcb.svg",
+            "svgSha256": "e8dfadcd3a6cf9a07e1e5306ebd8249d7898e5a038ee3d0e231b223b48f98e7a"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 0,
+            "requestedNets": 356,
+            "traces": 0,
+            "vias": 0,
+            "pours": 1,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 95,
+                "startedMs": 296329.258675,
+                "elapsedMs": 303674.18606000004
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 604102.5615729999,
+            "peakRssMb": 1870.94140625,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "glider-fanout-before.pcb.svg",
+            "svgSha256": "29a3a0705a7b4f02b072b37f13e63919d95da78cc426dd43f6f99c2aa0fab349"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 0,
+            "requestedNets": 356,
+            "traces": 0,
+            "vias": 0,
+            "pours": 0,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 95,
+                "startedMs": 298299.907535,
+                "elapsedMs": 301708.5490420001
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 660122.873869,
+            "peakRssMb": 1496.42578125,
+            "timedOut": true,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "glider-fanout-after.pcb.svg",
+            "svgSha256": "9c310507ce07e6c9de261a5fbd4d3d7084c3cae15be2af79a4720933b7bad8d4"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 27401.374817,
+          "assessment": {
+            "requestedNets": 49,
+            "connectedNets": 49,
+            "unconnectedNets": [],
+            "pcbTraces": 53,
+            "vias": 94,
+            "wireLengthMm": 1168.796736864427,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 389.740411
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 27028.424143,
+          "assessment": {
+            "requestedNets": 49,
+            "connectedNets": 49,
+            "unconnectedNets": [],
+            "pcbTraces": 53,
+            "vias": 94,
+            "wireLengthMm": 1168.796736864427,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 425.32889899999986
+          }
+        }
+      }
+    },
+    {
+      "id": "imx6",
+      "title": "i.MX6 Demo Board",
+      "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+      "tsxSha256": "81d9421ad723af44979ebdc15e08cdcb4f250b42925c2862bad0daeeb85cab5c",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 404,
+            "traces": 0,
+            "vias": 0,
+            "pours": 140,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 64792.70574299999,
+                "elapsedMs": 535777.4738469999
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 606469.873317,
+            "peakRssMb": 6227.3046875,
+            "timedOut": false,
+            "lastPipelineStage": "powerTraceExpansionSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 1139.1786339999962,
+              "componentDetectionSolver": 19.446867999999085,
+              "escapeViaLocationSolver": 30666.331045,
+              "netToPointPairsSolver": 511.350471999991,
+              "topologyPlanningSolver": 8487.752248000004,
+              "topologyMergingSolver": 23400.219564,
+              "nodeDimensionSubdivisionSolver": 56.93005900000571,
+              "edgeSolver": 19185.078861999995,
+              "availableSegmentPointSolver": 1597.047591999988,
+              "necessaryCrampedPortPointSolver": 11929.39110899999,
+              "preloadedTraceGraphSolver": 42.068682000011904,
+              "portPointPathingSolver": 49241.88792499999,
+              "uniformPortDistributionSolver": 920.1275920000044,
+              "highDensityRouteSolver": 38643.84361699998,
+              "highDensityForceImproveSolver": 3526.8119750000187,
+              "highDensityRepairSolver": 10093.939262999978,
+              "highDensityStitchSolver": 421.6167569999816,
+              "traceSimplificationSolver": 4438.681394999963,
+              "mutatedPreloadedTraceSimplificationSolver": 66.34512499999255,
+              "traceWidthSolver": 1952.6378689999692,
+              "globalDrcForceImproveSolver": 1375.9907930000336,
+              "pipeline9JointDrcRepairSolver": 214410.01300099998,
+              "effortCleanupSolver": 8155.088769000024,
+              "lengthMatchingPostProcessingSolver": 193.7290159999393,
+              "powerTraceExpansionSolver": 0
+            },
+            "svg": "imx6-phased-before.pcb.svg",
+            "svgSha256": "479b999fbd0a9712e53e4c425c15f817cfdd45c62f477503d16274b7b133e282"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 404,
+            "traces": 0,
+            "vias": 0,
+            "pours": 140,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 70935.412884,
+                "elapsedMs": 529092.527843
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted"
+            ],
+            "wallMs": 605961.574958,
+            "peakRssMb": 6282.0703125,
+            "timedOut": false,
+            "lastPipelineStage": "pipeline9JointDrcRepairSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 1555.4619999999995,
+              "componentDetectionSolver": 21.843479999995907,
+              "escapeViaLocationSolver": 26375.524735,
+              "netToPointPairsSolver": 580.2550239999982,
+              "topologyPlanningSolver": 8358.931719999993,
+              "topologyMergingSolver": 26384.77820100001,
+              "nodeDimensionSubdivisionSolver": 66.12671099998988,
+              "edgeSolver": 14768.512000999996,
+              "availableSegmentPointSolver": 1366.347636999999,
+              "necessaryCrampedPortPointSolver": 12405.89142,
+              "preloadedTraceGraphSolver": 29.575221000006422,
+              "portPointPathingSolver": 47677.493637999985,
+              "uniformPortDistributionSolver": 1193.8722019999987,
+              "highDensityRouteSolver": 40375.903151999984,
+              "highDensityForceImproveSolver": 4313.088227999979,
+              "highDensityRepairSolver": 13678.369114000001,
+              "highDensityStitchSolver": 569.3539170000004,
+              "traceSimplificationSolver": 5896.545014000032,
+              "mutatedPreloadedTraceSimplificationSolver": 71.24095499998657,
+              "traceWidthSolver": 2368.515773000021,
+              "globalDrcForceImproveSolver": 1647.5625319999526,
+              "pipeline9JointDrcRepairSolver": 0
+            },
+            "svg": "imx6-phased-after.pcb.svg",
+            "svgSha256": "479b999fbd0a9712e53e4c425c15f817cfdd45c62f477503d16274b7b133e282"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 404,
+            "traces": 0,
+            "vias": 0,
+            "pours": 372,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 32,
+                "startedMs": 515130.69310100004,
+                "elapsedMs": 104076.569273
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted",
+              "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors)."
+            ],
+            "wallMs": 625434.604043,
+            "peakRssMb": 3130.28125,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "imx6-fanout-before.pcb.svg",
+            "svgSha256": "04437b4ac57417b30d0355f54097c2a951e4466b11a1c9f825421ea943a113f5"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 3,
+            "requestedNets": 404,
+            "traces": 0,
+            "vias": 0,
+            "pours": 372,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 32,
+                "startedMs": 514833.903663,
+                "elapsedMs": 139308.38228300004
+              }
+            ],
+            "errors": [
+              "Full-board routing budget exhausted",
+              "Error: Full-board routing budget exhausted",
+              "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors)."
+            ],
+            "wallMs": 659554.494424,
+            "peakRssMb": 3149.71875,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "imx6-fanout-after.pcb.svg",
+            "svgSha256": "04437b4ac57417b30d0355f54097c2a951e4466b11a1c9f825421ea943a113f5"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 100857.13859500001,
+          "assessment": {
+            "requestedNets": 53,
+            "connectedNets": 53,
+            "unconnectedNets": [],
+            "pcbTraces": 66,
+            "vias": 134,
+            "wireLengthMm": 1494.1970873138753,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 772.8253520000001
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 114996.51688800001,
+          "assessment": {
+            "requestedNets": 53,
+            "connectedNets": 53,
+            "unconnectedNets": [],
+            "pcbTraces": 66,
+            "vias": 134,
+            "wireLengthMm": 1494.1970873138753,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 845.1152239999999
+          }
+        }
+      }
+    },
+    {
+      "id": "icepi",
+      "title": "iCE/Pi CM0 SBC",
+      "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+      "tsxSha256": "5a80aa72c0cb6fa08f246b9496af9cfaa27e7e7b83b183bdd5f562f8e68a1136",
+      "full": {
+        "phased": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 7,
+            "requestedNets": 230,
+            "traces": 0,
+            "vias": 0,
+            "pours": 70,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 32051.674310000002,
+                "elapsedMs": 145399.980664
+              }
+            ],
+            "errors": [
+              "PreparedPortPointRoutingSolver ran out of iterations",
+              "Error: PreparedPortPointRoutingSolver ran out of iterations"
+            ],
+            "wallMs": 181090.224961,
+            "peakRssMb": 4712.2421875,
+            "timedOut": false,
+            "lastPipelineStage": "portPointPathingSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 890.3575500000006,
+              "componentDetectionSolver": 24.633920000000217,
+              "escapeViaLocationSolver": 10359.752732,
+              "netToPointPairsSolver": 396.37529899999936,
+              "topologyPlanningSolver": 5898.9899460000015,
+              "topologyMergingSolver": 11102.833887,
+              "nodeDimensionSubdivisionSolver": 63.3713940000016,
+              "edgeSolver": 5033.236275000003,
+              "availableSegmentPointSolver": 1412.8421539999981,
+              "necessaryCrampedPortPointSolver": 5239.974474000002,
+              "preloadedTraceGraphSolver": 25.210925000006682,
+              "portPointPathingSolver": 0
+            },
+            "svg": "icepi-phased-before.pcb.svg",
+            "svgSha256": "f9e5d155f80d29de58fcc1f62b1fdd21dd7e52a427e9c8d9e9af421fdede6fa7"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 7,
+            "requestedNets": 230,
+            "traces": 0,
+            "vias": 0,
+            "pours": 70,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "plane_escape",
+                "solver": "workspace Pipeline 9",
+                "status": "failed",
+                "connections": 8,
+                "startedMs": 32244.947763999997,
+                "elapsedMs": 156304.49467600003
+              }
+            ],
+            "errors": [
+              "PreparedPortPointRoutingSolver ran out of iterations",
+              "Error: PreparedPortPointRoutingSolver ran out of iterations"
+            ],
+            "wallMs": 192567.633067,
+            "peakRssMb": 4747.9921875,
+            "timedOut": false,
+            "lastPipelineStage": "portPointPathingSolver",
+            "phaseTimesMs": {
+              "preprocessSimpleRouteJsonSolver": 958.9104320000042,
+              "componentDetectionSolver": 22.668335000002116,
+              "escapeViaLocationSolver": 10556.852949,
+              "netToPointPairsSolver": 393.5656699999963,
+              "topologyPlanningSolver": 5999.265551999997,
+              "topologyMergingSolver": 12545.442234999995,
+              "nodeDimensionSubdivisionSolver": 68.81610700000601,
+              "edgeSolver": 4984.274890000001,
+              "availableSegmentPointSolver": 1395.560501999993,
+              "necessaryCrampedPortPointSolver": 5474.16885300001,
+              "preloadedTraceGraphSolver": 24.196821000005002,
+              "portPointPathingSolver": 0
+            },
+            "svg": "icepi-phased-after.pcb.svg",
+            "svgSha256": "f9e5d155f80d29de58fcc1f62b1fdd21dd7e52a427e9c8d9e9af421fdede6fa7"
+          }
+        },
+        "fanout": {
+          "before": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 7,
+            "requestedNets": 230,
+            "traces": 0,
+            "vias": 0,
+            "pours": 70,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 32,
+                "startedMs": 235475.079917,
+                "elapsedMs": 325402.4463109999
+              }
+            ],
+            "errors": [
+              "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+              "Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+            ],
+            "wallMs": 564673.853399,
+            "peakRssMb": 2227.21484375,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "icepi-fanout-before.pcb.svg",
+            "svgSha256": "6a1c8ab85148b2257bb6e33c969a740a2a30079caca21f9fc046e4e0b10adcc4"
+          },
+          "after": {
+            "passed": false,
+            "status": "failed",
+            "initialCopperElements": 0,
+            "connectedNets": 7,
+            "requestedNets": 230,
+            "traces": 0,
+            "vias": 0,
+            "pours": 70,
+            "geometryErrors": [],
+            "membershipErrors": [],
+            "physicalFindings": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "contiguous": 0,
+              "viaInPad": 0,
+              "holeTrace": 0
+            },
+            "phases": [
+              {
+                "name": "fanout preparation",
+                "solver": "FanoutSolver",
+                "status": "failed",
+                "connections": 32,
+                "startedMs": 252542.14341999998,
+                "elapsedMs": 325957.26329399995
+              }
+            ],
+            "errors": [
+              "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+              "Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+            ],
+            "wallMs": 582685.715599,
+            "peakRssMb": 2212.625,
+            "timedOut": false,
+            "lastPipelineStage": null,
+            "phaseTimesMs": {},
+            "svg": "icepi-fanout-after.pcb.svg",
+            "svgSha256": "6a1c8ab85148b2257bb6e33c969a740a2a30079caca21f9fc046e4e0b10adcc4"
+          }
+        }
+      },
+      "ddr": {
+        "before": {
+          "status": "passed",
+          "wallMs": 111527.248466,
+          "assessment": {
+            "requestedNets": 50,
+            "connectedNets": 50,
+            "unconnectedNets": [],
+            "pcbTraces": 52,
+            "vias": 125,
+            "wireLengthMm": 897.4060691834198,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 595.9579180000003
+          }
+        },
+        "after": {
+          "status": "passed",
+          "wallMs": 108334.946419,
+          "assessment": {
+            "requestedNets": 50,
+            "connectedNets": 50,
+            "unconnectedNets": [],
+            "pcbTraces": 52,
+            "vias": 125,
+            "wireLengthMm": 897.4060691834198,
+            "findings": {
+              "missing_traces": 0,
+              "disconnected_ports": 0,
+              "trace_overlap": 0,
+              "pad_trace": 0,
+              "via_trace": 0,
+              "via_pad": 0,
+              "via_spacing": 0,
+              "contiguous": 0,
+              "via_in_pad": 0,
+              "hole_trace": 0,
+              "width": 0
+            },
+            "geometryErrors": [],
+            "validationMs": 626.1733740000002
+          }
+        }
+      }
+    }
+  ],
+  "pairedDataset18": {
+    "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43951456533",
+    "summary": {
+      "base": {
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "completedRateLabel": "100.0%",
+        "relaxedDrcRateLabel": "100.0%",
+        "timedOutLabel": "0/16",
+        "p50TimeMs": 27244.688668000003,
+        "p60TimeMs": 34908.175635,
+        "p70TimeMs": 43275.8209855,
+        "p80TimeMs": 58629.726431,
+        "p90TimeMs": 83327.896878,
+        "p95TimeMs": 88240.86827325,
+        "p50PeakRssBytes": 1053036544,
+        "p80PeakRssBytes": 1859817472,
+        "p90PeakRssBytes": 2069964800,
+        "avgVia": 212.9375,
+        "avgTraceLintIssues": {
+          "odd_angle": 375.4375
+        },
+        "meanTimeMs": 35892.572759125,
+        "totalVias": 3407
+      },
+      "fixed": {
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "completedRateLabel": "100.0%",
+        "relaxedDrcRateLabel": "100.0%",
+        "timedOutLabel": "0/16",
+        "p50TimeMs": 26556.2847375,
+        "p60TimeMs": 34412.251288,
+        "p70TimeMs": 43025.7026645,
+        "p80TimeMs": 57765.526089,
+        "p90TimeMs": 82525.118877,
+        "p95TimeMs": 89182.15870275,
+        "p50PeakRssBytes": 1048879104,
+        "p80PeakRssBytes": 1988816896,
+        "p90PeakRssBytes": 2123063296,
+        "avgVia": 212.9375,
+        "avgTraceLintIssues": {
+          "odd_angle": 375.4375
+        },
+        "meanTimeMs": 35686.5688485625,
+        "totalVias": 3407
+      }
+    },
+    "samples": [
+      {
+        "sample": 1,
+        "beforeMs": 10471.340109,
+        "afterMs": 10199.073895000001,
+        "beforeVias": 157,
+        "afterVias": 157,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 2,
+        "beforeMs": 79091.00406199999,
+        "afterMs": 77070.4038,
+        "beforeVias": 507,
+        "afterVias": 507,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 3,
+        "beforeMs": 9897.847914,
+        "afterMs": 9565.179221,
+        "beforeVias": 82,
+        "afterVias": 82,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 4,
+        "beforeMs": 29724.848685,
+        "afterMs": 28927.733257999997,
+        "beforeVias": 137,
+        "afterVias": 137,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 5,
+        "beforeMs": 7731.305471,
+        "afterMs": 7877.149678999999,
+        "beforeVias": 142,
+        "afterVias": 142,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 6,
+        "beforeMs": 58629.726431,
+        "afterMs": 57765.526089,
+        "beforeVias": 265,
+        "afterVias": 265,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 7,
+        "beforeMs": 12618.799357,
+        "afterMs": 13012.929933,
+        "beforeVias": 200,
+        "afterVias": 200,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 8,
+        "beforeMs": 36880.23952,
+        "afterMs": 36939.652974000004,
+        "beforeVias": 281,
+        "afterVias": 281,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 9,
+        "beforeMs": 14897.076844000001,
+        "afterMs": 14422.724709,
+        "beforeVias": 114,
+        "afterVias": 114,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 10,
+        "beforeMs": 13653.754611,
+        "afterMs": 13329.122878,
+        "beforeVias": 158,
+        "afterVias": 158,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 11,
+        "beforeMs": 13507.2207,
+        "afterMs": 13397.798378,
+        "beforeVias": 187,
+        "afterVias": 187,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 12,
+        "beforeMs": 49671.402451,
+        "afterMs": 49111.752355000004,
+        "beforeVias": 298,
+        "afterVias": 298,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 13,
+        "beforeMs": 34908.175635,
+        "afterMs": 34412.251288,
+        "beforeVias": 194,
+        "afterVias": 194,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 14,
+        "beforeMs": 90269.104011,
+        "afterMs": 92789.132949,
+        "beforeVias": 267,
+        "afterVias": 267,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 15,
+        "beforeMs": 87564.78969399999,
+        "afterMs": 87979.833954,
+        "beforeVias": 313,
+        "afterVias": 313,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      },
+      {
+        "sample": 16,
+        "beforeMs": 24764.528651,
+        "afterMs": 24184.836217,
+        "beforeVias": 105,
+        "afterVias": 105,
+        "beforeDrcErrors": 0,
+        "afterDrcErrors": 0
+      }
+    ],
+    "nativeSvgEquivalence": {
+      "equal": {
+        "1": true,
+        "2": true,
+        "3": true,
+        "4": true,
+        "5": true,
+        "6": true,
+        "7": true,
+        "8": true,
+        "9": true,
+        "10": true,
+        "11": true,
+        "12": true,
+        "13": true,
+        "14": true,
+        "15": true,
+        "16": true
+      },
+      "hashes": {
+        "base": {
+          "1": "c738fb9e21d8bac50baccd83e761cb68d526231617d0a5e1e24f0d0514a7fe70",
+          "2": "6f63297fe7d57d915d0412a96f26b856b863760bcd04f1b642225f93c855acdf",
+          "3": "608d86a43f77cd387939656e0de2a9f1b3cf67815610e1dec8b26c2caa8ead39",
+          "4": "4d8cd4bc3e2146a899b0eaed29cca290965bfd54e64b56c972948d22abb7b751",
+          "5": "0944800c9f124c18658b088046cf14f78c662f6e182495ceac967aa0e8560622",
+          "6": "9dc619afe73b14a04435ed47db076cdafeb3b0704dd705bc014216133ced926d",
+          "7": "aec80f44d1166904a1d7d549e0f12da5efe35a8000d02242a07362e3cf059f11",
+          "8": "e439acc2f0a28d043ed45f3868f177a1cad90e35e747af0443149c93863c9dc0",
+          "9": "d34c35f4de7880ae276636b42ef12c600a0cd6dcfe816099fbbbc04577b0da2a",
+          "10": "bb6e6b2a4b78db007a109dbb7b154e01598fbdd31bbbe5f0dfcfedb8fc6e99b1",
+          "11": "330735fbcfdf0e226b265e65293043bb297bb5a9f85497c4c915afbac04cec47",
+          "12": "c7879be3dcb0dbbbe08c4317df5becb1353b092195bf3453f6e543295b749dbe",
+          "13": "1f70174d55b15c08cec499bf24b1c4d4969c8dbfbb560d2f7feb1180bc54aa2e",
+          "14": "f8d4df6b4710759711456d18a5366284177832d4e99b50276967bbcd1e12844b",
+          "15": "decaacb410e7624a6ee361e4643f71eff471ca9f205bfa47b0781329e6ff5ee9",
+          "16": "bea0a65f3ecaff6eaed2c01f1a2c2595be61944981d8b8a6b8376bd24b69178b"
+        },
+        "fixed": {
+          "1": "c738fb9e21d8bac50baccd83e761cb68d526231617d0a5e1e24f0d0514a7fe70",
+          "2": "6f63297fe7d57d915d0412a96f26b856b863760bcd04f1b642225f93c855acdf",
+          "3": "608d86a43f77cd387939656e0de2a9f1b3cf67815610e1dec8b26c2caa8ead39",
+          "4": "4d8cd4bc3e2146a899b0eaed29cca290965bfd54e64b56c972948d22abb7b751",
+          "5": "0944800c9f124c18658b088046cf14f78c662f6e182495ceac967aa0e8560622",
+          "6": "9dc619afe73b14a04435ed47db076cdafeb3b0704dd705bc014216133ced926d",
+          "7": "aec80f44d1166904a1d7d549e0f12da5efe35a8000d02242a07362e3cf059f11",
+          "8": "e439acc2f0a28d043ed45f3868f177a1cad90e35e747af0443149c93863c9dc0",
+          "9": "d34c35f4de7880ae276636b42ef12c600a0cd6dcfe816099fbbbc04577b0da2a",
+          "10": "bb6e6b2a4b78db007a109dbb7b154e01598fbdd31bbbe5f0dfcfedb8fc6e99b1",
+          "11": "330735fbcfdf0e226b265e65293043bb297bb5a9f85497c4c915afbac04cec47",
+          "12": "c7879be3dcb0dbbbe08c4317df5becb1353b092195bf3453f6e543295b749dbe",
+          "13": "1f70174d55b15c08cec499bf24b1c4d4969c8dbfbb560d2f7feb1180bc54aa2e",
+          "14": "f8d4df6b4710759711456d18a5366284177832d4e99b50276967bbcd1e12844b",
+          "15": "decaacb410e7624a6ee361e4643f71eff471ca9f205bfa47b0781329e6ff5ee9",
+          "16": "bea0a65f3ecaff6eaed2c01f1a2c2595be61944981d8b8a6b8376bd24b69178b"
+        }
+      }
+    }
+  },
+  "reproMetrics": {
+    "capturedRoutes": 3,
+    "outputRoutes": 3,
+    "solved": true,
+    "inputViaEntries": 5,
+    "outputViaEntries": 3,
+    "inputDistinctViaPositions": [
+      "15.469998999998744,0.7539056466024796",
+      "15.456,0.696",
+      "15.845000999998744,-0.2999990000000172",
+      "15.845,0.47",
+      "15.925391608637883,0.4700009999999828"
+    ],
+    "outputDistinctViaPositions": [
+      "15.845000999998744,-0.2999990000000172"
+    ]
+  },
+  "rejectedExperiment": {
+    "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43947925464",
+    "change": "Round dense-graph search-budget scaling up instead of down, combined with via canonicalization.",
+    "decision": "Rejected: iCE/Pi passed global pathing and simplification but exhausted the same 600-second budget in joint DRC repair, with no additional emitted traces or complete nets. ButterStick still exhausted pathing iterations. The fix retains released search budgets."
+  },
+  "totals": {
+    "before": {
+      "ddrPassed": 6,
+      "ddrConnectedNets": 310,
+      "ddrRequestedNets": 310,
+      "fullPhasedPassed": 0,
+      "fullFanoutPassed": 0,
+      "assessedCases": 12
+    },
+    "after": {
+      "ddrPassed": 6,
+      "ddrConnectedNets": 310,
+      "ddrRequestedNets": 310,
+      "fullPhasedPassed": 0,
+      "fullFanoutPassed": 0,
+      "assessedCases": 12
+    }
+  }
+}

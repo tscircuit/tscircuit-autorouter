@@ -1,0 +1,1354 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Six DDR boards — router 1111 rerun</title><style>body{font:16px/1.5 system-ui;margin:auto;max-width:1500px;padding:24px;color:#1e293b;background:#f4f6f8}section{background:white;padding:24px;margin:28px 0;border:1px solid #dbe0e8;border-radius:8px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}img{width:100%;height:auto;background:white}a{color:#1455a5}th,td{padding:10px;text-align:left;border-bottom:1px solid #dbe0e8}table{border-collapse:collapse;width:100%;background:white}pre{overflow:auto;white-space:pre-wrap;font-size:12px}.status{border-left:5px solid #b7791f;background:#fff2d5;padding:16px}@media(max-width:800px){.pair{grid-template-columns:1fr}table{font-size:12px}}</style><h1>Six DDR boards: released router 1111 and via-transition normalization</h1><p>tscircuit 0.0.3205 · core 0.0.2398 · autorouter 0.0.1111 · fanout 0.0.84 · bus lanes 0.0.58.</p><p class="status"><b>DDR controls: 6/6, 310/310 nets before and after. Complete full boards: 0/6 before and after in both routing modes.</b> Full-board SVGs show actual partial emitted copper. The fix removes a captured via-merging crash; it does not complete these full boards.</p><p>The full TSX models retain their original components, pad positions and net membership. Original tracks, vias and poured copper are removed; pours are generated fresh. Every full-board solve uses the same 600-second routing budget, an 8-vCPU ARM Blacksmith runner and Bun 1.4.3. Native connectivity requires physical pads, traces, via spans and generated pour polygons.</p><p><a href="https://github.com/tscircuit/tscircuit-autorouter/pull/3868">Passing repro #3868</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/pull/3869">Stacked fix #3869</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43947641756">Before run</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43951456533">Final run and paired dataset18</a> · <a href="analysis.json">Exact measured analysis</a></p><table><tr><th>Board</th><th>DDR nets</th><th>Full phased nets</th><th>Phased traces</th><th>Remaining blocker</th></tr><tr><td><a href="#orangecrab">OrangeCrab rev 0.2.1 ECP5 DDR3</a> · <a href="full-board-models/orangecrab/board.tsx">TSX</a></td><td>50/50</td><td>3/152 → 3/152</td><td>0 → 0</td><td>Full-board routing budget exhausted</td></tr><tr><td><a href="#h616">Allwinner H616 Devboard DDR3</a> · <a href="full-board-models/h616/board.tsx">TSX</a></td><td>53/53</td><td>2/121 → 2/121</td><td>221 → 221</td><td>Generated native surface approaches could not satisfy full-path geometry and matching</td></tr><tr><td><a href="#butterstick">ButterStick r1.0</a> · <a href="full-board-models/butterstick/board.tsx">TSX</a></td><td>55/55</td><td>9/317 → 9/317</td><td>0 → 0</td><td>PreparedPortPointRoutingSolver ran out of iterations</td></tr><tr><td><a href="#glider">Glider mainboard</a> · <a href="full-board-models/glider/board.tsx">TSX</a></td><td>49/49</td><td>1/356 → 1/356</td><td>537 → 537</td><td>Full-board routing budget exhausted</td></tr><tr><td><a href="#imx6">i.MX6 Demo Board</a> · <a href="full-board-models/imx6/board.tsx">TSX</a></td><td>53/53</td><td>3/404 → 3/404</td><td>0 → 0</td><td>Full-board routing budget exhausted</td></tr><tr><td><a href="#icepi">iCE/Pi CM0 SBC</a> · <a href="full-board-models/icepi/board.tsx">TSX</a></td><td>50/50</td><td>7/230 → 7/230</td><td>0 → 0</td><td>PreparedPortPointRoutingSolver ran out of iterations</td></tr></table><section><h2>Confirmed bug: near-coincident layer transitions</h2><p>The full simplification replay of three captured iCE/Pi +1V5 routes fails when via merging cannot find an exact XY layer transition. The discrepancy is about 1.3e-12 mm. Normalizing stitched routes with the existing Pipeline 9 canonicalizer before simplification resolves the exception and preserves the input geometry. The native repro includes 54 surrounding pads. Its five distinct input via positions consolidate to one shared position after successful simplification.</p><div class="pair"><div><h3>Before — simplification fails</h3><img src="icepi-transition-before.svg"></div><div><h3>After — simplification solves</h3><img src="icepi-transition-after.svg"></div></div><h3>Routed 54-pad iCE/Pi cutout</h3><p>This complete local reroute is a separate physical-output guard. Both versions pass relaxed DRC; the SVGs are generated directly from their routed output.</p><div class="pair"><div><h4>Before</h4><img src="icepi-routed-before.svg"></div><div><h4>After</h4><img src="icepi-routed-after.svg"></div></div></section><section><h2>Complete paired dataset18 validation</h2><table><tr><th>Dataset18 metric</th><th>Before</th><th>After</th><th>Time change</th></tr><tr><td>P50</td><td>27.245s</td><td>26.556s</td><td>-2.53%</td></tr><tr><td>P95</td><td>88.241s</td><td>89.182s</td><td>+1.07%</td></tr><tr><td>Mean</td><td>35.893s</td><td>35.687s</td><td>-0.57%</td></tr></table><p>See <a href="paired-dataset18.json">the raw comparison</a> for all sixteen cases, DRC, via counts and native SVG hashes. Timing is reported as measured; this change targets the reproducible simplification failure.</p></section><section id="orangecrab"><h2>OrangeCrab rev 0.2.1 ECP5 DDR3</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 3/152 complete nets</h4><a href="orangecrab-phased-before.pcb.svg"><img loading="lazy" src="orangecrab-phased-before.pcb.svg" alt="OrangeCrab rev 0.2.1 ECP5 DDR3 phased before"></a><p>0 traces · 0 vias · <a href="orangecrab-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 3/152 complete nets</h4><a href="orangecrab-phased-after.pcb.svg"><img loading="lazy" src="orangecrab-phased-after.pcb.svg" alt="OrangeCrab rev 0.2.1 ECP5 DDR3 phased after"></a><p>0 traces · 0 vias · <a href="orangecrab-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 3/152 complete nets</h4><a href="orangecrab-fanout-before.pcb.svg"><img loading="lazy" src="orangecrab-fanout-before.pcb.svg" alt="OrangeCrab rev 0.2.1 ECP5 DDR3 fanout before"></a><p>0 traces · 0 vias · <a href="orangecrab-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 3/152 complete nets</h4><a href="orangecrab-fanout-after.pcb.svg"><img loading="lazy" src="orangecrab-fanout-after.pcb.svg" alt="OrangeCrab rev 0.2.1 ECP5 DDR3 fanout after"></a><p>0 traces · 0 vias · <a href="orangecrab-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 152,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 29,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 11,
+          &quot;startedMs&quot;: 6271.388206,
+          &quot;elapsedMs&quot;: 593830.615386
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 602331.2259190001,
+      &quot;peakRssMb&quot;: 3904.234375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;powerTraceExpansionSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 355.4600450000007,
+        &quot;componentDetectionSolver&quot;: 16.432048999999097,
+        &quot;escapeViaLocationSolver&quot;: 4380.6274630000025,
+        &quot;netToPointPairsSolver&quot;: 176.31182900000204,
+        &quot;topologyPlanningSolver&quot;: 5818.402701999999,
+        &quot;topologyMergingSolver&quot;: 7657.023610999997,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 44.48620999999912,
+        &quot;edgeSolver&quot;: 2771.491054000002,
+        &quot;availableSegmentPointSolver&quot;: 467.52230099999724,
+        &quot;necessaryCrampedPortPointSolver&quot;: 21495.466993000002,
+        &quot;preloadedTraceGraphSolver&quot;: 24.420938000002934,
+        &quot;portPointPathingSolver&quot;: 21047.126607000006,
+        &quot;uniformPortDistributionSolver&quot;: 371.82835499999055,
+        &quot;highDensityRouteSolver&quot;: 23670.806817000004,
+        &quot;highDensityForceImproveSolver&quot;: 5051.492150999999,
+        &quot;highDensityRepairSolver&quot;: 16637.421013000014,
+        &quot;highDensityStitchSolver&quot;: 616.462709000014,
+        &quot;traceSimplificationSolver&quot;: 7083.281940999994,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 45.36198299998068,
+        &quot;traceWidthSolver&quot;: 945.3434249999991,
+        &quot;globalDrcForceImproveSolver&quot;: 1042.4387879999995,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 390950.204462,
+        &quot;effortCleanupSolver&quot;: 2466.883759999997,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 88.64295100001618,
+        &quot;powerTraceExpansionSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;orangecrab-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;df1118dd7fd68a491847bef0c9248161117e21c14672edfb0885a0f5f73b8126&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 152,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 29,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 11,
+          &quot;startedMs&quot;: 6502.870917,
+          &quot;elapsedMs&quot;: 593509.799061
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 602347.94652,
+      &quot;peakRssMb&quot;: 3722.96484375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;powerTraceExpansionSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 363.4180400000005,
+        &quot;componentDetectionSolver&quot;: 22.934903000001214,
+        &quot;escapeViaLocationSolver&quot;: 5344.853382000001,
+        &quot;netToPointPairsSolver&quot;: 208.533661999998,
+        &quot;topologyPlanningSolver&quot;: 5644.968946000001,
+        &quot;topologyMergingSolver&quot;: 7583.102056,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 30.01575799999773,
+        &quot;edgeSolver&quot;: 2305.7588609999984,
+        &quot;availableSegmentPointSolver&quot;: 439.96109199999773,
+        &quot;necessaryCrampedPortPointSolver&quot;: 20813.734799000005,
+        &quot;preloadedTraceGraphSolver&quot;: 26.7556889999978,
+        &quot;portPointPathingSolver&quot;: 19641.424241000008,
+        &quot;uniformPortDistributionSolver&quot;: 363.5347890000121,
+        &quot;highDensityRouteSolver&quot;: 23970.616903999995,
+        &quot;highDensityForceImproveSolver&quot;: 5053.906245000006,
+        &quot;highDensityRepairSolver&quot;: 17298.032175999993,
+        &quot;highDensityStitchSolver&quot;: 546.6561719999881,
+        &quot;traceSimplificationSolver&quot;: 6795.2043330000015,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 56.5325840000005,
+        &quot;traceWidthSolver&quot;: 1021.444061999995,
+        &quot;globalDrcForceImproveSolver&quot;: 1004.223949999985,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 409306.951066,
+        &quot;effortCleanupSolver&quot;: 2724.2763030000497,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 91.40679999999702,
+        &quot;powerTraceExpansionSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;orangecrab-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;df1118dd7fd68a491847bef0c9248161117e21c14672edfb0885a0f5f73b8126&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 152,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 29,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 273,
+          &quot;startedMs&quot;: 63271.975422,
+          &quot;elapsedMs&quot;: 536737.29613
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 602324.567356,
+      &quot;peakRssMb&quot;: 1585.03125,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;orangecrab-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;01e063405910ea4a3f15545aa05a31dc50e3c2dca96174a3c43ca90a5ddf48d5&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 152,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 52,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 273,
+          &quot;startedMs&quot;: 62645.872156,
+          &quot;elapsedMs&quot;: 537363.884709
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 619245.740949,
+      &quot;peakRssMb&quot;: 1559.390625,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;orangecrab-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;1f5a1a0e9954140f9a12edf1d40cfd3ab86f946ff2bc33e0cd402dc96d5648f3&quot;
+    }
+  }
+}</pre></details></section><section id="h616"><h2>Allwinner H616 Devboard DDR3</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 2/121 complete nets</h4><a href="h616-phased-before.pcb.svg"><img loading="lazy" src="h616-phased-before.pcb.svg" alt="Allwinner H616 Devboard DDR3 phased before"></a><p>221 traces · 140 vias · <a href="h616-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 2/121 complete nets</h4><a href="h616-phased-after.pcb.svg"><img loading="lazy" src="h616-phased-after.pcb.svg" alt="Allwinner H616 Devboard DDR3 phased after"></a><p>221 traces · 140 vias · <a href="h616-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 0/121 complete nets</h4><a href="h616-fanout-before.pcb.svg"><img loading="lazy" src="h616-fanout-before.pcb.svg" alt="Allwinner H616 Devboard DDR3 fanout before"></a><p>0 traces · 0 vias · <a href="h616-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 0/121 complete nets</h4><a href="h616-fanout-after.pcb.svg"><img loading="lazy" src="h616-fanout-after.pcb.svg" alt="Allwinner H616 Devboard DDR3 fanout after"></a><p>0 traces · 0 vias · <a href="h616-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 2,
+      &quot;requestedNets&quot;: 121,
+      &quot;traces&quot;: 221,
+      &quot;vias&quot;: 140,
+      &quot;pours&quot;: 17,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 1,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 1,
+        &quot;viaPad&quot;: 1,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;completed&quot;,
+          &quot;connections&quot;: 2,
+          &quot;startedMs&quot;: 2434.330298,
+          &quot;elapsedMs&quot;: 90299.831707
+        },
+        {
+          &quot;name&quot;: &quot;byte0&quot;,
+          &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 92957.797378,
+          &quot;elapsedMs&quot;: 158724.723826
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Generated native surface approaches could not satisfy full-path geometry and matching&quot;,
+        &quot;Error: Generated native surface approaches could not satisfy full-path geometry and matching&quot;
+      ],
+      &quot;wallMs&quot;: 255362.22176800002,
+      &quot;peakRssMb&quot;: 2449.3359375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;none&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 105.29625899999974,
+        &quot;componentDetectionSolver&quot;: 23.61450800000057,
+        &quot;escapeViaLocationSolver&quot;: 2566.426689,
+        &quot;netToPointPairsSolver&quot;: 119.36839300000065,
+        &quot;topologyPlanningSolver&quot;: 2206.3257379999995,
+        &quot;topologyMergingSolver&quot;: 2722.558778999999,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 22.760764000002382,
+        &quot;edgeSolver&quot;: 631.9925570000014,
+        &quot;availableSegmentPointSolver&quot;: 203.8571379999994,
+        &quot;necessaryCrampedPortPointSolver&quot;: 892.967901,
+        &quot;preloadedTraceGraphSolver&quot;: 11.544590000001335,
+        &quot;portPointPathingSolver&quot;: 7125.282025,
+        &quot;uniformPortDistributionSolver&quot;: 109.93434300000081,
+        &quot;highDensityRouteSolver&quot;: 3798.6492,
+        &quot;highDensityForceImproveSolver&quot;: 841.4862309999953,
+        &quot;highDensityRepairSolver&quot;: 373.2287720000022,
+        &quot;highDensityStitchSolver&quot;: 62.396299,
+        &quot;traceSimplificationSolver&quot;: 669.9027040000001,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 17.92233600000327,
+        &quot;traceWidthSolver&quot;: 229.70476199999393,
+        &quot;globalDrcForceImproveSolver&quot;: 310.55028799999855,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 37256.585702,
+        &quot;effortCleanupSolver&quot;: 221.81000500000664,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 42.45138299999235,
+        &quot;powerTraceExpansionSolver&quot;: 13457.281619999994
+      },
+      &quot;svg&quot;: &quot;h616-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;4cdd8322e73cc277eaef90bcffca521f50b77d5b0c958d8ca4806f6a47db1d2c&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 2,
+      &quot;requestedNets&quot;: 121,
+      &quot;traces&quot;: 221,
+      &quot;vias&quot;: 140,
+      &quot;pours&quot;: 17,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 1,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 1,
+        &quot;viaPad&quot;: 1,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;completed&quot;,
+          &quot;connections&quot;: 2,
+          &quot;startedMs&quot;: 2469.62255,
+          &quot;elapsedMs&quot;: 86711.379402
+        },
+        {
+          &quot;name&quot;: &quot;byte0&quot;,
+          &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 89419.934125,
+          &quot;elapsedMs&quot;: 161624.989586
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Generated native surface approaches could not satisfy full-path geometry and matching&quot;,
+        &quot;Error: Generated native surface approaches could not satisfy full-path geometry and matching&quot;
+      ],
+      &quot;wallMs&quot;: 254706.884173,
+      &quot;peakRssMb&quot;: 3247.86328125,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;none&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 102.97982899999988,
+        &quot;componentDetectionSolver&quot;: 10.389557000000423,
+        &quot;escapeViaLocationSolver&quot;: 2691.442174,
+        &quot;netToPointPairsSolver&quot;: 120.97089500000038,
+        &quot;topologyPlanningSolver&quot;: 2225.876905000001,
+        &quot;topologyMergingSolver&quot;: 2710.2649679999995,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 13.413259999997535,
+        &quot;edgeSolver&quot;: 600.7521429999979,
+        &quot;availableSegmentPointSolver&quot;: 188.35854800000016,
+        &quot;necessaryCrampedPortPointSolver&quot;: 969.5047919999997,
+        &quot;preloadedTraceGraphSolver&quot;: 11.544458000000304,
+        &quot;portPointPathingSolver&quot;: 6667.905684000001,
+        &quot;uniformPortDistributionSolver&quot;: 97.88679799999954,
+        &quot;highDensityRouteSolver&quot;: 3682.8707619999986,
+        &quot;highDensityForceImproveSolver&quot;: 586.6382719999965,
+        &quot;highDensityRepairSolver&quot;: 393.48330500000156,
+        &quot;highDensityStitchSolver&quot;: 86.11886700000468,
+        &quot;traceSimplificationSolver&quot;: 607.5554469999988,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 17.874414999998407,
+        &quot;traceWidthSolver&quot;: 228.93473699999595,
+        &quot;globalDrcForceImproveSolver&quot;: 291.66692299999704,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 35210.802129,
+        &quot;effortCleanupSolver&quot;: 217.08862199999567,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 48.30222300000605,
+        &quot;powerTraceExpansionSolver&quot;: 13087.458016000004
+      },
+      &quot;svg&quot;: &quot;h616-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;4cdd8322e73cc277eaef90bcffca521f50b77d5b0c958d8ca4806f6a47db1d2c&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 0,
+      &quot;requestedNets&quot;: 121,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 231,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 174,
+          &quot;startedMs&quot;: 55537.830192,
+          &quot;elapsedMs&quot;: 544483.325098
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 616521.363623,
+      &quot;peakRssMb&quot;: 1904.6484375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;h616-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;b57362fd83014062fc661182a4daf346c1fe9bd07ba6c3d9dfc174d756ec0f83&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 0,
+      &quot;requestedNets&quot;: 121,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 17,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 174,
+          &quot;startedMs&quot;: 52207.651843,
+          &quot;elapsedMs&quot;: 547797.621665
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 602218.490747,
+      &quot;peakRssMb&quot;: 2285.85546875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;h616-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;61f318fbf9180669267e3ceb07f0d604e3dd77c7523fd7f956854b7c06624a90&quot;
+    }
+  }
+}</pre></details></section><section id="butterstick"><h2>ButterStick r1.0</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 9/317 complete nets</h4><a href="butterstick-phased-before.pcb.svg"><img loading="lazy" src="butterstick-phased-before.pcb.svg" alt="ButterStick r1.0 phased before"></a><p>0 traces · 0 vias · <a href="butterstick-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 9/317 complete nets</h4><a href="butterstick-phased-after.pcb.svg"><img loading="lazy" src="butterstick-phased-after.pcb.svg" alt="ButterStick r1.0 phased after"></a><p>0 traces · 0 vias · <a href="butterstick-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 9/317 complete nets</h4><a href="butterstick-fanout-before.pcb.svg"><img loading="lazy" src="butterstick-fanout-before.pcb.svg" alt="ButterStick r1.0 fanout before"></a><p>0 traces · 0 vias · <a href="butterstick-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 9/317 complete nets</h4><a href="butterstick-fanout-after.pcb.svg"><img loading="lazy" src="butterstick-fanout-after.pcb.svg" alt="ButterStick r1.0 fanout after"></a><p>0 traces · 0 vias · <a href="butterstick-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 9,
+      &quot;requestedNets&quot;: 317,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 39,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 12,
+          &quot;startedMs&quot;: 28690.620066,
+          &quot;elapsedMs&quot;: 363899.61746100005
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+        &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+      ],
+      &quot;wallMs&quot;: 396445.924496,
+      &quot;peakRssMb&quot;: 5385.09765625,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;portPointPathingSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 1238.8899880000026,
+        &quot;componentDetectionSolver&quot;: 31.252542000001995,
+        &quot;escapeViaLocationSolver&quot;: 29562.175100000008,
+        &quot;netToPointPairsSolver&quot;: 441.09660799999256,
+        &quot;topologyPlanningSolver&quot;: 13446.203152000002,
+        &quot;topologyMergingSolver&quot;: 35224.516563,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 70.12898300000234,
+        &quot;edgeSolver&quot;: 14350.311875,
+        &quot;availableSegmentPointSolver&quot;: 2166.4779670000135,
+        &quot;necessaryCrampedPortPointSolver&quot;: 105707.557883,
+        &quot;preloadedTraceGraphSolver&quot;: 53.2048000000068,
+        &quot;portPointPathingSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;butterstick-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;b03c51df26018fae600eee5a16bb8538867b209e77fab4b3a2a1f9a5ce63a92a&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 9,
+      &quot;requestedNets&quot;: 317,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 39,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 12,
+          &quot;startedMs&quot;: 27306.681597,
+          &quot;elapsedMs&quot;: 352802.43962200003
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+        &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+      ],
+      &quot;wallMs&quot;: 384132.375312,
+      &quot;peakRssMb&quot;: 5169.56640625,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;portPointPathingSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 1238.9476299999951,
+        &quot;componentDetectionSolver&quot;: 17.503149999996822,
+        &quot;escapeViaLocationSolver&quot;: 23100.016446,
+        &quot;netToPointPairsSolver&quot;: 424.8458699999974,
+        &quot;topologyPlanningSolver&quot;: 12668.023014999992,
+        &quot;topologyMergingSolver&quot;: 35084.811942,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 103.78801200000453,
+        &quot;edgeSolver&quot;: 13673.041211000003,
+        &quot;availableSegmentPointSolver&quot;: 2117.123072999995,
+        &quot;necessaryCrampedPortPointSolver&quot;: 106468.30902799999,
+        &quot;preloadedTraceGraphSolver&quot;: 50.8988379999937,
+        &quot;portPointPathingSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;butterstick-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;b03c51df26018fae600eee5a16bb8538867b209e77fab4b3a2a1f9a5ce63a92a&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 9,
+      &quot;requestedNets&quot;: 317,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 39,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 91,
+          &quot;startedMs&quot;: 359402.15246899996,
+          &quot;elapsedMs&quot;: 242745.34854500007
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 606388.6588059999,
+      &quot;peakRssMb&quot;: 1876.94921875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;butterstick-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;391f73a88151e6c0ae09c3eb4e2cba6d9f4416105c8a552d0a79b4a0b484a116&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 9,
+      &quot;requestedNets&quot;: 317,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 39,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 91,
+          &quot;startedMs&quot;: 320449.20306900004,
+          &quot;elapsedMs&quot;: 279558.647199
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 604109.0619590001,
+      &quot;peakRssMb&quot;: 1950.48828125,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;butterstick-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;391f73a88151e6c0ae09c3eb4e2cba6d9f4416105c8a552d0a79b4a0b484a116&quot;
+    }
+  }
+}</pre></details></section><section id="glider"><h2>Glider mainboard</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 1/356 complete nets</h4><a href="glider-phased-before.pcb.svg"><img loading="lazy" src="glider-phased-before.pcb.svg" alt="Glider mainboard phased before"></a><p>537 traces · 318 vias · <a href="glider-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 1/356 complete nets</h4><a href="glider-phased-after.pcb.svg"><img loading="lazy" src="glider-phased-after.pcb.svg" alt="Glider mainboard phased after"></a><p>537 traces · 318 vias · <a href="glider-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 0/356 complete nets</h4><a href="glider-fanout-before.pcb.svg"><img loading="lazy" src="glider-fanout-before.pcb.svg" alt="Glider mainboard fanout before"></a><p>0 traces · 0 vias · <a href="glider-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 0/356 complete nets</h4><a href="glider-fanout-after.pcb.svg"><img loading="lazy" src="glider-fanout-after.pcb.svg" alt="Glider mainboard fanout after"></a><p>0 traces · 0 vias · <a href="glider-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 1,
+      &quot;requestedNets&quot;: 356,
+      &quot;traces&quot;: 537,
+      &quot;vias&quot;: 318,
+      &quot;pours&quot;: 1,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 15,
+        &quot;padTrace&quot;: 6,
+        &quot;viaTrace&quot;: 8,
+        &quot;viaPad&quot;: 2,
+        &quot;viaSpacing&quot;: 1,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 1,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;completed&quot;,
+          &quot;connections&quot;: 5,
+          &quot;startedMs&quot;: 10262.140978,
+          &quot;elapsedMs&quot;: 404672.812762
+        },
+        {
+          &quot;name&quot;: &quot;byte0&quot;,
+          &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 416170.080334,
+          &quot;elapsedMs&quot;: 183861.8772820001
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 615853.820476,
+      &quot;peakRssMb&quot;: 5201.91796875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;none&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 864.8581849999991,
+        &quot;componentDetectionSolver&quot;: 72.54771400000027,
+        &quot;escapeViaLocationSolver&quot;: 18539.797358000003,
+        &quot;netToPointPairsSolver&quot;: 485.68804799999634,
+        &quot;topologyPlanningSolver&quot;: 6782.522675,
+        &quot;topologyMergingSolver&quot;: 11445.729533999998,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 45.07930400000623,
+        &quot;edgeSolver&quot;: 8200.140315999997,
+        &quot;availableSegmentPointSolver&quot;: 761.819267999992,
+        &quot;necessaryCrampedPortPointSolver&quot;: 3747.0872850000014,
+        &quot;preloadedTraceGraphSolver&quot;: 29.60853500000667,
+        &quot;portPointPathingSolver&quot;: 18725.141533,
+        &quot;uniformPortDistributionSolver&quot;: 578.3468639999919,
+        &quot;highDensityRouteSolver&quot;: 24522.952640000003,
+        &quot;highDensityForceImproveSolver&quot;: 5046.054562000005,
+        &quot;highDensityRepairSolver&quot;: 4739.213033999986,
+        &quot;highDensityStitchSolver&quot;: 565.1644249999954,
+        &quot;traceSimplificationSolver&quot;: 4964.704682999989,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 63.444673000019975,
+        &quot;traceWidthSolver&quot;: 2475.2269510000187,
+        &quot;globalDrcForceImproveSolver&quot;: 344.40640199999325,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 216849.69874999998,
+        &quot;effortCleanupSolver&quot;: 1133.6753589999862,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 119.96002100000624,
+        &quot;powerTraceExpansionSolver&quot;: 31889.989587999997
+      },
+      &quot;svg&quot;: &quot;glider-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;e8dfadcd3a6cf9a07e1e5306ebd8249d7898e5a038ee3d0e231b223b48f98e7a&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 1,
+      &quot;requestedNets&quot;: 356,
+      &quot;traces&quot;: 537,
+      &quot;vias&quot;: 318,
+      &quot;pours&quot;: 1,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 15,
+        &quot;padTrace&quot;: 6,
+        &quot;viaTrace&quot;: 8,
+        &quot;viaPad&quot;: 2,
+        &quot;viaSpacing&quot;: 1,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 1,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;completed&quot;,
+          &quot;connections&quot;: 5,
+          &quot;startedMs&quot;: 10827.316576,
+          &quot;elapsedMs&quot;: 391760.134986
+        },
+        {
+          &quot;name&quot;: &quot;byte0&quot;,
+          &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 403696.435888,
+          &quot;elapsedMs&quot;: 196338.85763599997
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 618442.55771,
+      &quot;peakRssMb&quot;: 5581.0234375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;none&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 997.4691249999996,
+        &quot;componentDetectionSolver&quot;: 75.75984900000185,
+        &quot;escapeViaLocationSolver&quot;: 19336.296072999998,
+        &quot;netToPointPairsSolver&quot;: 427.40582999999606,
+        &quot;topologyPlanningSolver&quot;: 6693.482079999994,
+        &quot;topologyMergingSolver&quot;: 10704.907898999998,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 26.72117799999978,
+        &quot;edgeSolver&quot;: 7597.532565000001,
+        &quot;availableSegmentPointSolver&quot;: 685.4451560000016,
+        &quot;necessaryCrampedPortPointSolver&quot;: 3724.3124959999986,
+        &quot;preloadedTraceGraphSolver&quot;: 31.07117300000391,
+        &quot;portPointPathingSolver&quot;: 16792.58726500001,
+        &quot;uniformPortDistributionSolver&quot;: 615.9802839999902,
+        &quot;highDensityRouteSolver&quot;: 24068.53082,
+        &quot;highDensityForceImproveSolver&quot;: 4883.541618999996,
+        &quot;highDensityRepairSolver&quot;: 4790.154859000002,
+        &quot;highDensityStitchSolver&quot;: 412.98780199998873,
+        &quot;traceSimplificationSolver&quot;: 4679.987497000024,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 65.73422899999423,
+        &quot;traceWidthSolver&quot;: 2175.2476940000197,
+        &quot;globalDrcForceImproveSolver&quot;: 305.14350500001456,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 207847.26912300003,
+        &quot;effortCleanupSolver&quot;: 1085.7869090000167,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 82.38856699998723,
+        &quot;powerTraceExpansionSolver&quot;: 33622.18625799997
+      },
+      &quot;svg&quot;: &quot;glider-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;e8dfadcd3a6cf9a07e1e5306ebd8249d7898e5a038ee3d0e231b223b48f98e7a&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 0,
+      &quot;requestedNets&quot;: 356,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 1,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 95,
+          &quot;startedMs&quot;: 296329.258675,
+          &quot;elapsedMs&quot;: 303674.18606000004
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 604102.5615729999,
+      &quot;peakRssMb&quot;: 1870.94140625,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;glider-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;29a3a0705a7b4f02b072b37f13e63919d95da78cc426dd43f6f99c2aa0fab349&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 0,
+      &quot;requestedNets&quot;: 356,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 0,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 95,
+          &quot;startedMs&quot;: 298299.907535,
+          &quot;elapsedMs&quot;: 301708.5490420001
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 660122.873869,
+      &quot;peakRssMb&quot;: 1496.42578125,
+      &quot;timedOut&quot;: true,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;glider-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;9c310507ce07e6c9de261a5fbd4d3d7084c3cae15be2af79a4720933b7bad8d4&quot;
+    }
+  }
+}</pre></details></section><section id="imx6"><h2>i.MX6 Demo Board</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 3/404 complete nets</h4><a href="imx6-phased-before.pcb.svg"><img loading="lazy" src="imx6-phased-before.pcb.svg" alt="i.MX6 Demo Board phased before"></a><p>0 traces · 0 vias · <a href="imx6-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 3/404 complete nets</h4><a href="imx6-phased-after.pcb.svg"><img loading="lazy" src="imx6-phased-after.pcb.svg" alt="i.MX6 Demo Board phased after"></a><p>0 traces · 0 vias · <a href="imx6-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 3/404 complete nets</h4><a href="imx6-fanout-before.pcb.svg"><img loading="lazy" src="imx6-fanout-before.pcb.svg" alt="i.MX6 Demo Board fanout before"></a><p>0 traces · 0 vias · <a href="imx6-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 3/404 complete nets</h4><a href="imx6-fanout-after.pcb.svg"><img loading="lazy" src="imx6-fanout-after.pcb.svg" alt="i.MX6 Demo Board fanout after"></a><p>0 traces · 0 vias · <a href="imx6-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 404,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 140,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 64792.70574299999,
+          &quot;elapsedMs&quot;: 535777.4738469999
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 606469.873317,
+      &quot;peakRssMb&quot;: 6227.3046875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;powerTraceExpansionSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 1139.1786339999962,
+        &quot;componentDetectionSolver&quot;: 19.446867999999085,
+        &quot;escapeViaLocationSolver&quot;: 30666.331045,
+        &quot;netToPointPairsSolver&quot;: 511.350471999991,
+        &quot;topologyPlanningSolver&quot;: 8487.752248000004,
+        &quot;topologyMergingSolver&quot;: 23400.219564,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 56.93005900000571,
+        &quot;edgeSolver&quot;: 19185.078861999995,
+        &quot;availableSegmentPointSolver&quot;: 1597.047591999988,
+        &quot;necessaryCrampedPortPointSolver&quot;: 11929.39110899999,
+        &quot;preloadedTraceGraphSolver&quot;: 42.068682000011904,
+        &quot;portPointPathingSolver&quot;: 49241.88792499999,
+        &quot;uniformPortDistributionSolver&quot;: 920.1275920000044,
+        &quot;highDensityRouteSolver&quot;: 38643.84361699998,
+        &quot;highDensityForceImproveSolver&quot;: 3526.8119750000187,
+        &quot;highDensityRepairSolver&quot;: 10093.939262999978,
+        &quot;highDensityStitchSolver&quot;: 421.6167569999816,
+        &quot;traceSimplificationSolver&quot;: 4438.681394999963,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 66.34512499999255,
+        &quot;traceWidthSolver&quot;: 1952.6378689999692,
+        &quot;globalDrcForceImproveSolver&quot;: 1375.9907930000336,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 214410.01300099998,
+        &quot;effortCleanupSolver&quot;: 8155.088769000024,
+        &quot;lengthMatchingPostProcessingSolver&quot;: 193.7290159999393,
+        &quot;powerTraceExpansionSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;imx6-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;479b999fbd0a9712e53e4c425c15f817cfdd45c62f477503d16274b7b133e282&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 404,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 140,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 70935.412884,
+          &quot;elapsedMs&quot;: 529092.527843
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;
+      ],
+      &quot;wallMs&quot;: 605961.574958,
+      &quot;peakRssMb&quot;: 6282.0703125,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;pipeline9JointDrcRepairSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 1555.4619999999995,
+        &quot;componentDetectionSolver&quot;: 21.843479999995907,
+        &quot;escapeViaLocationSolver&quot;: 26375.524735,
+        &quot;netToPointPairsSolver&quot;: 580.2550239999982,
+        &quot;topologyPlanningSolver&quot;: 8358.931719999993,
+        &quot;topologyMergingSolver&quot;: 26384.77820100001,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 66.12671099998988,
+        &quot;edgeSolver&quot;: 14768.512000999996,
+        &quot;availableSegmentPointSolver&quot;: 1366.347636999999,
+        &quot;necessaryCrampedPortPointSolver&quot;: 12405.89142,
+        &quot;preloadedTraceGraphSolver&quot;: 29.575221000006422,
+        &quot;portPointPathingSolver&quot;: 47677.493637999985,
+        &quot;uniformPortDistributionSolver&quot;: 1193.8722019999987,
+        &quot;highDensityRouteSolver&quot;: 40375.903151999984,
+        &quot;highDensityForceImproveSolver&quot;: 4313.088227999979,
+        &quot;highDensityRepairSolver&quot;: 13678.369114000001,
+        &quot;highDensityStitchSolver&quot;: 569.3539170000004,
+        &quot;traceSimplificationSolver&quot;: 5896.545014000032,
+        &quot;mutatedPreloadedTraceSimplificationSolver&quot;: 71.24095499998657,
+        &quot;traceWidthSolver&quot;: 2368.515773000021,
+        &quot;globalDrcForceImproveSolver&quot;: 1647.5625319999526,
+        &quot;pipeline9JointDrcRepairSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;imx6-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;479b999fbd0a9712e53e4c425c15f817cfdd45c62f477503d16274b7b133e282&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 404,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 372,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 32,
+          &quot;startedMs&quot;: 515130.69310100004,
+          &quot;elapsedMs&quot;: 104076.569273
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;,
+        &quot;Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).&quot;
+      ],
+      &quot;wallMs&quot;: 625434.604043,
+      &quot;peakRssMb&quot;: 3130.28125,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;imx6-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;04437b4ac57417b30d0355f54097c2a951e4466b11a1c9f825421ea943a113f5&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 3,
+      &quot;requestedNets&quot;: 404,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 372,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 32,
+          &quot;startedMs&quot;: 514833.903663,
+          &quot;elapsedMs&quot;: 139308.38228300004
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Full-board routing budget exhausted&quot;,
+        &quot;Error: Full-board routing budget exhausted&quot;,
+        &quot;Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).&quot;
+      ],
+      &quot;wallMs&quot;: 659554.494424,
+      &quot;peakRssMb&quot;: 3149.71875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;imx6-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;04437b4ac57417b30d0355f54097c2a951e4466b11a1c9f825421ea943a113f5&quot;
+    }
+  }
+}</pre></details></section><section id="icepi"><h2>iCE/Pi CM0 SBC</h2><h3>Phased routing — incomplete</h3><div class="pair"><div><h4>Before · 7/230 complete nets</h4><a href="icepi-phased-before.pcb.svg"><img loading="lazy" src="icepi-phased-before.pcb.svg" alt="iCE/Pi CM0 SBC phased before"></a><p>0 traces · 0 vias · <a href="icepi-phased-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 7/230 complete nets</h4><a href="icepi-phased-after.pcb.svg"><img loading="lazy" src="icepi-phased-after.pcb.svg" alt="iCE/Pi CM0 SBC phased after"></a><p>0 traces · 0 vias · <a href="icepi-phased-after.pcb.svg">Native PCB SVG</a></p></div></div><h3>Fanout routing — incomplete</h3><div class="pair"><div><h4>Before · 7/230 complete nets</h4><a href="icepi-fanout-before.pcb.svg"><img loading="lazy" src="icepi-fanout-before.pcb.svg" alt="iCE/Pi CM0 SBC fanout before"></a><p>0 traces · 0 vias · <a href="icepi-fanout-before.pcb.svg">Native PCB SVG</a></p></div><div><h4>After · 7/230 complete nets</h4><a href="icepi-fanout-after.pcb.svg"><img loading="lazy" src="icepi-fanout-after.pcb.svg" alt="iCE/Pi CM0 SBC fanout after"></a><p>0 traces · 0 vias · <a href="icepi-fanout-after.pcb.svg">Native PCB SVG</a></p></div></div><details><summary>Measured failures and validation</summary><pre>{
+  &quot;phased&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 7,
+      &quot;requestedNets&quot;: 230,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 70,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 32051.674310000002,
+          &quot;elapsedMs&quot;: 145399.980664
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+        &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+      ],
+      &quot;wallMs&quot;: 181090.224961,
+      &quot;peakRssMb&quot;: 4712.2421875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;portPointPathingSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 890.3575500000006,
+        &quot;componentDetectionSolver&quot;: 24.633920000000217,
+        &quot;escapeViaLocationSolver&quot;: 10359.752732,
+        &quot;netToPointPairsSolver&quot;: 396.37529899999936,
+        &quot;topologyPlanningSolver&quot;: 5898.9899460000015,
+        &quot;topologyMergingSolver&quot;: 11102.833887,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 63.3713940000016,
+        &quot;edgeSolver&quot;: 5033.236275000003,
+        &quot;availableSegmentPointSolver&quot;: 1412.8421539999981,
+        &quot;necessaryCrampedPortPointSolver&quot;: 5239.974474000002,
+        &quot;preloadedTraceGraphSolver&quot;: 25.210925000006682,
+        &quot;portPointPathingSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;icepi-phased-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;f9e5d155f80d29de58fcc1f62b1fdd21dd7e52a427e9c8d9e9af421fdede6fa7&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 7,
+      &quot;requestedNets&quot;: 230,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 70,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;plane_escape&quot;,
+          &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 8,
+          &quot;startedMs&quot;: 32244.947763999997,
+          &quot;elapsedMs&quot;: 156304.49467600003
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+        &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+      ],
+      &quot;wallMs&quot;: 192567.633067,
+      &quot;peakRssMb&quot;: 4747.9921875,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: &quot;portPointPathingSolver&quot;,
+      &quot;phaseTimesMs&quot;: {
+        &quot;preprocessSimpleRouteJsonSolver&quot;: 958.9104320000042,
+        &quot;componentDetectionSolver&quot;: 22.668335000002116,
+        &quot;escapeViaLocationSolver&quot;: 10556.852949,
+        &quot;netToPointPairsSolver&quot;: 393.5656699999963,
+        &quot;topologyPlanningSolver&quot;: 5999.265551999997,
+        &quot;topologyMergingSolver&quot;: 12545.442234999995,
+        &quot;nodeDimensionSubdivisionSolver&quot;: 68.81610700000601,
+        &quot;edgeSolver&quot;: 4984.274890000001,
+        &quot;availableSegmentPointSolver&quot;: 1395.560501999993,
+        &quot;necessaryCrampedPortPointSolver&quot;: 5474.16885300001,
+        &quot;preloadedTraceGraphSolver&quot;: 24.196821000005002,
+        &quot;portPointPathingSolver&quot;: 0
+      },
+      &quot;svg&quot;: &quot;icepi-phased-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;f9e5d155f80d29de58fcc1f62b1fdd21dd7e52a427e9c8d9e9af421fdede6fa7&quot;
+    }
+  },
+  &quot;fanout&quot;: {
+    &quot;before&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 7,
+      &quot;requestedNets&quot;: 230,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 70,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 32,
+          &quot;startedMs&quot;: 235475.079917,
+          &quot;elapsedMs&quot;: 325402.4463109999
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+        &quot;Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;
+      ],
+      &quot;wallMs&quot;: 564673.853399,
+      &quot;peakRssMb&quot;: 2227.21484375,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;icepi-fanout-before.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;6a1c8ab85148b2257bb6e33c969a740a2a30079caca21f9fc046e4e0b10adcc4&quot;
+    },
+    &quot;after&quot;: {
+      &quot;passed&quot;: false,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;initialCopperElements&quot;: 0,
+      &quot;connectedNets&quot;: 7,
+      &quot;requestedNets&quot;: 230,
+      &quot;traces&quot;: 0,
+      &quot;vias&quot;: 0,
+      &quot;pours&quot;: 70,
+      &quot;geometryErrors&quot;: [],
+      &quot;membershipErrors&quot;: [],
+      &quot;physicalFindings&quot;: {
+        &quot;overlap&quot;: 0,
+        &quot;padTrace&quot;: 0,
+        &quot;viaTrace&quot;: 0,
+        &quot;viaPad&quot;: 0,
+        &quot;viaSpacing&quot;: 0,
+        &quot;contiguous&quot;: 0,
+        &quot;viaInPad&quot;: 0,
+        &quot;holeTrace&quot;: 0
+      },
+      &quot;phases&quot;: [
+        {
+          &quot;name&quot;: &quot;fanout preparation&quot;,
+          &quot;solver&quot;: &quot;FanoutSolver&quot;,
+          &quot;status&quot;: &quot;failed&quot;,
+          &quot;connections&quot;: 32,
+          &quot;startedMs&quot;: 252542.14341999998,
+          &quot;elapsedMs&quot;: 325957.26329399995
+        }
+      ],
+      &quot;errors&quot;: [
+        &quot;Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+        &quot;Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;
+      ],
+      &quot;wallMs&quot;: 582685.715599,
+      &quot;peakRssMb&quot;: 2212.625,
+      &quot;timedOut&quot;: false,
+      &quot;lastPipelineStage&quot;: null,
+      &quot;phaseTimesMs&quot;: {},
+      &quot;svg&quot;: &quot;icepi-fanout-after.pcb.svg&quot;,
+      &quot;svgSha256&quot;: &quot;6a1c8ab85148b2257bb6e33c969a740a2a30079caca21f9fc046e4e0b10adcc4&quot;
+    }
+  }
+}</pre></details></section><section><h2>Why the larger search budget was rejected</h2><p>A separate experiment rounded dense-graph search-budget scaling upward. On iCE/Pi it cleared pathing and simplification, then exhausted the routing budget in joint DRC repair. No additional traces or complete nets were emitted. ButterStick still exhausted pathing iterations. That budget change is excluded from the fix.</p><p>Global plane pathing, joint DRC repair, power expansion, DDR surface approaches and fanout escape capacity remain the measured blockers. The report preserves failed and missing results and does not count internal solver candidates as accepted copper.</p><p><a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43947925464">Rejected budget experiment</a></p></section></html>

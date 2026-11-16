@@ -1,0 +1,17 @@
+{
+  "capturedRoutes": 3,
+  "outputRoutes": 3,
+  "solved": true,
+  "inputViaEntries": 5,
+  "outputViaEntries": 3,
+  "inputDistinctViaPositions": [
+    "15.469998999998744,0.7539056466024796",
+    "15.456,0.696",
+    "15.845000999998744,-0.2999990000000172",
+    "15.845,0.47",
+    "15.925391608637883,0.4700009999999828"
+  ],
+  "outputDistinctViaPositions": [
+    "15.845000999998744,-0.2999990000000172"
+  ]
+}
