@@ -1,0 +1,17 @@
+{
+  "name": "core-ddr-full-board-recreations",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract": "python3 extract.py",
+    "render": "bun run.ts"
+  },
+  "dependencies": {
+    "tscircuit": "0.0.3204",
+    "react": "19.3.1",
+    "transformation-matrix": "2.16.1",
+    "typescript": "5.9.3",
+    "@types/bun": "1.3.8",
+    "@types/react": "19.2.14"
+  }
+}
