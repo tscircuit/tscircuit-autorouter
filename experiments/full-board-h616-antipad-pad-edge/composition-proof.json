@@ -1,0 +1,69 @@
+{
+  "immutableEngines": {
+    "apply-via-pour-antipad-contract.mjs": "57ff83afab96c4bcae63f2b9bce6d9e01479e919fa55056489f06ad81f7e20ad",
+    "apply-pad-edge-candidate.mjs": "b4627029084d4f9995658718601c840a3f6dacafd8ebe5c6b5b7352765fbfa81"
+  },
+  "antipadReference": {
+    "inputVariant": "published_core2392",
+    "inputSha256": "cdd8fd63614327e7037617f62c0cc732861be5e969e53bdb99c0b0831e493fd1",
+    "outputSha256": "2210fbe0a5f7aacb4e2352a799fd41876d21ae7e50210a6cde8f4c2909712bf4",
+    "inputByteLength": 7186243,
+    "outputByteLength": 7186795,
+    "anchors": [
+      "rotated pour primitive metadata",
+      "ordinary pour primitive metadata",
+      "manufactured via non-handoff layer metadata",
+      "symmetric intermediate via-pour conflict exemption",
+      "via-only source-and-target pour retention",
+      "viaScenes uses filtered primitive list"
+    ],
+    "changedFunctions": [
+      "fixedCopper: preserve pour provenance and mark actual via copper layers",
+      "CopperConflictIndex.findConflict: skip only pour versus eligible via",
+      "expandedSignalSites: via-only intermediate-pour exemption"
+    ],
+    "carrierAndSurfaceFixedListsUnchanged": true,
+    "allNonPourObstaclesAndInputTracesRetained": true,
+    "sourceAndTargetPourPartsRetained": true,
+    "actualViaPhysicalSpanUnchanged": true,
+    "algorithmOptionsAndBudgetsChanged": false,
+    "v2ObserverFilesModified": false,
+    "requiresFinalManufacturedPourQualification": true
+  },
+  "padEdgeReference": {
+    "inputSha256": "ca0766b386f4e2d60237c49ef9d1dfe91cb385cfa33ff828fa7b4d8b764d7b0e",
+    "outputSha256": "298c5446f3de8a44150ff4697419656dc29be56a0ea417bab2d445662951e875",
+    "originalBytes": 7186302,
+    "candidateBytes": 7186162,
+    "changedFunction": "expandedSignalSites",
+    "deletedStatements": [
+      "const gridCandidateCount = candidates.length;",
+      "if (index2 === gridCandidateCount && ends[end].length) break;"
+    ],
+    "unusedLoopIndexRemoved": true,
+    "regularCandidateOrderAndGeometryUnchanged": true,
+    "explicitPadEdgeRetryOnly": true,
+    "pourOrAntipadChanges": false,
+    "observersAdded": false,
+    "optionsRulesAndBudgetsChanged": false,
+    "outsideFunctionUnchanged": true
+  },
+  "padDeltaMatchesImmutableEngineExactly": true,
+  "affected2394FunctionPreimagesEqual2392": true,
+  "compositionChanges": 2,
+  "totalEngineEdits": 9,
+  "regionsSha256": "9245a05e81410a78b5e387e96d7f9c9781cb4cfca80a9365f25b81a99b1a8432",
+  "preview2394": {
+    "inputSha256": "ca0766b386f4e2d60237c49ef9d1dfe91cb385cfa33ff828fa7b4d8b764d7b0e",
+    "outputSha256": "8873aa4fc2884e9b054adab0baccb1f81ffb4e089800e691d76bf7ce33db311b"
+  },
+  "fullCandidateEntryWritten": false,
+  "importedCore": false,
+  "routingExecuted": false,
+  "latest2395": {
+    "inputSha256": "8d61139462e263a37d8f8314f0d7eb5ff54c0e5c64ae3f49110c566bfce556ee",
+    "outputSha256": "6796a63038bd29dc7fb7c31ff82ec855252dcaa961193881feb8b4a1a7de3acd",
+    "functionPreimagesExact": true,
+    "coreGitHead": "985f26701eb6998f107a58575d847ae22146a7e0"
+  }
+}

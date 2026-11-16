@@ -1,0 +1,48 @@
+{
+  "frozen": true,
+  "experiment": "h616-antipad-pad-edge-joint-hypothesis",
+  "baselineCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "target": {
+    "board": "h616",
+    "cohort": "original",
+    "fullCircuit": true,
+    "mode": "phased",
+    "fanout": false
+  },
+  "runtime": {
+    "main": "0.0.3200",
+    "core": "0.0.2395",
+    "eval": "0.0.1789",
+    "autorouter": "0.0.1107"
+  },
+  "originalCoreSha256": "8d61139462e263a37d8f8314f0d7eb5ff54c0e5c64ae3f49110c566bfce556ee",
+  "candidateCoreSha256": "6796a63038bd29dc7fb7c31ff82ec855252dcaa961193881feb8b4a1a7de3acd",
+  "engines": {
+    "apply-via-pour-antipad-contract.mjs": "57ff83afab96c4bcae63f2b9bce6d9e01479e919fa55056489f06ad81f7e20ad",
+    "apply-pad-edge-candidate.mjs": "b4627029084d4f9995658718601c840a3f6dacafd8ebe5c6b5b7352765fbfa81"
+  },
+  "regionsSha256": "9245a05e81410a78b5e387e96d7f9c9781cb4cfca80a9365f25b81a99b1a8432",
+  "changesCombined": 2,
+  "individualBenefitAttribution": false,
+  "busObserverAdded": false,
+  "existingP9DiagnosticsUnchanged": true,
+  "deadlinesMs": {
+    "capture": 900000,
+    "hard": 960000,
+    "assessment": 180000
+  },
+  "originalAssessmentPreparedFirst": true,
+  "sourceModulesAndRulesUnchanged": true,
+  "sourceFrozen": true,
+  "controlRebasePending": false,
+  "validation": {
+    "latestAffectedFunctionPreimagesExact": true,
+    "allNineEngineEditsPreserved": true,
+    "noRouting": true,
+    "candidateEntryCopied": true,
+    "candidateEntryImported": true,
+    "candidateImportSmokeProof": "/tmp/full-board-ten-20261116/audit-h616-antipad-pad-edge-3200/import-smoke-proof.json",
+    "exportCount": 183,
+    "originalCoreAndHelperPreserved": true
+  }
+}

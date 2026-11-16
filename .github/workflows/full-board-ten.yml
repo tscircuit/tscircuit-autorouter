@@ -1,42 +1,33 @@
-name: Published3200 full-board ten-case benchmark
+name: H616 original combined antipad and pad-edge diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3200-20261116]
+    branches: [bench/h616-antipad-pad-edge-3200]
 
 permissions:
   contents: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    name: H616 original (two-change joint hypothesis)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      BOARD: h616
+      FULL_BOARD_COHORTS: original
+      FULL_BOARD_EXPERIMENT: published
 
     steps:
-      - name: Checkout benchmark controller
+      - name: Checkout diagnostic controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           sparse-checkout: |
             experiments/full-board-ten
+            experiments/full-board-h616-antipad-pad-edge
             .github/workflows/full-board-ten.yml
             AGENTS.md
 
@@ -49,7 +40,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: experiments/full-board-priority-analysis
 
-      - name: Checkout immutable spaced circuits
+      - name: Checkout immutable spaced circuits for unchanged case factory
         uses: actions/checkout@v4
         with:
           repository: ShiboSoftwareDev/core-ddr-benchmark
@@ -68,10 +59,10 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Prepare verified package runtime
+      - name: Prepare verified published runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
+      - name: Prepare authentic H616 original case and unchanged helper
         id: prepare
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
@@ -80,70 +71,56 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
+      - name: Install frozen two-change diagnostic
+        id: candidate
+        run: bun experiments/full-board-h616-antipad-pad-edge/install-candidate.mjs "$FULL_BOARD_ROOT"
+
+      - name: Run authentic H616 original full circuit
         id: original
-        if: matrix.experiment == 'published'
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && steps.candidate.outcome == 'success' }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+          "$FULL_BOARD_ROOT/cases/h616-original.json"
+          "$FULL_BOARD_ROOT/results/h616/original"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+      - name: Preserve actual geometry and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
+          name: h616-original-antipad-pad-edge-${{ github.run_attempt }}
+          path: .full-board-run/results/h616/original
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Publish compact result notices and summary
+      - name: Publish compact results and explicit joint-hypothesis label
         id: report
         if: always()
         run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
 
-      - name: Preserve small reports and provenance
+      - name: Preserve small reports and frozen composition provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: h616-antipad-pad-edge-provenance-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/results/h616/summary.json
+            .full-board-run/results/h616/original/result.json
+            .full-board-run/results/h616/original/assessment.json
+            .full-board-run/results/h616/original/process.json
+            .full-board-run/results/h616/original/progress.json
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/combined-candidate-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
+            experiments/full-board-h616-antipad-pad-edge/
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Require selected full circuits to be complete and clean
+      - name: Require complete clean native circuit
         if: always()
         run: test "${{ steps.report.outputs.all_clean }}" = true
