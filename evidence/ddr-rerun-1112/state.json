@@ -4,7 +4,7 @@
   "baselineRun": 43964315562,
   "diagnosticRun": 43964836091,
   "candidate": "fix/drc-endpoint-layers",
-  "status": "running",
+  "status": "complete",
   "candidateRun": 43967019925,
   "fixPr": 3875,
   "reproPr": 3874,
@@ -22,6 +22,12 @@
   "candidateComplete": true,
   "reproCiPassed": true,
   "allFullBoardCasesAssessed": true,
-  "fixCiStatus": "final rerun after updating two validated native Linux snapshots",
-  "baselineBug107PixelsMatchPublishedSnapshot": true
+  "fixCiStatus": "passed",
+  "baselineBug107PixelsMatchPublishedSnapshot": true,
+  "fixCiPassed": true,
+  "testShardsPassed": 9,
+  "fixPrReady": true,
+  "formatCiRun": 43971995255,
+  "typecheckCiRun": 43971995264,
+  "buildCiRun": 43971995241
 }

@@ -12,7 +12,7 @@
     "baselineRun": 43964315562,
     "diagnosticRun": 43964836091,
     "candidate": "fix/drc-endpoint-layers",
-    "status": "running",
+    "status": "complete",
     "candidateRun": 43967019925,
     "fixPr": 3875,
     "reproPr": 3874,
@@ -22,7 +22,7 @@
     "baselineEvidenceCollectorRun": 43967820187,
     "productionTranspiledSha256": "a6b547cf6c4769a1c96c58291a2386bfb8fb1da2c611385bf772bb57fff97a59",
     "productionMatchesBenchmarkAfterMinifiedTypeScriptTranspilation": true,
-    "fixCiRun": 43968901837,
+    "fixCiRun": 43971995307,
     "reproCiRun": 43967635375,
     "candidateEvidenceCollectorRun": 43969336304,
     "pairedDataset18Complete": true,
@@ -30,8 +30,74 @@
     "candidateComplete": true,
     "reproCiPassed": true,
     "allFullBoardCasesAssessed": true,
-    "fixCiStatus": "final rerun after updating two validated native Linux snapshots",
-    "baselineBug107PixelsMatchPublishedSnapshot": true
+    "fixCiStatus": "passed",
+    "baselineBug107PixelsMatchPublishedSnapshot": true,
+    "fixCiPassed": true,
+    "testShardsPassed": 9,
+    "fixPrReady": true,
+    "formatCiRun": 43971995255,
+    "typecheckCiRun": 43971995264,
+    "buildCiRun": 43971995241
+  },
+  "ci": {
+    "run": 43971995307,
+    "head": "e3f41309f0cfd6bdfd01d3569ec1a3254a0d312e",
+    "jobs": [
+      {
+        "id": 133666234538,
+        "name": "test (1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234874,
+        "name": "test (5)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234876,
+        "name": "test (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234899,
+        "name": "test (7)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234919,
+        "name": "test (3)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234936,
+        "name": "test (6)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234939,
+        "name": "test (8)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666234952,
+        "name": "test (9)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133666235166,
+        "name": "test (2)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
   },
   "boards": [
     {
@@ -1073,7 +1139,7 @@
         "fanout": {
           "before": {
             "passed": false,
-            "status": "failed",
+            "status": "hard_process_timeout",
             "initialCopperElements": 0,
             "connectedNets": 0,
             "requestedNets": 356,
@@ -1406,7 +1472,7 @@
           },
           "after": {
             "passed": false,
-            "status": "running",
+            "status": "hard_process_timeout",
             "initialCopperElements": 0,
             "connectedNets": 0,
             "requestedNets": 404,
@@ -2190,9 +2256,17 @@
       "baselineSvgMatchesPublishedSnapshotPixels": true
     },
     "bug109": {
+      "traceCount": 349,
+      "reportedIssues": 0,
+      "byType": {},
+      "drcNetGroups": 101,
+      "errors": [],
+      "originalCheckerReportedIssues": 0,
+      "correctedCheckerReportedIssues": 0,
+      "afterRerouteCorrectedCheckerReportedIssues": 0,
       "beforeViaEntries": 427,
       "afterViaEntries": 411,
-      "afterRelaxedDrcIssues": 0
+      "originalRoutedInputSha256": "3b0d311bf63113f6e3815951633809a14666fef992cdbd1809def6360b4297c8"
     }
   },
   "srj23Sample50": {

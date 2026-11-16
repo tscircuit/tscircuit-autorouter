@@ -1,0 +1,13 @@
+{
+  "traceCount": 349,
+  "reportedIssues": 0,
+  "byType": {},
+  "drcNetGroups": 101,
+  "errors": [],
+  "originalCheckerReportedIssues": 0,
+  "correctedCheckerReportedIssues": 0,
+  "afterRerouteCorrectedCheckerReportedIssues": 0,
+  "beforeViaEntries": 427,
+  "afterViaEntries": 411,
+  "originalRoutedInputSha256": "3b0d311bf63113f6e3815951633809a14666fef992cdbd1809def6360b4297c8"
+}
