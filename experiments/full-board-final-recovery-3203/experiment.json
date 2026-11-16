@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "frozen": true,
+  "name": "matched-final-recovery-only-diagnostic-3203",
+  "status": "HELD: preparation only; no commit, push, install/import or routing performed",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "baseHarnessCommit": "d612311a273084c49f6384a63183b08d08f30569",
+  "matchedWindowPatternCommit": "4534c46e1840b0bcf0f392f475508f43ad9cf6e9",
+  "runtime": [
+    {
+      "name": "tscircuit",
+      "version": "0.0.3203",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+    },
+    {
+      "name": "@tscircuit/core",
+      "version": "0.0.2396",
+      "entrySha256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5"
+    },
+    {
+      "name": "@tscircuit/eval",
+      "version": "0.0.1790",
+      "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465"
+    },
+    {
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1109",
+      "entrySha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2"
+    }
+  ],
+  "sourceOverride": {
+    "adapterFormulasUnchanged": true,
+    "candidateBytes": 3323909,
+    "candidateSha256": "4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f",
+    "changedByteOffsets": [
+      2068963
+    ],
+    "childRuntimeName": "fQ",
+    "childSourceName": "PreparedFinalRouteSolver",
+    "classRuntimeName": "yQ",
+    "classSourceName": "PreparedPortPointRoutingSolver",
+    "conditionalEligibilityAndAttemptOrderUnchanged": true,
+    "fullCandidateEntryRetained": false,
+    "generalFormula": "max(options.MAX_ITERATIONS ?? 50000, parent.MAX_ITERATIONS * 4) instead of multiplier2",
+    "inputBytes": 3323909,
+    "inputEntry": "/tmp/full-board-ten-20261116/release-3203/local-runtime/npm/autorouter/dist/index.js",
+    "inputSha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+    "mainCapAnchor": "MAX_ITERATIONS:Math.ceil(2e6*o*i)",
+    "nativeClassSelection": "pending latest3203 observations; source dispatcher only",
+    "nonPreparedSelectiveFactoryUnchanged": true,
+    "ordinaryGreedy50kUnchanged": true,
+    "originalByte": "2",
+    "originalFactoryAnchor": "createGreedyFinalRouteSolver(e,t){if(t>=0)return super.createGreedyFinalRouteSolver(e,t);const n=new fQ(this.topology,this.problem,{...e,MAX_ITERATIONS:Math.max(e.MAX_ITERATIONS??5e4,2*this.MAX_ITERATIONS)},this.geometry);return n.remainingReripBudget=this.costAwareFinalReripBudget-this.state.ripCount,n}",
+    "parent2MChildBefore4MAfter8M": true,
+    "primaryGraphCoefficientUnchanged": true,
+    "publishedAutorouter": "0.0.1109",
+    "publishedEntryUnchangedAfterCheck": true,
+    "replacementByte": "4",
+    "replacementFactoryAnchor": "createGreedyFinalRouteSolver(e,t){if(t>=0)return super.createGreedyFinalRouteSolver(e,t);const n=new fQ(this.topology,this.problem,{...e,MAX_ITERATIONS:Math.max(e.MAX_ITERATIONS??5e4,4*this.MAX_ITERATIONS)},this.geometry);return n.remainingReripBudget=this.costAwareFinalReripBudget-this.state.ripCount,n}",
+    "restorationByteExact": true,
+    "restoredSha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+    "status": "prepared-only; not installed, imported, routed, pushed or proposed for production",
+    "weightsGraphRulesOrEffortChanged": false
+  },
+  "cases": [
+    {
+      "id": "glider",
+      "lane": "published",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "glider",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "imx6",
+      "lane": "published",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "imx6",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    }
+  ],
+  "scope": "Only the existing Prepared conditional final child multiplier changes2\u21924. Main2M, outer/portfolio scaling, ordinary greedy50k, non-Prepared factory, eligibility/attempt order and all routing weights/rules/effort remain byte-exact. Every lane uses identical1800/1860/180second external limits.",
+  "assessment": "Original published Core2396 helper is prepared before the routing override; its neutral assessment scope is pinned to original published AR1109. Only the routing alias changes in candidate lanes.",
+  "observations": "Unchanged published-instance lifecycle hooks. After routing, forward existing final parent.stats with explicit absentKeys. No new live witness/child collector. Child max cap is not actual child work; no strategy inferred from caps or finalAcceptances.",
+  "matching": "Four separate ARM8vCPU jobs, sameSKU and inputs. This is a matched native quality diagnostic, not a same-VM speed benchmark.",
+  "heldGates": [
+    "Parent review of this prepared harness",
+    "Old3200 stored parent stats must establish accepted congestion-aware strategy"
+  ],
+  "preparationValidation": {
+    "candidateEntryRetained": false,
+    "candidateImportPerformed": false,
+    "routingPerformed": false,
+    "installOrBuildPerformed": false,
+    "commitOrPushPerformed": false,
+    "sourceInputsChanged": false
+  },
+  "dispatch": "No workflow dispatch. Branch-specific push would launch all four lanes only after explicit parent authorization.",
+  "interpretationGates": [
+    "Before attributing results, the new matched published3203 lane must establish actual Prepared selection and relevant recovery eligibility; this does not require a separate all-ten run to finish before launch"
+  ]
+}

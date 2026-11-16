@@ -1,0 +1,27 @@
+{
+  "autorouterVersion": "0.0.1109",
+  "autorouterGitHead": "c30d99fb8a7cb6f32a1a238759f6fe19a2d2d8d9",
+  "declaredTinyPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "tinyLiteralMain": "f6d6a681147773fa55c4fa475b9998f0d96aefc7",
+  "wholeTreeParityProof": "/tmp/full-board-ten-20261116/tiny-pinned-vs-main-3200.json",
+  "readablePreparedSource": "/tmp/tiny-live-reachability-3200/lib/prepared/PreparedPortPointRoutingSolver.ts",
+  "literalSourceBlobProof": "/tmp/full-board-ten-20261116/audit-final-route-acceptance-3200/stats-inventory.json",
+  "preparedCompleteClassEqualToAR1107AfterOnlySymbolRename": true,
+  "symbolMappingAR1107To1109": {
+    "fQ": "yQ",
+    "lQ": "hQ",
+    "mQ": "gQ",
+    "hQ": "dQ",
+    "gQ": "fQ"
+  },
+  "preparedClassBeforeSha256": "3bb576ffcd705f704cf7604da9d31abc014400efba282a57bf552d4a17f6672c",
+  "preparedClassAfterSha256": "b2131b76722ce24697a1b71e1ec0a0fc884921f2330e575cb6c6dd6ae0c921ed",
+  "preparedFinalChildCompleteClassEqualAfterOnlySymbolRename": true,
+  "childSymbolMappingAR1107To1109": {
+    "gQ": "fQ",
+    "aQ": "cQ",
+    "hQ": "dQ"
+  },
+  "sourceDispatcherAnchor": "e.solverClass=n?yQ:hQ",
+  "nativeClassSelection": "pending latest3203 observations; no native class claim yet"
+}

@@ -1,8 +1,8 @@
-name: Published3203 full-board ten-case benchmark
+name: Published3203 matched final-recovery-only diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3203-20261116]
+    branches: [bench/full-board-final-recovery-3203]
 
 permissions:
   contents: read
@@ -14,21 +14,20 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 4
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: glider, experiment: published, cohorts: "spaced" }
+          - { board: imx6, experiment: published, cohorts: "spaced" }
+          - { board: glider, experiment: final-recovery-only-diagnostic, cohorts: "spaced" }
+          - { board: imx6, experiment: final-recovery-only-diagnostic, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       BOARD: ${{ matrix.board }}
       FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_EXPERIMENT: published
 
     steps:
       - name: Checkout benchmark controller
@@ -37,6 +36,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             experiments/full-board-ten
+            experiments/full-board-final-recovery-3203
             .github/workflows/full-board-ten.yml
             AGENTS.md
 
@@ -80,29 +80,14 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
-
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
+      - name: Install exact private AR recovery-only diagnostic
+        id: recovery
+        if: matrix.experiment == 'final-recovery-only-diagnostic'
+        run: bun experiments/full-board-final-recovery-3203/install-diagnostic.mjs "$FULL_BOARD_ROOT" "$BOARD"
 
       - name: Run spaced full circuit
         id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && (matrix.experiment == 'published' || (matrix.experiment == 'final-recovery-only-diagnostic' && steps.recovery.outcome == 'success')) }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -123,6 +108,8 @@ jobs:
       - name: Publish compact result notices and summary
         id: report
         if: always()
+        env:
+          FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
         run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
 
       - name: Preserve small reports and provenance
@@ -139,6 +126,11 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/final-recovery-only-diagnostic-proof.json
+            .full-board-run/recovery-only-byte-proof.json
+            .full-board-run/results/${{ matrix.board }}/spaced/acceptance-stats.json
+            experiments/full-board-final-recovery-3203/candidate-byte-proof.json
+            experiments/full-board-final-recovery-3203/experiment.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
           if-no-files-found: warn

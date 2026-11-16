@@ -1,0 +1,135 @@
+{
+  "status": "HELD; review-ready preparation only",
+  "baseCommit": "d612311a273084c49f6384a63183b08d08f30569",
+  "branch": "bench/full-board-final-recovery-3203",
+  "worktree": "/tmp/full-board-final-recovery-3203",
+  "inputSha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+  "candidateSha256": "4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f",
+  "files": [
+    {
+      "name": ".github/workflows/full-board-ten.yml",
+      "bytes": 5668,
+      "sha256": "57e09357d24333ebad4761835f6bade83013b671983ca0124a8fcf888b3cbb92"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/VALIDATION.md",
+      "bytes": 3595,
+      "sha256": "ee0b3b44f59163053e799dfdefa9f27d9d8b5da998e9d00f43e9011a6c3ad606"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/candidate-byte-proof.json",
+      "bytes": 2160,
+      "sha256": "8662787d999e1bc342719556c44fa335e6d25c0a9e708a9872e8f42df0411481"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/experiment.json",
+      "bytes": 6059,
+      "sha256": "530943e726d410b01051abd7cd2371172af32e7aac84348b328abf198f0a2260"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/install-diagnostic.mjs",
+      "bytes": 9805,
+      "sha256": "4e8e240c0ec453ce4c4dc67351f07a386b3b25558a4089b0e73d1d1e3de566b2"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/prepare-recovery-only.py",
+      "bytes": 4882,
+      "sha256": "c66c9608f2d0a98dde792c093c7fc46da20c8e0ebd0c046b30219cb61c8ec73d"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/source-relation.json",
+      "bytes": 1283,
+      "sha256": "04f4ac9cd47c91b43e49842ef714e02f0d62ff9b70811462def00aa1a3674910"
+    },
+    {
+      "name": "experiments/full-board-ten/harness-provenance.json",
+      "bytes": 2012,
+      "sha256": "b922404d9da914c83a7c07fff505b429956b1984c08b8c28444a7277c90bb1ea"
+    },
+    {
+      "name": "experiments/full-board-ten/prepare-cases.ts",
+      "bytes": 6508,
+      "sha256": "79e6f7889f09b8bf3aa3f9f2af47fb5f566098aff6811537b4cd759267772e9b"
+    },
+    {
+      "name": "experiments/full-board-ten/render-published.tsx",
+      "bytes": 14697,
+      "sha256": "f436629d1bf3983cd5d5f8c16ec892a095776fbdd17aa896da8be85084bb08de"
+    },
+    {
+      "name": "experiments/full-board-ten/report.py",
+      "bytes": 4607,
+      "sha256": "a72d3bf9a2b9b190bd9275ef2eb017fbf92ed44ff18a53a023e0ecbd4b2bebe6"
+    },
+    {
+      "name": "experiments/full-board-ten/run-one.ts",
+      "bytes": 13144,
+      "sha256": "bf583718e85276a58adb9396c8cdcdb95e3e1691ea16f914c0dc4c3349e562b9"
+    }
+  ],
+  "unchangedControlFiles": [
+    {
+      "name": "experiments/full-board-ten/bootstrap.py",
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d"
+    },
+    {
+      "name": "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts",
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "experiments/full-board-ten/release.json",
+      "sha256": "d549e4863bbbdafd54736dc0a05dec37da72df9261d71eb67b68cf116e2e87b7"
+    },
+    {
+      "name": "experiments/full-board-ten/source-provenance.json",
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb"
+    },
+    {
+      "name": "experiments/full-board-ten/runtime/package.json",
+      "sha256": "91564d02d89732ee9bb3052164021708de8e4a54eb47ffe09c9904fc63bdc997"
+    },
+    {
+      "name": "experiments/full-board-ten/runtime/bun.lock",
+      "sha256": "297c3c52a9c01d36e37cb140388674912e5091d79f22807384f0fd3affd8ca06"
+    },
+    {
+      "name": "experiments/full-board-ten/autorouter-dependencies/package.json",
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360"
+    },
+    {
+      "name": "experiments/full-board-ten/autorouter-dependencies/bun.lock",
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
+    }
+  ],
+  "checks": {
+    "PythonAst": true,
+    "Json": true,
+    "WorkflowYaml": true,
+    "NodeSyntax": true,
+    "BunTypeScriptSyntaxScan": true,
+    "GitDiffWhitespace": true,
+    "ExactCopiedAdapterProof": true,
+    "InMemoryByteProof": true,
+    "changedByteOffsets": [
+      2068963
+    ],
+    "main2MCoefficientUnchanged": true
+  },
+  "notExecuted": [
+    "candidate entry retained",
+    "runtime install",
+    "candidate import",
+    "solver construction or routing",
+    "full build",
+    "commit",
+    "push",
+    "dispatch"
+  ],
+  "pending": [
+    "parent review",
+    "old accepted strategy applicability",
+    "CI-only install/import/alias isolation proof",
+    "four matched native observations",
+    "actual3203 Prepared/recovery applicability must be verified in matched published lane before interpreting results"
+  ]
+}

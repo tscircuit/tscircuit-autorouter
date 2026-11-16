@@ -24,6 +24,8 @@ for cohort in cohorts:
             "completeSourceCounts", "requestedRoutableNets", "connectedNets",
             "geometryErrorCount", "membershipErrorCount", "listedFindingCount",
             "sharedDrcErrorCount", "routingPolicyObserved",
+            "captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs",
+            "diagnosticOnly", "routingSourceOverride", "longWindowDiagnostic",
         ]}
         record["vias"] = result["emittedCounts"]["pcb_via"] if result["emittedCounts"] is not None else None
     else:
@@ -57,9 +59,16 @@ with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
     output.write("all_clean=" + str(summary["allClean"]).lower() + "\n")
 with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as output:
     output.write(f"### {board}: {experiment} full-board cases\n\n")
-    output.write("| Cohort | Status | Connected/requested | Listed findings | Shared DRC | Last phase |\n|---|---|---|---|---|---|\n")
+    output.write("| Cohort | Status | Connected/requested | Listed findings | Shared DRC | Last phase | Capture/hard/audit seconds |\n|---|---|---|---|---|---|---|\n")
     for record in records:
         phase = record.get("lastPhase")
         phase_name = phase["name"] if phase else "unavailable"
-        output.write(f"| {record['cohort']} | {record['status']} | {record.get('connectedNets')}/{record.get('requestedRoutableNets')} | {record.get('listedFindingCount')} | {record.get('sharedDrcErrorCount')} | {phase_name} |\n")
+        window_values = [record.get(key) for key in ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"]]
+        window = " / ".join(
+            str(value / 1000)
+            if isinstance(value, (int, float)) and not isinstance(value, bool)
+            else "unavailable"
+            for value in window_values
+        )
+        output.write(f"| {record['cohort']} | {record['status']} | {record.get('connectedNets')}/{record.get('requestedRoutableNets')} | {record.get('listedFindingCount')} | {record.get('sharedDrcErrorCount')} | {phase_name} | {window} |\n")
     output.write("\nTimeouts, missing assessments and incomplete nets remain explicit failures.\n")

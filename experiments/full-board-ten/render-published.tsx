@@ -9,6 +9,7 @@ const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
 if (!casePath || !output) throw new Error("Usage: render-published.tsx CASE.json OUTPUT")
 const task = JSON.parse(readFileSync(casePath, "utf8"))
+if (!Number.isFinite(task.captureDeadlineMs) || task.captureDeadlineMs <= 0) throw new Error("Invalid task capture deadline")
 if (task.mode !== "phased" || task.fanout !== false || !["original", "spaced"].includes(task.cohort)) throw new Error("Ten-case cohort requires explicit original/spaced phased mode, fanout=false")
 task.sourcePath = resolve(task.sourcePath)
 const sourceBytes = readFileSync(task.sourcePath)
@@ -90,7 +91,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: Boolean(task.routingSourceOverride), cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -179,11 +180,11 @@ circuit.on("asyncEffect:end", (event: any): void => { if (event.error) progress.
 const heartbeat = setInterval(() => save(), 2000)
 const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
-  progress.errors.push("900 second external capture deadline; solver budgets unchanged")
+  progress.errors.push(`${task.captureDeadlineMs / 1000} second external capture deadline`)
   finishCoarseDiagnostics()
   save(true)
   process.exit(124)
-}, 900000)
+}, task.captureDeadlineMs)
 try {
   circuit.add(<SourceBoard />)
   await circuit.renderUntilSettled()
