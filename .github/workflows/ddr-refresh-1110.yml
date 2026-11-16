@@ -1,7 +1,7 @@
-name: Rerun full DDR boards on released router 1110 and core 2397
+name: Measure indexed cramped-port reachability on all six boards
 on:
   push:
-    branches: [codex/ddr-refresh-1110]
+    branches: [candidate/indexed-plane-escapes]
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: 1c99b22209414cb9a79601f9e877df253e3cf34d
+          ref: candidate/indexed-plane-escapes
           path: router
       - uses: actions/checkout@v4
         with:
@@ -44,12 +44,12 @@ jobs:
           export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
           BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
             --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
-            --out "$GITHUB_WORKSPACE/results/latest/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/latest/ddr/$BOARD_ID/"*.log; exit 1; }
-          FULL_BOARD_VARIANT=latest bun plane-suite.ts ../../results/latest/full
+            --out "$GITHUB_WORKSPACE/results/indexed/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/indexed/ddr/$BOARD_ID/"*.log; exit 1; }
+          FULL_BOARD_VARIANT=indexed bun plane-suite.ts ../../results/indexed/full
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh1110-${{ matrix.board }}
+          name: indexed-escapes-${{ matrix.board }}
           path: results
           retention-days: 14
       - name: Export native results and phase inputs for analysis
@@ -64,10 +64,10 @@ jobs:
               for path in Path('results').rglob('*'):
                   if path.is_file() and (path.name in names or path.name.endswith('.srj.json')):
                       archive.writestr(str(path.relative_to('results')),path.read_bytes())
-          print('REFRESH1110_BOARD_EVIDENCE_BEGIN')
+          print('INDEXED_ESCAPES_BOARD_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('REFRESH1110_BOARD_EVIDENCE_END')
+          print('INDEXED_ESCAPES_BOARD_EVIDENCE_END')
           PY
   dataset18:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
@@ -75,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1c99b22209414cb9a79601f9e877df253e3cf34d
+          ref: candidate/indexed-plane-escapes
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh1110-dataset18
+          name: indexed-escapes-dataset18
           path: |
             benchmark-result.json
             benchmark-result.txt
@@ -98,5 +98,5 @@ jobs:
           python3 - <<'PYREPORT'
           import json
           from pathlib import Path
-          print('REFRESH1110_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
+          print('INDEXED_ESCAPES_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
           PYREPORT
