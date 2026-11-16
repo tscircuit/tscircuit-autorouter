@@ -9,12 +9,22 @@ jobs:
   collect:
     runs-on: ubuntu-24.04
     steps:
+      - name: Wait for the submitted candidate run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 60); do
+            status="$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/43967019925 --jq .status)"
+            if [ "$status" = completed ]; then exit 0; fi
+            sleep 20
+          done
+          exit 1
       - uses: actions/download-artifact@v4
         with:
-          run-id: 43964315562
+          run-id: 43967019925
           github-token: ${{ github.token }}
-          pattern: refresh1112-*
-          path: evidence/before
+          pattern: endpoint-layers-*
+          path: evidence/after
       - name: Export compact native PCB and measured metadata
         run: |
           python3 - <<'PY'
@@ -26,8 +36,8 @@ jobs:
               for path in Path('evidence').rglob('*'):
                   if path.is_file() and path.name in names:
                       archive.writestr(str(path.relative_to('evidence')),path.read_bytes())
-          print('DDR1112_COMPACT_EVIDENCE_BEGIN')
+          print('DDR1112_AFTER_COMPACT_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('DDR1112_COMPACT_EVIDENCE_END')
+          print('DDR1112_AFTER_COMPACT_EVIDENCE_END')
           PY
