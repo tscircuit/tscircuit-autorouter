@@ -10,7 +10,7 @@ root = Path(sys.argv[1])
 board = sys.argv[2]
 records = []
 cohorts = os.environ.get("FULL_BOARD_COHORTS", "original,spaced").split(",")
-if cohorts not in [["original", "spaced"], ["spaced"]]:
+if cohorts not in [["original", "spaced"], ["original"], ["spaced"]]:
     raise RuntimeError("Unexpected benchmark cohort selection")
 experiment = os.environ.get("FULL_BOARD_EXPERIMENT", "published")
 for cohort in cohorts:

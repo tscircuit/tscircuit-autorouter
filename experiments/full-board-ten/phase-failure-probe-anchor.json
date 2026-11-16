@@ -1,0 +1,78 @@
+{
+  "originalCoreSHA256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+  "expectedCandidateCoreSHA256": "d270ca61627a48583d17aa2cc9d0120a76c20e357bbe2f3660c4eedac80c10ba",
+  "unchangedAutorouterSHA256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+  "replacements": [
+    {
+      "name": "count-error-records",
+      "old": "    let routingError;\n    const outputTraces = [];",
+      "new": "    let routingError;\n    let recordedRoutingErrors = 0;\n    const outputTraces = [];",
+      "oldSHA256": "851e242a1ccc1f16ae1840ab49fa941f60e881f89f3bcaba88bc960deb53ffa7",
+      "newSHA256": "1abdf8d7ed41386ae5be7a2dede470a7441fa7645c28b063241f8fd541e2b0f6",
+      "byteOffset": 6510714,
+      "occurrences": 1
+    },
+    {
+      "name": "assert-ordinary-independent-program",
+      "old": "    const skippedRemainingPhases = /* @__PURE__ */ new Set();\n    for (const [\n      routingStageIndex,",
+      "new": "    const skippedRemainingPhases = /* @__PURE__ */ new Set();\n    if (isSingleLayerBoard || isAutoJumperPreset || isLaserPrefabPreset || !routingStages.every((stage) => {\n      const plan = stage.routingPhasePlan;\n      return plan.routingPhaseIndex !== null && Boolean(plan.autoroutingPhase) && stage.phaseStageCount === 1 && !stage.usesPreviousStageOutput && !plan.reroute && !plan.testPointOptions && !plan.routingPcbGroupId && !plan.fanoutRegionPcbGroupId && !plan.region && !plan.getPrecomputedRoutingResult && !plan.algorithmFn && !stage.autorouterConfig.algorithmFn && [void 0, \"default\", \"bus_lanes\"].includes(stage.autorouterConfig.preset) && !this._isAutoJumperAutorouter(stage.autorouterConfig) && !this._isLaserPrefabAutorouter(stage.autorouterConfig);\n    })) {\n      throw new Error(\"Initial phase failure diagnostic requires authored ordinary single-stage routing plans\");\n    }\n    for (const [\n      routingStageIndex,",
+      "oldSHA256": "6a6cc8bf5d4d221f87304802f3c5a36c6af823bbb50dc0bf24713a2a39a3110a",
+      "newSHA256": "536ec84c55d79a7ab8a57ff845c153d98d7f4c8afc8d2f3bad742e448f74fc40",
+      "byteOffset": 6512437,
+      "occurrences": 1
+    },
+    {
+      "name": "stage-local-error",
+      "old": "      let autorouter;\n      try {\n        const runAutorouter = async (activeAutorouter) => {",
+      "new": "      let autorouter;\n      let stageRoutingError;\n      try {\n        const runAutorouter = async (activeAutorouter) => {",
+      "oldSHA256": "49830587c75a239ffef17bb20bc7f2fa0bd1ead9250aed21a1e710161d7267b2",
+      "newSHA256": "ee476b4d9babd5f46e3e93000dea2d7945683e42e9b35170a5e7037c2b8320a0",
+      "byteOffset": 6524902,
+      "occurrences": 1
+    },
+    {
+      "name": "retain-first-errors",
+      "old": "                routingError = event.error;\n                reject(event.error);",
+      "new": "                stageRoutingError ??= event.error;\n                routingError ??= event.error;\n                reject(event.error);",
+      "oldSHA256": "642f4a2f08250ae585ee78bb3355ed9b3367b1823d1be0c82c51350063b82633",
+      "newSHA256": "ee0fd16685c1a1a324491912298af3c4a9478bf7e4e81bdc224117f80ff38c1f",
+      "byteOffset": 6525460,
+      "occurrences": 1
+    },
+    {
+      "name": "retain-distinct-error-identities",
+      "old": "      } catch (error) {\n        const { db: db3 } = this.root;\n        db3.pcb_autorouting_error.insert({\n          pcb_error_id: `pcb_autorouter_error_subcircuit_${this.subcircuit_id}`,\n          error_type: \"pcb_autorouting_error\",\n          message: error instanceof Error ? error.message : String(error)\n        });",
+      "new": "      } catch (error) {\n        const { db: db3 } = this.root;\n        db3.pcb_autorouting_error.insert({\n          pcb_error_id: recordedRoutingErrors++ === 0 ? `pcb_autorouter_error_subcircuit_${this.subcircuit_id}` : `pcb_autorouter_error_subcircuit_${this.subcircuit_id}_stage_${routingStageIndex}`,\n          error_type: \"pcb_autorouting_error\",\n          message: error instanceof Error ? error.message : String(error)\n        });",
+      "oldSHA256": "9c45aed2c8fe97957495a92d7fa218d9b85ec40e8fd7cb8890a282ebe26cdcbf",
+      "newSHA256": "3fa9353598c356ea2786222f31a408b1bdbd4657c6d64acacf783f962e4acfcb",
+      "byteOffset": 6538378,
+      "occurrences": 1
+    },
+    {
+      "name": "continue-only-before-accepted-output",
+      "old": "        if (outputTraces.length === 0 || !routingError) throw error;\n        break;\n      } finally {",
+      "new": "        if (!stageRoutingError || error !== stageRoutingError) throw error;\n        if (outputTraces.length === 0 && outputJumpers.length === 0 && outputTestPoints.length === 0 && pcbTraceIdsToDelete.size === 0) {\n          skippedRemainingPhases.add(routingPhasePlan);\n          continue;\n        }\n        if (outputTraces.length === 0) throw error;\n        break;\n      } finally {",
+      "oldSHA256": "b02108117ba995b79b02854b6b487d1dffc6b408caa72b148948e015435e2dec",
+      "newSHA256": "cf2cd2faf4a8709e401bb1848f46007bf6282569ef18bb8cbed89efc5f97da06",
+      "byteOffset": 6539386,
+      "occurrences": 1
+    },
+    {
+      "name": "preserve-empty-failure-subcircuit-state",
+      "old": "    this._asyncAutoroutingResult = {\n      output_pcb_traces: outputTraces,\n      output_jumpers: outputJumpers,\n      output_test_points: outputTestPoints,\n      pcb_trace_ids_to_be_replaced: [...pcbTraceIdsToDelete]\n    };",
+      "new": "    if (routingError && outputTraces.length === 0) throw routingError;\n    this._asyncAutoroutingResult = {\n      output_pcb_traces: outputTraces,\n      output_jumpers: outputJumpers,\n      output_test_points: outputTestPoints,\n      pcb_trace_ids_to_be_replaced: [...pcbTraceIdsToDelete]\n    };",
+      "oldSHA256": "bc25ce3e44db1cff047fa92557bd4c30220f88a89c4102746300ffc3796de901",
+      "newSHA256": "a52d3852bd3a38f8f29710b022b1829e5f7ae14f9c8fdee4762ed0ab8266c4dc",
+      "byteOffset": 6539530,
+      "occurrences": 1
+    }
+  ],
+  "source": {
+    "repository": "tscircuit/core",
+    "baseCommit": "e0dfe6ff2dfc98e90bfe927384c2f554efd61d42",
+    "packageVersion": "0.0.2396",
+    "path": "lib/components/primitive-components/Group/Group.ts",
+    "productionSourceCommit": null
+  },
+  "scope": "Diagnostic only, no production fix. Continue after a reported solver failure only before any accepted output in an asserted ordinary authored single-stage program. Preserve first error, existing accepted-output stop/publication behavior, and empty-failure child gating. No checkpoints, solver changes, budgets, or failed partial output."
+}
