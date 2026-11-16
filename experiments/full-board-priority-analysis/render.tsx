@@ -95,11 +95,24 @@ const algorithmFn: AutoroutingPhaseProps["algorithmFn"] = async (input): Promise
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { cacheProvider: null })
   const events = new EventEmitter()
   let timer: ReturnType<typeof setTimeout> | undefined
+  const seenSimplificationStates = new Set<string>()
+  const captureSimplification = (): void => {
+    const simplifier = (solver as any).traceSimplificationSolver
+    if (!simplifier) return
+    const child = simplifier.activeSubSolver
+    const key = `${simplifier.simplificationPipelineLoops}-${simplifier.currentPhase}-${child?.constructor.name ?? "pending"}`
+    if (seenSimplificationStates.has(key)) return
+    seenSimplificationStates.add(key)
+    const {connMap, ...config} = simplifier.simplificationConfig
+    const snapshot = {key,srj:input,config,hdRoutes:simplifier.hdRoutes}
+    writeFileSync(join(output,`simplification-${key}.json`),JSON.stringify(snapshot,(_key,value)=>value instanceof Map ? {kind:"Map",entries:[...value]} : value instanceof Set ? {kind:"Set",entries:[...value]} : value))
+    console.log("CAPTURED_SIMPLIFICATION",key,simplifier.hdRoutes.length)
+  }
   const step = (): void => {
     try {
       checkRoutingBudget()
       const until = performance.now() + 25
-      while (!solver.solved && !solver.failed && performance.now() < until) solver.step()
+      while (!solver.solved && !solver.failed && performance.now() < until) { captureSimplification(); solver.step() }
       progress.stage = solver.getCurrentPhase()
       const runtimeSolver = solver as any
       diagnostics.pipelineLastState = {phase:progress.phases.findLast((p)=>p.status==="running")?.name,
@@ -113,7 +126,7 @@ const algorithmFn: AutoroutingPhaseProps["algorithmFn"] = async (input): Promise
         timer = setTimeout(step, 0)
       }
     } catch (error) {
-      events.emit("error", { type: "error", error })
+      captureSimplification(); events.emit("error", { type: "error", error })
     }
   }
   return {
