@@ -8,7 +8,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("A13 routed traces sit closer together than the declared clearance", async (): Promise<void> => {
+test("A13 routed traces keep the declared clearance from each other", async (): Promise<void> => {
   // The real A13 DDR section after Core routes the four data bytes: 64
   // remaining connections, with the byte copper as 2,603 fixed obstacles.
   const input: SimpleRouteJson = JSON.parse(
@@ -52,7 +52,7 @@ test("A13 routed traces sit closer together than the declared clearance", async 
   const closeTracePairs = errorsWithCenters.filter(
     (error) => error.type === "pcb_trace_error" && /gap: /.test(error.message),
   )
-  expect(closeTracePairs.length).toBeGreaterThan(0)
+  expect(closeTracePairs).toEqual([])
 
   const graphics = convertSrjToGraphicsObject({
     ...input,
