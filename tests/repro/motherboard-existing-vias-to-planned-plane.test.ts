@@ -90,9 +90,9 @@ test("full motherboard reuses existing vias when planning plane connections", as
   expect(existingGroundEndpoints).toHaveLength(125)
   // Existing STM32 and DDR escapes now remove redundant connection requests.
   expect(recognized).toBe(125)
-  expect(pairs).toHaveLength(1756)
+  expect(pairs).toHaveLength(1745)
   expect(groundPairs).toHaveLength(532)
-  expect(ddrPowerPairs).toHaveLength(51)
+  expect(ddrPowerPairs).toHaveLength(40)
   expect(escapeSolver.createdEscapeVias).toHaveLength(535)
   expect(groundViaPlans).toHaveLength(516)
 

@@ -5,7 +5,7 @@ import { getConnectionEscapePortPoints } from "../../../lib/solvers/AvailableSeg
 import inputJson from "../../../fixtures/bug-reports/rvboy-escape-via-span/rvboy-native.srj.json"
 import { renderRvboyRoutingView } from "../../../fixtures/bug-reports/rvboy-escape-via-span/renderRvboyRoutingView"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import type { SimpleRouteJson } from "../../../lib/types"
+import type { CapacityMeshNodeId, SimpleRouteJson } from "../../../lib/types"
 
 const input = inputJson as SimpleRouteJson
 
@@ -33,7 +33,7 @@ test("RVboy ground pad retains access to its requested routing destinations", as
   )!
   expect(target).toBeDefined()
   const segments = solver.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!
-  const portsByNodeId = new Map<string, SegmentPortPoint[]>()
+  const portsByNodeId = new Map<CapacityMeshNodeId, SegmentPortPoint[]>()
   for (const segment of segments) {
     for (const port of segment.portPoints) {
       for (const nodeId of port.nodeIds) {

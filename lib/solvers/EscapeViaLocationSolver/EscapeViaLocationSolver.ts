@@ -1037,7 +1037,11 @@ export class EscapeViaLocationSolver extends BaseSolver {
         })
         if (existingPlaneAccesses.length > 0) {
           for (const pour of existingPlaneAccesses) {
-            const pourKey = getObstacleKey(pour)
+            const representativePour = connectedPourRepresentatives.get(pour)
+            if (!representativePour) {
+              throw new Error("Missing connected copper pour region")
+            }
+            const pourKey = getObstacleKey(representativePour)
             const pointIds = groupedEscapePointIds.get(pourKey)
             if (pointIds) {
               pointIds.push(point.pointId!)
