@@ -95,8 +95,7 @@ test("repairs ECP5 DDR copper using the native clearance rules", async (): Promi
       ),
     )
     const pcbPortIds = circuit.flatMap((element) =>
-      element.type === "pcb_port" &&
-      sourcePortIds.has(element.source_port_id)
+      element.type === "pcb_port" && sourcePortIds.has(element.source_port_id)
         ? [element.pcb_port_id]
         : [],
     )
