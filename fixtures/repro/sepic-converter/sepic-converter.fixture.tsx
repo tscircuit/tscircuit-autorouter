@@ -1,30 +1,31 @@
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
-import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
-import type { SimpleRouteJson } from "lib/types"
 import type { ReactElement } from "react"
-import { useEffect, useState } from "react"
-import { renderSepicRepro } from "./render"
 
-export default (): ReactElement => {
-  const [input, setInput] = useState<SimpleRouteJson>()
-  const [error, setError] = useState<string>()
-  useEffect(() => {
-    renderSepicRepro()
-      .then(({ input }) => setInput(input))
-      .catch((error) => setError(String(error)))
-  }, [])
-  if (error) return <pre>{error}</pre>
-  if (!input) return <div>Rendering circuit TSX…</div>
-  return (
-    <AutoroutingPipelineDebugger
-      srj={input}
-      createSolver={(srj, opts) =>
-        new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
-          ...opts,
-          cacheProvider: null,
-          effort: 1,
-        })
+// Render the circuit TSX in the test; keep the pinned Core out of Cosmos's bundle.
+export default (): ReactElement => (
+  <div>
+    <p>
+      Generated from board.tsx by
+      <code> bun test tests/repro/sepic-converter-pipeline9-clearance.test.ts</code>
+    </p>
+    <img
+      alt="Complete TSX board with one Core trace DRC error"
+      src={
+        new URL(
+          "../../../tests/repro/__snapshots__/sepic-converter-pipeline9-clearance.snap.svg",
+          import.meta.url,
+        ).href
       }
+      style={{ width: "100%", maxWidth: 1000 }}
     />
-  )
-}
+    <img
+      alt="Bottom-layer VCC and GATE clearance: reported 0.053 mm; required 0.1 mm"
+      src={
+        new URL(
+          "../../../tests/repro/__snapshots__/sepic-converter-pipeline9-clearance-bottom-clearance.snap.svg",
+          import.meta.url,
+        ).href
+      }
+      style={{ width: "100%", maxWidth: 1000 }}
+    />
+  </div>
+)
