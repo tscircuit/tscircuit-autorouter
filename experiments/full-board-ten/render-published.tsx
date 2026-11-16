@@ -4,6 +4,8 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createHighDensityWitnessDiagnostics } from "./createHighDensityWitnessDiagnostics"
+import { verifyHighDensityWitnessRuntime } from "./createHighDensityWitnessRuntime"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -20,6 +22,11 @@ const source = layout ? layout.createPeripheralLayout(rawSource) : rawSource
 for (const file of task.implementationFiles) if (sha(readFileSync(file.path)) !== file.sha256) throw new Error(`Authoritative circuit implementation changed: ${file.path}`)
 if (task.cohort === "original" && source.planeIntent.savedCopperImported) throw new Error("Fresh original case must not import saved copper")
 mkdirSync(output, { recursive: true })
+const witnessRequested = process.env.FULL_BOARD_HD_WITNESS === "1"
+if (process.env.FULL_BOARD_HD_WITNESS && !witnessRequested) throw new Error("Invalid HD witness selection")
+if (witnessRequested && (executionMode !== "full" || task.id !== "icepi" || task.cohort !== "spaced")) throw new Error("HD witness is restricted to spaced iCE/Pi full rendering")
+if (witnessRequested !== Boolean(process.env.FULL_BOARD_HD_WITNESS_PROOF)) throw new Error("HD witness requires its controller runtime proof")
+const witnessProof = witnessRequested ? verifyHighDensityWitnessRuntime(process.env.FULL_BOARD_HD_WITNESS_PROOF!, casePath, true) : undefined
 
 // Normal published geometry uses Manifold. Routing/unknown WASM stays forbidden.
 const wasmUsage = { coldMainImportCalls: 0, coldMainImportStacks: [] as { package: string; stack: string }[], geometryCalls: 0, routingOrUnknownAttempts: 0, geometryStacks: [] as string[] }
@@ -59,7 +66,8 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// Only the private, byte-guarded AR observer may differ from published entries.
+// Core, solver selection, routing policy, options and package manifests stay original.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
@@ -72,8 +80,10 @@ const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: str
     folder = dirname(folder)
   }
   const pkg = JSON.parse(readFileSync(join(folder, "package.json"), "utf8"))
-  if (pkg.version !== version || sha(readFileSync(entry)) !== entrySha256) throw new Error(`Published runtime identity mismatch for ${name}`)
-  return { name, version, entry, entrySha256, gitHead: pkg.gitHead }
+  const observedEntrySha256 = witnessProof && name === "@tscircuit/capacity-autorouter" ? witnessProof.observedEntrySha256 : entrySha256
+  if (witnessProof && name === "@tscircuit/capacity-autorouter" && (entrySha256 !== witnessProof.originalEntrySha256 || entry !== witnessProof.observedEntry)) throw new Error("HD witness selected an unexpected autorouter entry")
+  if (pkg.version !== version || sha(readFileSync(entry)) !== observedEntrySha256) throw new Error(`Published runtime identity mismatch for ${name}`)
+  return { name, version, entry, entrySha256: observedEntrySha256, publishedEntrySha256: entrySha256, gitHead: pkg.gitHead }
 })
 function readablePackage(folder: string, name: string): boolean {
   try { return JSON.parse(readFileSync(join(folder, "package.json"), "utf8")).name === name }
@@ -88,9 +98,11 @@ const circuit = new RootCircuit({ platform: { localCacheEngine: undefined, routi
 const started = performance.now()
 const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
+  experiment: witnessRequested ? "hd-witness-observational" : task.experiment,
+  diagnosticOnly: witnessRequested,
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: witnessRequested, observationalOverride: witnessRequested, observationalSourceOverride: witnessRequested, routingPolicyOverride: false, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -110,6 +122,27 @@ const save = (withCircuit = false): void => {
   atomic("progress.json", JSON.stringify(progress, null, 2))
 }
 const running = (): any => progress.phases.findLast((phase: any) => phase.status === "running")
+let witnessObserver: ReturnType<typeof createHighDensityWitnessDiagnostics> | undefined
+progress.highDensityWitness = { enabled: witnessRequested, targetPhase: "other_signals", targetNodeId: "topology_merge_17108", packetLimitBytes: 150000, finished: false }
+const writeWitnessSnapshot = (report: Record<string, any>, event: string): void => {
+  const encoded = JSON.stringify(report)
+  if (Buffer.byteLength(encoded) > 150000) throw new Error("HD witness packet exceeds 150000 bytes")
+  atomic("hd-witness.json", encoded)
+  progress.highDensityWitness.lastEvent = event
+}
+const finishHighDensityWitness = (): void => {
+  if (!witnessObserver) return
+  const observer = witnessObserver
+  witnessObserver = undefined
+  try {
+    const report = observer.finish()
+    if (report) writeWitnessSnapshot(report, "finished")
+    progress.highDensityWitness.finished = true
+  } catch (error) {
+    progress.highDensityWitness.error = String(error)
+    atomic("hd-witness.json", JSON.stringify({ phase: "other_signals", targetNodeId: "topology_merge_17108", observationErrorCount: 1, observationErrors: [{ event: "finish", message: String(error).slice(0, 500) }] }))
+  }
+}
 const diagnosticTargets: Record<string, string> = {
   "butterstick-original": "plane_escape", "icepi-original": "plane_escape",
   "glider-spaced": "other_signals", "imx6-spaced": "remaining", "butterstick-spaced": "*",
@@ -139,6 +172,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       atomic(`phase-${index}-input.srj.json.gz`, gzipSync(inputBytes, { level: 1 }))
       progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason })
     } else {
+      finishHighDensityWitness()
       const phase = running()
       if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs }
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))
@@ -160,6 +194,14 @@ circuit.on("solver:started", (event: any): void => {
   const options = event.solverParams?.options
   if (options?.cacheProvider) throw new Error("Unexpected solver cache provider")
   const phaseName = running()?.name
+  if (witnessRequested && event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && phaseName === "other_signals") {
+    if (witnessObserver || progress.highDensityWitness.finished) throw new Error("HD witness target phase started more than once")
+    witnessObserver = createHighDensityWitnessDiagnostics({
+      pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
+      targetNodeId: "topology_merge_17108", targetPhase: "other_signals", onSnapshot: writeWitnessSnapshot,
+    })
+    witnessObserver.onSolverStarted(event, phaseName)
+  }
   if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && targetPhase && (targetPhase === "*" || phaseName === targetPhase)) {
     finishCoarseDiagnostics()
     coarseObserver = createCoarseRoutingDiagnostics({
@@ -180,6 +222,7 @@ const heartbeat = setInterval(() => save(), 2000)
 const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
+  finishHighDensityWitness()
   finishCoarseDiagnostics()
   save(true)
   process.exit(124)
@@ -197,6 +240,7 @@ try {
 } finally {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
+  finishHighDensityWitness()
   finishCoarseDiagnostics()
   save(true)
   try {

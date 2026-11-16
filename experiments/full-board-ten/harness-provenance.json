@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 17977,
+      "sha256": "1fd1104784deb2eed289331e8f2e9edd592b88f5bc33f0f53d8ccf9c3299892b"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 13065,
+      "sha256": "49a896859012452ccbf3484ce62c0e1e204661b348aa232fda450e707ff8c3d0"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -40,7 +40,51 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "createHighDensityWitnessRuntime.ts",
+      "bytes": 11277,
+      "sha256": "da5b55d8f2b44ad81ad8cb3d932a1f1eecc4c479e53df8ec55b1a5f16ad41f6e"
+    },
+    {
+      "name": "createHighDensityWitnessDiagnostics.ts",
+      "bytes": 19383,
+      "sha256": "a8092e8a639a18b88a5e9273d163fba2fbe12e781d07548869fb83e8d85c3398"
+    },
+    {
+      "name": "installHighDensityWitnessHooks.ts",
+      "bytes": 6959,
+      "sha256": "9a52a99910b776cdefb546c2917a231ca4eaaafaa79963b5a61bcb680bbeeef7"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Read-only, bounded observation of the owned published AR1111 instance for spaced iCE/Pi other_signals / topology_merge_17108. Three byte-guarded callback sites observe existing private-route options, actual via rejection and parent conflict; no routing decisions, inputs, ordering, options, limits or budgets change. Snapshot artifact <=150000 bytes; no full packet logs. Timings include observation overhead, exclude package-restoration/verification I/O, and support no speed claim.",
+  "workflow": {
+    "path": ".github/workflows/full-board-ten.yml",
+    "bytes": 5412,
+    "sha256": "c3ca53b18b6d01a081fc05d9a8675b7e1f78cf6b106e3fb5793614721739d02e"
+  },
+  "baseControllerCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+  "experiment": "hd-witness-observational",
+  "diagnosticOnly": true,
+  "observationalSourceOverride": true,
+  "routingPolicyOverride": false,
+  "scope": {
+    "board": "icepi",
+    "cohort": "spaced",
+    "phase": "other_signals",
+    "nodeId": "topology_merge_17108",
+    "originalAutorouterSha256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
+    "observedAutorouterSha256": "dd279d2d53c6fc4ef1af38e3cb2979b39f19bca921b6abcbb0807847453d6f0b",
+    "nativeCaptureHardAssessmentMs": [
+      900000,
+      960000,
+      180000
+    ],
+    "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+    "jobMinutes": 45,
+    "jobCount": 1,
+    "renderWallMsBoundary": "worker exit, before controller restoration or verification I/O",
+    "neutralAssessment": "Original Core helper prepared before observer selection; helper-local AR alias remains original; original runtime AR alias restored before unchanged assessment."
+  },
+  "nativeParityStatus": "Not measured by this held diagnostic. Compare native connected-net names and actual copper/physical results with frozen3207 after the run; a valid witness packet alone does not prove routing parity."
 }

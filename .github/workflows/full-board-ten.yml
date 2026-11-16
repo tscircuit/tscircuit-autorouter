@@ -1,27 +1,23 @@
-name: Published3207 full-board ten-case benchmark
+name: Published3207 iCE-Pi bounded HD witness
 
 on:
   push:
-    branches: [bench/full-board-ten-3207-20261116]
+    branches: [bench/full-board-hd-witness-3207]
 
 permissions:
   contents: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    name: iCE-Pi spaced HD witness (published3207 routing policy)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: icepi, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -29,6 +25,7 @@ jobs:
       BOARD: ${{ matrix.board }}
       FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
       FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_HD_WITNESS: "1"
 
     steps:
       - name: Checkout benchmark controller
@@ -71,7 +68,7 @@ jobs:
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
+      - name: Prepare authentic cases and original Core assessment helper
         id: prepare
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
@@ -80,27 +77,7 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
-
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Run spaced full circuit
+      - name: Observe one spaced full circuit and restore published AR before assessment
         id: spaced
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         continue-on-error: true
@@ -114,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
+          name: full-board-${{ matrix.board }}-hd-witness-spaced-${{ github.run_attempt }}
           path: .full-board-run/results/${{ matrix.board }}/spaced
           if-no-files-found: warn
           compression-level: 0
@@ -123,6 +100,8 @@ jobs:
       - name: Publish compact result notices and summary
         id: report
         if: always()
+        env:
+          FULL_BOARD_EXPERIMENT: hd-witness-observational
         run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
 
       - name: Preserve small reports and provenance
@@ -130,20 +109,33 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: full-board-${{ matrix.board }}-hd-witness-summary-${{ github.run_attempt }}
           path: |
             .full-board-run/results/${{ matrix.board }}/summary.json
             .full-board-run/results/${{ matrix.board }}/*/result.json
             .full-board-run/results/${{ matrix.board }}/*/assessment.json
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/results/${{ matrix.board }}/*/hd-witness.json
+            .full-board-run/results/${{ matrix.board }}/*/hd-witness-runtime-proof.json
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/harness-provenance.json
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Require selected full circuits to be complete and clean
+      - name: Require authentic assessment and complete bounded witness
         if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true
+        run: |
+          python3 - <<'PY_VERIFY'
+          import json
+          from pathlib import Path
+          path = Path(".full-board-run/results/icepi/spaced/result.json")
+          result = json.loads(path.read_text())
+          assert result["hdWitnessValidation"]["valid"] is True, result["hdWitnessValidation"]
+          assert result["diagnosticOnly"] is True
+          assert result["routingPolicyOverride"] is False
+          print("Authenticated bounded HD witness captured; native completion status is reported separately in result.json")
+          PY_VERIFY

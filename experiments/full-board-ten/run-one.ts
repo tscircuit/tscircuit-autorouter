@@ -2,6 +2,7 @@ import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, w
 import { join, resolve } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHash } from "node:crypto"
+import { createHighDensityWitnessRuntime } from "./createHighDensityWitnessRuntime"
 
 const [caseFile, outputArg, executionMode = "full"] = process.argv.slice(2)
 if (!caseFile || !outputArg) throw new Error("Usage: run-one.ts CASE.json OUTPUT")
@@ -12,21 +13,38 @@ mkdirSync(output, { recursive: true })
 const environment = { ...process.env }
 delete environment.FULL_BOARD_CORE_MODULE
 delete environment.FULL_BOARD_COPPER_MODULE
+delete environment.FULL_BOARD_HD_WITNESS_PROOF
+const witnessRequested = environment.FULL_BOARD_HD_WITNESS === "1"
+if (environment.FULL_BOARD_HD_WITNESS && !witnessRequested) throw new Error("Invalid HD witness selection")
+if (witnessRequested && executionMode !== "full") throw new Error("HD witness requires a full native render")
+const witnessRuntime = witnessRequested ? createHighDensityWitnessRuntime(resolve(caseFile), output) : undefined
+if (witnessRuntime) environment.FULL_BOARD_HD_WITNESS_PROOF = witnessRuntime.proofPath
 const started = performance.now()
-const log = openSync(join(output, "worker.log"), "w")
-const worker = Bun.spawn([process.execPath, join(import.meta.dir, "render-published.tsx"), resolve(caseFile), output, executionMode], { cwd: import.meta.dir, env: environment, stdout: log, stderr: log })
 let peakRssKb = 0, hardTimedOut = false
-const sample = setInterval((): void => {
+let renderExitCode: number
+let renderWallMs: number
+try {
+  const log = openSync(join(output, "worker.log"), "w")
   try {
-    const match = /VmHWM:\s+(\d+)/.exec(readFileSync(`/proc/${worker.pid}/status`, "utf8"))
-    if (match) peakRssKb = Math.max(peakRssKb, Number(match[1]))
-  } catch (error: any) { if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error }
-}, 1000)
-const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
-const renderExitCode = await worker.exited
-clearInterval(sample)
-clearTimeout(watchdog)
-closeSync(log)
+    const worker = Bun.spawn([process.execPath, join(import.meta.dir, "render-published.tsx"), resolve(caseFile), output, executionMode], { cwd: import.meta.dir, env: environment, stdout: log, stderr: log })
+    const sample = setInterval((): void => {
+      try {
+        const match = /VmHWM:\s+(\d+)/.exec(readFileSync(`/proc/${worker.pid}/status`, "utf8"))
+        if (match) peakRssKb = Math.max(peakRssKb, Number(match[1]))
+      } catch (error: any) { if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error }
+    }, 1000)
+    const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
+    try {
+      renderExitCode = await worker.exited
+      renderWallMs = performance.now() - started
+    }
+    finally { clearInterval(sample); clearTimeout(watchdog) }
+  } finally { closeSync(log) }
+} finally {
+  witnessRuntime?.restore()
+  delete environment.FULL_BOARD_HD_WITNESS
+  delete environment.FULL_BOARD_HD_WITNESS_PROOF
+}
 const diagnosticPath = join(output, "coarse-diagnostics.json")
 if (existsSync(diagnosticPath)) {
   const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))
@@ -42,7 +60,7 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: witnessRequested ? "hd-witness-observational" : task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null, diagnosticOnly: witnessRequested, observationalOverride: witnessRequested, routingPolicyOverride: false, witnessRuntimeProof: witnessRuntime?.proofPath ?? null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false
@@ -111,6 +129,25 @@ const renderSettled = renderExitCode === 0 && !hardTimedOut && progress?.renderC
 const routingPolicyObserved = progress?.wasmUsage?.routingOrUnknownAttempts === 0 && Array.isArray(progress?.forbiddenRoutingSolverSelections) && progress.forbiddenRoutingSolverSelections.length === 0
 const completeAndClean = renderSettled && routingPolicyObserved && assessmentReady && completeSourceCounts && connectedNets === task.expectedRoutableNets && geometryErrorCount === 0 && (membershipErrorCount === null || membershipErrorCount === 0) && listedFindingCount === 0
 const geometryOnlyValidated = executionMode === "geometry" && renderExitCode === 0 && progress?.renderCompleted === true && progress.status === "geometry_only" && routingPolicyObserved && progress.phases.length === 0 && assessmentReady && completeSourceCounts && emittedCounts!.pcb_trace === 0 && emittedCounts!.pcb_via === 0 && geometryErrorCount === 0 && (membershipErrorCount === null || membershipErrorCount === 0)
+let hdWitnessValidation: Record<string, boolean | number | null> | null = null
+if (witnessRuntime) {
+  const witnessPath = join(output, "hd-witness.json")
+  const packet = existsSync(witnessPath) ? readFileSync(witnessPath) : null
+  const witness = packet ? JSON.parse(packet.toString()) : null
+  const proof = JSON.parse(readFileSync(witnessRuntime.proofPath, "utf8"))
+  const checks = {
+    targetObserved: witness?.targetObserved === true,
+    firstPrivateCandidate: Boolean(witness?.firstPrivateCandidate),
+    firstParentConflict: Boolean(witness?.firstParentConflict),
+    firstRawViaRejection: Boolean(witness?.firstRawViaRejection),
+    noObservationErrors: witness?.observationErrorCount === 0,
+    boundedPacket: packet !== null && packet.byteLength <= 150000,
+    observerFinished: progress?.highDensityWitness?.finished === true,
+    originalAutorouterRestoredBeforeAssessment: proof.originalAutorouterRestoredBeforeAssessment === true,
+    authenticAssessment: assessmentReady && completeSourceCounts && routingPolicyObserved,
+  }
+  hdWitnessValidation = { ...checks, packetBytes: packet?.byteLength ?? null, valid: Object.values(checks).every(Boolean) }
+}
 const result = {
   ...processResult, auditExitCode, auditTimedOut, assessmentReady, renderSettled, phasesCompleted,
   emittedCounts, completeSourceCounts,
@@ -119,7 +156,7 @@ const result = {
   assessmentProfile: task.cohort === "original" ? "original_nine_groups" : "spaced_eleven_groups",
   listedFindingCount, sharedDrcByGroup, sharedDrcErrorCount,
   status: geometryOnlyValidated ? "geometry_only_validated" : completeAndClean ? "complete_and_clean" : assessmentReady ? "incomplete_or_errors" : "assessment_unavailable",
-  completeAndClean, geometryOnlyValidated,
+  completeAndClean, geometryOnlyValidated, hdWitnessValidation,
   lastPhase: progress?.phases?.at(-1)?.name ?? null,
   currentPhase: progress?.phases?.findLast((phase: any) => phase.status === "running")?.name ?? null,
   lastError: progress?.errors?.at(-1) ?? null,
