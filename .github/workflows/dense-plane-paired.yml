@@ -1,0 +1,68 @@
+name: Pair released router 1111 against dense plane routing
+on:
+  push:
+    branches: [codex/dense-plane-paired]
+permissions:
+  contents: read
+jobs:
+  dataset18:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5548af181cda76191e83e48a7fec2f31c102d066
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: c222afd0b97e847f74adb20e8c898a87d28c531f
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install identical dependencies for the paired comparison
+        run: |
+          (cd base && bun install --ignore-scripts)
+          cmp base/package.json fixed/package.json
+          ln -s ../base/node_modules fixed/node_modules
+      - name: Compare the complete dataset18 on the same runner
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for variant in base fixed; do
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s)
+            mkdir -p "results/$variant"
+            cp "$variant/benchmark-result.json" "$variant/benchmark-result.txt" "$variant/benchmark-snapshots.html" "results/$variant/"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dense-plane-paired-dataset18
+          path: results
+          retention-days: 14
+      - name: Export the complete measured reports
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('results').rglob('benchmark-result.json'):
+              print('DENSE_PAIRED_DATASET18_RESULT',path.parent.name,json.dumps(json.loads(path.read_text()),separators=(',',':')))
+          PY
+      - name: Compare all native PCB SVGs
+        if: always()
+        run: |
+          python3 - <<'PYSVG'
+          import hashlib,json,re
+          from pathlib import Path
+          hashes={}
+          for variant in ['base','fixed']:
+              html=Path(f'results/{variant}/benchmark-snapshots.html').read_text()
+              hashes[variant]={}
+              for card in re.findall(r'<section class="snapshot">(.*?)</section>',html,re.S):
+                  sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',card).group(1))
+                  svg=re.search(r'<svg\b.*?</svg>',card,re.S).group(0)
+                  hashes[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+              assert len(hashes[variant])==16
+          print('DENSE_PAIRED_SVG_EQUIVALENCE',json.dumps({'hashes':hashes,'equal':{s:hashes['base'][s]==hashes['fixed'][s] for s in hashes['base']}},sort_keys=True))
+          PYSVG
