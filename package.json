@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1104",
+  "version": "0.0.1106",
   "type": "module",
   "repository": {
     "type": "git",
@@ -68,7 +68,7 @@
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/540c8f89e5749c629876f54c438f1284605398d9",
-    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#b607e0b93b302daad818711d9a85f26a0da8dc08",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#8193d693020c4d2c6e89cc919151c39923d4d713",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
