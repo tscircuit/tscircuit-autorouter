@@ -1,8 +1,8 @@
-name: Published3200 Glider pending-terminal diagnostic
+name: Published3200 Glider current-search diagnostic
 
 on:
   push:
-    branches: [bench/glider-terminal-cut-3200]
+    branches: [bench/glider-current-search-3200]
 
 permissions:
   contents: read

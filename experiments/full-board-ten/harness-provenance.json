@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11374,
-      "sha256": "95a29c019b97f19c32ebef90f074b125bb0d0c9a630cd8bc1e04076d9db82693"
+      "bytes": 11823,
+      "sha256": "75c2bf21dd5b28b93a575c34a6c3377fa985ba4cb79d397691af1946ea986481"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -38,8 +38,8 @@
     },
     {
       "name": "createCoarseRoutingDiagnostics.ts",
-      "bytes": 18719,
-      "sha256": "9bf42a97ff1ebb33ebd3285fcd459c5ae1a7a1baf248c328493cdcee8c631d8b"
+      "bytes": 18937,
+      "sha256": "3f5a313c2bc731adba45c664beef36373edb3606f4dbd91e660907146eb59059"
     },
     {
       "name": "collectPendingTerminalCut.ts",
@@ -48,12 +48,18 @@
     },
     {
       "name": "check-glider-terminal-cut-observation.py",
-      "bytes": 3466,
-      "sha256": "710f4da66d7cd14e0b64c512a2daadd3968bdde7934101289f48b1d0049e964d"
+      "bytes": 4629,
+      "sha256": "76b67f42a795748704ad6802a0e54f746f8de460a2c3a6d4015aa2163a058518"
+    },
+    {
+      "name": "collectCurrentSearchCensus.ts",
+      "bytes": 14543,
+      "sha256": "1ed5f7c8d645c2677f20ed0beac691c0e5e1f208d05eb5aed5802de89e17edab"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance Glider spaced other_signals pending-terminal capture before the existing final-acceptance call; own stored fields only, no added solver predicate/getter calls or source/options/budget changes. One selected packet below 24KiB; execution gate validates complete error-free observation of the actual pending route at the native2M cap. Canonical output parity remains pending comparison with the fresh3200 control; no benefit claim. Timings include observation overhead.",
+  "diagnosticInstrumentation": "Published-instance Glider spaced other_signals observation before existing final acceptance. Preserves the terminal packet; adds bounded current-assignment necessary-condition region census and recorded minimum-frontier predecessor-cost totals. No native solver predicate/getter calls or source/options/budget changes. Each selected packet below24KiB. Connected census does not certify a finite route; exhaustion applies only to current assignments, including movable preloads. Canonical output parity remains pending fresh3200 control comparison; no benefit claim.",
   "diagnosticBaselineCommit": "102c27644a53cf02861199d38608a9931dbef25d",
   "diagnosticOnly": true,
-  "canonicalOutputParity": "pending_fresh3200_control_comparison"
+  "canonicalOutputParity": "pending_fresh3200_control_comparison",
+  "priorDiagnosticCommit": "2ea9d0c739634452ce71c4a2f3081e4c520be624"
 }
