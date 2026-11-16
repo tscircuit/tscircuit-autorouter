@@ -6,7 +6,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { getH616PowerCrossingSnapshots } from "tests/fixtures/getH616PowerCrossingSnapshots"
 import { HighDensitySolverB01 } from "@tscircuit/high-density-b01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { createPreloadedInnerLayerPortValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedInnerLayerPortValidator"
+import { createPreloadedPortValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedPortValidator"
 import { normalizePipeline9NodeRootConnectionNames } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -40,7 +40,7 @@ test("H616 ground crossings beside completed DDR copper", async (): Promise<void
   centeredSolver.solve()
   expect(centeredSolver.failed).toBeTrue()
   const connMap = new ConnectivityMap(fixture.netMap)
-  const isPortPointClear = createPreloadedInnerLayerPortValidator({
+  const isPortPointClear = createPreloadedPortValidator({
     srj: fixture.srj,
     connMap,
     traceWidth: fixture.srj.minTraceWidth,
@@ -68,15 +68,16 @@ test("H616 ground crossings beside completed DDR copper", async (): Promise<void
     node,
     connMap,
   )
+  expect(normalizedNode.portPoints.every(isPortPointClear)).toBeTrue()
   const solver = new HighDensitySolverB01({
     ...fixture.b01,
     nodeWithPortPoints: normalizedNode,
   })
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
   const routes = solver.solved ? solver.getOutput() : []
-  expect(routes).toHaveLength(0)
+  expect(routes).toHaveLength(5)
   for (const route of routes) {
     const terminals = normalizedNode.portPoints.filter(
       (point) => point.connectionName === route.connectionName,

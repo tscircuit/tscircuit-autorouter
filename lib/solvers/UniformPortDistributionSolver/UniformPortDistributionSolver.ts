@@ -188,22 +188,23 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    // Keep a valid planned crossing when centering would overlap fixed copper.
-    for (const point of redistributed) {
-      if (
-        !this.input.preserveSolitaryPorts ||
-        portCountByLayer.get(point.z) !== 1 ||
-        !this.input.isPortPointClear ||
-        this.input.isPortPointClear(point)
-      ) {
-        continue
-      }
-      const original = familyRaw.find(
-        (candidate) => candidate.portPointId === point.portPointId,
-      )!
-      if (this.input.isPortPointClear(original)) {
-        point.x = original.x
-        point.y = original.y
+    // Reject centering that violates copper clearance. Keep the planned layer
+    // family together so accepting individual moves cannot invert its order.
+    const isPortPointClear = this.input.isPortPointClear
+    if (isPortPointClear) {
+      for (const z of portCountByLayer.keys()) {
+        const layerFamily = redistributed.filter((point) => point.z === z)
+        const originalPortPoints = layerFamily.map(
+          (point) =>
+            familyRaw.find(
+              (candidate) => candidate.portPointId === point.portPointId,
+            )!,
+        )
+        if (layerFamily.every(isPortPointClear)) continue
+        for (let index = 0; index < layerFamily.length; index++) {
+          layerFamily[index]!.x = originalPortPoints[index]!.x
+          layerFamily[index]!.y = originalPortPoints[index]!.y
+        }
       }
     }
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
