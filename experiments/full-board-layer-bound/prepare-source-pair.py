@@ -94,6 +94,11 @@ def main() -> None:
     base, candidate = root / "same-machine-base", root / "same-machine-pr"
     artifact = root / ("dataset-source-proof" if arguments.reuse_artifact else "source-pair-artifact")
     artifact.mkdir()
+    # AR intentionally disables lockfile saving. Override only dependency
+    # installation; official builds and tests keep the repository's bunfig.
+    install_config = artifact / "install.bunfig.toml"
+    install_config.write_text("[install.lockfile]\nsave = true\n")
+    install_command = ["bun", f"--config={install_config}", "install", "--save-text-lockfile"]
     for source in [base, candidate]:
         revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip()
         if revision != frozen["autorouterCommit"]:
@@ -109,9 +114,9 @@ def main() -> None:
     if arguments.reuse_artifact:
         shared = arguments.reuse_artifact.resolve()
         shutil.copyfile(shared / "bun.lock", base / "bun.lock")
-        run(["bun", "install", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], base)
+        run([*install_command, "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], base)
     else:
-        run(["bun", "install", "--ignore-scripts", "--backend", "copy"], base)
+        run([*install_command, "--ignore-scripts", "--backend", "copy"], base)
     if (base / "package.json").read_bytes() != (candidate / "package.json").read_bytes():
         raise RuntimeError("Dependency setup changed the AR source manifest")
     shutil.copyfile(base / "bun.lock", artifact / "bun.lock")
@@ -204,7 +209,7 @@ def main() -> None:
     production.mkdir()
     shutil.copyfile(base / "package.json", production / "package.json")
     shutil.copyfile(base / "bun.lock", production / "bun.lock")
-    run(["bun", "install", "--production", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], production)
+    run([*install_command, "--production", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], production)
     if digest(production / "bun.lock") != digest(artifact / "bun.lock"):
         raise RuntimeError("Production closure changed the shared frozen lock")
     production_inventory = inventory(production / "node_modules")
