@@ -41,6 +41,13 @@ if (existsSync(diagnosticPath)) {
       neverSuccessfullyRoutedCount: report.final.neverSuccessfullyRouted.length, candidateQueueLength: report.final.candidateQueueLength,
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
+  if (task.id === "glider" && task.cohort === "spaced") {
+    const selected = diagnostic.reports.filter((report: any) => report.phase === "other_signals")
+    const packet = { id: task.id, cohort: task.cohort, phase: "other_signals", reportCount: selected.length,
+      pendingTerminalCut: selected.length === 1 ? selected[0].pendingTerminalCut ?? null : null }
+    const json = JSON.stringify(packet)
+    console.log(`GLIDER_PENDING_TERMINAL_CUT ${Buffer.byteLength(json) < 24 * 1024 ? json : JSON.stringify({ id: task.id, cohort: task.cohort, observerError: "Selected packet exceeded 24KiB; full artifact retained" })}`)
+  }
 }
 const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))

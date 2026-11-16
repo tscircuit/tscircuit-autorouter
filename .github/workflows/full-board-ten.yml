@@ -1,8 +1,8 @@
-name: Published3200 full-board ten-case benchmark
+name: Published3200 Glider pending-terminal diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3200-20261116]
+    branches: [bench/glider-terminal-cut-3200]
 
 permissions:
   contents: read
@@ -14,14 +14,10 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: glider, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -82,7 +78,7 @@ jobs:
 
       - name: Run original full circuit
         id: original
-        if: matrix.experiment == 'published'
+        if: matrix.experiment == 'published' && contains(matrix.cohorts, 'original')
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -90,7 +86,7 @@ jobs:
           "$FULL_BOARD_ROOT/results/$BOARD/original"
 
       - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
+        if: ${{ always() && matrix.experiment == 'published' && contains(matrix.cohorts, 'original') }}
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
@@ -125,6 +121,10 @@ jobs:
         if: always()
         run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
 
+      - name: Require complete native observation; canonical3200 parity remains pending
+        if: always()
+        run: python3 experiments/full-board-ten/check-glider-terminal-cut-observation.py "$FULL_BOARD_ROOT"
+
       - name: Preserve small reports and provenance
         if: always()
         uses: actions/upload-artifact@v4
@@ -138,6 +138,7 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
+            .full-board-run/glider-terminal-cut-observation-gate.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json

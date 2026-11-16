@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11374,
+      "sha256": "95a29c019b97f19c32ebef90f074b125bb0d0c9a630cd8bc1e04076d9db82693"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -38,9 +38,22 @@
     },
     {
       "name": "createCoarseRoutingDiagnostics.ts",
-      "bytes": 18242,
-      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+      "bytes": 18719,
+      "sha256": "9bf42a97ff1ebb33ebd3285fcd459c5ae1a7a1baf248c328493cdcee8c631d8b"
+    },
+    {
+      "name": "collectPendingTerminalCut.ts",
+      "bytes": 14645,
+      "sha256": "cd8c2a84876b474c51089d9398c6b284f8fefce33975fd2af886f245e4063be2"
+    },
+    {
+      "name": "check-glider-terminal-cut-observation.py",
+      "bytes": 3466,
+      "sha256": "710f4da66d7cd14e0b64c512a2daadd3968bdde7934101289f48b1d0049e964d"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance Glider spaced other_signals pending-terminal capture before the existing final-acceptance call; own stored fields only, no added solver predicate/getter calls or source/options/budget changes. One selected packet below 24KiB; execution gate validates complete error-free observation of the actual pending route at the native2M cap. Canonical output parity remains pending comparison with the fresh3200 control; no benefit claim. Timings include observation overhead.",
+  "diagnosticBaselineCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "diagnosticOnly": true,
+  "canonicalOutputParity": "pending_fresh3200_control_comparison"
 }
