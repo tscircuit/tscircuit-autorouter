@@ -53,8 +53,9 @@ def copy_graph(source: Path, destination: Path) -> None:
                 path.symlink_to(destination / target.relative_to(source))
 
 
-def audit_maps(source: Path, maps: list[tuple[Path, Path]]) -> dict:
+def audit_maps(source: Path, maps: list[tuple[Path, Path]], upstream_proofs: dict) -> dict:
     bundled = {}
+    upstream_sources = {}
     for path, original_map_path in maps:
         packet = json.loads(path.read_text())
         if len(packet["sources"]) != len(packet["sourcesContent"]):
@@ -66,8 +67,37 @@ def audit_maps(source: Path, maps: list[tuple[Path, Path]]) -> dict:
             resolved = (original_map_path.parent / filename).resolve()
             if not resolved.is_relative_to(source):
                 raise RuntimeError(f"Bundled source escaped its lane: {filename} from {original_map_path}")
-            if not resolved.is_file() or hashlib.sha256(content.encode()).hexdigest() != digest(resolved):
-                raise RuntimeError(f"Bundled content does not match the actual source file: {resolved}")
+            content_hash = hashlib.sha256(content.encode()).hexdigest()
+            if resolved.is_file():
+                if content_hash != digest(resolved):
+                    raise RuntimeError(f"Bundled content differs from the actual source file: {resolved}")
+            else:
+                # Published dependencies can ship dist/maps without their
+                # original TS. Require the exact content from a shipped map
+                # in this lane's frozen dependency graph, never a guessed file.
+                if not resolved.is_relative_to(source / "node_modules"):
+                    raise RuntimeError(f"Missing bundled project source: {resolved}")
+                package = next((parent for parent in resolved.parents if (parent / "package.json").is_file()), None)
+                if package is None or not package.is_relative_to(source / "node_modules"):
+                    raise RuntimeError(f"Missing upstream source-map package: {resolved}")
+                if package not in upstream_sources:
+                    originals = {}
+                    for shipped_map in package.rglob("*.map"):
+                        try:
+                            upstream = json.loads(shipped_map.read_text())
+                        except (ValueError, UnicodeError):
+                            continue
+                        for original_name, original_content in zip(upstream.get("sources", []), upstream.get("sourcesContent", [])):
+                            if original_content is None:
+                                continue
+                            original_path = (shipped_map.parent / original_name).resolve()
+                            original_hash = hashlib.sha256(original_content.encode()).hexdigest()
+                            originals.setdefault((original_path, original_hash), []).append(str(shipped_map.relative_to(source)))
+                    upstream_sources[package] = originals
+                evidence = upstream_sources[package].get((resolved, content_hash))
+                if not evidence:
+                    raise RuntimeError(f"No shipped source-map evidence for original source: {resolved}")
+                upstream_proofs[str(resolved.relative_to(source))] = {"sha256": content_hash, "shippedMaps": evidence}
             if "/node_modules/" in normalized:
                 key = "node_modules/" + normalized.rsplit("/node_modules/", 1)[1]
             else:
@@ -168,6 +198,7 @@ def main() -> None:
         }, indent=2) + "\n")
         return
     map_sets = {}
+    upstream_map_proofs = {}
     dist_hashes = {}
     for label, source in [("base", base), ("pr", candidate)]:
         run(["bun", "run", "build"], source)
@@ -186,7 +217,8 @@ def main() -> None:
         maps += [(Path(row["path"]), Path(row["originalMapPath"])) for row in json.loads((worker_output / "map-origins.json").read_text())]
         if len(maps) < 5:
             raise RuntimeError("Official main/runtime source maps are missing")
-        map_sets[label] = audit_maps(source, maps)
+        upstream_map_proofs[label] = {}
+        map_sets[label] = audit_maps(source, maps, upstream_map_proofs[label])
         package_output = artifact / "packages" / label
         package_output.mkdir(parents=True)
         shutil.copyfile(source / "package.json", package_output / "package.json")
@@ -226,6 +258,7 @@ def main() -> None:
         "packageSha256": digest(base / "package.json"), "lockSha256": digest(artifact / "bun.lock"),
         "dependencyDifferences": sorted(actual_differences), "bundledSourceDifferences": sorted(differences),
         "bundledSources": map_sets, "distFiles": dist_hashes,
+        "upstreamSourceMapEvidence": upstream_map_proofs,
         "productionDependencyInventory": production_inventory,
         "workerDiagnosticJsMatchesOfficial": True,
     }
