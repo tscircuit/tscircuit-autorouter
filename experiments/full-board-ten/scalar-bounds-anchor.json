@@ -1,0 +1,28 @@
+{
+  "originalCoreSHA256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+  "expectedCandidateCoreSHA256": "19c4ee30f248adff5da0d12c8af65a6648333fb5eee2fd9e2aa40a2a2cc7c292",
+  "oldGuard": "  if ([start, end].some(\n    (p2) => p2.x < r2.minX + margin - epsilon || p2.x > r2.maxX - margin + epsilon || p2.y < r2.minY + margin - epsilon || p2.y > r2.maxY - margin + epsilon\n  ))",
+  "newGuard": "  if (start.x < r2.minX + margin - epsilon || start.x > r2.maxX - margin + epsilon || start.y < r2.minY + margin - epsilon || start.y > r2.maxY - margin + epsilon || end.x < r2.minX + margin - epsilon || end.x > r2.maxX - margin + epsilon || end.y < r2.minY + margin - epsilon || end.y > r2.maxY - margin + epsilon)",
+  "oldGuardSHA256": "5b0cfe6b0c897105e96740164b3af4c3c66d9fee0b1ecac8a4c3be860163b48e",
+  "newGuardSHA256": "0c0affca3e4f0e9941b9d5caf9362c36ca16a5dfb7eba62d449bfd547825312e",
+  "oldGuardOccurrences": 1,
+  "newGuardOccurrencesInOriginal": 0,
+  "guardByteOffset": 2290423,
+  "sourceBoundsToCompiledBoundsMapping": "identical comparison tokens and arithmetic after r -> r2; removed array/callback only",
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "74ed20b7f9331a97abfed44ff606d9e72e208a0a",
+    "changedFiles": [
+      "lib/board-outline.ts"
+    ],
+    "baseSourceSHA256": "2a2f45ed355ec822ccc655788d810a73f36ea6da1fd8d8a22382856c591f5171",
+    "candidateSourceSHA256": "4fa3d7b52da8eafe62717ffc5c1720019963bab73583e2595f14e1edb28abac7",
+    "baseSourceGitBlob": "145e10eb9177cf839c4fca55a41f562f349c4592",
+    "candidateSourceGitBlob": "96a25774ceff02ff17946beb8b9883d9d8e97814",
+    "exactSourceReplacementConfirmed": true,
+    "commit": "6b62d4a3b49a12cdbeb95471deb2ac86e1db58ef"
+  },
+  "controlRunId": 43924818002,
+  "scope": "Three unprofiled native full-board cases; no speedup claim. Exact scalar bounds guard is the only runtime code change.",
+  "unchangedAutorouterSHA256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2"
+}

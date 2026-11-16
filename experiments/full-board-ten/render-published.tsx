@@ -59,7 +59,7 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// The manifest identifies the isolated scalar-bounds Core entry; no solver injection or options change.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
@@ -90,7 +90,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: Boolean(task.coreScalarBoundsCandidate), cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
