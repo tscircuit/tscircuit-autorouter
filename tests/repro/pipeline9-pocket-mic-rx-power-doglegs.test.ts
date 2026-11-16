@@ -19,10 +19,9 @@ function hasNonOctilinearSegment(route: SimplifiedPcbTrace["route"]): boolean {
 
 test("reproduces doglegs introduced by Pipeline 9 power expansion on Pocket Mic RX", async (): Promise<void> => {
   const inputSrj = input as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    inputSrj,
-    { cacheProvider: null },
-  )
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
+    cacheProvider: null,
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
 
