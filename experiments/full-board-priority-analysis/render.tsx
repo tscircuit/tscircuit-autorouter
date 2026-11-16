@@ -65,6 +65,7 @@ const fanoutPrototype = SOLVERS.FanoutSolver.prototype
 const originalFanoutStep = fanoutPrototype.step
 fanoutPrototype.step = function (...args: Parameters<typeof originalFanoutStep>): ReturnType<typeof originalFanoutStep> {
   checkRoutingBudget()
+  if (this.iterations === 0) console.log("FANOUT_RECHECK_FIRST_STEP")
   const result = originalFanoutStep.apply(this,args)
   if (this.failed || this.solved || performance.now()-lastDiagnosticWrite > 1000) {
     const runtimeSolver = this as any
@@ -169,8 +170,12 @@ circuit.on("asyncEffect:end", (event: any) => {
 })
 const heartbeat = setInterval(() => save(), 2000)
 try {
+  console.log("FANOUT_RECHECK_ADD_BEGIN")
   circuit.add(<NativeFullBoard source={source} algorithmFn={algorithmFn} geometryOnly={mode === "geometry"} fanout={mode === "fanout"} planes={mode !== "legacy"} />)
-  await circuit.renderUntilSettled()
+  console.log("FANOUT_RECHECK_RENDER_BEGIN")
+  const rendering = circuit.renderUntilSettled()
+  console.log("FANOUT_RECHECK_RENDER_PROMISE_RETURNED")
+  await rendering
   progress.renderCompleted = true
   for (const element of circuit.getCircuitJson()) {
     if (element.type === "pcb_autorouting_error") progress.errors.push(element.message)
