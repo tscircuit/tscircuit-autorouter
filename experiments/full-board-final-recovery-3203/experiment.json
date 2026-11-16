@@ -1,12 +1,11 @@
 {
   "schemaVersion": 1,
   "frozen": true,
-  "name": "matched-final-recovery-only-diagnostic-3203",
-  "status": "HELD: preparation only; no commit, push, install/import or routing performed",
+  "name": "default-window-final-recovery-only-diagnostic-3203",
+  "status": "Prepared for parent review; default-window run has not been committed or launched",
   "diagnosticOnly": true,
   "productionFixProposed": false,
-  "baseHarnessCommit": "d612311a273084c49f6384a63183b08d08f30569",
-  "matchedWindowPatternCommit": "4534c46e1840b0bcf0f392f475508f43ad9cf6e9",
+  "baseHarnessCommit": "4faeb09514467a8b0804688328bc393206c4b614",
   "runtime": [
     {
       "name": "tscircuit",
@@ -65,53 +64,22 @@
   },
   "cases": [
     {
-      "id": "glider",
-      "lane": "published",
-      "cohort": "spaced",
-      "mode": "phased",
-      "fanout": false,
-      "captureDeadlineMs": 1800000,
-      "hardDeadlineMs": 1860000,
-      "assessmentDeadlineMs": 180000
-    },
-    {
-      "id": "glider",
-      "lane": "final-recovery-only-diagnostic",
-      "cohort": "spaced",
-      "mode": "phased",
-      "fanout": false,
-      "captureDeadlineMs": 1800000,
-      "hardDeadlineMs": 1860000,
-      "assessmentDeadlineMs": 180000
-    },
-    {
-      "id": "imx6",
-      "lane": "published",
-      "cohort": "spaced",
-      "mode": "phased",
-      "fanout": false,
-      "captureDeadlineMs": 1800000,
-      "hardDeadlineMs": 1860000,
-      "assessmentDeadlineMs": 180000
-    },
-    {
       "id": "imx6",
       "lane": "final-recovery-only-diagnostic",
       "cohort": "spaced",
       "mode": "phased",
       "fanout": false,
-      "captureDeadlineMs": 1800000,
-      "hardDeadlineMs": 1860000,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
       "assessmentDeadlineMs": 180000
     }
   ],
-  "scope": "Only the existing Prepared conditional final child multiplier changes2\u21924. Main2M, outer/portfolio scaling, ordinary greedy50k, non-Prepared factory, eligibility/attempt order and all routing weights/rules/effort remain byte-exact. Every lane uses identical1800/1860/180second external limits.",
+  "scope": "Only the existing Prepared conditional final child multiplier changes2\u21924. Main2M, outer/portfolio scaling, ordinary greedy50k, non-Prepared factory, eligibility/attempt order and all routing weights/rules/effort remain byte-exact. One iMX spaced candidate uses the original900/960/180second limits.",
   "assessment": "Original published Core2396 helper is prepared before the routing override; its neutral assessment scope is pinned to original published AR1109. Only the routing alias changes in candidate lanes.",
   "observations": "Unchanged published-instance lifecycle hooks. After routing, forward existing final parent.stats with explicit absentKeys. No new live witness/child collector. Child max cap is not actual child work; no strategy inferred from caps or finalAcceptances.",
-  "matching": "Four separate ARM8vCPU jobs, sameSKU and inputs. This is a matched native quality diagnostic, not a same-VM speed benchmark.",
+  "matching": "One ARM8vCPU candidate compared with the frozen latest3203 published iMX spaced baseline under the same900/960/180second limits, exact runtime and source identities. Separate runs do not establish same-VM performance.",
   "heldGates": [
-    "Parent review of this prepared harness",
-    "Old3200 stored parent stats must establish accepted congestion-aware strategy"
+    "Parent review before commit/push"
   ],
   "preparationValidation": {
     "candidateEntryRetained": false,
@@ -121,8 +89,29 @@
     "commitOrPushPerformed": false,
     "sourceInputsChanged": false
   },
-  "dispatch": "No workflow dispatch. Branch-specific push would launch all four lanes only after explicit parent authorization.",
+  "dispatch": "No workflow dispatch. A later authorized push to bench/full-board-final-recovery-default-3203 launches exactly one iMX spaced candidate.",
   "interpretationGates": [
-    "Before attributing results, the new matched published3203 lane must establish actual Prepared selection and relevant recovery eligibility; this does not require a separate all-ten run to finish before launch"
-  ]
+    "Report actual900/960second capture or hard-kill outcome, source/copper counts, native membership, DRC and stored stats without substituting long-window results.",
+    "Hard timeout, absent candidate publication or unavailable assessment must remain explicit; no full-board completion is inferred from partial gains."
+  ],
+  "publishedControl": {
+    "runId": 43924818002,
+    "headSha": "d612311a273084c49f6384a63183b08d08f30569",
+    "jobId": 133501356499,
+    "case": "imx6/spaced",
+    "limitsMs": [
+      900000,
+      960000,
+      180000
+    ],
+    "connectedNets": 16,
+    "requestedRoutableNets": 404,
+    "physicalDrc": 0,
+    "renderWallMs": 752616.082592
+  },
+  "longWindowEvidence": {
+    "runId": 43929516030,
+    "headSha": "4faeb09514467a8b0804688328bc393206c4b614",
+    "purpose": "Motivation only: matched1800second candidate gain does not establish a900second gain. No long-window limits apply to this run."
+  }
 }

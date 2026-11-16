@@ -25,7 +25,7 @@ for cohort in cohorts:
             "geometryErrorCount", "membershipErrorCount", "listedFindingCount",
             "sharedDrcErrorCount", "routingPolicyObserved",
             "captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs",
-            "diagnosticOnly", "routingSourceOverride", "longWindowDiagnostic",
+            "diagnosticOnly", "routingSourceOverride",
         ]}
         record["vias"] = result["emittedCounts"]["pcb_via"] if result["emittedCounts"] is not None else None
     else:

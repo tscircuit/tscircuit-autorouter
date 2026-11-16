@@ -1,20 +1,20 @@
 {
-  "status": "HELD; review-ready preparation only",
-  "baseCommit": "d612311a273084c49f6384a63183b08d08f30569",
-  "branch": "bench/full-board-final-recovery-3203",
-  "worktree": "/tmp/full-board-final-recovery-3203",
+  "status": "Review-ready default-window preparation; no commit or launch",
+  "baseCommit": "4faeb09514467a8b0804688328bc393206c4b614",
+  "branch": "bench/full-board-final-recovery-default-3203",
+  "worktree": "/tmp/full-board-final-recovery-default-3203",
   "inputSha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
   "candidateSha256": "4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f",
   "files": [
     {
       "name": ".github/workflows/full-board-ten.yml",
-      "bytes": 5668,
-      "sha256": "57e09357d24333ebad4761835f6bade83013b671983ca0124a8fcf888b3cbb92"
+      "bytes": 5448,
+      "sha256": "cc0bd353d5a992b21f4a0a38fe78337d75f688d8c391a9cf121bf9de2306fc29"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/VALIDATION.md",
-      "bytes": 3595,
-      "sha256": "ee0b3b44f59163053e799dfdefa9f27d9d8b5da998e9d00f43e9011a6c3ad606"
+      "bytes": 2425,
+      "sha256": "5691ae7e47fb7452dea409c2168330bd59ef56c2351c1f417a3b8ee9f173651b"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/candidate-byte-proof.json",
@@ -23,13 +23,13 @@
     },
     {
       "name": "experiments/full-board-final-recovery-3203/experiment.json",
-      "bytes": 6059,
-      "sha256": "530943e726d410b01051abd7cd2371172af32e7aac84348b328abf198f0a2260"
+      "bytes": 6000,
+      "sha256": "520d9d500bb13c4bc30a3e9cb0f796da109b173a71f28b6d02b3505b8d9faf6c"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/install-diagnostic.mjs",
-      "bytes": 9805,
-      "sha256": "4e8e240c0ec453ce4c4dc67351f07a386b3b25558a4089b0e73d1d1e3de566b2"
+      "bytes": 9798,
+      "sha256": "8e402c5467c8875a733e79cd72c1225de93f0f2a960fcb6e48680161006e0aa1"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/prepare-recovery-only.py",
@@ -43,13 +43,13 @@
     },
     {
       "name": "experiments/full-board-ten/harness-provenance.json",
-      "bytes": 2012,
-      "sha256": "b922404d9da914c83a7c07fff505b429956b1984c08b8c28444a7277c90bb1ea"
+      "bytes": 2040,
+      "sha256": "0ef831730ea6736c2901e9dd6a73fba5f79b7f89494bb1ae5ee447d0d163737f"
     },
     {
       "name": "experiments/full-board-ten/prepare-cases.ts",
-      "bytes": 6508,
-      "sha256": "79e6f7889f09b8bf3aa3f9f2af47fb5f566098aff6811537b4cd759267772e9b"
+      "bytes": 6280,
+      "sha256": "2d85ae00c441adc93524853ba04867f1a18353b9cef5e4ec41b403f5e6cdca9c"
     },
     {
       "name": "experiments/full-board-ten/render-published.tsx",
@@ -58,19 +58,23 @@
     },
     {
       "name": "experiments/full-board-ten/report.py",
-      "bytes": 4607,
-      "sha256": "a72d3bf9a2b9b190bd9275ef2eb017fbf92ed44ff18a53a023e0ecbd4b2bebe6"
+      "bytes": 4583,
+      "sha256": "84fdb8ce8526036fd12f1dc979dd037613b39a801ac75defbac0bd6292a018cc"
     },
     {
       "name": "experiments/full-board-ten/run-one.ts",
-      "bytes": 13144,
-      "sha256": "bf583718e85276a58adb9396c8cdcdb95e3e1691ea16f914c0dc4c3349e562b9"
+      "bytes": 13095,
+      "sha256": "0b11e0260e00ca0a87e31b72781254a32c5ff24e71fc470e1367d03b5ca1d3bb"
     }
   ],
   "unchangedControlFiles": [
     {
       "name": "experiments/full-board-ten/bootstrap.py",
       "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d"
+    },
+    {
+      "name": "experiments/full-board-ten/render-published.tsx",
+      "sha256": "f436629d1bf3983cd5d5f8c16ec892a095776fbdd17aa896da8be85084bb08de"
     },
     {
       "name": "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts",
@@ -99,21 +103,38 @@
     {
       "name": "experiments/full-board-ten/autorouter-dependencies/bun.lock",
       "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/prepare-recovery-only.py",
+      "sha256": "c66c9608f2d0a98dde792c093c7fc46da20c8e0ebd0c046b30219cb61c8ec73d"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/candidate-byte-proof.json",
+      "sha256": "8662787d999e1bc342719556c44fa335e6d25c0a9e708a9872e8f42df0411481"
+    },
+    {
+      "name": "experiments/full-board-final-recovery-3203/source-relation.json",
+      "sha256": "04f4ac9cd47c91b43e49842ef714e02f0d62ff9b70811462def00aa1a3674910"
     }
   ],
   "checks": {
-    "PythonAst": true,
-    "Json": true,
-    "WorkflowYaml": true,
-    "NodeSyntax": true,
-    "BunTypeScriptSyntaxScan": true,
-    "GitDiffWhitespace": true,
-    "ExactCopiedAdapterProof": true,
-    "InMemoryByteProof": true,
-    "changedByteOffsets": [
-      2068963
-    ],
-    "main2MCoefficientUnchanged": true
+    "oneCandidateOnly": true,
+    "branchTrigger": true,
+    "immutableSourceRefs": true,
+    "pythonAst": true,
+    "json": true,
+    "workflowYaml": true,
+    "unchangedRoutingRuntimeRendererObserverSourcesAndAssessment": true,
+    "actualTaskLimits": true,
+    "actualInstallerGuards": true,
+    "longWindowMetadataRemoved": true,
+    "storedStatsAndExecutionUnchanged": true,
+    "publishedArHash": true,
+    "exactInMemoryByteProof": true,
+    "nodeSyntax": true,
+    "bunSyntaxNoModuleExecution": true,
+    "reportWithoutLongWindowMetadata": true,
+    "diffWhitespace": true
   },
   "notExecuted": [
     "candidate entry retained",
@@ -126,10 +147,31 @@
     "dispatch"
   ],
   "pending": [
-    "parent review",
-    "old accepted strategy applicability",
+    "Parent review before commit/push",
     "CI-only install/import/alias isolation proof",
-    "four matched native observations",
-    "actual3203 Prepared/recovery applicability must be verified in matched published lane before interpreting results"
-  ]
+    "One actual default-window iMX spaced candidate outcome"
+  ],
+  "cases": [
+    {
+      "id": "imx6",
+      "cohort": "spaced",
+      "experiment": "final-recovery-only-diagnostic",
+      "limitsMs": [
+        900000,
+        960000,
+        180000
+      ]
+    }
+  ],
+  "publishedControl": {
+    "runId": 43924818002,
+    "headSha": "d612311a273084c49f6384a63183b08d08f30569",
+    "jobId": 133501356499,
+    "case": "imx6/spaced",
+    "limitsMs": [
+      900000,
+      960000,
+      180000
+    ]
+  }
 }

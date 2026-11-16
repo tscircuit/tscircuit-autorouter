@@ -8,8 +8,8 @@
   "files": [
     {
       "name": "prepare-cases.ts",
-      "bytes": 6508,
-      "sha256": "79e6f7889f09b8bf3aa3f9f2af47fb5f566098aff6811537b4cd759267772e9b"
+      "bytes": 6280,
+      "sha256": "2d85ae00c441adc93524853ba04867f1a18353b9cef5e4ec41b403f5e6cdca9c"
     },
     {
       "name": "render-published.tsx",
@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 13144,
-      "sha256": "bf583718e85276a58adb9396c8cdcdb95e3e1691ea16f914c0dc4c3349e562b9"
+      "bytes": 13095,
+      "sha256": "0b11e0260e00ca0a87e31b72781254a32c5ff24e71fc470e1367d03b5ca1d3bb"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -43,7 +43,7 @@
     }
   ],
   "diagnosticInstrumentation": "Inherited published-instance lifecycle observer unchanged. After routing, forward its existing final parent stats with explicit absent keys; no live instrumentation or new witness collector. Timings include inherited observation overhead.",
-  "recoveryDiagnostic": "Only exact Prepared conditional final multiplier2\u21924 in private routing AR1109; main2M retained. Original neutral Core2396 assessment and original AR1109 helper dependency remain separate. All four lanes1800/1860/180seconds.",
-  "baseHarnessCommit": "d612311a273084c49f6384a63183b08d08f30569",
-  "heldStatus": "Preparation only; runtime CI import/install and native routing not executed; parent review and acceptance-stat applicability gates pending."
+  "recoveryDiagnostic": "Exact Prepared conditional final multiplier2\u21924 in private routing AR1109; main2M retained. Original neutral Core2396 assessment and original AR1109 helper dependency remain separate. One iMX spaced candidate uses original900/960/180second limits.",
+  "baseHarnessCommit": "4faeb09514467a8b0804688328bc393206c4b614",
+  "heldStatus": "Default-window preparation only; parent review pending before commit/push. Existing matched1800second evidence does not qualify900second output."
 }

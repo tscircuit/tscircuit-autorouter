@@ -18,7 +18,7 @@ if (resolve(autorouter.entry) !== join(originalFolder, autorouter.entryRelative)
 const originalEntry = autorouter.entry
 const casePath = join(root, "cases", `${board}-spaced.json`)
 const task = JSON.parse(readFileSync(casePath, "utf8"))
-if (task.id !== board || task.cohort !== "spaced" || task.captureDeadlineMs !== 1800000 || task.hardDeadlineMs !== 1860000 || task.assessmentDeadlineMs !== 180000) throw new Error("Unexpected matched long-window recovery case or deadlines")
+if (task.id !== board || task.cohort !== "spaced" || task.captureDeadlineMs !== 900000 || task.hardDeadlineMs !== 960000 || task.assessmentDeadlineMs !== 180000) throw new Error("Unexpected default-window recovery case or deadlines")
 const sha = bytes => createHash("sha256").update(bytes).digest("hex")
 const byteProofPath = join(root, "recovery-only-byte-proof.json")
 if (existsSync(byteProofPath)) throw new Error("Refuse to replace an existing byte proof")

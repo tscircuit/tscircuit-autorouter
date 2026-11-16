@@ -1,28 +1,13 @@
-# Held Prepared final-recovery comparison
+# Default-window Prepared recovery diagnostic
 
-This worktree is preparation only. Do not commit, push or run it before parent review and the stored acceptance-stat gates qualify the hypothesis.
+This branch prepares exactly one iMX6 spaced candidate at the original 900-second capture, 960-second hard and 180-second assessment limits. Parent review is required before commit/push. No other cases or published lanes are scheduled.
 
-Base controller: `d612311a273084c49f6384a63183b08d08f30569`. Frozen runtime: Main3203 / Core2396 / Eval1790 / AR1109. The release, runtime locks, original source checkouts and rules are inherited byte-exact.
+Base controller: `4faeb09514467a8b0804688328bc393206c4b614`. Runtime remains Main3203 / Core2396 / Eval1790 / AR1109, with unchanged locks, authentic source checkouts, routing observer, renderer and assessment implementation. The frozen published comparison is run43924818002, head`d612311a273084c49f6384a63183b08d08f30569`, job133501356499, iMX6 spaced: 16/404 connected nets, zero physical DRC and 752.616 seconds under the same 900/960/180 limits.
 
-Four jobs compare Glider spaced and iMX spaced, each with published routing and the recovery-only diagnostic. All use the reviewed `4534c46e` external window: 1800 seconds capture, 1860 seconds hard limit and 180 seconds assessment. They are separate ARM8vCPU jobs, so timing is diagnostic and does not establish a same-VM speed comparison. Estimated wall time is up to 35–40 minutes with four parallel jobs.
+The routing candidate remains SHA256 `4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f`, derived from original `705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2` by the same single byte at offset2068963. Only the Prepared conditional final-child multiplier changes2→4; main2M and all routing policies remain unchanged. The copied adapter, candidate-byte proof and source relation remain byte-exact.
 
-The exact held Python adapter and byte proof are copied unchanged from `audit-final-recovery-budget-3203`. In CI the installer invokes that adapter, verifies its full class/factory/main-cap anchors and proof, and creates a private AR package. Only byte2068963 changes `2` to `4`: the Prepared conditional final child's multiplier becomes4×parent instead of2×parent. The main2M coefficient remains unchanged. There is no live-reachability, declined-goal, MST, pour, pad-edge or other routing change.
+The existing installer still verifies separate routing and assessment dependencies and original package hashes. Its task deadline guard now requires900/960/180. Case preparation emits these actual limits and no long-window metadata; result/report metadata no longer requires the removed field. Existing postprocessing forwards stored parent stats without adding a live observer.
 
-Expected routing entry hashes:
+The successful partial-net gain under the prior1800-second matched experiment does not establish benefit at900 seconds. Report actual capture/hard-timeout behavior, native named membership, copper counts, physical findings, source completeness and assessment availability. A hard kill, earlier snapshot or absent candidate publication remains an explicit result. Do not substitute the prior longer-window outcome. Complete-and-clean full-board completion remains unqualified.
 
-- Published: `705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2`
-- Diagnostic: `4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f`
-
-No candidate bundle is retained locally. The CI-only installer checks separate-process import/export parity without constructing or stepping a solver. It preserves published AR/Core bytes, prepares the original neutral assessment helper first, pins that helper's private AR dependency to the original package, and changes only the candidate routing alias. Its installation proof explicitly records that a candidate entry is retained in the private CI runtime; the unchanged copied byte proof remains preparation-only. The worker hashes the candidate entry and the parent rechecks routing/Core/helper bytes after routing.
-
-The existing lifecycle observer is unchanged. After routing, `run-one.ts` forwards its already-stored final parent `.stats` and reports missing keys explicitly. No new live instrumentation or witness collector is added. A configured child cap is not measured child work. Neither final strategy nor child execution is inferred from a cap, zero iteration count or one final-acceptance event.
-
-Qualification uses all actual components, source membership, emitted counts, named physical connectivity, completed phases, routing-WASM policy observations and original DRC assessment. Missing publication, timeout or missing assessment remains an explicit failure. Original canonical assessment and candidate routing are separate scopes. Existing disconnected/finding profiles remain unchanged.
-
-Prerequisites before launch:
-
-1. Parent reviews this complete preparation.
-2. Old3200 stored parent stats support accepted congestion-aware recovery rather than a different final strategy.
-Before interpreting new results, the matched published3203 lane must establish the actual Prepared class and relevant recovery eligibility. This can be checked in the new comparison itself; a separate all-ten run is not a prelaunch requirement.
-
-The branch-specific workflow would run all four jobs on a later authorized push. This preparation performs no install, import smoke, routing, build, commit or push. Syntax/static validation is separate from unperformed CI/runtime validation.
+Static validation covers workflow selection, Python/JSON/YAML/JavaScript/TypeScript syntax, exact inherited control-file hashes, actual task/installer limits, compact reporting without long-window metadata and the in-memory one-byte proof. It does not install/import a candidate, construct a solver, route a board or launch CI. Runtime evidence will come only from the later authorized single job.

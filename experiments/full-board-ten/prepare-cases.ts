@@ -65,8 +65,7 @@ for (const id of onlyId ? [onlyId] : knownIds) for (const cohort of ["original",
     assessmentHelperProof: cohort === "original" ? join(output, "assessment-helper-proof.json") : undefined,
     runtimeRoot: import.meta.dir, runtimeManifestPath: resolve(manifestPath),
     diagnosticOnly: true,
-    longWindowDiagnostic: { previousCaptureDeadlineMs: 900000, previousHardDeadlineMs: 960000, captureDeadlineMs: 1800000, hardDeadlineMs: 1860000, assessmentDeadlineMs: 180000, matchedAcrossPublishedAndRecoveryLanes: true },
-    captureDeadlineMs: 1800000, hardDeadlineMs: 1860000, assessmentDeadlineMs: 180000,
+    captureDeadlineMs: 900000, hardDeadlineMs: 960000, assessmentDeadlineMs: 180000,
   }
   const caseFile = join(output, `${id}-${cohort}.json`)
   writeFileSync(caseFile, JSON.stringify(task, null, 2))

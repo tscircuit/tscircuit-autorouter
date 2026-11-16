@@ -1,8 +1,8 @@
-name: Published3203 matched final-recovery-only diagnostic
+name: Published3203 default-window final-recovery-only diagnostic
 
 on:
   push:
-    branches: [bench/full-board-final-recovery-3203]
+    branches: [bench/full-board-final-recovery-default-3203]
 
 permissions:
   contents: read
@@ -14,12 +14,9 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 1
       matrix:
         include:
-          - { board: glider, experiment: published, cohorts: "spaced" }
-          - { board: imx6, experiment: published, cohorts: "spaced" }
-          - { board: glider, experiment: final-recovery-only-diagnostic, cohorts: "spaced" }
           - { board: imx6, experiment: final-recovery-only-diagnostic, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
