@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="14.05,0.35 14.052408,0.364908" data-type="line" data-label="GND_mst0" points="199.90196078431472,404.06862745098044 200.72823529411835,398.953137254902" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="1px"/></g><g><polyline data-points="14.052408,0.364908 14.7,0.35" data-type="line" data-label="GND_mst1" points="200.72823529411835,398.953137254902 422.9411764705892,404.06862745098044" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="1px"/></g><text data-type="text" data-label="iCE/Pi GND: 2 layer-changing pairs" data-x="14.4" data-y="0.8" x="320.0000000000009" y="249.65686274509807" fill="black" font-size="27.45098039215687" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">iCE/Pi GND: 2 layer-changing pairs</text><g><circle data-type="point" data-label="U1.P13" data-x="14.05" data-y="0.35" cx="199.90196078431472" cy="404.06862745098044" r="3" fill="blue"/></g><g><circle data-type="point" data-label="C38.1" data-x="14.052408" data-y="0.364908" cx="200.72823529411835" cy="398.953137254902" r="3" fill="blue"/></g><g><circle data-type="point" data-label="C38.1" data-x="14.052408" data-y="0.364908" cx="200.72823529411835" cy="398.953137254902" r="3" fill="blue"/></g><g><circle data-type="point" data-label="U1.R13" data-x="14.7" data-y="0.35" cx="422.9411764705892" cy="404.06862745098044" r="3" fill="blue"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":343.13725490196083,"c":0,"e":-4621.176470588235,"b":0,"d":-343.13725490196083,"f":524.1666666666667};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
