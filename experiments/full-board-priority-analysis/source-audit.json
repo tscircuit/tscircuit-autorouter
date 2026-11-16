@@ -1,0 +1,44 @@
+[
+  {
+    "id": "orangecrab",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 385,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  },
+  {
+    "id": "h616",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 384,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  },
+  {
+    "id": "butterstick",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 581,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  },
+  {
+    "id": "glider",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 360,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  },
+  {
+    "id": "imx6",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 401,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  },
+  {
+    "id": "icepi",
+    "sourceSha256Verified": true,
+    "benchmarkPadPositionsChecked": 445,
+    "mismatches": [],
+    "toleranceMm": 1e-05
+  }
+]
