@@ -7,7 +7,9 @@ const pinAttributes = {
   pin1: { isPassive: true },
 } satisfies NonNullable<ResistorProps["pinAttributes"]>
 
-export const A_0603WAF1003T5E = (props: Omit<ResistorProps, "resistance">): ReactElement => {
+export const A_0603WAF1003T5E = (
+  props: Omit<ResistorProps, "resistance">,
+): ReactElement => {
   const { name = "R1", ...restProps } = props
 
   return (

@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { CapacitorProps } from "@tscircuit/props-for-sepic-repro"
 
-export const CL10B102KB8NNNC = (props: Omit<CapacitorProps, "capacitance">): ReactElement => {
+export const CL10B102KB8NNNC = (
+  props: Omit<CapacitorProps, "capacitance">,
+): ReactElement => {
   const { name = "C1", ...restProps } = props
 
   return (

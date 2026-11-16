@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { PotentiometerProps } from "@tscircuit/props-for-sepic-repro"
 
-export const A_3296W_1_104LF = (props: Omit<PotentiometerProps, "maxResistance">): ReactElement => {
+export const A_3296W_1_104LF = (
+  props: Omit<PotentiometerProps, "maxResistance">,
+): ReactElement => {
   return (
     <potentiometer
       maxResistance="100k"

@@ -10,7 +10,9 @@ type FixtureProps<P> = P extends object
 export namespace JSX {
   export type Element = ReactElement
   export type ElementType = import("react").JSX.ElementType
-  export interface ElementChildrenAttribute { children: {} }
+  export interface ElementChildrenAttribute {
+    children: {}
+  }
   export interface IntrinsicAttributes extends Attributes {}
   export interface IntrinsicElements {
     board: FixtureProps<Props.BoardProps>

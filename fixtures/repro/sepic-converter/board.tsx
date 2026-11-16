@@ -44,7 +44,12 @@ export default function BuckBoostConverter({
       <silkscreentext text="-" pcbX={-18.3} pcbY={3} fontSize={0.7} />
       <silkscreentext text="+" pcbX={18.3} pcbY={3} fontSize={0.7} />
       <silkscreentext text="-" pcbX={18.3} pcbY={8} fontSize={0.7} />
-      <silkscreentext text="SEPIC / 1A TARGET" pcbX={0} pcbY={21} fontSize={0.8} />
+      <silkscreentext
+        text="SEPIC / 1A TARGET"
+        pcbX={0}
+        pcbY={21}
+        fontSize={0.8}
+      />
     </board>
   )
 }

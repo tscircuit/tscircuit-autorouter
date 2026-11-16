@@ -12,7 +12,10 @@ import { LM3478MA_NOPB } from "../imports/LM3478MA_NOPB/LM3478MA_NOPB"
 export function ControlLoop(): ReactElement {
   return (
     <>
-      <schematicsection name="Control" displayName="LM3478 controller and compensation" />
+      <schematicsection
+        name="Control"
+        displayName="LM3478 controller and compensation"
+      />
       <trace
         name="AnalogGroundReturn"
         from=".U1 > .AGND"
@@ -39,7 +42,13 @@ export function ControlLoop(): ReactElement {
         to=".R6 > .pin1"
         thickness="0.15mm"
         pcbPath={[
-          { x: -0.635, y: -4.1, via: true, fromLayer: "top", toLayer: "bottom" },
+          {
+            x: -0.635,
+            y: -4.1,
+            via: true,
+            fromLayer: "top",
+            toLayer: "bottom",
+          },
           { x: -0.635, y: 2.565 },
           { x: 1, y: 4.2, via: true, fromLayer: "bottom", toLayer: "top" },
         ]}

@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { ResistorProps } from "@tscircuit/props-for-sepic-repro"
 
-export const A_25121WF120MT4E = (props: Omit<ResistorProps, "resistance">): ReactElement => {
+export const A_25121WF120MT4E = (
+  props: Omit<ResistorProps, "resistance">,
+): ReactElement => {
   const { name = "R1", ...restProps } = props
 
   return (

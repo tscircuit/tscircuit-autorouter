@@ -11,7 +11,9 @@ test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearanc
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(checkTracesAreContiguous(circuitJson)).toEqual([])
-  const errors = circuitJson.filter((element) => element.type === "pcb_trace_error")
+  const errors = circuitJson.filter(
+    (element) => element.type === "pcb_trace_error",
+  )
   expect(errors).toHaveLength(1)
   const clearanceError = errors[0]
   if (

@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { CapacitorProps } from "@tscircuit/props-for-sepic-repro"
 
-export const GRM32ER71H106KA12L = (props: Omit<CapacitorProps, "capacitance">): ReactElement => {
+export const GRM32ER71H106KA12L = (
+  props: Omit<CapacitorProps, "capacitance">,
+): ReactElement => {
   const { name = "C1", ...restProps } = props
 
   return (

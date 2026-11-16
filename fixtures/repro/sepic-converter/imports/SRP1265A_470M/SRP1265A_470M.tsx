@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { InductorProps } from "@tscircuit/props-for-sepic-repro"
 
-export const SRP1265A_470M = (props: Omit<InductorProps, "inductance">): ReactElement => {
+export const SRP1265A_470M = (
+  props: Omit<InductorProps, "inductance">,
+): ReactElement => {
   return (
     <inductor
       inductance="47uH"

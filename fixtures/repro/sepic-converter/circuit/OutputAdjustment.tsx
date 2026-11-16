@@ -84,7 +84,6 @@ export function OutputAdjustment(): ReactElement {
         pcbRotation={90}
         schX={9.8}
         schY={1.05}
-
         schSectionName="Output"
         connections={{ pin1: "net.ADJ", pin2: "net.FB", pin3: "net.FB" }}
       />

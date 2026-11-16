@@ -24,7 +24,9 @@ const pinAttributes = {
   pin8: { requiresPower: true },
 } as const
 
-export const LM3478MA_NOPB = (props: ChipProps<typeof pinLabels>): ReactElement => {
+export const LM3478MA_NOPB = (
+  props: ChipProps<typeof pinLabels>,
+): ReactElement => {
   return (
     <chip
       pinLabels={pinLabels}

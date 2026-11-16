@@ -2,7 +2,9 @@
 import type { ReactElement } from "react"
 import type { MosfetProps } from "@tscircuit/props-for-sepic-repro"
 
-export const IRL540NPBF = (props: Omit<MosfetProps, "channelType" | "mosfetMode">): ReactElement => {
+export const IRL540NPBF = (
+  props: Omit<MosfetProps, "channelType" | "mosfetMode">,
+): ReactElement => {
   return (
     <mosfet
       channelType="n"
