@@ -1,0 +1,55 @@
+name: Counterbalanced timing with retained point-pair identities
+on:
+  push:
+    branches: [codex/ddr-stable-pairing-repeat]
+permissions:
+  contents: read
+jobs:
+  repeat:
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 6, 9, 14]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 544fb5cba6f4985d1fd236bcabdd0a377b792427
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: 9f91d1366661a9d9594980c09238892799107d47
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          (cd base && bun install --ignore-scripts)
+          cmp base/package.json fixed/package.json
+          ln -s ../base/node_modules fixed/node_modules
+      - name: Base fix fix base on identical dependencies and one runner
+        env:
+          SAMPLE: ${{ matrix.sample }}
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          mkdir results
+          for entry in base:0 fixed:1 fixed:2 base:3; do
+            variant="${entry%:*}"
+            repetition="${entry#*:}"
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --sample "$SAMPLE" --concurrency 1 --sample-timeout 240s)
+            cp "$variant/benchmark-result.json" "results/$variant-$repetition.json"
+            python3 - "$SAMPLE" "$variant" "$repetition" <<'PYCODE'
+          import json,sys
+          from pathlib import Path
+          sample,variant,repetition=sys.argv[1:]
+          report=json.loads(Path(f'results/{variant}-{repetition}.json').read_text())
+          print('STABLE_REPEAT_RESULT',sample,variant,repetition,json.dumps(report,separators=(',',':')))
+          PYCODE
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stable-pairing-repeat-${{ matrix.sample }}
+          path: results
+          retention-days: 14
