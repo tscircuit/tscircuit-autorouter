@@ -8,18 +8,18 @@
   "files": [
     {
       "name": "prepare-cases.ts",
-      "bytes": 6254,
-      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330"
+      "bytes": 6506,
+      "sha256": "499101c80f8f5dab08b9c0f9cf9893b4b74bb00b6f66e5a90ca62011c2ea722e"
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14559,
-      "sha256": "1f88e5cf9103223e385f62df7b94abd749ca4c7744e534d7a82c52aa7df90a28"
+      "bytes": 14704,
+      "sha256": "04dacddbb626e315ed5c683145e7b37f323c9d629d2d73b4d9ea47224547bb4b"
     },
     {
       "name": "run-one.ts",
-      "bytes": 11462,
-      "sha256": "e65aab3c64fde110d7ade9c821d9e78f1d1f3e11d697e17ff4afb6a210663455"
+      "bytes": 11926,
+      "sha256": "741042e9259017ce060d3cb423244c05a3dbd9e62a0243d3cf337423db7afda4"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -48,8 +48,8 @@
     },
     {
       "name": "../full-board-budget-3200/install-diagnostic.mjs",
-      "bytes": 6623,
-      "sha256": "0910a66f700de9aaad9d8d922231ca1c5e8fed18ae4b0bf295c569dc6491ee21"
+      "bytes": 6642,
+      "sha256": "160e0f74cf5e9afbce05202147c5254b4ea83e1139309c16ba7d2ed43c4c9f5e"
     },
     {
       "name": "../full-board-budget-3200/candidate-proof.json",
@@ -58,10 +58,16 @@
     },
     {
       "name": "../full-board-budget-3200/experiment.json",
-      "bytes": 3712,
-      "sha256": "c4165e2d472929338da0bc947e2ad38bf61d227a21486025f453a474a4b10473"
+      "bytes": 4882,
+      "sha256": "54692dc5160c959aff1a005e139844159d1be9178ec1525cfafcbcf946045bac"
+    },
+    {
+      "name": "report.py",
+      "bytes": 4607,
+      "sha256": "a72d3bf9a2b9b190bd9275ef2eb017fbf92ed44ff18a53a023e0ecbd4b2bebe6"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
-  "budgetSufficiencyDiagnostic": "Explicit diagnostic override: double only the existing solveGraph base allowance2M\u21924M. Original graph/effort scaling and derived parent/conditional-final/portfolio formulas remain, so allowances propagate. No live guard, new observer, weights, legality or solver changes. External deadlines remain900/960/180seconds. No production fix claim."
+  "diagnosticInstrumentation": "Inherited published-instance lifecycle observer, identical in all four lanes. The observer adds no routing behavior. Matched external-window changes and the budget-lane-only source override are declared separately; timings include observation overhead.",
+  "budgetSufficiencyDiagnostic": "Budget lanes double one original solveGraph coefficient2M\u21924M, preserving existing scaling/derived formulas; published lanes retain original source. All four lanes now use matched1800/1860/180second capture/hard/assessment limits, versus prior900/960/180. No live guard, new observer, weights, legality, effort or solver change. No production fix claim.",
+  "windowComparisonDiagnostic": "The shared harness window is deliberately changed to1800/1860/180seconds in all four lanes. The unchanged AR applier field externalDeadlinesChanged:false describes only the routing-module patch, not the harness. Prior900/960runs are context only."
 }

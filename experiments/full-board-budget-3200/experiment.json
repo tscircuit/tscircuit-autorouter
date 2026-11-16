@@ -1,27 +1,48 @@
 {
   "schemaVersion": 1,
   "frozen": true,
-  "name": "budget-sufficiency-diagnostic",
+  "name": "matched-long-window-budget-sufficiency-diagnostic",
   "diagnosticOnly": true,
   "productionFixProposed": false,
-  "controlCommit": "102c27644a53cf02861199d38608a9931dbef25d",
   "cases": [
     {
       "id": "glider",
+      "lane": "published",
       "cohort": "spaced",
       "mode": "phased",
       "fanout": false,
-      "captureDeadlineMs": 900000,
-      "hardDeadlineMs": 960000,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
       "assessmentDeadlineMs": 180000
     },
     {
       "id": "imx6",
+      "lane": "published",
       "cohort": "spaced",
       "mode": "phased",
       "fanout": false,
-      "captureDeadlineMs": 900000,
-      "hardDeadlineMs": 960000,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "glider",
+      "lane": "budget-sufficiency-diagnostic",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "imx6",
+      "lane": "budget-sufficiency-diagnostic",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 1800000,
+      "hardDeadlineMs": 1860000,
       "assessmentDeadlineMs": 180000
     }
   ],
@@ -93,7 +114,19 @@
     "neutralAssessmentOriginalARResolved": true,
     "noRoutingExecuted": true
   },
-  "scope": "Diagnostic constant applies to every native Tiny solveGraph invocation in these two full boards, including earlier and later phases, not only the named failure phases. Exactly one original allowance coefficient doubles. Existing effort/graph scale, portfolio, parent and conditional final-child formulas remain unchanged and propagate the increase. No live-reachability guard or new census observer.",
-  "interpretation": "Diagnostic only: test shared-work budget sufficiency. This is not a production fix, performance comparison or automatic authorization for another cap. Actual native connectivity, physical findings, phase progress and deadline outcomes must all be reported.",
-  "assessment": "Original Core/helper prefix and helper-private original AR dependency preserved. Authentic source/count/physical assessment unchanged."
+  "scope": "Only budget lanes replace the existing2M solveGraph coefficient with4M. It applies across every native Tiny phase in those two lanes and propagates existing formulas. Published lanes keep untouched2M source. All four lanes share the new1800/1860/180second external window; earlier900/960runs are context only.",
+  "interpretation": "Diagnostic full-output qualification only. Compare freshly run published2M versus one-byte4M under matched1800/1860/180second limits. No inference of gain from the longer window alone, no new algorithm and no production fix proposal.",
+  "assessment": "Original Core/helper prefix and helper-private original AR dependency preserved. Authentic source/count/physical assessment unchanged.",
+  "publishedSourceControlCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "windowChange": {
+    "previousDiagnosticRun": 43910332163,
+    "previousCaptureDeadlineMs": 900000,
+    "previousHardDeadlineMs": 960000,
+    "captureDeadlineMs": 1800000,
+    "hardDeadlineMs": 1860000,
+    "assessmentDeadlineMs": 180000,
+    "identicalAcrossAllFourLanes": true
+  },
+  "sourceOverrideDeadlineScope": "The unchanged applier proof externalDeadlinesChanged:false describes ONLY the one-byte AR routing patch, which contains no external timers. The shared harness deliberately changes to1800/1860/180seconds in every lane; this is explicitly different from the prior900/960/180window.",
+  "baseHarnessCommit": "425dc4c18434c748e074626d24380bb840244b15"
 }

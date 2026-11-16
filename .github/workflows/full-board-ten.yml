@@ -1,8 +1,8 @@
-name: Published3200 spaced budget-sufficiency diagnostic
+name: Published3200 matched long-window budget diagnostic
 
 on:
   push:
-    branches: [bench/full-board-budget-sufficiency-3200]
+    branches: [bench/full-board-budget-window-3200]
 
 permissions:
   contents: read
@@ -14,9 +14,11 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 4
       matrix:
         include:
+          - { board: glider, experiment: published, cohorts: "spaced" }
+          - { board: imx6, experiment: published, cohorts: "spaced" }
           - { board: glider, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
           - { board: imx6, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
     env:
@@ -80,11 +82,12 @@ jobs:
 
       - name: Install exact private AR budget diagnostic
         id: budget
+        if: matrix.experiment == 'budget-sufficiency-diagnostic'
         run: bun experiments/full-board-budget-3200/install-diagnostic.mjs "$FULL_BOARD_ROOT" "$BOARD"
 
       - name: Run spaced full circuit
         id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && steps.budget.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && (matrix.experiment == 'published' || (matrix.experiment == 'budget-sufficiency-diagnostic' && steps.budget.outcome == 'success')) }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts

@@ -7,6 +7,10 @@ const [caseFile, outputArg, executionMode = "full"] = process.argv.slice(2)
 if (!caseFile || !outputArg) throw new Error("Usage: run-one.ts CASE.json OUTPUT")
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
 const task = JSON.parse(readFileSync(caseFile, "utf8"))
+for (const key of ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"]) {
+  if (!Number.isFinite(task[key]) || task[key] <= 0) throw new Error(`Invalid task deadline ${key}`)
+}
+if (task.hardDeadlineMs <= task.captureDeadlineMs) throw new Error("Hard deadline must exceed the capture deadline")
 const output = resolve(outputArg)
 mkdirSync(output, { recursive: true })
 const environment = { ...process.env }
@@ -22,7 +26,7 @@ const sample = setInterval((): void => {
     if (match) peakRssKb = Math.max(peakRssKb, Number(match[1]))
   } catch (error: any) { if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error }
 }, 1000)
-const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
+const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, task.hardDeadlineMs)
 const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
@@ -47,7 +51,7 @@ if (task.budgetDiagnostic) {
   const digest = (path: string): string => createHash("sha256").update(readFileSync(path)).digest("hex")
   if (digest(proof.originalEntry) !== proof.inputSha256 || digest(proof.candidateEntry) !== proof.outputSha256 || digest(proof.originalCoreEntry) !== proof.originalCoreSha256 || digest(proof.helperProofPath) !== proof.helperProofSha256 || digest(proof.helperEntry) !== proof.helperEntrySha256) throw new Error("Budget diagnostic or original assessment provenance changed during render")
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], budgetDiagnostic: task.budgetDiagnostic ?? null, diagnosticOnly: Boolean(task.diagnosticOnly), routingSourceOverride: Boolean(task.routingSourceOverride), mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], budgetDiagnostic: task.budgetDiagnostic ?? null, diagnosticOnly: Boolean(task.diagnosticOnly), routingSourceOverride: Boolean(task.routingSourceOverride), mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: task.captureDeadlineMs, hardDeadlineMs: task.hardDeadlineMs, assessmentDeadlineMs: task.assessmentDeadlineMs, longWindowDiagnostic: task.longWindowDiagnostic, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false
@@ -74,7 +78,7 @@ if (existsSync(compressedCircuit)) {
   }
   const auditLog = openSync(join(output, "audit.log"), "w")
   const audit = Bun.spawn(args, { cwd: task.assessmentRoot, env: auditEnvironment, stdout: auditLog, stderr: auditLog })
-  const auditTimer = setTimeout((): void => { auditTimedOut = true; audit.kill("SIGKILL") }, 180000)
+  const auditTimer = setTimeout((): void => { auditTimedOut = true; audit.kill("SIGKILL") }, task.assessmentDeadlineMs)
   auditExitCode = await audit.exited
   clearTimeout(auditTimer)
   closeSync(auditLog)
