@@ -147,6 +147,12 @@ def main() -> None:
         run([*install_command, "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], base)
     else:
         run([*install_command, "--ignore-scripts", "--backend", "copy"], base)
+    # The repository's test preload imports Sharp. Install its native image
+    # library before inventory/copy so both lanes receive identical bytes.
+    sharp = (base / "node_modules/sharp").resolve()
+    if not sharp.is_relative_to(base / "node_modules"):
+        raise RuntimeError("Sharp installer escaped the isolated source graph")
+    run(["bun", "run", "install"], sharp)
     if (base / "package.json").read_bytes() != (candidate / "package.json").read_bytes():
         raise RuntimeError("Dependency setup changed the AR source manifest")
     shutil.copyfile(base / "bun.lock", artifact / "bun.lock")
