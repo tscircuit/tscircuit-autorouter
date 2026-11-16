@@ -1,0 +1,48 @@
+name: Review dataset18 native copper equivalence
+on:
+  push:
+    branches: [codex/ddr1110-snapshot-equivalence]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: refresh1110-dataset18
+          run-id: 43931330769
+          github-token: ${{ github.token }}
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          name: indexed-escapes-dataset18
+          run-id: 43931998522
+          github-token: ${{ github.token }}
+          path: after
+      - name: Compare every native SVG and export sample 12
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,io,json,re,zipfile
+          from pathlib import Path
+          reports={}
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for variant in ['before','after']:
+                  html=(Path(variant)/'benchmark-snapshots.html').read_text()
+                  reports[variant]={}
+                  for card in re.findall(r'<section class="snapshot">(.*?)</section>',html,re.S):
+                      sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',card).group(1))
+                      svg=re.search(r'<svg\b.*?</svg>',card,re.S).group(0)
+                      reports[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+                      if sample==12: archive.writestr(f'sample12-{variant}.svg',svg)
+                  assert len(reports[variant])==16
+              equal={sample: reports['before'][sample]==reports['after'][sample] for sample in reports['before']}
+              print('DATASET18_SVG_EQUIVALENCE',json.dumps({'hashes':reports,'equal':equal},sort_keys=True))
+              archive.writestr('equivalence.json',json.dumps({'hashes':reports,'equal':equal},indent=2))
+          print('NATIVE_DATASET18_SVGS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('NATIVE_DATASET18_SVGS_END')
+          PY
