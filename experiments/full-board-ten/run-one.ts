@@ -13,6 +13,27 @@ for (const key of ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"
 if (task.hardDeadlineMs <= task.captureDeadlineMs) throw new Error("Hard deadline must exceed capture deadline")
 const cpuProfile = process.env.FULL_BOARD_CPU_PROFILE === "1"
 if (cpuProfile && (Bun.version !== "1.4.3" || task.id !== "imx6" || task.cohort !== "spaced" || executionMode !== "full" || task.experiment !== "published")) throw new Error("CPU diagnostic requires Bun1.4.3 and published iMX6 spaced")
+const cpuProfileIntervalUs = 10000
+const memoryEventsPath = "/sys/fs/cgroup/memory.events"
+const memoryEventKeys = ["low", "high", "max", "oom", "oom_kill", "oom_group_kill"]
+type MemoryEventsSnapshot = { status: "available"; observedUtc: string; counters: Record<string, number> } | { status: "unavailable"; observedUtc: string; reason: string }
+const readMemoryEvents = (): MemoryEventsSnapshot => {
+  const observedUtc = new Date().toISOString()
+  try {
+    const counters: Record<string, number> = {}
+    for (const line of readFileSync(memoryEventsPath, "utf8").trim().split("\n")) {
+      const [key, raw] = line.trim().split(/\s+/)
+      if (!memoryEventKeys.includes(key)) continue
+      const value = Number(raw)
+      if (!Number.isSafeInteger(value) || value < 0) throw new Error(`Invalid memory.events counter ${key}`)
+      counters[key] = value
+    }
+    if (!("oom" in counters) || !("oom_kill" in counters)) throw new Error("memory.events omits OOM counters")
+    return { status: "available", observedUtc, counters }
+  } catch (error) {
+    return { status: "unavailable", observedUtc, reason: (error instanceof Error ? error.message : String(error)).slice(0, 200) }
+  }
+}
 const output = resolve(outputArg)
 mkdirSync(output, { recursive: true })
 const profileDirectory = join(output, "cpu-profile")
@@ -22,7 +43,8 @@ delete environment.FULL_BOARD_CORE_MODULE
 delete environment.FULL_BOARD_COPPER_MODULE
 const started = performance.now()
 const log = openSync(join(output, "worker.log"), "w")
-const profileArgs = cpuProfile ? ["--cpu-prof", `--cpu-prof-dir=${profileDirectory}`, "--cpu-prof-name=render.cpuprofile"] : []
+const profileArgs = cpuProfile ? ["--cpu-prof", `--cpu-prof-dir=${profileDirectory}`, "--cpu-prof-name=render.cpuprofile", `--cpu-prof-interval=${cpuProfileIntervalUs}`] : []
+const memoryEventsBefore = cpuProfile ? readMemoryEvents() : null
 const worker = Bun.spawn([process.execPath, ...profileArgs, join(import.meta.dir, "render-published.tsx"), resolve(caseFile), output, executionMode], { cwd: import.meta.dir, env: environment, stdout: log, stderr: log })
 let peakRssKb = 0, hardTimedOut = false
 const sample = setInterval((): void => {
@@ -33,6 +55,7 @@ const sample = setInterval((): void => {
 }, 1000)
 const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, task.hardDeadlineMs)
 const renderExitCode = await worker.exited
+const memoryEventsAfter = cpuProfile ? readMemoryEvents() : null
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
@@ -51,7 +74,15 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: task.captureDeadlineMs, hardDeadlineMs: task.hardDeadlineMs, assessmentDeadlineMs: task.assessmentDeadlineMs, cpuProfile: cpuProfile ? { scope: "render-worker-only", bunVersion: Bun.version, file: "cpu-profile/render.cpuprofile", samplingInterval: "Bun default, no override", routingChanged: false } : null, memoryCap: null }
+const cgroupMemoryEvents = cpuProfile ? {
+  path: memoryEventsPath, before: memoryEventsBefore, after: memoryEventsAfter,
+  deltas: memoryEventsBefore?.status === "available" && memoryEventsAfter?.status === "available" ? Object.fromEntries(memoryEventKeys.map(key => {
+    const before = memoryEventsBefore.counters[key], after = memoryEventsAfter.counters[key]
+    return [key, before !== undefined && after !== undefined && after >= before ? after - before : null]
+  })) : null,
+  interpretation: "Shared hierarchical cgroup counters around render only; positive oom_kill delta establishes an event in this scope, not this worker's identity. Zero cannot exclude OOM outside this scope; missing or reset counters yield null deltas.",
+} : null
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: task.captureDeadlineMs, hardDeadlineMs: task.hardDeadlineMs, assessmentDeadlineMs: task.assessmentDeadlineMs, cpuProfile: cpuProfile ? { scope: "render-worker-only", bunVersion: Bun.version, file: "cpu-profile/render.cpuprofile", samplingIntervalUs: cpuProfileIntervalUs, routingChanged: false } : null, cgroupMemoryEvents, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false

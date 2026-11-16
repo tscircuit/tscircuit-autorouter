@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11894,
-      "sha256": "837fec22524d35847e85382a66741ed261481928f489ad3bfafe0b64e461b0a4"
+      "bytes": 14023,
+      "sha256": "434d70aa6afa3eb560a51812ed2488d70f68ecb83eb25ae858e7e6c87f7a162f"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -47,5 +47,5 @@
       "sha256": "fc1075327d5c0369875a255b237c065307092e0aa9797fe5ac15043a7c85aeb2"
     }
   ],
-  "diagnosticInstrumentation": "Existing published-instance lifecycle observers unchanged. One standard Bun 1.4.3 CPU profile of the published iMX6 spaced render worker; full-worker sample shares only, with no exact phase clock alignment or inferred GC share. External capture/hard/assessment windows are 1800/1860/180 seconds; routing input/options/solver limits are unchanged. Timings include profiler and observation overhead. The raw profile is preserved only in the ordinary artifact."
+  "diagnosticInstrumentation": "Existing published-instance lifecycle observers unchanged. One standard Bun 1.4.3 CPU profile of the published iMX6 spaced render worker, requesting a 10000 microsecond (10ms) sampling interval; full-worker sample shares only, with no exact phase clock alignment or inferred GC share. Bounded cgroup memory.events snapshots immediately before and after the render child record shared-scope OOM counter deltas without asserting worker-specific cause. External capture/hard/assessment windows are 1800/1860/180 seconds; routing input/options/solver limits are unchanged. Timings include profiler and observation overhead. The raw profile is preserved only in the ordinary artifact."
 }
