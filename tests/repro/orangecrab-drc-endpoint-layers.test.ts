@@ -40,7 +40,9 @@ test("captures opposite-layer pad aliases in the routed OrangeCrab plane phase",
   const graphics = convertSrjToGraphicsObject(
     {
       ...input,
-      connections: groups.map((name) => connections.find((c) => c.name === name)!),
+      connections: groups.map(
+        (name) => connections.find((c) => c.name === name)!,
+      ),
       traces: traces.map((trace) => ({
         ...trace,
         connection_name: connMap.getNetConnectedToId(trace.connection_name)!,
