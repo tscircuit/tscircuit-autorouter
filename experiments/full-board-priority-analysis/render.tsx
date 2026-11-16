@@ -129,6 +129,7 @@ const algorithmFn: AutoroutingPhaseProps["algorithmFn"] = async (input): Promise
       captured.add("joint-start")
       captureJson("joint-start", { params: joint.params, stats: joint.stats,
         state: scalarState(joint), child: scalarState(joint.activeSubSolver) })
+      if (process.env.FULL_BOARD_STOP_AFTER_JOINT === "1") throw new Error("Diagnostic stop after capturing joint DRC input")
     }
     if (id !== "icepi") return
     const queue = [runtime.activeSubSolver, runtime.portPointPathingSolver, runtime.portPointPathingSolver?.tinyPipelineSolver]

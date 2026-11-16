@@ -1,7 +1,7 @@
-name: Rerun full DDR boards on released router 1112 and core 2399
+name: Capture joint DRC inputs before repair work
 on:
   push:
-    branches: [codex/ddr-refresh-1112]
+    branches: [codex/joint-drc-capture-1112]
 permissions:
   contents: read
 jobs:
@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+        board: [orangecrab, imx6]
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     steps:
@@ -38,19 +38,17 @@ jobs:
           BOARD_ID: ${{ matrix.board }}
           FULL_BOARD_CASE_IDS: ${{ matrix.board }}
           FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_STOP_AFTER_JOINT: "1"
         working-directory: experiments/full-board-priority-analysis
         run: |
           export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
           export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
           export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
-          BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
-            --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
-            --out "$GITHUB_WORKSPACE/results/latest/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/latest/ddr/$BOARD_ID/"*.log; exit 1; }
-          FULL_BOARD_VARIANT=latest bun plane-suite.ts ../../results/latest/full
+          FULL_BOARD_VARIANT=diagnostic bun plane-suite.ts ../../results/diagnostic/full phased
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh1112-${{ matrix.board }}
+          name: joint-capture-1112-${{ matrix.board }}
           path: results
           retention-days: 14
       - name: Export native results and phase inputs for analysis
@@ -65,39 +63,8 @@ jobs:
               for path in Path('results').rglob('*'):
                   if path.is_file() and (path.name in names or path.name.endswith('.srj.json') or path.name.endswith('.capture.json.gz')):
                       archive.writestr(str(path.relative_to('results')),path.read_bytes())
-          print('REFRESH1112_BOARD_EVIDENCE_BEGIN')
+          print('JOINT_CAPTURE1112_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('REFRESH1112_BOARD_EVIDENCE_END')
+          print('JOINT_CAPTURE1112_EVIDENCE_END')
           PY
-  dataset18:
-    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: c5059c7e768ed23ba29eea7271423a778d7f1027
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - run: bun install --ignore-scripts
-      - name: Measure the complete released dataset18 baseline
-        env:
-          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
-        run: bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: refresh1112-dataset18
-          path: |
-            benchmark-result.json
-            benchmark-result.txt
-            benchmark-snapshots.html
-      - name: Export the measured report
-        if: always()
-        run: |
-          python3 - <<'PYREPORT'
-          import json
-          from pathlib import Path
-          print('REFRESH1112_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
-          PYREPORT
