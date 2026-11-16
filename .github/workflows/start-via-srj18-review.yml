@@ -1,0 +1,67 @@
+name: Review start-via sample12 geometry and counterbalanced timings
+on:
+  push:
+    branches: [codex/start-via-srj18-review]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: f2c9fdc76996abd6c9b059cdf2b61d3e037dfd6c
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: b16794703e777c4949db8ddfa6d1e21cdc9bd8e1
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install both pinned routers
+        run: |
+          for variant in base fixed; do
+            (cd "$variant" && bun install --ignore-scripts)
+            cp scripts/benchmark/reviewStartViaSample12.ts "$variant/scripts/benchmark/"
+          done
+      - name: Counterbalance samples 12 and 14
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for pass in base-1 fixed-1 fixed-2 base-2; do
+            variant="${pass%-*}"
+            (cd "$variant" && bash ./benchmark.sh --pipeline 9 --dataset 18 --sample-numbers 12,14 --concurrency 1 --sample-timeout 240s)
+            mkdir -p "results/$pass"
+            cp "$variant/benchmark-result.json" "$variant/benchmark-snapshots.html" "results/$pass/"
+          done
+      - name: Capture accepted sample 12 output and simplification geometry
+        run: |
+          for variant in base fixed; do
+            (cd "$variant" && bun scripts/benchmark/reviewStartViaSample12.ts "../results/$variant-geometry")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: start-via-srj18-reviewed
+          path: results
+          retention-days: 14
+      - name: Export review evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,json,zipfile
+          from pathlib import Path
+          for path in Path('results').rglob('benchmark-result.json'):
+              print('ABBA_RESULT',path.parent.name,json.dumps(json.loads(path.read_text()),separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').glob('*-geometry/*'):
+                  archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('SAMPLE12_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('SAMPLE12_EVIDENCE_END')
+          PY
