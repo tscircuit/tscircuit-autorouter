@@ -1,0 +1,86 @@
+{
+  "frozen": true,
+  "name": "dataset18-published-final-recovery-diagnostic-3203",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "nativePublicationQualificationPending": true,
+  "controlCommit": "d612311a273084c49f6384a63183b08d08f30569",
+  "harnessCommit": "c30d99fb8a7cb6f32a1a238759f6fe19a2d2d8d9",
+  "datasetCommit": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "runtime": {
+    "tscircuit": "0.0.3203",
+    "@tscircuit/core": "0.0.2396",
+    "@tscircuit/eval": "0.0.1790",
+    "@tscircuit/capacity-autorouter": "0.0.1109"
+  },
+  "adapterSha256": "c66c9608f2d0a98dde792c093c7fc46da20c8e0ebd0c046b30219cb61c8ec73d",
+  "baseEntrySha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+  "diagnosticEntrySha256": "4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f",
+  "scenarioCount": 16,
+  "sampleTimeoutMs": 360000,
+  "requestedConcurrency": 4,
+  "threadsPerSample": 1,
+  "memoryGuardUnchanged": true,
+  "passes": [
+    "base",
+    "pr"
+  ],
+  "sameVmSequential": true,
+  "sourceBuildPerformed": false,
+  "publishedRoutingDependencyGraphUnchanged": true,
+  "commonHarnessChanges": {
+    "scripts/benchmark/benchmark-run-task.ts": [
+      "autorouterModule import",
+      "convertSrjToGraphicsObject import"
+    ],
+    "scripts/benchmark/index.ts": [
+      "AUTOROUTER_VERSION import"
+    ]
+  },
+  "liveReachabilityCandidateIncluded": false,
+  "perCaseReporting": [
+    "didSolve",
+    "relaxedDrcPassed",
+    "drcErrorCount",
+    "didTimeout",
+    "sampleTimeoutMs",
+    "elapsedTimeMs",
+    "peakRssBytes",
+    "viaCount",
+    "traceLintIssueCounts",
+    "stageTiming",
+    "errorPhaseName",
+    "error"
+  ],
+  "status": "HELD: preparation only; no commit, push or routing until latest native gain and root review.",
+  "newSolverOrStrategyAdded": false,
+  "commonImportBoundaryAdaptation": true,
+  "reviewedPairHarnessCommit": "672bebeeaf6eb3833d4ec5fdb63573c0baccfa75",
+  "reviewedPairRun": "43921684929",
+  "changedByteOffsets": [
+    2068963
+  ],
+  "main2MCoefficientUnchanged": true,
+  "preparedConditionalFinalMultiplier": {
+    "before": 2,
+    "after": 4
+  },
+  "ordinaryGreedy50kUnchanged": true,
+  "nonPreparedFactoryUnchanged": true,
+  "sourceOverrideScope": "Only Prepared conditional final child multiplier2\u21924; outer allowance and eligibility/attempt order unchanged",
+  "evaluationGraph": "Exact c30 source helpers; resolved once on CI and copied identically; never used as selected routing graph",
+  "preparationValidation": {
+    "runtimeInstallPerformed": false,
+    "candidateEntryRetained": false,
+    "candidateImportPerformed": false,
+    "solverConstructionPerformed": false,
+    "routingPerformed": false,
+    "commitOrPushPerformed": false
+  },
+  "runtimeEntrySha256": {
+    "tscircuit": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+    "@tscircuit/core": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+    "@tscircuit/eval": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+    "@tscircuit/capacity-autorouter": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2"
+  }
+}
