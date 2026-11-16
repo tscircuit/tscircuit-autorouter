@@ -1,57 +1,57 @@
 {
-  "mainVersion": "0.0.3198",
+  "mainVersion": "0.0.3199",
   "packages": [
     {
       "label": "tscircuit",
       "name": "tscircuit",
-      "version": "0.0.3198",
-      "gitHead": "9643afb63b6b3db4d9cc9866903d73d81bfa80b7",
+      "version": "0.0.3199",
+      "gitHead": "d08e476b29a5b3833231d13c0b5153fdcd76b778",
       "entryRelative": "dist/index.js",
       "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
-      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3198.tgz",
-      "integrity": "sha512-aQhQ6PmD0wE7eJ2oiDb+wBkGEOSpaeUMog+CN6FxixM5udaugV3K+XsL1arjsSxpINJMJHPpFYG1i1t5wVIPJQ=="
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3199.tgz",
+      "integrity": "sha512-J8HggxR++tf2m1q61SFcEPMWcdIjc4I8RucHiUiEo2ee6Z+t9+gOjFSTdNMVy7vVVhOK8DDoRIZQ8+gc2vFsew=="
     },
     {
       "label": "core",
       "name": "@tscircuit/core",
-      "version": "0.0.2392",
-      "gitHead": "67c124df536e17640ec4b55c8a3f8d54ad449033",
+      "version": "0.0.2394",
+      "gitHead": "312aa419d8e7ce018eb826d6f48754880f011e58",
       "entryRelative": "dist/index.js",
-      "entrySha256": "cdd8fd63614327e7037617f62c0cc732861be5e969e53bdb99c0b0831e493fd1",
-      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2392.tgz",
-      "integrity": "sha512-S4ghyK7ulUv49GUThZm28G6nV1vyYO2sl/96L1kSEWumzof4li2JnZNL6H/pw6rWJ/eXOFV2VSKLvfH+zyzfjQ=="
+      "entrySha256": "ca0766b386f4e2d60237c49ef9d1dfe91cb385cfa33ff828fa7b4d8b764d7b0e",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2394.tgz",
+      "integrity": "sha512-A2BTq2tHMtjmAPfyTUVniZJS5QGK7czMmoBQGdgxnIFmKe2pm1fkCKlLX1tvkj4wLUf7vG1nnxcPeQMcGEZjnQ=="
     },
     {
       "label": "eval",
       "name": "@tscircuit/eval",
-      "version": "0.0.1786",
-      "gitHead": "cf88bb48c8c2e2d7d455256543859b50799608be",
+      "version": "0.0.1788",
+      "gitHead": "3e682e3b7d0bc6fe89f60ad5bb19f208e9067257",
       "entryRelative": "dist/lib/index.js",
       "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
-      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1786.tgz",
-      "integrity": "sha512-Z0ppiizP+Pqo/OYO3YejIVlV51VCcRIs4P6VcmSwuObquFHTWgX2DsYi+zUK+EiOTPzVJ7OZr6UKtEyJTTpwkw=="
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1788.tgz",
+      "integrity": "sha512-4xtJqq+X9meJxVfrzIuUJJDfx5Eh3nIZYpHIwJWxVvCAE2athMqVhDmGd8Ynm3i8hw2sNs35g0Zc1q2fH7EBnA=="
     },
     {
       "label": "autorouter",
       "name": "@tscircuit/capacity-autorouter",
-      "version": "0.0.1104",
-      "gitHead": "1e1213d8a3b7c25e8965293a68611b02d9098cab",
+      "version": "0.0.1106",
+      "gitHead": "3b55dbee3a605b202f814567c9e972efaf93fb9f",
       "entryRelative": "dist/index.js",
-      "entrySha256": "39a5ec8c1750d4e1d236364e69732412631e17a21e2533dbba68bc94b6169ef5",
-      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1104.tgz",
-      "integrity": "sha512-Kn9s22FEzTrPjX7Cc6CjABIboR0ebso1g6VnDMJrfTeev6zD0SQPfDhuK5ftzh1XW4dRp6i9mknOMd4Dqly7Ng=="
+      "entrySha256": "ef43c68a0996dc64e84ae7e0135e587ffea5e60d16b812f25707df0bf4c90749",
+      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1106.tgz",
+      "integrity": "sha512-DrIBbEj0rnTbYPQ4cjXRiUKli3ZBzedNgwaVqLJ/j7DEfWAdhabGplbm2/G8MdZ2byD7PrVfrmUpX1pyq2jRKg=="
     }
   ],
   "additionalChangedPackages": [
     {
       "label": "runframe",
       "name": "@tscircuit/runframe",
-      "version": "0.0.3257",
-      "gitHead": "67cd2b1387543d036e1fb01db8af4e91f8c300ab",
+      "version": "0.0.3259",
+      "gitHead": "88f31e920dff22eb3fd9f423c479aba565429411",
       "entryRelative": "dist/preview.js",
-      "entrySha256": "476bb023bf69d9e3f52b3abbe5653fd49d8a9e46571a93cf6882dd2b214b82b6",
-      "tarball": "https://registry.npmjs.org/@tscircuit/runframe/-/runframe-0.0.3257.tgz",
-      "integrity": "sha512-+6ZuRkJgN6KvaC+sTDdWNlTOUzekSgSdO9EZ7IEVsrIhABT3dpdhjfG8EcQVZal+HwJfekHTq+czVWgJ4wmn4A=="
+      "entrySha256": "f3407e72984d317652ac99e2da3db45369e82367e24372971d15828c3548cbd3",
+      "tarball": "https://registry.npmjs.org/@tscircuit/runframe/-/runframe-0.0.3259.tgz",
+      "integrity": "sha512-0Xv5Rpk6IuL4tzQUDItbxWSxZp0hNsMh6cbaxyjJda8rVUuweDkFUCJP8D9fn81utW/JX9uSfyzCN/eKPJw6CQ=="
     },
     {
       "label": "circuit-json",
