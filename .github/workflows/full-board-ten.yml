@@ -1,8 +1,8 @@
-name: Published3197 full-board ten-case benchmark
+name: Published3198 full-board ten-case benchmark
 
 on:
   push:
-    branches: [bench/full-board-ten-3197-20261116]
+    branches: [bench/full-board-ten-3198-20261116]
 
 permissions:
   contents: read
@@ -93,6 +93,7 @@ jobs:
         if: ${{ always() && matrix.experiment == 'published' }}
         uses: actions/upload-artifact@v4
         with:
+          include-hidden-files: true
           name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
           path: .full-board-run/results/${{ matrix.board }}/original
           if-no-files-found: warn
@@ -112,6 +113,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          include-hidden-files: true
           name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
           path: .full-board-run/results/${{ matrix.board }}/spaced
           if-no-files-found: warn
@@ -127,6 +129,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          include-hidden-files: true
           name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
           path: |
             .full-board-run/results/${{ matrix.board }}/summary.json
