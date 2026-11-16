@@ -11,6 +11,7 @@ import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacl
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
+import { getDifferentialPairConstraintError } from "lib/utils/getDifferentialPairConstraintError"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
@@ -25,6 +26,11 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   }
 
   override _step(): void {
+    this.error = getDifferentialPairConstraintError(this.inputSrj)
+    if (this.error) {
+      this.failed = true
+      return
+    }
     this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
     if (this.error) {
       this.failed = true
