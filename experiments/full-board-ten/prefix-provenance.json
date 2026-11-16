@@ -1,0 +1,95 @@
+{
+  "purpose": "Bounded actual-input iMX6 spaced byte1 CPU diagnostic; no completion or speedup claim",
+  "baseCommit": "d612311a273084c49f6384a63183b08d08f30569",
+  "sourceArtifact": {
+    "repository": "tscircuit/tscircuit-autorouter",
+    "runId": 43929516030,
+    "headSha": "4faeb09514467a8b0804688328bc393206c4b614",
+    "artifactId": 14259406094,
+    "name": "full-board-imx6-published-spaced-1",
+    "archiveSha256": "d991063caf8773c76c95b202d08374c61416f7241dfdc129e519fc310eb4bb42",
+    "compressedSha256": "1486908e405cf2675f22f8c69146160bc35da38e25432936c09cbea4a6a254df",
+    "rawSha256": "f86791279e8f787d434621699d8eab42d475ef4c4bd4d92a3b1f87144dc881df",
+    "progressSha256": "db5f937b9b49e63be2cafe806b5a501fe909ece1db6e8f592d344a4f20e8cd80"
+  },
+  "collection": {
+    "bun": "1.4.3",
+    "publishedRuntime": "tscircuit3203/Core2396/eval1790/AR1109",
+    "prefixMs": 120000,
+    "hardDeadlineMs": 180000,
+    "samplingIntervalUs": 10000,
+    "normalStepBatchMaximum": 200,
+    "solverOptionsChanged": false,
+    "solverMethodsReplaced": false,
+    "completionClaim": false
+  },
+  "stepInspection": {
+    "source": "@tscircuit/core@0.0.2396/dist/index.js",
+    "entrySha256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+    "generatorAdvanceLine": 122282,
+    "multiTerminalChildStepLine": 87319,
+    "multiTerminalYieldLine": 87320,
+    "conclusion": "Selected multi-terminal generator yields after each ordinary child step; it does not call blocking solve() for the whole phase. Constructor/setup and any nested synchronous step can still overrun the cooperative cutoff. The 180s containment SIGKILL does not guarantee profile flush."
+  },
+  "preparationValidation": {
+    "typescript": "Bun.Transpiler syntax only; no runtime imports or execution",
+    "workflow": "Bun.YAML parse and embedded JavaScript syntax check",
+    "python": "ast.parse",
+    "diffCheck": true,
+    "exactInputAndCoreHashes": true,
+    "inertSummary": {
+      "fixtureOnly": true,
+      "routingRuns": 0,
+      "publishedRuntimeImports": 0,
+      "remoteRuns": 0,
+      "summaryExitCode": 0,
+      "summaryOutputBytes": 3215,
+      "newProgressShapeAccepted": true,
+      "newProcessShapePresent": true,
+      "processShapeNote": "CPU summary does not read process.json; controller process reporting remains separate",
+      "selfAndInclusiveCountsCorrect": true,
+      "oneBasedPositionsCorrect": true,
+      "noGcInferenceWithoutMarkers": true,
+      "completionClaim": false
+    },
+    "priorInertNormalExit": {
+      "bun": "1.4.3",
+      "exitCode": 0,
+      "profileBytes": 1441,
+      "sampleCount": 94,
+      "profileSha256": "5a744e69f6bfea255e29c0ae93de5d19201b33dc70a2e9f83bd2529a649830b1"
+    },
+    "realRoutingRuns": 0,
+    "remoteRuns": 0,
+    "builds": 0,
+    "installs": 0
+  },
+  "files": [
+    {
+      "path": ".github/workflows/full-board-ten.yml",
+      "bytes": 5720,
+      "sha256": "9629bf5b8872b43ac7a5ff014c9bfbde951438175b2674907f257ad9608ed048"
+    },
+    {
+      "path": "experiments/full-board-ten/render-bus-prefix.ts",
+      "bytes": 10570,
+      "sha256": "efe15200e617715570fe8f9760e401f0bc8b0dd263b3ed2aa00dffecde9956c8"
+    },
+    {
+      "path": "experiments/full-board-ten/run-bus-prefix.ts",
+      "bytes": 3832,
+      "sha256": "4e5cb01818401dbc48cabf4e9da7e7729a4aae73f288aa270f38181485163865"
+    },
+    {
+      "path": "experiments/full-board-ten/summarize-cpu-profile.py",
+      "bytes": 6292,
+      "sha256": "c8b2c72f4ce5824d3f8a45b5a12cfc8a0eb468e1e95b2cea81250d38c580b0b0"
+    }
+  ],
+  "limits": [
+    "Fresh-process cold-cache prefix omits preceding byte0 history, internal wrapper visualization/callbacks and full-board work.",
+    "Existing solver budgets and acceptance behavior remain unchanged; profiling overhead can affect real-time budgets.",
+    "Whole-worker sample shares include imports and input decoding; no exact profile-to-phase clock anchor.",
+    "No full-board parity, physical completion, remaining-phase cost, speedup, or GC cost without explicit markers is established."
+  ]
+}

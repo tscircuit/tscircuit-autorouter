@@ -1,34 +1,23 @@
-name: Published3203 full-board ten-case benchmark
+name: Published3203 iMX6 byte1 CPU prefix
 
 on:
   push:
-    branches: [bench/full-board-ten-3203-20261116]
+    branches: [bench/imx6-byte1-cpu-prefix-3203]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+  prefix:
+    name: Published iMX6 byte1 diagnostic prefix
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+    timeout-minutes: 8
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_EXPERIMENT: published
 
     steps:
       - name: Checkout benchmark controller
@@ -71,79 +60,80 @@ jobs:
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
-        id: prepare
-        run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
+      - name: Verify genuine published phase artifact identity
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const repository = "tscircuit/tscircuit-autorouter"
+            const runId = 43929516030
+            const artifactId = 14259406094
+            const headSha = "4faeb09514467a8b0804688328bc393206c4b614"
+            const name = "full-board-imx6-published-spaced-1"
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: "tscircuit", repo: "tscircuit-autorouter", run_id: runId,
+              name, per_page: 100,
+            })
+            if (data.total_count !== 1 || data.artifacts.length !== 1) throw new Error("Expected exactly one genuine published phase artifact")
+            const artifact = data.artifacts[0]
+            if (artifact.id !== artifactId || artifact.name !== name || artifact.workflow_run?.id !== runId || artifact.workflow_run.head_sha !== headSha || artifact.expired !== false) throw new Error("Published phase artifact identity mismatch")
+            if (artifact.size_in_bytes !== 14582165 || artifact.digest !== "sha256:d991063caf8773c76c95b202d08374c61416f7241dfdc129e519fc310eb4bb42") throw new Error("Published phase archive identity changed")
+            const identity = {
+              repository, runId, artifactId, name, sizeInBytes: artifact.size_in_bytes,
+              digest: artifact.digest, headSha: artifact.workflow_run.head_sha, expired: artifact.expired,
+            }
+            const fs = require("node:fs")
+            const path = require("node:path")
+            const directory = path.join(process.env.FULL_BOARD_ROOT, "prefix-input")
+            fs.mkdirSync(directory, { recursive: true })
+            fs.writeFileSync(path.join(directory, "artifact-identity.json"), JSON.stringify(identity, null, 2) + "\n")
+            core.info(`PREFIX_SOURCE_ARTIFACT ${JSON.stringify(identity)}`)
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+      - name: Download genuine published phase input
+        uses: actions/download-artifact@v4
+        with:
+          name: full-board-imx6-published-spaced-1
+          run-id: 43929516030
+          repository: tscircuit/tscircuit-autorouter
+          github-token: ${{ github.token }}
+          path: .full-board-run/prefix-input
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
+      - name: Observe bounded published byte1 prefix
+        id: prefix
+        run: >-
+          bun experiments/full-board-ten/run-bus-prefix.ts
+          "$FULL_BOARD_ROOT/prefix-input"
+          "$FULL_BOARD_ROOT/results/imx6/byte1-prefix"
+
+      - name: Summarize prefix CPU samples
+        if: always()
+        run: >-
+          python3 experiments/full-board-ten/summarize-cpu-profile.py
+          "$FULL_BOARD_ROOT/results/imx6/byte1-prefix"
+
+      - name: Preserve prefix profile and diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
+          name: imx6-byte1-prefix-profile-${{ github.run_attempt }}
+          path: .full-board-run/results/imx6/byte1-prefix
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+      - name: Preserve small runtime and source provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: imx6-byte1-prefix-provenance-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/prefix-input/artifact-identity.json
             .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/harness-provenance.json
+            experiments/full-board-ten/prefix-provenance.json
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true
