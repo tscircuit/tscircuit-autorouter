@@ -3,7 +3,7 @@ import { MultiHeadPolyLineIntraNodeSolver3 } from "lib/solvers/HighDensitySolver
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("polyline candidates can use the requested width in a narrow channel", (): void => {
+test("polyline candidates enforce the requested terminal clearance", (): void => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "narrow-channel",
     center: { x: 0, y: 0 },
@@ -11,15 +11,15 @@ test("polyline candidates can use the requested width in a narrow channel", (): 
     height: 0.6,
     availableZ: [0],
     portPoints: [
-      { x: -0.5, y: -0.12, z: 0, connectionName: "signal_a" },
-      { x: 0.5, y: -0.12, z: 0, connectionName: "signal_a" },
-      { x: -0.5, y: 0.12, z: 0, connectionName: "signal_b" },
-      { x: 0.5, y: 0.12, z: 0, connectionName: "signal_b" },
+      { x: -0.5, y: -0.13, z: 0, connectionName: "signal_a" },
+      { x: 0.5, y: -0.13, z: 0, connectionName: "signal_a" },
+      { x: -0.5, y: 0.13, z: 0, connectionName: "signal_b" },
+      { x: 0.5, y: 0.13, z: 0, connectionName: "signal_b" },
     ],
   }
   const portfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: node,
-    traceWidth: 0.119,
+    traceWidth: 0.15,
     obstacleMargin: 0.119,
     viaDiameter: 0.4,
   })
@@ -31,6 +31,13 @@ test("polyline candidates can use the requested width in a narrow channel", (): 
     throw new Error("Expected the polyline portfolio candidate")
   }
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  expect(solver.solvedRoutes).toHaveLength(2)
+  const terminalClearance =
+    Math.abs(node.portPoints[2]!.y - node.portPoints[0]!.y) -
+    solver.solvedRoutes[0]!.traceThickness
+  expect(terminalClearance).toBeLessThan(
+    portfolio.constructorParams.obstacleMargin!,
+  )
 })
