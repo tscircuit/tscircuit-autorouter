@@ -1,25 +1,25 @@
 {
   "runtimePackages": [
-    "tscircuit@0.0.3195",
-    "@tscircuit/core@0.0.2388",
+    "tscircuit@0.0.3196",
+    "@tscircuit/core@0.0.2389",
     "@tscircuit/eval@0.0.1783",
-    "@tscircuit/capacity-autorouter@0.0.1102"
+    "@tscircuit/capacity-autorouter@0.0.1103"
   ],
   "files": [
     {
       "name": "prepare-cases.ts",
-      "bytes": 6127,
-      "sha256": "e690e02b0dffc7f9e3b88386bbb85bf428d37f3847d64e4376bb1dbf3a1f9b31"
+      "bytes": 6254,
+      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330"
     },
     {
       "name": "render-published.tsx",
-      "bytes": 12670,
-      "sha256": "7f42a05a7cbb1b84dadbf4fa56d3951a88fa1e785e846a0266bb09d45e5d3d80"
+      "bytes": 14522,
+      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
     },
     {
       "name": "run-one.ts",
-      "bytes": 9254,
-      "sha256": "646c410f41c20c5c0a3306638ff52d2088c4214104c6c67f506ce94854ce63dd"
+      "bytes": 10746,
+      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -35,6 +35,12 @@
       "name": "tsconfig.json",
       "bytes": 208,
       "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+    },
+    {
+      "name": "createCoarseRoutingDiagnostics.ts",
+      "bytes": 18242,
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
     }
-  ]
+  ],
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
 }

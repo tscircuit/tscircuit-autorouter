@@ -74,9 +74,9 @@
     "@jscad/modeling": "^2.13.0",
     "react-reconciler": "^0.32.0",
     "@tscircuit/mm": "0.0.9",
-    "tscircuit": "0.0.3195",
-    "@tscircuit/core": "0.0.2388",
+    "tscircuit": "0.0.3196",
+    "@tscircuit/core": "0.0.2389",
     "@tscircuit/eval": "0.0.1783",
-    "@tscircuit/capacity-autorouter": "0.0.1102"
+    "@tscircuit/capacity-autorouter": "0.0.1103"
   }
 }

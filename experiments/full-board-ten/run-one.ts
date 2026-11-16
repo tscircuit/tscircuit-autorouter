@@ -27,7 +27,22 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
-const processResult = { id: task.id, cohort: task.cohort, mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const diagnosticPath = join(output, "coarse-diagnostics.json")
+if (existsSync(diagnosticPath)) {
+  const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))
+  for (const report of diagnostic.reports) console.log(`COARSE_ROUTING_DIAGNOSTIC_SUMMARY ${JSON.stringify({ id: task.id, cohort: task.cohort,
+    phase: report.phase, inputNetCount: report.inputNetCount, innerHookInstalled: report.innerHookInstalled ?? Boolean(report.configured),
+    configured: report.configured, lifecycleCounts: report.lifecycleCounts,
+    firstExhaustedSearch: report.firstExhaustedSearch ?? null, firstRejectedGoalApproach: report.firstRejectedGoalApproach ?? null,
+    firstNonfiniteGoalApproachWithoutPriorGoal: report.firstNonfiniteGoalApproachWithoutPriorGoal ?? null,
+    final: report.final ? { iterations: report.final.iterations, MAX_ITERATIONS: report.final.MAX_ITERATIONS, currentRoute: report.final.currentRoute,
+      pendingRouteCount: report.final.pendingRouteCount, neverAttemptedCount: report.final.neverAttemptedCount,
+      iterationsSincePreviousRouteEvent: report.final.iterationsSincePreviousRouteEvent,
+      neverSuccessfullyRoutedCount: report.final.neverSuccessfullyRouted.length, candidateQueueLength: report.final.candidateQueueLength,
+      bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
+  })}`)
+}
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false

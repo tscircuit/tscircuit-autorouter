@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
+import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -78,8 +79,9 @@ function readablePackage(folder: string, name: string): boolean {
   try { return JSON.parse(readFileSync(join(folder, "package.json"), "utf8")).name === name }
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
-const { RootCircuit } = await import("tscircuit")
+const { RootCircuit, SOLVERS } = await import("tscircuit")
 importingPublishedMain = false
+const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
 const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardModule)).href)
 const { convertCircuitJsonToPcbSvg } = await import("circuit-to-svg")
 const circuit = new RootCircuit({ platform: { localCacheEngine: undefined, routingDisabled: executionMode === "geometry" } })
@@ -88,7 +90,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -108,6 +110,20 @@ const save = (withCircuit = false): void => {
   atomic("progress.json", JSON.stringify(progress, null, 2))
 }
 const running = (): any => progress.phases.findLast((phase: any) => phase.status === "running")
+const diagnosticTargets: Record<string, string> = {
+  "butterstick-original": "plane_escape", "icepi-original": "plane_escape",
+  "glider-spaced": "other_signals", "imx6-spaced": "remaining", "butterstick-spaced": "*",
+}
+const targetPhase = executionMode === "full" ? diagnosticTargets[`${task.id}-${task.cohort}`] : undefined
+progress.coarseRoutingInstrumentation = { enabled: Boolean(targetPhase), targetPhase: targetPhase ?? null, mode: "observational published-instance lifecycle hooks" }
+const coarseReports: Record<string, any>[] = []
+let coarseObserver: ReturnType<typeof createCoarseRoutingDiagnostics> | undefined
+const finishCoarseDiagnostics = (): void => {
+  const report = coarseObserver?.finish()
+  coarseObserver = undefined
+  if (report) coarseReports.push(report)
+  if (coarseReports.length) atomic("coarse-diagnostics.json", JSON.stringify({ reports: coarseReports }, null, 2))
+}
 for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:error"] as const) {
   circuit.on(eventName, (event: any): void => {
     if (event.cacheStatus && event.cacheStatus !== "disabled") throw new Error(`Unexpected routing cache status ${event.cacheStatus}`)
@@ -143,6 +159,16 @@ circuit.on("solver:started", (event: any): void => {
   }
   const options = event.solverParams?.options
   if (options?.cacheProvider) throw new Error("Unexpected solver cache provider")
+  const phaseName = running()?.name
+  if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && targetPhase && (targetPhase === "*" || phaseName === targetPhase)) {
+    finishCoarseDiagnostics()
+    coarseObserver = createCoarseRoutingDiagnostics({
+      pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
+      targetPhase: phaseName,
+      onSnapshot: report => atomic("coarse-diagnostics.json", JSON.stringify({ reports: [...coarseReports, report] }, null, 2)),
+    })
+    coarseObserver.onSolverStarted(event, phaseName)
+  }
   progress.solvers.push({ name: event.solverName, component: event.componentName, status: "running", startedMs: performance.now() - started, cacheProvider: options?.cacheProvider ? "present" : null })
 })
 circuit.on("solver:ended", (event: any): void => {
@@ -154,6 +180,7 @@ const heartbeat = setInterval(() => save(), 2000)
 const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
+  finishCoarseDiagnostics()
   save(true)
   process.exit(124)
 }, 900000)
@@ -170,6 +197,7 @@ try {
 } finally {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
+  finishCoarseDiagnostics()
   save(true)
   try {
     atomic("pcb.svg.gz", gzipSync(convertCircuitJsonToPcbSvg(circuit.getCircuitJson(), { width: 1600, height: 1100, backgroundColor: "white", shouldDrawRatsNest: false, shouldDrawErrors: false, showPcbGroups: false }), { level: 1 }))

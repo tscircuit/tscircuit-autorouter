@@ -111,6 +111,15 @@ def main() -> None:
     if subprocess.check_output([arguments.bun, "--version"], text=True).strip() != "1.4.3":
         raise RuntimeError("This benchmark requires Bun1.4.3")
     release = json.loads((controller / "release.json").read_text())
+    experiment = os.environ.get("FULL_BOARD_EXPERIMENT", "published")
+    dependency_overrides = release.get("dependencyOverrides", [])
+    if experiment == "published" and dependency_overrides:
+        raise RuntimeError("The published control cannot override dependencies")
+    if experiment == "checks-279" and [
+        (override["name"], override["from"], override["to"])
+        for override in dependency_overrides
+    ] != [("@tscircuit/checks", "0.0.278", "0.0.279")]:
+        raise RuntimeError("The checks experiment must change only the declared checker")
     sources = verify_sources(root, json.loads((controller / "source-provenance.json").read_text()))
     runtime = root / "runtime"
     ar_dependencies = root / "autorouter-dependencies"
@@ -136,6 +145,8 @@ def main() -> None:
         extra_packages.append({"name": expected["name"], "version": metadata["version"], "entrySha256": sha256(entry)})
     manifest = {
         "mainVersion": release["mainVersion"], "packages": packages,
+        "dependencyOverrides": dependency_overrides,
+        "experiment": experiment,
         "additionalChangedPackages": extra_packages, "sourceCommits": sources,
         "runtimeDependencyFiles": runtime_lock, "autorouterDependencyFiles": ar_lock,
         "packageAliases": aliases, "sourceOverrides": False,
@@ -154,7 +165,7 @@ def main() -> None:
     if manifest["runner"]["architecture"] not in ["aarch64", "arm64"]:
         raise RuntimeError("Expected the declared Blacksmith ARM runner")
     (root / "runtime-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(json.dumps({"preparedPublishedRuntime": release["mainVersion"], "packageVersions": {package["name"]: package["version"] for package in packages}, "sourceCommits": sources}))
+    print(json.dumps({"preparedRuntime": release["mainVersion"], "experiment": manifest["experiment"], "dependencyOverrides": manifest["dependencyOverrides"], "packageVersions": {package["name"]: package["version"] for package in packages}, "sourceCommits": sources}))
 
 
 if __name__ == "__main__":

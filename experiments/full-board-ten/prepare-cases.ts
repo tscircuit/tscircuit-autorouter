@@ -50,6 +50,8 @@ for (const id of onlyId ? [onlyId] : knownIds) for (const cohort of ["original",
   const assessorFiles = cohort === "original" ? [join(originalRoot, "assess.ts"), join(originalRoot, "connectivity.ts")] : [join(spacedRoot, "scripts/assess.ts"), join(spacedRoot, "scripts/connectivity.ts"), join(spacedRoot, "scripts/audit-full-board-geometry.ts")]
   const task = {
     id, cohort, mode: "phased", fanout: false, planes: cohort === "original",
+    experiment: runtimeManifest.experiment ?? "published",
+    dependencyOverrides: runtimeManifest.dependencyOverrides ?? [],
     sourcePath, sourceSha256: digest(bytes), boardModule, layoutModule,
     implementationFiles: implementation.map(path => ({ path, sha256: digest(readFileSync(path)) })),
     expectedComponents: source.parts.length,
