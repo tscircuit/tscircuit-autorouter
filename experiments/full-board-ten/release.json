@@ -1,0 +1,58 @@
+{
+  "mainVersion": "0.0.3193",
+  "packages": [
+    {
+      "label": "tscircuit",
+      "name": "tscircuit",
+      "version": "0.0.3193",
+      "gitHead": "25c632e4b9a18712a88fb16f4fc8cad7bdc728fc",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3193.tgz",
+      "integrity": "sha512-3b9ltmoZzGkVKKiOFp0SW9dg/Lz60Z3ZUEypv+Mszic0WynnIvuHdkbqJd71t2MmC1wwRQL/YmSeAAUHvr7JGA=="
+    },
+    {
+      "label": "core",
+      "name": "@tscircuit/core",
+      "version": "0.0.2386",
+      "gitHead": "2f7db1dee7cf872cbe2b358ae00fa8f841501610",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "4675360fda9bb6c1fff6e0cf6f7e67576a203cf89cd80d03e1f02bfa46c11db2",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2386.tgz",
+      "integrity": "sha512-7CWcgqJ1fcBXMFbjSLIQqrbHxwdCI9p2zCwODGv60wzAX4zf2YX6lP3oaiX/SvcyctRJsCKNv/2EiCGz9PzFEA=="
+    },
+    {
+      "label": "eval",
+      "name": "@tscircuit/eval",
+      "version": "0.0.1781",
+      "gitHead": "c2f51e4ec784f3aba64208f069caa0e0503e0f59",
+      "entryRelative": "dist/lib/index.js",
+      "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1781.tgz",
+      "integrity": "sha512-XQyBUIw6jG4DyZiAxnh887IAhbeCT6SHuuR7RVcshwEhJ6Lf+7SB9znSeIAJu3Edkyb6P0jblNfI0g1Hno3xcQ=="
+    },
+    {
+      "label": "autorouter",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1101",
+      "gitHead": "864d5fb97477da2df5eb1187387ae7fde328d4d5",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "3a19276461ab92906978b98dec74fde7ab84586ed4c59c76542f2e021b1dc544",
+      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1101.tgz",
+      "integrity": "sha512-kKIinXmf762T+Sv0weYJbE3OQDvBjrkBX/yQSs6208DRG5SR0hGoBR1Ribb1EC3Rua780utC3wT9hbPpargK0w=="
+    }
+  ],
+  "additionalChangedPackages": [
+    {
+      "label": "runframe",
+      "name": "@tscircuit/runframe",
+      "version": "0.0.3251",
+      "gitHead": "69939b5a3b95ba1fc8d3790f8ef1a4f7f8ad7f91",
+      "entryRelative": "dist/preview.js",
+      "entrySha256": "6129c22376928aa5b844f1267ce95b79afdb75b13852b3aa0aca42b0f81002fa",
+      "tarball": "https://registry.npmjs.org/@tscircuit/runframe/-/runframe-0.0.3251.tgz",
+      "integrity": "sha512-RMXnCjSP1t19ya8LaI1kfSpI48GsKZvE7GP1wzP1xGIh6Ex2nXSULfhExM/OLsPjR311b3pM0TdPPcj4XC4pzQ=="
+    }
+  ],
+  "routingSourceOverrides": false
+}

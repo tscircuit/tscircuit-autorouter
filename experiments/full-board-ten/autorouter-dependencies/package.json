@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "stack-svgs": "^0.0.1",
+    "object-hash": "^3.0.0",
+    "@tscircuit/solver-utils": "^0.0.23",
+    "fast-json-stable-stringify": "^2.1.0"
+  },
+  "name": "full-board-ten-autorouter-dependencies"
+}

@@ -1,0 +1,40 @@
+{
+  "runtimePackages": [
+    "tscircuit@0.0.3193",
+    "@tscircuit/core@0.0.2386",
+    "@tscircuit/eval@0.0.1781",
+    "@tscircuit/capacity-autorouter@0.0.1101"
+  ],
+  "files": [
+    {
+      "name": "prepare-cases.ts",
+      "bytes": 5899,
+      "sha256": "51d1860c4dd711f6c9f9a02f9aa4afe23c7fdc075f252945772d1e384c35d8e0"
+    },
+    {
+      "name": "render-published.tsx",
+      "bytes": 12670,
+      "sha256": "7f42a05a7cbb1b84dadbf4fa56d3951a88fa1e785e846a0266bb09d45e5d3d80"
+    },
+    {
+      "name": "run-one.ts",
+      "bytes": 8997,
+      "sha256": "33473bfc78b2bd728aa8ce2206ed0727c68ca1718fef1f633aa375a51a317140"
+    },
+    {
+      "name": "calibrate-assessment.tsx",
+      "bytes": 2714,
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0"
+    },
+    {
+      "name": "package.json",
+      "bytes": 87,
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3"
+    },
+    {
+      "name": "tsconfig.json",
+      "bytes": 208,
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+    }
+  ]
+}
