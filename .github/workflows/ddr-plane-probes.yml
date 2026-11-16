@@ -1,0 +1,57 @@
+name: Compare graph budget and layer-aware pairing on full-board plane inputs
+on:
+  push:
+    branches: [codex/ddr-plane-probes-1107]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [icepi, butterstick]
+        variant: [graph_budget, layer_cost]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: merged-full-${{ matrix.board }}
+          run-id: 43810629603
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Apply one experimental routing policy
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          if os.environ['VARIANT']=='graph_budget':
+              path=Path('lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts')
+              source=path.read_text()
+              assert 'Math.floor(portCount / 125_000)' in source
+              path.write_text(source.replace('Math.floor(portCount / 125_000)','Math.ceil(portCount / 125_000)'))
+          else:
+              path=Path('lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts')
+              source=path.read_text()
+              assert 'type Point = { x: number; y: number }' in source
+              assert 'weight: distance,' in source
+              source=source.replace('type Point = { x: number; y: number }','type Point = { x: number; y: number; layer?: string }')
+              source=source.replace('weight: distance,','weight: distance + (point.layer && neighbor.layer && point.layer !== neighbor.layer ? 0.45 : 0),')
+              path.write_text(source)
+          PY
+      - name: Replay the complete native plane input up to global pathing
+        run: bun scripts/benchmark/capturePlaneRouting.ts evidence/merged/full/${{ matrix.board }}-phased/phase-1-input.srj.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plane-policy-${{ matrix.board }}-${{ matrix.variant }}
+          path: capture-summary.json
+          retention-days: 14
