@@ -1,0 +1,33 @@
+name: Collect completed DDR1112 evidence
+on:
+  push:
+    branches: [codex/ddr1112-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  collect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 43964315562
+          github-token: ${{ github.token }}
+          pattern: refresh1112-*
+          path: evidence/before
+      - name: Export compact native PCB and measured metadata
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'environment.json','summary.json','progress.json','assessment.json','diagnostics.json','process.json','results.json','pcb.svg'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('evidence').rglob('*'):
+                  if path.is_file() and path.name in names:
+                      archive.writestr(str(path.relative_to('evidence')),path.read_bytes())
+          print('DDR1112_COMPACT_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('DDR1112_COMPACT_EVIDENCE_END')
+          PY
