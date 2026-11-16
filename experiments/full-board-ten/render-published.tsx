@@ -59,9 +59,10 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// Main/Core remain published; explicit source AR experiments are manifest-labeled.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
-const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
+const expectedRuntimeManifest = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
+const expectedRuntime = expectedRuntimeManifest.packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (expectedRuntime.length !== 4 || expectedNames.some(name => !expectedRuntime.some((row: any) => row.name === name))) throw new Error("Runtime manifest must identify the complete compatible four-package chain")
 const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: string; version: string; entrySha256: string }) => {
@@ -90,7 +91,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: Boolean(expectedRuntimeManifest.routingSourceOverrides), cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {

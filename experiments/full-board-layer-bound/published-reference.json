@@ -1,0 +1,395 @@
+{
+  "icepi-original": {
+    "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+    "implementationHashes": [
+      {
+        "name": "board.tsx",
+        "sha256": "5a80aa72c0cb6fa08f246b9496af9cfaa27e7e7b83b183bdd5f562f8e68a1136"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+      },
+      {
+        "name": "native-part.tsx",
+        "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "Net-(U3-LX)",
+      "Net-(U4-LX)",
+      "Net-(U5-LX)",
+      "Net-(U6-LX)",
+      "Net-(U7-BS)",
+      "Net-(U7-LX)",
+      "Net-(U8-LX)"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": 0,
+      "connectedNets": 7,
+      "requestedRoutableNets": 230,
+      "listedFindingCount": 1,
+      "sharedDrcErrorCount": 0,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "plane_escape",
+        "status": "failed",
+        "connections": 8,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "iteration_limit",
+    "coarseConfiguration": {
+      "plane_escape": {
+        "MAX_ITERATIONS": 2000000,
+        "denseWorkspaceSupported": true,
+        "fixedRouteCount": null,
+        "hookInstalledAtIteration": 0,
+        "initialAssignmentCount": null,
+        "outsideInRouting": false,
+        "partialRipEligibilityCount": 559,
+        "partialRipEnabled": false,
+        "pathingEffort": 1,
+        "pathingFlags": {
+          "FORCE_CENTER_FIRST": true,
+          "RIPPING_ENABLED": true,
+          "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
+          "USE_PREPARED_PORT_POINT_ROUTING": true,
+          "USE_SELECTIVE_RERIP_ROUTING": true
+        },
+        "portCount": 130354,
+        "regionCount": 66397,
+        "reportedPreloadedAssignmentCount": 0,
+        "routeCount": 559,
+        "serializedConnectionCount": 559,
+        "serializedPortCount": 141256,
+        "solveGraphOptions": {
+          "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+          "DISTANCE_TO_COST": 0.05,
+          "GREEDY_FINAL_ROUTE_ITERS": 4,
+          "MAX_ITERATIONS": 2000000,
+          "OUTSIDE_IN_ROUTING": false,
+          "OWNED_REGIONAL_HOP_FRONTIER": true,
+          "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_ENABLED": false,
+          "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+          "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+          "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+          "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+          "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+          "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+          "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+          "RIP_THRESHOLD_END": 0.8,
+          "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+          "RIP_THRESHOLD_START": 0.05,
+          "USE_SPARSE_CANDIDATE_STORAGE": false,
+          "minViaPadDiameter": 0.45
+        }
+      }
+    },
+    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "88e9820893eb386dedadc5f36b4370a28bec0cfa3ee94996d13e6bdb2117bedd",
+      "assessment.json": "55cca97a90214bfbd8c4e10f5c9d77506ec24c0f86731cbe0b60dfb01312cf49",
+      "reported-summary.json": "acb203e83c75bd9c92703c127ce41483eb24d5f140bcddfd824618c64dec5df8",
+      "coarse-diagnostics.json": "ac64ca3c01ebd17ff7937288ec03caa1986c93f4463a0e47d337a8377b733856"
+    },
+    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+  },
+  "glider-spaced": {
+    "sourceSha256": "8addde162ad12f391f4f5b8205845e236c94bbcccafd8a31846a1a710ac5f4ed",
+    "implementationHashes": [
+      {
+        "name": "glider.tsx",
+        "sha256": "baa9f59f7aca2dac50ff53ba2affba861a9959997efe1e44c17ca4a77430589c"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+      },
+      {
+        "name": "peripheral-layout.ts",
+        "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "/fpga_ddr/DRAM_ADDR0",
+      "/fpga_ddr/DRAM_ADDR1",
+      "/fpga_ddr/DRAM_ADDR10",
+      "/fpga_ddr/DRAM_ADDR11",
+      "/fpga_ddr/DRAM_ADDR12",
+      "/fpga_ddr/DRAM_ADDR13",
+      "/fpga_ddr/DRAM_ADDR14",
+      "/fpga_ddr/DRAM_ADDR2",
+      "/fpga_ddr/DRAM_ADDR3",
+      "/fpga_ddr/DRAM_ADDR4",
+      "/fpga_ddr/DRAM_ADDR5",
+      "/fpga_ddr/DRAM_ADDR6",
+      "/fpga_ddr/DRAM_ADDR7",
+      "/fpga_ddr/DRAM_ADDR8",
+      "/fpga_ddr/DRAM_ADDR9",
+      "/fpga_ddr/DRAM_BA0",
+      "/fpga_ddr/DRAM_BA1",
+      "/fpga_ddr/DRAM_BA2",
+      "/fpga_ddr/DRAM_CASB",
+      "/fpga_ddr/DRAM_CKE",
+      "/fpga_ddr/DRAM_CKN",
+      "/fpga_ddr/DRAM_CKP",
+      "/fpga_ddr/DRAM_CSB",
+      "/fpga_ddr/DRAM_DATA0",
+      "/fpga_ddr/DRAM_DATA1",
+      "/fpga_ddr/DRAM_DATA10",
+      "/fpga_ddr/DRAM_DATA11",
+      "/fpga_ddr/DRAM_DATA12",
+      "/fpga_ddr/DRAM_DATA13",
+      "/fpga_ddr/DRAM_DATA14",
+      "/fpga_ddr/DRAM_DATA15",
+      "/fpga_ddr/DRAM_DATA2",
+      "/fpga_ddr/DRAM_DATA3",
+      "/fpga_ddr/DRAM_DATA4",
+      "/fpga_ddr/DRAM_DATA5",
+      "/fpga_ddr/DRAM_DATA6",
+      "/fpga_ddr/DRAM_DATA7",
+      "/fpga_ddr/DRAM_DATA8",
+      "/fpga_ddr/DRAM_DATA9",
+      "/fpga_ddr/DRAM_LDM",
+      "/fpga_ddr/DRAM_LDQSN",
+      "/fpga_ddr/DRAM_LDQSP",
+      "/fpga_ddr/DRAM_ODT",
+      "/fpga_ddr/DRAM_RASB",
+      "/fpga_ddr/DRAM_RST",
+      "/fpga_ddr/DRAM_UDM",
+      "/fpga_ddr/DRAM_UDQSN",
+      "/fpga_ddr/DRAM_UDQSP",
+      "/fpga_ddr/DRAM_WEB"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": null,
+      "connectedNets": 49,
+      "requestedRoutableNets": 356,
+      "listedFindingCount": 1465,
+      "sharedDrcErrorCount": 0,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "byte0",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "byte1",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "remaining",
+        "status": "completed",
+        "connections": 33,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      },
+      {
+        "name": "other_signals",
+        "status": "failed",
+        "connections": 283,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "iteration_limit",
+    "coarseConfiguration": {
+      "other_signals": {
+        "MAX_ITERATIONS": 2000000,
+        "denseWorkspaceSupported": true,
+        "fixedRouteCount": 3,
+        "hookInstalledAtIteration": 0,
+        "initialAssignmentCount": 901,
+        "outsideInRouting": false,
+        "partialRipEligibilityCount": 901,
+        "partialRipEnabled": false,
+        "pathingEffort": 1,
+        "pathingFlags": {
+          "FORCE_CENTER_FIRST": true,
+          "RIPPING_ENABLED": true,
+          "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
+          "USE_PREPARED_PORT_POINT_ROUTING": true,
+          "USE_SELECTIVE_RERIP_ROUTING": true
+        },
+        "portCount": 100976,
+        "regionCount": 25609,
+        "reportedPreloadedAssignmentCount": 901,
+        "routeCount": 536,
+        "serializedConnectionCount": 536,
+        "serializedPortCount": 118530,
+        "solveGraphOptions": {
+          "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+          "DISTANCE_TO_COST": 0.05,
+          "GREEDY_FINAL_ROUTE_ITERS": 4,
+          "MAX_ITERATIONS": 2000000,
+          "OUTSIDE_IN_ROUTING": false,
+          "OWNED_REGIONAL_HOP_FRONTIER": true,
+          "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_ENABLED": false,
+          "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+          "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+          "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+          "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+          "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+          "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+          "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+          "RIP_THRESHOLD_END": 0.8,
+          "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+          "RIP_THRESHOLD_START": 0.05,
+          "USE_SPARSE_CANDIDATE_STORAGE": false,
+          "minViaPadDiameter": 0.45
+        }
+      }
+    },
+    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "b531d794caf24fc896814a9608c3c3ad3bdf5ce556bfc8642e00894a2c771094",
+      "assessment.json": "244b8649647a6f81670d78551d9f11b3ded27a39f6409c395846fd516d5f17a7",
+      "reported-summary.json": "5af29fd39889bdf1854e42333b8ba384d1ce7426dd6eee0c5ddd9c4d869be7f5",
+      "coarse-diagnostics.json": "f5aebd11f593c5a5ab8e3647f493a4129aa850fa98ebf9fd9c63756c99ef5f02"
+    },
+    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+  },
+  "imx6-spaced": {
+    "sourceSha256": "d8cccad6f5cf63911130fbb5e13af9a961064bc231b92f639afa3944d6131c77",
+    "implementationHashes": [
+      {
+        "name": "imx6.tsx",
+        "sha256": "919047cd47c5cb633e75692c45a1f4810258f0d6195efb754c76c85d9a85826f"
+      },
+      {
+        "name": "native-full-board.tsx",
+        "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+      },
+      {
+        "name": "peripheral-layout.ts",
+        "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+      }
+    ],
+    "connectedNativeNetNames": [
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA0",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA1",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA10",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA11",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA12",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA13",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA14",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA15",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA2",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA3",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA4",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA5",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA6",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA7",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA8",
+      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA9"
+    ],
+    "counts": {
+      "completeSourceCounts": true,
+      "geometryErrorCount": 0,
+      "membershipErrorCount": null,
+      "connectedNets": 16,
+      "requestedRoutableNets": 404,
+      "listedFindingCount": 1642,
+      "sharedDrcErrorCount": 0,
+      "status": "incomplete_or_errors",
+      "renderSettled": false,
+      "renderExitCode": 0
+    },
+    "phases": [
+      {
+        "name": "byte0",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "byte1",
+        "status": "completed",
+        "connections": 8,
+        "solver": "BusLanesPipelineSolver"
+      },
+      {
+        "name": "remaining",
+        "status": "failed",
+        "connections": 37,
+        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      }
+    ],
+    "blockerClass": "iteration_limit",
+    "coarseConfiguration": {
+      "remaining": {
+        "MAX_ITERATIONS": 2000000,
+        "denseWorkspaceSupported": false,
+        "fixedRouteCount": null,
+        "hookInstalledAtIteration": 0,
+        "initialAssignmentCount": null,
+        "outsideInRouting": false,
+        "partialRipEligibilityCount": 49,
+        "partialRipEnabled": false,
+        "pathingEffort": 1,
+        "pathingFlags": {
+          "FORCE_CENTER_FIRST": true,
+          "RIPPING_ENABLED": true,
+          "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
+          "USE_PREPARED_PORT_POINT_ROUTING": true,
+          "USE_SELECTIVE_RERIP_ROUTING": true
+        },
+        "portCount": 181105,
+        "regionCount": 45817,
+        "reportedPreloadedAssignmentCount": 0,
+        "routeCount": 49,
+        "serializedConnectionCount": 49,
+        "serializedPortCount": 214805,
+        "solveGraphOptions": {
+          "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
+          "DISTANCE_TO_COST": 0.05,
+          "GREEDY_FINAL_ROUTE_ITERS": 4,
+          "MAX_ITERATIONS": 2000000,
+          "OUTSIDE_IN_ROUTING": false,
+          "OWNED_REGIONAL_HOP_FRONTIER": true,
+          "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_ENABLED": false,
+          "PARTIAL_RIP_MAX_ATTEMPTS": 7,
+          "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
+          "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
+          "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
+          "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
+          "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
+          "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
+          "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
+          "RIP_THRESHOLD_END": 0.8,
+          "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
+          "RIP_THRESHOLD_START": 0.05,
+          "USE_SPARSE_CANDIDATE_STORAGE": false,
+          "minViaPadDiameter": 0.4
+        }
+      }
+    },
+    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "sourceFilesSha256": {
+      "result.json": "a87e16f057bc41840f45e3d978740043815c857ddebe646cb2b130fe52535b07",
+      "assessment.json": "4cc89596bf0779ab3ab6fd15e32580d6771354466547fb694b275dede91343ed",
+      "reported-summary.json": "06d68eb86dd63ee110c17601feca2d6cdc0b264641ab644c62871705535115a1",
+      "coarse-diagnostics.json": "8c9dd7fccb7e9b2515574063622d037d12528ca3c569caca0a858a4ae70363c5"
+    },
+    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+  }
+}

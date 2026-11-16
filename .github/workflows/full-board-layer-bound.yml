@@ -1,0 +1,223 @@
+name: Matched full-board last-layer bound
+
+on:
+  push:
+    branches: [bench/full-board-layer-bound-3196]
+  workflow_dispatch:
+    inputs:
+      validation:
+        description: Build provenance only, or the three board pairs plus Dataset18
+        type: choice
+        default: build_only
+        options: [build_only, boards_and_dataset18]
+
+permissions:
+  contents: read
+
+jobs:
+  source-builds:
+    name: Freeze one graph and build both AR packages
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.source-bun-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-layer-bound
+            experiments/full-board-ten
+            .github/workflows/full-board-layer-bound.yml
+            AGENTS.md
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: adb881cb67ae777a13ae3f7e76bdbc6d61f542ab
+          path: same-machine-base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: adb881cb67ae777a13ae3f7e76bdbc6d61f542ab
+          path: same-machine-pr
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Resolve once, build officially, audit all bundled sources
+        run: python3 experiments/full-board-layer-bound/prepare-source-pair.py --root "$GITHUB_WORKSPACE"
+      - name: Archive symlink-safe matched packages and shared production closure
+        if: always()
+        run: tar -czf matched-source-pair.tgz source-pair-artifact
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matched-source-pair
+          path: |
+            matched-source-pair.tgz
+            source-pair-artifact/provenance.json
+          compression-level: 0
+          retention-days: 7
+
+  boards:
+    name: Source pair (${{ matrix.board }}, ${{ matrix.cohort }})
+    needs: source-builds
+    if: github.event_name == 'workflow_dispatch' && inputs.validation == 'boards_and_dataset18'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { board: icepi, cohort: original }
+          - { board: glider, cohort: spaced }
+          - { board: imx6, cohort: spaced }
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      BOARD: ${{ matrix.board }}
+      COHORT: ${{ matrix.cohort }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-layer-bound
+            experiments/full-board-ten
+            AGENTS.md
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/published/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/published/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: matched-source-pair
+          path: .matched-download
+      - name: Restore both frozen official packages
+        run: tar -xzf .matched-download/matched-source-pair.tgz
+      - name: Prepare unchanged published Main3196 runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT/published"
+      - name: Activate matched source control and prepare authentic cases
+        run: |
+          python3 experiments/full-board-layer-bound/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant base
+          export FULL_BOARD_RUNTIME_MANIFEST="$FULL_BOARD_ROOT/source-base/runtime-manifest.json"
+          bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/published/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/published/sources/spaced" "$FULL_BOARD_ROOT/source-base/cases" "$BOARD"
+      - name: Run full authentic source control
+        continue-on-error: true
+        run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/source-base/cases/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/source-base/results/$BOARD/$COHORT"
+      - name: Require source control to match available published functional evidence
+        id: parity
+        run: python3 experiments/full-board-layer-bound/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT" --control-only
+      - name: Activate candidate from the same build graph
+        if: steps.parity.outcome == 'success'
+        run: |
+          python3 experiments/full-board-layer-bound/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant pr
+          export FULL_BOARD_RUNTIME_MANIFEST="$FULL_BOARD_ROOT/source-pr/runtime-manifest.json"
+          bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/published/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/published/sources/spaced" "$FULL_BOARD_ROOT/source-pr/cases" "$BOARD"
+      - name: Run full authentic candidate on the same VM
+        if: steps.parity.outcome == 'success'
+        continue-on-error: true
+        run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/source-pr/cases/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/source-pr/results/$BOARD/$COHORT"
+      - name: Report matched completion and physical net changes
+        if: ${{ always() && steps.parity.outcome == 'success' }}
+        run: python3 experiments/full-board-layer-bound/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT"
+      - name: Preserve fresh cases, complete geometry, partial failures and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-bound-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
+          path: |
+            .full-board-run/source-*/results
+            .full-board-run/source-*/runtime-manifest.json
+            .full-board-run/source-*/cases/*.json
+            .full-board-run/*parity.json
+            .full-board-run/pair-summary.json
+            source-pair-artifact/provenance.json
+          compression-level: 0
+          retention-days: 7
+
+  dataset18:
+    name: Dataset18 sequential matched source pair, four workers
+    needs: source-builds
+    if: github.event_name == 'workflow_dispatch' && inputs.validation == 'boards_and_dataset18'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 120
+    env:
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.source-bun-cache
+      BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","18","--concurrency","4","--threads","1"]'
+      BENCHMARK_DATASET: srj18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-layer-bound
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: adb881cb67ae777a13ae3f7e76bdbc6d61f542ab
+          path: same-machine-base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: adb881cb67ae777a13ae3f7e76bdbc6d61f542ab
+          path: same-machine-pr
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: matched-source-pair
+          path: .matched-download
+      - run: tar -xzf .matched-download/matched-source-pair.tgz
+      - name: Restore the globally frozen source graph without resolving ranges
+        run: python3 experiments/full-board-layer-bound/prepare-source-pair.py --root "$GITHUB_WORKSPACE" --reuse-artifact "$GITHUB_WORKSPACE/source-pair-artifact"
+      - name: Run the unchanged Dataset18 controller sequentially
+        run: bun same-machine-base/scripts/benchmark/runSameMachineBenchmarks.ts
+      - name: Render the ordinary Dataset18 comparison and visible summary
+        env:
+          RUNNER_NAME: ${{ runner.name }}
+        run: |
+          bun same-machine-base/scripts/benchmark/same-machine-results.ts --base-report same-machine-results/base/benchmark-result.json --pr-report same-machine-results/pr/benchmark-result.json --base-sha adb881cb67ae777a13ae3f7e76bdbc6d61f542ab --pr-sha adb881cb67ae777a13ae3f7e76bdbc6d61f542ab --repository "${{ github.repository }}" --runner-name "$RUNNER_NAME" --output same-machine-results/comparison.md
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path("experiments/full-board-layer-bound/experiment.json").read_text())
+          note = "Both lanes build AR " + manifest["autorouterCommit"] + "; source base uses Tiny " + manifest["tinyCommit"] + ". Candidate changes only " + json.dumps(manifest["files"]) + ". These are explicit private source builds, not two different published versions.\n\n"
+          comparison = Path("same-machine-results/comparison.md").read_text()
+          print(note + comparison)
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
+              stream.write(note + comparison)
+          PY
+      - name: Preserve normal Dataset18 results and exact source graph proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-bound-dataset18-${{ github.run_attempt }}
+          path: |
+            same-machine-results
+            dataset-source-proof
+            source-pair-artifact/provenance.json
+          compression-level: 0
+          retention-days: 7
