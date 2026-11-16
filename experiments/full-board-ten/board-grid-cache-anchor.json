@@ -1,0 +1,28 @@
+{
+  "originalCoreSHA256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+  "expectedCandidateCoreSHA256": "e065c844cf8874ad8c90247f5db6b648377d0ec72d1d3986075c400090cb8f1a",
+  "oldBlock": "var boardGrids = /* @__PURE__ */ new WeakMap();\nvar maxBoardGridBytes = 8 * 1024 * 1024;\nfunction getBoardGrid({\n  input,\n  copperRadiusMm,\n  xs,\n  ys,\n  step\n}) {\n  const key = JSON.stringify([\n    xs[0],\n    ys[0],\n    xs.length,\n    ys.length,\n    step,\n    copperRadiusMm,\n    input.bounds,\n    input.outline,\n    input.minBoardEdgeClearance\n  ]);\n  const previous = boardGrids.get(input);\n  if (previous?.key === key) return previous.blocked;\n  const blocked = new Uint8Array(xs.length * ys.length);\n  for (let y2 = 0; y2 < ys.length; y2++)\n    for (let x2 = 0; x2 < xs.length; x2++) {\n      const point52 = { x: xs[x2], y: ys[y2] };\n      if (!boardSegmentIsClear({\n        input,\n        start: point52,\n        end: point52,\n        copperRadiusMm\n      }))\n        blocked[x2 + y2 * xs.length] = 1;\n    }\n  if (blocked.byteLength <= maxBoardGridBytes)\n    boardGrids.set(input, { key, blocked });\n  return blocked;\n}\n",
+  "newBlock": "var boardGrids = /* @__PURE__ */ new WeakMap();\nvar maxBoardGridBytes = 16 * 1024 * 1024;\nfunction getBoardGrid({\n  input,\n  copperRadiusMm,\n  xs,\n  ys,\n  step\n}) {\n  const key = JSON.stringify([\n    xs[0],\n    ys[0],\n    xs.length,\n    ys.length,\n    step,\n    copperRadiusMm,\n    input.bounds,\n    input.outline,\n    input.minBoardEdgeClearance\n  ]);\n  const grids = boardGrids.get(input) ?? new Map();\n  const previous = grids.get(key);\n  if (previous) {\n    grids.delete(key);\n    grids.set(key, previous);\n    return previous;\n  }\n  const blocked = new Uint8Array(xs.length * ys.length);\n  for (let y2 = 0; y2 < ys.length; y2++)\n    for (let x2 = 0; x2 < xs.length; x2++) {\n      const point52 = { x: xs[x2], y: ys[y2] };\n      if (!boardSegmentIsClear({\n        input,\n        start: point52,\n        end: point52,\n        copperRadiusMm\n      }))\n        blocked[x2 + y2 * xs.length] = 1;\n    }\n  if (blocked.byteLength <= maxBoardGridBytes) {\n    let retained = [...grids.values()].reduce(\n      (sum, grid) => sum + grid.byteLength,\n      0\n    );\n    while (retained + blocked.byteLength > maxBoardGridBytes && grids.size) {\n      const oldest = grids.keys().next().value;\n      retained -= grids.get(oldest).byteLength;\n      grids.delete(oldest);\n    }\n    grids.set(key, blocked);\n    boardGrids.set(input, grids);\n  }\n  return blocked;\n}\n",
+  "oldBlockSHA256": "2291f3f42c358b7737bfb7fbd52b331206eb806d826e17728103a8818f529050",
+  "newBlockSHA256": "eee4f79dd5d0be67c7b6dd6b3dd796e61dc8b591006df5afa047b5d237492bb1",
+  "oldBlockOccurrences": 1,
+  "newBlockOccurrencesInOriginal": 0,
+  "blockByteOffset": 2370437,
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "74ed20b7f9331a97abfed44ff606d9e72e208a0a",
+    "commit": "d56cd39a115a3f247857a9362ea575a90ed84ea4",
+    "changedFiles": [
+      "lib/board-grid.ts",
+      "tests/board-grid-cache.test.ts"
+    ],
+    "baseSourceSHA256": "caed7d0e2a200d8ad515ecbb4dcf994942b4c17d5f68927e3fc90f5647c520ea",
+    "candidateSourceSHA256": "2188d37396d76b4ecd0e71230972a7d985be248e260d54f2995960a2f4cfd958",
+    "sourceToReplacementTokensEqual": true,
+    "normalization": "Bun1.4.3 TypeScript syntax transpilation only; remove import/export, normalize global const->var, no-argument constructor parentheses, Core local identifier renaming x2/y2/point52 and whitespace/comments."
+  },
+  "scope": "Board-raster content-key LRU only,16MiB array-byte retention budget; unchanged point classifier and source board-outline predicate. No candidate bundle written, import/build/install/routing performed.",
+  "controlRunId": 43924818002,
+  "unchangedAutorouterSHA256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
+  "qualificationScope": "Three unprofiled native full-board cases from original Core99ba; scalar-bounds candidate excluded. No speedup claim."
+}
