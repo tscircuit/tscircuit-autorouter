@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { PowerTraceExpansionSolver } from "lib/solvers/PowerTraceExpansionSolver"
 import type { Pipeline7PowerTraceExpansionInput } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 import type {
   SimpleRouteJson,
@@ -13,13 +13,14 @@ const createTrace = (
   pcbTraceId: string,
   connectionName: string,
   y: number,
+  endWidth = 0.15,
 ): SimplifiedPcbTrace => ({
   type: "pcb_trace",
   pcb_trace_id: pcbTraceId,
   connection_name: connectionName,
   route: [
     { route_type: "wire", x: 0, y, width: 0.15, layer: "top" },
-    { route_type: "wire", x: 10, y, width: 0.15, layer: "top" },
+    { route_type: "wire", x: 10, y, width: endWidth, layer: "top" },
   ],
 })
 
@@ -56,12 +57,11 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
     __replaces_pcb_trace_id: "power-preload",
   }
   const updatedSignalTrace = {
-    ...createTrace("signal-preload", "SIGNAL", 2.5),
+    ...createTrace("signal-preload", "SIGNAL", 2.5, 0.2),
     __replaces_pcb_trace_id: "signal-preload",
   }
-  const newlyRoutedTraces: SimplifiedPcbTraces = [
-    createTrace("new-route", "NEW", 3),
-  ]
+  const newlyRoutedTrace = createTrace("new-route", "NEW", 3, 0.2)
+  const newlyRoutedTraces: SimplifiedPcbTraces = [newlyRoutedTrace]
   const powerStep = solver.pipelineDef.at(-1)!
 
   expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
@@ -107,6 +107,20 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
 
   const simplifiedOutput = solver.getOutputSimplifiedPcbTraces()
   const completeOutput = solver.getOutputSimpleRouteJson().traces ?? []
+  expect(
+    expansionSolver
+      .getOutput()
+      .find((trace) => trace.pcb_trace_id === "new-route"),
+  ).toEqual(newlyRoutedTrace)
+  for (const output of [simplifiedOutput, completeOutput]) {
+    expect(output.find((trace) => trace.pcb_trace_id === "new-route")).toEqual({
+      ...newlyRoutedTrace,
+      route_thickness_mode: "interpolated",
+    })
+    expect(
+      output.find((trace) => trace.pcb_trace_id === "signal-preload"),
+    ).toEqual(updatedSignalTrace)
+  }
   expect(simplifiedOutput).toHaveLength(3)
   expect(completeOutput).toHaveLength(3)
   expect(new Set(completeOutput.map((trace) => trace.pcb_trace_id)).size).toBe(

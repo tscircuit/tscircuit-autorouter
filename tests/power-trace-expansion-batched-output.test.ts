@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { PowerTraceExpanderSolver } from "@tscircuit/power-trace-expander"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { PowerTraceExpansionSolver } from "lib/solvers/PowerTraceExpansionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("power expansion preserves trace width and delegates upstream batches", (): void => {

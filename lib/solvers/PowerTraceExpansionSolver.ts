@@ -7,7 +7,8 @@ import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
-import { BaseSolver } from "../../solvers/BaseSolver"
+import { withInterpolatedTraceWidths } from "lib/utils/withInterpolatedTraceWidths"
+import { BaseSolver } from "./BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
@@ -63,6 +64,13 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     }
 
     return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+  }
+
+  /** Export routed vertex widths so Core can reverse traces without shifting them. */
+  getOutputWithInterpolatedWidths(): SimplifiedPcbTraces {
+    // Use the completed expansion output because expansion can change widths.
+    const traces = this.getOutput()
+    return withInterpolatedTraceWidths(traces)
   }
 
   override visualize(): GraphicsObject {

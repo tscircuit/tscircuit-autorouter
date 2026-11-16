@@ -1,5 +1,5 @@
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { PowerTraceExpansionSolver } from "lib/solvers/PowerTraceExpansionSolver"
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import type { SimpleRouteJson } from "lib/types"
 import constructorArgsJson from "./bugreport98-mangopi-r3c-power-expansion-iteration-limit.input.json"

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { PowerTraceExpansionSolver } from "lib/solvers/PowerTraceExpansionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("PowerTraceExpansionSolver immediately bypasses an empty selection", () => {

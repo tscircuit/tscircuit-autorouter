@@ -7,7 +7,7 @@ type TraceWithWidths = Pick<
 > &
   TraceThicknessMode
 
-/** Preserve vertex widths when Core reverses a newly routed trace. */
+/** Encode vertex widths for newly routed traces when publishing them to Core. */
 export function withInterpolatedTraceWidths<T extends TraceWithWidths>(
   traces: readonly T[],
 ): Array<T & TraceThicknessMode> {

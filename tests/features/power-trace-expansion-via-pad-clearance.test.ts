@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { SpatialObstacleIndex } from "@tscircuit/power-trace-expander"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { PowerTraceExpansionSolver } from "lib/solvers/PowerTraceExpansionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("power expansion honors general and via-specific pad rules without widening trace rules", (): void => {
