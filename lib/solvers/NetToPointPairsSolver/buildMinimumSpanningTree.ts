@@ -296,9 +296,8 @@ export function buildMinimumSpanningTree<T extends Point>(
         }
 
         const distance =
-          Math.sqrt(
-            (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
-          ) + (opts.getAdditionalEdgeCost?.(point, neighbor) ?? 0)
+          Math.sqrt((point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2) +
+          (opts.getAdditionalEdgeCost?.(point, neighbor) ?? 0)
 
         edges.push({
           from: point,

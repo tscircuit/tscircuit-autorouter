@@ -17,7 +17,9 @@ test("nearest-neighbor candidates use the same additional cost as the tree", ():
       from.layer === to.layer ? 0 : 0.45,
   })
   expect(edges).toHaveLength(points.length - 1)
-  expect(edges.filter(({ from, to }) => from.layer !== to.layer)).toHaveLength(1)
+  expect(edges.filter(({ from, to }) => from.layer !== to.layer)).toHaveLength(
+    1,
+  )
   expect(
     edges.some(({ from, to }) => from.layer === "top" && to.layer === "top"),
   ).toBe(true)

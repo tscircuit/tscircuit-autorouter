@@ -172,15 +172,18 @@ export class NetToPointPairsSolver extends BaseSolver {
     const originalEdges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: [...pathEdges, ...zeroWeightEdges],
     })
-    const optimizedEdges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: [...pathEdges, ...zeroWeightEdges],
-      getAdditionalEdgeCost: (from, to): number =>
-        getConnectionPointLayers(from).some((layer) =>
-          getConnectionPointLayers(to).includes(layer),
-        )
-          ? 0
-          : layerChangeCost,
-    })
+    const optimizedEdges = buildMinimumSpanningTree(
+      connection.pointsToConnect,
+      {
+        extraEdges: [...pathEdges, ...zeroWeightEdges],
+        getAdditionalEdgeCost: (from, to): number =>
+          getConnectionPointLayers(from).some((layer) =>
+            getConnectionPointLayers(to).includes(layer),
+          )
+            ? 0
+            : layerChangeCost,
+      },
+    )
     const edges = orderMstEdgesForStablePairNames({
       points: connection.pointsToConnect,
       originalEdges,

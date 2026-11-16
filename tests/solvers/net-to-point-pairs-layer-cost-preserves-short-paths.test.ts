@@ -28,7 +28,9 @@ test("layer preferences retain materially shorter cross-layer paths", (): void =
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.newConnections).toHaveLength(2)
-  for (const { pointsToConnect: [from, to] } of solver.newConnections) {
+  for (const {
+    pointsToConnect: [from, to],
+  } of solver.newConnections) {
     expect(getConnectionPointLayers(from!)).not.toEqual(
       getConnectionPointLayers(to!),
     )
