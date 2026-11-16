@@ -83,10 +83,9 @@ test("routes the iCE/Pi ground pairing cutout", async (): Promise<void> => {
       includeTextLabels: false,
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "pairs" })
-  await expect(getBugReportSnapshotSvg(drcInput, { bounds: input.bounds })).toMatchSvgSnapshot(
-    import.meta.path,
-    { svgName: "routed" },
-  )
+  await expect(
+    getBugReportSnapshotSvg(drcInput, { bounds: input.bounds }),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "routed" })
   expect(
     drcInput.routedTraces
       .flatMap((trace) => trace.route)
