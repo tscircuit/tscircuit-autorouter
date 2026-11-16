@@ -1,0 +1,15 @@
+{
+  "sourceRepository": "ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs",
+  "sourceRevision": "585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
+  "sourcePath": "samples/sample021.json",
+  "sourceBlobSha": "ff5263eb8c857f31485c06a7a02d2191cb4dcd7a",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "sha256": "38c774814decccc3182fdad3735e77489a0cd7a6b3770793a55ae37608ccfd67",
+  "sourceUrl": "https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs/blob/585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30/samples/sample021.json",
+  "upstreamBoard": "https://tscircuit.com/0hmX/am62l-lpddr4-breakout-repro",
+  "upstreamPackageVersion": "1.0.5",
+  "scope": "Unchanged flat SRJ: all 573 native package pads, 33 requested signal connections, board outline, eight layers, buses and differential pairs.",
+  "defect": "All three differential pairs omit the required numeric lengthTolerance. This reproduction does not replace it with an invented routing tolerance.",
+  "visualization": "Native SRJ geometry and dashed unrouted requests. This preflight reproduction performs no routing and claims no accepted copper."
+}
