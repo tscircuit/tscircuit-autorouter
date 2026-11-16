@@ -50,6 +50,9 @@ if (existsSync(diagnosticPath)) {
     const census = JSON.stringify({ id: task.id, cohort: task.cohort, phase: "other_signals", reportCount: selected.length,
       currentSearchCensus: selected.length === 1 ? selected[0].currentSearchCensus ?? null : null })
     console.log(`GLIDER_CURRENT_SEARCH_CENSUS ${Buffer.byteLength(census) < 24 * 1024 ? census : JSON.stringify({ id: task.id, cohort: task.cohort, observerError: "Census packet exceeded 24KiB; full artifact retained" })}`)
+    const recoverability = JSON.stringify({ id: task.id, cohort: task.cohort, phase: "other_signals", reportCount: selected.length,
+      goalSideRecoverability: selected.length === 1 ? selected[0].goalSideRecoverability ?? null : null })
+    console.log(`GLIDER_RECOVERABILITY_CENSUS ${Buffer.byteLength(recoverability) < 24 * 1024 ? recoverability : JSON.stringify({ id: task.id, cohort: task.cohort, observerError: "Recoverability packet exceeded 24KiB; full artifact retained" })}`)
   }
 }
 const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }

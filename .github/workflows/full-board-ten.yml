@@ -1,8 +1,8 @@
-name: Published3200 Glider current-search diagnostic
+name: Published3200 Glider recoverability diagnostic
 
 on:
   push:
-    branches: [bench/glider-current-search-3200]
+    branches: [bench/glider-recoverability-3200]
 
 permissions:
   contents: read

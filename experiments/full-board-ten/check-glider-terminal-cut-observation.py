@@ -42,9 +42,20 @@ checks.update({
     "sameMinimumFrontierCandidate": len(minimum) == 6 and [frontier.get("candidate", {}).get(key) for key in ["port", "nextRegion", "g", "h", "f"]] == [minimum[0], minimum[1], minimum[3], minimum[4], minimum[5]],
     "currentSearchPacketBelow24KiB": len(json.dumps(census_selected_packet, separators=(",", ":"), ensure_ascii=False).encode()) < 24 * 1024,
 })
+recoverability = report.get("goalSideRecoverability", {})
+modes = recoverability.get("modes", [])
+recoverability_selected_packet = {"id": "glider", "cohort": "spaced", "phase": "other_signals", "reportCount": 1, "goalSideRecoverability": recoverability}
+expected_modes = ["current", "verified-movable-owners-relaxed", "all-assignments-relaxed"]
+checks.update({
+    "goalSideRecoverabilityObserved": recoverability.get("status") == "observed",
+    "goalSideIdentity": recoverability.get("routeId") == route.get("routeId") and recoverability.get("net") == route.get("netId") and recoverability.get("nativeIterations") == 2_000_000,
+    "threeCompleteNecessaryConditionModes": [mode.get("mode") for mode in modes] == expected_modes and all(mode.get("status") in ["disconnected-under-mode", "cost-independent-connection-found"] for mode in modes),
+    "forwardReverseCurrentAgreement": bool(modes) and ((census.get("status") == "disconnected-under-current-hard-admission" and modes[0].get("status") == "disconnected-under-mode") or (census.get("status") == "cost-independent-connection-found" and modes[0].get("status") == "cost-independent-connection-found")),
+    "recoverabilityPacketBelow24KiB": len(json.dumps(recoverability_selected_packet, separators=(",", ":"), ensure_ascii=False).encode()) < 24 * 1024,
+})
 packet = {
     "baselineCommit": "102c27644a53cf02861199d38608a9931dbef25d",
-    "priorDiagnosticCommit": "2ea9d0c739634452ce71c4a2f3081e4c520be624",
+    "priorDiagnosticCommit": "99bfea070042f1c766d51e3dcc98946bbedc66a8",
     "release": "tscircuit@0.0.3200",
     "diagnosticOnly": True,
     "observationValid": all(checks.values()),

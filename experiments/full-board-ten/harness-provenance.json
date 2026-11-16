@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11823,
-      "sha256": "75c2bf21dd5b28b93a575c34a6c3377fa985ba4cb79d397691af1946ea986481"
+      "bytes": 12310,
+      "sha256": "c5252aabb13b1e30478706fff614dd66416c2fd7133b418d9d561beafa1bdaaa"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -38,8 +38,8 @@
     },
     {
       "name": "createCoarseRoutingDiagnostics.ts",
-      "bytes": 18937,
-      "sha256": "3f5a313c2bc731adba45c664beef36373edb3606f4dbd91e660907146eb59059"
+      "bytes": 19173,
+      "sha256": "cc6696efb678bdb40787a2f65971e7d55416a83f9a160c75ad9195ad352a162e"
     },
     {
       "name": "collectPendingTerminalCut.ts",
@@ -48,18 +48,23 @@
     },
     {
       "name": "check-glider-terminal-cut-observation.py",
-      "bytes": 4629,
-      "sha256": "76b67f42a795748704ad6802a0e54f746f8de460a2c3a6d4015aa2163a058518"
+      "bytes": 5941,
+      "sha256": "1a201bc18c8654fb213498217f3db2a09d896d4008254901718db442ddfd9557"
     },
     {
       "name": "collectCurrentSearchCensus.ts",
       "bytes": 14543,
       "sha256": "1ed5f7c8d645c2677f20ed0beac691c0e5e1f208d05eb5aed5802de89e17edab"
+    },
+    {
+      "name": "collectGoalSideRecoverability.ts",
+      "bytes": 15430,
+      "sha256": "13109981742f37fb69f8c97be99ccebee4ada421e9fb36421339c08092032287"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance Glider spaced other_signals observation before existing final acceptance. Preserves the terminal packet; adds bounded current-assignment necessary-condition region census and recorded minimum-frontier predecessor-cost totals. No native solver predicate/getter calls or source/options/budget changes. Each selected packet below24KiB. Connected census does not certify a finite route; exhaustion applies only to current assignments, including movable preloads. Canonical output parity remains pending fresh3200 control comparison; no benefit claim.",
+  "diagnosticInstrumentation": "Published-instance Glider spaced other_signals observation before existing final acceptance. Preserves terminal and forward-census/cost packets; adds bounded goal-side necessary-condition modes for current assignments, exclusively verified movable owners relaxed, and all assignments relaxed. Fixed/unknown owners retained in movable-only mode; endpoint/region/section reservations remain in all modes. No solver predicate/getter calls or source/options/budget changes. Each selected packet below24KiB. Canonical parity remains pending fresh3200 comparison; no benefit claim.",
   "diagnosticBaselineCommit": "102c27644a53cf02861199d38608a9931dbef25d",
   "diagnosticOnly": true,
   "canonicalOutputParity": "pending_fresh3200_control_comparison",
-  "priorDiagnosticCommit": "2ea9d0c739634452ce71c4a2f3081e4c520be624"
+  "priorDiagnosticCommit": "99bfea070042f1c766d51e3dcc98946bbedc66a8"
 }

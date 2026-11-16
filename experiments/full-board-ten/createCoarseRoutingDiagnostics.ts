@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { collectPendingTerminalCut } from "./collectPendingTerminalCut"
 import { collectCurrentSearchCensus } from "./collectCurrentSearchCensus"
+import { collectGoalSideRecoverability } from "./collectGoalSideRecoverability"
 
 type RuntimeObject = Record<string, any>
 type DiagnosticOptions = {
@@ -183,6 +184,7 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
         if (name === "tryFinalAcceptance" && !report!.pendingTerminalCut && this.state.currentRouteId !== undefined) {
           report!.pendingTerminalCut = collectPendingTerminalCut(this, pathing!, "before_tryFinalAcceptance")
           report!.currentSearchCensus = collectCurrentSearchCensus(this)
+          report!.goalSideRecoverability = collectGoalSideRecoverability(this)
         }
         if (name === "onOutOfCandidates" && !report!.firstExhaustedSearch) {
           report!.firstExhaustedSearch = { iteration, route: routeDetail(this, routeId), queueLength: this.state.candidateQueue.length }
@@ -296,6 +298,7 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
       if (report && inner && pathing && !report.pendingTerminalCut) {
         report.pendingTerminalCut = collectPendingTerminalCut(inner, pathing, "finish")
         report.currentSearchCensus = collectCurrentSearchCensus(inner)
+        report.goalSideRecoverability = collectGoalSideRecoverability(inner)
       }
       if (report) report.innerHookInstalled = Boolean(inner)
       for (const restore of restorations.reverse()) restore()
