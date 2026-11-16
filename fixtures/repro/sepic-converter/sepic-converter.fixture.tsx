@@ -5,7 +5,10 @@ export default (): ReactElement => (
   <div>
     <p>
       Generated from board.tsx by
-      <code> bun test tests/repro/sepic-converter-pipeline9-clearance.test.ts</code>
+      <code>
+        {" "}
+        bun test tests/repro/sepic-converter-pipeline9-clearance.test.ts
+      </code>
     </p>
     <img
       alt="Complete TSX board with one Core trace DRC error"
