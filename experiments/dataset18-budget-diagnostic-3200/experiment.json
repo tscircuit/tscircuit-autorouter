@@ -1,0 +1,58 @@
+{
+  "frozen": true,
+  "name": "dataset18-published-budget-diagnostic",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "nativePublicationQualificationPending": true,
+  "controlCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "harnessCommit": "6d2cf24aea553928628036aceaa8f43ed3026e73",
+  "datasetCommit": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "runtime": {
+    "tscircuit": "0.0.3200",
+    "@tscircuit/core": "0.0.2395",
+    "@tscircuit/eval": "0.0.1789",
+    "@tscircuit/capacity-autorouter": "0.0.1107"
+  },
+  "adapterSha256": "e19108fe682f05f32b9dae5ef56d0e0c54963cfd69c3397b06e47a9ecae1644e",
+  "baseEntrySha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+  "diagnosticEntrySha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+  "scenarioCount": 16,
+  "sampleTimeoutMs": 360000,
+  "requestedConcurrency": 4,
+  "threadsPerSample": 1,
+  "memoryGuardUnchanged": true,
+  "passes": [
+    "base",
+    "pr"
+  ],
+  "sameVmSequential": true,
+  "sourceBuildPerformed": false,
+  "publishedRoutingDependencyGraphUnchanged": true,
+  "commonHarnessChanges": {
+    "scripts/benchmark/benchmark-run-task.ts": [
+      "autorouterModule import",
+      "convertSrjToGraphicsObject import"
+    ],
+    "scripts/benchmark/index.ts": [
+      "AUTOROUTER_VERSION import"
+    ]
+  },
+  "liveReachabilityCandidateIncluded": false,
+  "perCaseReporting": [
+    "didSolve",
+    "relaxedDrcPassed",
+    "drcErrorCount",
+    "didTimeout",
+    "sampleTimeoutMs",
+    "elapsedTimeMs",
+    "peakRssBytes",
+    "viaCount",
+    "traceLintIssueCounts",
+    "stageTiming",
+    "errorPhaseName",
+    "error"
+  ],
+  "status": "Prepared only; no push or dispatch until native publication gain and root review.",
+  "newSolverOrStrategyAdded": false,
+  "commonImportBoundaryAdaptation": true
+}

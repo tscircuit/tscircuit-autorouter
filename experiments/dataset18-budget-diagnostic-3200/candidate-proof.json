@@ -1,0 +1,51 @@
+{
+  "frozen": true,
+  "inputSha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+  "outputSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+  "originalBytes": 3321678,
+  "candidateBytes": 3321678,
+  "changedByteOffsets": [
+    2109350
+  ],
+  "originalAnchor": "MAX_ITERATIONS:Math.ceil(2e6*o*i)",
+  "replacementAnchor": "MAX_ITERATIONS:Math.ceil(4e6*o*i)",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "solveGraphBaseIterations": {
+    "before": 2000000,
+    "after": 4000000
+  },
+  "effortAndGraphScalingUnchanged": true,
+  "derivedPipelineIterationsAtEffort1GraphScale1": {
+    "before": 4000000,
+    "after": 6000000
+  },
+  "existingPortfolioMultiplier": {
+    "eligiblePairRouteCounts": [
+      30,
+      99
+    ],
+    "multiplier": 2,
+    "targetFailurePhase": {
+      "glider": 1,
+      "imx6": 2
+    }
+  },
+  "derivedOuterAdapterIterationsForTargetFailurePhase": {
+    "glider": 6000000,
+    "imx6": 12000000
+  },
+  "conditionalCostAwareFinalChildIterationsAtEffort1GraphScale1": {
+    "before": 4000000,
+    "after": 8000000,
+    "existingFormulaUnchanged": true
+  },
+  "sectionIterationsAtEffort1": 1000000,
+  "soloPrepassIterationsAtEffort1": 2000000,
+  "ordinaryGreedyFinalChildIterations": 50000,
+  "weightsGraphRulesEffortOrSolverChanged": false,
+  "externalDeadlinesChanged": false,
+  "liveReachabilityGuardAdded": false,
+  "newCensusObserverAdded": false,
+  "onlyOriginalBudgetConstantChanged": true
+}
