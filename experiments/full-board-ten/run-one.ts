@@ -27,6 +27,12 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
+if (task.corePadEdgeCandidate) {
+  const candidate = task.corePadEdgeCandidate
+  const publishedHash = createHash("sha256").update(readFileSync(candidate.originalEntry)).digest("hex")
+  const candidateHash = createHash("sha256").update(readFileSync(candidate.candidateEntry)).digest("hex")
+  if (publishedHash !== candidate.inputSha256 || candidateHash !== candidate.outputSha256) throw new Error("Frozen published/candidate Core bytes changed during the native run")
+}
 const diagnosticPath = join(output, "coarse-diagnostics.json")
 if (existsSync(diagnosticPath)) {
   const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))
@@ -42,7 +48,7 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], corePadEdgeCandidate: task.corePadEdgeCandidate ?? null, routingSourceOverride: Boolean(task.routingSourceOverride), mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false

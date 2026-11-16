@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14558,
+      "sha256": "8b32684996e2e4299b02f73344c324c180df33165ce9128d30376966ec54aa46"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11333,
+      "sha256": "39bbb04f9277b9691742c33a94fdfe0b5894d6fca400954f425d1240fbe8bd48"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -40,7 +40,28 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "../full-board-pad-edge-3199/apply-pad-edge-candidate.mjs",
+      "bytes": 2453,
+      "sha256": "b4627029084d4f9995658718601c840a3f6dacafd8ebe5c6b5b7352765fbfa81"
+    },
+    {
+      "name": "../full-board-pad-edge-3199/install-candidate.mjs",
+      "bytes": 5256,
+      "sha256": "d0dd8d4ed95fdb11af16ee0ba1129af7715b0dcf38fcd72619375d74b132f2d6"
+    },
+    {
+      "name": "../full-board-pad-edge-3199/candidate-proof.json",
+      "bytes": 687,
+      "sha256": "efee8c17737dd819203aecd0b33e1425579482dc32657ca83065c30e192d9175"
+    },
+    {
+      "name": "../full-board-pad-edge-3199/experiment.json",
+      "bytes": 2021,
+      "sha256": "447f69761bc2b1da7d7d38d2d8113b2d95be30744e65fa5f1663eaaa4216030d"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Inherited baseline P9 lifecycle diagnostics unchanged. No additional bus observer. Exact Core2394 private candidate enumerates existing explicit pad-edge alternatives; all native source/rule/budget/assessment contracts retained.",
+  "candidateExperiment": "pad-edge-site-candidate"
 }

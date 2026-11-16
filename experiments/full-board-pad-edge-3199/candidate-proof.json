@@ -1,0 +1,18 @@
+{
+  "inputSha256": "ca0766b386f4e2d60237c49ef9d1dfe91cb385cfa33ff828fa7b4d8b764d7b0e",
+  "outputSha256": "298c5446f3de8a44150ff4697419656dc29be56a0ea417bab2d445662951e875",
+  "originalBytes": 7186302,
+  "candidateBytes": 7186162,
+  "changedFunction": "expandedSignalSites",
+  "deletedStatements": [
+    "const gridCandidateCount = candidates.length;",
+    "if (index2 === gridCandidateCount && ends[end].length) break;"
+  ],
+  "unusedLoopIndexRemoved": true,
+  "regularCandidateOrderAndGeometryUnchanged": true,
+  "explicitPadEdgeRetryOnly": true,
+  "pourOrAntipadChanges": false,
+  "observersAdded": false,
+  "optionsRulesAndBudgetsChanged": false,
+  "outsideFunctionUnchanged": true
+}

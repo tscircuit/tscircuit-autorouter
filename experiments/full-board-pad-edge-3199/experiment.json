@@ -1,0 +1,62 @@
+{
+  "frozen": true,
+  "experiment": "pad-edge-site-candidate",
+  "baselineCommit": "ac386aa25ecf774e74441f5f571e938b6f3e24ff",
+  "target": {
+    "board": "butterstick",
+    "cohort": "spaced",
+    "fullCircuit": true,
+    "mode": "phased",
+    "fanout": false
+  },
+  "runtime": {
+    "main": "0.0.3199",
+    "core": "0.0.2394",
+    "eval": "0.0.1788",
+    "autorouter": "0.0.1106"
+  },
+  "candidate": {
+    "inputSha256": "ca0766b386f4e2d60237c49ef9d1dfe91cb385cfa33ff828fa7b4d8b764d7b0e",
+    "outputSha256": "298c5446f3de8a44150ff4697419656dc29be56a0ea417bab2d445662951e875",
+    "originalBytes": 7186302,
+    "candidateBytes": 7186162,
+    "changedFunction": "expandedSignalSites",
+    "deletedStatements": [
+      "const gridCandidateCount = candidates.length;",
+      "if (index2 === gridCandidateCount && ends[end].length) break;"
+    ],
+    "unusedLoopIndexRemoved": true,
+    "regularCandidateOrderAndGeometryUnchanged": true,
+    "explicitPadEdgeRetryOnly": true,
+    "pourOrAntipadChanges": false,
+    "observersAdded": false,
+    "optionsRulesAndBudgetsChanged": false,
+    "outsideFunctionUnchanged": true
+  },
+  "routingSourceOverride": true,
+  "existingP9DiagnosticsUnchanged": true,
+  "busObserverAdded": false,
+  "deadlinesMs": {
+    "capture": 900000,
+    "hard": 960000,
+    "assessment": 180000
+  },
+  "sourceModulesAndAssessmentUnchanged": true,
+  "installationOrder": [
+    "verified published runtime",
+    "authentic case and original assessment helper",
+    "private Core copy and explicit candidate metadata",
+    "full published Main render",
+    "unchanged physical assessment"
+  ],
+  "validation": {
+    "fullCandidateModuleParsed": true,
+    "sourceEntryImportPassed": true,
+    "exportCount": 183,
+    "rootCircuitExport": true,
+    "routingExecutedLocally": false,
+    "installerSyntaxChecked": true
+  },
+  "candidateSourceSha256": "b4627029084d4f9995658718601c840a3f6dacafd8ebe5c6b5b7352765fbfa81",
+  "installerSha256": "d0dd8d4ed95fdb11af16ee0ba1129af7715b0dcf38fcd72619375d74b132f2d6"
+}
