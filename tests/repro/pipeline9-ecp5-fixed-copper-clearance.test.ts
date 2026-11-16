@@ -114,7 +114,7 @@ test("repairs ECP5 DDR copper using the native clearance rules", async (): Promi
     ...checkDifferentNetViaSpacing(circuit),
     ...checkViasInPads(circuit),
   ]
-  expect(findings).toHaveLength(34)
+  expect(findings).toEqual([])
   const renderOptions = {
     backgroundColor: "white",
     colorOverrides: {
