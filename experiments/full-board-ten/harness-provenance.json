@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14563,
+      "sha256": "b7d4ff3d8769d73f16dbdca77159ed807ed8b14e10a554f15cfb7dce81703ab0"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11449,
+      "sha256": "1eb731399d1d0c0b0b71cbc3f8fd0155254c30551ab70c2d827f99ae83b3b963"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -40,7 +40,43 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/apply-live-reachability-candidate.mjs",
+      "bytes": 3660,
+      "sha256": "dd70659bdcfab06e10d500492e915f264d4399000d20cd3c03870de0ed9e510e"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/install-candidate.mjs",
+      "bytes": 6565,
+      "sha256": "7f637700cbeb696228031f5e5a70bbee8d73d23611c8fa16024b84a09aaa61c6"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/helper-source.ts.txt",
+      "bytes": 2069,
+      "sha256": "21bd674e9b8194684b71af50df24506408dd41303885d0cca064e4d700109f0f"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/source-freeze.json",
+      "bytes": 767,
+      "sha256": "4c73cb7e44034127609b4d06c8f77ec02688c0c6737b4a1adad99570587444b6"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/production.patch",
+      "bytes": 3913,
+      "sha256": "1b5f35fe4a2f4eb625a4e5685f9f385fc86b0299a1a1e0d70ad4836fcfcb9896"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/candidate-proof.json",
+      "bytes": 1148,
+      "sha256": "f555d5842fcd8351bd1969123bb3c5751ce0dd29085012a25740b615b0d002f1"
+    },
+    {
+      "name": "../full-board-live-reachability-3200/experiment.json",
+      "bytes": 3550,
+      "sha256": "63a6018966857e522e9bfe6f672c03f7866bcf3a6679d50fca4a309c8ee95abc"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
+  "routingSourceCandidate": "Private source-derived Tiny live-assignment reachability guard in the exact AR1107 bundle. Costs, legal input graph, recovery algorithm and budgets unchanged; proven disconnection invokes existing onOutOfCandidates earlier. Original Core/assessment AR remain published. Native completion is unqualified until measured."
 }

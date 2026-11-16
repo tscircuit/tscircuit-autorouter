@@ -1,0 +1,117 @@
+diff --git a/lib/core.ts b/lib/core.ts
+index e1b07ea..009161c 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -22,6 +22,7 @@ import {
+   createStaticallyUnroutableRouteSummary,
+   getStaticallyUnroutableRoutes,
+   getStaticReachabilityError,
++  hasCurrentRouteReachabilityPath,
+ } from "./static-reachability"
+ import type {
+   HopId,
+@@ -847,6 +848,23 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         return
+       }
+ 
++      state.goalPortId = this.getRouteEndPortId(state.currentRouteId!)
++      if (
++        !hasCurrentRouteReachabilityPath({
++          topology,
++          problem,
++          problemSetup: this.problemSetup,
++          portAssignment: state.portAssignment,
++          routeNetId: state.currentRouteNetId!,
++          startPortId: startingPortId,
++          goalPortId: state.goalPortId,
++          startRegionId: startingNextRegionId,
++        })
++      ) {
++        this.onOutOfCandidates()
++        return
++      }
++
+       const startingHopId = this.getHopId(startingPortId, startingNextRegionId)
+       this.setCandidateBestCost(startingHopId, 0)
+       state.candidateQueue.queue({
+@@ -857,7 +875,6 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         g: 0,
+         h: 0,
+       })
+-      state.goalPortId = this.getRouteEndPortId(state.currentRouteId!)
+     }
+ 
+     const currentCandidate = state.candidateQueue.dequeue()
+diff --git a/lib/static-reachability.ts b/lib/static-reachability.ts
+index 6fe01d2..3dde7c7 100644
+--- a/lib/static-reachability.ts
++++ b/lib/static-reachability.ts
+@@ -49,6 +49,68 @@ interface StaticReachabilityContext {
+   getRouteSummary: (routeId: RouteId) => StaticallyUnroutableRouteSummary
+ }
+ 
++interface CurrentRouteReachabilityContext {
++  topology: TinyHyperGraphTopology
++  problem: TinyHyperGraphProblem
++  problemSetup: TinyHyperGraphProblemSetup
++  portAssignment: Int32Array
++  routeNetId: NetId
++  startPortId: PortId
++  goalPortId: PortId
++  startRegionId: RegionId
++}
++
++export const hasCurrentRouteReachabilityPath = ({
++  topology,
++  problem,
++  problemSetup,
++  portAssignment,
++  routeNetId,
++  startPortId,
++  goalPortId,
++  startRegionId,
++}: CurrentRouteReachabilityContext): boolean => {
++  if (startPortId === goalPortId) return true
++  const visited = new Uint8Array(topology.regionCount)
++  const queue = new Int32Array(topology.regionCount)
++  let queueLength = 1
++  queue[0] = startRegionId
++  visited[startRegionId] = 1
++
++  // Ignoring entry-port and weighted-cost constraints overapproximates native
++  // paths. Only exhaustive failure proves the current assignments disconnect it.
++  for (let index = 0; index < queueLength; index++) {
++    const regionId = queue[index]!
++    const regionNetId = problem.regionNetId[regionId]
++    if (regionNetId !== -1 && regionNetId !== routeNetId) continue
++
++    for (const portId of topology.regionIncidentPorts[regionId]!) {
++      const endpointNetId =
++        problemSetup.portEndpointReservationNetId[portId] ?? -1
++      const assignedNetId = portAssignment[portId]
++      if (
++        endpointNetId === -2 ||
++        (endpointNetId !== -1 && endpointNetId !== routeNetId) ||
++        (assignedNetId !== -1 && assignedNetId !== routeNetId)
++      ) {
++        continue
++      }
++      // Native goals do not need a section-enabled port or an opposite region.
++      if (portId === goalPortId) return true
++      if (problem.portSectionMask[portId] === 0) continue
++      const incidentRegions = topology.incidentPortRegion[portId]!
++      const nextRegionId =
++        incidentRegions[0] === regionId
++          ? incidentRegions[1]
++          : incidentRegions[0]
++      if (nextRegionId === undefined || visited[nextRegionId]) continue
++      visited[nextRegionId] = 1
++      queue[queueLength++] = nextRegionId
++    }
++  }
++  return false
++}
++
+ const getRouteMetadataFromProblem = (
+   problem: TinyHyperGraphProblem,
+   routeId: RouteId,

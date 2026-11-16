@@ -1,0 +1,18 @@
+{
+  "head": "f6d6a681147773fa55c4fa475b9998f0d96aefc7",
+  "files": {
+    "lib/core.ts": "269444da58599635ce30875c7d8a177399dcfc44760de34dfa2e867a67fccf32",
+    "lib/static-reachability.ts": "2b591f0ba3b5054706f4980d2d0362d9ed3c3e4ecb674f3b0709f287842c4f7c",
+    "tests/solver/current-route-reachability.test.ts": "8f4c328ad9a1417e52ec868f3b016cc94b1d0ce3eefd80208149803e66472957"
+  },
+  "baselineFailsAtSame16StepCap": true,
+  "candidateCompletesSameGraphAtSameCap": true,
+  "frozen": true,
+  "baselineTinyCommit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "baselineProductionFilesMatch": true,
+  "helperFragmentSha256": "21bd674e9b8194684b71af50df24506408dd41303885d0cca064e4d700109f0f",
+  "helperFragmentSourceRange": {
+    "start": 1261,
+    "end": 3330
+  }
+}

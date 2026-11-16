@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "frozen": true,
+  "name": "live-reachability-candidate",
+  "controlCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "case": {
+    "id": "glider",
+    "cohort": "spaced",
+    "mode": "phased",
+    "fanout": false,
+    "captureDeadlineMs": 900000,
+    "hardDeadlineMs": 960000,
+    "assessmentDeadlineMs": 180000
+  },
+  "runtime": [
+    "tscircuit@0.0.3200",
+    "@tscircuit/core@0.0.2395",
+    "@tscircuit/eval@0.0.1789",
+    "@tscircuit/capacity-autorouter@0.0.1107"
+  ],
+  "sourceOverride": {
+    "frozen": true,
+    "inputSha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+    "outputSha256": "5f184e09c5873093a16e542238797e0a629f028e1651f087191ed246d34d4880",
+    "originalBytes": 3321678,
+    "candidateBytes": 3323348,
+    "tinyBaselineCommit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+    "tinySourceHead": "f6d6a681147773fa55c4fa475b9998f0d96aefc7",
+    "tinySourceFiles": {
+      "lib/core.ts": "269444da58599635ce30875c7d8a177399dcfc44760de34dfa2e867a67fccf32",
+      "lib/static-reachability.ts": "2b591f0ba3b5054706f4980d2d0362d9ed3c3e4ecb674f3b0709f287842c4f7c"
+    },
+    "helperFragmentSha256": "21bd674e9b8194684b71af50df24506408dd41303885d0cca064e4d700109f0f",
+    "helperJavascriptSha256": "863c9f310a9d8b2ef5c1588637089a0f94268f63bfe6e54248cc694f44ca2a0a",
+    "compiler": "Bun 1.4.3 Transpiler",
+    "changedMethod": "TinyHyperGraphSolver._step route initialization",
+    "existingRecoveryMethod": "onOutOfCandidates",
+    "unrelatedPublishedBytesUnchanged": true,
+    "olderNestedTinyCopyUnchanged": true,
+    "weightsGraphRulesAndBudgetsChanged": false,
+    "newSolverOrStrategyAdded": false,
+    "additionalObserverAdded": false
+  },
+  "nativeClassSourceProof": {
+    "actualPreparedClass": "fQ",
+    "ancestry": [
+      {
+        "name": "fQ",
+        "parent": "lQ",
+        "offset": 2067415
+      },
+      {
+        "name": "lQ",
+        "parent": "aQ",
+        "offset": 2061151
+      },
+      {
+        "name": "aQ",
+        "parent": "iQ",
+        "offset": 2045719
+      },
+      {
+        "name": "iQ",
+        "parent": "nQ",
+        "offset": 2025504
+      },
+      {
+        "name": "nQ",
+        "parent": "GJ",
+        "offset": 2024684
+      },
+      {
+        "name": "GJ",
+        "parent": "yq",
+        "offset": 1993117
+      }
+    ],
+    "initAnchorOffset": 2000341,
+    "initOwner": "GJ",
+    "anchorBelongsToNativePreparedAncestor": true,
+    "onlyOneExactSeedAnchor": true,
+    "topologyIsConstructorOwnField": true
+  },
+  "localImportSmoke": {
+    "originalSha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+    "candidateSha256": "5f184e09c5873093a16e542238797e0a629f028e1651f087191ed246d34d4880",
+    "exportsIdentical": true,
+    "exportCount": 49,
+    "pipeline9ExportAvailable": true,
+    "reapplicationRejected": true,
+    "noRoutingExecuted": true,
+    "canonicalRuntimeAliasUnchanged": true,
+    "importProcessIsolation": "Separate child processes preserve the solver-utils registry. Importing two distinct AR builds in one process is rejected by the existing duplicate solver registration guard."
+  },
+  "assessment": "Exact published Core prefix/helper preserved; its private AR alias remains original. Native connectivity/count/physical assessment unchanged.",
+  "diagnostics": "Inherited baseline P9 lifecycle observer unchanged; no new observer.",
+  "qualification": "Not yet tested on the authentic native full board. Existing source regression and import checks do not establish a completion gain."
+}

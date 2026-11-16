@@ -1,0 +1,62 @@
+interface CurrentRouteReachabilityContext {
+  topology: TinyHyperGraphTopology
+  problem: TinyHyperGraphProblem
+  problemSetup: TinyHyperGraphProblemSetup
+  portAssignment: Int32Array
+  routeNetId: NetId
+  startPortId: PortId
+  goalPortId: PortId
+  startRegionId: RegionId
+}
+
+export const hasCurrentRouteReachabilityPath = ({
+  topology,
+  problem,
+  problemSetup,
+  portAssignment,
+  routeNetId,
+  startPortId,
+  goalPortId,
+  startRegionId,
+}: CurrentRouteReachabilityContext): boolean => {
+  if (startPortId === goalPortId) return true
+  const visited = new Uint8Array(topology.regionCount)
+  const queue = new Int32Array(topology.regionCount)
+  let queueLength = 1
+  queue[0] = startRegionId
+  visited[startRegionId] = 1
+
+  // Ignoring entry-port and weighted-cost constraints overapproximates native
+  // paths. Only exhaustive failure proves the current assignments disconnect it.
+  for (let index = 0; index < queueLength; index++) {
+    const regionId = queue[index]!
+    const regionNetId = problem.regionNetId[regionId]
+    if (regionNetId !== -1 && regionNetId !== routeNetId) continue
+
+    for (const portId of topology.regionIncidentPorts[regionId]!) {
+      const endpointNetId =
+        problemSetup.portEndpointReservationNetId[portId] ?? -1
+      const assignedNetId = portAssignment[portId]
+      if (
+        endpointNetId === -2 ||
+        (endpointNetId !== -1 && endpointNetId !== routeNetId) ||
+        (assignedNetId !== -1 && assignedNetId !== routeNetId)
+      ) {
+        continue
+      }
+      // Native goals do not need a section-enabled port or an opposite region.
+      if (portId === goalPortId) return true
+      if (problem.portSectionMask[portId] === 0) continue
+      const incidentRegions = topology.incidentPortRegion[portId]!
+      const nextRegionId =
+        incidentRegions[0] === regionId
+          ? incidentRegions[1]
+          : incidentRegions[0]
+      if (nextRegionId === undefined || visited[nextRegionId]) continue
+      visited[nextRegionId] = 1
+      queue[queueLength++] = nextRegionId
+    }
+  }
+  return false
+}
+
