@@ -31,20 +31,18 @@ test("captures H616 ordinary-signal routing around preloaded DDR traces", async 
   const original = structuredClone(fixture)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(fixture.srj)
   solver.solve()
-  expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("Static reachability precheck failed")
-  expect(solver.error).toContain("source_net_1_mst0")
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
   expect(fixture).toEqual(original)
-  const routedTraces = solver.solved
-    ? solver.getOutputSimplifiedPcbTraces()
-    : []
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const evaluate = createPipeline9AutoroutingDrcEvaluator({
     inputSrj: fixture.srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
     includeBoardClearance: true,
   })
   expect(
-    evaluate(routedTraces, { includeTraceContinuity: solver.solved }).errors,
+    evaluate(routedTraces, { includeTraceContinuity: true }).errors,
   ).toEqual([])
   const allTraces = [
     ...fixture.fixedTraces,
@@ -67,7 +65,7 @@ test("captures H616 ordinary-signal routing around preloaded DDR traces", async 
   const routedNetCount = new Set(
     allTraces.map((trace) => trace.connection_name),
   ).size
-  expect(routedNetCount).toBe(53)
+  expect(routedNetCount).toBe(109)
   await expect(
     getH616PreloadReachabilityPcbSvg({ circuitJson, routedNetCount }),
   ).toMatchSvgSnapshot(import.meta.path, { scale: 1 })
