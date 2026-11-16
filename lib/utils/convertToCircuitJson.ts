@@ -16,6 +16,12 @@ import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getSrjWithImportedPadPortIds } from "./getSrjWithImportedPadPortIds"
 
+type RouteEndpoint = {
+  x: number
+  y: number
+  layers: string[]
+}
+
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
  */
@@ -371,6 +377,45 @@ const resolveCircuitJsonSourceTraceId = (
   return sourceTraceIds.values().next().value
 }
 
+function getRouteEndpoints(
+  route: SimplifiedPcbTrace | HighDensityRoute,
+  srj: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
+): RouteEndpoint[] {
+  return [route.route[0], route.route[route.route.length - 1]].map(
+    (segment, endpointIndex): RouteEndpoint => {
+      const endpoint = endpointIndex === 0 ? "start" : "end"
+      if ("route_type" in segment && segment.route_type === "jumper") {
+        return { ...segment[endpoint], layers: [segment.layer] }
+      }
+      if (
+        "route_type" in segment &&
+        segment.route_type === "through_obstacle"
+      ) {
+        return {
+          ...segment[endpoint],
+          layers: [
+            endpoint === "start" ? segment.from_layer : segment.to_layer,
+          ],
+        }
+      }
+      if ("x" in segment && "y" in segment) {
+        const layers =
+          "route_type" in segment
+            ? segment.route_type === "via"
+              ? getViaDrillLayers(
+                  segment,
+                  srj.layerCount,
+                  srj.allowBlindAndBuriedVias === true,
+                )
+              : [segment.layer]
+            : [mapZToLayerName(segment.z, srj.layerCount)]
+        return { x: segment.x, y: segment.y, layers }
+      }
+      throw new Error("Cannot resolve route endpoint layers")
+    },
+  )
+}
+
 /**
  * Create source_trace elements from the SimpleRouteJson connections
  * These represent the logical connections between points
@@ -430,30 +475,20 @@ function createSourceTraces(
 
     // Physical terminals fix the net; unbound routes can attach by geometry.
     const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
+    const hdRoute = hdRoutes.find((route): boolean => {
+      const connectionName =
+        "connection_name" in route
+          ? route.connection_name
+          : route.connectionName
+      return connectionName === connection.name
+    })
     if (hdRoute) {
-      const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
-        if ("route_type" in segment && segment.route_type === "jumper") {
-          return segment.start
-        }
-        if ("x" in segment && "y" in segment) {
-          return { x: segment.x, y: segment.y }
-        }
-        return { x: 0, y: 0 }
-      }
-
-      const endpoints = [
-        getPointFromSegment(hdRoute.route[0]),
-        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
-      ]
+      const endpoints = getRouteEndpoints(hdRoute, srj)
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
           if (
+            endpoint.layers.some((layer) => obstacle.layers.includes(layer)) &&
             pointToBoxDistance(endpoint, obstacle) <= 0 &&
             (connectedPortIds.length === 0 ||
               obstacle.netIsAssignable ||
