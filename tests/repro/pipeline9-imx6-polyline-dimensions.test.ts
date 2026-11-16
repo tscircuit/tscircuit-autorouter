@@ -123,6 +123,7 @@ test("i.MX6 DDR polyline candidates use the requested copper dimensions", async 
     ...checkDifferentNetViaSpacing(circuit),
     ...checkViasInPads(circuit),
   ]
+  expect(findings).toEqual([])
   const snapshots = getImx6PolylineCircuitSnapshots({
     circuitJson: circuit,
     connectedNetCount: routedNetIds.size,

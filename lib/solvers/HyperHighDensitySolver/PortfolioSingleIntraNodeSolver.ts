@@ -739,6 +739,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         connMap: this.connMap,
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
+        obstacleMargin: this.constructorParams.obstacleMargin,
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {

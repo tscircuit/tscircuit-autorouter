@@ -31,13 +31,6 @@ test("polyline candidates enforce the requested terminal clearance", (): void =>
     throw new Error("Expected the polyline portfolio candidate")
   }
   solver.solve()
-  expect(solver.failed).toBeFalse()
-  expect(solver.solved).toBeTrue()
-  expect(solver.solvedRoutes).toHaveLength(2)
-  const terminalClearance =
-    Math.abs(node.portPoints[2]!.y - node.portPoints[0]!.y) -
-    solver.solvedRoutes[0]!.traceThickness
-  expect(terminalClearance).toBeLessThan(
-    portfolio.constructorParams.obstacleMargin!,
-  )
+  expect(solver.failed).toBeTrue()
+  expect(solver.solved).toBeFalse()
 })
