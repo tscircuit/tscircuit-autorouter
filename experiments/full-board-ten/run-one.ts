@@ -1,5 +1,5 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHash } from "node:crypto"
 
@@ -24,6 +24,7 @@ const sample = setInterval((): void => {
 }, 1000)
 const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
 const renderExitCode = await worker.exited
+const renderWallMs = performance.now() - started
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
@@ -42,8 +43,13 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
+
+if (task.autorouterRegionalExpansion) {
+  const restore = Bun.spawnSync(["python3", join(import.meta.dir, "regional-expansion-runtime.py"), "restore", dirname(task.runtimeManifestPath)], { stdout: "inherit", stderr: "inherit" })
+  if (restore.exitCode !== 0) throw new Error("Failed to restore original autorouter before neutral assessment")
+}
 
 let auditExitCode: number | null = null, auditTimedOut = false
 let emittedCounts: Record<string, number> | null = null
