@@ -50,12 +50,19 @@ def main() -> None:
                 (namespace / package.name).symlink_to(package)
         else:
             (farm / alias.name).symlink_to(alias)
-    records = manifest["packages"] + manifest["additionalChangedPackages"]
+    release = json.loads((controller / "release.json").read_text())
+    extra_packages = {record["name"]: record for record in release["additionalChangedPackages"]}
+    records = list(manifest["packages"])
+    for record in manifest["additionalChangedPackages"]:
+        expected = extra_packages[record["name"]]
+        if any(record[key] != expected[key] for key in ["name", "version", "entrySha256"]):
+            raise RuntimeError("Extra published dependency differs from the frozen release")
+        records.append(expected)
     for record in records:
         package = output / "npm" / record["label"]
         if record["label"] == "autorouter":
             source = artifact / "packages" / arguments.variant
-        elif record in manifest["additionalChangedPackages"]:
+        elif record["name"] in extra_packages:
             source = published / "runtime/node_modules" / record["name"]
         else:
             source = published / "npm" / record["label"]

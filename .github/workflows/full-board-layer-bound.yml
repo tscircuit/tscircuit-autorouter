@@ -9,7 +9,7 @@ on:
         description: Build provenance only, or the three board pairs plus Dataset18
         type: choice
         default: build_only
-        options: [build_only, boards_and_dataset18]
+        options: [build_only, boards_only, boards_and_dataset18]
 
 permissions:
   contents: read
@@ -63,7 +63,7 @@ jobs:
   boards:
     name: Source pair (${{ matrix.board }}, ${{ matrix.cohort }})
     needs: source-builds
-    if: github.event_name == 'workflow_dispatch' && inputs.validation == 'boards_and_dataset18'
+    if: github.event_name == 'workflow_dispatch' && inputs.validation != 'build_only'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 75
     strategy:
