@@ -161,7 +161,11 @@ export const KF301_5_0_2P = (props: ConnectorProps): ReactElement => {
         stepUrl:
           "https://modelcdn.tscircuit.com/easyeda_models/assets/C474881.step?uuid=ccfba28652874fb7a69eea8ba34eb61b",
         pcbRotationOffset: 0,
-        modelOriginPosition: { x: 0, y: -0.1499495999999556, z: -4.950006999999999 },
+        modelOriginPosition: {
+          x: 0,
+          y: -0.1499495999999556,
+          z: -4.950006999999999,
+        },
       }}
       {...props}
     />

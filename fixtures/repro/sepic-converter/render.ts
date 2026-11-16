@@ -31,12 +31,15 @@ export async function renderSepicRepro(): Promise<{
       autorouter: {
         local: true,
         groupMode: "subcircuit",
-        algorithmFn: async (srj: SimpleRouteJson): Promise<NativeAutorouter> => {
+        algorithmFn: async (
+          srj: SimpleRouteJson,
+        ): Promise<NativeAutorouter> => {
           input = srj
-          const routingSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-            srj,
-            { cacheProvider: null, effort: 1 },
-          )
+          const routingSolver =
+            new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+              cacheProvider: null,
+              effort: 1,
+            })
           solver = routingSolver
           const listeners = new Map<string, RoutingListener>()
           return {

@@ -210,7 +210,11 @@ export const LM3478MA_NOPB = (
               { x: -2.5262078000000656, y: 0.44889420000004066 },
             ]}
           />
-          <silkscreencircle pcbX="-1.905mm" pcbY="-1.016mm" radius="0.150114mm" />
+          <silkscreencircle
+            pcbX="-1.905mm"
+            pcbY="-1.016mm"
+            radius="0.150114mm"
+          />
           <silkscreentext
             text="{NAME}"
             pcbX="0.0127mm"

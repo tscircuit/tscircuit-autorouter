@@ -48,9 +48,9 @@ test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearanc
     ["source_net_8_mst1_0", 0.15],
     ["source_net_7_mst0_0", 0.2],
   ] as const) {
-    const trace = solver.getOutputSimplifiedPcbTraces().find(
-      (trace) => trace.pcb_trace_id === traceId,
-    )!
+    const trace = solver
+      .getOutputSimplifiedPcbTraces()
+      .find((trace) => trace.pcb_trace_id === traceId)!
     const bottomWires = trace.route.filter(
       (point) => point.route_type === "wire" && point.layer === "bottom",
     )
