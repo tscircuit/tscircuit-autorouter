@@ -22,7 +22,7 @@ test("routes the complete GMSL serializer board with layer-aware net pairing", a
   const viaCount = snapshotInput.routedTraces
     .flatMap((trace) => trace.route)
     .filter((point) => point.route_type === "via").length
-  expect(viaCount).toBe(118)
+  expect(viaCount).toBe(116)
   await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
     import.meta.path,
   )

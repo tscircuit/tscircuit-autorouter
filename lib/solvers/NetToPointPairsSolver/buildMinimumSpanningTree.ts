@@ -2,26 +2,29 @@ import type { PointKey } from "lib/types"
 
 type Point = { x: number; y: number }
 
-export class KDNode {
-  point: Point
-  left: KDNode | null = null
-  right: KDNode | null = null
+export class KDNode<T extends Point = Point> {
+  point: T
+  left: KDNode<T> | null = null
+  right: KDNode<T> | null = null
 
-  constructor(point: Point) {
+  constructor(point: T) {
     this.point = point
   }
 }
 
-class KDTree {
-  root: KDNode | null = null
+class KDTree<T extends Point> {
+  root: KDNode<T> | null = null
 
-  constructor(points: Point[]) {
+  constructor(
+    points: T[],
+    private readonly getAdditionalEdgeCost?: (from: T, to: T) => number,
+  ) {
     if (points.length > 0) {
       this.root = this.buildTree(points, 0)
     }
   }
 
-  private buildTree(points: Point[], depth: number): KDNode {
+  private buildTree(points: T[], depth: number): KDNode<T> {
     const axis = depth % 2 === 0 ? "x" : "y"
 
     // Sort points by the current axis
@@ -44,12 +47,12 @@ class KDTree {
   }
 
   // Find the nearest neighbor to a query point
-  findNearestNeighbor(queryPoint: Point): Point {
+  findNearestNeighbor(queryPoint: T): T {
     if (!this.root) {
       throw new Error("Tree is empty")
     }
 
-    const best: Point = this.root.point
+    const best: T = this.root.point
     const bestDistance = this.distance(queryPoint, best)
 
     this.nearestNeighborSearch(this.root, queryPoint, 0, best, bestDistance)
@@ -58,12 +61,12 @@ class KDTree {
   }
 
   private nearestNeighborSearch(
-    node: KDNode | null,
-    queryPoint: Point,
+    node: KDNode<T> | null,
+    queryPoint: T,
     depth: number,
-    best: Point,
+    best: T,
     bestDistance: number,
-  ): Point {
+  ): T {
     if (!node) {
       return best
     }
@@ -106,12 +109,12 @@ class KDTree {
   }
 
   // Find k nearest neighbors
-  findKNearestNeighbors(queryPoint: Point, k: number): Point[] {
+  findKNearestNeighbors(queryPoint: T, k: number): T[] {
     if (!this.root) {
       return []
     }
 
-    const neighbors: Array<{ point: Point; distance: number }> = []
+    const neighbors: Array<{ point: T; distance: number }> = []
 
     this.kNearestNeighborSearch(this.root, queryPoint, 0, neighbors, k)
 
@@ -122,10 +125,10 @@ class KDTree {
   }
 
   private kNearestNeighborSearch(
-    node: KDNode | null,
-    queryPoint: Point,
+    node: KDNode<T> | null,
+    queryPoint: T,
     depth: number,
-    neighbors: Array<{ point: Point; distance: number }>,
+    neighbors: Array<{ point: T; distance: number }>,
     k: number,
   ): void {
     if (!node) {
@@ -172,8 +175,11 @@ class KDTree {
   }
 
   // Calculate Euclidean distance between two points
-  private distance(a: Point, b: Point): number {
-    return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+  private distance(a: T, b: T): number {
+    return (
+      Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2) +
+      (this.getAdditionalEdgeCost?.(a, b) ?? 0)
+    )
   }
 }
 
@@ -254,6 +260,8 @@ interface Edge<T extends Point> {
 
 interface BuildMinimumSpanningTreeOptions<T extends Point> {
   extraEdges?: Edge<T>[]
+  /** Nonnegative additional edge cost, in the same mm-equivalent units as XY distance. */
+  getAdditionalEdgeCost?: (from: T, to: T) => number
 }
 
 // Main function to build a minimum spanning tree using Kruskal's algorithm
@@ -269,7 +277,7 @@ export function buildMinimumSpanningTree<T extends Point>(
   const pointsCopy = [...points]
 
   // Build KD-Tree for efficient nearest neighbor search
-  const kdTree = new KDTree(pointsCopy)
+  const kdTree = new KDTree(pointsCopy, opts.getAdditionalEdgeCost)
 
   // Generate edges with k-nearest neighbors for each point
   // This is an optimization to avoid generating all possible n(n-1)/2 edges
@@ -287,13 +295,14 @@ export function buildMinimumSpanningTree<T extends Point>(
           continue
         }
 
-        const distance = Math.sqrt(
-          (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
-        )
+        const distance =
+          Math.sqrt(
+            (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
+          ) + (opts.getAdditionalEdgeCost?.(point, neighbor) ?? 0)
 
         edges.push({
           from: point,
-          to: neighbor as T,
+          to: neighbor,
           weight: distance,
         })
       }
