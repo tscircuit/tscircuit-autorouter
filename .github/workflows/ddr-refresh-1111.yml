@@ -1,7 +1,7 @@
 name: Rerun full DDR boards on released router 1111 and core 2398
 on:
   push:
-    branches: [codex/ddr-refresh-1111]
+    branches: [candidate/dense-plane-transitions]
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: 5548af181cda76191e83e48a7fec2f31c102d066
+          ref: candidate/dense-plane-transitions
           path: router
       - uses: actions/checkout@v4
         with:
@@ -44,12 +44,12 @@ jobs:
           export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
           BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
             --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
-            --out "$GITHUB_WORKSPACE/results/latest/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/latest/ddr/$BOARD_ID/"*.log; exit 1; }
-          FULL_BOARD_VARIANT=latest bun plane-suite.ts ../../results/latest/full
+            --out "$GITHUB_WORKSPACE/results/fixed/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/fixed/ddr/$BOARD_ID/"*.log; exit 1; }
+          FULL_BOARD_VARIANT=fixed bun plane-suite.ts ../../results/fixed/full
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh1111-${{ matrix.board }}
+          name: dense-plane-${{ matrix.board }}
           path: results
           retention-days: 14
       - name: Export native results and phase inputs for analysis
@@ -64,10 +64,10 @@ jobs:
               for path in Path('results').rglob('*'):
                   if path.is_file() and (path.name in names or path.name.endswith('.srj.json')):
                       archive.writestr(str(path.relative_to('results')),path.read_bytes())
-          print('REFRESH1111_BOARD_EVIDENCE_BEGIN')
+          print('DENSE_PLANE_BOARD_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('REFRESH1111_BOARD_EVIDENCE_END')
+          print('DENSE_PLANE_BOARD_EVIDENCE_END')
           PY
   dataset18:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
@@ -75,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 5548af181cda76191e83e48a7fec2f31c102d066
+          ref: candidate/dense-plane-transitions
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh1111-dataset18
+          name: dense-plane-dataset18
           path: |
             benchmark-result.json
             benchmark-result.txt
@@ -98,5 +98,5 @@ jobs:
           python3 - <<'PYREPORT'
           import json
           from pathlib import Path
-          print('REFRESH1111_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
+          print('DENSE_PLANE_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
           PYREPORT
