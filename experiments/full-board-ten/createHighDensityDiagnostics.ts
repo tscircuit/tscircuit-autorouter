@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { getHighDensityPortContext } from "./getHighDensityPortContext"
 
 type RuntimeObject = Record<string, any>
 type DiagnosticOptions = {
@@ -53,6 +54,13 @@ export function createHighDensityDiagnostics(options: DiagnosticOptions): {
       }
       b01Attempts.set(solver, attempt)
       report.b01Attempts.push(attempt)
+      if (options.targetNodeId === "topology_merge_7204" && report.nativeContexts.length === 0) {
+        assert(pipeline)
+        for (const context of getHighDensityPortContext(pipeline)) {
+          report.nativeContexts.push(context)
+          options.onSnapshot(report, "native-context")
+        }
+      }
       options.onSnapshot(report, "b01-input")
     }
     if ((solver.failed || solver.solved) && !attempt.final) {
@@ -170,6 +178,7 @@ export function createHighDensityDiagnostics(options: DiagnosticOptions): {
         inputNetCount: input.connections.length,
         b01Attempts: [],
         regionalAttempts: [],
+        nativeContexts: [],
       }
       const prototype = options.pipelineClass.prototype
       const descriptor = Object.getOwnPropertyDescriptor(prototype, "step")

@@ -137,8 +137,8 @@ const finishHighDensityDiagnostics = (): void => {
 const saveHighDensityDiagnostics = (report: Record<string, any>, event: string): void => {
   const artifact = "hd-diagnostics.json"
   atomic(artifact, JSON.stringify({ ...report, provenance: { runtime: progress.runtime, sourceSha256: task.sourceSha256, phaseInputSha256: running()?.inputSha256 ?? null } }, null, 2))
-  if (!["b01-outcome", "regional-outcome", "finished"].includes(event)) return
-  const attempts = event === "b01-outcome" ? report.b01Attempts : report.regionalAttempts
+  if (!["b01-outcome", "regional-outcome", "native-context", "finished"].includes(event)) return
+  const attempts = event === "native-context" ? report.nativeContexts : event === "b01-outcome" ? report.b01Attempts : report.regionalAttempts
   const attempt = event === "finished" ? undefined : attempts.at(-1)
   const packet = { board: task.id, cohort: task.cohort, phase: report.phase, targetNodeId: report.targetNodeId, event, artifact, attempt }
   const bytes = JSON.stringify(packet)
@@ -146,16 +146,17 @@ const saveHighDensityDiagnostics = (report: Record<string, any>, event: string):
     console.log(`FULL_BOARD_HD_PACKET ${bytes}`)
   } else {
     const final = attempt?.final
-    const node = attempt?.constructorParams.nodeWithPortPoints
+    const node = attempt?.constructorParams?.nodeWithPortPoints
     console.log(`FULL_BOARD_HD_SUMMARY ${JSON.stringify({
       ...packet, attempt: undefined, packetBytes: Buffer.byteLength(bytes), packetSha256: sha(bytes),
       completePacketInArtifact: event !== "finished", targetObserved: report.targetObserved ?? null,
       b01Attempts: report.b01Attempts.length, regionalAttempts: report.regionalAttempts.length,
       outcome: final ? { name: final.name, iterations: final.iterations, maxIterations: final.maxIterations, maxRips: final.maxRips, error: final.error, stats: final.stats } : null,
       node: node ? { center: node.center, width: node.width, height: node.height, availableZ: node.availableZ, portPointCount: node.portPoints.length, pairedPortCount: node.portPointsInPairs?.length ?? null } : null,
-      obstacleCount: attempt?.constructorParams.obstacles?.length ?? null,
-      boardObstacleCount: attempt?.constructorParams.boardObstacles?.length ?? null,
+      obstacleCount: attempt?.constructorParams?.obstacles?.length ?? null,
+      boardObstacleCount: attempt?.constructorParams?.boardObstacles?.length ?? null,
       highDensity: report.highDensityFinal ?? null,
+      contextType: attempt?.contextType ?? null,
     })}`)
   }
 }
