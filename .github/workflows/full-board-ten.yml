@@ -1,8 +1,8 @@
-name: Published3199 full-board ten-case benchmark
+name: Published3200 full-board ten-case benchmark
 
 on:
   push:
-    branches: [bench/full-board-ten-3199-20261116]
+    branches: [bench/full-board-ten-3200-20261116]
 
 permissions:
   contents: read
