@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "frozen": true,
+  "name": "budget-sufficiency-diagnostic",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "controlCommit": "102c27644a53cf02861199d38608a9931dbef25d",
+  "cases": [
+    {
+      "id": "glider",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000
+    },
+    {
+      "id": "imx6",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000
+    }
+  ],
+  "runtime": [
+    "tscircuit@0.0.3200",
+    "@tscircuit/core@0.0.2395",
+    "@tscircuit/eval@0.0.1789",
+    "@tscircuit/capacity-autorouter@0.0.1107"
+  ],
+  "sourceOverride": {
+    "frozen": true,
+    "inputSha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+    "outputSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+    "originalBytes": 3321678,
+    "candidateBytes": 3321678,
+    "changedByteOffsets": [
+      2109350
+    ],
+    "originalAnchor": "MAX_ITERATIONS:Math.ceil(2e6*o*i)",
+    "replacementAnchor": "MAX_ITERATIONS:Math.ceil(4e6*o*i)",
+    "diagnosticOnly": true,
+    "productionFixProposed": false,
+    "solveGraphBaseIterations": {
+      "before": 2000000,
+      "after": 4000000
+    },
+    "effortAndGraphScalingUnchanged": true,
+    "derivedPipelineIterationsAtEffort1GraphScale1": {
+      "before": 4000000,
+      "after": 6000000
+    },
+    "existingPortfolioMultiplier": {
+      "eligiblePairRouteCounts": [
+        30,
+        99
+      ],
+      "multiplier": 2,
+      "targetFailurePhase": {
+        "glider": 1,
+        "imx6": 2
+      }
+    },
+    "derivedOuterAdapterIterationsForTargetFailurePhase": {
+      "glider": 6000000,
+      "imx6": 12000000
+    },
+    "conditionalCostAwareFinalChildIterationsAtEffort1GraphScale1": {
+      "before": 4000000,
+      "after": 8000000,
+      "existingFormulaUnchanged": true
+    },
+    "sectionIterationsAtEffort1": 1000000,
+    "soloPrepassIterationsAtEffort1": 2000000,
+    "ordinaryGreedyFinalChildIterations": 50000,
+    "weightsGraphRulesEffortOrSolverChanged": false,
+    "externalDeadlinesChanged": false,
+    "liveReachabilityGuardAdded": false,
+    "newCensusObserverAdded": false,
+    "onlyOriginalBudgetConstantChanged": true
+  },
+  "localImportSmoke": {
+    "originalSha256": "52eea6a8b25d4af91da1c92790d9c80f674e6ed1aecbf1344738c133033e6310",
+    "diagnosticSha256": "baac86bb722ab1ef19d025655ce22ca5a5ae523dedcedd6cb69b483059fddb40",
+    "separateProcessImports": true,
+    "exportsIdentical": true,
+    "exportCount": 49,
+    "pipeline9ExportAvailable": true,
+    "canonicalAliasUnchanged": true,
+    "neutralAssessmentOriginalARResolved": true,
+    "noRoutingExecuted": true
+  },
+  "scope": "Diagnostic constant applies to every native Tiny solveGraph invocation in these two full boards, including earlier and later phases, not only the named failure phases. Exactly one original allowance coefficient doubles. Existing effort/graph scale, portfolio, parent and conditional final-child formulas remain unchanged and propagate the increase. No live-reachability guard or new census observer.",
+  "interpretation": "Diagnostic only: test shared-work budget sufficiency. This is not a production fix, performance comparison or automatic authorization for another cap. Actual native connectivity, physical findings, phase progress and deadline outcomes must all be reported.",
+  "assessment": "Original Core/helper prefix and helper-private original AR dependency preserved. Authentic source/count/physical assessment unchanged."
+}

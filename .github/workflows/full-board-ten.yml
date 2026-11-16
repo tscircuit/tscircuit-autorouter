@@ -1,8 +1,8 @@
-name: Published3200 full-board ten-case benchmark
+name: Published3200 spaced budget-sufficiency diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3200-20261116]
+    branches: [bench/full-board-budget-sufficiency-3200]
 
 permissions:
   contents: read
@@ -14,14 +14,11 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 2
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: glider, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
+          - { board: imx6, experiment: budget-sufficiency-diagnostic, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -37,6 +34,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             experiments/full-board-ten
+            experiments/full-board-budget-3200
             .github/workflows/full-board-ten.yml
             AGENTS.md
 
@@ -80,29 +78,13 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
-
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
+      - name: Install exact private AR budget diagnostic
+        id: budget
+        run: bun experiments/full-board-budget-3200/install-diagnostic.mjs "$FULL_BOARD_ROOT" "$BOARD"
 
       - name: Run spaced full circuit
         id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && steps.budget.outcome == 'success' }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -139,6 +121,9 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/budget-sufficiency-diagnostic-proof.json
+            experiments/full-board-budget-3200/candidate-proof.json
+            experiments/full-board-budget-3200/experiment.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
           if-no-files-found: warn

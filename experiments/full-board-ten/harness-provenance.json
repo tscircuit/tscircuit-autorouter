@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14559,
+      "sha256": "1f88e5cf9103223e385f62df7b94abd749ca4c7744e534d7a82c52aa7df90a28"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11462,
+      "sha256": "e65aab3c64fde110d7ade9c821d9e78f1d1f3e11d697e17ff4afb6a210663455"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -40,7 +40,28 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "../full-board-budget-3200/apply-budget-diagnostic.mjs",
+      "bytes": 2455,
+      "sha256": "e19108fe682f05f32b9dae5ef56d0e0c54963cfd69c3397b06e47a9ecae1644e"
+    },
+    {
+      "name": "../full-board-budget-3200/install-diagnostic.mjs",
+      "bytes": 6623,
+      "sha256": "0910a66f700de9aaad9d8d922231ca1c5e8fed18ae4b0bf295c569dc6491ee21"
+    },
+    {
+      "name": "../full-board-budget-3200/candidate-proof.json",
+      "bytes": 1485,
+      "sha256": "ec1fb5cfb1149ab9eb2e848273f48b999e4006438798c7986949eb7cb728e6e2"
+    },
+    {
+      "name": "../full-board-budget-3200/experiment.json",
+      "bytes": 3712,
+      "sha256": "c4165e2d472929338da0bc947e2ad38bf61d227a21486025f453a474a4b10473"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
+  "budgetSufficiencyDiagnostic": "Explicit diagnostic override: double only the existing solveGraph base allowance2M\u21924M. Original graph/effort scaling and derived parent/conditional-final/portfolio formulas remain, so allowances propagate. No live guard, new observer, weights, legality or solver changes. External deadlines remain900/960/180seconds. No production fix claim."
 }

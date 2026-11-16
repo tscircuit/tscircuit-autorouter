@@ -42,7 +42,12 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+if (task.budgetDiagnostic) {
+  const proof = task.budgetDiagnostic
+  const digest = (path: string): string => createHash("sha256").update(readFileSync(path)).digest("hex")
+  if (digest(proof.originalEntry) !== proof.inputSha256 || digest(proof.candidateEntry) !== proof.outputSha256 || digest(proof.originalCoreEntry) !== proof.originalCoreSha256 || digest(proof.helperProofPath) !== proof.helperProofSha256 || digest(proof.helperEntry) !== proof.helperEntrySha256) throw new Error("Budget diagnostic or original assessment provenance changed during render")
+}
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], budgetDiagnostic: task.budgetDiagnostic ?? null, diagnosticOnly: Boolean(task.diagnosticOnly), routingSourceOverride: Boolean(task.routingSourceOverride), mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false
