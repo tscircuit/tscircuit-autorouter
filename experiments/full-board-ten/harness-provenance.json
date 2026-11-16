@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11449,
-      "sha256": "1eb731399d1d0c0b0b71cbc3f8fd0155254c30551ab70c2d827f99ae83b3b963"
+      "bytes": 12743,
+      "sha256": "dfb21ff00185f92c5c1e49811177843c73d04515fda9493add9e1de88fb933e2"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -38,8 +38,8 @@
     },
     {
       "name": "createCoarseRoutingDiagnostics.ts",
-      "bytes": 18242,
-      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+      "bytes": 18937,
+      "sha256": "3f5a313c2bc731adba45c664beef36373edb3606f4dbd91e660907146eb59059"
     },
     {
       "name": "../full-board-live-reachability-3200/apply-live-reachability-candidate.mjs",
@@ -75,8 +75,23 @@
       "name": "../full-board-live-reachability-3200/experiment.json",
       "bytes": 3550,
       "sha256": "63a6018966857e522e9bfe6f672c03f7866bcf3a6679d50fca4a309c8ee95abc"
+    },
+    {
+      "name": "collectCurrentSearchCensus.ts",
+      "bytes": 14543,
+      "sha256": "1ed5f7c8d645c2677f20ed0beac691c0e5e1f208d05eb5aed5802de89e17edab"
+    },
+    {
+      "name": "collectPendingTerminalCut.ts",
+      "bytes": 14645,
+      "sha256": "cd8c2a84876b474c51089d9398c6b284f8fefce33975fd2af886f245e4063be2"
+    },
+    {
+      "name": "check-glider-current-search-observation.py",
+      "bytes": 4924,
+      "sha256": "df4d225947691274bb98154d7a78a8338bfdaa6869468aeca184d3d8aeb296a9"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
+  "diagnosticInstrumentation": "Inherited lifecycle observer plus exact99bfea bounded terminal/admission and current-search/cost-chain collectors, invoked once before main final acceptance (finish if unavailable). Routing source remains frozen5f184e09 candidate. No predicates/getters/search methods added; output/progress parity awaits the frozen17e4 native comparison. Timing includes observer overhead.",
   "routingSourceCandidate": "Private source-derived Tiny live-assignment reachability guard in the exact AR1107 bundle. Costs, legal input graph, recovery algorithm and budgets unchanged; proven disconnection invokes existing onOutOfCandidates earlier. Original Core/assessment AR remain published. Native completion is unqualified until measured."
 }

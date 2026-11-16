@@ -1,8 +1,8 @@
-name: Published3200 Glider spaced live-reachability candidate
+name: Published3200 Glider live-reachability current-search observation
 
 on:
   push:
-    branches: [bench/glider-live-reachability-3200]
+    branches: [bench/glider-live-search-census-3200]
 
 permissions:
   contents: read
@@ -121,6 +121,7 @@ jobs:
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
             .full-board-run/live-reachability-candidate-proof.json
+            .full-board-run/glider-current-search-observation-gate.json
             experiments/full-board-live-reachability-3200/candidate-proof.json
             experiments/full-board-live-reachability-3200/experiment.json
             experiments/full-board-ten/release.json
@@ -128,6 +129,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true
+      - name: Validate the pending-route observation only
+        if: ${{ always() && steps.candidate.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/check-glider-current-search-observation.py "$FULL_BOARD_ROOT"

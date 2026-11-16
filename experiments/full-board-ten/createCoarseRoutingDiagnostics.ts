@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { collectPendingTerminalCut } from "./collectPendingTerminalCut"
+import { collectCurrentSearchCensus } from "./collectCurrentSearchCensus"
 
 type RuntimeObject = Record<string, any>
 type DiagnosticOptions = {
@@ -178,6 +180,10 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
         const previousGoalCost = goalApproach ? this.getCandidateBestCost(this.getHopId(this.state.goalPortId, (args[0] as RuntimeObject).nextRegionId)) : null
         let observedGoalCost: unknown = null
         const before = name === "tryFinalAcceptance" ? snapshot() : undefined
+        if (name === "tryFinalAcceptance" && !report!.pendingTerminalCut && this.state.currentRouteId !== undefined) {
+          report!.pendingTerminalCut = collectPendingTerminalCut(this, pathing!, "before_tryFinalAcceptance")
+          report!.currentSearchCensus = collectCurrentSearchCensus(this)
+        }
         if (name === "onOutOfCandidates" && !report!.firstExhaustedSearch) {
           report!.firstExhaustedSearch = { iteration, route: routeDetail(this, routeId), queueLength: this.state.candidateQueue.length }
         }
@@ -287,6 +293,10 @@ export function createCoarseRoutingDiagnostics(options: DiagnosticOptions): {
     },
     finish(): RuntimeObject | null {
       if (report && finalSnapshot) report.final = finalSnapshot()
+      if (report && inner && pathing && !report.pendingTerminalCut) {
+        report.pendingTerminalCut = collectPendingTerminalCut(inner, pathing, "finish")
+        report.currentSearchCensus = collectCurrentSearchCensus(inner)
+      }
       if (report) report.innerHookInstalled = Boolean(inner)
       for (const restore of restorations.reverse()) restore()
       return report

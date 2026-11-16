@@ -41,6 +41,17 @@ if (existsSync(diagnosticPath)) {
       neverSuccessfullyRoutedCount: report.final.neverSuccessfullyRouted.length, candidateQueueLength: report.final.candidateQueueLength,
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
+  if (task.id === "glider" && task.cohort === "spaced") {
+    const selected = diagnostic.reports.filter((report: any) => report.phase === "other_signals")
+    const report = selected.length === 1 ? selected[0] : null
+    const packet = JSON.stringify({ id: task.id, cohort: task.cohort, phase: "other_signals", reportCount: selected.length, pendingTerminalCut: report?.pendingTerminalCut ?? null })
+    console.log(`GLIDER_PENDING_TERMINAL_CUT ${Buffer.byteLength(packet) < 24 * 1024 ? packet : JSON.stringify({ id: task.id, cohort: task.cohort, observerError: "Selected packet exceeded 24KiB; full artifact retained" })}`)
+    const routeId = report?.final?.currentRoute?.routeId
+    const census = JSON.stringify({ id: task.id, cohort: task.cohort, phase: "other_signals", reportCount: selected.length,
+      currentRouteCounters: typeof routeId === "number" ? { routeId, attempts: report.final.routeAttempts?.[routeId] ?? null, successes: report.final.routeSuccesses?.[routeId] ?? null } : null,
+      currentSearchCensus: report?.currentSearchCensus ?? null })
+    console.log(`GLIDER_CURRENT_SEARCH_CENSUS ${Buffer.byteLength(census) < 24 * 1024 ? census : JSON.stringify({ id: task.id, cohort: task.cohort, observerError: "Census packet exceeded 24KiB; full artifact retained" })}`)
+  }
 }
 if (task.liveReachabilityCandidate) {
   const proof = task.liveReachabilityCandidate
