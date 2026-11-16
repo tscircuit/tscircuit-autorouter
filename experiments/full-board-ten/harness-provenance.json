@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 15239,
-      "sha256": "6bf05a611320304ada3b1633dba341737b1a973831d36d27668eae66420b1651"
+      "bytes": 15263,
+      "sha256": "ffe21013ea545dc4c61ee5c30ba32515c6f1e4c3b7d61a40747325588783bcad"
     },
     {
       "name": "run-one.ts",
-      "bytes": 13030,
-      "sha256": "45b2cbba026f1af177d48f80db8cc8dd81c0cb587e8079234f2d83fcf23b7fef"
+      "bytes": 15345,
+      "sha256": "80ccc5c3c4e52dcbea48076c54190ba021c928550e0f36a2a5a37db3f4e589ae"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -42,5 +42,14 @@
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
     }
   ],
-  "diagnosticInstrumentation": "Byte-guarded Core2392/bus58 observation only, gated to authentic H616 original byte0. Original assessor and package preserved. Native predicates evaluated once; timing overhead remains possible and published outcome parity is required."
+  "diagnosticInstrumentation": "Byte-guarded Core2392/bus58 observation only, gated to authentic H616 original byte0. Original assessor and package preserved. Native predicates evaluated once; timing overhead remains possible and published outcome parity is required.",
+  "busObserverV2": {
+    "files": {
+      "instrument-core2392.mjs": "3aab91f510a681fc75bd308f0d9a3f62b29b6b6dbb98b00d411a6a7ba8ddb153",
+      "create-bus58-negotiation-observer.mjs": "b4b27cf4e8959a2c4843001d47fa48d6e48cf8a5546ab5a09cad0c5b41313146"
+    },
+    "instrumentedCoreSha256": "76197e17b2d765dda6f5b354b477f7e0d82e5cff729c8768811b49fd9a6956a9",
+    "boundedChecksPassed": 14,
+    "independentReview": "clear"
+  }
 }

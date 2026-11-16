@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
-import { createBus58SurfaceObserver } from "../full-board-bus-diagnostic/create-bus58-observer.mjs"
+import { createBus58NegotiationObserver } from "../full-board-bus-diagnostic/create-bus58-negotiation-observer.mjs"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -84,7 +84,7 @@ function readablePackage(folder: string, name: string): boolean {
 }
 if (!runtimeIdentity.coreObserver || task.id !== "h616" || task.cohort !== "original") throw new Error("This diagnostic only observes the native H616 original board")
 let activeByte0 = false
-const busObserver = createBus58SurfaceObserver({ isActive: () => activeByte0 })
+const busObserver = createBus58NegotiationObserver({ isActive: () => activeByte0 })
 busObserver.install()
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 importingPublishedMain = false
@@ -108,7 +108,7 @@ let lastCircuitSave = -Infinity
 const save = (withCircuit = false): void => {
   progress.elapsedMs = performance.now() - started
   progress.wasmUsage = wasmUsage
-  atomic("bus-surface-observer.json", JSON.stringify(busObserver.getReport(), null, 2))
+  atomic("bus-negotiation-observer.json", JSON.stringify(busObserver.getReport(), null, 2))
   if (withCircuit || performance.now() - lastCircuitSave >= 15000) {
     const json = circuit.getCircuitJson()
     atomic("circuit.json.gz", gzipSync(JSON.stringify(json), { level: 1 }))

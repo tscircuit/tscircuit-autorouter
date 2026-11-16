@@ -27,29 +27,43 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
-const busObserverPath = join(output, "bus-surface-observer.json")
+const busObserverPath = join(output, "bus-negotiation-observer.json")
 if (existsSync(busObserverPath)) {
   const report = JSON.parse(readFileSync(busObserverPath, "utf8"))
-  const summary = {
-    counts: report.counts,
-    normalizationCount: report.normalizationCount,
-    normalizationSummaries: report.normalizationSummaries,
-    surfaceEntries: report.surfaceStarts.map(row => ({ entry: row.entry, phase: row.pipeline.phase, attempt: row.pipeline.attempt, child: { phase: row.pipeline.child.phase, solved: row.pipeline.child.solved, failed: row.pipeline.child.failed, error: row.pipeline.child.error, failureCode: row.pipeline.child.failureCode } })),
-    nullReasons: report.surfaceNulls.map(row => ({ reason: row.reason, error: row.error, steps: row.steps, validator: { phase: row.validator.phase, solved: row.validator.solved, failed: row.validator.failed, error: row.validator.error, failureCode: row.validator.failureCode } })),
-    firstCompletedNull: report.firstCompletedNull ? { phase: report.firstCompletedNull.phase, attempt: report.firstCompletedNull.attempt, iterations: report.firstCompletedNull.iterations } : null,
-    observerError: report.observerError,
-    observerCompletedWithoutError: report.observerCompletedWithoutError,
-    observedSurfaceNull: report.observedSurfaceNull,
-    observedCompletedNull: report.observedCompletedNull,
-    normalizationLimitReached: report.normalizationLimitReached,
-    visibilityInspectionLimitReached: report.visibilityInspectionLimitReached,
-    limits: report.limits,
+  const { searchSummary, ...summary } = report.summary
+  const totals = new Map<string, { nativeNet: string; stage: string; searches: number; solved: number; interruptedBeforeCancel: number; failedByReason: Record<string, number> }>()
+  for (const row of searchSummary) {
+    const key = `${row.nativeNet}|${row.stage}`
+    const total = totals.get(key) ?? { nativeNet: row.nativeNet, stage: row.stage, searches: 0, solved: 0, interruptedBeforeCancel: 0, failedByReason: {} }
+    total.searches += row.searches
+    total.solved += row.solved
+    total.interruptedBeforeCancel += row.interruptedBeforeCancel
+    for (const [reason, count] of Object.entries(row.failedByReason)) total.failedByReason[reason] = (total.failedByReason[reason] ?? 0) + Number(count)
+    totals.set(key, total)
   }
-  for (const [kind, data] of Object.entries({ summary, firstJoinedRejection: report.firstJoinedRejection, firstRejectedNormalizationCandidate: report.firstRejectedNormalizationCandidate, firstVisibilityBoundary: report.firstVisibilityBoundary, firstVisibilityBlock: report.firstVisibilityBlock, firstPotentialSupersededBlock: report.firstPotentialSupersededBlock })) {
+  const packets: { kind: string; data: unknown }[] = [
+    { kind: "summary", data: summary },
+    { kind: "per-net-search-totals", data: [...totals.values()] },
+  ]
+  for (const kind of ["fatalWitnesses", "searchRepresentatives", "firstBlocks", "viaHoleRejections", "escapeHoleConflicts", "compatibilityConflicts", "expandedEmpty", "variantExceptions"]) {
+    const rows = report.witnesses[kind]
+    const seen = new Set<string>()
+    const selected = []
+    const limit = kind === "fatalWitnesses" ? 8 : 4
+    for (const row of rows) {
+      const key = JSON.stringify([row.event, row.reason, row.connection?.name, row.kind, row.stage, row.outcome, row.invocation?.allowPadEdgeSites, row.targetLayer, row.end, row.alignSurfaceGrid, row.allowPadEdgeSites, row.connection?.pointsToConnect?.values?.map(point => point.layer), row.firstNames])
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (selected.length < limit) selected.push(row)
+    }
+    packets.push({ kind: `${kind}-coverage`, data: { available: rows.length, distinct: seen.size, selected: selected.length, selectionLimit: limit } })
+    for (const [index, data] of selected.entries()) packets.push({ kind: `${kind}-${index}`, data })
+  }
+  for (const { kind, data } of packets) {
     const packet = JSON.stringify({ kind, data })
     const bytes = Buffer.byteLength(packet)
-    if (bytes <= 24576) console.log(`BUS_SURFACE_OBSERVATION ${packet}`)
-    else console.log(`BUS_SURFACE_OBSERVATION ${JSON.stringify({ kind, notForwarded: true, bytes, reason: "Selected witness exceeds the ordinary diagnostic log limit", artifact: "bus-surface-observer.json" })}`)
+    if (bytes <= 24576) console.log(`BUS_NEGOTIATION_OBSERVATION ${packet}`)
+    else console.log(`BUS_NEGOTIATION_OBSERVATION ${JSON.stringify({ kind, notForwarded: true, bytes, reason: "Selected witness exceeds the ordinary diagnostic log limit", artifact: "bus-negotiation-observer.json" })}`)
   }
 }
 const diagnosticPath = join(output, "coarse-diagnostics.json")
@@ -102,6 +116,30 @@ if (existsSync(compressedCircuit)) {
   // The raw file was created above solely for the unchanged original assessors.
   unlinkSync(rawCircuit)
   const findings = join(output, "findings.json")
+  if (existsSync(findings) && task.experiment === "bus-observer") {
+    const viaPadErrors = JSON.parse(readFileSync(findings, "utf8")).viaPad
+    const selectedErrors = viaPadErrors.slice(0, 4)
+    const ids = new Set<string>(selectedErrors.flatMap(error => error.pcb_pad_ids))
+    const selected = rawJson.filter(element => ids.has(element.pcb_via_id ?? element.pcb_smtpad_id ?? element.pcb_plated_hole_id))
+    const related = [...selected]
+    for (const element of selected) {
+      const port = rawJson.find(row => row.type === "pcb_port" && row.pcb_port_id === element.pcb_port_id)
+      const component = rawJson.find(row => row.type === "pcb_component" && row.pcb_component_id === element.pcb_component_id)
+      const trace = rawJson.find(row => row.type === "pcb_trace" && row.pcb_trace_id === element.pcb_trace_id)
+      if (port) related.push(port)
+      if (component) related.push(component)
+      if (trace) related.push({ type: trace.type, pcb_trace_id: trace.pcb_trace_id, source_trace_id: trace.source_trace_id, subcircuit_connectivity_map_key: trace.subcircuit_connectivity_map_key })
+      for (const source of [
+        rawJson.find(row => row.type === "source_port" && row.source_port_id === port?.source_port_id),
+        rawJson.find(row => row.type === "source_component" && row.source_component_id === component?.source_component_id),
+      ]) if (source) related.push(source)
+    }
+    const witness = { canonicalAssessmentReused: true, viaPadErrorCount: viaPadErrors.length, truncatedErrors: viaPadErrors.length > selectedErrors.length, errors: selectedErrors, referencedElements: related }
+    const packet = JSON.stringify(witness)
+    writeFileSync(join(output, "via-pad-witness.json"), packet)
+    if (Buffer.byteLength(packet) <= 24576) console.log(`BUS_PRIOR_COPPER_FINDING ${packet}`)
+    else console.log(`BUS_PRIOR_COPPER_FINDING ${JSON.stringify({ notForwarded: true, bytes: Buffer.byteLength(packet), artifact: "via-pad-witness.json" })}`)
+  }
   if (existsSync(findings)) { writeFileSync(`${findings}.gz`, gzipSync(readFileSync(findings), { level: 1 })); unlinkSync(findings) }
 }
 const progressPath = join(output, "progress.json")

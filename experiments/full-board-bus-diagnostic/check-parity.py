@@ -11,7 +11,8 @@ folder = root / "results/h616/original"
 result = json.loads((folder / "result.json").read_text())
 progress = json.loads((folder / "progress.json").read_text())
 assessment = json.loads((folder / "assessment.json").read_text())
-observation = json.loads((folder / "bus-surface-observer.json").read_text())
+observation = json.loads((folder / "bus-negotiation-observer.json").read_text())
+observed = observation["summary"]
 source_bytes = Path(progress["sourcePath"]).read_bytes()
 source = json.loads(source_bytes)
 requested = {net["nativeName"] for net in source["nets"] if net["routable"]}
@@ -27,9 +28,10 @@ checks = {
     "connectedNativeNetNames": connected == reference["connectedNativeNetNames"],
     "phaseOrderAndOutcome": phases == reference["phases"],
     "routingWasmAttempts": result["wasmUsage"]["routingOrUnknownAttempts"] == 0,
-    "observerCompletedWithoutError": observation["observerCompletedWithoutError"],
-    "surfaceNullObserved": observation["observedSurfaceNull"],
-    "completedNullObserved": observation["observedCompletedNull"],
+    "observerCompletedWithoutError": observed["observerCompletedWithoutError"],
+    "boundedResultObserved": observed["observedBoundedResult"],
+    "completedNullObserved": observed["observedCompletedNull"],
+    "fatalWitnessObserved": bool(observation["witnesses"]["fatalWitnesses"]),
 }
 packet = {
     "baselineRunId": reference["baselineRunId"],

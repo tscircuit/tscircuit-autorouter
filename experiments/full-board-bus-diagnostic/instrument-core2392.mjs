@@ -1,245 +1,249 @@
 import { createHash } from "node:crypto"
-
 export const ORIGINAL_CORE_SHA256 = "cdd8fd63614327e7037617f62c0cc732861be5e969e53bdb99c0b0831e493fd1"
-export const OBSERVER_SYMBOL = "tscircuit.bus58.surface-observer"
+export const OBSERVER_SYMBOL = "tscircuit.bus58.negotiation-observer"
 
-/** Returns a private diagnostic copy. The original npm file is never written. */
+/** Produces a private observation-only copy; never writes original Core bytes. */
 export function instrumentCore2392(source) {
-  const originalSha256 = createHash("sha256").update(source).digest("hex")
-  if (originalSha256 !== ORIGINAL_CORE_SHA256) throw new Error("Unexpected published Core2392 bytes")
+  const originalBytes = Buffer.byteLength(source)
+  if (createHash("sha256").update(source).digest("hex") !== ORIGINAL_CORE_SHA256) throw Error("Unexpected published Core2392 bytes")
   const anchors = []
-  const replaceOnce = (text, from, to, label) => {
-    if (text.split(from).length !== 2) throw new Error(`Nonunique diagnostic anchor: ${label}`)
-    anchors.push(label)
+  const once = (text, from, to, name) => {
+    if (text.split(from).length !== 2) throw Error(`Nonunique diagnostic anchor: ${name}`)
+    anchors.push(name)
     return text.replace(from, to)
   }
-  const editFunction = (start, end, edit) => {
-    const first = source.indexOf(start)
-    const last = source.indexOf(end, first + start.length)
-    if (first < 0 || last < 0) throw new Error(`Missing diagnostic function: ${start}`)
-    const original = source.slice(first, last)
-    source = source.slice(0, first) + edit(original) + source.slice(last)
+  const edit = (start, end, transform) => {
+    const a = source.indexOf(start), b = source.indexOf(end, a + start.length)
+    if (a < 0 || b < 0) throw Error(`Missing diagnostic region: ${start}`)
+    source = source.slice(0,a) + transform(source.slice(a,b)) + source.slice(b)
   }
-
-  // The harness installs one callback before importing Core. No callback result
-  // enters routing control flow. Callback failures cannot change solver results.
-  source = replaceOnce(source, "function fixedCopper(input) {", `var __bus58Observer = globalThis[Symbol.for("${OBSERVER_SYMBOL}")];
-var __bus58Normalization;
+  source = once(source, "function fixedCopper(input) {", `var __bus58Observer = globalThis[Symbol.for("${OBSERVER_SYMBOL}")];
+var __bus58ProbeContext;
+var __bus58TaggedChildren = new WeakSet();
 function __bus58Observe(event, details) {
   if (typeof __bus58Observer !== "function") return;
   try { __bus58Observer(event, details); } catch {}
 }
-function __bus58Blocked(scene, a, b, copper, margin) {
-  if (__bus58Normalization?.candidate)
-    __bus58Observe("visibility_blocked", { context: __bus58Normalization, scene, a, b, copper, margin });
+function __bus58Probe(context, test) {
+  const previous = __bus58ProbeContext;
+  __bus58ProbeContext = context;
+  try { return test(); } finally { __bus58ProbeContext = previous; }
 }
-function __bus58Copper(kind, copper, original, replacement) {
-  if (__bus58Normalization)
-    __bus58Observe("normalization_copper", { context: __bus58Normalization, kind, copper, original, replacement });
-  return copper;
+function __bus58Block(scene, a, b, copper, margin, reason) {
+  if (__bus58ProbeContext) __bus58Observe("probe_blocked", { context: __bus58ProbeContext, scene, a, b, copper, margin, reason });
+}
+function __bus58Component(search, attachment, side, value) {
+  __bus58Observe("component_value", { search, attachment, side, value });
+  return value;
+}
+function __bus58Return(event, result, details) {
+  __bus58Observe(event, { ...details, result });
+  return result;
+}
+function __bus58Collision(result, details) {
+  if (result) __bus58Observe("site_copper_conflict", { ...details, conflict: result });
+  return result;
+}
+function __bus58Child(pipeline, child) {
+  if (!__bus58TaggedChildren.has(child)) {
+    __bus58TaggedChildren.add(child);
+    __bus58Observe("lane_child_tag", { pipeline, child });
+  }
+  return child;
 }
 function fixedCopper(input) {`, "observer declaration")
 
-  editFunction("var VectorScene = class", "function routeAnglesAreConventional", block => {
-    block = replaceOnce(block,
+  edit("var VectorScene = class", "function routeAnglesAreConventional", block => {
+    block = once(block,
       `    ))
       return false;
     if (this.input.outline?.length && !this.boardEdgeIsClear(a2, b2)) return false;`,
       `    )) {
-      if (__bus58Normalization?.candidate) __bus58Observe("visibility_boundary", { reason: "board_bounds", context: __bus58Normalization, scene: this, a: a2, b: b2 });
+      __bus58Block(this, a2, b2, void 0, void 0, "board_bounds");
       return false;
     }
     if (this.input.outline?.length && !this.boardEdgeIsClear(a2, b2)) {
-      if (__bus58Normalization?.candidate) __bus58Observe("visibility_boundary", { reason: "board_outline", context: __bus58Normalization, scene: this, a: a2, b: b2 });
+      __bus58Block(this, a2, b2, void 0, void 0, "board_outline");
       return false;
-    }`, "visibility bounds and outline rejection")
-    block = replaceOnce(block,
-      "(c2) => copperTooClose(a2, b2, c2, this.margin - 1e-8)",
-      `(c2) => {
+    }`, "visibility early boundaries")
+    block = once(block, "(c2) => copperTooClose(a2, b2, c2, this.margin - 1e-8)", `(c2) => {
           const diagnosticMargin = this.margin - 1e-8;
           const blocked = copperTooClose(a2, b2, c2, diagnosticMargin);
-          if (blocked) __bus58Blocked(this, a2, b2, c2, diagnosticMargin);
+          if (blocked) __bus58Block(this, a2, b2, c2, diagnosticMargin, "copper");
           return blocked;
-        }`, "indexed first blocker")
-    return replaceOnce(block,
-      "if (copperTooClose(a2, b2, c2, this.margin - 1e-8)) return false;",
-      `const diagnosticMargin = this.margin - 1e-8;
+        }`, "indexed existing copper rejection")
+    return once(block, "if (copperTooClose(a2, b2, c2, this.margin - 1e-8)) return false;", `const diagnosticMargin = this.margin - 1e-8;
       if (copperTooClose(a2, b2, c2, diagnosticMargin)) {
-        __bus58Blocked(this, a2, b2, c2, diagnosticMargin);
+        __bus58Block(this, a2, b2, c2, diagnosticMargin, "copper");
         return false;
-      }`, "linear first blocker")
+      }`, "linear existing copper rejection")
   })
 
-  editFunction("function joinedSignalGeometryIsValid(params) {", "function* matchNativeCarrierSignals", block => {
-    block = replaceOnce(block,
-      "if (!traceStaysInsideOutline(input, trace)) return false;",
-      `if (!traceStaysInsideOutline(input, trace)) {
-    __bus58Observe("joined_rejected", { reason: "outline", input, trace });
-    return false;
-  }`, "joined outline rejection")
-    block = replaceOnce(block,
-      'if (params.smoothTuning !== false && !nativeSignalGeometryIsValid(trace))\n    return false;',
-      `if (params.smoothTuning !== false && !nativeSignalGeometryIsValid(trace)) {
-    __bus58Observe("joined_rejected", { reason: "native_angle_or_curve_metadata", input, trace });
-    return false;
-  }`, "joined native rejection")
-    block = replaceOnce(block,
-      '))\n        return false;\n      run = [];',
-      `)) {
-        __bus58Observe("joined_rejected", { reason: "self_clear_completed_run", input, trace, run, clearance });
-        return false;
-      }
-      run = [];`, "joined completed run rejection")
-    block = replaceOnce(block, "  return run.length < 2 || tuningPathIsSelfClear(", "  const diagnosticValid = run.length < 2 || tuningPathIsSelfClear(", "joined final result")
-    return replaceOnce(block,
-      '  );\n}\n',
-      `  );
-  if (!diagnosticValid) __bus58Observe("joined_rejected", { reason: "self_clear_final_run", input, trace, run, clearance });
-  return diagnosticValid;
+  edit("var GridVisibilitySearch = class", "function remapCurvedSegments", block => {
+    block = once(block,
+      `          for (const path of connectors(p2, this.point(id)))
+            if (scene.pathVisible(path)) {`,
+      `          for (const path of connectors(p2, this.point(id)))
+            if (__bus58Probe({ kind: "terminal_attachment", search: this, terminal: p2, gridId: id, path }, () => scene.pathVisible(path))) {`, "native attachment predicate")
+    block = once(block, "    if (!a2 || !z23) {\n      this.failed = true;", `    if (!a2 || !z23) {
+      __bus58Observe("search_failed", { search: this, reason: "no_terminal_attachment" });
+      this.failed = true;`, "missing discrete attachment")
+    block = once(block,
+      "components.at(start2.id) !== 0 && components.at(start2.id) === components.at(end2.id)",
+      '__bus58Component(this, start2, "start_nonzero", components.at(start2.id)) !== 0 && __bus58Component(this, start2, "start_compare", components.at(start2.id)) === __bus58Component(this, end2, "end_compare", components.at(end2.id))', "tap existing component lookups")
+    block = once(block, "      if (!sameComponent(this.startAttachments, this.endAttachments)) {\n        this.failed = true;", `      if (!sameComponent(this.startAttachments, this.endAttachments)) {
+        __bus58Observe("search_failed", { search: this, reason: "disconnected_discrete_components" });
+        this.failed = true;`, "discrete component failure")
+    block = once(block, "    this.result = path;\n    this.solved = true;", `    this.result = path;
+    this.solved = true;
+    __bus58Observe("search_solved", { search: this });`, "actual search success")
+    block = once(block,
+      '        if (this.retryAttachments()) continue;\n        this.failed = true;',
+      `        if (this.retryAttachments()) continue;
+        __bus58Observe("search_failed", { search: this, reason: "frontier_exhausted_after_attachment_retries" });
+        this.failed = true;`, "frontier exhaustion")
+    return once(block,
+      '            if (this.retryAttachments()) continue;\n            this.failed = true;',
+      `            if (this.retryAttachments()) continue;
+            __bus58Observe("search_failed", { search: this, reason: "returned_path_invalid_after_attachment_retries", path: result });
+            this.failed = true;`, "returned path rejection")
+  })
+
+  edit("function* runBoundedRouting(generator, limit) {", "function shortenPairApproaches", block => once(block,
+    "    return state.done ? state.value : null;",
+    '    return __bus58Return("bounded_result", state.done ? state.value : null, { generator, limit, steps, state });', "bounded result without extra next"))
+
+  edit("function* negotiateLanes(input,", "function independentBusGroups", block => {
+    block = once(block, "  const flexibleTerminals =", `  const diagnosticInvocation = { input, connections };
+  __bus58Observe("lane_negotiation_start", { invocation: diagnosticInvocation });
+  const flexibleTerminals =`, "initial lane invocation")
+    block = once(block,
+      "        if (!histories.has(candidateLayer))\n          histories.set(",
+      `        __bus58Observe("search_tag", { search: candidateSearch, stage: "lane_candidate", invocation: diagnosticInvocation, connection, layer: candidateLayer });
+        if (!histories.has(candidateLayer))
+          histories.set(`, "lane candidate search identity")
+    block = once(block,
+      `          try {
+            while (!candidateSearch.solved && !candidateSearch.failed) {`,
+      `          __bus58Observe("search_tag", { search: candidateSearch, stage: "lane_unpenalized_retry", invocation: diagnosticInvocation, connection, layer: candidateLayer });
+          try {
+            while (!candidateSearch.solved && !candidateSearch.failed) {`, "unpenalized original retry identity")
+    block = once(block, "        if (!certificatePaths.length) return null;", `        if (!certificatePaths.length) {
+          __bus58Observe("lane_null", { reason: "no_best_choice_no_certificate", invocation: diagnosticInvocation, connection, available, iteration, routed, queue });
+          return null;
+        }`, "initial fatal no choice")
+    block = once(block, "        if (previous.length !== unit.connections.length) return null;", `        if (previous.length !== unit.connections.length) {
+          __bus58Observe("lane_null", { reason: "coupled_pair_without_previous_certificate", invocation: diagnosticInvocation, connection, iteration, previous });
+          return null;
+        }`, "initial fatal coupled pair")
+    return once(block, "  return null;\n}\n", `  __bus58Observe("lane_null", { reason: "negotiation_rounds_exhausted", invocation: diagnosticInvocation, routed, queue, visits });
+  return null;
 }
-`, "joined final rejection")
+`, "initial lane final exhaustion")
   })
 
-  editFunction("function carrierEndCandidates(trace, scene, atStart) {", "function normalizeCarrierEnds", block => replaceOnce(block,
-    "      if (!monotone(replacement) || !scene.pathVisible(replacement)) continue;",
-    `      if (__bus58Normalization) __bus58Normalization.candidate = { kind: "carrier_end_generation", original: trace, trace: candidate, visibilityRoute: replacement, atStart };
-      let diagnosticVisible;
-      const diagnosticMonotone = monotone(replacement);
-      const diagnosticRejected = !diagnosticMonotone || !(diagnosticVisible = scene.pathVisible(replacement));
-      if (__bus58Normalization) {
-        __bus58Observe("normalization_candidate", { context: __bus58Normalization, scene, monotone: diagnosticMonotone, visible: diagnosticVisible, accepted: !diagnosticRejected });
-        __bus58Normalization.candidate = void 0;
-      }
-      if (diagnosticRejected) continue;`, "carrier candidate generation short circuit"))
-
-  editFunction("function normalizeCarrierEnds(trace, scene) {", "function octilinearSurfaceEscape", block => replaceOnce(block,
-    `  for (const candidate of candidates)
-    if (octilinear(candidate) && routeAnglesAreConventional([candidate]) && tuningPathIsSelfClear(candidate.route, scene.width / 2 + scene.margin) && scene.pathVisible(candidate.route))
-      return candidate;`,
-    `  for (const candidate of candidates) {
-    if (__bus58Normalization) __bus58Normalization.candidate = { kind: "carrier_end", original: trace, trace: candidate };
-    let diagnosticAngles, diagnosticSelfClear, diagnosticVisible;
-    const diagnosticOctilinear = octilinear(candidate);
-    const diagnosticAccepted = diagnosticOctilinear && (diagnosticAngles = routeAnglesAreConventional([candidate])) && (diagnosticSelfClear = tuningPathIsSelfClear(candidate.route, scene.width / 2 + scene.margin)) && (diagnosticVisible = scene.pathVisible(candidate.route));
-    if (__bus58Normalization) {
-      __bus58Observe("normalization_candidate", { context: __bus58Normalization, scene, octilinear: diagnosticOctilinear, angles: diagnosticAngles, selfClear: diagnosticSelfClear, visible: diagnosticVisible, accepted: diagnosticAccepted });
-      __bus58Normalization.candidate = void 0;
-    }
-    if (diagnosticAccepted) return candidate;
-  }`, "carrier candidate short circuit"))
-
-  editFunction("function octilinearSurfaceEscape(escape, scene) {", "function normalizeSurfaceCarriers", block => replaceOnce(block,
-    `      if (!scene.pathVisible(route) || !tuningPathIsSelfClear(route, scene.width / 2 + scene.margin) && tuningPathIsSelfClear(result.route, scene.width / 2 + scene.margin))
-        continue;`,
-    `      if (__bus58Normalization) __bus58Normalization.candidate = { kind: "surface_bend", original: result, candidateRoute: route };
-      let diagnosticSelfClear, diagnosticOriginalSelfClear;
-      const diagnosticVisible = scene.pathVisible(route);
-      const diagnosticRejected = !diagnosticVisible || !(diagnosticSelfClear = tuningPathIsSelfClear(route, scene.width / 2 + scene.margin)) && (diagnosticOriginalSelfClear = tuningPathIsSelfClear(result.route, scene.width / 2 + scene.margin));
-      if (__bus58Normalization) {
-        __bus58Observe("normalization_candidate", { context: __bus58Normalization, scene, visible: diagnosticVisible, selfClear: diagnosticSelfClear, originalSelfClear: diagnosticOriginalSelfClear, accepted: !diagnosticRejected });
-        __bus58Normalization.candidate = void 0;
-      }
-      if (diagnosticRejected) continue;`, "surface candidate short circuit"))
-
-  editFunction("function normalizeSurfaceCarriers(input, traces, generatedEscapes) {", "var reverse3 =", block => {
-    block = replaceOnce(block, "  const replacements =", `  const diagnosticPrevious = __bus58Normalization;
-  if (typeof __bus58Observer === "function") {
-    __bus58Normalization = { input, traces, generatedEscapes };
-    __bus58Observe("normalization_start", { context: __bus58Normalization });
-  }
-  try {
-  const replacements =`, "normalization scope start")
-    const hardAnchor = "hard ??= [...fixedCopper(input), ...traces.flatMap(routeCopper)];"
-    if (block.split(hardAnchor).length !== 3) throw new Error("Expected both native hard-list constructions")
-    block = block.replaceAll(hardAnchor, 'hard ??= [...__bus58Copper("input_copper", fixedCopper(input)), ...traces.flatMap((diagnosticTrace) => __bus58Copper("original_carrier", routeCopper(diagnosticTrace), diagnosticTrace))];')
-    anchors.push("both actual hard-list primitive constructions")
-    block = replaceOnce(block,
-      "        curvedSegments: void 0\n      });\n    hard ??=",
-      `        curvedSegments: void 0
-      });
-    if (__bus58Normalization) __bus58Observe("escape_replacement_map", { context: __bus58Normalization, replacements });
-    hard ??=`, "attached escape provenance")
-    block = replaceOnce(block,
-      "    if (result !== trace) hard.push(...routeCopper(result));\n    return result;",
-      `    if (result !== trace) hard.push(...__bus58Copper("replacement_carrier", routeCopper(result), trace, result));
-    if (__bus58Normalization) __bus58Observe("carrier_replaced", { context: __bus58Normalization, original: trace, replacement: result });
-    return result;`, "carrier provenance")
-    block = replaceOnce(block,
-      "      hard.push(...routeCopper(normalized2));\n      return normalized2;",
-      `      hard.push(...__bus58Copper("replacement_escape", routeCopper(normalized2), escape, normalized2));
-      if (__bus58Normalization) __bus58Observe("escape_replaced", { context: __bus58Normalization, original: escape, replacement: normalized2 });
-      return normalized2;`, "escape provenance")
-    return replaceOnce(block,
-      '    escapes\n  };\n}\n',
-      `    escapes
-  };
-  } finally {
-    if (__bus58Normalization) __bus58Observe("normalization_end", { context: __bus58Normalization });
-    __bus58Normalization = diagnosticPrevious;
-  }
-}
-`, "normalization scope release")
+  edit("function* expandedSignalSiteChoices({", "function* expandedSignalSites", block => {
+    block = once(block, "  if (ends.some((sites) => !sites.length)) return [];", `  if (ends.some((sites) => !sites.length)) {
+    __bus58Observe("expanded_sites_empty", { input, connection, targetLayer: targetLayer2, allowPadEdgeSites, ends });
+    return [];
+  }`, "expanded endpoint domain empty")
+    block = once(block, "      if (!search.solved) break;", `      __bus58Observe("search_probe_end", { search, steps, limit: 1e4, attempts });
+      if (!search.solved) break;`, "expanded pair bounded work")
+    return once(block, "    try {\n      let steps = 0;", `    __bus58Observe("search_tag", { search, stage: "expanded_site_pair", input, connection, layer: targetLayer2, starts, goals, allowPadEdgeSites });
+    try {
+      let steps = 0;`, "expanded pair search identity")
   })
 
-  editFunction("function* finishSurfaceTiming(previous, options, policy = {}) {", "function* solveRefinement", block => {
-    for (const [variable, reason] of [["matched", "initial_refinement"], ["extended", "package_coupling"], ["repaired", "package_coupling_repair"], ["rematched", "second_refinement"]]) {
-      block = replaceOnce(block, `if (!${variable}) return null;`, `if (!${variable}) { __bus58Observe("surface_null", { reason: "${reason}", prepared, options, policy }); return null; }`, `surface null ${reason}`)
-    }
-    block = replaceOnce(block, "    if (!accepted()) return null;", `    if (!accepted()) { __bus58Observe("surface_null", { reason: "length_or_pair_report", prepared, options, policy }); return null; }`, "surface reports rejection")
-    block = replaceOnce(block, "      if (!validator.solved) return null;", `      if (!validator.solved) { __bus58Observe("surface_null", { reason: "final_validator", prepared, options, policy, validator, steps }); return null; }`, "surface validation rejection")
-    return replaceOnce(block, '  } catch {\n    return null;\n  }', `  } catch (diagnosticError) {
-    __bus58Observe("surface_null", { reason: "caught_exception", prepared, options, policy, error: diagnosticError });
-    return null;
-  }`, "surface swallowed exception")
-  })
-
-  editFunction("function* finishGeneratedSurfaceCarriers(params) {", "function pruneCandidateDomains", block => {
-    block = replaceOnce(block, "  if (!result) return null;", `  if (!result) { __bus58Observe("surface_null", { reason: "finish_timing_null", input, carriers, escapes, options, maxSteps }); return null; }`, "finishing timing null")
-    return replaceOnce(block, '  ))\n    return null;', `  )) {
-    __bus58Observe("surface_null", { reason: "final_joined_geometry", input, carriers: completedCarriers, escapes: result.escapes, traces });
-    return null;
-  }`, "finishing joined null")
-  })
-
-  editFunction("function* routeGeneratedSignalSites({", "function* negotiateGeneratedSignalSites", block => replaceOnce(block,
-    "  if (!routed) return null;", `  if (!routed) { __bus58Observe("surface_null", { reason: "generated_site_negotiation", input, options, maxSteps }); return null; }`, "negotiation null"))
-
-  editFunction("var BusLanesPipelineSolver = class", "// lib/utils/autorouting/BusLanesAutorouter.ts", block => {
-    block = replaceOnce(block,
-      '        if (!state.done) return;\n        this.surfaceFinishing = void 0;',
-      `        if (!state.done) return;
-        __bus58Observe("surface_done", { pipeline: this, state });
-        this.surfaceFinishing = void 0;`, "surface completion before cleanup")
-    block = replaceOnce(block,
-      '          maxSteps: Math.max(1, this.MAX_ITERATIONS - this.iterations)\n        });\n        return;\n      }\n      this.phase = `lanes_',
-      `          maxSteps: Math.max(1, this.MAX_ITERATIONS - this.iterations)
-        });
-        __bus58Observe("surface_start", { entry: "failed_lane_site_negotiation", pipeline: this });
-        return;
-      }
-      this.phase = \`lanes_`, "failed child entry")
-    return replaceOnce(block,
-      '            maxSteps: Math.max(1, this.MAX_ITERATIONS - this.iterations)\n          });\n          return;\n        }\n        this.acceptGeneratedTraces(this.traces);',
-      `            maxSteps: Math.max(1, this.MAX_ITERATIONS - this.iterations)
-          });
-          __bus58Observe("surface_start", { entry: "solved_lane_invalid_join", pipeline: this });
-          return;
+  edit("function generatedEscapeHolesConflict(input, first, second) {", "function* expandedSignalSiteChoices", block => once(block,
+    "        return true;\n  return false;",
+    `        {
+          __bus58Observe("escape_hole_conflict", { input, first, second, a: a2, b: b2 });
+          return true;
         }
-        this.acceptGeneratedTraces(this.traces);`, "solved child entry")
+  return false;`, "actual escape hole conflict pair"))
+
+  edit("function* expandedSignalSites({", "function ", block => {
+    block = once(block,
+      "        if (viaScenes.some((scene2) => !scene2.visible(point52, point52))) continue;",
+      `        if (viaScenes.some((scene2) => !__bus58Probe({ kind: "via_site", input, connection, owner, pad, end, point: point52, targetLayer: targetLayer2, alignSurfaceGrid, allowPadEdgeSites }, () => scene2.visible(point52, point52)))) continue;`, "actual full-span via site rejection")
+    block = once(block,
+      `          (via) => distance15(via, point52) < hole / 2 + (via.via_hole_diameter ?? input.minViaHoleDiameter ?? 0.15) / 2 + holeClearance - 1e-8`,
+      `          (via) => {
+            const diagnosticDistance = distance15(via, point52);
+            const diagnosticRequired = hole / 2 + (via.via_hole_diameter ?? input.minViaHoleDiameter ?? 0.15) / 2 + holeClearance - 1e-8;
+            const blocked = diagnosticDistance < diagnosticRequired;
+            if (blocked) __bus58Observe("via_hole_rejected", { input, connection, owner, pad, point: point52, via, end, targetLayer: targetLayer2, alignSurfaceGrid, allowPadEdgeSites, distance: diagnosticDistance, required: diagnosticRequired });
+            return blocked;
+          }`, "existing via hole rejection")
+    block = once(block, "          if (!search.solved) continue;", `          __bus58Observe("search_probe_end", { search, steps, limit: 4e3 });
+          if (!search.solved) continue;`, "expanded surface bounded work")
+    block = once(block, "        try {\n          let steps = 0;", `        __bus58Observe("search_tag", { search, stage: "expanded_surface_escape", input, connection, layer: pad.layer, pad, point: point52, end, alignSurfaceGrid, allowPadEdgeSites });
+        try {
+          let steps = 0;`, "expanded surface search identity")
+    return block
   })
 
-  return {
-    source,
-    proof: {
-      originalSha256,
-      instrumentedSha256: createHash("sha256").update(source).digest("hex"),
-      originalByteLength: Buffer.byteLength(arguments[0]),
-      instrumentedByteLength: Buffer.byteLength(source),
-      observerSymbol: OBSERVER_SYMBOL,
-      anchors,
-      originalOptionsAndBudgetsUnchanged: true,
-      extraOriginalPredicateEvaluations: 0,
-      wallClockOutcomeParityGuaranteed: false,
-    },
-  }
+  edit("function* negotiateSignalSites(state,", "function* routeGeneratedSignalSites", block => {
+    block = once(block, "  if (!remove.size) return null;", `  const diagnosticInvocation = { state, options };
+  __bus58Observe("site_pass_start", { invocation: diagnosticInvocation });
+  if (!remove.size) return null;`, "site pass identity")
+    block = once(block, "      } catch {\n      }\n      yield;", `      } catch (diagnosticError) {
+        __bus58Observe("site_variant_exception", { invocation: diagnosticInvocation, connection, variant, error: diagnosticError });
+      }
+      yield;`, "dogbone variant exception")
+    block = once(block, "    const choices = previous ? [previous.option] : [];", `    __bus58Observe("site_endpoint_options", { invocation: diagnosticInvocation, connection, ends, carrierLayers, single });
+    const choices = previous ? [previous.option] : [];`, "actual endpoint site arrays")
+    block = once(block, "          try {\n            let steps = 0;", `          __bus58Observe("search_tag", { search, stage: "site_pair_viability", invocation: diagnosticInvocation, connection, layer, escapes, local });
+          try {
+            let steps = 0;`, "site viability search identity")
+    block = once(block,
+      "            if (search.solved)\n              choices.push({",
+      `            __bus58Observe("search_probe_end", { search, steps, limit: 3e3 });
+            if (search.solved)
+              choices.push({`, "site viability bounded work")
+    block = once(block, "      options.onBlockedConnection?.(connection.name);\n      return null;", `      options.onBlockedConnection?.(connection.name);
+      __bus58Observe("site_null", { reason: "zero_route_choices", invocation: diagnosticInvocation, connection, ends, carrierLayers, variants });
+      return null;`, "fatal empty native-net domain")
+    block = once(block,
+      "  const overlap = (a2, b2) => copperConflicts.firstConflict(a2, b2, clearance - 1e-8);",
+      '  const overlap = (a2, b2) => __bus58Collision(copperConflicts.firstConflict(a2, b2, clearance - 1e-8), { invocation: diagnosticInvocation, first: a2, second: b2 });', "actual escape compatibility copper pair")
+    block = once(block,
+      "      (index2) => options.onBlockedConnection?.(entries[index2][0])",
+      `(index2) => {
+        __bus58Observe("site_pruned_empty", { invocation: diagnosticInvocation, index: index2, entries });
+        return options.onBlockedConnection?.(entries[index2][0]);
+      }`, "compatibility-pruned native-net domain")
+    block = once(block, "    if (!domains) return null;", `    if (!domains) {
+      __bus58Observe("site_null", { reason: "escape_compatibility_domains_empty", invocation: diagnosticInvocation, entries });
+      return null;
+    }`, "fatal pruned domains")
+    block = once(block, "      try {\n        let steps = 0;", `      __bus58Observe("search_tag", { search, stage: "site_negotiated_route", invocation: diagnosticInvocation, connection, layer, option, iteration });
+      try {
+        let steps = 0;`, "negotiated route search identity")
+    block = once(block,
+      "        if (search.solved) {\n          const trace = signalTrace(native, connection, search.result, layer),",
+      `        __bus58Observe("search_probe_end", { search, steps, limit: 3e3 });
+        if (search.solved) {
+          const trace = signalTrace(native, connection, search.result, layer),`, "negotiated route bounded work")
+    return once(block, "  return routed.size === base.connections.length ? finish() : null;", `  return __bus58Return("site_result", routed.size === base.connections.length ? finish() : null, { invocation: diagnosticInvocation, routed, queue, variants, pools: pools2, visits });`, "actual site pool final result")
+  })
+
+  edit("function* routeGeneratedSignalSites({", "function* negotiateGeneratedSignalSites", block => {
+    block = once(block, "  const routed = yield* runBoundedRouting(\n    negotiateGeneratedSignalSites(input),", `  const diagnosticGenerator = negotiateGeneratedSignalSites(input);
+  __bus58Observe("bounded_tag", { generator: diagnosticGenerator, stage: "generated_site_negotiation", input, maxSteps });
+  const routed = yield* runBoundedRouting(
+    diagnosticGenerator,`, "bounded generated-site identity")
+    return block
+  })
+
+  edit("var BusLanesPipelineSolver = class", "// lib/utils/autorouting/BusLanesAutorouter.ts", block => {
+    block = once(block, "  prepare() {", `  prepare() {
+    __bus58Observe("pipeline_prepare", { pipeline: this });`, "pipeline attempt identity")
+    block = once(block, "      this.child.step();", "      __bus58Child(this, this.child).step();", "actual lane child identity")
+    return once(block, "        if (!state.done) return;\n        this.surfaceFinishing = void 0;", `        if (!state.done) return;
+        __bus58Observe("surface_done", { pipeline: this, state });
+        this.surfaceFinishing = void 0;`, "completed native surface result")
+  })
+
+  return { source, proof: { originalSha256: ORIGINAL_CORE_SHA256, instrumentedSha256: createHash("sha256").update(source).digest("hex"), originalByteLength: originalBytes, instrumentedByteLength: Buffer.byteLength(source), observerSymbol: OBSERVER_SYMBOL, anchors, algorithmOptionsChanged: false, extraOriginalPredicateEvaluations: 0, wallClockOutcomeParityGuaranteed: false } }
 }
