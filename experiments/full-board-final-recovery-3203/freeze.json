@@ -1,50 +1,47 @@
 {
-  "status": "Review-ready default-window preparation; no commit or launch",
-  "baseCommit": "4faeb09514467a8b0804688328bc393206c4b614",
-  "branch": "bench/full-board-final-recovery-default-3203",
-  "worktree": "/tmp/full-board-final-recovery-default-3203",
+  "status": "HELD for parent review; no commit/push/run",
+  "baseCommit": "5b0030c049194715e9c145aa83f4fb89fbf862ac",
+  "branch": "bench/full-board-recovery-remainder-3203",
+  "worktree": "/tmp/full-board-recovery-remainder-3203",
   "inputSha256": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2",
   "candidateSha256": "4506f98dd368089eecc1c7cc66962e2dcd40a419db567e75e0a7ed0bea60885f",
   "files": [
     {
       "name": ".github/workflows/full-board-ten.yml",
-      "bytes": 5448,
-      "sha256": "cc0bd353d5a992b21f4a0a38fe78337d75f688d8c391a9cf121bf9de2306fc29"
+      "bytes": 6152,
+      "sha256": "ab7073181181ef547893eec6c1d51b1ff0c2754538657ae9e4ad2b62bc670946"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/VALIDATION.md",
-      "bytes": 2425,
-      "sha256": "5691ae7e47fb7452dea409c2168330bd59ef56c2351c1f417a3b8ee9f173651b"
-    },
-    {
-      "name": "experiments/full-board-final-recovery-3203/candidate-byte-proof.json",
-      "bytes": 2160,
-      "sha256": "8662787d999e1bc342719556c44fa335e6d25c0a9e708a9872e8f42df0411481"
+      "bytes": 3297,
+      "sha256": "c223d631d3ca1ce74663f9e6eb1df22a83d6b39a39b92042ecb5a18ee3050581"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/experiment.json",
-      "bytes": 6000,
-      "sha256": "520d9d500bb13c4bc30a3e9cb0f796da109b173a71f28b6d02b3505b8d9faf6c"
+      "bytes": 13950,
+      "sha256": "a7a654ac7dce9276ebd14d425b7271727ae79b3872845a86aac267514f29d04d"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/install-diagnostic.mjs",
-      "bytes": 9798,
-      "sha256": "8e402c5467c8875a733e79cd72c1225de93f0f2a960fcb6e48680161006e0aa1"
-    },
-    {
-      "name": "experiments/full-board-final-recovery-3203/prepare-recovery-only.py",
-      "bytes": 4882,
-      "sha256": "c66c9608f2d0a98dde792c093c7fc46da20c8e0ebd0c046b30219cb61c8ec73d"
-    },
-    {
-      "name": "experiments/full-board-final-recovery-3203/source-relation.json",
-      "bytes": 1283,
-      "sha256": "04f4ac9cd47c91b43e49842ef714e02f0d62ff9b70811462def00aa1a3674910"
+      "bytes": 10000,
+      "sha256": "e8ab118284da19323bf0e9961b001653dbf361d8e099a713180428b7c913c5db"
     },
     {
       "name": "experiments/full-board-ten/harness-provenance.json",
-      "bytes": 2040,
-      "sha256": "0ef831730ea6736c2901e9dd6a73fba5f79b7f89494bb1ae5ee447d0d163737f"
+      "bytes": 2026,
+      "sha256": "e1d7a46d99ee48a979b7bcd5913b91f7f9a0df9338b3e2a489b78409ca30ddf8"
+    },
+    {
+      "name": "experiments/full-board-ten/report.py",
+      "bytes": 4597,
+      "sha256": "6d5b32bf73a2c43f3c097d2ac9f4fac1a08f4b3b47cf9a52a8b3020cb174964a"
+    }
+  ],
+  "unchangedControlFiles": [
+    {
+      "name": "experiments/full-board-ten/bootstrap.py",
+      "bytes": 8903,
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d"
     },
     {
       "name": "experiments/full-board-ten/prepare-cases.ts",
@@ -57,121 +54,403 @@
       "sha256": "f436629d1bf3983cd5d5f8c16ec892a095776fbdd17aa896da8be85084bb08de"
     },
     {
-      "name": "experiments/full-board-ten/report.py",
-      "bytes": 4583,
-      "sha256": "84fdb8ce8526036fd12f1dc979dd037613b39a801ac75defbac0bd6292a018cc"
-    },
-    {
       "name": "experiments/full-board-ten/run-one.ts",
       "bytes": 13095,
       "sha256": "0b11e0260e00ca0a87e31b72781254a32c5ff24e71fc470e1367d03b5ca1d3bb"
-    }
-  ],
-  "unchangedControlFiles": [
-    {
-      "name": "experiments/full-board-ten/bootstrap.py",
-      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d"
-    },
-    {
-      "name": "experiments/full-board-ten/render-published.tsx",
-      "sha256": "f436629d1bf3983cd5d5f8c16ec892a095776fbdd17aa896da8be85084bb08de"
     },
     {
       "name": "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts",
+      "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
     },
     {
+      "name": "experiments/full-board-ten/calibrate-assessment.tsx",
+      "bytes": 2714,
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0"
+    },
+    {
       "name": "experiments/full-board-ten/release.json",
+      "bytes": 4140,
       "sha256": "d549e4863bbbdafd54736dc0a05dec37da72df9261d71eb67b68cf116e2e87b7"
     },
     {
       "name": "experiments/full-board-ten/source-provenance.json",
+      "bytes": 23139,
       "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb"
     },
     {
       "name": "experiments/full-board-ten/runtime/package.json",
+      "bytes": 2804,
       "sha256": "91564d02d89732ee9bb3052164021708de8e4a54eb47ffe09c9904fc63bdc997"
     },
     {
       "name": "experiments/full-board-ten/runtime/bun.lock",
+      "bytes": 72112,
       "sha256": "297c3c52a9c01d36e37cb140388674912e5091d79f22807384f0fd3affd8ca06"
     },
     {
       "name": "experiments/full-board-ten/autorouter-dependencies/package.json",
+      "bytes": 261,
       "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360"
     },
     {
       "name": "experiments/full-board-ten/autorouter-dependencies/bun.lock",
+      "bytes": 13144,
       "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/prepare-recovery-only.py",
+      "bytes": 4882,
       "sha256": "c66c9608f2d0a98dde792c093c7fc46da20c8e0ebd0c046b30219cb61c8ec73d"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/candidate-byte-proof.json",
+      "bytes": 2160,
       "sha256": "8662787d999e1bc342719556c44fa335e6d25c0a9e708a9872e8f42df0411481"
     },
     {
       "name": "experiments/full-board-final-recovery-3203/source-relation.json",
+      "bytes": 1283,
       "sha256": "04f4ac9cd47c91b43e49842ef714e02f0d62ff9b70811462def00aa1a3674910"
     }
   ],
   "checks": {
-    "oneCandidateOnly": true,
-    "branchTrigger": true,
-    "immutableSourceRefs": true,
-    "pythonAst": true,
-    "json": true,
+    "exactSevenSingleCandidateJobs": true,
+    "maximumParallelJobs": 5,
+    "sameArmRunner": true,
+    "readOnlyContentsAndNoPersistedCredentials": true,
     "workflowYaml": true,
-    "unchangedRoutingRuntimeRendererObserverSourcesAndAssessment": true,
-    "actualTaskLimits": true,
-    "actualInstallerGuards": true,
-    "longWindowMetadataRemoved": true,
-    "storedStatsAndExecutionUnchanged": true,
-    "publishedArHash": true,
-    "exactInMemoryByteProof": true,
-    "nodeSyntax": true,
-    "bunSyntaxNoModuleExecution": true,
-    "reportWithoutLongWindowMetadata": true,
-    "diffWhitespace": true
+    "jsonAndPythonAst": true,
+    "installerSyntaxNodeCheck": true,
+    "installerOnlyBoardCohortGeneralization": true,
+    "reportOnlyAddsOriginalSelection": true,
+    "cohortSpecificArtifactNames": true,
+    "actualTaskAndTimerLimitsMs": [
+      900000,
+      960000,
+      180000
+    ],
+    "sourceProvenanceFilesRehashed": 101,
+    "sevenRawSourceAndBaselineComponentPadNetCountsVerified": true,
+    "originalAssessmentPourAndMembershipPathsUnchanged": true,
+    "rendererObserverAndPostroutingProvenanceChecksUnchanged": true,
+    "routingCandidateExactlyOneByte": true,
+    "publishedActiveEntryUnchanged": true
   },
-  "notExecuted": [
-    "candidate entry retained",
-    "runtime install",
-    "candidate import",
-    "solver construction or routing",
-    "full build",
-    "commit",
-    "push",
-    "dispatch"
-  ],
-  "pending": [
-    "Parent review before commit/push",
-    "CI-only install/import/alias isolation proof",
-    "One actual default-window iMX spaced candidate outcome"
-  ],
   "cases": [
     {
-      "id": "imx6",
+      "id": "h616",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "original",
+      "mode": "phased",
+      "fanout": false,
+      "planes": true,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+      "expectedComponents": 125,
+      "expectedPads": 760,
+      "expectedNativeNets": 264,
+      "expectedNets": 264,
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "h616",
+      "lane": "final-recovery-only-diagnostic",
       "cohort": "spaced",
-      "experiment": "final-recovery-only-diagnostic",
-      "limitsMs": [
-        900000,
-        960000,
-        180000
-      ]
+      "mode": "phased",
+      "fanout": false,
+      "planes": false,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+      "expectedComponents": 125,
+      "expectedPads": 760,
+      "expectedNativeNets": 264,
+      "expectedNets": 121,
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "butterstick",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "original",
+      "mode": "phased",
+      "fanout": false,
+      "planes": true,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+      "expectedComponents": 350,
+      "expectedPads": 1623,
+      "expectedNativeNets": 349,
+      "expectedNets": 349,
+      "expectedRoutableNets": 317
+    },
+    {
+      "id": "glider",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "original",
+      "mode": "phased",
+      "fanout": false,
+      "planes": true,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+      "expectedComponents": 379,
+      "expectedPads": 1700,
+      "expectedNativeNets": 459,
+      "expectedNets": 459,
+      "expectedRoutableNets": 356
+    },
+    {
+      "id": "imx6",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "original",
+      "mode": "phased",
+      "fanout": false,
+      "planes": true,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+      "expectedComponents": 498,
+      "expectedPads": 1904,
+      "expectedNativeNets": 588,
+      "expectedNets": 588,
+      "expectedRoutableNets": 404
+    },
+    {
+      "id": "icepi",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "original",
+      "mode": "phased",
+      "fanout": false,
+      "planes": true,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+      "expectedComponents": 280,
+      "expectedPads": 1426,
+      "expectedNativeNets": 466,
+      "expectedNets": 466,
+      "expectedRoutableNets": 230
+    },
+    {
+      "id": "icepi",
+      "lane": "final-recovery-only-diagnostic",
+      "cohort": "spaced",
+      "mode": "phased",
+      "fanout": false,
+      "planes": false,
+      "captureDeadlineMs": 900000,
+      "hardDeadlineMs": 960000,
+      "assessmentDeadlineMs": 180000,
+      "sourceSha256": "c27dd280882cfa15a3516a9c60796c83f47ff380505a212d2d1672ea4b61f375",
+      "expectedComponents": 280,
+      "expectedPads": 1426,
+      "expectedNativeNets": 466,
+      "expectedNets": 230,
+      "expectedRoutableNets": 230
     }
   ],
   "publishedControl": {
     "runId": 43924818002,
     "headSha": "d612311a273084c49f6384a63183b08d08f30569",
-    "jobId": 133501356499,
-    "case": "imx6/spaced",
-    "limitsMs": [
-      900000,
-      960000,
-      180000
+    "assessmentDeadlineBasis": "Exact baseline run-one.ts hard-codes 180000ms; original result schema omits this field.",
+    "cases": [
+      {
+        "case": "h616/original",
+        "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+        "connectedNets": 2,
+        "requestedRoutableNets": 121,
+        "physicalDrc": 3,
+        "emittedCounts": {
+          "pcb_copper_pour": 17,
+          "pcb_hole": 4,
+          "pcb_plated_hole": 30,
+          "pcb_smtpad": 726,
+          "pcb_trace": 221,
+          "pcb_via": 140,
+          "source_component": 125,
+          "source_net": 264
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "h616/spaced",
+        "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+        "connectedNets": 53,
+        "requestedRoutableNets": 121,
+        "physicalDrc": 3,
+        "emittedCounts": {
+          "pcb_copper_pour": 0,
+          "pcb_hole": 4,
+          "pcb_plated_hole": 30,
+          "pcb_smtpad": 726,
+          "pcb_trace": 57,
+          "pcb_via": 96,
+          "source_component": 125,
+          "source_net": 121
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "butterstick/original",
+        "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+        "connectedNets": 9,
+        "requestedRoutableNets": 317,
+        "physicalDrc": 0,
+        "emittedCounts": {
+          "pcb_copper_pour": 39,
+          "pcb_hole": 10,
+          "pcb_plated_hole": 56,
+          "pcb_smtpad": 1557,
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "source_component": 350,
+          "source_net": 349
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "glider/original",
+        "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+        "connectedNets": 0,
+        "requestedRoutableNets": 356,
+        "physicalDrc": 0,
+        "emittedCounts": {
+          "pcb_copper_pour": 1,
+          "pcb_hole": 10,
+          "pcb_plated_hole": 11,
+          "pcb_smtpad": 1679,
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "source_component": 379,
+          "source_net": 459
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "imx6/original",
+        "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+        "connectedNets": 3,
+        "requestedRoutableNets": 404,
+        "physicalDrc": 0,
+        "emittedCounts": {
+          "pcb_copper_pour": 140,
+          "pcb_hole": 10,
+          "pcb_plated_hole": 59,
+          "pcb_smtpad": 1835,
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "source_component": 498,
+          "source_net": 588
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "icepi/original",
+        "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+        "connectedNets": 7,
+        "requestedRoutableNets": 230,
+        "physicalDrc": 0,
+        "emittedCounts": {
+          "pcb_copper_pour": 70,
+          "pcb_hole": 12,
+          "pcb_plated_hole": 85,
+          "pcb_smtpad": 1329,
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "source_component": 280,
+          "source_net": 466
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      },
+      {
+        "case": "icepi/spaced",
+        "sourceSha256": "c27dd280882cfa15a3516a9c60796c83f47ff380505a212d2d1672ea4b61f375",
+        "connectedNets": 50,
+        "requestedRoutableNets": 230,
+        "physicalDrc": 0,
+        "emittedCounts": {
+          "pcb_copper_pour": 0,
+          "pcb_hole": 12,
+          "pcb_plated_hole": 85,
+          "pcb_smtpad": 1329,
+          "pcb_trace": 52,
+          "pcb_via": 122,
+          "source_component": 280,
+          "source_net": 230
+        },
+        "completeSourceCounts": true,
+        "limitsMs": [
+          900000,
+          960000,
+          180000
+        ]
+      }
     ]
-  }
+  },
+  "excludedCases": [
+    {
+      "case": "butterstick/spaced",
+      "reason": "Observed paths contain only BusLanes; no Prepared/Pipeline9 exposure."
+    },
+    {
+      "case": "imx6/spaced",
+      "reason": "Original-window candidate is already running on the base controller."
+    },
+    {
+      "case": "glider/spaced",
+      "reason": "Published/candidate pair already matched naturally without a timeout."
+    }
+  ],
+  "notExecuted": [
+    "runtime install",
+    "candidate import",
+    "solver construction or routing",
+    "build",
+    "commit",
+    "push",
+    "dispatch"
+  ],
+  "pending": [
+    "Parent exact-patch review before commit/push",
+    "Remote seven-case outcomes"
+  ]
 }

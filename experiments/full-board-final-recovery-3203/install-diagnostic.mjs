@@ -3,8 +3,9 @@ import { spawnSync } from "node:child_process"
 import { existsSync, linkSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 
-const [rootArg, board] = process.argv.slice(2)
-if (!rootArg || !["glider", "imx6"].includes(board)) throw new Error("Usage: install-diagnostic.mjs VERIFIED_RUNTIME_ROOT glider|imx6")
+const [rootArg, board, cohort] = process.argv.slice(2)
+const allowedCases = ["h616-original", "h616-spaced", "butterstick-original", "glider-original", "imx6-original", "icepi-original", "icepi-spaced"]
+if (!rootArg || !allowedCases.includes(`${board}-${cohort}`)) throw new Error("Usage: install-diagnostic.mjs VERIFIED_RUNTIME_ROOT BOARD COHORT (one of the seven remaining cases)")
 const root = resolve(rootArg)
 const manifestPath = join(root, "runtime-manifest.json")
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
@@ -16,9 +17,9 @@ if (autorouter?.version !== "0.0.1109" || autorouter.entrySha256 !== frozen.inpu
 const originalFolder = join(root, "npm", "autorouter")
 if (resolve(autorouter.entry) !== join(originalFolder, autorouter.entryRelative)) throw new Error("Unexpected original AR location")
 const originalEntry = autorouter.entry
-const casePath = join(root, "cases", `${board}-spaced.json`)
+const casePath = join(root, "cases", `${board}-${cohort}.json`)
 const task = JSON.parse(readFileSync(casePath, "utf8"))
-if (task.id !== board || task.cohort !== "spaced" || task.captureDeadlineMs !== 900000 || task.hardDeadlineMs !== 960000 || task.assessmentDeadlineMs !== 180000) throw new Error("Unexpected default-window recovery case or deadlines")
+if (task.id !== board || task.cohort !== cohort || task.captureDeadlineMs !== 900000 || task.hardDeadlineMs !== 960000 || task.assessmentDeadlineMs !== 180000) throw new Error("Unexpected default-window recovery case or deadlines")
 const sha = bytes => createHash("sha256").update(bytes).digest("hex")
 const byteProofPath = join(root, "recovery-only-byte-proof.json")
 if (existsSync(byteProofPath)) throw new Error("Refuse to replace an existing byte proof")
