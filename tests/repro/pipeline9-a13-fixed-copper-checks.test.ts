@@ -8,10 +8,12 @@ import type { SimpleRouteJson } from "lib/types"
 test("route the A13 DDR section around previously routed data bytes", async (): Promise<void> => {
   const input: SimpleRouteJson = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/a13-fixed-copper/remaining64.srj.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/a13-fixed-copper/remaining64.srj.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString("utf8"),
