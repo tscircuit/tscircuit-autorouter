@@ -1,8 +1,8 @@
-name: Matched full-board last-layer bound
+name: Matched full-board planning fix
 
 on:
   push:
-    branches: [bench/full-board-layer-bound-3196]
+    branches: [bench/full-board-planning-3196]
   workflow_dispatch:
     inputs:
       validation:
@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   source-builds:
@@ -26,9 +27,9 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            experiments/full-board-layer-bound
+            experiments/full-board-planning
             experiments/full-board-ten
-            .github/workflows/full-board-layer-bound.yml
+            .github/workflows/full-board-planning.yml
             AGENTS.md
       - uses: actions/checkout@v4
         with:
@@ -45,8 +46,19 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Resolve once, build officially, audit all bundled sources
-        run: python3 experiments/full-board-layer-bound/prepare-source-pair.py --root "$GITHUB_WORKSPACE"
+      - name: Read the proven source-base graph through normal Actions artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: matched-source-pair
+          run-id: 43840051309
+          github-token: ${{ github.token }}
+          path: .planning-seed-download
+      - name: Extract only the old BASE lock and dependency inventory
+        run: |
+          mkdir .planning-source-seed
+          tar -xzf .planning-seed-download/matched-source-pair.tgz -C .planning-source-seed source-pair-artifact/bun.lock source-pair-artifact/dependency-inventory.json.gz
+      - name: Restore the proven graph, build both NEW packages and audit all sources
+        run: python3 experiments/full-board-planning/prepare-source-pair.py --root "$GITHUB_WORKSPACE" --seed-artifact "$GITHUB_WORKSPACE/.planning-source-seed/source-pair-artifact"
       - name: Archive symlink-safe matched packages and shared production closure
         if: always()
         run: tar -czf matched-source-pair.tgz source-pair-artifact
@@ -84,7 +96,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            experiments/full-board-layer-bound
+            experiments/full-board-planning
             experiments/full-board-ten
             AGENTS.md
       - uses: actions/checkout@v4
@@ -119,7 +131,7 @@ jobs:
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT/published"
       - name: Activate matched source control and prepare authentic cases
         run: |
-          python3 experiments/full-board-layer-bound/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant base
+          python3 experiments/full-board-planning/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant base
           export FULL_BOARD_RUNTIME_MANIFEST="$FULL_BOARD_ROOT/source-base/runtime-manifest.json"
           bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/published/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/published/sources/spaced" "$FULL_BOARD_ROOT/source-base/cases" "$BOARD"
       - name: Run full authentic source control
@@ -127,11 +139,11 @@ jobs:
         run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/source-base/cases/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/source-base/results/$BOARD/$COHORT"
       - name: Require source control to match available published functional evidence
         id: parity
-        run: python3 experiments/full-board-layer-bound/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT" --control-only
+        run: python3 experiments/full-board-planning/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT" --control-only
       - name: Activate candidate from the same build graph
         if: steps.parity.outcome == 'success'
         run: |
-          python3 experiments/full-board-layer-bound/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant pr
+          python3 experiments/full-board-planning/activate-runtime.py --published "$FULL_BOARD_ROOT/published" --artifact "$GITHUB_WORKSPACE/source-pair-artifact" --variant pr
           export FULL_BOARD_RUNTIME_MANIFEST="$FULL_BOARD_ROOT/source-pr/runtime-manifest.json"
           bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/published/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/published/sources/spaced" "$FULL_BOARD_ROOT/source-pr/cases" "$BOARD"
       - name: Run full authentic candidate on the same VM
@@ -140,12 +152,12 @@ jobs:
         run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/source-pr/cases/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/source-pr/results/$BOARD/$COHORT"
       - name: Report matched completion and physical net changes
         if: ${{ always() && steps.parity.outcome == 'success' }}
-        run: python3 experiments/full-board-layer-bound/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT"
+        run: python3 experiments/full-board-planning/report-pair.py --root "$FULL_BOARD_ROOT" --board "$BOARD" --cohort "$COHORT"
       - name: Preserve fresh cases, complete geometry, partial failures and provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: layer-bound-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
+          name: planning-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
           path: |
             .full-board-run/source-*/results
             .full-board-run/source-*/runtime-manifest.json
@@ -170,7 +182,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          sparse-checkout: experiments/full-board-layer-bound
+          sparse-checkout: experiments/full-board-planning
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/tscircuit-autorouter
@@ -192,7 +204,7 @@ jobs:
           path: .matched-download
       - run: tar -xzf .matched-download/matched-source-pair.tgz
       - name: Restore the globally frozen source graph without resolving ranges
-        run: python3 experiments/full-board-layer-bound/prepare-source-pair.py --root "$GITHUB_WORKSPACE" --reuse-artifact "$GITHUB_WORKSPACE/source-pair-artifact"
+        run: python3 experiments/full-board-planning/prepare-source-pair.py --root "$GITHUB_WORKSPACE" --reuse-artifact "$GITHUB_WORKSPACE/source-pair-artifact"
       - name: Run the unchanged Dataset18 controller sequentially
         run: bun same-machine-base/scripts/benchmark/runSameMachineBenchmarks.ts
       - name: Render the ordinary Dataset18 comparison and visible summary
@@ -203,8 +215,8 @@ jobs:
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          manifest = json.loads(Path("experiments/full-board-layer-bound/experiment.json").read_text())
-          note = "Both lanes build AR " + manifest["autorouterCommit"] + "; source base uses Tiny " + manifest["tinyCommit"] + ". Candidate changes only " + json.dumps(manifest["files"]) + ". These are explicit private source builds, not two different published versions.\n\n"
+          manifest = json.loads(Path("experiments/full-board-planning/experiment.json").read_text())
+          note = "Both lanes build AR " + manifest["autorouterCommit"] + "; frozen Tiny dependency stays at " + manifest["tinyCommit"] + ". Candidate patch target " + manifest["patchTarget"] + " changes only " + json.dumps(manifest["files"]) + ". These are explicit private source builds, not two different published versions.\n\n"
           comparison = Path("same-machine-results/comparison.md").read_text()
           print(note + comparison)
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
@@ -214,7 +226,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: layer-bound-dataset18-${{ github.run_attempt }}
+          name: planning-dataset18-${{ github.run_attempt }}
           path: |
             same-machine-results
             dataset-source-proof

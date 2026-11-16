@@ -112,13 +112,18 @@ def audit_maps(source: Path, maps: list[tuple[Path, Path]], upstream_proofs: dic
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True, type=Path)
-    parser.add_argument("--reuse-artifact", type=Path)
+    graph = parser.add_mutually_exclusive_group(required=True)
+    graph.add_argument("--seed-artifact", type=Path)
+    graph.add_argument("--reuse-artifact", type=Path)
     arguments = parser.parse_args()
     root = arguments.root.resolve()
     controller = Path(__file__).resolve().parent
     frozen = json.loads((controller / "experiment.json").read_text())
     if not frozen["frozen"] or not frozen["files"]:
         raise RuntimeError("Candidate source manifest is not frozen/reviewed")
+    patch_target = frozen["patchTarget"]
+    if patch_target not in ["autorouter", "tiny"]:
+        raise RuntimeError("Select exactly one source patch target")
     if subprocess.check_output(["bun", "--version"], text=True).strip() != "1.4.3":
         raise RuntimeError("Bun1.4.3 is required for both builds")
     base, candidate = root / "same-machine-base", root / "same-machine-pr"
@@ -140,13 +145,15 @@ def main() -> None:
         raise RuntimeError("AR1103 no longer pins the expected Tiny base")
     if frozen["dataset18Commit"] not in package["devDependencies"]["dataset-srj18"]:
         raise RuntimeError("Dataset18 source changed")
-    # Only setup resolves ranges. The Dataset18 job reuses that exact lock.
-    if arguments.reuse_artifact:
-        shared = arguments.reuse_artifact.resolve()
-        shutil.copyfile(shared / "bun.lock", base / "bun.lock")
-        run([*install_command, "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], base)
-    else:
-        run([*install_command, "--ignore-scripts", "--backend", "copy"], base)
+    # Both modes restore the proven source-base graph. Seed mode builds a NEW
+    # pair; Dataset18 reuse mode later restores that new pair's worker outputs.
+    shared = (arguments.reuse_artifact or arguments.seed_artifact).resolve()
+    if digest(shared / "bun.lock") != frozen["expectedLockSha256"]:
+        raise RuntimeError("Source graph seed is not the proven0a388 lock")
+    shutil.copyfile(shared / "bun.lock", base / "bun.lock")
+    run([*install_command, "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], base)
+    if digest(base / "bun.lock") != frozen["expectedLockSha256"]:
+        raise RuntimeError("Frozen install changed the proven dependency lock")
     # The repository's test preload imports Sharp. Install its native image
     # library before inventory/copy so both lanes receive identical bytes.
     sharp = (base / "node_modules/sharp").resolve()
@@ -158,37 +165,52 @@ def main() -> None:
     shutil.copyfile(base / "bun.lock", artifact / "bun.lock")
     shutil.copyfile(base / "package.json", artifact / "package.json")
     graph_before = inventory(base / "node_modules")
-    if arguments.reuse_artifact:
-        with gzip.open(shared / "dependency-inventory.json.gz", "rt") as stream:
-            expected_graph = json.load(stream)["control"]
-        if graph_before != expected_graph:
-            raise RuntimeError("Frozen Dataset18 dependency bytes differ from setup")
+    with gzip.open(shared / "dependency-inventory.json.gz", "rt") as stream:
+        expected_graph = json.load(stream)["control"]
+    if graph_before != expected_graph:
+        raise RuntimeError("Restored dependency bytes differ from the proven source-base graph")
     copy_graph(base / "node_modules", candidate / "node_modules")
     shutil.copyfile(base / "bun.lock", candidate / "bun.lock")
-    tiny_base = (base / "node_modules/tiny-hypergraph").resolve()
-    tiny_candidate = (candidate / "node_modules/tiny-hypergraph").resolve()
+    source_base = base if patch_target == "autorouter" else (base / "node_modules/tiny-hypergraph").resolve()
+    source_candidate = candidate if patch_target == "autorouter" else (candidate / "node_modules/tiny-hypergraph").resolve()
     expected_differences = set()
     for patch in frozen["files"]:
         relative = Path(patch["path"])
-        original = tiny_base / relative
-        revised = tiny_candidate / relative
+        if not relative.parts or relative.is_absolute() or ".." in relative.parts:
+            raise RuntimeError("Reviewed source patches must be relative paths")
+        expected_root = "tests" if patch["role"] == "test" else "lib"
+        if relative.parts[0] != expected_root or patch["bundled"] != (patch["role"] == "production"):
+            raise RuntimeError("Source role/bundled flag does not match its lib/tests scope")
+        if patch["role"] not in ["production", "test"] or (patch_target == "tiny" and patch["role"] != "production"):
+            raise RuntimeError("Unsupported reviewed source role")
+        original = source_base / relative
+        revised = source_candidate / relative
         payload = controller / "candidate" / relative
         if patch["beforeSha256"] is None:
             if original.exists():
-                raise RuntimeError("Expected new Tiny file already exists")
+                raise RuntimeError("Expected new source file already exists")
         elif digest(original) != patch["beforeSha256"]:
-            raise RuntimeError("Tiny source preimage differs")
+            raise RuntimeError("Source preimage differs")
         if digest(payload) != patch["afterSha256"]:
             raise RuntimeError("Candidate source differs from review manifest")
         revised.parent.mkdir(parents=True, exist_ok=True)
         temporary = revised.with_name(revised.name + ".candidate")
         shutil.copyfile(payload, temporary)
         temporary.replace(revised)  # breaks hardlinks before any candidate edit
-        expected_differences.add(str(revised.relative_to(candidate / "node_modules")))
+        if patch_target == "tiny":
+            expected_differences.add(str(revised.relative_to(candidate / "node_modules")))
     graph_after = inventory(candidate / "node_modules")
     actual_differences = {key for key in graph_before.keys() | graph_after.keys() if graph_before.get(key) != graph_after.get(key)}
     if actual_differences != expected_differences:
         raise RuntimeError(f"Unreviewed dependency changes: {sorted(actual_differences ^ expected_differences)}")
+    project_differences = set(subprocess.check_output(["git", "diff", "--name-only"], cwd=candidate, text=True).splitlines())
+    project_differences.update(subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=candidate, text=True).splitlines())
+    if digest(candidate / "bun.lock") != frozen["expectedLockSha256"]:
+        raise RuntimeError("Candidate lock differs from the frozen shared dependency graph")
+    project_differences.discard("bun.lock")
+    expected_project_differences = {patch["path"] for patch in frozen["files"]} if patch_target == "autorouter" else set()
+    if project_differences != expected_project_differences:
+        raise RuntimeError(f"Unreviewed AR source-tree changes: {sorted(project_differences ^ expected_project_differences)}")
     with gzip.open(artifact / "dependency-inventory.json.gz", "wt") as stream:
         json.dump({"control": graph_before, "candidateChanges": {key: graph_after[key] for key in actual_differences}}, stream)
     if arguments.reuse_artifact:
@@ -200,7 +222,9 @@ def main() -> None:
         (artifact / "provenance.json").write_text(json.dumps({
             "lockSha256": expected["lockSha256"], "graphResolvedAgain": False,
             "sourceGraphBytesMatchSetup": True, "candidateDifferences": sorted(actual_differences),
-            "experiment": frozen,
+            "experiment": frozen, "patchTarget": patch_target,
+            "candidateSourceFiles": frozen["files"],
+            "projectSourceDifferences": sorted(project_differences),
         }, indent=2) + "\n")
         return
     map_sets = {}
@@ -209,12 +233,7 @@ def main() -> None:
     for label, source in [("base", base), ("pr", candidate)]:
         run(["bun", "run", "build"], source)
         if label == "pr":
-            run(["bun", "test", "--timeout", "9999999",
-                 "tests/tinyhypergraph-terminal-port-ids.test.ts",
-                 "tests/tinyhypergraph-pipeline-error-propagation.test.ts",
-                 "tests/tinyhypergraph-lazy-stats.test.ts",
-                 "tests/solvers/tinyhypergraph-candidate-portfolio.test.ts",
-                 "tests/features/tinyhypergraph-port-bridge-repro.test.ts"], source)
+            run(["bun", "test", "--timeout", "9999999", *frozen["testFiles"]], source)
         if digest(source / "bun.lock") != digest(artifact / "bun.lock"):
             raise RuntimeError("Official build changed the shared frozen lock")
         worker_output = artifact / "worker-audit" / label
@@ -231,17 +250,19 @@ def main() -> None:
         shutil.copytree(source / "dist", package_output / "dist")
         shutil.copytree(source / "lib/runtime/generated", artifact / "generated" / label)
         dist_hashes[label] = {str(path.relative_to(package_output)): digest(path) for path in package_output.rglob("*") if path.is_file()}
-    allowed = {"node_modules/tiny-hypergraph/" + patch["path"] for patch in frozen["files"]}
+    source_prefix = "" if patch_target == "autorouter" else "node_modules/tiny-hypergraph/"
+    bundled_files = [patch for patch in frozen["files"] if patch["bundled"]]
+    allowed = {source_prefix + patch["path"] for patch in bundled_files}
     generated = {"lib/runtime/generated/bunWorkerSource.ts", "lib/runtime/generated/nodeWorkerSource.ts"}
     differences = {key for key in map_sets["base"].keys() | map_sets["pr"].keys() if map_sets["base"].get(key) != map_sets["pr"].get(key)}
     if differences - allowed - generated:
         raise RuntimeError(f"Unreviewed bundled source changes: {sorted(differences - allowed - generated)}")
-    for patch in frozen["files"]:
-        key = "node_modules/tiny-hypergraph/" + patch["path"]
+    for patch in bundled_files:
+        key = source_prefix + patch["path"]
         if patch["beforeSha256"] is not None and map_sets["base"].get(key) != [patch["beforeSha256"]]:
-            raise RuntimeError(f"Control Tiny module differs from the pinned source: {key}")
+            raise RuntimeError(f"Control module differs from the pinned source: {key}")
         if map_sets["pr"].get(key) != [patch["afterSha256"]]:
-            raise RuntimeError(f"Candidate Tiny module not proven in built sources: {key}")
+            raise RuntimeError(f"Candidate module not proven in built sources: {key}")
     # Freeze the external production closure from the SAME lock; no range resolution.
     production = root / "production-closure"
     production.mkdir()
@@ -260,7 +281,10 @@ def main() -> None:
                 path.symlink_to(os.path.relpath(target, path.parent))
     shutil.move(str(production / "node_modules"), artifact / "runtime-node_modules")
     provenance = {
-        "experiment": frozen, "bun": "1.4.3", "graphResolvedOnce": True,
+        "experiment": frozen, "bun": "1.4.3", "graphResolvedAgain": False,
+        "patchTarget": patch_target, "candidateSourceFiles": frozen["files"],
+        "projectSourceDifferences": sorted(project_differences),
+        "sourceGraphSeed": {"run": 43840051309, "lockSha256": frozen["expectedLockSha256"]},
         "packageSha256": digest(base / "package.json"), "lockSha256": digest(artifact / "bun.lock"),
         "dependencyDifferences": sorted(actual_differences), "bundledSourceDifferences": sorted(differences),
         "bundledSources": map_sets, "distFiles": dist_hashes,

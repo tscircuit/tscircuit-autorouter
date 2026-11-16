@@ -81,7 +81,7 @@ def main() -> None:
     override = {
         "name": "@tscircuit/capacity-autorouter", "from": "published0.0.1103",
         "to": "matched-source-" + arguments.variant,
-        "reason": "Frozen AR1103 source graph; only the reviewed Tiny last-layer bound differs between source lanes",
+        "reason": "Frozen AR1103 source graph; only the reviewed planning-source patch differs between source lanes",
     }
     for record in manifest["packages"]:
         record["entry"] = str(output / "npm" / record["label"] / record["entryRelative"])
@@ -91,7 +91,7 @@ def main() -> None:
             record["sourceCommit"] = provenance["experiment"]["autorouterCommit"]
             record["sourceGraphLockSha256"] = provenance["lockSha256"]
     manifest.update(
-        experiment="last-layer-bound-source-" + arguments.variant,
+        experiment="planning-source-" + arguments.variant,
         dependencyOverrides=[override], routingSourceOverrides=True,
         sourceOverrides=True, publishedMainAndCoreUnchanged=True,
         sourceBuildProvenance=str(artifact / "provenance.json"),
