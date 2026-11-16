@@ -38,6 +38,10 @@ test("Pipeline 9 routes the NEMA 23 stepper controller", async (): Promise<void>
   expect(routedPairs).toEqual(expectedPairs)
 
   await expect(
-    getBugReportSnapshotSvg({ inputSrj: input, srjWithPointPairs, routedTraces }),
+    getBugReportSnapshotSvg({
+      inputSrj: input,
+      srjWithPointPairs,
+      routedTraces,
+    }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

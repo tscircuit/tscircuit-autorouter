@@ -1,9 +1,7 @@
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import type { SimpleRouteJson } from "lib/types"
-import srj from "./nema-23-stepper-controller.srj.json" with {
-  type: "json",
-}
+import srj from "./nema-23-stepper-controller.srj.json" with { type: "json" }
 
 export default () => {
   return (
