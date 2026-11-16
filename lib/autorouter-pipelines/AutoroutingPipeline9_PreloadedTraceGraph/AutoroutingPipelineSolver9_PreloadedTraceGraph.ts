@@ -1,6 +1,7 @@
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { withInterpolatedTraceWidths } from "./withInterpolatedTraceWidths"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -1700,27 +1701,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const { fixedTraces } =
       expansionSolver.inputSrj as Pipeline7PowerTraceExpansionInput
-    const routedTraces = expansionSolver
-      .getOutput()
-      .map((trace): SimplifiedPcbTraces[number] => {
-        if (trace.__replaces_pcb_trace_id || trace.route_thickness_mode) {
-          return trace
-        }
-        const hasWidthTransition = trace.route.some((point, index) => {
-          const previous = trace.route[index - 1]
-          return (
-            point.route_type === "wire" &&
-            previous?.route_type === "wire" &&
-            point.layer === previous.layer &&
-            point.width !== previous.width
-          )
-        })
-        // Preserve vertex widths when Core reverses a trace to match the
-        // source trace's endpoint order.
-        return hasWidthTransition
-          ? { ...trace, route_thickness_mode: "interpolated" }
-          : trace
-      })
+    const routedTraces = withInterpolatedTraceWidths(
+      expansionSolver.getOutput(),
+    )
     return { fixedTraces, routedTraces }
   }
 

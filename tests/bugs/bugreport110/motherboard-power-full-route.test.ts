@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import { writeFileSync } from "node:fs"
 import { gzipSync } from "node:zlib"
 import { PowerTraceExpanderSolver as OriginalPowerTraceExpanderSolver } from "@tscircuit/power-trace-expander-baseline"
+import { withInterpolatedTraceWidths } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/withInterpolatedTraceWidths"
 import { solveForComparison } from "../../../fixtures/bug-reports/bugreport110-motherboard-power-phase/solve-for-comparison"
 
 test("preserves the complete motherboard output against the original expander on the same runtime", (): void => {
@@ -21,7 +22,10 @@ test("preserves the complete motherboard output against the original expander on
   }
   const originalOutput: string = JSON.stringify({
     ...current.output,
-    traces: [...current.expansionInput.fixedTraces, ...original.getOutput()],
+    traces: [
+      ...current.expansionInput.fixedTraces,
+      ...withInterpolatedTraceWidths(original.getOutput()),
+    ],
   })
   const currentOutput: string = JSON.stringify(current.output)
   const originalHash: string = createHash("sha256")
