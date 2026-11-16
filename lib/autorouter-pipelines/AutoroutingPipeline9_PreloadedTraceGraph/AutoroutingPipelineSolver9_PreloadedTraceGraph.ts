@@ -779,8 +779,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             .getChangedPreloadedTraceSections()
             .map((section) => section.connectionName),
         )
-        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-          (route) => !materializedConnectionNames.has(route.connectionName),
+        const newHdRoutes = canonicalizePipeline9HdRoutes(
+          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
+            (route) => !materializedConnectionNames.has(route.connectionName),
+          ),
         )
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],
