@@ -1,0 +1,29 @@
+name: Capture the native OrangeCrab trace-width failure
+on:
+  push:
+    branches: [codex/orangecrab-taper-diagnostic-20261116]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  capture:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: merged-full-orangecrab
+          run-id: 43810629603
+          github-token: ${{ github.token }}
+          path: evidence
+      - run: bun scripts/benchmark/capture-orangecrab-taper.ts evidence/merged/full/orangecrab-phased/phase-1-input.srj.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: orangecrab-taper-capture
+          path: orangecrab-taper-capture.json
