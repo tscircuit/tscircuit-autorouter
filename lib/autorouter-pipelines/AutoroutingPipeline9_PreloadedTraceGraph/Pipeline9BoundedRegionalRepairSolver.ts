@@ -25,6 +25,7 @@ import {
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
+import { isPipeline9DrcPriorityImprovement } from "./isPipeline9DrcPriorityImprovement"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
 import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9TerminalApproaches"
@@ -230,8 +231,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   }
 
   private initialize(): void {
-    const { originalSrj, routes, syntheticConnectionNames } = this.params
-    if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
+    const { originalSrj, routes } = this.params
+    if (originalSrj.traces?.length) {
       this.finish()
       return
     }
@@ -763,7 +764,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-    if (candidateErrors.length >= context.currentErrors.length) {
+    if (
+      !isPipeline9DrcPriorityImprovement({
+        currentErrors: context.currentErrors,
+        candidateErrors,
+      })
+    ) {
       this.state = { phase: "select-region", context }
       return
     }

@@ -682,6 +682,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
             traceWidth: cms.minTraceWidth,
             obstacleMargin,
+            minClearance: cms.srj.minTraceToPadEdgeClearance,
+            viaCopperClearance: cms.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
@@ -724,6 +726,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
+          minClearance: cms.srj.minTraceToPadEdgeClearance,
+          viaCopperClearance: cms.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
+          layerCount: cms.srj.layerCount,
+          allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
           connMap: cms.connMap,
         },
       ],
@@ -933,6 +939,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline9EffortCleanupSolver,
       (cms) => {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
+        const otherHdRoutes = preloadedTraces.flatMap((trace, index) =>
+          convertPreloadedTraceToHdRoutes(
+            trace,
+            index,
+            cms.srj.layerCount,
+            cms.viaDiameter,
+            cms.connMap,
+          ),
+        )
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = canonicalizePipeline9HdRoutes(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
@@ -982,15 +997,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               layerCount: cms.srj.layerCount,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
               minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-              otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
-                convertPreloadedTraceToHdRoutes(
-                  trace,
-                  index,
-                  cms.srj.layerCount,
-                  cms.viaDiameter,
-                  cms.connMap,
-                ),
-              ),
+              otherHdRoutes,
               enableCrossingViaReduction: true,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
@@ -1019,6 +1026,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
+            refineTraceWidths: (
+              routes: HighDensityRoute[],
+            ): HighDensityRoute[] =>
+              cms.traceWidthSolver!.refineWidths({
+                hdRoutes: routes,
+                otherHdRoutes: otherHdRoutes.map(
+                  (route): HighDensityRoute => ({
+                    ...route,
+                    rootConnectionName:
+                      preloadedTraces[route.preloadedTraceIndex]!
+                        .connection_name,
+                  }),
+                ),
+              }),
           },
         ]
       },

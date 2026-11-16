@@ -54,6 +54,7 @@ import {
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
+import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
 // Finish Circuit JSON repairs before targeting projected earlier copper.
@@ -1739,8 +1740,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.finishWithTraceContactCheck()
       return
     }
-    // Bounded repair does not own preloaded copper. Keep those boards on
-    // their existing exact/preload repair stages without an extra search.
+    // Defer raw preloads until final repair can represent their movable
+    // sections as routes and the remaining copper as fixed obstacles.
     if (
       params.updatedPreloadedTraces.length > 0 ||
       (params.originalSrj.traces?.length ?? 0) > 0
@@ -2163,13 +2164,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ).length,
       this.params.effort,
     )
+    // Movable preloaded sections are already in the repair routes. Keep only
+    // the remaining earlier copper fixed, with its original net and drill span.
     this.boundedRegionalParams = {
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
+        traces: undefined,
+        obstacles: [
+          ...this.params.originalSrj.obstacles,
+          ...getPipeline9FixedRouteObstacles({
+            fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+            layerCount: this.params.layerCount,
+            allowBlindAndBuriedVias:
+              this.params.originalSrj.allowBlindAndBuriedVias,
+          }),
+        ],
         connections: [
           ...this.params.originalSrj.connections,
           ...this.params.newConnections,
+          ...this.movablePreloadedSections.map((section) =>
+            createSyntheticConnection(section, this.params.layerCount),
+          ),
         ],
       },
       routes: regionalB01RepairResult.routes,

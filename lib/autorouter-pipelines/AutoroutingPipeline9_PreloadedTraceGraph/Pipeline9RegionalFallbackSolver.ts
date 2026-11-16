@@ -22,6 +22,8 @@ type Pipeline9RegionalFallbackSolverParams = {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  minClearance?: number
+  viaCopperClearance?: number
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -241,6 +243,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       colorMap: this.params.colorMap,
       repairMargin: this.params.obstacleMargin,
       minimumTraceWidth: this.params.traceWidth,
+      minClearance: this.params.minClearance,
+      viaCopperClearance: this.params.viaCopperClearance,
       connMap: this.params.connMap,
     })
     repairSolver.solve()

@@ -49,6 +49,8 @@ export type Pipeline9HighDensitySolverParams = {
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
+  minClearance?: number
+  viaCopperClearance?: number
   viaToPadClearance?: number
   effort: number
   nodePfById?:
@@ -788,6 +790,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      minClearance: this.params.minClearance,
+      viaCopperClearance: this.params.viaCopperClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
