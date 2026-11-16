@@ -5,15 +5,21 @@ import { fileURLToPath } from "node:url"
 import { gunzipSync } from "node:zlib"
 
 type PackageIdentity = { name: string; version: string; entrySha256: string }
-type ResolvedPackageIdentity = PackageIdentity & { entry: string }
+type ResolvedPackageIdentity = PackageIdentity & { entry: string; publishedEntrySha256: string }
 type CapturedPhase = { index: number; name: string; inputSha256: string; status: string; solver: string }
 type CapturedProgress = {
   id: string; cohort: string; experiment: string; sourceSha256: string
   phases: CapturedPhase[]; runtime: { packages: PackageIdentity[] }
 }
 type ReleaseIdentity = { mainVersion: string; packages: PackageIdentity[] }
-type RuntimeManifest = { experiment: string; dependencyOverrides: unknown[]; packages: PackageIdentity[] }
+type GridInstrumentation = { originalCoreEntry: string; originalCoreSha256: string; instrumentedEntry: string; instrumentedCoreSha256: string; counterOnly: boolean; algorithmChanged: boolean; profiled: boolean }
+type RuntimeManifest = { experiment: string; dependencyOverrides: unknown[]; packages: PackageIdentity[]; gridCensusInstrumentation: GridInstrumentation }
 type PublishedBusInput = ConstructorParameters<typeof SOLVERS.BusLanesPipelineSolver>[0]
+type BoardGridKey = string
+type GridCall = { input: object; key: BoardGridKey; hit: boolean; nx: number; ny: number; firstX: number; lastX: number; firstY: number; lastY: number; step: number; copperRadiusMm: number }
+type GridKeyRow = Omit<GridCall, "input" | "hit"> & { id: number; calls: number; hits: number; misses: number; missCells: number; keyLength: number }
+type GridInputRow = { id: number; calls: number; hits: number; misses: number; missCells: number }
+type GridTransition = { call: number; inputId: number; keyId: number | null; hit: boolean; cells: number }
 
 const [inputArg, outputArg] = process.argv.slice(2)
 if (!inputArg || !outputArg || Bun.version !== "1.4.3") throw new Error("Usage: Bun1.4.3 render-bus-prefix.ts INPUT_DIR OUTPUT")
@@ -42,6 +48,8 @@ const input: PublishedBusInput = JSON.parse(raw.toString())
 if (!input.traces || new Set(input.traces.map((trace): string => trace.pcb_trace_id)).size !== 8 || input.traces.some((trace): boolean => !trace.route.length || trace.route.some((segment): boolean => !["wire", "via"].includes(segment.route_type)))) throw new Error("Source traces require the internal Core adapter; direct replay is not equivalent")
 const release: ReleaseIdentity = JSON.parse(readFileSync(releasePath, "utf8"))
 const manifest: RuntimeManifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+const instrumentation = manifest.gridCensusInstrumentation
+if (!instrumentation?.counterOnly || instrumentation.algorithmChanged || instrumentation.profiled || instrumentation.originalCoreSha256 !== "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5" || instrumentation.instrumentedCoreSha256 !== "737a6e2616281e2c70dfa7ced6423540029f8b3f44863e3a8613170b54fab58d" || sha(readFileSync(instrumentation.originalCoreEntry)) !== instrumentation.originalCoreSha256) throw new Error("Exact counter-only Core instrumentation required")
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (release.mainVersion !== "0.0.3203" || manifest.experiment !== "published" || manifest.dependencyOverrides.length !== 0 || manifest.packages.length !== 4 || prior.runtime.packages.length !== 4) throw new Error("Published runtime identity mismatch")
 const runtime = expectedNames.map((name): ResolvedPackageIdentity => {
@@ -50,10 +58,71 @@ const runtime = expectedNames.map((name): ResolvedPackageIdentity => {
   const captured = prior.runtime.packages.find((row): boolean => row.name === name)
   if (!expected || !actual || !captured || [actual, captured].some(row => row.version !== expected.version || row.entrySha256 !== expected.entrySha256)) throw new Error(`Published package chain differs for ${name}`)
   const entry = fileURLToPath(import.meta.resolve(name))
-  if (sha(readFileSync(entry)) !== expected.entrySha256) throw new Error(`Published entry hash mismatch for ${name}`)
-  return { name, version: expected.version, entry, entrySha256: expected.entrySha256 }
+  const entrySha256 = name === "@tscircuit/core" ? instrumentation.instrumentedCoreSha256 : expected.entrySha256
+  if (name === "@tscircuit/core" && entry !== instrumentation.instrumentedEntry) throw new Error("Core did not resolve to the private instrumented copy")
+  if (sha(readFileSync(entry)) !== entrySha256) throw new Error(`Runtime entry hash mismatch for ${name}`)
+  return { name, version: expected.version, entry, entrySha256, publishedEntrySha256: expected.entrySha256 }
 })
-const immutableFiles = [inputPath, progressPath, identityPath, manifestPath, releasePath, ...runtime.map(row => row.entry)].map(path => ({ path, sha256: sha(readFileSync(path)) }))
+const immutableFiles = [inputPath, progressPath, identityPath, manifestPath, releasePath, instrumentation.originalCoreEntry, ...runtime.map(row => row.entry)].map(path => ({ path, sha256: sha(readFileSync(path)) }))
+
+// Observe the existing lookup result without retaining inputs or changing its cache.
+const gridCensus = {
+  calls: 0, hits: 0, misses: 0, missCells: 0, inputCount: 0,
+  maxKeyLength: 0, maxGridCells: 0, keyCallsOmitted: 0, inputCallsOmitted: 0,
+  transitionsOmitted: 0, keys: [] as GridKeyRow[], inputs: [] as GridInputRow[], transitions: [] as GridTransition[],
+  callSequence: [] as [number, number | null, boolean][], callSequenceOmitted: 0,
+  missCellsScope: "Cells requested for classification on misses; hook precedes classification. Interrupted calls are not proven completed.",
+  callSequenceColumns: ["inputId", "keyIdOrNull", "hit"],
+  limits: { keyRows: 16, keyCharacters: 8192, inputRows: 16, transitions: 64, callSequence: 8192 },
+}
+const inputIds = new WeakMap<object, number>()
+const keyRows = new Map<BoardGridKey, GridKeyRow>()
+let previousGridKey: BoardGridKey | undefined
+let previousGridInput = 0
+const censusGlobal = globalThis as typeof globalThis & { __tscircuitBoardGridAudit?: (call: GridCall) => void }
+if (censusGlobal.__tscircuitBoardGridAudit) throw new Error("Unexpected existing board grid observer")
+censusGlobal.__tscircuitBoardGridAudit = (call): void => {
+  const cells = call.nx * call.ny
+  if (!Number.isSafeInteger(cells) || cells < 0) throw new Error("Invalid board grid dimensions")
+  gridCensus.calls++
+  if (call.hit) gridCensus.hits++
+  else { gridCensus.misses++; gridCensus.missCells += cells }
+  gridCensus.maxKeyLength = Math.max(gridCensus.maxKeyLength, call.key.length)
+  gridCensus.maxGridCells = Math.max(gridCensus.maxGridCells, cells)
+  let inputId = inputIds.get(call.input)
+  if (inputId === undefined) { inputId = ++gridCensus.inputCount; inputIds.set(call.input, inputId) }
+  let inputRow = gridCensus.inputs[inputId - 1]
+  if (!inputRow && inputId <= gridCensus.limits.inputRows) {
+    inputRow = { id: inputId, calls: 0, hits: 0, misses: 0, missCells: 0 }
+    gridCensus.inputs.push(inputRow)
+  }
+  if (inputRow) {
+    inputRow.calls++
+    if (call.hit) inputRow.hits++
+    else { inputRow.misses++; inputRow.missCells += cells }
+  } else gridCensus.inputCallsOmitted++
+  let keyRow = keyRows.get(call.key)
+  if (!keyRow && keyRows.size < gridCensus.limits.keyRows && call.key.length <= gridCensus.limits.keyCharacters) {
+    keyRow = { id: keyRows.size + 1, key: call.key, keyLength: call.key.length, nx: call.nx, ny: call.ny,
+      firstX: call.firstX, lastX: call.lastX, firstY: call.firstY, lastY: call.lastY, step: call.step,
+      copperRadiusMm: call.copperRadiusMm, calls: 0, hits: 0, misses: 0, missCells: 0 }
+    keyRows.set(call.key, keyRow)
+    gridCensus.keys.push(keyRow)
+  }
+  if (keyRow) {
+    keyRow.calls++
+    if (call.hit) keyRow.hits++
+    else { keyRow.misses++; keyRow.missCells += cells }
+  } else gridCensus.keyCallsOmitted++
+  if (gridCensus.callSequence.length < gridCensus.limits.callSequence) gridCensus.callSequence.push([inputId, keyRow?.id ?? null, call.hit])
+  else gridCensus.callSequenceOmitted++
+  if (call.key !== previousGridKey || inputId !== previousGridInput) {
+    if (gridCensus.transitions.length < gridCensus.limits.transitions) gridCensus.transitions.push({ call: gridCensus.calls, inputId, keyId: keyRow?.id ?? null, hit: call.hit, cells })
+    else gridCensus.transitionsOmitted++
+    previousGridKey = call.key
+    previousGridInput = inputId
+  }
+}
 
 // Preserve the established cold-import accounting, then forbid routing WASM.
 const wasmUsage = { coldMainImportCalls: 0, coldMainImportStacks: [] as string[], routingOrUnknownAttempts: 0 }
@@ -112,16 +181,16 @@ const save = (status: string, error?: string): void => {
     id: "imx6", cohort: "spaced", sourceSha256: prior.sourceSha256, status, error: error?.slice(0, 600) ?? null,
     scope: "Actual-input cold-cache byte1 prefix; not a full-board routing or completion result",
     sourceArtifact: artifact, phaseInputSha256: inputSha256,
-    runtime: { packages: runtime, candidateOverride: false, routingSourceOverride: false, cacheEngine: false },
+    runtime: { packages: runtime, candidateOverride: false, routingSourceOverride: true, cacheEngine: false, gridCensusInstrumentation: instrumentation },
     captureDeadlineMs: prefixMs, hardDeadlineMs: 180000, assessmentDeadlineMs: null,
     elapsedMs, cutoffOvershootMs: Math.max(0, elapsedMs - prefixMs),
     solver: solver ? { name: "BusLanesPipelineSolver", phase, iterations: solver.iterations, MAX_ITERATIONS: solver.MAX_ITERATIONS, progress: solver.progress, solved: solver.solved, failed: solver.failed, error: solver.error?.slice(0, 600) ?? null, observedTraceCount: solver.traces.length, stats } : null,
     phases: [{ name: "byte1", index: 2, status, startedMs: 0, elapsedMs, inputSha256, connections: 8, terminals: 17 }],
-    phaseHistory, phaseTransitionsOmitted, wasmUsage, postHashesVerified: finished,
+    phaseHistory, phaseTransitionsOmitted, wasmUsage, postHashesVerified: finished, gridCensus,
     completionClaim: false,
   }
   const encoded = JSON.stringify(progress, null, 2)
-  if (Buffer.byteLength(encoded) > 20000) throw new Error("Prefix progress exceeds bounded record size")
+  if (Buffer.byteLength(encoded) > 1000000) throw new Error("Prefix progress exceeds bounded record size")
   writeFileSync(join(output, "progress.json.tmp"), encoded)
   renameSync(join(output, "progress.json.tmp"), join(output, "progress.json"))
   lastSavedMs = elapsedMs

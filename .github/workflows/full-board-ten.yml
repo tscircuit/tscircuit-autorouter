@@ -1,8 +1,8 @@
-name: Published3203 iMX6 byte1 CPU prefix
+name: Published3203 iMX6 byte1 board grid census
 
 on:
   push:
-    branches: [bench/imx6-byte1-cpu-prefix-3203]
+    branches: [bench/imx6-byte1-grid-census-3203]
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   prefix:
-    name: Published iMX6 byte1 diagnostic prefix
+    name: Published iMX6 byte1 grid counter census
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 8
     env:
@@ -98,25 +98,27 @@ jobs:
           github-token: ${{ github.token }}
           path: .full-board-run/prefix-input
 
-      - name: Observe bounded published byte1 prefix
+      - name: Install counter-only private Core copy
+        id: instrument
+        run: python3 experiments/full-board-ten/grid-census-runtime.py install "$FULL_BOARD_ROOT"
+
+      - name: Observe bounded unprofiled byte1 grid census
         id: prefix
         run: >-
           bun experiments/full-board-ten/run-bus-prefix.ts
           "$FULL_BOARD_ROOT/prefix-input"
           "$FULL_BOARD_ROOT/results/imx6/byte1-prefix"
 
-      - name: Summarize prefix CPU samples
-        if: always()
-        run: >-
-          python3 experiments/full-board-ten/summarize-cpu-profile.py
-          "$FULL_BOARD_ROOT/results/imx6/byte1-prefix"
+      - name: Restore original Core and verify all runtime bytes
+        if: ${{ always() && steps.instrument.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/grid-census-runtime.py restore "$FULL_BOARD_ROOT"
 
-      - name: Preserve prefix profile and diagnostics
+      - name: Preserve bounded grid census and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: imx6-byte1-prefix-profile-${{ github.run_attempt }}
+          name: imx6-byte1-grid-census-${{ github.run_attempt }}
           path: .full-board-run/results/imx6/byte1-prefix
           if-no-files-found: warn
           compression-level: 0
@@ -127,13 +129,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: imx6-byte1-prefix-provenance-${{ github.run_attempt }}
+          name: imx6-byte1-grid-provenance-${{ github.run_attempt }}
           path: |
             .full-board-run/prefix-input/artifact-identity.json
             .full-board-run/runtime-manifest.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
             experiments/full-board-ten/harness-provenance.json
-            experiments/full-board-ten/prefix-provenance.json
+            experiments/full-board-ten/grid-census-provenance.json
+            experiments/full-board-ten/grid-census-anchor.json
+            .full-board-run/grid-census-*.json
           if-no-files-found: warn
           retention-days: 7

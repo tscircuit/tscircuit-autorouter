@@ -1,0 +1,122 @@
+{
+  "purpose": "Bounded unprofiled actual-input board-grid cache census; no routing fix/completion or timing claim",
+  "baseCommit": "6ff2cf1e7341bd757910d584d95067a89bc68bc9",
+  "branch": "bench/imx6-byte1-grid-census-3203",
+  "historicalPrefixProvenance": "prefix-provenance.json describes the earlier CPU profiler only and is not uploaded as current proof",
+  "sourceArtifact": {
+    "repository": "tscircuit/tscircuit-autorouter",
+    "runId": 43929516030,
+    "headSha": "4faeb09514467a8b0804688328bc393206c4b614",
+    "artifactId": 14259406094,
+    "name": "full-board-imx6-published-spaced-1",
+    "archiveSha256": "d991063caf8773c76c95b202d08374c61416f7241dfdc129e519fc310eb4bb42",
+    "compressedSha256": "1486908e405cf2675f22f8c69146160bc35da38e25432936c09cbea4a6a254df",
+    "rawSha256": "f86791279e8f787d434621699d8eab42d475ef4c4bd4d92a3b1f87144dc881df",
+    "progressSha256": "db5f937b9b49e63be2cafe806b5a501fe909ece1db6e8f592d344a4f20e8cd80"
+  },
+  "collection": {
+    "bun": "1.4.3",
+    "publishedRuntime": "tscircuit3203/Core2396/eval1790/AR1109",
+    "prefixMs": 120000,
+    "hardDeadlineMs": 180000,
+    "normalStepBatchMaximum": 200,
+    "profiled": false,
+    "solverOptionsChanged": false,
+    "solverMethodsReplaced": false,
+    "algorithmChanged": false,
+    "instrumentation": "Unique observer hook after original boardGrids.get(input), before unchanged original hit branch",
+    "originalCoreSha256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+    "instrumentedCoreSha256": "737a6e2616281e2c70dfa7ced6423540029f8b3f44863e3a8613170b54fab58d",
+    "privateCoreCopy": true,
+    "originalPackageFilesUnchanged": true,
+    "originalAliasRestoredAfterWorker": true,
+    "completionClaim": false
+  },
+  "observer": {
+    "keyRows": 16,
+    "keyCharactersPerRow": 8192,
+    "inputRows": 16,
+    "transitions": 64,
+    "callSequence": 8192,
+    "explicitOverflowCounts": true,
+    "inputIdentityStorage": "WeakMap without strong references to inputs",
+    "missCells": "Cells requested for classification before miss body; interrupted calls are not proven completed",
+    "offlineLruModelLimit": "Only retained known-key call sequence can be modeled; unknown keys/omitted calls must remain explicit"
+  },
+  "unchangedBaselineFiles": [
+    "bootstrap.py",
+    "release.json",
+    "source-provenance.json",
+    "prepare-cases.ts",
+    "createCoarseRoutingDiagnostics.ts"
+  ],
+  "preparationValidation": {
+    "typescript": "Bun.Transpiler syntax only, no package import",
+    "workflow": "Bun.YAML parse and runner/profile/counter-step assertions",
+    "python": "ast.parse",
+    "exactCoreAnchorHash": true,
+    "diffCheck": true,
+    "inertObserver": {
+      "inertOnly": true,
+      "routerRuns": 0,
+      "calls": 8500,
+      "hits": 2834,
+      "misses": 5666,
+      "requestedMissCells": 679920,
+      "inputCount": 20,
+      "keyRows": 16,
+      "inputRows": 16,
+      "transitions": 64,
+      "callSequence": 8192,
+      "callSequenceOmitted": 308,
+      "inputsUnchanged": true,
+      "compactBytes": 116082,
+      "prettyBytes": 376250
+    },
+    "inertInstaller": {
+      "inertOnly": true,
+      "realPackageImports": 0,
+      "routerRuns": 0,
+      "installPassed": true,
+      "restorePassed": true,
+      "mutatedOriginalAutorouterRejected": true,
+      "fixtureBytes": 19296
+    },
+    "routingRuns": 0,
+    "builds": 0,
+    "installs": 0
+  },
+  "files": [
+    {
+      "path": ".github/workflows/full-board-ten.yml",
+      "bytes": 6053,
+      "sha256": "c2c4e68df957b924e936c1c019a493337318f27e6a4357f161756a0d014cc773"
+    },
+    {
+      "path": "experiments/full-board-ten/render-bus-prefix.ts",
+      "bytes": 15706,
+      "sha256": "601ae21f22355d3c7300df1c27effccb4fe5a810ef4faa42b5dd13ddf66b17ac"
+    },
+    {
+      "path": "experiments/full-board-ten/run-bus-prefix.ts",
+      "bytes": 3981,
+      "sha256": "b47d2547b102492c47813af97e1faba21e1fe957f6afdb3b3476983c980901c1"
+    },
+    {
+      "path": "experiments/full-board-ten/grid-census-runtime.py",
+      "bytes": 6406,
+      "sha256": "8bb496e669819a533c3d9f90185dbe2c6d67a2135491e301d404ec5ed085672a"
+    },
+    {
+      "path": "experiments/full-board-ten/grid-census-anchor.json",
+      "bytes": 1649,
+      "sha256": "99e1aef1b3e5d9cc7de9d1565e0f8769c30e337bbb799a38da27ee5de5717b2f"
+    }
+  ],
+  "limits": [
+    "Fresh-process cold-cache byte1 prefix omits preceding byte0 cache history and full-board work.",
+    "Counter overhead may affect real-time work reached; this is not a timing comparison.",
+    "Ordinary constructor or step may overrun the cooperative120s cutoff;180s independent containment may leave only earlier counters.",
+    "Only normal exit with all hash checks and successful census accounting establishes a completed diagnostic; neither establishes physically completed routing."
+  ]
+}

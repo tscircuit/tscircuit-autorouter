@@ -1,0 +1,17 @@
+{
+  "scope": "Diagnostic hook only, once per getBoardGrid call after existing cache lookup and before unchanged cache hit branch; no algorithm, geometry predicate, cache policy or options change",
+  "originalCoreSHA256": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
+  "expectedDiagnosticCoreSHA256": "737a6e2616281e2c70dfa7ced6423540029f8b3f44863e3a8613170b54fab58d",
+  "old": "  const previous = boardGrids.get(input);\n  if (previous?.key === key) return previous.blocked;",
+  "new": "  const previous = boardGrids.get(input);\n  globalThis.__tscircuitBoardGridAudit?.({ input, key, hit: previous?.key === key, nx: xs.length, ny: ys.length, firstX: xs[0], lastX: xs[xs.length - 1], firstY: ys[0], lastY: ys[ys.length - 1], step, copperRadiusMm });\n  if (previous?.key === key) return previous.blocked;",
+  "oldSHA256": "d0208a6436349fc89956fa13359c91d1725970ee70fd2e7f4ae1b5d2379f3933",
+  "newSHA256": "3d4688fc5b0c984383c7490a11f0d833935f36b348cdb97b2b794d30852a3f0a",
+  "occurrences": 1,
+  "byteOffset": 2370789,
+  "originalFunctionByteOffset": 2370526,
+  "sourceRepository": "tscircuit/bus-lanes-solver",
+  "sourceBase": "74ed20b7f9331a97abfed44ff606d9e72e208a0a",
+  "sourcePath": "lib/board-grid.ts",
+  "hook": "globalThis.__tscircuitBoardGridAudit",
+  "runtimeNote": "Harness installs bounded observer before importing tscircuit; use WeakMap for input IDs, do not retain input objects, do not mutate callback arguments. Classify calls/hits/misses by observed original previous/key equality. Counts of classified cells equals nx*ny on cache miss; no per-cell observer. This is diagnostics, not performance evidence."
+}
