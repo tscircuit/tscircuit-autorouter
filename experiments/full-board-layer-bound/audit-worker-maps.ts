@@ -26,9 +26,14 @@ for (const platform of ["bun", "node"] as const) {
   assert.equal(maps.length, 1)
   assert.equal(bundles.length, 1)
   const diagnostic = await bundles[0]!.text()
-  // Remove only the emitted sourceMappingURL comment, retaining all code/whitespace.
-  const withoutMapComment = diagnostic.replace(/^\/\/# sourceMappingURL=[^\r\n]*(?:\r?\n)?$/m, "")
-  assert.equal(withoutMapComment, official, `${platform} diagnostic JS differs from the official worker`)
+  // Bun adds these source-map metadata comments after the unchanged worker.
+  const withoutMapMetadata = diagnostic
+    .replace(/^\/\/# sourceMappingURL=[^\r\n]*(?:\r?\n)?$/m, "")
+    .replace(/\n\/\/# debugId=[A-Fa-f0-9-]+\r?\n?$/, "")
+  assert.ok(
+    withoutMapMetadata === official,
+    `${platform} diagnostic JS differs from the official worker (${withoutMapMetadata.length} vs ${official.length} bytes)`,
+  )
   writeFileSync(join(output, `${platform}.worker.js`), official)
   writeFileSync(join(output, `${platform}.worker.js.map`), await maps[0]!.text())
   manifests.push({ path: join(output, `${platform}.worker.js.map`), originalMapPath: resolve(maps[0]!.path), platform })
