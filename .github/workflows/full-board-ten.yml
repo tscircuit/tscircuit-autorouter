@@ -1,4 +1,4 @@
-name: Published3207 native high-density phase replay
+name: Published3207 isolated native VREF region replay
 
 on:
   push:
@@ -15,9 +15,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
-        variant: [published, regional-expansion]
+        variant: [target-regional-expansion]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache

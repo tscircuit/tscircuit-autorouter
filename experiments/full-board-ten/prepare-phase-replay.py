@@ -8,8 +8,8 @@ import sys
 
 root = Path(sys.argv[1]).resolve()
 variant = sys.argv[2]
-if variant not in {"published", "regional-expansion"}:
-    raise ValueError("Expected published or regional-expansion")
+if variant not in {"published", "target-regional-expansion"}:
+    raise ValueError("Expected published or target-regional-expansion")
 controller = Path(__file__).resolve().parent
 manifest = json.loads((root / "runtime-manifest.json").read_text())
 release = json.loads((controller / "release.json").read_text())
@@ -26,7 +26,7 @@ original_entry = Path(package["entry"])
 original = original_entry.read_bytes()
 assert sha(original) == anchor["originalAutorouterSHA256"]
 selected_entry = original_entry
-if variant == "regional-expansion":
+if variant == "target-regional-expansion":
     candidate = original
     for replacement in anchor["replacements"]:
         old, new = replacement["old"].encode(), replacement["new"].encode()
@@ -63,6 +63,7 @@ proof = {
     "selectedAutorouterEntry": str(selected_entry), "selectedAutorouterSha256": sha(selected_entry.read_bytes()),
     "constructor": "new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {capacityDepth:undefined,targetMinCapacity:undefined,cacheProvider:null,effort:undefined})",
     "captureSearchDebug": "absent, matching Core", "limitsMs": [900000, 960000],
+    "diagnosticPacketLimitBytes": 1048576,
     "cacheCaveat": "Fresh process lacks any prior-phase warmed internal HD global cache; baseline replay must reproduce native target failure and Tiny context.",
     "packages": [{"name": item["name"], "version": item["version"], "entrySha256": item["entrySha256"]} for item in manifest["packages"]],
 }

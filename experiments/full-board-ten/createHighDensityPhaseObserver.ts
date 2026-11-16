@@ -8,7 +8,7 @@ type Restore = () => void
 type ObserverOptions = { onSnapshot?: (report: RuntimeObject) => void }
 
 const TARGET_NODE_IDS = ["topology_merge_17108", "new-cmn_8-79__sub_3_0"]
-const MAX_REPORT_BYTES = 512 * 1024
+const MAX_REPORT_BYTES = 1024 * 1024
 
 function summarize(serializable: unknown): RuntimeObject {
   const serialized = JSON.stringify(serializable)
