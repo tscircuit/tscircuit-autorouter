@@ -1,6 +1,6 @@
 {
   "frozen": true,
-  "name": "dataset18-published-final-recovery-diagnostic-3203",
+  "name": "dataset18-sample015-final-recovery-repeat-3203",
   "diagnosticOnly": true,
   "productionFixProposed": false,
   "nativePublicationQualificationPending": true,
@@ -52,7 +52,7 @@
     "errorPhaseName",
     "error"
   ],
-  "status": "HELD: preparation only; no commit, push or routing until latest native gain and root review.",
+  "status": "HELD for root review: targeted fresh-process same-machine repeat, no push or run",
   "newSolverOrStrategyAdded": false,
   "commonImportBoundaryAdaptation": true,
   "reviewedPairHarnessCommit": "672bebeeaf6eb3833d4ec5fdb63573c0baccfa75",
@@ -82,5 +82,22 @@
     "@tscircuit/core": "99ba251a6138c40982b6132736fd8731e30d3498e4bf712b2fcb7f8448442af5",
     "@tscircuit/eval": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
     "@tscircuit/capacity-autorouter": "705b0ecd6484536ae9732c886c1bd35b5b97c20c98708f05d993c34ddbbbf9e2"
+  },
+  "sampleSelection": {
+    "sampleNumbers": [
+      15
+    ],
+    "scenarioNames": [
+      "sample015"
+    ],
+    "nativeDatasetScenarioCount": 16,
+    "measuredScenarioCount": 1,
+    "freshProcessPerSample": true,
+    "purpose": "Investigate sample015 peak RSS doubling in completed full pair43933549417",
+    "fullPairRunId": 43933549417,
+    "fullPairCommit": "d6e0c24416c616d717049843090faa013da1fbcf",
+    "actualActiveWorkersPerLane": 1,
+    "limits": "Same fresh process lifecycle but selected case runs without other samples; cannot reproduce concurrent memory pressure from full suite or prove causality from one pair.",
+    "requiredFullPairEvaluationLockSha256": "fd2d212e63baea37c7542800bfd93f1a7d51a52a78ae2f804b017ba39854382a"
   }
 }

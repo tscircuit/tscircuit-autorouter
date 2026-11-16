@@ -119,6 +119,8 @@ def main() -> None:
     # One evaluation/development graph only. The measured routing modules keep
     # the separate, unchanged published runtime dependency graph from bootstrap.
     subprocess.run(["bun", f"--config={install_config}", "install", "--save-text-lockfile", "--ignore-scripts", "--backend", "copy"], cwd=base, check=True)
+    if digest(base / "bun.lock") != frozen["sampleSelection"]["requiredFullPairEvaluationLockSha256"]:
+        raise RuntimeError("Repeat evaluation lock differs from the completed full pair")
     sharp = (base / "node_modules/sharp").resolve()
     if not sharp.is_relative_to(base / "node_modules"):
         raise RuntimeError("Sharp escaped the isolated evaluation graph")

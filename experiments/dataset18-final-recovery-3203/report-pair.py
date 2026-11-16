@@ -19,6 +19,9 @@ def percentile(values: list[float], fraction: float) -> float:
 workspace = Path(sys.argv[1]).resolve()
 output = workspace / "same-machine-results"
 proof = json.loads((workspace / "dataset18-pair-proof/provenance.json").read_text())
+selected_names = set(proof["experiment"]["sampleSelection"]["scenarioNames"])
+if selected_names != {"sample015"}:
+    raise RuntimeError("Expected exactly selected sample015")
 reports = {}
 for lane in ["base", "pr"]:
     path = output / lane / "benchmark-result.json"
@@ -38,17 +41,19 @@ fields = ["sampleNumber", "scenarioName", "didSolve", "relaxedDrcPassed", "drcEr
           "didTimeout", "sampleTimeoutMs", "elapsedTimeMs", "peakRssBytes", "viaCount",
           "traceLintIssueCounts", "errorPhaseName", "errorSolverName", "error", "stageTiming"]
 for lane, report in reports.items():
-    if report["datasetName"] != "srj18" or report["scenarioCount"] != 16 or len(report["tests"]) != 16:
-        raise RuntimeError("Dataset18 denominator changed")
+    if report["datasetName"] != "srj18" or report["scenarioCount"] != 1 or len(report["tests"]) != 1:
+        raise RuntimeError("Targeted sample015 denominator changed")
     if report["memoryMeasurementMode"] != "isolated_process_per_sample":
         raise RuntimeError("Per-sample memory measurement changed")
     runtime[lane] = report["runtime"]
-    if runtime[lane]["requestedConcurrency"] != 4 or runtime[lane]["threadsPerSample"] != 1:
+    if runtime[lane]["requestedConcurrency"] != 4 or runtime[lane]["threadsPerSample"] != 1 or runtime[lane]["workerCount"] != 1:
         raise RuntimeError("Requested benchmark CPU allocation changed")
     tests[lane] = {}
     stage_totals[lane] = {}
     for row in report["tests"]:
         name = row["scenarioName"]
+        if name != "sample015" or row["sampleNumber"] != 15:
+            raise RuntimeError("Benchmark did not select original sample015")
         if name in tests[lane] or row["solverName"] != "AutoroutingPipelineSolver9_PreloadedTraceGraph":
             raise RuntimeError("Duplicate case or unexpected routing solver")
         if row["sampleTimeoutMs"] != 360000:
@@ -77,7 +82,9 @@ for lane, report in reports.items():
     clean_cases[lane] = sum(row["didSolve"] and row["relaxedDrcPassed"] for row in report["tests"])
     print("DATASET18_STAGE_TOTALS " + json.dumps({"lane": lane, "milliseconds": stage_totals[lane], "completeCases": sum(row.get("stageTiming") is not None and row["stageTiming"]["status"] == "complete" for row in report["tests"])}))
 
-expected_names = {item["name"] for item in proof["lanes"]["base"]["identity"]["fixtures"]}
+expected_names = {item["name"] for item in proof["lanes"]["base"]["identity"]["fixtures"] if item["name"] in selected_names}
+if expected_names != selected_names:
+    raise RuntimeError("Selected sample is missing from original full Dataset18 identities")
 if set(tests["base"]) != expected_names or set(tests["pr"]) != expected_names:
     raise RuntimeError("The completed report cases differ from the original fixture identities")
 runtime_keys = ["bunVersion", "architecture", "availableParallelism", "memoryLimitBytes", "requestedConcurrency", "workerCount", "threadsPerSample", "effectiveThreadsPerSample"]
@@ -86,10 +93,10 @@ new_solve_failures = [name for name in sorted(expected_names) if tests["base"][n
 new_drc_failures = [name for name in sorted(expected_names) if tests["base"][name]["relaxedDrcPassed"] and not tests["pr"][name]["relaxedDrcPassed"]]
 gained_solves = [name for name in sorted(expected_names) if not tests["base"][name]["didSolve"] and tests["pr"][name]["didSolve"]]
 summary = {"diagnosticOnly": True, "productionFixProposed": False, "entryHashes": {lane: proof["routingEntries"][lane]["sha256"] for lane in ["base", "pr"]},
-           "sameVmSequentialPair": True, "runtimeComparable": comparable, "runtime": runtime,
+           "sameVmSequentialPair": True, "sampleSelection": proof["experiment"]["sampleSelection"], "runtimeComparable": comparable, "runtime": runtime,
            "summary": {lane: report["summary"] for lane, report in reports.items()},
            "cleanSolvedAndDrcPassed": clean_cases, "timingMs": timing,
-           "timingPolicy": "All 16 observed elapsed values are retained. Standard percentiles substitute each unsolved case's 360000ms timeout, including early failures; both use linear interpolation at (n-1)*p.",
+           "timingPolicy": "The selected sample015 observed elapsed value is retained. Standard percentiles substitute each unsolved case's 360000ms timeout, including early failures; both use linear interpolation at (n-1)*p.",
            "newSolveFailures": new_solve_failures, "newDrcFailures": new_drc_failures,
            "gainedSolves": gained_solves, "stageTotalsMs": stage_totals,
            "nativePublicationQualificationSeparate": True}
@@ -99,16 +106,16 @@ for name in sorted(set(new_solve_failures + new_drc_failures)):
     print("DATASET18_NEW_FAILURE " + json.dumps({"sample": name, "base": {key: tests["base"][name].get(key) for key in fields + ["drcErrorTypes", "drcErrorMessages"]}, "pr": {key: tests["pr"][name].get(key) for key in fields + ["drcErrorTypes", "drcErrorMessages"]}}))
 
 ordinary = output / "comparison.md"
-parts = ["# Dataset18: published AR1109 versus final-recovery-only diagnostic\n",
-         "Both lanes use the same AR1109 evaluation source and fixtures. Only the Prepared conditional final recovery multiplier changes from 2 to 4; the main 2M allowance remains unchanged. This is diagnostic evidence, not a production-fix recommendation.\n",
+parts = ["# Dataset18 sample015: final recovery memory repeat\n",
+         "Both lanes use the same AR1109 evaluation source and original sample015, in a fresh process per sample. One active sample worker is used per lane; requested concurrency remains4. This isolated pair does not recreate concurrent full-suite memory pressure. Only the Prepared conditional final recovery multiplier changes from 2 to 4; the main 2M allowance remains unchanged. This is diagnostic evidence, not a production-fix recommendation.\n",
          "Base entry: `" + summary["entryHashes"]["base"] + "`; diagnostic entry: `" + summary["entryHashes"]["pr"] + "`.\n"]
 if ordinary.exists():
     parts.append(ordinary.read_text())
-parts.extend(["\nAll-case observed timing and standard failed-case penalties:\n",
+parts.extend(["\nSelected-case observed timing and standard failed-case penalties:\n",
               "| Lane | Solved and DRC passed | Observed total s | Observed median s | Observed P95 s | Failed-penalty median s | Failed-penalty P95 s |\n|---|---|---|---|---|---|---|\n"])
 for lane in ["base", "pr"]:
     values = timing[lane]
-    parts.append(f"| {lane} | {clean_cases[lane]} / 16 | {values['observedTotalMs'] / 1000:.2f} | {values['observedMedianMs'] / 1000:.2f} | {values['observedP95Ms'] / 1000:.2f} | {values['failedPenaltyMedianMs'] / 1000:.2f} | {values['failedPenaltyP95Ms'] / 1000:.2f} |\n")
+    parts.append(f"| {lane} | {clean_cases[lane]} / 1 | {values['observedTotalMs'] / 1000:.2f} | {values['observedMedianMs'] / 1000:.2f} | {values['observedP95Ms'] / 1000:.2f} | {values['failedPenaltyMedianMs'] / 1000:.2f} | {values['failedPenaltyP95Ms'] / 1000:.2f} |\n")
 parts.append("\nObserved times include every case's recorded elapsed time. Standard failed-penalty percentiles substitute 360 seconds for every unsolved case, including early failures and timeouts. Both percentile series use linear interpolation at `(n - 1) * p`; the observed total is summed case time, not paired-job wall time.\n")
 parts.extend(["\nPer-case observations:\n", "| Case | Solved base/head | DRC issues base/head | Timeout base/head | Vias base/head | Time s base/head | RSS MiB base/head |\n|---|---|---|---|---|---|---|\n"])
 for name in sorted(expected_names):

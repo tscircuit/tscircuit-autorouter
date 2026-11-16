@@ -1,23 +1,23 @@
-name: Dataset18 published AR1109 paired final recovery diagnostic
+name: Dataset18 sample015 final recovery memory repeat
 
 on:
   push:
-    branches: [bench/dataset18-final-recovery-3203]
+    branches: [bench/dataset18-sample015-recovery-3203]
 
 permissions:
   contents: read
 
 jobs:
   dataset18:
-    name: Dataset18 sequential published pair (requested four workers)
+    name: Sample015 fresh-process pair (one active worker per lane)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 120
+    timeout-minutes: 35
     env:
       RUNTIME_ROOT: ${{ github.workspace }}/.dataset18-run
       FULL_BOARD_EXPERIMENT: published
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.dataset18-bun-cache
       BENCHMARK_DATASET: srj18
-      BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","18","--concurrency","4","--threads","1","--sample-timeout","360s"]'
+      BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","18","--concurrency","4","--threads","1","--sample-timeout","360s","--sample","15"]'
 
     steps:
       - name: Checkout frozen controller
@@ -106,7 +106,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: dataset18-published-final-recovery-diagnostic-${{ github.run_attempt }}
+          name: dataset18-sample015-final-recovery-repeat-${{ github.run_attempt }}
           path: |
             same-machine-results/*/benchmark-result.json
             same-machine-results/*/benchmark-result.txt
