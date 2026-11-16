@@ -22,17 +22,20 @@ const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { cac
 const started = performance.now()
 let entered = false
 let thrown: string | undefined
+let prepared: PreparedPortPointRoutingSolver | undefined
 try {
   while (!pipeline.failed && !pipeline.solved) {
     if (performance.now() - started > 600_000) throw new Error("Capture routing budget exhausted")
     pipeline.step()
+    const child = pipeline.portPointPathingSolver?.activeSubSolver
+    if (child instanceof PreparedPortPointRoutingSolver) prepared = child
     if (pipeline.getCurrentPhase() === "portPointPathingSolver") entered = true
     else if (entered) break
   }
 } catch (error) {
   thrown = error instanceof Error ? error.message : String(error)
 }
-const native = pipeline.portPointPathingSolver?.activeSubSolver
+const native = prepared ?? pipeline.portPointPathingSolver?.activeSubSolver
 const summary = {
   entered,
   stage: pipeline.getCurrentPhase(),
