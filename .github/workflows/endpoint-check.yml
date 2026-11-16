@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: c38befed
+          ref: c38befed91f3ee10f9103d32fbe460f830e60026
           path: router
       - uses: actions/checkout@v4
         with:
@@ -80,7 +80,7 @@ jobs:
           path: base
       - uses: actions/checkout@v4
         with:
-          ref: c38befed
+          ref: c38befed91f3ee10f9103d32fbe460f830e60026
           path: fixed
       - uses: oven-sh/setup-bun@v2
         with:
