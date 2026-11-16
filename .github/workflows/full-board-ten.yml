@@ -1,8 +1,8 @@
-name: Published full-board ten-case benchmark
+name: Published3197 full-board ten-case benchmark
 
 on:
   push:
-    branches: [bench/full-board-ten-20261116]
+    branches: [bench/full-board-ten-3197-20261116]
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 5
       matrix:
         include:
           - { board: h616, experiment: published, cohorts: "original,spaced" }
@@ -22,7 +22,6 @@ jobs:
           - { board: glider, experiment: published, cohorts: "original,spaced" }
           - { board: imx6, experiment: published, cohorts: "original,spaced" }
           - { board: icepi, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: checks-279, cohorts: spaced }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -68,13 +67,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-
-      - name: Select isolated checks dependency experiment
-        if: matrix.experiment == 'checks-279'
-        run: |
-          cp experiments/full-board-ten/checks-279/release.json experiments/full-board-ten/release.json
-          cp experiments/full-board-ten/checks-279/runtime/package.json experiments/full-board-ten/runtime/package.json
-          cp experiments/full-board-ten/checks-279/runtime/bun.lock experiments/full-board-ten/runtime/bun.lock
 
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
