@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createBus58SurfaceObserver } from "../full-board-bus-diagnostic/create-bus58-observer.mjs"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -59,9 +60,11 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// The diagnostic Core copy only observes existing bus decisions; its exact
+// source changes and original published identity are recorded in the manifest.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
-const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
+const runtimeIdentity = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
+const expectedRuntime = runtimeIdentity.packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (expectedRuntime.length !== 4 || expectedNames.some(name => !expectedRuntime.some((row: any) => row.name === name))) throw new Error("Runtime manifest must identify the complete compatible four-package chain")
 const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: string; version: string; entrySha256: string }) => {
@@ -79,6 +82,10 @@ function readablePackage(folder: string, name: string): boolean {
   try { return JSON.parse(readFileSync(join(folder, "package.json"), "utf8")).name === name }
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
+if (!runtimeIdentity.coreObserver || task.id !== "h616" || task.cohort !== "original") throw new Error("This diagnostic only observes the native H616 original board")
+let activeByte0 = false
+const busObserver = createBus58SurfaceObserver({ isActive: () => activeByte0 })
+busObserver.install()
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
@@ -90,7 +97,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: true, diagnosticCoreObserver: runtimeIdentity.coreObserver, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -101,6 +108,7 @@ let lastCircuitSave = -Infinity
 const save = (withCircuit = false): void => {
   progress.elapsedMs = performance.now() - started
   progress.wasmUsage = wasmUsage
+  atomic("bus-surface-observer.json", JSON.stringify(busObserver.getReport(), null, 2))
   if (withCircuit || performance.now() - lastCircuitSave >= 15000) {
     const json = circuit.getCircuitJson()
     atomic("circuit.json.gz", gzipSync(JSON.stringify(json), { level: 1 }))
@@ -129,6 +137,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
     if (event.cacheStatus && event.cacheStatus !== "disabled") throw new Error(`Unexpected routing cache status ${event.cacheStatus}`)
     const name = event.phaseName ?? event.componentDisplayName ?? "unnamed"
     if (eventName === "autorouting:start") {
+      activeByte0 = name === "byte0"
       if (progress.phases.length === 0) {
         const json = circuit.getCircuitJson()
         atomic("unrouted.circuit.json.gz", gzipSync(JSON.stringify(json), { level: 1 }))
@@ -139,6 +148,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       atomic(`phase-${index}-input.srj.json.gz`, gzipSync(inputBytes, { level: 1 }))
       progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason })
     } else {
+      activeByte0 = false
       const phase = running()
       if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs }
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))

@@ -27,6 +27,31 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
+const busObserverPath = join(output, "bus-surface-observer.json")
+if (existsSync(busObserverPath)) {
+  const report = JSON.parse(readFileSync(busObserverPath, "utf8"))
+  const summary = {
+    counts: report.counts,
+    normalizationCount: report.normalizationCount,
+    normalizationSummaries: report.normalizationSummaries,
+    surfaceEntries: report.surfaceStarts.map(row => ({ entry: row.entry, phase: row.pipeline.phase, attempt: row.pipeline.attempt, child: { phase: row.pipeline.child.phase, solved: row.pipeline.child.solved, failed: row.pipeline.child.failed, error: row.pipeline.child.error, failureCode: row.pipeline.child.failureCode } })),
+    nullReasons: report.surfaceNulls.map(row => ({ reason: row.reason, error: row.error, steps: row.steps, validator: { phase: row.validator.phase, solved: row.validator.solved, failed: row.validator.failed, error: row.validator.error, failureCode: row.validator.failureCode } })),
+    firstCompletedNull: report.firstCompletedNull ? { phase: report.firstCompletedNull.phase, attempt: report.firstCompletedNull.attempt, iterations: report.firstCompletedNull.iterations } : null,
+    observerError: report.observerError,
+    observerCompletedWithoutError: report.observerCompletedWithoutError,
+    observedSurfaceNull: report.observedSurfaceNull,
+    observedCompletedNull: report.observedCompletedNull,
+    normalizationLimitReached: report.normalizationLimitReached,
+    visibilityInspectionLimitReached: report.visibilityInspectionLimitReached,
+    limits: report.limits,
+  }
+  for (const [kind, data] of Object.entries({ summary, firstJoinedRejection: report.firstJoinedRejection, firstRejectedNormalizationCandidate: report.firstRejectedNormalizationCandidate, firstVisibilityBoundary: report.firstVisibilityBoundary, firstVisibilityBlock: report.firstVisibilityBlock, firstPotentialSupersededBlock: report.firstPotentialSupersededBlock })) {
+    const packet = JSON.stringify({ kind, data })
+    const bytes = Buffer.byteLength(packet)
+    if (bytes <= 24576) console.log(`BUS_SURFACE_OBSERVATION ${packet}`)
+    else console.log(`BUS_SURFACE_OBSERVATION ${JSON.stringify({ kind, notForwarded: true, bytes, reason: "Selected witness exceeds the ordinary diagnostic log limit", artifact: "bus-surface-observer.json" })}`)
+  }
+}
 const diagnosticPath = join(output, "coarse-diagnostics.json")
 if (existsSync(diagnosticPath)) {
   const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))

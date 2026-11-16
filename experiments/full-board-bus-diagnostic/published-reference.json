@@ -1,0 +1,55 @@
+{
+  "baselineRunId": 43866548242,
+  "baselineJobId": 133296453408,
+  "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+  "counts": {
+    "requestedRoutableNets": 121,
+    "connectedNets": 2,
+    "emittedCounts": {
+      "pcb_copper_pour": 17,
+      "pcb_hole": 4,
+      "pcb_plated_hole": 30,
+      "pcb_smtpad": 726,
+      "pcb_trace": 221,
+      "pcb_via": 140,
+      "source_component": 125,
+      "source_net": 264
+    },
+    "completeSourceCounts": true,
+    "assessmentReady": true,
+    "phasesCompleted": false,
+    "renderSettled": false,
+    "lastPhase": "byte0",
+    "lastError": "Generated native surface approaches could not satisfy full-path geometry and matching",
+    "completeAndClean": false
+  },
+  "findings": {
+    "contiguous": 0,
+    "holeTrace": 0,
+    "overlap": 1,
+    "padTrace": 0,
+    "routing": 1,
+    "viaInPad": 0,
+    "viaPad": 1,
+    "viaSpacing": 0,
+    "viaTrace": 1
+  },
+  "connectedNativeNetNames": [
+    "GND",
+    "VCC_DRAM"
+  ],
+  "phases": [
+    {
+      "connections": 2,
+      "name": "plane_escape",
+      "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "status": "completed"
+    },
+    {
+      "connections": 8,
+      "name": "byte0",
+      "solver": "BusLanesPipelineSolver",
+      "status": "failed"
+    }
+  ]
+}
