@@ -1,3 +1,8 @@
+import { readFile } from "node:fs/promises"
+import { gunzipSync } from "node:zlib"
+import powerTraceBoards from "../../fixtures/datasets/dataset-srj37-power-trace-boards/manifest.json" with {
+  type: "json",
+}
 import { migrateLegacyObstacleCircuitJsonMetadata } from "../../lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
@@ -21,6 +26,7 @@ export const DATASET_NAMES = [
   "srj28",
   "srj29",
   "srj33",
+  "srj37",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -28,7 +34,7 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33, 37/srj37"
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -121,6 +127,10 @@ const datasetAliases: Record<string, DatasetName> = {
   srj33: "srj33",
   "dataset-srj33-drc-failures": "srj33",
   "@tscircuit/dataset-srj33-drc-failures": "srj33",
+  "37": "srj37",
+  dataset37: "srj37",
+  srj37: "srj37",
+  "dataset-srj37-power-trace-boards": "srj37",
   zdwiel: "zdwiel",
 }
 
@@ -268,6 +278,23 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   },
   srj33: async () =>
     (await import("@tscircuit/dataset-srj33-drc-failures")) as DatasetModule,
+  srj37: async () => {
+    const entries = await Promise.all(
+      powerTraceBoards.samples.map(async ({ id }: { id: string }) => {
+        const compressed = await readFile(
+          new URL(
+            `../../fixtures/datasets/dataset-srj37-power-trace-boards/${id}.srj.json.gz`,
+            import.meta.url,
+          ),
+        )
+        const input: unknown = JSON.parse(
+          gunzipSync(new Uint8Array(compressed)).toString("utf8"),
+        )
+        return [id, input] as const
+      }),
+    )
+    return Object.fromEntries(entries)
+  },
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -290,6 +317,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj28: /^circuit\d{3}$/,
   srj29: /^sample\d{3}$/,
   srj33: /^sample\d{3}$/,
+  srj37: /^sample\d{3}$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {

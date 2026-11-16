@@ -1,0 +1,178 @@
+{
+  "format": "SimpleRouteJson",
+  "pipeline": 9,
+  "samples": [
+    {
+      "id": "sample001",
+      "board": "Pocket Mic RX",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/038712315a32dc2c7f3824a9cf1203d6ef13026b/fixtures/repro/pocket-mic-rx/pocket-mic-rx.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3839"
+      },
+      "capture": "Full board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.3,
+          "label": "DAC AVDD to CPVDD",
+          "endpoints": [
+            "pcb_port_179",
+            "pcb_port_172"
+          ]
+        },
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.3,
+          "label": "DAC AVDD to bypass capacitor",
+          "endpoints": [
+            "pcb_port_179",
+            "pcb_port_204"
+          ]
+        }
+      ],
+      "sha256": "a8a4f811007a94988e1fd2753fdccd25d83092e32cc854ea1eb852d430b013b8"
+    },
+    {
+      "id": "sample002",
+      "board": "Pocket Mic TX",
+      "source": {
+        "capture": "Pocket Mic TX development build, tx-route/phase-0.input.simple-route.json"
+      },
+      "capture": "Full board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_0",
+          "widthMm": 0.3,
+          "label": "VBUS"
+        },
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.3,
+          "label": "BAT"
+        },
+        {
+          "connection": "source_net_2",
+          "widthMm": 0.35,
+          "label": "SYS"
+        },
+        {
+          "connection": "source_net_3",
+          "widthMm": 0.35,
+          "label": "V3V3"
+        }
+      ],
+      "sha256": "462c43bf4f47c6addd50e17671f986d6b38945992d02636af23c87ea6560da13"
+    },
+    {
+      "id": "sample003",
+      "board": "Four-gang Wi-Fi controller",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/f546f6cbb1e52c24fdfab261dcb945c112c18eba/fixtures/bug-reports/controller-power-expansion/controller-full-board.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3441"
+      },
+      "capture": "Full-board geometry, JOINT_LV phase, five preloaded mains traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_3",
+          "widthMm": 0.4,
+          "label": "V5"
+        },
+        {
+          "connection": "source_net_4",
+          "widthMm": 0.4,
+          "label": "GND"
+        },
+        {
+          "connection": "source_net_5",
+          "widthMm": 0.4,
+          "label": "V3V3"
+        }
+      ],
+      "sha256": "8a84eb897be7bcc35cb316c647cf7086e3b7e417f88f498bd3d6e465c4e6cda9"
+    },
+    {
+      "id": "sample004",
+      "board": "Pedometer v1.0.6",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/f546f6cbb1e52c24fdfab261dcb945c112c18eba/fixtures/bug-reports/bugreport104-pedometer-v1.0.6.unrouted.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/2404"
+      },
+      "capture": "Full board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_4",
+          "widthMm": 0.4
+        },
+        {
+          "connection": "source_net_6",
+          "widthMm": 0.4
+        },
+        {
+          "connection": "source_net_25",
+          "widthMm": 0.35
+        }
+      ],
+      "sha256": "e6c9d966d18d0a9750c98f424cb7fcac51296f3fc7ec6b4c33312a6cc9da3bfc"
+    },
+    {
+      "id": "sample005",
+      "board": "Book reading clip lamp",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/f546f6cbb1e52c24fdfab261dcb945c112c18eba/fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/3088"
+      },
+      "capture": "Full board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.4
+        },
+        {
+          "connection": "source_net_9",
+          "widthMm": 0.8
+        },
+        {
+          "connection": "source_net_10",
+          "widthMm": 0.8
+        }
+      ],
+      "sha256": "3b1ee89bf6173be71a8099a65a7f5b440884c21f6f4b29c7ffe7bff147c4d06d"
+    },
+    {
+      "id": "sample006",
+      "board": "MangoPi R3C",
+      "source": {
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/blob/f546f6cbb1e52c24fdfab261dcb945c112c18eba/fixtures/bug-reports/bugreport97-mangopi-r3c-six-layer-power-expansion/bugreport97-mangopi-r3c-six-layer-power-expansion.srj.json",
+        "pullRequest": "https://github.com/tscircuit/tscircuit-autorouter/pull/2177"
+      },
+      "capture": "Full board, no preloaded traces",
+      "widthTargets": [
+        {
+          "connection": "source_net_0",
+          "widthMm": 0.35
+        },
+        {
+          "connection": "source_net_1",
+          "widthMm": 0.35
+        },
+        {
+          "connection": "source_net_2",
+          "widthMm": 0.35
+        },
+        {
+          "connection": "source_net_3",
+          "widthMm": 0.35
+        },
+        {
+          "connection": "source_net_4",
+          "widthMm": 0.35
+        },
+        {
+          "connection": "source_net_5",
+          "widthMm": 0.35
+        }
+      ],
+      "sha256": "5f4412c80e7feeaca193977bb22dabc779c8e0549154328a6e98b114a2fbf8df"
+    }
+  ]
+}
