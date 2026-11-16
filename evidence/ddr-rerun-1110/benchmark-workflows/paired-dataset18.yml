@@ -1,0 +1,51 @@
+name: Pair released router 1110 against indexed cramped-port reachability
+on:
+  push:
+    branches: [codex/ddr1110-indexed-paired]
+permissions:
+  contents: read
+jobs:
+  dataset18:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1c99b22209414cb9a79601f9e877df253e3cf34d
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: f4bea030d74ac3899097c98e50a1cdedb4106010
+          path: fixed
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install identical dependencies for the paired comparison
+        run: |
+          (cd base && bun install --ignore-scripts)
+          cmp base/package.json fixed/package.json
+          ln -s ../base/node_modules fixed/node_modules
+      - name: Compare the complete dataset18 on the same runner
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for variant in base fixed; do
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s)
+            mkdir -p "results/$variant"
+            cp "$variant/benchmark-result.json" "$variant/benchmark-result.txt" "$variant/benchmark-snapshots.html" "results/$variant/"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: indexed-reachability-paired-dataset18
+          path: results
+          retention-days: 14
+      - name: Export the complete measured reports
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('results').rglob('benchmark-result.json'):
+              print('INDEXED_PAIRED_DATASET18_RESULT',path.parent.name,json.dumps(json.loads(path.read_text()),separators=(',',':')))
+          PY

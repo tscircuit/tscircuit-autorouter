@@ -1,0 +1,3380 @@
+{
+  "version": 1,
+  "datasetName": "srj18",
+  "memoryMeasurementMode": "isolated_process_per_sample",
+  "runtime": {
+    "bunVersion": "1.4.3",
+    "platform": "linux",
+    "architecture": "arm64",
+    "cpuModel": "unknown",
+    "logicalCpuCount": 8,
+    "availableParallelism": 8,
+    "memoryLimitBytes": 25151705088,
+    "memoryBudgetPerWorkerBytes": 6442450944,
+    "requestedConcurrency": 2,
+    "workerCount": 2,
+    "threadsPerSample": 1,
+    "effectiveThreadsPerSample": 1,
+    "cpuBudgetPerSample": 1
+  },
+  "scenarioCount": 16,
+  "effortLabel": "1x effort",
+  "summary": [
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "completedRateLabel": "100.0%",
+      "relaxedDrcRateLabel": "100.0%",
+      "timedOutLabel": "0/16",
+      "p50TimeMs": 27648.361270499998,
+      "p60TimeMs": 35713.196582000004,
+      "p70TimeMs": 45840.131297500004,
+      "p80TimeMs": 58687.688899,
+      "p90TimeMs": 84099.658317,
+      "p95TimeMs": 90360.4869045,
+      "p50PeakRssBytes": 1048969216,
+      "p80PeakRssBytes": 1994649600,
+      "p90PeakRssBytes": 2174332928,
+      "avgVia": 212.9375,
+      "avgTraceLintIssues": {
+        "odd_angle": 375.4375
+      }
+    }
+  ],
+  "solverFailureSummary": [],
+  "timeoutSummary": [],
+  "failureSummary": [],
+  "snapshots": [
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample001",
+      "sampleNumber": 1,
+      "label": "srj18 sample 1 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 10096.195220000001,
+      "traceCount": 205,
+      "viaCount": 157,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample002",
+      "sampleNumber": 2,
+      "label": "srj18 sample 2 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 78733.18146400001,
+      "traceCount": 244,
+      "viaCount": 507,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample003",
+      "sampleNumber": 3,
+      "label": "srj18 sample 3 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 9271.611658,
+      "traceCount": 145,
+      "viaCount": 82,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample004",
+      "sampleNumber": 4,
+      "label": "srj18 sample 4 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 30197.431735000002,
+      "traceCount": 114,
+      "viaCount": 137,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample005",
+      "sampleNumber": 5,
+      "label": "srj18 sample 5 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 7836.993533,
+      "traceCount": 172,
+      "viaCount": 142,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample006",
+      "sampleNumber": 6,
+      "label": "srj18 sample 6 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 58687.688899,
+      "traceCount": 255,
+      "viaCount": 265,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample007",
+      "sampleNumber": 7,
+      "label": "srj18 sample 7 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 13429.651643000001,
+      "traceCount": 263,
+      "viaCount": 200,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample008",
+      "sampleNumber": 8,
+      "label": "srj18 sample 8 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 38919.770933,
+      "traceCount": 361,
+      "viaCount": 281,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample009",
+      "sampleNumber": 9,
+      "label": "srj18 sample 9 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 15188.387818000001,
+      "traceCount": 256,
+      "viaCount": 114,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample010",
+      "sampleNumber": 10,
+      "label": "srj18 sample 10 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 14132.944003,
+      "traceCount": 310,
+      "viaCount": 158,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample011",
+      "sampleNumber": 11,
+      "label": "srj18 sample 11 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 14851.017979999999,
+      "traceCount": 289,
+      "viaCount": 187,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample012",
+      "sampleNumber": 12,
+      "label": "srj18 sample 12 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 52760.491662,
+      "traceCount": 504,
+      "viaCount": 298,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample013",
+      "sampleNumber": 13,
+      "label": "srj18 sample 13 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 35713.196582000004,
+      "traceCount": 238,
+      "viaCount": 194,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample014",
+      "sampleNumber": 14,
+      "label": "srj18 sample 14 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 93043.542108,
+      "traceCount": 238,
+      "viaCount": 267,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample015",
+      "sampleNumber": 15,
+      "label": "srj18 sample 15 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 89466.13517,
+      "traceCount": 461,
+      "viaCount": 313,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    },
+    {
+      "datasetName": "srj18",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample016",
+      "sampleNumber": 16,
+      "label": "srj18 sample 16 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "elapsedTimeMs": 25099.290805999997,
+      "traceCount": 269,
+      "viaCount": 105,
+      "relaxedDrcPassed": true,
+      "drcErrorCount": 0
+    }
+  ],
+  "tests": [
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample001",
+      "sampleNumber": 1,
+      "elapsedTimeMs": 10096.195220000001,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 157,
+      "traceLintIssueCounts": {
+        "odd_angle": 65
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 46.45605499999999
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.425544000000002
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 11.203958
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 16.184570000000008
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 306.08525499999996
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 57.618210999999974
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 1.8583690000000388
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 23.411822999999913
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 19.993451999999934
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 327.5786260000001
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 1.596902
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 1378.1845499999997
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 15.877821999999924
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 2502.45993
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 668.1501779999999
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 272.05063000000064
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 68.74420699999973
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1365.2043190000004
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 23.7259269999995
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 255.47412799999984
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 216.2698019999989
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 585.2907960000011
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 589.7741729999998
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 24.628279000000475
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.02132800000072166
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 205,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 5.08736996877905,
+          "downstreamNodePfSquaredSum": 0.642042402456049,
+          "downstreamNodePfMax": 0.35378835761357247,
+          "downstreamSquaredNodePortPointCount": 16324,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 220452,
+          "timeMs": 1137.283307,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 415,
+          "partiallyRippedSegmentCount": 2680,
+          "retainedPartialRipSegmentCount": 4621,
+          "firstMaxRegionCost": 3.135627851410052,
+          "bestMaxRegionCost": 1.9261052781501817,
+          "firstTotalRegionCost": 23.835998740532233,
+          "bestTotalRegionCost": 11.59159180811326,
+          "firstSegmentCount": 1335,
+          "bestSolvedSegmentCount": 1185,
+          "bestSolvedMaxRegionSegmentCount": 15,
+          "bestSolvedSquaredRegionSegmentCount": 4081,
+          "finalMaxRegionSegmentCount": 15,
+          "finalSquaredRegionSegmentCount": 4081,
+          "finalSegmentCount": 1185,
+          "finalLayerChangeCount": 80,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 415,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 33590,
+          "outsideInReverseExpansionCount": 33358
+        },
+        "highDensityIterations": 4234,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 46.45605499999999,
+          "componentDetectionSolver": 5.425544000000002,
+          "escapeViaLocationSolver": 11.203958,
+          "netToPointPairsSolver": 16.184570000000008,
+          "topologyPlanningSolver": 306.08525499999996,
+          "topologyMergingSolver": 57.618210999999974,
+          "nodeDimensionSubdivisionSolver": 1.8583690000000388,
+          "edgeSolver": 23.411822999999913,
+          "availableSegmentPointSolver": 19.993451999999934,
+          "necessaryCrampedPortPointSolver": 327.5786260000001,
+          "preloadedTraceGraphSolver": 1.596902,
+          "portPointPathingSolver": 1378.1845499999997,
+          "uniformPortDistributionSolver": 15.877821999999924,
+          "highDensityRouteSolver": 2502.45993,
+          "highDensityForceImproveSolver": 668.1501779999999,
+          "highDensityRepairSolver": 272.05063000000064,
+          "highDensityStitchSolver": 68.74420699999973,
+          "traceSimplificationSolver": 1365.2043190000004,
+          "mutatedPreloadedTraceSimplificationSolver": 23.7259269999995,
+          "traceWidthSolver": 255.47412799999984,
+          "globalDrcForceImproveSolver": 216.2698019999989,
+          "pipeline9JointDrcRepairSolver": 585.2907960000011,
+          "effortCleanupSolver": 589.7741729999998,
+          "lengthMatchingPostProcessingSolver": 24.628279000000475,
+          "powerTraceExpansionSolver": 0.02132800000072166
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample001",
+        "sampleNumber": 1,
+        "label": "srj18 sample 1 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 10096.195220000001,
+        "traceCount": 205,
+        "viaCount": 157,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 783634432,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample002",
+      "sampleNumber": 2,
+      "elapsedTimeMs": 78733.18146400001,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 507,
+      "traceLintIssueCounts": {
+        "odd_angle": 742
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 94.09864099999999
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.141404000000023
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 19.887347999999974
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 24.388327999999944
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 353.320111
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 84.30546100000015
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 3.289406999999983
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 33.18354199999999
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 29.523284999999987
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 580.800317
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.2216189999999187
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 3156.931885
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 20.37532199999987
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 35567.237068999995
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 6239.838507
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 5420.7883809999985
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 112.48087000000669
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 8082.2966520000045
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 38.44848099999945
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 785.3938330000019
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 1348.6849820000061
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 9230.612195000002
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 5046.072698999997
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 55.947325999994064
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.023300000000745058
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 244,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 10.567481366741406,
+          "downstreamNodePfSquaredSum": 4.303200659104465,
+          "downstreamNodePfMax": 1.307098223736817,
+          "downstreamSquaredNodePortPointCount": 35208,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 703691,
+          "timeMs": 2749.058605,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 752,
+          "partiallyRippedSegmentCount": 3562,
+          "retainedPartialRipSegmentCount": 6172,
+          "firstMaxRegionCost": 6.064560536037868,
+          "bestMaxRegionCost": 2.9419355554056645,
+          "firstTotalRegionCost": 26.216080251644623,
+          "bestTotalRegionCost": 25.221589916556898,
+          "firstSegmentCount": 1714,
+          "bestSolvedSegmentCount": 1588,
+          "bestSolvedMaxRegionSegmentCount": 26,
+          "bestSolvedSquaredRegionSegmentCount": 8802,
+          "finalMaxRegionSegmentCount": 26,
+          "finalSquaredRegionSegmentCount": 8802,
+          "finalSegmentCount": 1588,
+          "finalLayerChangeCount": 175,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 752,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 38765,
+          "outsideInReverseExpansionCount": 32070
+        },
+        "highDensityIterations": 483947,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 94.09864099999999,
+          "componentDetectionSolver": 6.141404000000023,
+          "escapeViaLocationSolver": 19.887347999999974,
+          "netToPointPairsSolver": 24.388327999999944,
+          "topologyPlanningSolver": 353.320111,
+          "topologyMergingSolver": 84.30546100000015,
+          "nodeDimensionSubdivisionSolver": 3.289406999999983,
+          "edgeSolver": 33.18354199999999,
+          "availableSegmentPointSolver": 29.523284999999987,
+          "necessaryCrampedPortPointSolver": 580.800317,
+          "preloadedTraceGraphSolver": 2.2216189999999187,
+          "portPointPathingSolver": 3156.931885,
+          "uniformPortDistributionSolver": 20.37532199999987,
+          "highDensityRouteSolver": 35567.237068999995,
+          "highDensityForceImproveSolver": 6239.838507,
+          "highDensityRepairSolver": 5420.7883809999985,
+          "highDensityStitchSolver": 112.48087000000669,
+          "traceSimplificationSolver": 8082.2966520000045,
+          "mutatedPreloadedTraceSimplificationSolver": 38.44848099999945,
+          "traceWidthSolver": 785.3938330000019,
+          "globalDrcForceImproveSolver": 1348.6849820000061,
+          "pipeline9JointDrcRepairSolver": 9230.612195000002,
+          "effortCleanupSolver": 5046.072698999997,
+          "lengthMatchingPostProcessingSolver": 55.947325999994064,
+          "powerTraceExpansionSolver": 0.023300000000745058
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample002",
+        "sampleNumber": 2,
+        "label": "srj18 sample 2 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 78733.18146400001,
+        "traceCount": 244,
+        "viaCount": 507,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1372585984,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample003",
+      "sampleNumber": 3,
+      "elapsedTimeMs": 9271.611658,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 82,
+      "traceLintIssueCounts": {
+        "odd_angle": 134
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 35.68638800000002
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.596629000000007
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 10.201431000000014
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 12.498612000000037
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 415.172733
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 1.075967999999989
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 3.84948200000008
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 38.94759499999998
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 24.93362300000001
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 339.24899600000003
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 1.876209999999901
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 1250.599155
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 21.718476999999893
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 3545.920275
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 586.121016
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 244.6415219999999
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 34.503436999999394
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 403.9641159999992
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 9.888723000000027
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 111.87721299999976
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 192.39961399999993
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 489.5883709999998
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 202.17771299999913
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 19.39315499999975
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.026821000001291395
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 145,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 4.684102289363673,
+          "downstreamNodePfSquaredSum": 0.9901933942519362,
+          "downstreamNodePfMax": 0.3922130836872007,
+          "downstreamSquaredNodePortPointCount": 11920,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 152190,
+          "timeMs": 996.813191,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 361,
+          "partiallyRippedSegmentCount": 3275,
+          "retainedPartialRipSegmentCount": 2681,
+          "firstMaxRegionCost": 1.6199997610608359,
+          "bestMaxRegionCost": 1.1415608337577894,
+          "firstTotalRegionCost": 15.44774340959604,
+          "bestTotalRegionCost": 11.997079705768336,
+          "firstSegmentCount": 1053,
+          "bestSolvedSegmentCount": 1048,
+          "bestSolvedMaxRegionSegmentCount": 11,
+          "bestSolvedSquaredRegionSegmentCount": 2980,
+          "finalMaxRegionSegmentCount": 11,
+          "finalSquaredRegionSegmentCount": 2980,
+          "finalSegmentCount": 1048,
+          "finalLayerChangeCount": 96,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 361,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 30555,
+          "outsideInReverseExpansionCount": 30382
+        },
+        "highDensityIterations": 17344,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 35.68638800000002,
+          "componentDetectionSolver": 5.596629000000007,
+          "escapeViaLocationSolver": 10.201431000000014,
+          "netToPointPairsSolver": 12.498612000000037,
+          "topologyPlanningSolver": 415.172733,
+          "topologyMergingSolver": 1.075967999999989,
+          "nodeDimensionSubdivisionSolver": 3.84948200000008,
+          "edgeSolver": 38.94759499999998,
+          "availableSegmentPointSolver": 24.93362300000001,
+          "necessaryCrampedPortPointSolver": 339.24899600000003,
+          "preloadedTraceGraphSolver": 1.876209999999901,
+          "portPointPathingSolver": 1250.599155,
+          "uniformPortDistributionSolver": 21.718476999999893,
+          "highDensityRouteSolver": 3545.920275,
+          "highDensityForceImproveSolver": 586.121016,
+          "highDensityRepairSolver": 244.6415219999999,
+          "highDensityStitchSolver": 34.503436999999394,
+          "traceSimplificationSolver": 403.9641159999992,
+          "mutatedPreloadedTraceSimplificationSolver": 9.888723000000027,
+          "traceWidthSolver": 111.87721299999976,
+          "globalDrcForceImproveSolver": 192.39961399999993,
+          "pipeline9JointDrcRepairSolver": 489.5883709999998,
+          "effortCleanupSolver": 202.17771299999913,
+          "lengthMatchingPostProcessingSolver": 19.39315499999975,
+          "powerTraceExpansionSolver": 0.026821000001291395
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample003",
+        "sampleNumber": 3,
+        "label": "srj18 sample 3 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 9271.611658,
+        "traceCount": 145,
+        "viaCount": 82,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 809656320,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample004",
+      "sampleNumber": 4,
+      "elapsedTimeMs": 30197.431735000002,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 137,
+      "traceLintIssueCounts": {
+        "odd_angle": 824
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 21.294226000000037
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 7.140569999999968
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 8.275499999999965
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 9.839502000000039
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 198.79268299999995
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 59.06496900000002
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 3.2959079999999403
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 26.41292199999998
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 20.44642299999998
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 247.80210599999998
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 1.7449659999999767
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 1249.613069
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 13.451716999999917
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 15105.325353
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 845.4749090000005
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 769.3516469999995
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 47.38673899999776
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1194.7723920000026
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 15.166102999999566
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 119.07690500000172
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 5541.9751209999995
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 2223.7590980000023
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 1412.2435509999996
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 25.73492400000032
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.016620999998849584
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 114,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 9.81269088940662,
+          "downstreamNodePfSquaredSum": 4.32716686179622,
+          "downstreamNodePfMax": 0.9091120097020926,
+          "downstreamSquaredNodePortPointCount": 11956,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 449189,
+          "timeMs": 1082.5972310000002,
+          "ripCount": 11,
+          "partialRipCount": 1,
+          "partiallyRippedRouteCount": 88,
+          "partiallyRippedSegmentCount": 772,
+          "retainedPartialRipSegmentCount": 252,
+          "firstMaxRegionCost": 5.928074979684308,
+          "bestMaxRegionCost": 2.986441909409087,
+          "firstTotalRegionCost": 51.68739284916109,
+          "bestTotalRegionCost": 32.20468742548805,
+          "firstSegmentCount": 1081,
+          "bestSolvedSegmentCount": 967,
+          "bestSolvedMaxRegionSegmentCount": 16,
+          "bestSolvedSquaredRegionSegmentCount": 2989,
+          "finalMaxRegionSegmentCount": 16,
+          "finalSquaredRegionSegmentCount": 2989,
+          "finalSegmentCount": 967,
+          "finalLayerChangeCount": 65,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": true,
+          "outsideInCompletedRouteCount": 88,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 18653,
+          "outsideInReverseExpansionCount": 18608
+        },
+        "highDensityIterations": 201720,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 21.294226000000037,
+          "componentDetectionSolver": 7.140569999999968,
+          "escapeViaLocationSolver": 8.275499999999965,
+          "netToPointPairsSolver": 9.839502000000039,
+          "topologyPlanningSolver": 198.79268299999995,
+          "topologyMergingSolver": 59.06496900000002,
+          "nodeDimensionSubdivisionSolver": 3.2959079999999403,
+          "edgeSolver": 26.41292199999998,
+          "availableSegmentPointSolver": 20.44642299999998,
+          "necessaryCrampedPortPointSolver": 247.80210599999998,
+          "preloadedTraceGraphSolver": 1.7449659999999767,
+          "portPointPathingSolver": 1249.613069,
+          "uniformPortDistributionSolver": 13.451716999999917,
+          "highDensityRouteSolver": 15105.325353,
+          "highDensityForceImproveSolver": 845.4749090000005,
+          "highDensityRepairSolver": 769.3516469999995,
+          "highDensityStitchSolver": 47.38673899999776,
+          "traceSimplificationSolver": 1194.7723920000026,
+          "mutatedPreloadedTraceSimplificationSolver": 15.166102999999566,
+          "traceWidthSolver": 119.07690500000172,
+          "globalDrcForceImproveSolver": 5541.9751209999995,
+          "pipeline9JointDrcRepairSolver": 2223.7590980000023,
+          "effortCleanupSolver": 1412.2435509999996,
+          "lengthMatchingPostProcessingSolver": 25.73492400000032,
+          "powerTraceExpansionSolver": 0.016620999998849584
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample004",
+        "sampleNumber": 4,
+        "label": "srj18 sample 4 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 30197.431735000002,
+        "traceCount": 114,
+        "viaCount": 137,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 828960768,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample005",
+      "sampleNumber": 5,
+      "elapsedTimeMs": 7836.993533,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 142,
+      "traceLintIssueCounts": {
+        "odd_angle": 48
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 44.37137899999999
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.410443999999984
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 10.79790700000001
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 13.816407000000027
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 279.04787600000003
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 65.65312500000005
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 3.162464
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 23.953676000000087
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 21.671055000000024
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 159.16245000000004
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.0114139999998315
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 777.7314480000002
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 13.687743999999839
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 2314.087378
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 594.1751709999999
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 222.25364700000046
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 42.93058099999962
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1278.6238000000003
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 12.758957999999438
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 206.73245399999996
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 79.11352299999999
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 0.02801999999974214
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 409.9464340000004
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 23.890454999999747
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.021140000000741566
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 172,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 5.025494916676076,
+          "downstreamNodePfSquaredSum": 0.7865975092191904,
+          "downstreamNodePfMax": 0.33533110890354717,
+          "downstreamSquaredNodePortPointCount": 13060,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 142091,
+          "timeMs": 533.337634,
+          "ripCount": 2,
+          "partialRipCount": 1,
+          "partiallyRippedRouteCount": 75,
+          "partiallyRippedSegmentCount": 447,
+          "retainedPartialRipSegmentCount": 590,
+          "firstMaxRegionCost": 0.8012801712644423,
+          "bestMaxRegionCost": 0.6400351185250224,
+          "firstTotalRegionCost": 9.015441521884188,
+          "bestTotalRegionCost": 9.51020777255929,
+          "firstSegmentCount": 1099,
+          "bestSolvedSegmentCount": 1017,
+          "bestSolvedMaxRegionSegmentCount": 15,
+          "bestSolvedSquaredRegionSegmentCount": 3265,
+          "finalMaxRegionSegmentCount": 15,
+          "finalSquaredRegionSegmentCount": 3265,
+          "finalSegmentCount": 1017,
+          "finalLayerChangeCount": 80,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": true,
+          "outsideInCompletedRouteCount": 75,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 3505,
+          "outsideInReverseExpansionCount": 2595
+        },
+        "highDensityIterations": 9951,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 44.37137899999999,
+          "componentDetectionSolver": 5.410443999999984,
+          "escapeViaLocationSolver": 10.79790700000001,
+          "netToPointPairsSolver": 13.816407000000027,
+          "topologyPlanningSolver": 279.04787600000003,
+          "topologyMergingSolver": 65.65312500000005,
+          "nodeDimensionSubdivisionSolver": 3.162464,
+          "edgeSolver": 23.953676000000087,
+          "availableSegmentPointSolver": 21.671055000000024,
+          "necessaryCrampedPortPointSolver": 159.16245000000004,
+          "preloadedTraceGraphSolver": 2.0114139999998315,
+          "portPointPathingSolver": 777.7314480000002,
+          "uniformPortDistributionSolver": 13.687743999999839,
+          "highDensityRouteSolver": 2314.087378,
+          "highDensityForceImproveSolver": 594.1751709999999,
+          "highDensityRepairSolver": 222.25364700000046,
+          "highDensityStitchSolver": 42.93058099999962,
+          "traceSimplificationSolver": 1278.6238000000003,
+          "mutatedPreloadedTraceSimplificationSolver": 12.758957999999438,
+          "traceWidthSolver": 206.73245399999996,
+          "globalDrcForceImproveSolver": 79.11352299999999,
+          "pipeline9JointDrcRepairSolver": 0.02801999999974214,
+          "effortCleanupSolver": 409.9464340000004,
+          "lengthMatchingPostProcessingSolver": 23.890454999999747,
+          "powerTraceExpansionSolver": 0.021140000000741566
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample005",
+        "sampleNumber": 5,
+        "label": "srj18 sample 5 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 7836.993533,
+        "traceCount": 172,
+        "viaCount": 142,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 774504448,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample006",
+      "sampleNumber": 6,
+      "elapsedTimeMs": 58687.688899,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 265,
+      "traceLintIssueCounts": {
+        "odd_angle": 618
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 155.87224200000003
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.200404999999932
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 27.94972299999995
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 29.76629099999991
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 523.338407
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 387.92487000000006
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 12.04654000000005
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 339.9178730000001
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 165.2384709999999
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 938.3865779999996
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 5.3570019999997385
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 18959.833458
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 33.23181999999724
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 21076.239819999995
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 1589.4153929999957
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 2258.026527999995
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 132.76680599999963
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 2123.870284000004
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 22.55536800000118
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 255.75652500000433
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 708.0693189999947
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 2872.5606289999996
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 692.6189999999988
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 36.940482999998494
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.017400000004272442
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 255,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 32.550661414050566,
+          "downstreamNodePfSquaredSum": 25.661628766934466,
+          "downstreamNodePfMax": 2.4329200193579688,
+          "downstreamSquaredNodePortPointCount": 38424,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 2000000,
+          "timeMs": 17982.650496000002,
+          "bestMaxRegionCost": 19.599999999999866,
+          "bestTotalRegionCost": 162.44490649471732,
+          "finalMaxRegionSegmentCount": 29,
+          "finalSquaredRegionSegmentCount": 9606,
+          "finalSegmentCount": 2766,
+          "finalLayerChangeCount": 247,
+          "outsideInCompletedRouteCount": 0,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 0,
+          "outsideInReverseExpansionCount": 0
+        },
+        "highDensityIterations": 74878,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 155.87224200000003,
+          "componentDetectionSolver": 6.200404999999932,
+          "escapeViaLocationSolver": 27.94972299999995,
+          "netToPointPairsSolver": 29.76629099999991,
+          "topologyPlanningSolver": 523.338407,
+          "topologyMergingSolver": 387.92487000000006,
+          "nodeDimensionSubdivisionSolver": 12.04654000000005,
+          "edgeSolver": 339.9178730000001,
+          "availableSegmentPointSolver": 165.2384709999999,
+          "necessaryCrampedPortPointSolver": 938.3865779999996,
+          "preloadedTraceGraphSolver": 5.3570019999997385,
+          "portPointPathingSolver": 18959.833458,
+          "uniformPortDistributionSolver": 33.23181999999724,
+          "highDensityRouteSolver": 21076.239819999995,
+          "highDensityForceImproveSolver": 1589.4153929999957,
+          "highDensityRepairSolver": 2258.026527999995,
+          "highDensityStitchSolver": 132.76680599999963,
+          "traceSimplificationSolver": 2123.870284000004,
+          "mutatedPreloadedTraceSimplificationSolver": 22.55536800000118,
+          "traceWidthSolver": 255.75652500000433,
+          "globalDrcForceImproveSolver": 708.0693189999947,
+          "pipeline9JointDrcRepairSolver": 2872.5606289999996,
+          "effortCleanupSolver": 692.6189999999988,
+          "lengthMatchingPostProcessingSolver": 36.940482999998494,
+          "powerTraceExpansionSolver": 0.017400000004272442
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample006",
+        "sampleNumber": 6,
+        "label": "srj18 sample 6 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 58687.688899,
+        "traceCount": 255,
+        "viaCount": 265,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 2308665344,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample007",
+      "sampleNumber": 7,
+      "elapsedTimeMs": 13429.651643000001,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 200,
+      "traceLintIssueCounts": {
+        "odd_angle": 76
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 47.05930599999999
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.080764999999985
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 18.61301000000003
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 36.265832999999986
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 290.4505230000001
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 0.9393460000000005
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 3.382806999999957
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 48.90023599999995
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 49.72600399999999
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 783.836977
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.629479000000174
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 3355.8032810000004
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 19.846770000000106
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 3232.1837509999996
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 703.7769860000008
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 289.16306299999997
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 54.24395200000072
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 935.9889199999998
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 19.43899600000077
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 329.4242350000004
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 267.88193499999943
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 594.7208699999992
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 461.5482710000015
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 32.577432000000044
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.02568000000064785
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 263,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 6.000302666232431,
+          "downstreamNodePfSquaredSum": 0.7826940612624433,
+          "downstreamNodePfMax": 0.3525012680930093,
+          "downstreamSquaredNodePortPointCount": 19396,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 349481,
+          "timeMs": 2876.4017100000005,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 482,
+          "partiallyRippedSegmentCount": 2932,
+          "retainedPartialRipSegmentCount": 5409,
+          "firstMaxRegionCost": 0.9867171193773592,
+          "bestMaxRegionCost": 0.9575338909034627,
+          "firstTotalRegionCost": 12.20160108961296,
+          "bestTotalRegionCost": 12.73847185852311,
+          "firstSegmentCount": 1556,
+          "bestSolvedSegmentCount": 1369,
+          "bestSolvedMaxRegionSegmentCount": 14,
+          "bestSolvedSquaredRegionSegmentCount": 4849,
+          "finalMaxRegionSegmentCount": 14,
+          "finalSquaredRegionSegmentCount": 4849,
+          "finalSegmentCount": 1369,
+          "finalLayerChangeCount": 158,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": true,
+          "outsideInCompletedRouteCount": 482,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 56530,
+          "outsideInReverseExpansionCount": 56300
+        },
+        "highDensityIterations": 5518,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 47.05930599999999,
+          "componentDetectionSolver": 6.080764999999985,
+          "escapeViaLocationSolver": 18.61301000000003,
+          "netToPointPairsSolver": 36.265832999999986,
+          "topologyPlanningSolver": 290.4505230000001,
+          "topologyMergingSolver": 0.9393460000000005,
+          "nodeDimensionSubdivisionSolver": 3.382806999999957,
+          "edgeSolver": 48.90023599999995,
+          "availableSegmentPointSolver": 49.72600399999999,
+          "necessaryCrampedPortPointSolver": 783.836977,
+          "preloadedTraceGraphSolver": 2.629479000000174,
+          "portPointPathingSolver": 3355.8032810000004,
+          "uniformPortDistributionSolver": 19.846770000000106,
+          "highDensityRouteSolver": 3232.1837509999996,
+          "highDensityForceImproveSolver": 703.7769860000008,
+          "highDensityRepairSolver": 289.16306299999997,
+          "highDensityStitchSolver": 54.24395200000072,
+          "traceSimplificationSolver": 935.9889199999998,
+          "mutatedPreloadedTraceSimplificationSolver": 19.43899600000077,
+          "traceWidthSolver": 329.4242350000004,
+          "globalDrcForceImproveSolver": 267.88193499999943,
+          "pipeline9JointDrcRepairSolver": 594.7208699999992,
+          "effortCleanupSolver": 461.5482710000015,
+          "lengthMatchingPostProcessingSolver": 32.577432000000044,
+          "powerTraceExpansionSolver": 0.02568000000064785
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample007",
+        "sampleNumber": 7,
+        "label": "srj18 sample 7 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 13429.651643000001,
+        "traceCount": 263,
+        "viaCount": 200,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1014751232,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample008",
+      "sampleNumber": 8,
+      "elapsedTimeMs": 38919.770933,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 281,
+      "traceLintIssueCounts": {
+        "odd_angle": 487
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 160.62794999999994
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 13.722464999999943
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 24.35342000000003
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 39.7038
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 600.1898249999999
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 168.91168199999993
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 5.267198000000008
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 83.54223500000012
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 48.61038099999996
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 1343.143979
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.968714000000091
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 5965.92273
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 29.553737999998702
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 14825.475559
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 1470.6762080000008
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 759.7785719999993
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 101.43499499999962
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1374.7359649999999
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 25.691381000000547
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 403.7436170000001
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 584.8684809999977
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 6618.542072000004
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 1146.905773999999
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 44.81679399999848
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.022921000003407244
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 361,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 21.14567319887393,
+          "downstreamNodePfSquaredSum": 5.720918818688314,
+          "downstreamNodePfMax": 0.6578485407644236,
+          "downstreamSquaredNodePortPointCount": 32752,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 2000000,
+          "timeMs": 5303.6144349999995,
+          "ripCount": 6,
+          "bestMaxRegionCost": 2.1190447504841017,
+          "bestTotalRegionCost": 61.914575112198705,
+          "finalMaxRegionSegmentCount": 12,
+          "finalSquaredRegionSegmentCount": 8188,
+          "finalSegmentCount": 2462,
+          "finalLayerChangeCount": 291
+        },
+        "highDensityIterations": 67775,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 160.62794999999994,
+          "componentDetectionSolver": 13.722464999999943,
+          "escapeViaLocationSolver": 24.35342000000003,
+          "netToPointPairsSolver": 39.7038,
+          "topologyPlanningSolver": 600.1898249999999,
+          "topologyMergingSolver": 168.91168199999993,
+          "nodeDimensionSubdivisionSolver": 5.267198000000008,
+          "edgeSolver": 83.54223500000012,
+          "availableSegmentPointSolver": 48.61038099999996,
+          "necessaryCrampedPortPointSolver": 1343.143979,
+          "preloadedTraceGraphSolver": 2.968714000000091,
+          "portPointPathingSolver": 5965.92273,
+          "uniformPortDistributionSolver": 29.553737999998702,
+          "highDensityRouteSolver": 14825.475559,
+          "highDensityForceImproveSolver": 1470.6762080000008,
+          "highDensityRepairSolver": 759.7785719999993,
+          "highDensityStitchSolver": 101.43499499999962,
+          "traceSimplificationSolver": 1374.7359649999999,
+          "mutatedPreloadedTraceSimplificationSolver": 25.691381000000547,
+          "traceWidthSolver": 403.7436170000001,
+          "globalDrcForceImproveSolver": 584.8684809999977,
+          "pipeline9JointDrcRepairSolver": 6618.542072000004,
+          "effortCleanupSolver": 1146.905773999999,
+          "lengthMatchingPostProcessingSolver": 44.81679399999848,
+          "powerTraceExpansionSolver": 0.022921000003407244
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample008",
+        "sampleNumber": 8,
+        "label": "srj18 sample 8 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 38919.770933,
+        "traceCount": 361,
+        "viaCount": 281,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1428770816,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample009",
+      "sampleNumber": 9,
+      "elapsedTimeMs": 15188.387818000001,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 114,
+      "traceLintIssueCounts": {
+        "odd_angle": 127
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 75.72063699999995
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.645136999999977
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 21.295507000000043
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 33.30772000000002
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 635.832948
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 1.3121590000000651
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 5.41581599999995
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 118.08261600000014
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 85.81712000000016
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 725.117753
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.7879759999996168
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 2027.8490969999998
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 22.50431899999967
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 4723.637137
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 633.7699799999991
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 237.60253899999952
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 64.20611300000019
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 708.7024700000002
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 15.966270999999324
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 210.0882500000007
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 224.7279069999986
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 1601.6097829999999
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 733.8563379999996
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 29.7524459999986
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.03354100000069593
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 256,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 7.234087420104138,
+          "downstreamNodePfSquaredSum": 1.4907373779655475,
+          "downstreamNodePfMax": 0.42960222892672306,
+          "downstreamSquaredNodePortPointCount": 13140,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 223727,
+          "timeMs": 1537.1431970000003,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 379,
+          "partiallyRippedSegmentCount": 2824,
+          "retainedPartialRipSegmentCount": 5585,
+          "firstMaxRegionCost": 1.7052662910971685,
+          "bestMaxRegionCost": 1.4921080047100221,
+          "firstTotalRegionCost": 16.083573119892094,
+          "bestTotalRegionCost": 17.267613127915997,
+          "firstSegmentCount": 1449,
+          "bestSolvedSegmentCount": 1381,
+          "bestSolvedMaxRegionSegmentCount": 13,
+          "bestSolvedSquaredRegionSegmentCount": 3285,
+          "finalMaxRegionSegmentCount": 13,
+          "finalSquaredRegionSegmentCount": 3285,
+          "finalSegmentCount": 1381,
+          "finalLayerChangeCount": 81,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 379,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 31626,
+          "outsideInReverseExpansionCount": 31452
+        },
+        "highDensityIterations": 13600,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 75.72063699999995,
+          "componentDetectionSolver": 6.645136999999977,
+          "escapeViaLocationSolver": 21.295507000000043,
+          "netToPointPairsSolver": 33.30772000000002,
+          "topologyPlanningSolver": 635.832948,
+          "topologyMergingSolver": 1.3121590000000651,
+          "nodeDimensionSubdivisionSolver": 5.41581599999995,
+          "edgeSolver": 118.08261600000014,
+          "availableSegmentPointSolver": 85.81712000000016,
+          "necessaryCrampedPortPointSolver": 725.117753,
+          "preloadedTraceGraphSolver": 2.7879759999996168,
+          "portPointPathingSolver": 2027.8490969999998,
+          "uniformPortDistributionSolver": 22.50431899999967,
+          "highDensityRouteSolver": 4723.637137,
+          "highDensityForceImproveSolver": 633.7699799999991,
+          "highDensityRepairSolver": 237.60253899999952,
+          "highDensityStitchSolver": 64.20611300000019,
+          "traceSimplificationSolver": 708.7024700000002,
+          "mutatedPreloadedTraceSimplificationSolver": 15.966270999999324,
+          "traceWidthSolver": 210.0882500000007,
+          "globalDrcForceImproveSolver": 224.7279069999986,
+          "pipeline9JointDrcRepairSolver": 1601.6097829999999,
+          "effortCleanupSolver": 733.8563379999996,
+          "lengthMatchingPostProcessingSolver": 29.7524459999986,
+          "powerTraceExpansionSolver": 0.03354100000069593
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample009",
+        "sampleNumber": 9,
+        "label": "srj18 sample 9 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 15188.387818000001,
+        "traceCount": 256,
+        "viaCount": 114,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1013317632,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample010",
+      "sampleNumber": 10,
+      "elapsedTimeMs": 14132.944003,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 158,
+      "traceLintIssueCounts": {
+        "odd_angle": 93
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 133.08626700000002
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.521828000000028
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 31.62071400000002
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 34.45806700000003
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 541.1087540000001
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 126.29989299999988
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 7.238526999999976
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 53.45625600000017
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 58.72601200000008
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 777.8750719999998
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.762192000000141
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 2999.1679849999996
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 20.917457999999897
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 3848.087187
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 784.2695290000011
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 334.94378700000016
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 66.74550500000078
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 720.9802099999997
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 13.266386999999668
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 231.16026799999963
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 260.78482299999996
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 387.8983420000004
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 546.2598829999988
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 34.446077999999034
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.024238999998487998
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 310,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 5.330559705856558,
+          "downstreamNodePfSquaredSum": 1.1164599948126195,
+          "downstreamNodePfMax": 0.4810301518348775,
+          "downstreamSquaredNodePortPointCount": 23400,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 281171,
+          "timeMs": 2453.269711,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 556,
+          "partiallyRippedSegmentCount": 3720,
+          "retainedPartialRipSegmentCount": 5524,
+          "firstMaxRegionCost": 1.603960396039594,
+          "bestMaxRegionCost": 0.9126170212913352,
+          "firstTotalRegionCost": 13.657936197921337,
+          "bestTotalRegionCost": 9.838088322066016,
+          "firstSegmentCount": 1621,
+          "bestSolvedSegmentCount": 1598,
+          "bestSolvedMaxRegionSegmentCount": 23,
+          "bestSolvedSquaredRegionSegmentCount": 5850,
+          "finalMaxRegionSegmentCount": 23,
+          "finalSquaredRegionSegmentCount": 5850,
+          "finalSegmentCount": 1598,
+          "finalLayerChangeCount": 132,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 556,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 55376,
+          "outsideInReverseExpansionCount": 55067
+        },
+        "highDensityIterations": 17651,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 133.08626700000002,
+          "componentDetectionSolver": 6.521828000000028,
+          "escapeViaLocationSolver": 31.62071400000002,
+          "netToPointPairsSolver": 34.45806700000003,
+          "topologyPlanningSolver": 541.1087540000001,
+          "topologyMergingSolver": 126.29989299999988,
+          "nodeDimensionSubdivisionSolver": 7.238526999999976,
+          "edgeSolver": 53.45625600000017,
+          "availableSegmentPointSolver": 58.72601200000008,
+          "necessaryCrampedPortPointSolver": 777.8750719999998,
+          "preloadedTraceGraphSolver": 2.762192000000141,
+          "portPointPathingSolver": 2999.1679849999996,
+          "uniformPortDistributionSolver": 20.917457999999897,
+          "highDensityRouteSolver": 3848.087187,
+          "highDensityForceImproveSolver": 784.2695290000011,
+          "highDensityRepairSolver": 334.94378700000016,
+          "highDensityStitchSolver": 66.74550500000078,
+          "traceSimplificationSolver": 720.9802099999997,
+          "mutatedPreloadedTraceSimplificationSolver": 13.266386999999668,
+          "traceWidthSolver": 231.16026799999963,
+          "globalDrcForceImproveSolver": 260.78482299999996,
+          "pipeline9JointDrcRepairSolver": 387.8983420000004,
+          "effortCleanupSolver": 546.2598829999988,
+          "lengthMatchingPostProcessingSolver": 34.446077999999034,
+          "powerTraceExpansionSolver": 0.024238999998487998
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample010",
+        "sampleNumber": 10,
+        "label": "srj18 sample 10 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 14132.944003,
+        "traceCount": 310,
+        "viaCount": 158,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1010900992,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample011",
+      "sampleNumber": 11,
+      "elapsedTimeMs": 14851.017979999999,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 187,
+      "traceLintIssueCounts": {
+        "odd_angle": 239
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 83.41012799999999
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 6.1849789999999985
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 25.893087000000037
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 32.43205499999999
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 376.25697
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 173.10060099999987
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 4.439695999999913
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 54.87759199999982
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 55.02462799999989
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 620.8831319999999
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.4968190000004142
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 3719.814687
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 22.489026999999624
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 3379.1513060000007
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 817.5283250000011
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 316.00984400000016
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 70.17461400000138
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1038.7879759999996
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 20.52983099999983
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 230.97795399999995
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 396.31216799999856
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 557.3619010000002
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 536.6871549999996
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 35.37088700000095
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.017519999999421998
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 289,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 9.332488541604974,
+          "downstreamNodePfSquaredSum": 3.5012646813476977,
+          "downstreamNodePfMax": 1,
+          "downstreamSquaredNodePortPointCount": 25692,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 572347,
+          "timeMs": 3276.1127420000003,
+          "ripCount": 7,
+          "partialRipCount": 4,
+          "partiallyRippedRouteCount": 524,
+          "partiallyRippedSegmentCount": 2985,
+          "retainedPartialRipSegmentCount": 3213,
+          "firstMaxRegionCost": 1.9614307566770437,
+          "bestMaxRegionCost": 1.272247458020619,
+          "firstTotalRegionCost": 18.045733918716806,
+          "bestTotalRegionCost": 17.335404884640564,
+          "firstSegmentCount": 1691,
+          "bestSolvedSegmentCount": 1627,
+          "bestSolvedMaxRegionSegmentCount": 17,
+          "bestSolvedSquaredRegionSegmentCount": 6423,
+          "finalMaxRegionSegmentCount": 17,
+          "finalSquaredRegionSegmentCount": 6423,
+          "finalSegmentCount": 1627,
+          "finalLayerChangeCount": 165,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 495,
+          "outsideInFallbackRouteCount": 2,
+          "outsideInForwardExpansionCount": 50317,
+          "outsideInReverseExpansionCount": 27834
+        },
+        "highDensityIterations": 8456,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 83.41012799999999,
+          "componentDetectionSolver": 6.1849789999999985,
+          "escapeViaLocationSolver": 25.893087000000037,
+          "netToPointPairsSolver": 32.43205499999999,
+          "topologyPlanningSolver": 376.25697,
+          "topologyMergingSolver": 173.10060099999987,
+          "nodeDimensionSubdivisionSolver": 4.439695999999913,
+          "edgeSolver": 54.87759199999982,
+          "availableSegmentPointSolver": 55.02462799999989,
+          "necessaryCrampedPortPointSolver": 620.8831319999999,
+          "preloadedTraceGraphSolver": 2.4968190000004142,
+          "portPointPathingSolver": 3719.814687,
+          "uniformPortDistributionSolver": 22.489026999999624,
+          "highDensityRouteSolver": 3379.1513060000007,
+          "highDensityForceImproveSolver": 817.5283250000011,
+          "highDensityRepairSolver": 316.00984400000016,
+          "highDensityStitchSolver": 70.17461400000138,
+          "traceSimplificationSolver": 1038.7879759999996,
+          "mutatedPreloadedTraceSimplificationSolver": 20.52983099999983,
+          "traceWidthSolver": 230.97795399999995,
+          "globalDrcForceImproveSolver": 396.31216799999856,
+          "pipeline9JointDrcRepairSolver": 557.3619010000002,
+          "effortCleanupSolver": 536.6871549999996,
+          "lengthMatchingPostProcessingSolver": 35.37088700000095,
+          "powerTraceExpansionSolver": 0.017519999999421998
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample011",
+        "sampleNumber": 11,
+        "label": "srj18 sample 11 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 14851.017979999999,
+        "traceCount": 289,
+        "viaCount": 187,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1024876544,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample012",
+      "sampleNumber": 12,
+      "elapsedTimeMs": 52760.491662,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 298,
+      "traceLintIssueCounts": {
+        "odd_angle": 444
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 736.94785
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 8.50588300000004
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 62.60032000000001
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 88.19468700000016
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 727.089991
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 307.96396600000026
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 7.716429000000062
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 117.65756699999974
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 100.43156799999997
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 3538.283401
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 4.534831999999369
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 8674.469861
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 51.66653700000097
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 14361.967817999997
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 1728.7574559999994
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 689.1351270000014
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 159.06313800000498
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 2955.2389570000014
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 42.816305000000284
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 1061.5981919999977
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 650.336983000001
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 6616.873217
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 3355.4851160000035
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 56.54842099999951
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.026480000000447035
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 504,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 8.071296714449216,
+          "downstreamNodePfSquaredSum": 2.0847026032376355,
+          "downstreamNodePfMax": 1,
+          "downstreamSquaredNodePortPointCount": 80572,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 2000000,
+          "timeMs": 7329.015035999999,
+          "ripCount": 1,
+          "bestMaxRegionCost": 1.0098507149655327,
+          "bestTotalRegionCost": 13.618104817023788,
+          "finalMaxRegionSegmentCount": 40,
+          "finalSquaredRegionSegmentCount": 20143,
+          "finalSegmentCount": 3293,
+          "finalLayerChangeCount": 269
+        },
+        "highDensityIterations": 18645,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 736.94785,
+          "componentDetectionSolver": 8.50588300000004,
+          "escapeViaLocationSolver": 62.60032000000001,
+          "netToPointPairsSolver": 88.19468700000016,
+          "topologyPlanningSolver": 727.089991,
+          "topologyMergingSolver": 307.96396600000026,
+          "nodeDimensionSubdivisionSolver": 7.716429000000062,
+          "edgeSolver": 117.65756699999974,
+          "availableSegmentPointSolver": 100.43156799999997,
+          "necessaryCrampedPortPointSolver": 3538.283401,
+          "preloadedTraceGraphSolver": 4.534831999999369,
+          "portPointPathingSolver": 8674.469861,
+          "uniformPortDistributionSolver": 51.66653700000097,
+          "highDensityRouteSolver": 14361.967817999997,
+          "highDensityForceImproveSolver": 1728.7574559999994,
+          "highDensityRepairSolver": 689.1351270000014,
+          "highDensityStitchSolver": 159.06313800000498,
+          "traceSimplificationSolver": 2955.2389570000014,
+          "mutatedPreloadedTraceSimplificationSolver": 42.816305000000284,
+          "traceWidthSolver": 1061.5981919999977,
+          "globalDrcForceImproveSolver": 650.336983000001,
+          "pipeline9JointDrcRepairSolver": 6616.873217,
+          "effortCleanupSolver": 3355.4851160000035,
+          "lengthMatchingPostProcessingSolver": 56.54842099999951,
+          "powerTraceExpansionSolver": 0.026480000000447035
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample012",
+        "sampleNumber": 12,
+        "label": "srj18 sample 12 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 52760.491662,
+        "traceCount": 504,
+        "viaCount": 298,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 2107764736,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample013",
+      "sampleNumber": 13,
+      "elapsedTimeMs": 35713.196582000004,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 194,
+      "traceLintIssueCounts": {
+        "odd_angle": 442
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 60.06330200000002
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.970465999999988
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 21.159070999999983
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 39.815623000000016
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 452.0533909999999
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 265.43271200000004
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 7.143407000000025
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 121.90378799999985
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 53.096669999999904
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 333.01213000000007
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 3.2223750000000564
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 6156.159087999999
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 21.489980000000287
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 12554.822696000001
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 1302.5484219999998
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 1437.702379000002
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 71.9885549999999
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 851.6346139999987
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 18.19286700000157
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 277.28242599999794
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 709.565341999998
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 7962.310084000001
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 388.0612370000017
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 32.538039999999455
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.036218000001099426
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 238,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 13.015046280637687,
+          "downstreamNodePfSquaredSum": 6.396565756359833,
+          "downstreamNodePfMax": 0.9713408919430696,
+          "downstreamSquaredNodePortPointCount": 20884,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 1919736,
+          "timeMs": 5657.706888000001,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 699,
+          "partiallyRippedSegmentCount": 6092,
+          "retainedPartialRipSegmentCount": 4275,
+          "firstMaxRegionCost": 9.169811320754755,
+          "bestMaxRegionCost": 7.139788083623248,
+          "firstTotalRegionCost": 60.472297242863775,
+          "bestTotalRegionCost": 60.6194962625164,
+          "firstSegmentCount": 1795,
+          "bestSolvedSegmentCount": 1679,
+          "bestSolvedMaxRegionSegmentCount": 14,
+          "bestSolvedSquaredRegionSegmentCount": 5221,
+          "finalMaxRegionSegmentCount": 14,
+          "finalSquaredRegionSegmentCount": 5221,
+          "finalSegmentCount": 1679,
+          "finalLayerChangeCount": 190,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 699,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 73933,
+          "outsideInReverseExpansionCount": 73614
+        },
+        "highDensityIterations": 53161,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 60.06330200000002,
+          "componentDetectionSolver": 5.970465999999988,
+          "escapeViaLocationSolver": 21.159070999999983,
+          "netToPointPairsSolver": 39.815623000000016,
+          "topologyPlanningSolver": 452.0533909999999,
+          "topologyMergingSolver": 265.43271200000004,
+          "nodeDimensionSubdivisionSolver": 7.143407000000025,
+          "edgeSolver": 121.90378799999985,
+          "availableSegmentPointSolver": 53.096669999999904,
+          "necessaryCrampedPortPointSolver": 333.01213000000007,
+          "preloadedTraceGraphSolver": 3.2223750000000564,
+          "portPointPathingSolver": 6156.159087999999,
+          "uniformPortDistributionSolver": 21.489980000000287,
+          "highDensityRouteSolver": 12554.822696000001,
+          "highDensityForceImproveSolver": 1302.5484219999998,
+          "highDensityRepairSolver": 1437.702379000002,
+          "highDensityStitchSolver": 71.9885549999999,
+          "traceSimplificationSolver": 851.6346139999987,
+          "mutatedPreloadedTraceSimplificationSolver": 18.19286700000157,
+          "traceWidthSolver": 277.28242599999794,
+          "globalDrcForceImproveSolver": 709.565341999998,
+          "pipeline9JointDrcRepairSolver": 7962.310084000001,
+          "effortCleanupSolver": 388.0612370000017,
+          "lengthMatchingPostProcessingSolver": 32.538039999999455,
+          "powerTraceExpansionSolver": 0.036218000001099426
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample013",
+        "sampleNumber": 13,
+        "label": "srj18 sample 13 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 35713.196582000004,
+        "traceCount": 238,
+        "viaCount": 194,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1432858624,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample014",
+      "sampleNumber": 14,
+      "elapsedTimeMs": 93043.542108,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 267,
+      "traceLintIssueCounts": {
+        "odd_angle": 693
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 52.00246599999997
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.451362000000017
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 19.720158000000026
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 27.96578900000003
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 404.61187700000005
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 160.11702700000012
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 5.43458899999996
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 80.98015499999997
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 43.09383200000002
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 306.9889720000001
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 3.4306060000001253
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 10767.59138
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 29.181248000000778
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 49519.42651
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 3513.910721
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 6662.423003999997
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 139.02407299999322
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 2054.530451999992
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 24.608508999997866
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 374.0647400000016
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 903.5528000000049
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 13195.801047
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 1413.9388199999958
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 40.54278400000476
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.01674000000639353
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 238,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 59.658068540568046,
+          "downstreamNodePfSquaredSum": 53.591297613136305,
+          "downstreamNodePfMax": 1,
+          "downstreamSquaredNodePortPointCount": 31268,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 2000000,
+          "timeMs": 10297.706215999999,
+          "ripCount": 23,
+          "bestMaxRegionCost": 62.09090909090919,
+          "bestTotalRegionCost": 1131.3134348855192,
+          "finalMaxRegionSegmentCount": 18,
+          "finalSquaredRegionSegmentCount": 7817,
+          "finalSegmentCount": 2173,
+          "finalLayerChangeCount": 181,
+          "outsideInCompletedRouteCount": 0,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 0,
+          "outsideInReverseExpansionCount": 0
+        },
+        "highDensityIterations": 167528,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 52.00246599999997,
+          "componentDetectionSolver": 5.451362000000017,
+          "escapeViaLocationSolver": 19.720158000000026,
+          "netToPointPairsSolver": 27.96578900000003,
+          "topologyPlanningSolver": 404.61187700000005,
+          "topologyMergingSolver": 160.11702700000012,
+          "nodeDimensionSubdivisionSolver": 5.43458899999996,
+          "edgeSolver": 80.98015499999997,
+          "availableSegmentPointSolver": 43.09383200000002,
+          "necessaryCrampedPortPointSolver": 306.9889720000001,
+          "preloadedTraceGraphSolver": 3.4306060000001253,
+          "portPointPathingSolver": 10767.59138,
+          "uniformPortDistributionSolver": 29.181248000000778,
+          "highDensityRouteSolver": 49519.42651,
+          "highDensityForceImproveSolver": 3513.910721,
+          "highDensityRepairSolver": 6662.423003999997,
+          "highDensityStitchSolver": 139.02407299999322,
+          "traceSimplificationSolver": 2054.530451999992,
+          "mutatedPreloadedTraceSimplificationSolver": 24.608508999997866,
+          "traceWidthSolver": 374.0647400000016,
+          "globalDrcForceImproveSolver": 903.5528000000049,
+          "pipeline9JointDrcRepairSolver": 13195.801047,
+          "effortCleanupSolver": 1413.9388199999958,
+          "lengthMatchingPostProcessingSolver": 40.54278400000476,
+          "powerTraceExpansionSolver": 0.01674000000639353
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample014",
+        "sampleNumber": 14,
+        "label": "srj18 sample 14 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 93043.542108,
+        "traceCount": 238,
+        "viaCount": 267,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1994649600,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample015",
+      "sampleNumber": 15,
+      "elapsedTimeMs": 89466.13517,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 313,
+      "traceLintIssueCounts": {
+        "odd_angle": 786
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 373.7796
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 7.841502999999989
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 36.98121400000002
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 59.61350200000004
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 642.685262
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 245.625272
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 5.927822999999989
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 92.53613500000006
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 98.29583700000012
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 1370.0308560000003
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 3.7904410000001008
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 8183.813155999999
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 34.70237300000008
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 39009.034446
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 2252.6631070000003
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 8541.146721000005
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 102.56791000000521
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 1719.689210000004
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 30.328742999990936
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 454.660904999997
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 863.1350860000093
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 18282.848711
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 1082.3417669999908
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 50.2634049999906
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.025299999993876554
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 461,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 113.17706265798242,
+          "downstreamNodePfSquaredSum": 122.9653918012161,
+          "downstreamNodePfMax": 6.137318737113069,
+          "downstreamSquaredNodePortPointCount": 28048,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 2000000,
+          "timeMs": 7225.515736,
+          "ripCount": 8,
+          "bestMaxRegionCost": 3805.609650075477,
+          "bestTotalRegionCost": 5812.401421687434,
+          "finalMaxRegionSegmentCount": 13,
+          "finalSquaredRegionSegmentCount": 7012,
+          "finalSegmentCount": 2622,
+          "finalLayerChangeCount": 388
+        },
+        "highDensityIterations": 189589,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 373.7796,
+          "componentDetectionSolver": 7.841502999999989,
+          "escapeViaLocationSolver": 36.98121400000002,
+          "netToPointPairsSolver": 59.61350200000004,
+          "topologyPlanningSolver": 642.685262,
+          "topologyMergingSolver": 245.625272,
+          "nodeDimensionSubdivisionSolver": 5.927822999999989,
+          "edgeSolver": 92.53613500000006,
+          "availableSegmentPointSolver": 98.29583700000012,
+          "necessaryCrampedPortPointSolver": 1370.0308560000003,
+          "preloadedTraceGraphSolver": 3.7904410000001008,
+          "portPointPathingSolver": 8183.813155999999,
+          "uniformPortDistributionSolver": 34.70237300000008,
+          "highDensityRouteSolver": 39009.034446,
+          "highDensityForceImproveSolver": 2252.6631070000003,
+          "highDensityRepairSolver": 8541.146721000005,
+          "highDensityStitchSolver": 102.56791000000521,
+          "traceSimplificationSolver": 1719.689210000004,
+          "mutatedPreloadedTraceSimplificationSolver": 30.328742999990936,
+          "traceWidthSolver": 454.660904999997,
+          "globalDrcForceImproveSolver": 863.1350860000093,
+          "pipeline9JointDrcRepairSolver": 18282.848711,
+          "effortCleanupSolver": 1082.3417669999908,
+          "lengthMatchingPostProcessingSolver": 50.2634049999906,
+          "powerTraceExpansionSolver": 0.025299999993876554
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample015",
+        "sampleNumber": 15,
+        "label": "srj18 sample 15 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 89466.13517,
+        "traceCount": 461,
+        "viaCount": 313,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 2240901120,
+      "sampleTimeoutMs": 240000
+    },
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "scenarioName": "sample016",
+      "sampleNumber": 16,
+      "elapsedTimeMs": 25099.290805999997,
+      "didSolve": true,
+      "didTimeout": false,
+      "relaxedDrcPassed": true,
+      "viaCount": 105,
+      "traceLintIssueCounts": {
+        "odd_angle": 189
+      },
+      "stageTiming": {
+        "status": "complete",
+        "stages": [
+          {
+            "stageName": "preprocessSimpleRouteJsonSolver",
+            "elapsedTimeMs": 85.49212900000003
+          },
+          {
+            "stageName": "componentDetectionSolver",
+            "elapsedTimeMs": 5.904861000000039
+          },
+          {
+            "stageName": "escapeViaLocationSolver",
+            "elapsedTimeMs": 19.975981999999988
+          },
+          {
+            "stageName": "netToPointPairsSolver",
+            "elapsedTimeMs": 41.48436400000003
+          },
+          {
+            "stageName": "topologyPlanningSolver",
+            "elapsedTimeMs": 694.0792289999999
+          },
+          {
+            "stageName": "topologyMergingSolver",
+            "elapsedTimeMs": 233.14370299999996
+          },
+          {
+            "stageName": "nodeDimensionSubdivisionSolver",
+            "elapsedTimeMs": 5.026800999999978
+          },
+          {
+            "stageName": "edgeSolver",
+            "elapsedTimeMs": 69.0266059999999
+          },
+          {
+            "stageName": "availableSegmentPointSolver",
+            "elapsedTimeMs": 69.55804699999999
+          },
+          {
+            "stageName": "necessaryCrampedPortPointSolver",
+            "elapsedTimeMs": 484.2522479999998
+          },
+          {
+            "stageName": "preloadedTraceGraphSolver",
+            "elapsedTimeMs": 2.9929409999999734
+          },
+          {
+            "stageName": "portPointPathingSolver",
+            "elapsedTimeMs": 1886.7128670000002
+          },
+          {
+            "stageName": "uniformPortDistributionSolver",
+            "elapsedTimeMs": 16.71240200000011
+          },
+          {
+            "stageName": "highDensityRouteSolver",
+            "elapsedTimeMs": 15203.951786000001
+          },
+          {
+            "stageName": "highDensityForceImproveSolver",
+            "elapsedTimeMs": 751.8013949999986
+          },
+          {
+            "stageName": "highDensityRepairSolver",
+            "elapsedTimeMs": 479.36640799999805
+          },
+          {
+            "stageName": "highDensityStitchSolver",
+            "elapsedTimeMs": 54.52684600000066
+          },
+          {
+            "stageName": "traceSimplificationSolver",
+            "elapsedTimeMs": 443.57776399999784
+          },
+          {
+            "stageName": "mutatedPreloadedTraceSimplificationSolver",
+            "elapsedTimeMs": 12.729661000001215
+          },
+          {
+            "stageName": "traceWidthSolver",
+            "elapsedTimeMs": 149.873094999999
+          },
+          {
+            "stageName": "globalDrcForceImproveSolver",
+            "elapsedTimeMs": 271.66634599999816
+          },
+          {
+            "stageName": "pipeline9JointDrcRepairSolver",
+            "elapsedTimeMs": 1763.4335950000022
+          },
+          {
+            "stageName": "effortCleanupSolver",
+            "elapsedTimeMs": 295.20448899999974
+          },
+          {
+            "stageName": "lengthMatchingPostProcessingSolver",
+            "elapsedTimeMs": 25.55804200000057
+          },
+          {
+            "stageName": "powerTraceExpansionSolver",
+            "elapsedTimeMs": 0.01736000000164495
+          }
+        ]
+      },
+      "routingMetrics": {
+        "tinyHypergraph": {
+          "routeCount": 269,
+          "traceDensityCandidateEvaluated": false,
+          "traceDensityCandidateSelected": false,
+          "downstreamNodePfSum": 7.03890506466091,
+          "downstreamNodePfSquaredSum": 1.3775144516360782,
+          "downstreamNodePfMax": 0.43964331515161936,
+          "downstreamSquaredNodePortPointCount": 17964,
+          "changedPreloadedTraceSectionCount": 0,
+          "iterations": 459492,
+          "timeMs": 1421.8413410000003,
+          "ripCount": 7,
+          "partialRipCount": 6,
+          "partiallyRippedRouteCount": 445,
+          "partiallyRippedSegmentCount": 2900,
+          "retainedPartialRipSegmentCount": 4975,
+          "firstMaxRegionCost": 1.2412712233347853,
+          "bestMaxRegionCost": 1.2412712233347853,
+          "firstTotalRegionCost": 16.293834190080712,
+          "bestTotalRegionCost": 16.293834190080712,
+          "firstSegmentCount": 1413,
+          "bestSolvedSegmentCount": 1413,
+          "bestSolvedMaxRegionSegmentCount": 16,
+          "bestSolvedSquaredRegionSegmentCount": 4491,
+          "finalMaxRegionSegmentCount": 16,
+          "finalSquaredRegionSegmentCount": 4491,
+          "finalSegmentCount": 1413,
+          "finalLayerChangeCount": 107,
+          "warmupFullRipAttempts": 1,
+          "complexityAwareSelection": true,
+          "targetReached": false,
+          "outsideInCompletedRouteCount": 445,
+          "outsideInFallbackRouteCount": 0,
+          "outsideInForwardExpansionCount": 19806,
+          "outsideInReverseExpansionCount": 19549
+        },
+        "highDensityIterations": 41028,
+        "phaseTimeMs": {
+          "preprocessSimpleRouteJsonSolver": 85.49212900000003,
+          "componentDetectionSolver": 5.904861000000039,
+          "escapeViaLocationSolver": 19.975981999999988,
+          "netToPointPairsSolver": 41.48436400000003,
+          "topologyPlanningSolver": 694.0792289999999,
+          "topologyMergingSolver": 233.14370299999996,
+          "nodeDimensionSubdivisionSolver": 5.026800999999978,
+          "edgeSolver": 69.0266059999999,
+          "availableSegmentPointSolver": 69.55804699999999,
+          "necessaryCrampedPortPointSolver": 484.2522479999998,
+          "preloadedTraceGraphSolver": 2.9929409999999734,
+          "portPointPathingSolver": 1886.7128670000002,
+          "uniformPortDistributionSolver": 16.71240200000011,
+          "highDensityRouteSolver": 15203.951786000001,
+          "highDensityForceImproveSolver": 751.8013949999986,
+          "highDensityRepairSolver": 479.36640799999805,
+          "highDensityStitchSolver": 54.52684600000066,
+          "traceSimplificationSolver": 443.57776399999784,
+          "mutatedPreloadedTraceSimplificationSolver": 12.729661000001215,
+          "traceWidthSolver": 149.873094999999,
+          "globalDrcForceImproveSolver": 271.66634599999816,
+          "pipeline9JointDrcRepairSolver": 1763.4335950000022,
+          "effortCleanupSolver": 295.20448899999974,
+          "lengthMatchingPostProcessingSolver": 25.55804200000057,
+          "powerTraceExpansionSolver": 0.01736000000164495
+        }
+      },
+      "benchmarkSnapshot": {
+        "datasetName": "srj18",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "scenarioName": "sample016",
+        "sampleNumber": 16,
+        "label": "srj18 sample 16 - AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "elapsedTimeMs": 25099.290805999997,
+        "traceCount": 269,
+        "viaCount": 105,
+        "relaxedDrcPassed": true,
+        "drcErrorCount": 0
+      },
+      "drcErrorCount": 0,
+      "drcErrorTypes": {},
+      "drcErrorMessages": [],
+      "peakRssBytes": 1073061888,
+      "sampleTimeoutMs": 240000
+    }
+  ]
+}

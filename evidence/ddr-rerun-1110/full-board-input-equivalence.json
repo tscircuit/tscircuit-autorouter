@@ -1,0 +1,50 @@
+[
+  {
+    "board": "orangecrab",
+    "equal": true,
+    "hashes": [
+      "a44bcf322b2eaa1755d5e2f2bb755d418b87eac880112d18595cc5f206e1862d",
+      "a44bcf322b2eaa1755d5e2f2bb755d418b87eac880112d18595cc5f206e1862d"
+    ]
+  },
+  {
+    "board": "h616",
+    "equal": true,
+    "hashes": [
+      "a999954e24f468a22ea43a8b1ff1a771fb20d3c4c02e07c76269d50bcf4c4506",
+      "a999954e24f468a22ea43a8b1ff1a771fb20d3c4c02e07c76269d50bcf4c4506"
+    ]
+  },
+  {
+    "board": "butterstick",
+    "equal": true,
+    "hashes": [
+      "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a",
+      "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a"
+    ]
+  },
+  {
+    "board": "glider",
+    "equal": true,
+    "hashes": [
+      "cae7f6a75de6d85b9a4e050eeee49ea82808e7a769cc6adf003a40250a49f8d8",
+      "cae7f6a75de6d85b9a4e050eeee49ea82808e7a769cc6adf003a40250a49f8d8"
+    ]
+  },
+  {
+    "board": "imx6",
+    "equal": true,
+    "hashes": [
+      "53f879b34a258031059303904be4ace642a3b2e493f3ec6f4dbdb304a38e5857",
+      "53f879b34a258031059303904be4ace642a3b2e493f3ec6f4dbdb304a38e5857"
+    ]
+  },
+  {
+    "board": "icepi",
+    "equal": true,
+    "hashes": [
+      "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6",
+      "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6"
+    ]
+  }
+]

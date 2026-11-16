@@ -1,0 +1,60 @@
+{
+  "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43935944589",
+  "initialIndexedResult": "660-second hard timeout before progress, assessment or PCB SVG",
+  "variants": {
+    "base": {
+      "progressStatus": "failed",
+      "errors": [
+        "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      ],
+      "wallMs": 515384.23045800003,
+      "timedOut": false,
+      "initialCopperElements": 0,
+      "connectedNets": 7,
+      "requestedNets": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "reachabilityPruningConstructedCount": 0,
+      "milestones": [
+        "FANOUT_RECHECK_ADD_BEGIN",
+        "FANOUT_RECHECK_RENDER_BEGIN",
+        "FANOUT_RECHECK_RENDER_PROMISE_RETURNED",
+        "FANOUT_RECHECK_FIRST_STEP"
+      ],
+      "svg": "icepi-fanout-repeat-base.pcb.svg",
+      "svgSha256": "ab880d195b2e3aa0e24be0b34ab907382daa99f94b38381d3ef181d0f65aa2d6"
+    },
+    "fixed": {
+      "progressStatus": "failed",
+      "errors": [
+        "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      ],
+      "wallMs": 534801.750182,
+      "timedOut": false,
+      "initialCopperElements": 0,
+      "connectedNets": 7,
+      "requestedNets": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "reachabilityPruningConstructedCount": 0,
+      "milestones": [
+        "FANOUT_RECHECK_ADD_BEGIN",
+        "FANOUT_RECHECK_RENDER_BEGIN",
+        "FANOUT_RECHECK_RENDER_PROMISE_RETURNED",
+        "FANOUT_RECHECK_FIRST_STEP"
+      ],
+      "svg": "icepi-fanout-repeat-fixed.pcb.svg",
+      "svgSha256": "ab880d195b2e3aa0e24be0b34ab907382daa99f94b38381d3ef181d0f65aa2d6"
+    }
+  }
+}

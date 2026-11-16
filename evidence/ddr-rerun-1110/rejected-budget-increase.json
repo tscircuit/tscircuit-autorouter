@@ -1,0 +1,179 @@
+{
+  "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/43931646411",
+  "experiment": "Replace floor with ceil in graph-size search-budget scaling; not included in fix PR",
+  "status": "failed",
+  "errors": [
+    "SameNetViaMergerSolver could not find transition layers for via at (15.844999999998743, 0.46999999999998276)",
+    "Error: SameNetViaMergerSolver could not find transition layers for via at (15.844999999998743, 0.46999999999998276)",
+    "SameNetViaMergerSolver could not find transition layers for via at (15.844999999998743, 0.46999999999998276)"
+  ],
+  "route": {
+    "connectionName": "source_net_2_mst33",
+    "endPcbPortId": "pcb_port_1278",
+    "rootConnectionName": "source_net_2",
+    "route": [
+      {
+        "x": 15.844999999998743,
+        "y": 0.46999999999998276,
+        "z": 0
+      },
+      {
+        "x": 15.845,
+        "y": 0.47,
+        "z": 3
+      },
+      {
+        "x": 15.791,
+        "y": 0.47,
+        "z": 3
+      },
+      {
+        "x": 15.739,
+        "y": 0.47,
+        "z": 3
+      },
+      {
+        "x": 15.676,
+        "y": 0.47,
+        "z": 3
+      },
+      {
+        "x": 15.62,
+        "y": 0.47,
+        "z": 3
+      },
+      {
+        "x": 15.606,
+        "y": 0.483,
+        "z": 3
+      },
+      {
+        "x": 15.548,
+        "y": 0.626,
+        "z": 3
+      },
+      {
+        "x": 15.546,
+        "y": 0.625,
+        "z": 3
+      },
+      {
+        "x": 15.582105558479851,
+        "y": 0.628,
+        "z": 3
+      },
+      {
+        "x": 15.58010555847985,
+        "y": 0.627,
+        "z": 3
+      },
+      {
+        "x": 15.54,
+        "y": 0.626,
+        "z": 3
+      },
+      {
+        "x": 15.539,
+        "y": 0.625,
+        "z": 3
+      },
+      {
+        "x": 15.536,
+        "y": 0.624,
+        "z": 3
+      },
+      {
+        "x": 15.528,
+        "y": 0.618,
+        "z": 3
+      },
+      {
+        "x": 15.484,
+        "y": 0.585,
+        "z": 3
+      },
+      {
+        "x": 15.47,
+        "y": 0.579,
+        "z": 3
+      },
+      {
+        "x": 15.47,
+        "y": 0.579,
+        "z": 3
+      },
+      {
+        "x": 15.29360064738703,
+        "y": 0.5417534640900619,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.51,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.529,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.491,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.43,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.412,
+        "z": 3
+      },
+      {
+        "x": 15.298,
+        "y": 0.404,
+        "z": 3
+      },
+      {
+        "x": 15.292,
+        "y": 0.37,
+        "z": 3
+      },
+      {
+        "x": 15.14844124664834,
+        "y": 0.35,
+        "z": 3
+      },
+      {
+        "x": 15.187,
+        "y": 0.35,
+        "z": 3
+      },
+      {
+        "x": 15.1,
+        "y": 0.35,
+        "z": 3
+      },
+      {
+        "x": 15.012,
+        "y": 0.365,
+        "z": 3
+      }
+    ],
+    "vias": [
+      {
+        "x": 15.845,
+        "y": 0.47
+      }
+    ],
+    "jumpers": [],
+    "viaDiameter": 0.45,
+    "traceThickness": 0.1
+  },
+  "transitionXyDistanceMm": 1.2577783676654127e-12,
+  "firstSimplificationPhase": "via_removal",
+  "failingSimplificationPhase": "via_merging"
+}
