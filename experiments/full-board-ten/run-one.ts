@@ -27,6 +27,11 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
+for (const line of readFileSync(join(output, "worker.log"), "utf8").split("\n")) {
+  if (line.startsWith("FULL_BOARD_HD_PACKET ") || line.startsWith("FULL_BOARD_HD_SUMMARY ")) {
+    console.log(line)
+  }
+}
 const diagnosticPath = join(output, "coarse-diagnostics.json")
 if (existsSync(diagnosticPath)) {
   const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))
