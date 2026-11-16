@@ -20,7 +20,7 @@ jobs:
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
-      BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/full-board-ten-bun-cache
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       BOARD: ${{ matrix.board }}
 
     steps:
