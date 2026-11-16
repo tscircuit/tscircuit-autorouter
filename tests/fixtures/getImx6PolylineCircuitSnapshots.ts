@@ -67,7 +67,9 @@ export function getImx6PolylineCircuitSnapshots({
   const sourcePortIds = new Set(
     circuitJson.flatMap((element) =>
       element.type === "source_trace" &&
-      element.connected_source_net_ids?.some((netId) => focusedNetIds.has(netId))
+      element.connected_source_net_ids?.some((netId) =>
+        focusedNetIds.has(netId),
+      )
         ? element.connected_source_port_ids
         : [],
     ),

@@ -27,10 +27,12 @@ test("i.MX6 DDR polyline candidates use the requested copper dimensions", async 
   // copper. Replay the remaining DDR phase using the board's original rules.
   const fixture = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/imx6-polyline-dimensions.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/imx6-polyline-dimensions.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString("utf8"),
