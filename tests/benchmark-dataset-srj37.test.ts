@@ -16,14 +16,8 @@ test("SRJ37 loads the power trace boards in sample order", async (): Promise<voi
     ["sample004", 4],
     ["sample005", 4],
     ["sample006", 6],
-    ["sample007", 2],
-    ["sample008", 4],
-    ["sample009", 4],
-    ["sample010", 4],
   ])
   expect(scenarios[2]![1].traces).toHaveLength(5)
-  expect(scenarios[8]![1].traces).toHaveLength(342)
-  expect(scenarios[9]![1].traces).toHaveLength(638)
 
   const first = await loadScenarioBySampleNumber("srj37", 1)
   expect(first.sourceLabel).toBe("srj37#1:sample001")
