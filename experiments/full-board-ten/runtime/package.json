@@ -34,7 +34,7 @@
     "@flatten-js/core": "^1.6.2",
     "@tscircuit/props": "^0.0.732",
     "connectivity-map": "^1.0.1",
-    "@tscircuit/checks": "^0.0.278",
+    "@tscircuit/checks": "^0.0.279",
     "calculate-packing": "^0.0.90",
     "schematic-symbols": "^0.0.251",
     "svg-path-commander": "^2.1.11",
@@ -74,9 +74,9 @@
     "@jscad/modeling": "^2.13.0",
     "react-reconciler": "^0.32.0",
     "@tscircuit/mm": "0.0.9",
-    "tscircuit": "0.0.3196",
-    "@tscircuit/core": "0.0.2389",
-    "@tscircuit/eval": "0.0.1783",
+    "tscircuit": "0.0.3197",
+    "@tscircuit/core": "0.0.2390",
+    "@tscircuit/eval": "0.0.1784",
     "@tscircuit/capacity-autorouter": "0.0.1103"
   }
 }

@@ -1,8 +1,8 @@
 {
   "runtimePackages": [
-    "tscircuit@0.0.3196",
-    "@tscircuit/core@0.0.2389",
-    "@tscircuit/eval@0.0.1783",
+    "tscircuit@0.0.3197",
+    "@tscircuit/core@0.0.2390",
+    "@tscircuit/eval@0.0.1784",
     "@tscircuit/capacity-autorouter@0.0.1103"
   ],
   "files": [
@@ -13,8 +13,8 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14636,
+      "sha256": "3ca5695ade3add4fdd6604e45bc769733cd123a857def63253e842f85867148c"
     },
     {
       "name": "run-one.ts",

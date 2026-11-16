@@ -94,14 +94,14 @@
         }
       }
     },
-    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "source": "Actual published Main3197/Core2390/Eval1784/AR1103/checks279 cloud case; timing is not a same-VM speed comparator",
     "sourceFilesSha256": {
-      "result.json": "88e9820893eb386dedadc5f36b4370a28bec0cfa3ee94996d13e6bdb2117bedd",
+      "result.json": "d16f2d8349bfec55a86bb4b09c1b8eaadc3fc89cb759845b81c3349b123d2865",
       "assessment.json": "55cca97a90214bfbd8c4e10f5c9d77506ec24c0f86731cbe0b60dfb01312cf49",
-      "reported-summary.json": "acb203e83c75bd9c92703c127ce41483eb24d5f140bcddfd824618c64dec5df8",
+      "reported-summary.json": "614133e13e0442a8e45ba8389202517accafefeccfd5908fbb8a1abe32cb0dc2",
       "coarse-diagnostics.json": "ac64ca3c01ebd17ff7937288ec03caa1986c93f4463a0e47d337a8377b733856"
     },
-    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+    "fullPublishedReferenceSha256": "6acb8909dacc99950baef0c2c5d3f5cc7b3640399c7fae0d462c7fa1049bdad0"
   },
   "glider-spaced": {
     "sourceSha256": "8addde162ad12f391f4f5b8205845e236c94bbcccafd8a31846a1a710ac5f4ed",
@@ -258,139 +258,14 @@
         }
       }
     },
-    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "source": "Actual published Main3197/Core2390/Eval1784/AR1103/checks279 cloud case; timing is not a same-VM speed comparator",
     "sourceFilesSha256": {
-      "result.json": "b531d794caf24fc896814a9608c3c3ad3bdf5ce556bfc8642e00894a2c771094",
-      "assessment.json": "244b8649647a6f81670d78551d9f11b3ded27a39f6409c395846fd516d5f17a7",
-      "reported-summary.json": "5af29fd39889bdf1854e42333b8ba384d1ce7426dd6eee0c5ddd9c4d869be7f5",
+      "result.json": "f287b57cf523d9e1bb3d3a7b11b56c640c8828f086d22ada67eeda6dc5c50470",
+      "assessment.json": "1087a5149d94a74fb82edd8b0bf56498ce15993ff49c3a4f22bdbce9f93adc8b",
+      "reported-summary.json": "84087a03007e19175f5820093b209daebe8df98403d57b17237f8ef0033db080",
       "coarse-diagnostics.json": "f5aebd11f593c5a5ab8e3647f493a4129aa850fa98ebf9fd9c63756c99ef5f02"
     },
-    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
-  },
-  "imx6-spaced": {
-    "sourceSha256": "d8cccad6f5cf63911130fbb5e13af9a961064bc231b92f639afa3944d6131c77",
-    "implementationHashes": [
-      {
-        "name": "imx6.tsx",
-        "sha256": "919047cd47c5cb633e75692c45a1f4810258f0d6195efb754c76c85d9a85826f"
-      },
-      {
-        "name": "native-full-board.tsx",
-        "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
-      },
-      {
-        "name": "peripheral-layout.ts",
-        "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
-      }
-    ],
-    "connectedNativeNetNames": [
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA0",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA1",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA10",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA11",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA12",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA13",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA14",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA15",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA2",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA3",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA4",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA5",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA6",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA7",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA8",
-      "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA9"
-    ],
-    "counts": {
-      "completeSourceCounts": true,
-      "geometryErrorCount": 0,
-      "membershipErrorCount": null,
-      "connectedNets": 16,
-      "requestedRoutableNets": 404,
-      "listedFindingCount": 1642,
-      "sharedDrcErrorCount": 0,
-      "status": "incomplete_or_errors",
-      "renderSettled": false,
-      "renderExitCode": 0
-    },
-    "phases": [
-      {
-        "name": "byte0",
-        "status": "completed",
-        "connections": 8,
-        "solver": "BusLanesPipelineSolver"
-      },
-      {
-        "name": "byte1",
-        "status": "completed",
-        "connections": 8,
-        "solver": "BusLanesPipelineSolver"
-      },
-      {
-        "name": "remaining",
-        "status": "failed",
-        "connections": 37,
-        "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph"
-      }
-    ],
-    "blockerClass": "iteration_limit",
-    "coarseConfiguration": {
-      "remaining": {
-        "MAX_ITERATIONS": 2000000,
-        "denseWorkspaceSupported": false,
-        "fixedRouteCount": null,
-        "hookInstalledAtIteration": 0,
-        "initialAssignmentCount": null,
-        "outsideInRouting": false,
-        "partialRipEligibilityCount": 49,
-        "partialRipEnabled": false,
-        "pathingEffort": 1,
-        "pathingFlags": {
-          "FORCE_CENTER_FIRST": true,
-          "RIPPING_ENABLED": true,
-          "USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES": true,
-          "USE_PREPARED_PORT_POINT_ROUTING": true,
-          "USE_SELECTIVE_RERIP_ROUTING": true
-        },
-        "portCount": 181105,
-        "regionCount": 45817,
-        "reportedPreloadedAssignmentCount": 0,
-        "routeCount": 49,
-        "serializedConnectionCount": 49,
-        "serializedPortCount": 214805,
-        "solveGraphOptions": {
-          "ACCEPT_BEST_SOLUTION_ON_TIMEOUT": true,
-          "DISTANCE_TO_COST": 0.05,
-          "GREEDY_FINAL_ROUTE_ITERS": 4,
-          "MAX_ITERATIONS": 2000000,
-          "OUTSIDE_IN_ROUTING": false,
-          "OWNED_REGIONAL_HOP_FRONTIER": true,
-          "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT": 100,
-          "PARTIAL_RIP_ENABLED": false,
-          "PARTIAL_RIP_MAX_ATTEMPTS": 7,
-          "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO": 0.05,
-          "PARTIAL_RIP_MAX_ROUTE_COUNT": 350,
-          "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO": 0.1,
-          "PARTIAL_RIP_MIN_ROUTE_COUNT": 100,
-          "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO": 0.02,
-          "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS": 1,
-          "RIP_CONGESTION_REGION_COST_FACTOR": 0.1,
-          "RIP_THRESHOLD_END": 0.8,
-          "RIP_THRESHOLD_RAMP_ATTEMPTS": 10,
-          "RIP_THRESHOLD_START": 0.05,
-          "USE_SPARSE_CANDIDATE_STORAGE": false,
-          "minViaPadDiameter": 0.4
-        }
-      }
-    },
-    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
-    "sourceFilesSha256": {
-      "result.json": "a87e16f057bc41840f45e3d978740043815c857ddebe646cb2b130fe52535b07",
-      "assessment.json": "4cc89596bf0779ab3ab6fd15e32580d6771354466547fb694b275dede91343ed",
-      "reported-summary.json": "06d68eb86dd63ee110c17601feca2d6cdc0b264641ab644c62871705535115a1",
-      "coarse-diagnostics.json": "8c9dd7fccb7e9b2515574063622d037d12528ca3c569caca0a858a4ae70363c5"
-    },
-    "fullPublishedReferenceSha256": "57a298cb4779e0a6997fee23267a96fc0972dbc6fff55cce3b740289bf2d25c1"
+    "fullPublishedReferenceSha256": "d6272465cbfb287a3c72fc8e37f6d77fa9710189652a71dc7f4afdfb0fd88e26"
   },
   "butterstick-original": {
     "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
@@ -489,13 +364,13 @@
         }
       }
     },
-    "source": "Actual published Main3196/Core2389/Eval1783/AR1103 cloud case; timing is not a same-VM speed comparator",
+    "source": "Actual published Main3197/Core2390/Eval1784/AR1103/checks279 cloud case; timing is not a same-VM speed comparator",
     "sourceFilesSha256": {
-      "result.json": "56b5d4c2d7657e89910445344479252c9406144ca81e3fcc79fca4b23eddd2fa",
+      "result.json": "0b55c470b6da5aabc5629f3d8bdd39b954c5c16c77cdb8928803ea4761d68392",
       "assessment.json": "ea78d2d6885c589e0fdf994e52b31556379e42e4de9d1ae943f34af4ec6084fd",
-      "reported-summary.json": "c702c272a4c6e8ccb31108c6657def34dd71e0578ce73b908ef199280c66efe0",
+      "reported-summary.json": "8a2f39d0070c8070899ee4f4e3f4eb8ab365ae81876711c1eec1b8f09b5cce16",
       "coarse-diagnostics.json": "842af54408200cf5e4f8e5a5ee135e05be04231fbff6804f99ac1c7c302e2da0"
     },
-    "fullPublishedReferenceSha256": "df0f72c16cb8b9dd28ff77cb81c092af0a19f93c9d877282bb3c6c56a5d3f09e"
+    "fullPublishedReferenceSha256": "d878d8e9528f213070113d374cc61f5c0a491b08818253eea3126a83cfe89572"
   }
 }

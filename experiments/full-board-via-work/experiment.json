@@ -1,5 +1,5 @@
 {
-  "issue": "kd_query_split_axis",
+  "issue": "mst_via_work",
   "frozen": true,
   "patchTarget": "autorouter",
   "autorouterCommit": "adb881cb67ae777a13ae3f7e76bdbc6d61f542ab",
@@ -13,18 +13,25 @@
       "role": "production",
       "bundled": true,
       "beforeSha256": "118975a53d82af09ad47977119d5f0e9d5298d489c829f1d660146018f0cd10a",
-      "afterSha256": "6641a4fc523a2c47acea9d54258fea8930acac8cc405fb36c6e985a91aa1b067"
+      "afterSha256": "1cf25fa07461c94d8694ef0f776d500155899a8edef44269bcdbf9d82510bbc7"
     },
     {
-      "path": "tests/solvers/mst-preserves-connected-tree-pairs.test.ts",
+      "path": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+      "role": "production",
+      "bundled": true,
+      "beforeSha256": "fb514ecef7d807fc24e9571e2867d1c1962010d2cfac9529d40d916de5c0427c",
+      "afterSha256": "080bcea7416828d53e1e8cc2f039ae80b7e5d63e40de58502ea0280de227ff42"
+    },
+    {
+      "path": "tests/solvers/net-to-point-pairs-via-work.test.ts",
       "role": "test",
       "bundled": false,
-      "beforeSha256": "0bb3597e47d834750ac94cab72d0eabbd988847838279ea933e51e190addd502",
-      "afterSha256": "aa3926d6db6b5fa7295fa401b76a1914367cd4bd492c058c62e14ebccca0d941"
+      "beforeSha256": null,
+      "afterSha256": "3c70a7421b65070382ffe40b8451bd4eeb4aaffeb1edeae5dde748aa208d1b2a"
     }
   ],
-  "independentReview": "KD production/test review clear;10 focused tests pass,763 assertions",
-  "candidate": "Only two KD query-axis expressions; existing grid optimum assertion updated29\u219227. No Tiny or layer-pricing change.",
+  "independentReview": "Root and independent review clear; 12 focused tests / 757 assertions, focused typecheck and native implementation parity pass (559 pairs,98 cross-layer).",
+  "candidate": "Original AR1103 KD query axes; candidate policy adds resolved via-pad diameter only for disjoint endpoint layer sets. No held KD or Tiny changes.",
   "testFiles": [
     "tests/solvers/mst-counts-distinct-components.test.ts",
     "tests/solvers/mst-expands-disconnected-neighborhoods.test.ts",
@@ -39,6 +46,8 @@
     "tests/tinyhypergraph-pipeline-error-propagation.test.ts",
     "tests/tinyhypergraph-lazy-stats.test.ts",
     "tests/solvers/tinyhypergraph-candidate-portfolio.test.ts",
-    "tests/features/tinyhypergraph-port-bridge-repro.test.ts"
+    "tests/features/tinyhypergraph-port-bridge-repro.test.ts",
+    "tests/solvers/net-to-point-pairs-via-work.test.ts",
+    "tests/utils/connection-point-utils.test.ts"
   ]
 }
