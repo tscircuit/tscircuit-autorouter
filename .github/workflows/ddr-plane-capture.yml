@@ -1,0 +1,50 @@
+name: Capture the native plane-routing failure on router1107
+on:
+  push:
+    branches: [codex/ddr-plane-capture-1107]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  capture:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [icepi, butterstick]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: merged-full-${{ matrix.board }}
+          run-id: 43810629603
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Replay the native phase input up to global pathing
+        run: bun scripts/benchmark/capturePlaneRouting.ts evidence/merged/full/${{ matrix.board }}-phased/phase-1-input.srj.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prepared-capture-${{ matrix.board }}
+          path: |
+            prepared-input.json.gz
+            capture-summary.json
+          retention-days: 14
+      - name: Export the exact native constructor input
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          path=Path('prepared-input.json.gz')
+          if path.exists():
+              print('PREPARED_INPUT_BEGIN')
+              encoded=base64.b64encode(path.read_bytes()).decode()
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('PREPARED_INPUT_END')
+          PY
