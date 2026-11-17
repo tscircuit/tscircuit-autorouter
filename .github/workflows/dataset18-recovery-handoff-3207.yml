@@ -1,0 +1,132 @@
+name: Dataset18 source-baseline and isolated recovery handoff comparison
+
+on:
+  push:
+    branches: [bench/dataset18-recovery-handoff-3207]
+
+permissions:
+  contents: read
+
+jobs:
+  dataset18:
+    name: Dataset18 sequential source pair (requested four workers)
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 120
+    env:
+      RUNTIME_ROOT: ${{ github.workspace }}/.dataset18-run
+      FULL_BOARD_EXPERIMENT: published
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.dataset18-bun-cache
+      BENCHMARK_DATASET: srj18
+      BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","18","--concurrency","4","--threads","1","--sample-timeout","360s"]'
+
+    steps:
+      - name: Checkout frozen controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            experiments/dataset18-recovery-handoff-3207
+            .github/workflows/dataset18-recovery-handoff-3207.yml
+
+      - name: Checkout immutable original source for unchanged bootstrap
+        uses: actions/checkout@v4
+        with:
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .dataset18-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced source for unchanged bootstrap
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .dataset18-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Checkout exact AR1111 evaluation source for baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 89977557a0082737afc275e69d74efb2d984de5b
+          path: same-machine-base
+          persist-credentials: false
+
+      - name: Checkout identical evaluation source for diagnostic
+        uses: actions/checkout@v4
+        with:
+          ref: 89977557a0082737afc275e69d74efb2d984de5b
+          path: same-machine-pr
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged published3207 routing dependency graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$RUNTIME_ROOT"
+
+      - name: Prepare exact routing entries and one shared evaluation graph
+        id: prepare
+        run: >-
+          python3 experiments/dataset18-recovery-handoff-3207/prepare-pair.py
+          --workspace "$GITHUB_WORKSPACE" --runtime-root "$RUNTIME_ROOT"
+
+      - name: Run original Dataset18 controller sequentially on this VM
+        id: benchmark
+        continue-on-error: true
+        run: bun same-machine-base/scripts/benchmark/runSameMachineBenchmarks.ts
+
+      - name: Verify frozen entries and graph after measurement
+        id: postcheck
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        run: >-
+          python3 experiments/dataset18-recovery-handoff-3207/prepare-pair.py
+          --workspace "$GITHUB_WORKSPACE" --runtime-root "$RUNTIME_ROOT" --verify-only
+
+      - name: Render normal comparison and per-case completion DRC timing RSS observations
+        id: report
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        env:
+          RUNNER_NAME: ${{ runner.name }}
+        run: |
+          if [ -f same-machine-results/base/benchmark-result.json ] && [ -f same-machine-results/pr/benchmark-result.json ]; then
+            bun same-machine-base/scripts/benchmark/same-machine-results.ts --base-report same-machine-results/base/benchmark-result.json --pr-report same-machine-results/pr/benchmark-result.json --base-sha 89977557a0082737afc275e69d74efb2d984de5b --pr-sha 89977557a0082737afc275e69d74efb2d984de5b --repository "${{ github.repository }}" --runner-name "$RUNNER_NAME" --output same-machine-results/comparison.md
+          fi
+          python3 experiments/dataset18-recovery-handoff-3207/report-pair.py "$GITHUB_WORKSPACE"
+
+      - name: Preserve scoped ordinary reports and fresh dependency proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: dataset18-recovery-handoff-diagnostic-${{ github.run_attempt }}
+          path: |
+            same-machine-results/*/benchmark-result.json
+            same-machine-results/*/benchmark-result.txt
+            same-machine-results/*/benchmark-interrupted.json
+            same-machine-results/*/benchmark-failure.json
+            same-machine-results/active-pass.json
+            same-machine-results/comparison.md
+            same-machine-results/review.md
+            same-machine-results/pair-summary.json
+            dataset18-pair-proof
+            .dataset18-run/runtime-manifest.json
+            experiments/dataset18-recovery-handoff-3207/experiment.json
+            experiments/full-board-ten/source-bundles/manifest.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Require a complete measured pair and valid provenance
+        if: ${{ always() }}
+        run: |
+          test "${{ steps.benchmark.outcome }}" = success
+          test "${{ steps.postcheck.outcome }}" = success
+          test "${{ steps.report.outcome }}" = success
