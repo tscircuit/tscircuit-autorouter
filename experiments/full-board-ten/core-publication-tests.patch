@@ -1,9 +1,9 @@
 diff --git a/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx b/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx
 new file mode 100644
-index 0000000..91d80d8
+index 0000000..125e875
 --- /dev/null
 +++ b/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx
-@@ -0,0 +1,154 @@
+@@ -0,0 +1,159 @@
 +import { expect, test } from "bun:test"
 +import { Group } from "lib/components/primitive-components/Group/Group"
 +import type { SimplifiedPcbTrace } from "lib/utils/autorouting/SimpleRouteJson"
@@ -132,9 +132,14 @@ index 0000000..91d80d8
 +  })
 +  try {
 +    await secondPhaseStarted.promise
-+    const child = circuit.selectOne(".PHASED")
 +    const board = circuit.firstChild
-+    if (!(child instanceof Group) || !(board instanceof Group)) {
++    if (!(board instanceof Group)) {
++      throw new Error("Expected the circuit's board")
++    }
++    const child = board
++      ._findDirectChildSubcircuits()
++      .find((subcircuit) => subcircuit.name === "PHASED")
++    if (!child) {
 +      throw new Error("Expected a board containing the phased subcircuit")
 +    }
 +    expect(child._asyncAutoroutingResult).toBeNull()

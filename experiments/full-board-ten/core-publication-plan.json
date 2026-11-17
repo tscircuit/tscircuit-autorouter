@@ -137,9 +137,9 @@
   "nativeRuns": 0,
   "frozen": true,
   "productionPatchSha256": "41c6cd24c13f3dccbbe1cef741339ca260e5db86cd1b75f5ab86617a6eb8d7a9",
-  "testPatchSha256": "22f9c63d5ca6ef5d958d548f00e52fb8b4f068dbf2b69f87ec55dae2d60c61b9",
+  "testPatchSha256": "bcc4b18073b22688585ec74bdc287fc2d73e94d7a3bd0439320db24053e6af58",
   "testFiles": {
-    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx": "29e250be6f9762d022128b33e1bb0c8f5f7403f4ed1858f005dd2661ce1f9f9b",
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx": "4b81a25d3eebeb1f8de9c15cbb898518dee08c15528485c2af8185b3f7a604cf",
     "tests/features/autoroutingphase-replaces-accepted-traces.test.tsx": "932cb72a60683176954ba6165ecc6bb2511e45fb8494965aa8d279cb1481358b",
     "tests/features/autoroutingphase-publishes-saved-traces.test.tsx": "d9a257e75c02308e9412b5d6dcee77241d6db0e0a0662f6ac459b32e2481a475"
   },
@@ -183,10 +183,42 @@
     "tests/features/autoroutingphase-replaces-accepted-traces.test.tsx",
     "tests/features/autoroutingphase-publishes-saved-traces.test.tsx"
   ],
-  "reviewedFullPatchSha256": "041884d3fe6278492b899ec9980696bf1111df3eb3eca2492a5c2e13f95f8290",
+  "reviewedFullPatchSha256": "52beb9ef5b45501cda878472c7c4dd3fcb8870d3399f24361f3965a459deac5d",
   "baselineFailurePatterns": [
     "Expected length:\\s*1",
     "Received length:\\s*0"
   ],
-  "reviewedProductionPatchSha256": "c7eeb054488d0261186d14e17fbab2fd0983ca3f22a9fdd6204105cac4528b86"
+  "reviewedProductionPatchSha256": "c7eeb054488d0261186d14e17fbab2fd0983ca3f22a9fdd6204105cac4528b86",
+  "frozenSourceGraph": {
+    "artifact": {
+      "id": 14356042998,
+      "name": "butterstick-core-accepted-phase-1",
+      "size_in_bytes": 1370330,
+      "digest": "sha256:c34decf37b45183a7b4a05612e34bf4e0076115193395e4508b69260da85ff30",
+      "workflow_run": {
+        "id": 44146186865,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/core-accepted-phase-output-3216",
+        "head_sha": "c396dbf0faf38a42f57e24e6429251de55f89a78"
+      }
+    },
+    "files": {
+      "bun.lock": {
+        "member": ".full-board-run/core-source-pair/bun.lock",
+        "bytes": 204150,
+        "sha256": "66a4a199f1abb0d7257acd06dbe80f4cbe979b6e4bbf3fe74cd20f3603de45be"
+      },
+      "dependency-inventory.json.gz": {
+        "member": ".full-board-run/core-source-pair/dependency-inventory.json.gz",
+        "bytes": 1228887,
+        "sha256": "1b7d1ae64213328b0dbac44282ab3adb2b569cd7482194e75b915dd73220d464"
+      },
+      "resolved-packages.json": {
+        "member": ".full-board-run/core-source-pair/resolved-packages.json",
+        "bytes": 155828,
+        "sha256": "141b697110856ad8c9df3b2384cc0caf7cce50013b35fe9512f20a03fad91571"
+      }
+    }
+  }
 }

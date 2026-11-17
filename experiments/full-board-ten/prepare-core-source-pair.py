@@ -4,12 +4,14 @@
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import zipfile
 
 
 def digest(path):
@@ -92,13 +94,42 @@ def main():
             raise RuntimeError(f"Reviewed patch changed: {path.name}")
     install_config = proof / "install.bunfig.toml"
     install_config.write_text("[install.lockfile]\nsave = true\n")
-    run(["bun", f"--config={install_config}", "install", "--ignore-scripts", "--backend", "copy"], source)
+    frozen_graph = plan["frozenSourceGraph"]
+    artifact = frozen_graph["artifact"]
+    api = f"repos/tscircuit/tscircuit-autorouter/actions/artifacts/{artifact['id']}"
+    actual = json.loads(subprocess.check_output(["gh", "api", api]))
+    for field in ["id", "name", "size_in_bytes", "digest", "workflow_run"]:
+        if actual[field] != artifact[field]:
+            raise RuntimeError(f"Frozen source graph artifact changed: {field}")
+    archive = subprocess.check_output(["gh", "api", api + "/zip"])
+    if len(archive) != artifact["size_in_bytes"] or "sha256:" + hashlib.sha256(archive).hexdigest() != artifact["digest"]:
+        raise RuntimeError("Frozen source graph archive failed authentication")
+    frozen_directory = proof / "frozen-source-graph"
+    frozen_directory.mkdir()
+    with zipfile.ZipFile(io.BytesIO(archive)) as packet:
+        names = packet.namelist()
+        if len(names) != len(set(names)):
+            raise RuntimeError("Frozen source graph archive has duplicate members")
+        for filename, record in frozen_graph["files"].items():
+            if names.count(record["member"]) != 1:
+                raise RuntimeError(f"Frozen source graph member missing: {filename}")
+            content = packet.read(record["member"])
+            if len(content) != record["bytes"] or hashlib.sha256(content).hexdigest() != record["sha256"]:
+                raise RuntimeError(f"Frozen source graph member changed: {filename}")
+            (frozen_directory / filename).write_bytes(content)
+    shutil.copyfile(frozen_directory / "bun.lock", source / "bun.lock")
+    run(["bun", f"--config={install_config}", "install", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], source)
     lock = source / "bun.lock"
     lock_sha = digest(lock)
+    if lock_sha != frozen_graph["files"]["bun.lock"]["sha256"]:
+        raise RuntimeError("Installation changed the authenticated source lock")
     (proof / "bun.lock").write_bytes(lock.read_bytes())
     if (source / "package.json").read_bytes() != original_manifest:
         raise RuntimeError("Installation changed source manifest")
     graph = inventory(source / "node_modules")
+    with gzip.open(frozen_directory / "dependency-inventory.json.gz", "rt") as stream:
+        if graph != json.load(stream):
+            raise RuntimeError("Resolved source dependency inventory differs from the first authenticated graph")
     with gzip.open(proof / "dependency-inventory.json.gz", "wt") as stream:
         json.dump(graph, stream, sort_keys=True)
     packages = []
@@ -108,6 +139,10 @@ def main():
             if path.is_file():
                 package = json.loads(path.read_text())
                 packages.append({"path": relative, "name": package.get("name"), "version": package.get("version"), "sha256": digest(path)})
+    expected_packages = json.loads((frozen_directory / "resolved-packages.json").read_text())
+    if sorted(packages, key=lambda row: row["path"]) != sorted(expected_packages, key=lambda row: row["path"]):
+        raise RuntimeError("Resolved source package inventory differs from the first authenticated graph")
+    (frozen_directory / "proof.json").write_text(json.dumps({"artifact": actual, "archiveDigestAndSizeVerified": True, "selectedFiles": frozen_graph["files"], "dependencyInventoryIdentical": True, "packageInventoryIdentical": True}, indent=2) + "\n")
     (proof / "resolved-packages.json").write_text(json.dumps(packages, indent=2) + "\n")
     run(["patch", "--batch", "--forward", "-p1", "-i", str(test_patch)], source)
     for relative, checksum in plan["testFiles"].items():
@@ -203,6 +238,7 @@ def main():
         "productionPatchSha256": plan["productionPatchSha256"], "productionFiles": plan["productionFiles"],
         "reviewedProductionPatchSha256": plan["reviewedProductionPatchSha256"],
         "sharedLockSha256": lock_sha, "unchangedDependencyGraph": True,
+        "frozenSourceGraph": json.loads((frozen_directory / "proof.json").read_text()),
         "publishedModuleAudit": json.loads((proof / "published-module-audit.json").read_text()),
         "sourceTestGate": {"baselineExpectedFailure": True, "candidatePassed": True, "existingTestsPassed": True, "fullTypeScriptPassed": True},
         "sourceTestResults": records, "entries": entries, "changedBundledSources": sorted(changes),
