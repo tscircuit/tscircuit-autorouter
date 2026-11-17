@@ -51,6 +51,25 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): Pipeline9AutoroutingDrcEvaluator => {
+  // Manual copper can be represented by external point groups instead of traces.
+  const portIdByPointId = new Map(
+    inputSrj.connections.flatMap((connection) =>
+      connection.pointsToConnect.flatMap((point) =>
+        point.pointId && point.pcb_port_id
+          ? [[point.pointId, point.pcb_port_id] as const]
+          : [],
+      ),
+    ),
+  )
+  const externallyConnectedPortIds = inputSrj.connections.flatMap(
+    (connection) =>
+      (connection.externallyConnectedPointIds ?? []).map((pointIds) =>
+        pointIds.flatMap((pointId) => {
+          const portId = portIdByPointId.get(pointId)
+          return portId ? [portId] : []
+        }),
+      ),
+  )
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
@@ -115,7 +134,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []
-        : checkTraceContinuity(circuitJson)),
+        : checkTraceContinuity(circuitJson, { externallyConnectedPortIds })),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),

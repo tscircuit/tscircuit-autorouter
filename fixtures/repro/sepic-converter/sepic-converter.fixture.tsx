@@ -11,7 +11,7 @@ export default (): ReactElement => (
       </code>
     </p>
     <img
-      alt="Complete TSX board with one Core trace DRC error"
+      alt="Complete TSX board with zero Core trace DRC errors"
       src={
         new URL(
           "../../../tests/repro/__snapshots__/sepic-converter-pipeline9-clearance.snap.svg",
@@ -21,7 +21,7 @@ export default (): ReactElement => (
       style={{ width: "100%", maxWidth: 1000 }}
     />
     <img
-      alt="Bottom-layer VCC and GATE clearance: reported 0.053 mm; required 0.1 mm"
+      alt="VCC on bottom and GATE on top, with no trace clearance errors"
       src={
         new URL(
           "../../../tests/repro/__snapshots__/sepic-converter-pipeline9-clearance-bottom-clearance.snap.svg",
