@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { readFileSync, realpathSync, writeFileSync } from "node:fs"
-import { dirname } from "node:path"
+import { dirname, join } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
 /** Verify the ordinary package bindings before constructing any circuit. */
@@ -25,10 +25,25 @@ export async function verifySourceOverlay(runtimeManifestPath: string): Promise<
     assert.equal(sha(readFileSync(resolved)), entry.entrySha256, entry.name)
     assert.equal(realpathSync(Bun.resolveSync("@tscircuit/capacity-autorouter", dirname(resolved))), realpathSync(overlay.wrapperEntry), entry.name)
   }
-  for (const dependency of ["@tscircuit/solver-utils", "object-hash"]) {
+  for (const dependency of ["object-hash"]) {
     assert.equal(realpathSync(Bun.resolveSync(dependency, dirname(overlay.sourceEntry))),
       realpathSync(Bun.resolveSync(dependency, dirname(overlay.publishedPackage.entry))), dependency)
   }
+  const isolatedRuntime = overlay.isolatedSourceRuntime
+  const sourceRuntimeEntry = realpathSync(Bun.resolveSync("@tscircuit/solver-utils", dirname(overlay.sourceEntry)))
+  const publishedRuntimeEntry = realpathSync(Bun.resolveSync("@tscircuit/solver-utils", dirname(overlay.publishedCopyEntry)))
+  assert.equal(sourceRuntimeEntry, realpathSync(join(isolatedRuntime.private, "dist/index.js")))
+  assert.equal(publishedRuntimeEntry, realpathSync(join(isolatedRuntime.original, "dist/index.js")))
+  assert.notEqual(sourceRuntimeEntry, publishedRuntimeEntry)
+  assert.equal(realpathSync(Bun.resolveSync("graphics-debug", dirname(sourceRuntimeEntry))),
+    realpathSync(Bun.resolveSync("graphics-debug", dirname(publishedRuntimeEntry))))
+  for (const file of isolatedRuntime.files) {
+    assert.equal(sha(readFileSync(join(isolatedRuntime.private, file.path))), file.sha256)
+    assert.equal(sha(readFileSync(join(isolatedRuntime.original, file.path))), file.sha256)
+  }
+  const sourceRuntime = await import(pathToFileURL(sourceRuntimeEntry).href)
+  const publishedRuntime = await import(pathToFileURL(publishedRuntimeEntry).href)
+  assert.notEqual(sourceRuntime.SolverRuntime, publishedRuntime.SolverRuntime)
 
   const original = await import(pathToFileURL(overlay.publishedCopyEntry).href)
   const initialCache = (globalThis as any).TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE
@@ -58,6 +73,7 @@ export async function verifySourceOverlay(runtimeManifestPath: string): Promise<
     publishedEntrySha256: overlay.publishedPackage.entrySha256,
     exportCount: Object.keys(original).length, overriddenAliases: aliases,
     allOtherExportsIdentical: true, coreAndMainBindingsVerified: true,
+    isolatedRuntimeVersion: isolatedRuntime.version, isolatedRuntimeFilesIdentical: isolatedRuntime.files.length,
     sharedEmptyCacheBeforeRouting: true, circuitConstructed: false,
   }
 }

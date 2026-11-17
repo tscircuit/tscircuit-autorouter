@@ -33,7 +33,9 @@ private_folder = root / "npm" / f"autorouter-{variant}"
 private_folder.mkdir()
 private_entry = private_folder / published["entryRelative"]
 original_copy = private_entry.with_name("published-original.js")
-source_path = private_entry.with_name("source-pipeline9.js")
+source_folder = private_entry.parent / "source-pipeline9"
+source_folder.mkdir(parents=True)
+source_path = source_folder / "index.js"
 for item in published["publishedFiles"]:
     relative = Path(item["path"])
     assert not relative.is_absolute() and ".." not in relative.parts
@@ -43,9 +45,25 @@ for item in published["publishedFiles"]:
     target.parent.mkdir(parents=True, exist_ok=True)
     os.link(original, target)
 source_path.write_bytes(source_entry)
+source_runtime_original = root / "autorouter-dependencies/node_modules/@tscircuit/solver-utils"
+source_runtime_private = source_folder / "node_modules/@tscircuit/solver-utils"
+source_runtime_private.mkdir(parents=True)
+runtime_metadata = json.loads((source_runtime_original / "package.json").read_text())
+assert runtime_metadata["name"] == "@tscircuit/solver-utils" and runtime_metadata["version"] == "0.0.23"
+runtime_files = []
+for original in sorted(source_runtime_original.rglob("*")):
+    if original.is_dir():
+        continue
+    assert original.is_file() and not original.is_symlink()
+    relative = original.relative_to(source_runtime_original)
+    target = source_runtime_private / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    os.link(original, target)
+    assert sha(target.read_bytes()) == sha(original.read_bytes())
+    runtime_files.append({"path": str(relative), "sha256": sha(original.read_bytes()), "bytes": original.stat().st_size})
 wrapper = ('export * from "./published-original.js"\n'
     'export { AutoroutingPipelineSolver9_PreloadedTraceGraph,\n'
-    '  AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver } from "./source-pipeline9.js"\n')
+    '  AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver } from "./source-pipeline9/index.js"\n')
 private_entry.write_text(wrapper)
 (private_folder / "node_modules").symlink_to(root / "autorouter-dependencies/node_modules")
 alias = root / "runtime/node_modules/@tscircuit/capacity-autorouter"
@@ -62,10 +80,16 @@ proof = {
     "sourceEntry": str(source_path), "sourceSha256": sha(source_path.read_bytes()),
     "packageMetadataSha256": sha((private_folder / "package.json").read_bytes()),
     "dependencyDirectory": str((private_folder / "node_modules").resolve()),
+    "isolatedSourceRuntime": {
+        "name": runtime_metadata["name"], "version": runtime_metadata["version"],
+        "original": str(source_runtime_original.resolve()), "private": str(source_runtime_private),
+        "files": runtime_files,
+        "reason": "Published and source modules register distinct classes with the same names. Byte-identical modules at distinct paths isolate their module-scoped registries without changing or suppressing registration.",
+    },
     "runtimeAlias": str(alias), "sourceBuildManifestSha256": sha(build_bytes),
     "sourceBuild": build, "selectedSourceBuild": selected,
     "publishedRuntimeManifestSha256": sha(manifest_bytes),
-    "scope": "Only the private package's two P9 export bindings change; all other published exports and package files are preserved.",
+    "scope": "The private package's two P9 export bindings change, and its source bundle uses a byte-identical solver-utils module instance with an isolated registry. All other published exports and package files are preserved.",
 }
 (root / "published-runtime-manifest.json").write_bytes(manifest_bytes)
 (root / "source-overlay.json").write_text(json.dumps(proof, indent=2) + "\n")
