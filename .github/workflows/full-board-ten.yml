@@ -1,8 +1,8 @@
-name: Frozen3208 full-board source handoff comparison
+name: Frozen3208 full-board handoff regression
 
 on:
   push:
-    branches: [bench/full-board-completion-overlay-3208]
+    branches: [bench/full-board-handoff-regression-3208]
 
 permissions:
   contents: read
@@ -14,12 +14,14 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix:
         include:
-          - { board: imx6, experiment: source-baseline, measurement: baseline-1800s, capture: 1800, hard: 1860, cohorts: "spaced" }
-          - { board: imx6, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
-          - { board: imx6, experiment: handoff-only, measurement: handoff-secondary-1800s, capture: 1800, hard: 1860, cohorts: "spaced" }
+          - { board: h616, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
+          - { board: butterstick, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
+          - { board: glider, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
+          - { board: icepi, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
+          - { board: imx6, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
