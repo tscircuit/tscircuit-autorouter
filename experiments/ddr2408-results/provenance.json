@@ -1,0 +1,33 @@
+{
+  "versions": {
+    "tscircuit": "0.0.3230",
+    "core": "0.0.2408",
+    "autorouter": "0.0.1123",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "bun": "1.4.3"
+  },
+  "baselineRouter": "bfc6509a20959b11ebdea7e38d7fb5fe0fef2097",
+  "candidateRouter": "811f04e85ba271222dc7beb50b9751ee2a3a916f",
+  "measuredCandidateRouter": "bcc2094a1d0911594a1aa08c1f0ee7a517ac3723",
+  "core": "f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73",
+  "reproPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3919",
+  "fixPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3920",
+  "baselineRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894",
+  "candidateRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492",
+  "profileRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190793289",
+  "pairedPreparationRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44192780484",
+  "reverseDataset18Run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44193986365",
+  "interleavedDataset18Run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779",
+  "matchedOrangePhaseRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44194545012",
+  "finalSourceRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196947927",
+  "conclusion": "ButterStick preparation is 80.0% faster in three repeated measurements on the same worker, with identical complete output graphs. This is a preparation-time fix; neither full-board mode completes a clean board before or after.",
+  "controlsConclusion": "All six DDR controls preserve all 310 connected nets, trace counts, via counts and wire lengths, with zero physical findings. Both full dataset 18 execution orders and all 16 adjacent sample pairs preserve identical native PCB SVGs and vias. Adjacent pairing measures mean +0.7%, P50 +0.6% and P95 +0.1%; no global dataset 18 speed improvement is claimed. Earlier ordered batches measure mean +4.3\u20134.6% and remain in the report.",
+  "remainingBlockers": "Dense fanout escape failures, port-point pathing iteration exhaustion, the H616 bus surface-approach geometry/matching failure, and joint DRC work exhausting the board budget remain. Faster preparation alone does not resolve them. OrangeCrab emits partial phase copper before the deadline, increasing connected nets from 3 to 7 and physical findings from 0 to 683. Both revisions emit byte-identical 430-trace copper when allowed to finish the same phase. This is earlier publication of existing partial copper, not a board-quality improvement.",
+  "measurementNotes": [
+    "All full-board runs start with original copper removed: 49,583 tracks, 4,706 vias and 685 zones. Authored plane intent is rebuilt fresh.",
+    "The scene-extraction job passed routing/hash checks but its large log export exceeded the deliberate size cap; split read-only exports recovered the unchanged fixture.",
+    "The frozen measurement source has formatting-only differences from final source. The final emitted kernel JavaScript is byte-identical, and final source format/type/build checks pass."
+  ],
+  "decision": "Keep the scoped full-board preparation optimization: three repeats reduce median preparation time by 80.0% with byte-identical complete graphs. Native replay reduces redundant scans by 99.2% while retaining every candidate and parent path. No solved-board improvement or global dataset 18 speed improvement is claimed. Complete raw timing controls remain available for review."
+}

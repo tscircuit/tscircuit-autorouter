@@ -1,0 +1,37 @@
+{
+  "id": "imx6",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 602622.017215,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 64672.627307,
+      "elapsedMs": 535334.848489
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "pipeline9JointDrcRepairSolver",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3230",
+    "core": "0.0.2408",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "bcc2094a1d0911594a1aa08c1f0ee7a517ac3723"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 61,
+    "importedSavedCopper": false
+  }
+}

@@ -1,0 +1,85 @@
+name: Measure repeated ButterStick adjacency scans before and after
+on:
+  push:
+    branches: [codex/ddr2408-paired-preparation]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [time, scene]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: bfc6509a20959b11ebdea7e38d7fb5fe0fef2097
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: bcc2094a1d0911594a1aa08c1f0ee7a517ac3723
+          path: after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: butterstick-2408-reachability-profile
+          run-id: 44190793289
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Prepare the frozen sources
+        run: |
+          for variant in before after; do
+            (cd "$variant" && bun install --ignore-scripts)
+            cp experiments/full-board-priority-analysis/paired-preparation.ts "$variant/paired-preparation.ts"
+          done
+          test -f captured/profile/necessary-cramped-input.json.gz
+      - name: Measure uninstrumented stage three times on each side
+        if: matrix.mode == 'time'
+        run: |
+          for variant in before after; do
+            (cd "$variant" && bun paired-preparation.ts "$PWD" "$GITHUB_WORKSPACE/captured/profile/necessary-cramped-input.json.gz" "$GITHUB_WORKSPACE/results/$variant" time 3)
+          done
+          python3 - <<'PY'
+          import json,statistics
+          from pathlib import Path
+          rows={v:[json.loads(p.read_text()) for p in sorted((Path('results')/v).glob('time-*.json'))] for v in ['before','after']}
+          assert all(len(r)==3 for r in rows.values())
+          assert len({r['outputSha256'] for group in rows.values() for r in group})==1
+          report={'measurements':rows,'medianMs':{v:statistics.median(r['elapsedMs'] for r in group) for v,group in rows.items()}}
+          report['reductionPercent']=100*(1-report['medianMs']['after']/report['medianMs']['before'])
+          Path('results/paired-stage.json').write_text(json.dumps(report,indent=2))
+          print('PREP2408_PAIRED_RESULT',json.dumps(report,separators=(',',':')))
+          PY
+      - name: Extract and replay a real worst-case escape region
+        if: matrix.mode == 'scene'
+        run: |
+          (cd before && bun paired-preparation.ts "$PWD" "$GITHUB_WORKSPACE/captured/profile/necessary-cramped-input.json.gz" "$GITHUB_WORKSPACE/results/extract" extract)
+          for variant in before after; do
+            (cd "$variant" && bun paired-preparation.ts "$PWD" "$GITHUB_WORKSPACE/results/extract/butterstick-worst-target.json.gz" "$GITHUB_WORKSPACE/results/replay-$variant" replay)
+          done
+          python3 - <<'PY'
+          import base64,gzip,json
+          from pathlib import Path
+          root=Path('results')
+          for v in ['before','after']:
+              print('PREP2408_SCENE_REPLAY',v,json.dumps(json.loads((root/f'replay-{v}/replay-report.json').read_text()),separators=(',',':')))
+          p=root/'extract/butterstick-worst-target.json.gz'
+          print('PREP2408_SCENE_BYTES',p.stat().st_size)
+          assert p.stat().st_size<2_000_000,'Scene needs a smaller native cut before log transport'
+          print('PREP2408_SCENE_BEGIN')
+          encoded=base64.b64encode(p.read_bytes()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('PREP2408_SCENE_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prep2408-${{ matrix.mode }}
+          path: results
+          retention-days: 14

@@ -1,0 +1,30 @@
+{
+  "before": {
+    "mode": "replay",
+    "adjacencyReads": 25908,
+    "adjacencyEntries": 19623454,
+    "candidateCount": 37044,
+    "candidateSha256": "f080a39feda2f3b91ed3d4632a89f9a4e6e5ea0863efdb87b4c30754dea8cc09",
+    "expected": {
+      "adjacencyReads": 25908,
+      "adjacencyEntries": 19623454,
+      "candidateCount": 37044,
+      "candidateSha256": "f080a39feda2f3b91ed3d4632a89f9a4e6e5ea0863efdb87b4c30754dea8cc09"
+    }
+  },
+  "after": {
+    "mode": "replay",
+    "adjacencyReads": 2192,
+    "adjacencyEntries": 152798,
+    "candidateCount": 37044,
+    "candidateSha256": "f080a39feda2f3b91ed3d4632a89f9a4e6e5ea0863efdb87b4c30754dea8cc09",
+    "expected": {
+      "adjacencyReads": 25908,
+      "adjacencyEntries": 19623454,
+      "candidateCount": 37044,
+      "candidateSha256": "f080a39feda2f3b91ed3d4632a89f9a4e6e5ea0863efdb87b4c30754dea8cc09"
+    }
+  },
+  "reductionPercent": 99.22135012521241,
+  "completeCandidateSha256Identical": true
+}

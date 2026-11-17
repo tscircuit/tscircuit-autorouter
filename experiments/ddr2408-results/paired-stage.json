@@ -1,0 +1,79 @@
+{
+  "measurements": {
+    "before": [
+      {
+        "mode": "time",
+        "repetition": 1,
+        "elapsedMs": 90256.187158,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      },
+      {
+        "mode": "time",
+        "repetition": 2,
+        "elapsedMs": 88576.769361,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      },
+      {
+        "mode": "time",
+        "repetition": 3,
+        "elapsedMs": 90665.21591299996,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      }
+    ],
+    "after": [
+      {
+        "mode": "time",
+        "repetition": 1,
+        "elapsedMs": 20121.503426,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      },
+      {
+        "mode": "time",
+        "repetition": 2,
+        "elapsedMs": 18046.640006,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      },
+      {
+        "mode": "time",
+        "repetition": 3,
+        "elapsedMs": 18002.925815999995,
+        "outputSha256": "7daaa840140d695e5b63d6040727a4f5949f640010d95c3f1cf49662e76b4494",
+        "segments": 198201,
+        "portPoints": 249261,
+        "observedSteps": 0,
+        "totalAdjacencyReads": 0,
+        "totalAdjacencyEntries": 0
+      }
+    ]
+  },
+  "medianMs": {
+    "before": 90256.187158,
+    "after": 18046.640006
+  },
+  "reductionPercent": 80.00509375118179
+}

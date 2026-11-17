@@ -1,0 +1,566 @@
+{
+  "self": [
+    {
+      "ms": 60151.89,
+      "functionName": "flatIntoArray",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 11412.02,
+      "functionName": "isPointInOrOnPolygon",
+      "scriptId": "70",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/utils/polygonContainment.ts",
+      "lineNumber": 20,
+      "columnNumber": 36
+    },
+    {
+      "ms": 11153.1,
+      "functionName": "processCurrentXSlab",
+      "scriptId": "140",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 217,
+      "columnNumber": 29
+    },
+    {
+      "ms": 10251.25,
+      "functionName": "",
+      "scriptId": "152",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 100,
+      "columnNumber": 8
+    },
+    {
+      "ms": 4561.14,
+      "functionName": "_step",
+      "scriptId": "152",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 66,
+      "columnNumber": 16
+    },
+    {
+      "ms": 4344.91,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 3337.76,
+      "functionName": "",
+      "scriptId": "155",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 182,
+      "columnNumber": 51
+    },
+    {
+      "ms": 3172.07,
+      "functionName": "getCachedHorizontalBucketKey",
+      "scriptId": "140",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 313,
+      "columnNumber": 38
+    },
+    {
+      "ms": 3042.62,
+      "functionName": "some",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 2894.94,
+      "functionName": "gzipSync",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 2746.48,
+      "functionName": "minimumDistanceBetweenSegments",
+      "scriptId": "73",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/utils/minimumDistanceBetweenSegments.ts",
+      "lineNumber": 15,
+      "columnNumber": 46
+    },
+    {
+      "ms": 2354.28,
+      "functionName": "stringify",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 2132.06,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1804.93,
+      "functionName": "hasClearEscapePath",
+      "scriptId": "67",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+      "lineNumber": 381,
+      "columnNumber": 28
+    },
+    {
+      "ms": 1646.31,
+      "functionName": "getConnectionEscapePortPoints",
+      "scriptId": "154",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/AvailableSegmentPointSolver/getConnectionEscapePortPoints.ts",
+      "lineNumber": 45,
+      "columnNumber": 45
+    },
+    {
+      "ms": 1557.52,
+      "functionName": "pointToSegmentDistance",
+      "scriptId": "71",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/math-utils/dist/chunk-LKX2ITST.js",
+      "lineNumber": 53,
+      "columnNumber": 31
+    },
+    {
+      "ms": 1547.2,
+      "functionName": "filter",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1438.05,
+      "functionName": "stringify",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1424.08,
+      "functionName": "map",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1293.18,
+      "functionName": "shift",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1246.99,
+      "functionName": "Set",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1217.97,
+      "functionName": "",
+      "scriptId": "147",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver.ts",
+      "lineNumber": 108,
+      "columnNumber": 33
+    },
+    {
+      "ms": 1099.94,
+      "functionName": "getRayIntersectionDistance",
+      "scriptId": "67",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+      "lineNumber": 463,
+      "columnNumber": 36
+    },
+    {
+      "ms": 974.33,
+      "functionName": "structuredClone",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 961.93,
+      "functionName": "structuredClone",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 956.57,
+      "functionName": "structuredClone",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 877.1,
+      "functionName": "some",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 857.77,
+      "functionName": "",
+      "scriptId": "101",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/rectdiff/lib/utils/resizeSoftOverlaps.ts",
+      "lineNumber": 29,
+      "columnNumber": 39
+    },
+    {
+      "ms": 853.07,
+      "functionName": "",
+      "scriptId": "147",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver.ts",
+      "lineNumber": 108,
+      "columnNumber": 33
+    },
+    {
+      "ms": 834.83,
+      "functionName": "",
+      "scriptId": "101",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/rectdiff/lib/utils/resizeSoftOverlaps.ts",
+      "lineNumber": 29,
+      "columnNumber": 39
+    },
+    {
+      "ms": 782.62,
+      "functionName": "pointToBoxDistance",
+      "scriptId": "74",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/math-utils/dist/chunk-2TIYJVPZ.js",
+      "lineNumber": 8,
+      "columnNumber": 27
+    },
+    {
+      "ms": 782.5,
+      "functionName": "pointToBoxDistance",
+      "scriptId": "74",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/math-utils/dist/chunk-2TIYJVPZ.js",
+      "lineNumber": 8,
+      "columnNumber": 27
+    },
+    {
+      "ms": 773.91,
+      "functionName": "",
+      "scriptId": "157",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints.ts",
+      "lineNumber": 68,
+      "columnNumber": 22
+    },
+    {
+      "ms": 729.17,
+      "functionName": "",
+      "scriptId": "152",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 88,
+      "columnNumber": 8
+    },
+    {
+      "ms": 697.82,
+      "functionName": "_setup",
+      "scriptId": "155",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 73,
+      "columnNumber": 17
+    }
+  ],
+  "inclusive": [
+    {
+      "ms": 180297.36,
+      "functionName": "(root)",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 180015.5,
+      "functionName": "(module)",
+      "scriptId": "46",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/profile-reachability.ts",
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    {
+      "ms": 174850.6,
+      "functionName": "step",
+      "scriptId": "53",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 174826.66,
+      "functionName": "_step",
+      "scriptId": "47",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "lineNumber": 1221,
+      "columnNumber": 7
+    },
+    {
+      "ms": 125356.21,
+      "functionName": "step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 88951.09,
+      "functionName": "_step",
+      "scriptId": "155",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 121,
+      "columnNumber": 16
+    },
+    {
+      "ms": 77972.56,
+      "functionName": "_step",
+      "scriptId": "152",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 66,
+      "columnNumber": 16
+    },
+    {
+      "ms": 71245.4,
+      "functionName": "flatMap",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 70617.01,
+      "functionName": "flatIntoArrayWithCallback",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 60151.89,
+      "functionName": "flatIntoArray",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 41444.76,
+      "functionName": "step",
+      "scriptId": "53",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 25626.78,
+      "functionName": "_step",
+      "scriptId": "140",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 93,
+      "columnNumber": 16
+    },
+    {
+      "ms": 23495.67,
+      "functionName": "_step",
+      "scriptId": "67",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+      "lineNumber": 977,
+      "columnNumber": 7
+    },
+    {
+      "ms": 23353.78,
+      "functionName": "processCurrentXSlab",
+      "scriptId": "140",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 217,
+      "columnNumber": 29
+    },
+    {
+      "ms": 22881.72,
+      "functionName": "findBestEscapeViaCandidate",
+      "scriptId": "67",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+      "lineNumber": 710,
+      "columnNumber": 36
+    },
+    {
+      "ms": 13134,
+      "functionName": "_step",
+      "scriptId": "146",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization.ts",
+      "lineNumber": 35,
+      "columnNumber": 7
+    },
+    {
+      "ms": 12972.88,
+      "functionName": "isPointInOrOnPolygon",
+      "scriptId": "70",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/utils/polygonContainment.ts",
+      "lineNumber": 20,
+      "columnNumber": 36
+    },
+    {
+      "ms": 11198.24,
+      "functionName": "handleTargetNodes",
+      "scriptId": "147",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver.ts",
+      "lineNumber": 60,
+      "columnNumber": 19
+    },
+    {
+      "ms": 10251.25,
+      "functionName": "",
+      "scriptId": "152",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 100,
+      "columnNumber": 8
+    },
+    {
+      "ms": 9114.44,
+      "functionName": "doNodesHaveSharedLayer",
+      "scriptId": "147",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver.ts",
+      "lineNumber": 104,
+      "columnNumber": 24
+    },
+    {
+      "ms": 8993.28,
+      "functionName": "_step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 129,
+      "columnNumber": 7
+    },
+    {
+      "ms": 8605.49,
+      "functionName": "some",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 7988.38,
+      "functionName": "step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 6495.62,
+      "functionName": "hasClearEscapePath",
+      "scriptId": "67",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+      "lineNumber": 381,
+      "columnNumber": 28
+    },
+    {
+      "ms": 5604.4,
+      "functionName": "_step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 129,
+      "columnNumber": 7
+    },
+    {
+      "ms": 5588.99,
+      "functionName": "step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 5239.25,
+      "functionName": "_step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 129,
+      "columnNumber": 7
+    },
+    {
+      "ms": 5125.55,
+      "functionName": "step",
+      "scriptId": "60",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 4344.91,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 4288.86,
+      "functionName": "filter",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 4254.1,
+      "functionName": "",
+      "scriptId": "155",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 180,
+      "columnNumber": 60
+    },
+    {
+      "ms": 3956.18,
+      "functionName": "map",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 3939.3,
+      "functionName": "getCachedHorizontalBucketKey",
+      "scriptId": "140",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 313,
+      "columnNumber": 38
+    },
+    {
+      "ms": 3371.67,
+      "functionName": "map",
+      "scriptId": "18",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 3337.76,
+      "functionName": "",
+      "scriptId": "155",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+      "lineNumber": 182,
+      "columnNumber": 51
+    }
+  ]
+}

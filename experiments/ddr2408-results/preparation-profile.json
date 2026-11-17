@@ -1,0 +1,22 @@
+{
+  "elapsedMs": 178649.871488,
+  "stageTimesMs": {
+    "preprocessSimpleRouteJsonSolver": 2328.035315,
+    "componentDetectionSolver": 14.049293000000034,
+    "escapeViaLocationSolver": 23503.464617999998,
+    "netToPointPairsSolver": 400.0483260000001,
+    "topologyPlanningSolver": 9026.091214,
+    "topologyMergingSolver": 25661.760579999995,
+    "nodeDimensionSubdivisionSolver": 60.0076809999955,
+    "edgeSolver": 13148.161460000003,
+    "availableSegmentPointSolver": 1974.4562619999924,
+    "necessaryCrampedPortPointSolver": 90761.45105699998,
+    "preloadedTraceGraphSolver": 50.47781000001123
+  },
+  "graphSha256": "038b4d4e8c713b0902b89f8d2be2d87fefafdf225543b580012be6f0c7d848f7",
+  "nodes": 73022,
+  "segments": 225366,
+  "portPoints": 278612,
+  "iterations": 185703,
+  "phase": "portPointPathingSolver"
+}

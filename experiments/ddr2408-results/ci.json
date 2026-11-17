@@ -1,0 +1,314 @@
+{
+  "reproTests": {
+    "name": "reproTests",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942",
+    "jobs": [
+      {
+        "name": "test (3)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614489"
+      },
+      {
+        "name": "test (2)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614669"
+      },
+      {
+        "name": "test (1)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614753"
+      },
+      {
+        "name": "test (5)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614828"
+      },
+      {
+        "name": "test (9)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614836"
+      },
+      {
+        "name": "test (7)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614884"
+      },
+      {
+        "name": "test (4)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614891"
+      },
+      {
+        "name": "test (6)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438614912"
+      },
+      {
+        "name": "test (8)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196279942/job/134438615138"
+      }
+    ]
+  },
+  "fixTests": {
+    "name": "fixTests",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682",
+    "jobs": [
+      {
+        "name": "test (3)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440065389"
+      },
+      {
+        "name": "test (9)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440065820"
+      },
+      {
+        "name": "test (8)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440065829"
+      },
+      {
+        "name": "test (7)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440065930"
+      },
+      {
+        "name": "test (5)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440065984"
+      },
+      {
+        "name": "test (4)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440066024"
+      },
+      {
+        "name": "test (1)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440066029"
+      },
+      {
+        "name": "test (2)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440066120"
+      },
+      {
+        "name": "test (6)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196696682/job/134440066233"
+      }
+    ]
+  },
+  "finalSource": {
+    "name": "finalSource",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196947927",
+    "jobs": [
+      {
+        "name": "source (repro, be13e50805116014c4ac16decaa0bc81360b1099)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196947927/job/134440771059"
+      },
+      {
+        "name": "source (fix, 811f04e85ba271222dc7beb50b9751ee2a3a916f)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196947927/job/134440771377"
+      }
+    ]
+  },
+  "baseline": {
+    "name": "baseline",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894",
+    "jobs": [
+      {
+        "name": "dataset18",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418244419"
+      },
+      {
+        "name": "boards (h616)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418244900"
+      },
+      {
+        "name": "boards (glider)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418244960"
+      },
+      {
+        "name": "boards (icepi)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418244990"
+      },
+      {
+        "name": "boards (orangecrab)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418245081"
+      },
+      {
+        "name": "boards (butterstick)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418245149"
+      },
+      {
+        "name": "boards (imx6)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44190481894/job/134418245235"
+      }
+    ]
+  },
+  "candidate": {
+    "name": "candidate",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492",
+    "jobs": [
+      {
+        "name": "boards (butterstick)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423176896"
+      },
+      {
+        "name": "boards (orangecrab)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177073"
+      },
+      {
+        "name": "boards (h616)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177074"
+      },
+      {
+        "name": "dataset18",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177105"
+      },
+      {
+        "name": "boards (imx6)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177202"
+      },
+      {
+        "name": "boards (icepi)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177227"
+      },
+      {
+        "name": "boards (glider)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177294"
+      },
+      {
+        "name": "source-format",
+        "conclusion": "failure",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44191895492/job/134423177468"
+      }
+    ]
+  },
+  "pairedPreparation": {
+    "name": "pairedPreparation",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44192780484",
+    "jobs": [
+      {
+        "name": "paired (scene)",
+        "conclusion": "failure",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44192780484/job/134426246091"
+      },
+      {
+        "name": "paired (time)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44192780484/job/134426246584"
+      }
+    ]
+  },
+  "reverseDataset18": {
+    "name": "reverseDataset18",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44193986365",
+    "jobs": [
+      {
+        "name": "dataset18",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44193986365/job/134430427798"
+      },
+      {
+        "name": "source",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44193986365/job/134430428520"
+      }
+    ]
+  },
+  "adjacentDataset18": {
+    "name": "adjacentDataset18",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779",
+    "jobs": [
+      {
+        "name": "paired (2,5,9,11)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779/job/134443181058"
+      },
+      {
+        "name": "paired (1,4,10,15)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779/job/134443181232"
+      },
+      {
+        "name": "paired (3,6,13,16)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779/job/134443181373"
+      },
+      {
+        "name": "paired (7,8,12,14)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779/job/134443181518"
+      }
+    ]
+  },
+  "matchedOrangePhase": {
+    "name": "matchedOrangePhase",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44194545012",
+    "jobs": [
+      {
+        "name": "phase (after, bcc2094a1d0911594a1aa08c1f0ee7a517ac3723)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44194545012/job/134432376115"
+      },
+      {
+        "name": "controls",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44194545012/job/134432376353"
+      },
+      {
+        "name": "phase (before, bfc6509a20959b11ebdea7e38d7fb5fe0fef2097)",
+        "conclusion": "success",
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44194545012/job/134432376364"
+      }
+    ]
+  },
+  "archivedMeasurementFailures": {
+    "candidate": "All board and dataset18 measurement jobs pass. The frozen source-format job caught formatting, fixed in final source; emitted routing JavaScript is byte-identical.",
+    "pairedPreparation": "Paired timing and native scene solve/hash checks pass. The scene job failed only its deliberate 2MB log-export cap; split read-only exports recovered the unchanged fixture."
+  },
+  "localChecks": {
+    "focusedTests": "Pass: native repro, tie/later-cheaper path regression, existing real missing-port-points fixture, RVboy native SVG and component escape cases.",
+    "typescript": "Passed with latest isolated repair dependencies.",
+    "build": "ESM and declaration builds pass.",
+    "graphEquivalence": "1440 seeded graph comparisons preserve complete candidates and ordered parent chains."
+  }
+}

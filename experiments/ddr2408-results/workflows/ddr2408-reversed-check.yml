@@ -1,0 +1,81 @@
+name: Reverse paired dataset18 order and check final source
+on:
+  push:
+    branches: [codex/ddr2408-reversed-check]
+permissions:
+  contents: read
+jobs:
+  dataset18:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bfc6509a20959b11ebdea7e38d7fb5fe0fef2097
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: bcc2094a1d0911594a1aa08c1f0ee7a517ac3723
+          path: after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the two frozen router sources
+        run: |
+          for variant in before after; do (cd "$variant" && bun install --ignore-scripts); done
+      - name: Measure the entire dataset18 before and after on the same worker
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for variant in after before; do
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s)
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: expand2408-reversed-paired-dataset18
+          path: |
+            before/benchmark-result.json
+            before/benchmark-snapshots.html
+            after/benchmark-result.json
+            after/benchmark-snapshots.html
+      - name: Export both reports and native SVG comparisons
+        if: always()
+        run: |
+          python3 - <<'PYREPORT'
+          import json,re,hashlib,statistics
+          from pathlib import Path
+          reports={}
+          snapshots={}
+          for variant in ['before','after']:
+              root=Path(variant)
+              report=json.loads((root/'benchmark-result.json').read_text())
+              reports[variant]=report
+              print('REVERSE2408_DATASET18_PAIR',variant,json.dumps(report,separators=(',',':')))
+              snapshots[variant]={}
+              for section in re.findall(r'<section class="snapshot">(.*?)</section>',(root/'benchmark-snapshots.html').read_text(),re.S):
+                  sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                  svg=re.search(r'<svg\b.*?</svg>',section,re.S).group(0)
+                  snapshots[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+          rows=[]
+          for before in sorted(reports['before']['tests'],key=lambda row:row['sampleNumber']):
+              sample=before['sampleNumber']
+              after=next(row for row in reports['after']['tests'] if row['sampleNumber']==sample)
+              rows.append({'sample':sample,'beforeMs':before['elapsedTimeMs'],'afterMs':after['elapsedTimeMs'],'beforeSolved':before['didSolve'],'afterSolved':after['didSolve'],'beforeDrcPassed':before['relaxedDrcPassed'],'afterDrcPassed':after['relaxedDrcPassed'],'beforeVias':before.get('viaCount'),'afterVias':after.get('viaCount'),'beforeSvgSha256':snapshots['before'].get(sample),'afterSvgSha256':snapshots['after'].get(sample)})
+          result={'beforeSummary':reports['before']['summary'],'afterSummary':reports['after']['summary'],'beforeMeanMs':statistics.mean(row['beforeMs'] for row in rows),'afterMeanMs':statistics.mean(row['afterMs'] for row in rows),'rows':rows}
+          print('REVERSE2408_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
+          assert len(rows)==16 and all(row['beforeSolved'] and row['afterSolved'] and row['beforeDrcPassed'] and row['afterDrcPassed'] for row in rows)
+          PYREPORT
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cd3192949d4f2bd78370355df1a6d84eec6a4162
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - run: bun run format:check
+      - run: bunx tsc --noEmit
+      - run: bun run build

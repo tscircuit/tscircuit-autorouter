@@ -1,0 +1,9 @@
+{
+  "id": "icepi",
+  "mode": "fanout",
+  "variant": "candidate",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 304626.910829,
+  "peakRssMb": 1751.2109375
+}

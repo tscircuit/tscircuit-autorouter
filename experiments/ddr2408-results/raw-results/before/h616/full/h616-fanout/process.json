@@ -1,0 +1,9 @@
+{
+  "id": "h616",
+  "mode": "fanout",
+  "variant": "latest",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 605652.839041,
+  "peakRssMb": 1637.0703125
+}

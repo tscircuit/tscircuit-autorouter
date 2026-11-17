@@ -1,0 +1,305 @@
+{
+  "timeline": [
+    {
+      "phase": "byte0",
+      "stage": "resolve_layers",
+      "atMs": 96960.948951
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 100620.95005300001
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 100850.702462
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 124601.482346
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 129991.450044
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 130213.30080900001
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 155541.51139600002
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 160916.95703700001
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 161139.52861900002
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 186485.518068
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 191853.761038
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 192076.479952
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_native_carriers",
+      "atMs": 217414.410912
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 222749.17145300002
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 222964.748973
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 248055.48436
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 253385.497352
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 253599.71983400002
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 278456.328314
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 283788.193908
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 284008.794839
+    },
+    {
+      "phase": "byte0",
+      "stage": "retry_layers",
+      "atMs": 308969.095346
+    },
+    {
+      "phase": "byte0",
+      "stage": "lanes_route",
+      "atMs": 314305.962709
+    },
+    {
+      "phase": "byte0",
+      "stage": "finish_native_surface_carriers",
+      "atMs": 314517.094894
+    }
+  ],
+  "busStageMs": {
+    "byte0/resolve_layers": 3659.965221999999,
+    "byte0/lanes_route": 1755.7642510001897,
+    "byte0/finish_native_surface_carriers": 197471.27503499505,
+    "byte0/retry_layers": 32130.9446419999,
+    "byte0/retry_native_carriers": 5334.741901000001
+  },
+  "busLastState": {
+    "phase": "byte0",
+    "stage": "finish_native_surface_carriers",
+    "iterations": 12480,
+    "maxIterations": 800000,
+    "failureCode": null,
+    "child": {
+      "phase": "failed",
+      "iterations": 8,
+      "failureCode": "no_planar_route"
+    }
+  },
+  "pipelineLastState": {
+    "phase": "plane_escape",
+    "stage": "none",
+    "iterations": 2163098,
+    "times": {
+      "preprocessSimpleRouteJsonSolver": 109.23173600000064,
+      "componentDetectionSolver": 23.884266000000935,
+      "escapeViaLocationSolver": 2393.5598649999993,
+      "netToPointPairsSolver": 121.69578899999942,
+      "topologyPlanningSolver": 2195.93282,
+      "topologyMergingSolver": 3250.7092250000023,
+      "nodeDimensionSubdivisionSolver": 15.84651600000143,
+      "edgeSolver": 700.1051120000011,
+      "availableSegmentPointSolver": 225.8096089999999,
+      "necessaryCrampedPortPointSolver": 990.7077099999988,
+      "preloadedTraceGraphSolver": 12.728697999998985,
+      "portPointPathingSolver": 6885.192666000003,
+      "uniformPortDistributionSolver": 96.67790299999615,
+      "highDensityRouteSolver": 4161.850892999995,
+      "highDensityForceImproveSolver": 689.3164120000001,
+      "highDensityRepairSolver": 397.88311700000486,
+      "highDensityStitchSolver": 145.1274459999986,
+      "traceSimplificationSolver": 647.2931880000033,
+      "mutatedPreloadedTraceSimplificationSolver": 17.20264099999622,
+      "traceWidthSolver": 245.58501900000556,
+      "globalDrcForceImproveSolver": 338.6095589999968,
+      "pipeline9JointDrcRepairSolver": 39394.570017000005,
+      "effortCleanupSolver": 217.83698000000732,
+      "lengthMatchingPostProcessingSolver": 42.50430000000051,
+      "powerTraceExpansionSolver": 13504.652524000005
+    },
+    "active": null,
+    "joint": {
+      "name": "Pipeline9JointDrcRepairSolver",
+      "iterations": 22717,
+      "maxIterations": 9414548,
+      "stats": {
+        "initialJointDrcIssueCount": 223,
+        "baselineJointDrcIssueCount": 0,
+        "initialJointDrcIssueCountByType": {
+          "pcb_trace_error": 218,
+          "pcb_pad_trace_clearance_error": 1,
+          "pcb_pad_pad_clearance_error": 3,
+          "pcb_via_clearance_error": 1
+        },
+        "movablePreloadedTraceCount": 0,
+        "movablePreloadedSectionCount": 0,
+        "exactRepairConfiguredMaxIterations": 9,
+        "exactRepairConfiguredViaInPadMaxIterations": 9,
+        "exactRepairConfiguredBroadMaxIterations": 3,
+        "initialBoundedRegionalRepairAccepted": false,
+        "initialBoundedRegionalRepairAttemptedRegionCount": 4,
+        "initialBoundedRegionalRepairAcceptedRegionCount": 0,
+        "initialBoundedRegionalRepairCandidateAttemptCount": 45,
+        "initialBoundedRegionalRepairPathSearchNodeCount": 1751081,
+        "initialBoundedRegionalRepairReferenceValidationCount": 7,
+        "initialBoundedRegionalRepairPublishedDrcIssueCount": 223,
+        "initialBoundedRegionalRepairTimeMs": 19350.928798,
+        "initialDrcIssueCount": 12,
+        "finalDrcIssueCount": 12,
+        "globalDrcForceImproveMaxIterations": 9,
+        "globalDrcForceImproveBroadForceAccepted": false,
+        "globalDrcForceImproveTargetedForceAccepted": false,
+        "globalDrcForceImproveCandidateAttempts": 9,
+        "globalDrcForceImproveViaInPadCandidateAttempts": 0,
+        "globalDrcForceImproveViaInPadCandidatesAccepted": 0,
+        "globalDrcForceImproveStalledIterations": 0,
+        "globalDrcForceImproveBestDrcIssueCountSeen": 11,
+        "globalDrcForceImproveBestDrcIssueScoreSeen": 3.246,
+        "globalDrcForceImproveDrcCountPlateauChecks": 0,
+        "globalDrcForceImproveLargeBoardBroadFallbackMisses": 0,
+        "globalDrcForceImproveViaPadRepairRolledBack": false,
+        "globalDrcForceImproveTraceObstacleRepairRolledBack": false,
+        "globalDrcForceImproveTraceObstacleConnectionsRestored": 0,
+        "globalDrcForceImprovePeerTraceRepairRolledBack": false,
+        "globalDrcForceImproveOverlapRestorationChecks": 0,
+        "globalDrcForceImproveReferenceCandidateRolledBack": false,
+        "drcBranchPortfolioInitialDrcIssueCount": 17,
+        "drcBranchPortfolioBaselineDrcIssueCount": 17,
+        "drcBranchPortfolioBroadInitialDrcIssueCount": 14,
+        "drcBranchPortfolioBroadFinalDrcIssueCount": 14,
+        "drcBranchPortfolioBroadMaxIterations": 3,
+        "drcBranchPortfolioBroadBranchAttempted": true,
+        "drcBranchPortfolioBroadBranchAccepted": false,
+        "drcBranchPortfolioSafeTraceLayerPhaseAttempted": true,
+        "drcBranchPortfolioSafeTraceLayerPhaseAccepted": true,
+        "drcBranchPortfolioMixedSafeTraceLayerPhaseAttempted": true,
+        "drcBranchPortfolioMixedSafeTraceLayerPhaseAccepted": true,
+        "drcBranchPortfolioViaInPadPhaseAttempted": true,
+        "drcBranchPortfolioViaInPadMaxIterations": 9,
+        "drcBranchPortfolioFinalNonViaPadDrcIssueCount": 11,
+        "drcBranchPortfolioReferenceCandidateRolledBack": false,
+        "drcBranchPortfolioTraceObstacleRepairRolledBack": false,
+        "drcBranchPortfolioTraceObstacleConnectionsRestored": 0,
+        "drcBranchPortfolioPeerTraceRepairRolledBack": false,
+        "drcBranchPortfolioOverlapRestorationChecks": 0,
+        "drcBranchPortfolioStoppedForTraceContacts": false,
+        "postExactIndexedDrcIssueCount": 12,
+        "postExactReferenceValidationAttempted": true,
+        "postExactReferenceDrcIssueCount": 221,
+        "postExactReferenceAccepted": false,
+        "clearancePrecisionCandidateCount": 0,
+        "clearancePrecisionCandidateValidationCount": 0,
+        "clearancePrecisionReferenceValidationCount": 0,
+        "clearancePrecisionRepaired": false,
+        "regionalB01RepairTraceIdCount": 0,
+        "terminalEscapeCandidateCount": 32,
+        "terminalEscapeAcceptedCount": 0,
+        "boundedRegionalRepairMaxRegions": 24,
+        "boundedRegionalRepairMaxCandidateAttempts": 4096,
+        "boundedRegionalRepairMaxPathSearchNodes": 40000000,
+        "boundedRegionalRepairAttemptedRegionCount": 6,
+        "boundedRegionalRepairAcceptedRegionCount": 1,
+        "boundedRegionalRepairCandidateAttemptCount": 60,
+        "boundedRegionalRepairPathSearchNodeCount": 1273438,
+        "boundedRegionalRepairReferenceValidationCount": 12,
+        "boundedRegionalRepairRepaired": false,
+        "boundedRegionalRepairPublishedDrcIssueCount": 221,
+        "boundedRegionalRepairTimeMs": 15952.397582999998,
+        "regionalB01RepairCandidateCount": 0,
+        "regionalB01RepairAcceptedCount": 0,
+        "regionalB01RepairFallbackCandidateCount": 0,
+        "regionalB01RepairCandidateSearchCount": 0,
+        "regionalB01RepairCandidateSearchBudget": 31,
+        "regionalB01RepairCandidateSearchBudgetExhausted": false,
+        "regionalB01RepairSafeTraceLayerSkippedForBudget": false,
+        "regionalB01RepairRemainingDrcIssueCount": 12,
+        "regionalB01RepairPreloadEligibleDrcIssueCount": 0,
+        "regionalB01RepairAttempted": false,
+        "referenceDrcValidationCount": 9,
+        "referenceDrcFalseNegativeCount": 0,
+        "indexedDrcEvaluationCount": 78,
+        "indexedDrcCacheHitCount": 86,
+        "indexedDrcEvaluationTimeMs": 1275.7278650000226,
+        "indexedDrcCandidateCacheSize": 64,
+        "indexedDrcCandidateCacheCapacity": 64
+      },
+      "error": null,
+      "failed": false,
+      "solved": true
+    },
+    "jointChild": null,
+    "jointGrandchild": null,
+    "prepared": null
+  },
+  "fanoutLastState": null,
+  "phaseInputs": [
+    {
+      "name": "plane_escape",
+      "connections": 2,
+      "terminals": 224,
+      "obstacles": 1094,
+      "aliases": 394356
+    },
+    {
+      "name": "byte0",
+      "connections": 8,
+      "terminals": 16,
+      "obstacles": 1094,
+      "aliases": 394356
+    }
+  ]
+}

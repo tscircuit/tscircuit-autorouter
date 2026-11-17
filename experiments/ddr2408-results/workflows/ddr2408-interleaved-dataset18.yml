@@ -1,0 +1,69 @@
+name: Interleave adjacent dataset18 baseline and candidate samples
+on:
+  push:
+    branches: [codex/ddr2408-interleaved-dataset18]
+permissions:
+  contents: read
+jobs:
+  paired:
+    strategy:
+      fail-fast: false
+      matrix:
+        samples: ["1,4,10,15", "2,5,9,11", "3,6,13,16", "7,8,12,14"]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bfc6509a20959b11ebdea7e38d7fb5fe0fef2097
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: bcc2094a1d0911594a1aa08c1f0ee7a517ac3723
+          path: after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install identical frozen dependencies
+        run: |
+          for variant in before after; do (cd "$variant" && bun install --ignore-scripts); done
+      - name: Run adjacent sample pairs with alternating order
+        env:
+          SAMPLES: ${{ matrix.samples }}
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          mkdir results
+          pair_index=0
+          for sample in ${SAMPLES//,/ }; do
+            variants="before after"
+            if (( pair_index % 2 == 1 )); then variants="after before"; fi
+            for variant in $variants; do
+              (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --sample "$sample" --concurrency 1 --sample-timeout 240s)
+              cp "$variant/benchmark-result.json" "results/$sample-$variant.json"
+              cp "$variant/benchmark-snapshots.html" "results/$sample-$variant.html"
+            done
+            pair_index=$((pair_index+1))
+          done
+      - name: Export measured pairs and native output equality
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,re
+          from pathlib import Path
+          root=Path('results')
+          samples=sorted({int(p.name.split('-')[0]) for p in root.glob('*.json')})
+          rows=[]
+          for sample in samples:
+              pair={v:json.loads((root/f'{sample}-{v}.json').read_text())['tests'][0] for v in ['before','after']}
+              hashes={v:hashlib.sha256(re.search(r'<svg\b.*?</svg>',(root/f'{sample}-{v}.html').read_text(),re.S).group(0).encode()).hexdigest() for v in ['before','after']}
+              row={'sample':sample,'beforeMs':pair['before']['elapsedTimeMs'],'afterMs':pair['after']['elapsedTimeMs'],'beforeSolved':pair['before']['didSolve'],'afterSolved':pair['after']['didSolve'],'beforeDrcPassed':pair['before']['relaxedDrcPassed'],'afterDrcPassed':pair['after']['relaxedDrcPassed'],'beforeVias':pair['before']['viaCount'],'afterVias':pair['after']['viaCount'],'beforeSvgSha256':hashes['before'],'afterSvgSha256':hashes['after']}
+              rows.append(row)
+          (root/'paired-summary.json').write_text(json.dumps(rows,indent=2))
+          print('INTERLEAVED2408_RESULTS',json.dumps(rows,separators=(',',':')))
+          assert len(rows)==4 and all(r['beforeSolved'] and r['afterSolved'] and r['beforeDrcPassed'] and r['afterDrcPassed'] and r['beforeVias']==r['afterVias'] and r['beforeSvgSha256']==r['afterSvgSha256'] for r in rows)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interleaved2408-${{ strategy.job-index }}
+          path: results
+          retention-days: 14

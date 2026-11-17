@@ -1,0 +1,110 @@
+[
+  {
+    "board": "orangecrab",
+    "side": "before",
+    "requestedNets": 50,
+    "connectedNets": 50,
+    "pcbTraces": 52,
+    "vias": 109,
+    "wireLengthMm": 875.7576761568865
+  },
+  {
+    "board": "orangecrab",
+    "side": "after",
+    "requestedNets": 50,
+    "connectedNets": 50,
+    "pcbTraces": 52,
+    "vias": 109,
+    "wireLengthMm": 875.7576761568865
+  },
+  {
+    "board": "h616",
+    "side": "before",
+    "requestedNets": 53,
+    "connectedNets": 53,
+    "pcbTraces": 57,
+    "vias": 95,
+    "wireLengthMm": 668.1744201979592
+  },
+  {
+    "board": "h616",
+    "side": "after",
+    "requestedNets": 53,
+    "connectedNets": 53,
+    "pcbTraces": 57,
+    "vias": 95,
+    "wireLengthMm": 668.1744201979592
+  },
+  {
+    "board": "butterstick",
+    "side": "before",
+    "requestedNets": 55,
+    "connectedNets": 55,
+    "pcbTraces": 104,
+    "vias": 180,
+    "wireLengthMm": 1829.4640183481915
+  },
+  {
+    "board": "butterstick",
+    "side": "after",
+    "requestedNets": 55,
+    "connectedNets": 55,
+    "pcbTraces": 104,
+    "vias": 180,
+    "wireLengthMm": 1829.4640183481915
+  },
+  {
+    "board": "glider",
+    "side": "before",
+    "requestedNets": 49,
+    "connectedNets": 49,
+    "pcbTraces": 53,
+    "vias": 95,
+    "wireLengthMm": 1169.6425182695511
+  },
+  {
+    "board": "glider",
+    "side": "after",
+    "requestedNets": 49,
+    "connectedNets": 49,
+    "pcbTraces": 53,
+    "vias": 95,
+    "wireLengthMm": 1169.6425182695511
+  },
+  {
+    "board": "imx6",
+    "side": "before",
+    "requestedNets": 53,
+    "connectedNets": 53,
+    "pcbTraces": 66,
+    "vias": 135,
+    "wireLengthMm": 1484.1337927037878
+  },
+  {
+    "board": "imx6",
+    "side": "after",
+    "requestedNets": 53,
+    "connectedNets": 53,
+    "pcbTraces": 66,
+    "vias": 135,
+    "wireLengthMm": 1484.1337927037878
+  },
+  {
+    "board": "icepi",
+    "side": "before",
+    "requestedNets": 50,
+    "connectedNets": 50,
+    "pcbTraces": 52,
+    "vias": 118,
+    "wireLengthMm": 909.1659468792304
+  },
+  {
+    "board": "icepi",
+    "side": "after",
+    "requestedNets": 50,
+    "connectedNets": 50,
+    "pcbTraces": 52,
+    "vias": 118,
+    "wireLengthMm": 909.1659468792304
+  }
+]

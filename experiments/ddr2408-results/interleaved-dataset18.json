@@ -1,0 +1,232 @@
+{
+  "design": "Adjacent per-sample pairs, alternating before/after order within each four-sample worker; one isolated sample process at a time; four Blacksmith workers cover the complete16samples.",
+  "metrics": {
+    "before": {
+      "meanMs": 36550.290970375,
+      "p50Ms": 27240.6296955,
+      "p95Ms": 95528.1323905
+    },
+    "after": {
+      "meanMs": 36811.1570368125,
+      "p50Ms": 27392.426485000004,
+      "p95Ms": 95659.55727
+    }
+  },
+  "changePercent": {
+    "meanMs": 0.7137181661534431,
+    "p50Ms": 0.5572440549165503,
+    "p95Ms": 0.1375771473923093
+  },
+  "rows": [
+    {
+      "sample": 1,
+      "beforeMs": 10022.682726000001,
+      "afterMs": 10075.948423,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 157,
+      "afterVias": 157,
+      "beforeSvgSha256": "c738fb9e21d8bac50baccd83e761cb68d526231617d0a5e1e24f0d0514a7fe70",
+      "afterSvgSha256": "c738fb9e21d8bac50baccd83e761cb68d526231617d0a5e1e24f0d0514a7fe70"
+    },
+    {
+      "sample": 2,
+      "beforeMs": 77954.595415,
+      "afterMs": 77873.553994,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 507,
+      "afterVias": 507,
+      "beforeSvgSha256": "6f63297fe7d57d915d0412a96f26b856b863760bcd04f1b642225f93c855acdf",
+      "afterSvgSha256": "6f63297fe7d57d915d0412a96f26b856b863760bcd04f1b642225f93c855acdf"
+    },
+    {
+      "sample": 3,
+      "beforeMs": 9386.188427,
+      "afterMs": 9377.870333,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 82,
+      "afterVias": 82,
+      "beforeSvgSha256": "608d86a43f77cd387939656e0de2a9f1b3cf67815610e1dec8b26c2caa8ead39",
+      "afterSvgSha256": "608d86a43f77cd387939656e0de2a9f1b3cf67815610e1dec8b26c2caa8ead39"
+    },
+    {
+      "sample": 4,
+      "beforeMs": 29735.673084000002,
+      "afterMs": 30823.777991000003,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 137,
+      "afterVias": 137,
+      "beforeSvgSha256": "4d8cd4bc3e2146a899b0eaed29cca290965bfd54e64b56c972948d22abb7b751",
+      "afterSvgSha256": "4d8cd4bc3e2146a899b0eaed29cca290965bfd54e64b56c972948d22abb7b751"
+    },
+    {
+      "sample": 5,
+      "beforeMs": 7481.717329,
+      "afterMs": 7391.534549,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 142,
+      "afterVias": 142,
+      "beforeSvgSha256": "0944800c9f124c18658b088046cf14f78c662f6e182495ceac967aa0e8560622",
+      "afterSvgSha256": "0944800c9f124c18658b088046cf14f78c662f6e182495ceac967aa0e8560622"
+    },
+    {
+      "sample": 6,
+      "beforeMs": 57115.160192999996,
+      "afterMs": 57606.547128,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 265,
+      "afterVias": 265,
+      "beforeSvgSha256": "9dc619afe73b14a04435ed47db076cdafeb3b0704dd705bc014216133ced926d",
+      "afterSvgSha256": "9dc619afe73b14a04435ed47db076cdafeb3b0704dd705bc014216133ced926d"
+    },
+    {
+      "sample": 7,
+      "beforeMs": 12877.199588,
+      "afterMs": 12903.579553,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 200,
+      "afterVias": 200,
+      "beforeSvgSha256": "aec80f44d1166904a1d7d549e0f12da5efe35a8000d02242a07362e3cf059f11",
+      "afterSvgSha256": "aec80f44d1166904a1d7d549e0f12da5efe35a8000d02242a07362e3cf059f11"
+    },
+    {
+      "sample": 8,
+      "beforeMs": 36986.205117,
+      "afterMs": 36334.612946,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 281,
+      "afterVias": 281,
+      "beforeSvgSha256": "7d5659070adc7c4ae2930d048e677e8137b96526772eae8d6db5d7b4673c28a4",
+      "afterSvgSha256": "7d5659070adc7c4ae2930d048e677e8137b96526772eae8d6db5d7b4673c28a4"
+    },
+    {
+      "sample": 9,
+      "beforeMs": 14272.223021,
+      "afterMs": 13683.642552,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 114,
+      "afterVias": 114,
+      "beforeSvgSha256": "d34c35f4de7880ae276636b42ef12c600a0cd6dcfe816099fbbbc04577b0da2a",
+      "afterSvgSha256": "d34c35f4de7880ae276636b42ef12c600a0cd6dcfe816099fbbbc04577b0da2a"
+    },
+    {
+      "sample": 10,
+      "beforeMs": 13398.872559,
+      "afterMs": 13479.476321999999,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 158,
+      "afterVias": 158,
+      "beforeSvgSha256": "bb6e6b2a4b78db007a109dbb7b154e01598fbdd31bbbe5f0dfcfedb8fc6e99b1",
+      "afterSvgSha256": "bb6e6b2a4b78db007a109dbb7b154e01598fbdd31bbbe5f0dfcfedb8fc6e99b1"
+    },
+    {
+      "sample": 11,
+      "beforeMs": 13349.365649,
+      "afterMs": 12862.384984,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 187,
+      "afterVias": 187,
+      "beforeSvgSha256": "330735fbcfdf0e226b265e65293043bb297bb5a9f85497c4c915afbac04cec47",
+      "afterSvgSha256": "330735fbcfdf0e226b265e65293043bb297bb5a9f85497c4c915afbac04cec47"
+    },
+    {
+      "sample": 12,
+      "beforeMs": 48819.445023,
+      "afterMs": 48764.077531,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 298,
+      "afterVias": 298,
+      "beforeSvgSha256": "c7879be3dcb0dbbbe08c4317df5becb1353b092195bf3453f6e543295b749dbe",
+      "afterSvgSha256": "c7879be3dcb0dbbbe08c4317df5becb1353b092195bf3453f6e543295b749dbe"
+    },
+    {
+      "sample": 13,
+      "beforeMs": 34260.368158000005,
+      "afterMs": 34292.760596,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 194,
+      "afterVias": 194,
+      "beforeSvgSha256": "1f70174d55b15c08cec499bf24b1c4d4969c8dbfbb560d2f7feb1180bc54aa2e",
+      "afterSvgSha256": "1f70174d55b15c08cec499bf24b1c4d4969c8dbfbb560d2f7feb1180bc54aa2e"
+    },
+    {
+      "sample": 14,
+      "beforeMs": 93856.578316,
+      "afterMs": 91545.279186,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 252,
+      "afterVias": 252,
+      "beforeSvgSha256": "3017b545a132821290fb9ff125189f50114bb2cd5c3ac03582809dab3de968fd",
+      "afterSvgSha256": "3017b545a132821290fb9ff125189f50114bb2cd5c3ac03582809dab3de968fd"
+    },
+    {
+      "sample": 15,
+      "beforeMs": 100542.794614,
+      "afterMs": 108002.391522,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 317,
+      "afterVias": 317,
+      "beforeSvgSha256": "d93ef816bd926af9dab89694d22e7451da9fd72a37533df82e1ea3991ca57012",
+      "afterSvgSha256": "d93ef816bd926af9dab89694d22e7451da9fd72a37533df82e1ea3991ca57012"
+    },
+    {
+      "sample": 16,
+      "beforeMs": 24745.586306999998,
+      "afterMs": 23961.074979,
+      "beforeSolved": true,
+      "afterSolved": true,
+      "beforeDrcPassed": true,
+      "afterDrcPassed": true,
+      "beforeVias": 105,
+      "afterVias": 105,
+      "beforeSvgSha256": "bea0a65f3ecaff6eaed2c01f1a2c2595be61944981d8b8a6b8376bd24b69178b",
+      "afterSvgSha256": "bea0a65f3ecaff6eaed2c01f1a2c2595be61944981d8b8a6b8376bd24b69178b"
+    }
+  ],
+  "allCopperIdentical": true,
+  "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44197647779"
+}

@@ -1,0 +1,14 @@
+{
+  "baselineRouter": "bfc6509a20959b11ebdea7e38d7fb5fe0fef2097",
+  "publishedRouterGitHead": "ef34ee498e959c189a61ac58d4b04e28091e23e4",
+  "frozenCandidateRouter": "bcc2094a1d0911594a1aa08c1f0ee7a517ac3723",
+  "finalCandidateRouter": "811f04e85ba271222dc7beb50b9751ee2a3a916f",
+  "reproRouter": "be13e50805116014c4ac16decaa0bc81360b1099",
+  "core": "f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73",
+  "productionChangesSinceMeasurement": [
+    "lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts"
+  ],
+  "emittedKernelJavaScriptByteIdentical": true,
+  "otherProductionFilesByteIdentical": true,
+  "validationRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44196947927"
+}

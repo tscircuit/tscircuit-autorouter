@@ -1,0 +1,9 @@
+{
+  "id": "imx6",
+  "mode": "phased",
+  "variant": "candidate",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 605850.901119,
+  "peakRssMb": 6247.16015625
+}

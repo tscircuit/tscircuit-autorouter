@@ -1,0 +1,37 @@
+{
+  "id": "butterstick",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 371854.46572599997,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "failed",
+      "connections": 12,
+      "startedMs": 28125.403468,
+      "elapsedMs": 342335.43263099995
+    }
+  ],
+  "errors": [
+    "PreparedPortPointRoutingSolver ran out of iterations",
+    "Error: PreparedPortPointRoutingSolver ran out of iterations",
+    "PreparedPortPointRoutingSolver ran out of iterations"
+  ],
+  "stage": "portPointPathingSolver",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3230",
+    "core": "0.0.2408",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "bfc6509a20959b11ebdea7e38d7fb5fe0fef2097"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 53,
+    "importedSavedCopper": false
+  }
+}
