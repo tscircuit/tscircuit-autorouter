@@ -63,7 +63,10 @@ const prioritizeCircuitJsonDrcErrors = <T extends Record<string, unknown>>(
   errors: T[],
 ): T[] => {
   const circuitJsonErrors = errors.filter(
-    (error) => error.drc_source !== "fixed_copper",
+    (error) =>
+      error.drc_source !== "fixed_copper" ||
+      (typeof error.actual_clearance === "number" &&
+        error.actual_clearance <= 0),
   )
   return circuitJsonErrors.length > 0 ? circuitJsonErrors : errors
 }
