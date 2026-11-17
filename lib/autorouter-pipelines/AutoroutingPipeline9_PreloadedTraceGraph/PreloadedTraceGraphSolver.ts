@@ -98,6 +98,7 @@ const getPreloadedTracePrimitives = (
           traceId: trace.pcb_trace_id,
           fixedNetId,
           isFixed: trace.isFixed,
+          copperRadius: srj.minTraceWidth / 2,
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition + 1,
@@ -333,7 +334,17 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
           const portPoint = getClosestPortPoint(segment, primitive, z)
-          if (portPoint) preloadPort(portPoint, primitive, z)
+          if (
+            portPoint &&
+            (!primitive.isFixed ||
+              pointToSegmentDistance(
+                portPoint,
+                primitive.start,
+                primitive.end,
+              ) < searchMargin)
+          ) {
+            preloadPort(portPoint, primitive, z)
+          }
           if (!primitive.isFixed) continue
           for (const nearbyPort of segment.portPoints) {
             if (
@@ -345,7 +356,36 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
                 primitive.end,
               ) < searchMargin
             ) {
-              preloadPort(nearbyPort, primitive, z)
+              const assignments =
+                nearbyPort._preloadedTracePortAssignments ?? []
+              const foreignFixed = assignments.some(
+                (assignment) =>
+                  assignment.z === z &&
+                  assignment.isFixed &&
+                  assignment.fixedNetId !== primitive.fixedNetId,
+              )
+              if (foreignFixed) {
+                nearbyPort.availableZ = nearbyPort.availableZ.filter(
+                  (layer) => layer !== z,
+                )
+                nearbyPort._preloadedTracePortAssignments =
+                  assignments.filter((assignment) => assignment.z !== z)
+                nearbyPort._preloadedFixedNetIds = [
+                  ...new Set(
+                    nearbyPort._preloadedTracePortAssignments.map(
+                      (assignment) => assignment.fixedNetId,
+                    ),
+                  ),
+                ].sort()
+              } else if (
+                !assignments.some(
+                  (assignment) =>
+                    assignment.z === z &&
+                    assignment.fixedNetId !== primitive.fixedNetId,
+                )
+              ) {
+                preloadPort(nearbyPort, primitive, z)
+              }
             }
           }
         }
