@@ -93,13 +93,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       )
     if (isPlannedTransition) return VIA_PENALTY
 
-    // Avoid bypassing a routed via with another hop at coincident endpoints.
+    // Avoid bypassing a nearby routed via with another hop at coincident endpoints.
     // The existing via path must remain available to reach the terminal.
     const hasRoutedTransition = this.remainingHdRoutes.some((route) =>
       route.route.some((point, index) => {
         const next = route.route[index + 1]
         return (
           next !== undefined &&
+          distance(start, point) <= MAX_STITCH_GAP_DISTANCE_3 &&
           distance(point, next) < GEOMETRIC_TOLERANCE &&
           ((point.z === start.z && next.z === end.z) ||
             (point.z === end.z && next.z === start.z))
