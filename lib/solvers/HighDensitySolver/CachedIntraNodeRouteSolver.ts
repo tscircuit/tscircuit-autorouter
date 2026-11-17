@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 7 keeps direct same-layer routes inside the node's boundary inset.
+// Version 7 insets diagonal shortcuts between node boundary ports.
 const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
 
 export class CachedIntraNodeRouteSolver
