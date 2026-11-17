@@ -39,8 +39,12 @@ test("Pipeline9 only validates redistributed ports when preloaded copper exists"
       .isPortPointClear
     if (traces?.length) {
       expect(validate).toBeFunction()
-      expect(validate!({ x: 1, y: 1, z: 0, connectionName: "other" })).toBeFalse()
-      expect(validate!({ x: 1, y: 1, z: 1, connectionName: "other" })).toBeTrue()
+      expect(
+        validate!({ x: 1, y: 1, z: 0, connectionName: "other" }),
+      ).toBeFalse()
+      expect(
+        validate!({ x: 1, y: 1, z: 1, connectionName: "other" }),
+      ).toBeTrue()
     } else {
       expect(validate).toBeUndefined()
     }
