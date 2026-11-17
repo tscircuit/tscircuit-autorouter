@@ -1,0 +1,1630 @@
+{
+  "schemaVersion": 1,
+  "primary": {
+    "artifact": {
+      "id": 14361085743,
+      "name": "butterstick-core-accepted-phase-1",
+      "size_in_bytes": 22678365,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14361085743",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14361085743/zip",
+      "expired": false,
+      "created_at": "2026-11-17T19:03:39Z",
+      "expires_at": "2026-11-24T19:03:36Z",
+      "updated_at": "2026-11-17T19:03:39Z",
+      "digest": "sha256:95fa90bfc4b34ad8e91be3161cbb693438ed15c860419b98d8dd6b195e9027e2",
+      "workflow_run": {
+        "id": 44148002161,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/core-accepted-phase-output-3216",
+        "head_sha": "5049c6ef9ed83a994e502a6d6d81eb5ec410e98e"
+      }
+    },
+    "rootApproved": true,
+    "reviewedProofFiles": {
+      "core-source-pair/provenance.json": "4bc4bd624fcb14fa63d70d8287ca103d36129cf0b3bb65a9305e80ad19e79f5c",
+      "core-source-pair/base-validation.json": "2fddcb5f046bbabf3b9d854fffc877c3033a554feb3cb0e50fd14bd310fbf0ce",
+      "core-source-pair/candidate-validation.json": "78a3dc6e8be5d2e333a23cb5d6eb62d57b9b968ea22b148c2284e165a666453f",
+      "core-source-pair/published-module-audit.json": "a55a8127f5729b5a5c2ff4584a4adba0e2d76987e5345a867778c98dd0c5f893",
+      "published-runtime-manifest.json": "42247463bc27e6b8288a58d44e016e80c653caced30e0188ce5dfd46530b8692"
+    },
+    "candidateEntrySha256": "3879237e2e165ad0ed20c5107d7e3d981e2db5f726c665828a34dd8d9b2ad71d",
+    "candidateJsGraph": [
+      {
+        "path": "check-circuit-json-assembly-explosion-collisions-DNJT5PZV.js",
+        "sha256": "77be08f4689fbb282fccd01495eea4c6c94ec5ee0f3ba619dca8c550ece12164"
+      },
+      {
+        "path": "chunk-EPXNHTA4.js",
+        "sha256": "ca5b70ef7747b040f9ab618e3b8a864977135a936809ff97d23815f8383520d7"
+      },
+      {
+        "path": "chunk-IOW67EL6.js",
+        "sha256": "b71357621a2240d359c2950b4bc97799fa3a3273a8636733bd78d095ae39cbc2"
+      },
+      {
+        "path": "chunk-NUJKB7NQ.js",
+        "sha256": "3af097401bc75443293c8a5100e0e9c0c99beafeb65a588be9445391adccd8b7"
+      },
+      {
+        "path": "index.js",
+        "sha256": "3879237e2e165ad0ed20c5107d7e3d981e2db5f726c665828a34dd8d9b2ad71d"
+      },
+      {
+        "path": "resolve-drawing-dimensions-7FKMWYTW.js",
+        "sha256": "d2f195c0d4c5bbc41c05ceba15202e867a0ff469b57d31d8ae622e009af38a9f"
+      }
+    ]
+  },
+  "baselineRun": 44096144980,
+  "baselineHead": "8ea7c957afe84651fbe3682590d1632247e7d702",
+  "sourceCommit": "cfd206671da55be666f3302620b94235a2964ad7",
+  "productionFiles": {
+    "lib/IsolatedCircuit.ts": {
+      "beforeSha256": "4629596aecd4c698ce8aff859e566f13198d4d955641626cc6c8bb0fb30f5b9b",
+      "afterSha256": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34"
+    },
+    "lib/components/primitive-components/Group/Group.ts": {
+      "beforeSha256": "7d0ebbb22d795700256d4164d3c4cbd5795b85e23ef2151921d65d309952de30",
+      "afterSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
+    }
+  },
+  "reviewedProductionPatchSha256": "c7eeb054488d0261186d14e17fbab2fd0983ca3f22a9fdd6204105cac4528b86",
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+    "run-one.ts": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "release.json": "999f1dbd33d71920be7fa816131120c3bea2d83f91b138c0da250b9739a067d1",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "runtime/package.json": "40eb583eabf9aaaeb72360497015d13723cb884ceab5326f2210f547ce090b8e",
+    "runtime/bun.lock": "e4f779525bc8a0c2293673a8828c342c3692dda8db07107cfe28558ad84cd7f8",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "butterGainedNets": [
+    "/FPGA-DDR3L/DQ0",
+    "/FPGA-DDR3L/DQ1",
+    "/FPGA-DDR3L/DQ2",
+    "/FPGA-DDR3L/DQ3",
+    "/FPGA-DDR3L/DQ4",
+    "/FPGA-DDR3L/DQ5",
+    "/FPGA-DDR3L/DQ6",
+    "/FPGA-DDR3L/DQ7"
+  ],
+  "cases": [
+    {
+      "board": "butterstick",
+      "cohort": "original",
+      "artifact": {
+        "id": 14333983394,
+        "name": "full-board-butterstick-published-original-1",
+        "size_in_bytes": 8267024,
+        "digest": "sha256:64594b52441badb5d9e23b944d9d43c86d94841715fdb81f3324ff44f3f6a5ee",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": true,
+        "executionMode": "full",
+        "expectedComponents": 350,
+        "expectedPads": 1623,
+        "expectedNativeNets": 349,
+        "expectedNets": 349,
+        "expectedRoutableNets": 317,
+        "expectedGroups": [
+          "board",
+          "ddr_remaining",
+          "byte0",
+          "byte1"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": true,
+          "authoredZones": 53,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": true,
+          "targetPhase": "plane_escape",
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/butterstick/board.tsx",
+          "sha256": "b9a3357323a0ac2fa987aae7640ed955943579de4a2948ea3408f4e6ffa89a41"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-full-board.tsx",
+          "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-part.tsx",
+          "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/assess.ts",
+          "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/connectivity.ts",
+          "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3536,
+          "sha256": "48568e0ea94a2807d8e6f7f98777d9a8b8efb41030948af0b42726a46f401bcb",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 20791,
+          "sha256": "03ddcc811f69144877a187399d06051f9dfc678e6bfcbb1bdb1ef6319733a5fe",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 8414,
+          "sha256": "7ba688f589d401a78a1f8f039b2b1a6d449ae7ef589309085838c5733005081b",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 346,
+          "sha256": "ac5a7166919d4533eb3daa3dc92af1a64c8327e801ae2f224a29f4bca522d0d1",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 428821,
+          "sha256": "91a79ab9c7099272793cd1f057751d47ceeb5e16b3d8d1805966ede654b67f0c",
+          "rawSha256": "a2fe496d529ae1effef30a4755bf1e5f0fdb541362d85e91cbe175afa37c3dc2"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 264,
+          "sha256": "a7ba1e9c1850f44b0d9a1eb0be732b13e02f6ab8a668a9760cba695f37f40038",
+          "rawSha256": "a53310f7a6d90c0d0e49a0dd06e987cd3c9a6a18f38cc6a93803bc9245d95556"
+        },
+        {
+          "name": "phase-1-error.srj.json.gz",
+          "bytes": 3602375,
+          "sha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0",
+          "rawSha256": "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 3602375,
+          "sha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0",
+          "rawSha256": "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 309045,
+          "sha256": "af63da95d24f9d2f0b9449cf674bcb30fd422af6ab6e7cfbdf033db14cdd386a",
+          "rawSha256": "7e0420787689fb58d18a5e8d6799b6910524571ee4560e990ff22be340e1dc24"
+        }
+      ]
+    },
+    {
+      "board": "butterstick",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14335981098,
+        "name": "full-board-butterstick-published-spaced-1",
+        "size_in_bytes": 6813853,
+        "digest": "sha256:099359a3f66ecceb35d496ad055bebf88a9ab2c35a4e45aa26373d23150bba7a",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "62b2e7b8716f92baf49e9d2c445e8b1eb07443343168c96a85970f33423d0fbf",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": false,
+        "executionMode": "full",
+        "expectedComponents": 350,
+        "expectedPads": 1623,
+        "expectedNativeNets": 349,
+        "expectedNets": 317,
+        "expectedRoutableNets": 317,
+        "expectedGroups": [
+          "byte0",
+          "byte1",
+          "remaining",
+          "other_signals",
+          "power"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": false,
+          "authoredZones": 0,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": true,
+          "targetPhase": "*",
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/spaced/full-boards/butterstick.tsx",
+          "sha256": "2f2e0c39ab59562d874ba253016646c292d00762a0eb4e3b04a8d1487f2ff77b"
+        },
+        {
+          "path": "sources/spaced/full-boards/native-full-board.tsx",
+          "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+        },
+        {
+          "path": "sources/spaced/full-boards/peripheral-layout.ts",
+          "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/spaced/scripts/assess.ts",
+          "sha256": "061962dbb8deace443531b0d95a2d3c804a7d0e7fd8c5ee635f18136c219923f"
+        },
+        {
+          "path": "sources/spaced/scripts/connectivity.ts",
+          "sha256": "09d8f4b9da44f189dfe5f89e158d7e7fddaa843bd651c4b073df6a04d5f1b5c1"
+        },
+        {
+          "path": "sources/spaced/scripts/audit-full-board-geometry.ts",
+          "sha256": "e86e37c51256248ebf4fb3deeecbaf2d4aa07a9aee0f34b8488378d850209595"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3023,
+          "sha256": "30d302e3d6ed3c21eaf866e68d0f5f15ef3e76f5a1c003fdf783f20574d1d588",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 7704,
+          "sha256": "1d69c99da6a219d9138bd9f74a834ebda70708be8daece3df9e791f47326e04b",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 7838,
+          "sha256": "18502717704797d94090afb9a576fb089036c45ccde23bc9c1954a02b514478a",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 346,
+          "sha256": "33eeb4302aaf906135230bb490ea8860820289adc704e7da1596cdf184af0136",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 286578,
+          "sha256": "f44af5e68993da8115042d78477093c95f4be3b55f9499c5fdbe9fd375027d45",
+          "rawSha256": "a4b4948a8b2cc22953268589c03d434b87020e32ade34e4dc1e72fcbd0eb16c5"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 36005,
+          "sha256": "1a0971b2e44c9da4f0f419b509575419c10b6c7d5c40b040b11ec233132d041b",
+          "rawSha256": "1cebb1966719f892f9bf398c0cc7cb147eed3f305c64fdf92225a29bfc46dd65"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 2059085,
+          "sha256": "425229028203e91a7854a4e10a1e7e3040163e23592b6bf68c12c46efcc5737d",
+          "rawSha256": "78871ac62e4fdc8f1e7ae7f7aed8cfd53e8a8336a7681371d7f9e9d3285380b6"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 2062333,
+          "sha256": "c9b8917a3edcc2b2417734555c530c53daf7d9e6ab4f8894f2e26308f5eb722e",
+          "rawSha256": "f371bc5c52104a73097663eacbf9420e449823c2e9cea58e2e6049bae2ccf592"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 2062394,
+          "sha256": "f443b05bce41c591a18a9e98407bb372f254e98d22cb9824c6e0f438ac1af3c5",
+          "rawSha256": "76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 286563,
+          "sha256": "89792a80651a987e1f9fc8ed8eef3c00418daf24dbe137eaaf131e93bbcac328",
+          "rawSha256": "18d5e508d7048d29189cb5e276b0a84a86b87537e078ec43a71b04e49a56e01f"
+        }
+      ]
+    },
+    {
+      "board": "glider",
+      "cohort": "original",
+      "artifact": {
+        "id": 14334144502,
+        "name": "full-board-glider-published-original-1",
+        "size_in_bytes": 9040971,
+        "digest": "sha256:27f8ee392418411aa64be59edc884fe118bc9a7ed0c195b21a47322228bfc1bc",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": true,
+        "executionMode": "full",
+        "expectedComponents": 379,
+        "expectedPads": 1700,
+        "expectedNativeNets": 459,
+        "expectedNets": 459,
+        "expectedRoutableNets": 356,
+        "expectedGroups": [
+          "board",
+          "ddr_remaining",
+          "byte0",
+          "byte1"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": true,
+          "authoredZones": 5,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": false,
+          "targetPhase": null,
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/glider/board.tsx",
+          "sha256": "e66945b0ad64f60f0bcbbf2245ea38bf4b4a0d776d5d50acac1b993c755c7a56"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-full-board.tsx",
+          "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-part.tsx",
+          "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/assess.ts",
+          "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/connectivity.ts",
+          "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3471,
+          "sha256": "48b1208a51a10d81f4fe44281992774bcad66706b9bfbf7e7b7ed70997defacf",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 22667,
+          "sha256": "80d769e942f5750bfd24ed9baa9a709a2d89ff8d2be9eb97596340429b53f000",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 8755,
+          "sha256": "5a9a31880dcf6d1517c18b3fc05bf4781f07854c49a7202c52e9911d6a019294",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 339,
+          "sha256": "0be0d137fa93d792dae9d228e228882c72d95f2ecc585636fe3b69f47a790e94",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 408359,
+          "sha256": "44dd22544c0b25185739831a805dfa1121a528ff91978fb252c92abb7c793f66",
+          "rawSha256": "5692486375df71fb0749008e71fd41666e52b10b90de8573ed9e266d09825227"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 99,
+          "sha256": "54e6135ff46197fd9c12b52dd3a27bcca1057a65c76e8965fabda67fee45c4d4",
+          "rawSha256": "11a10f53e0cfdf2a833f6b761b1d0af0b464dcbbeeb5fdf2d2e0957ff077b974"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 2690493,
+          "sha256": "10c1f310a64d98d93d04a777adac4db2bda820d32354ea1b27ffa981afe732fc",
+          "rawSha256": "cae7f6a75de6d85b9a4e050eeee49ea82808e7a769cc6adf003a40250a49f8d8"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 2782215,
+          "sha256": "7b84312b220e42592fe5c3364bc8c6329794d36d3abb31d03bec04f5c7597540",
+          "rawSha256": "e9a26394ca31df1ab22a7f0ed7bb214ca3368dd84d8816f75aad56dc120d1be6"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 2770950,
+          "sha256": "0398df114834c924be1770923a951b08f1efc9e89c509ce6f9ac1a5cbb28e477",
+          "rawSha256": "5a7b0de2b921c721b783d5cf93fd2bd099f61f47ee9d5335a29222e9e6c1922f"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 351002,
+          "sha256": "f2db9bfe929fba99b092405a7842648f2492bcf221a12c003278c933e74e5591",
+          "rawSha256": "07dc28f64be3cd1f1c7ded81a0fd767d7ca1e4b49145f3a9f1b541484c263842"
+        }
+      ]
+    },
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14335721447,
+        "name": "full-board-glider-published-spaced-1",
+        "size_in_bytes": 18065290,
+        "digest": "sha256:628678bc208a1bd2bca68968a1becc72dc9bcb655fcb1ef387b1ae1815973aba",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "8addde162ad12f391f4f5b8205845e236c94bbcccafd8a31846a1a710ac5f4ed",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": false,
+        "executionMode": "full",
+        "expectedComponents": 379,
+        "expectedPads": 1700,
+        "expectedNativeNets": 459,
+        "expectedNets": 356,
+        "expectedRoutableNets": 356,
+        "expectedGroups": [
+          "byte0",
+          "byte1",
+          "remaining",
+          "other_signals",
+          "power"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": false,
+          "authoredZones": 0,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": true,
+          "targetPhase": "other_signals",
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/spaced/full-boards/glider.tsx",
+          "sha256": "baa9f59f7aca2dac50ff53ba2affba861a9959997efe1e44c17ca4a77430589c"
+        },
+        {
+          "path": "sources/spaced/full-boards/native-full-board.tsx",
+          "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+        },
+        {
+          "path": "sources/spaced/full-boards/peripheral-layout.ts",
+          "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/spaced/scripts/assess.ts",
+          "sha256": "061962dbb8deace443531b0d95a2d3c804a7d0e7fd8c5ee635f18136c219923f"
+        },
+        {
+          "path": "sources/spaced/scripts/connectivity.ts",
+          "sha256": "09d8f4b9da44f189dfe5f89e158d7e7fddaa843bd651c4b073df6a04d5f1b5c1"
+        },
+        {
+          "path": "sources/spaced/scripts/audit-full-board-geometry.ts",
+          "sha256": "e86e37c51256248ebf4fb3deeecbaf2d4aa07a9aee0f34b8488378d850209595"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3017,
+          "sha256": "680c5d78a57ab1f7e00f2be22132ceed1053154d43e3944b824b72bca55174fd",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 6065,
+          "sha256": "1dc60e6dc0535c38e6b15e9b3f381943dd2966adf94260450f2415052ebd653d",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 9384,
+          "sha256": "c55ec9b5e77919919c835afcf7d8160d8c1f3c1b08b8787dc4c9c293c233135c",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 338,
+          "sha256": "95f0fe6a7a01c878b1693c9e69ae221b8e40a39a6f0133658e6d4fff04050f98",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 353211,
+          "sha256": "d576ede1f3334a6af3b751bb2964efeb90a82f4957ea2eb666a5f1935020b71e",
+          "rawSha256": "afbc719a11fe1e207a8b5c2e43e345641cbece1cdd438aa6f3451a58afc85893"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 37576,
+          "sha256": "6a5a868e9ce3e083373eac2305f7b8d5c85c78ef66b49165a12efdd5ea7cc789",
+          "rawSha256": "36d0517c14a2218109524c460378a1dda0dcdb468162596aae96b39a74caa54c"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 2129566,
+          "sha256": "c921cbe9fdd24d2c337ec2926db9fedf84febe104b945bcf9092e68dd1039f92",
+          "rawSha256": "4b1604b5e3fcdb8eaba52385d1fbbc2568b0afa7271e336349769071add2f713"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 2128109,
+          "sha256": "e631baef2e6ed5f6e686540d94bf095d2a6beaefc33cd7f1e910cf130f38961b",
+          "rawSha256": "2907ab02cf0cd498395c689c30965242fc8e24a538ea4ea0a27da247de5b9449"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 2129559,
+          "sha256": "607492d40139ccfddaef83bc0d9618c76416a87f1a426651ab4585573b5ad792",
+          "rawSha256": "11f9e9d26f1be91b2ded86d6879f130aabb42038ff80521cbf65b87b9b50e93a"
+        },
+        {
+          "name": "phase-2-output.srj.json.gz",
+          "bytes": 2130798,
+          "sha256": "5d8012665b14fd1a839146913c95c4c9aaad7a8add89223e6ee61acd55c1224f",
+          "rawSha256": "c4fd49637ee24905c62ac11fd3c7dcb30b2be9e90c7ce8c3f8b915ddb3f1d80f"
+        },
+        {
+          "name": "phase-3-input.srj.json.gz",
+          "bytes": 2141051,
+          "sha256": "db7e146450ba904ebf6f2aa8fd246b9350edbcb8c5b5a768dc517d49d5ecafa5",
+          "rawSha256": "71ab018217c0d68443a1a153f019f1d746f356b601e044eebb03d81cfa3e48c5"
+        },
+        {
+          "name": "phase-3-output.srj.json.gz",
+          "bytes": 2159934,
+          "sha256": "087c6b3b4935e3d40c51182fe8ad239d4029bfd8f5585fa40040991e39627594",
+          "rawSha256": "adc7f362ff9e1fe2572c72bb304dd5d5d0e287b96fc22df283150e3f849cff2a"
+        },
+        {
+          "name": "phase-4-error.srj.json.gz",
+          "bytes": 2175285,
+          "sha256": "18be24653c1740ad65668f033e6d9731aa619174000c409f6b09bbb5682bbc3c",
+          "rawSha256": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4"
+        },
+        {
+          "name": "phase-4-input.srj.json.gz",
+          "bytes": 2175285,
+          "sha256": "18be24653c1740ad65668f033e6d9731aa619174000c409f6b09bbb5682bbc3c",
+          "rawSha256": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 294816,
+          "sha256": "324530b3f4c4c56069bc9c48d66ded6b0697fb5c6cd8a55b61266628604a5152",
+          "rawSha256": "5e1dbf43c432642fa42f168e5b2c50b4bd7a7513b3c63bae36f2ed5fd962c243"
+        }
+      ]
+    },
+    {
+      "board": "h616",
+      "cohort": "original",
+      "artifact": {
+        "id": 14334297269,
+        "name": "full-board-h616-published-original-1",
+        "size_in_bytes": 4198112,
+        "digest": "sha256:3144f9328c91296945b0510548f76bf425aa7d62de8c2a33c413a0ffc270f880",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": true,
+        "executionMode": "full",
+        "expectedComponents": 125,
+        "expectedPads": 760,
+        "expectedNativeNets": 264,
+        "expectedNets": 264,
+        "expectedRoutableNets": 121,
+        "expectedGroups": [
+          "board",
+          "byte0",
+          "byte1",
+          "ddr_remaining"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": true,
+          "authoredZones": 5,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": false,
+          "targetPhase": null,
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/h616/board.tsx",
+          "sha256": "8e27fcf9bc39d35c97a584a6a4aa6b624ebe14f589b12c5a45e3287e8fb36ace"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-full-board.tsx",
+          "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-part.tsx",
+          "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/assess.ts",
+          "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/connectivity.ts",
+          "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3554,
+          "sha256": "083ccaa5415fc4e423229ec93eadbc86e8b667c00dae5c2ddd94c02ab14c170e",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 8021,
+          "sha256": "ca57839f584214bf68528670a438e69e65062f0d13bda4486f05133c1f4691f4",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 9071,
+          "sha256": "d4a9a7eb6d4a066fc7a8d2c2e9d6b6c693405027d2709d663ab80cdcbf12cf8d",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 339,
+          "sha256": "099688a9dc027d0480f6a5abab70204d86a2f72074aabb20cb51139f3e160bc0",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 320898,
+          "sha256": "7f7ef19ca1cf3f4532a4ac8a727a78d7377d5822fe97e4653bf8747abd36761b",
+          "rawSha256": "38a3be69afa6d246bdc15dd4e00a0ef0fd0281b104b7c941c3eb8243c8396f4f"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 993,
+          "sha256": "9003268a9e5eef51a9915e9e71e65cb9b6a3ba91aede1cd59237041f85227eed",
+          "rawSha256": "6468d9a39b942753e2241a20f1af1625d725279cf37d770ebd2e2ea06c01ac17"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 799911,
+          "sha256": "db23ea5e1e1eb7ad8b02a62841b9e1a9bb2f612cbed2c8c9e497c38c1dd39a60",
+          "rawSha256": "a999954e24f468a22ea43a8b1ff1a771fb20d3c4c02e07c76269d50bcf4c4506"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 826728,
+          "sha256": "1527ab0ee3043c8eff3c9ff7f44a44c624f851e9aa64eff720942c8c34cf6603",
+          "rawSha256": "92fb2637ecabeeb1242308cb2ad8b84236d405cc38a3a4ea3181e628751cc637"
+        },
+        {
+          "name": "phase-2-error.srj.json.gz",
+          "bytes": 822647,
+          "sha256": "aba17038104b728e3808513e0cf5ada9476cd40210e7cc114edde430bb68865c",
+          "rawSha256": "1ab5118270c302b702d763fe7abded354450960ccab8603782897ef75caeda16"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 822647,
+          "sha256": "aba17038104b728e3808513e0cf5ada9476cd40210e7cc114edde430bb68865c",
+          "rawSha256": "1ab5118270c302b702d763fe7abded354450960ccab8603782897ef75caeda16"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 143466,
+          "sha256": "bb4304ba0a2bdc26f656e81282edd3021edea67d8e6e09e47162e5359b1c4a07",
+          "rawSha256": "31a1b29823c4902e78ddac979b95b09970a4ab66b446a1f38a871c5de5c83c8b"
+        }
+      ]
+    },
+    {
+      "board": "h616",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14333344818,
+        "name": "full-board-h616-published-spaced-1",
+        "size_in_bytes": 3996917,
+        "digest": "sha256:96e9ebee28278334da3a71b5b828f5fd3ba940e8fe8ea98ead5c4a4211c3cf81",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": false,
+        "executionMode": "full",
+        "expectedComponents": 125,
+        "expectedPads": 760,
+        "expectedNativeNets": 264,
+        "expectedNets": 121,
+        "expectedRoutableNets": 121,
+        "expectedGroups": [
+          "byte0",
+          "byte1",
+          "remaining",
+          "other_signals",
+          "power"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": false,
+          "authoredZones": 0,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": false,
+          "targetPhase": null,
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/spaced/full-boards/h616.tsx",
+          "sha256": "dca85fe287be5a6a3ebe839211a0c7f296f47cec64c8432d3ec22afc824808bf"
+        },
+        {
+          "path": "sources/spaced/full-boards/native-full-board.tsx",
+          "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+        },
+        {
+          "path": "sources/spaced/full-boards/peripheral-layout.ts",
+          "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/spaced/scripts/assess.ts",
+          "sha256": "061962dbb8deace443531b0d95a2d3c804a7d0e7fd8c5ee635f18136c219923f"
+        },
+        {
+          "path": "sources/spaced/scripts/connectivity.ts",
+          "sha256": "09d8f4b9da44f189dfe5f89e158d7e7fddaa843bd651c4b073df6a04d5f1b5c1"
+        },
+        {
+          "path": "sources/spaced/scripts/audit-full-board-geometry.ts",
+          "sha256": "e86e37c51256248ebf4fb3deeecbaf2d4aa07a9aee0f34b8488378d850209595"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3533,
+          "sha256": "e6e6bc03578832dd43fce1faa1f5957a635e16af3a2b2bb041f507cd5bfe6713",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 1808,
+          "sha256": "14cc03985ca4cfdf67598f818c37fd9c07f6730c1298b9ed31d3090ff8aec321",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 10972,
+          "sha256": "a443d6b8b48cba71265a427b694db8cf26b7364bc3150a192cc367ec93b4541b",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 342,
+          "sha256": "e06831a6b577852e5786d77773965581b7756486e036012b1c93775cba72b038",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 157106,
+          "sha256": "884b03bc598d85f3d5ec329154bc4e3630f01ebc6a315a62519ef608c7c4416e",
+          "rawSha256": "a4ff17c1ecfd362009dfcab4041d4a8544e959375c517cec2c9d658d1f889e42"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 14145,
+          "sha256": "23ca26dd3ebe3306b98ac570edc2e65e5d95fc328e149ef1d8c99d0026ba7a28",
+          "rawSha256": "705e0d3d6a58477aebbde2543e1e68c0c0c406abe47482116fa59eecabe98ae9"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 435371,
+          "sha256": "0751854a922c2da4782db2c51921116de21b986d18ade22092daef675d267602",
+          "rawSha256": "2cdedbb685087f57be9c499e6631a809e49487ac3613656a4f604c07c08b39d0"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 436887,
+          "sha256": "dcb237fd6541627176371c71d712fc6e4f850da468af62908ed733d7a7bceaa2",
+          "rawSha256": "9b2e485944785469b9b5daebe093e22f1404b732ca18e31b4d7445f86403ade9"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 436883,
+          "sha256": "fa8ce087aa344feeb720bd2487140e5b1d64cf84f93bdeed80b15b3ca78d7474",
+          "rawSha256": "9757b197b59e91cbe265d3d6cd55cda6a817d7fc01f56c618113bd347a081e4d"
+        },
+        {
+          "name": "phase-2-output.srj.json.gz",
+          "bytes": 438377,
+          "sha256": "a606fea7e19b80d8870736a8d1b2ef720d22c3ec3b01ff3e9657dedd4573eeb9",
+          "rawSha256": "f00bce3c33eae990e5a4e9a974a486ccd04c7c44b04b396d5d5b5ff994d23e6c"
+        },
+        {
+          "name": "phase-3-input.srj.json.gz",
+          "bytes": 455345,
+          "sha256": "d1738b713c24ff88945bf314a2c69318d632840398019d0798c5cfd3a3041ac3",
+          "rawSha256": "23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49"
+        },
+        {
+          "name": "phase-3-output.srj.json.gz",
+          "bytes": 469944,
+          "sha256": "ef963af1fa047752dd99af4324c909290f52590c88740e38a2d9135bad51be67",
+          "rawSha256": "e36e7971e141df1f458f645da51fe2886055cb248aaa836ff766400c57af5986"
+        },
+        {
+          "name": "phase-4-error.srj.json.gz",
+          "bytes": 472180,
+          "sha256": "6b8be42d73cd8b1b8aab892953fea2a62c90c1a36e25b43df20adc36c4fcd7a6",
+          "rawSha256": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102"
+        },
+        {
+          "name": "phase-4-input.srj.json.gz",
+          "bytes": 472180,
+          "sha256": "6b8be42d73cd8b1b8aab892953fea2a62c90c1a36e25b43df20adc36c4fcd7a6",
+          "rawSha256": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 123706,
+          "sha256": "c0fc9f4184c1e061316f948ca69ceba68115df49a35238d3736ee5f6cab08d34",
+          "rawSha256": "11c853c6f82d0ab8ab4a6cc13474f41dee6060ebe94503fd17136a098d10907b"
+        }
+      ]
+    },
+    {
+      "board": "icepi",
+      "cohort": "original",
+      "artifact": {
+        "id": 14333004271,
+        "name": "full-board-icepi-published-original-1",
+        "size_in_bytes": 4799540,
+        "digest": "sha256:33fdcefbe463ed4ff349ba3bb8de75c1b0b2bf47a5bf56a02c910726cd767dd4",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": true,
+        "executionMode": "full",
+        "expectedComponents": 280,
+        "expectedPads": 1426,
+        "expectedNativeNets": 466,
+        "expectedNets": 466,
+        "expectedRoutableNets": 230,
+        "expectedGroups": [
+          "board",
+          "ddr_remaining",
+          "byte0",
+          "byte1"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": true,
+          "authoredZones": 36,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": true,
+          "targetPhase": "plane_escape",
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/icepi/board.tsx",
+          "sha256": "5a80aa72c0cb6fa08f246b9496af9cfaa27e7e7b83b183bdd5f562f8e68a1136"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-full-board.tsx",
+          "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-part.tsx",
+          "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/assess.ts",
+          "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/connectivity.ts",
+          "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3583,
+          "sha256": "7d83f8cc1a5ea1f7fbe7a1d86bfcd5db570480f4b2cf0ef363bce158a4c518d2",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 14467,
+          "sha256": "3075b3cddd484964928c09857a658524e835275aa954bf331436f3f7fbbe253a",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 8552,
+          "sha256": "363d9c39bc0feb0de647f67182b2a5df2824bd9e5cb44585e2c15e87ba54024b",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 338,
+          "sha256": "21fa1acd494817ec7717dd74251ac52504f3d65cc3f20402fed44c6a81d17379",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 574779,
+          "sha256": "bc762f6d8405a7700c957b7e328a55d6d96c3f143fd19b85ce5fdab89f165153",
+          "rawSha256": "846be740e95d01505e8e6ffba74885fac4e9c0a0b468b4dfa7cb4b751a3a0d39"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 315,
+          "sha256": "4df6beacac5cc7961490518b6f3582067b5bed201c431db76177542bdca47b84",
+          "rawSha256": "6d20761988b0d0f9a3ddeb3507c2135115830ddef6018f8aeef293e5d194a2a1"
+        },
+        {
+          "name": "phase-1-error.srj.json.gz",
+          "bytes": 1702305,
+          "sha256": "e5392c09a437a9992535d6250d25ea632cc06405a16340b6a088e4cdd82cfe1c",
+          "rawSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 1702305,
+          "sha256": "e5392c09a437a9992535d6250d25ea632cc06405a16340b6a088e4cdd82cfe1c",
+          "rawSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 295984,
+          "sha256": "cb92019393a956f1c18e5439e9cdc78d48eb51983fcd272111e42a9bad048502",
+          "rawSha256": "88dcb2f30cafda5dd7851a9a224434745cd13fbee40b6026e62a64e27ca26302"
+        }
+      ]
+    },
+    {
+      "board": "icepi",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14333394775,
+        "name": "full-board-icepi-published-spaced-1",
+        "size_in_bytes": 11590840,
+        "digest": "sha256:7d67fadd81ee2aba18c057cba3e7021bdf018b4c1118178cea71d9422bd56191",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "c27dd280882cfa15a3516a9c60796c83f47ff380505a212d2d1672ea4b61f375",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": false,
+        "executionMode": "full",
+        "expectedComponents": 280,
+        "expectedPads": 1426,
+        "expectedNativeNets": 466,
+        "expectedNets": 230,
+        "expectedRoutableNets": 230,
+        "expectedGroups": [
+          "byte0",
+          "byte1",
+          "remaining",
+          "other_signals",
+          "power"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": false,
+          "authoredZones": 0,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": false,
+          "targetPhase": null,
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/spaced/full-boards/icepi.tsx",
+          "sha256": "4371f08988c20f95ecfae9ab47531a90ea38b40976769f8f5d7ffdc40d60e975"
+        },
+        {
+          "path": "sources/spaced/full-boards/native-full-board.tsx",
+          "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+        },
+        {
+          "path": "sources/spaced/full-boards/peripheral-layout.ts",
+          "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/spaced/scripts/assess.ts",
+          "sha256": "061962dbb8deace443531b0d95a2d3c804a7d0e7fd8c5ee635f18136c219923f"
+        },
+        {
+          "path": "sources/spaced/scripts/connectivity.ts",
+          "sha256": "09d8f4b9da44f189dfe5f89e158d7e7fddaa843bd651c4b073df6a04d5f1b5c1"
+        },
+        {
+          "path": "sources/spaced/scripts/audit-full-board-geometry.ts",
+          "sha256": "e86e37c51256248ebf4fb3deeecbaf2d4aa07a9aee0f34b8488378d850209595"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3550,
+          "sha256": "44794bed1f4644b91e6e8f388bfe51a75ff46e12fe94accd6eca3a5a6557e033",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 4074,
+          "sha256": "c7f2e78347f592117ead52767e6812a3cbc59f0fbc27e4ec96be10a3e369365d",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 10990,
+          "sha256": "116a658d29dce68bd9e5f0471d19faee3a36db1b9a025635f3d21e5c43e90db7",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 338,
+          "sha256": "3c3fd6d3f915b94443146bea60dcbf96bdc712697d51faf4107bbbdc0088fcbe",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 314601,
+          "sha256": "7dde9a19f7206c16adeb036a2373d5bb24e6094a0e370468ca390737781cb3d9",
+          "rawSha256": "34f1b4ad5cd1ced9bb6801251234b79be80443016a8b947789c9ae34bff94597"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 28586,
+          "sha256": "0a7e99df5cf5f8b70b89c4b6ebd6fffece9e1a94c009395ae656edd4f26b47b7",
+          "rawSha256": "1447e7018fa6576d2a5d7f8e5f6888e5abe34c558aabf363d7325d6793be2c1f"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 1332592,
+          "sha256": "9656bb05f53f660a5fb33775564360044433241405b88480f20e7063d454a17a",
+          "rawSha256": "eb2851a2195beb8335bd0437e420e0c1889ab52d885c2f2fb9ea28506b87e101"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 1333962,
+          "sha256": "590ec66516110990d7a0d976b158a4210ce3b76c79477ae8d323e469526ee3d2",
+          "rawSha256": "77055fea762c1cef86298587b12f95eeab45feb9fa998695b7a14f9cfccaf369"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 1333997,
+          "sha256": "d2e69ffa193065e2637eb2f0212713f5fde59d8193de3fe341b2fbd2ba5abd58",
+          "rawSha256": "d09050c4d3eaba2aa0b9e2c3815d49fb4a7ad37d304d61947224595121f814f5"
+        },
+        {
+          "name": "phase-2-output.srj.json.gz",
+          "bytes": 1335378,
+          "sha256": "503093520eaf143530f0fd17c993ffd6abedc23e6e654af870348cc9c649567b",
+          "rawSha256": "72768387c4e6de140630049c875b6cefb060f1d8eb9b9937f15ea6b53be5e99f"
+        },
+        {
+          "name": "phase-3-input.srj.json.gz",
+          "bytes": 1346747,
+          "sha256": "59ef001e0a562c644817a7f0bb4be30b4ea25a1ccc61f5cbfcf52ab90b7149a3",
+          "rawSha256": "baf786d1bebd05abf53f0c71791367fc1f90c3e2f8d079767af98a03d4d1d02a"
+        },
+        {
+          "name": "phase-4-error.srj.json.gz",
+          "bytes": 1395100,
+          "sha256": "d8ba29edacd668a92a7872c4dfcb69432ee3074f0512801db75bd917a304627b",
+          "rawSha256": "469694b90af95e44a1ef964c454370fdf361705400d152519391f9624896da6d"
+        },
+        {
+          "name": "phase-3-output.srj.json.gz",
+          "bytes": 1385155,
+          "sha256": "0756f3af8dac058ba8861ada4382e66bbe8db03e36cfe58347baf91aad733511",
+          "rawSha256": "691bf40348c014a1a71736353bf2173b4288eceb28cad708d13d2b89a46d68be"
+        },
+        {
+          "name": "phase-4-input.srj.json.gz",
+          "bytes": 1395100,
+          "sha256": "d8ba29edacd668a92a7872c4dfcb69432ee3074f0512801db75bd917a304627b",
+          "rawSha256": "469694b90af95e44a1ef964c454370fdf361705400d152519391f9624896da6d"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 242839,
+          "sha256": "4403787613f3f451ecb7d9f45f1791e6ab1d9a5290ff29f09e6fc5b6445cb5e1",
+          "rawSha256": "3a3175946d661e82aee46ec60ed0cba89575848a118ca2f58c171d2e81668685"
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "cohort": "original",
+      "artifact": {
+        "id": 14335790471,
+        "name": "full-board-imx6-published-original-1",
+        "size_in_bytes": 14726621,
+        "digest": "sha256:070d96d2f566532a6831d83543c3ca78ff9fff683b06d5098d1e03e17ccba71d",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": true,
+        "executionMode": "full",
+        "expectedComponents": 498,
+        "expectedPads": 1904,
+        "expectedNativeNets": 588,
+        "expectedNets": 588,
+        "expectedRoutableNets": 404,
+        "expectedGroups": [
+          "board",
+          "ddr_remaining",
+          "byte0",
+          "byte1"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": true,
+          "authoredZones": 61,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": false,
+          "targetPhase": null,
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/imx6/board.tsx",
+          "sha256": "81d9421ad723af44979ebdc15e08cdcb4f250b42925c2862bad0daeeb85cab5c"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-full-board.tsx",
+          "sha256": "d8ee2478083506c38ff99dbae47e533fd0b1f89e329607731250324c3f5db39f"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/native-part.tsx",
+          "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/assess.ts",
+          "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+        },
+        {
+          "path": "sources/original/experiments/full-board-priority-analysis/connectivity.ts",
+          "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3539,
+          "sha256": "fa56671fa5190a9b973ba80166fa8cf6407f0a9accf72a032e8887bb662a8d2a",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 30187,
+          "sha256": "e1be8c1099d90a2458ceea95be86602370dfd79118156deb13a936eab26a2b71",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 8817,
+          "sha256": "0a822952d80e6347f3f893c29ab3a6cfbbbf0ce867d46a705a0cc0d8b75b1daa",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 345,
+          "sha256": "aea7c91e4fcb520492c7b8778ebccc125461884241047988588df59681983336",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 798004,
+          "sha256": "dbebada199197d573c8ce7f59d8754327dc20da9e33c10ad3898a7cb62558d68",
+          "rawSha256": "e51c38ef6ab13e55db1147a774f26aa3b7dab2d4e572325690ee9e4585d9bf05"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 99,
+          "sha256": "54e6135ff46197fd9c12b52dd3a27bcca1057a65c76e8965fabda67fee45c4d4",
+          "rawSha256": "11a10f53e0cfdf2a833f6b761b1d0af0b464dcbbeeb5fdf2d2e0957ff077b974"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 4413215,
+          "sha256": "d521a6aa97f3b7c1c533ef755d91aa1bd139d5a0bd3a9112374b4c717e7ae5a0",
+          "rawSha256": "53f879b34a258031059303904be4ace642a3b2e493f3ec6f4dbdb304a38e5857"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 4528785,
+          "sha256": "d2745c2b72694b8ecb2fc1dfeece8bcb266afdda5d0d0defb1c9423ad6572d83",
+          "rawSha256": "6e413c7b7bd5517d951849dbce0b158b3e1aae2198d769a5fceb459d6d7108b0"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 4515727,
+          "sha256": "93f6eccfa787cee5410e8fb6f60ea137a55a84041732b90653618653a534e772",
+          "rawSha256": "1d2b3cf24f3081ef4f8081f7023af9c336d09ed65d1e14720fceb42fa268b388"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 425279,
+          "sha256": "3acc0257874d610e16cb27d59ca9bf3455cfbb1e3830477e5b027439d9f4b1a8",
+          "rawSha256": "50563226296df2b89ce5777fbf8f48dfa5b1cc289c45fa16cb789c254f7cafd6"
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14335044401,
+        "name": "full-board-imx6-published-spaced-1",
+        "size_in_bytes": 19444121,
+        "digest": "sha256:9a45d02f64ba62680f8f907945724eda8b13712ba80de4db6106160a9d4414e5",
+        "workflow_run": {
+          "id": 44096144980,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3216-20261117",
+          "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+        }
+      },
+      "sourceSha256": "d8cccad6f5cf63911130fbb5e13af9a961064bc231b92f639afa3944d6131c77",
+      "immutablePolicy": {
+        "mode": "phased",
+        "fanout": false,
+        "planes": false,
+        "executionMode": "full",
+        "expectedComponents": 498,
+        "expectedPads": 1904,
+        "expectedNativeNets": 588,
+        "expectedNets": 404,
+        "expectedRoutableNets": 404,
+        "expectedGroups": [
+          "byte0",
+          "byte1",
+          "remaining",
+          "other_signals",
+          "power"
+        ],
+        "initialCopperCounts": {
+          "pcb_trace": 0,
+          "pcb_via": 0,
+          "pcb_copper_pour": 0
+        },
+        "planeIntent": {
+          "enabled": false,
+          "authoredZones": 0,
+          "savedCopperImported": false
+        },
+        "coarseRoutingInstrumentation": {
+          "enabled": true,
+          "targetPhase": "remaining",
+          "mode": "observational published-instance lifecycle hooks"
+        },
+        "captureDeadlineMs": 900000,
+        "hardDeadlineMs": 960000,
+        "assessmentDeadlineMs": 180000
+      },
+      "implementationFiles": [
+        {
+          "path": "sources/spaced/full-boards/imx6.tsx",
+          "sha256": "919047cd47c5cb633e75692c45a1f4810258f0d6195efb754c76c85d9a85826f"
+        },
+        {
+          "path": "sources/spaced/full-boards/native-full-board.tsx",
+          "sha256": "b02adbdcbc3016681abe74aa015d50760815ed9ed695f7747ae98d8cf9127564"
+        },
+        {
+          "path": "sources/spaced/full-boards/peripheral-layout.ts",
+          "sha256": "77b7b1bbacb9610009695d1ce3167fe2a404f3e1ded6f4a0e97c33c6145a991d"
+        }
+      ],
+      "assessmentSourceFiles": [
+        {
+          "path": "sources/spaced/scripts/assess.ts",
+          "sha256": "061962dbb8deace443531b0d95a2d3c804a7d0e7fd8c5ee635f18136c219923f"
+        },
+        {
+          "path": "sources/spaced/scripts/connectivity.ts",
+          "sha256": "09d8f4b9da44f189dfe5f89e158d7e7fddaa843bd651c4b073df6a04d5f1b5c1"
+        },
+        {
+          "path": "sources/spaced/scripts/audit-full-board-geometry.ts",
+          "sha256": "e86e37c51256248ebf4fb3deeecbaf2d4aa07a9aee0f34b8488378d850209595"
+        }
+      ],
+      "requiredArtifactFiles": [
+        {
+          "name": "result.json",
+          "bytes": 3020,
+          "sha256": "48f6e8455a4f4e4700f0f1c9061ae7c242610f510cf5030ad014ec500ba6d130",
+          "rawSha256": null
+        },
+        {
+          "name": "assessment.json",
+          "bytes": 11127,
+          "sha256": "56458f7f8a2caa47ae7eecc6f06f0d3ba09e78857a8d7647ef22cf07904b3784",
+          "rawSha256": null
+        },
+        {
+          "name": "progress.json",
+          "bytes": 9441,
+          "sha256": "b0fd4a52159532ee4f12b899e2447911f14e5a2189f12249ddecfaf56f43a0b4",
+          "rawSha256": null
+        },
+        {
+          "name": "process.json",
+          "bytes": 341,
+          "sha256": "b02927191799dc6973f147a07025c26553b057a7dac93891a373c3f7b7d7ba90",
+          "rawSha256": null
+        },
+        {
+          "name": "circuit.json.gz",
+          "bytes": 436772,
+          "sha256": "c27c5f51d92a524684a5a63ee28a5cfa4f01b79d54e79915eb41342e9857e692",
+          "rawSha256": "1cf7f062fbb995fdf3cdc2cca98a83a4300af9bf69e2dfc7eaf22113091c378f"
+        },
+        {
+          "name": "findings.json.gz",
+          "bytes": 40643,
+          "sha256": "9180b520cb05701275e351c3a0bf343df31a5c2d0957c9359be4480c2e556fa4",
+          "rawSha256": "9f5820e23dae7a896710a7530f2683bedefc7b1dd29d820482d1fe82c97ef4bf"
+        },
+        {
+          "name": "phase-1-input.srj.json.gz",
+          "bytes": 2269468,
+          "sha256": "d74eea817428293e398d3a9a9000e6f38ed7b4f4a8c19103e317f1b551c2e288",
+          "rawSha256": "9e8c930b32c413a202b5a9063d125de49732d7ab9608b68e93edf77a852bb291"
+        },
+        {
+          "name": "phase-1-output.srj.json.gz",
+          "bytes": 2271113,
+          "sha256": "8ed219067cb868b11fe2c0203211ba07af324cc37bab97beab7a84ce396852ad",
+          "rawSha256": "9cdbc71c8fc6ae8ba4177187909941ac651244884371ea264e4444b95e9a125c"
+        },
+        {
+          "name": "phase-2-input.srj.json.gz",
+          "bytes": 2271161,
+          "sha256": "1486908e405cf2675f22f8c69146160bc35da38e25432936c09cbea4a6a254df",
+          "rawSha256": "f86791279e8f787d434621699d8eab42d475ef4c4bd4d92a3b1f87144dc881df"
+        },
+        {
+          "name": "phase-2-output.srj.json.gz",
+          "bytes": 2272928,
+          "sha256": "11e2eae2274554a4546366a83c8a5161ee16f27e06c7b71f627b4c47f7272378",
+          "rawSha256": "b4bf7744205a0ba4c511b1a3d594e0376dcd0e67117456a0131968cdc84ad437"
+        },
+        {
+          "name": "phase-3-input.srj.json.gz",
+          "bytes": 2294679,
+          "sha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986",
+          "rawSha256": "90b6c8e95194fe75106ab420d9ae830d44c049203d0a47fc0944bad3b16c6654"
+        },
+        {
+          "name": "phase-3-output.srj.json.gz",
+          "bytes": 2336398,
+          "sha256": "e7e307fbd5fbc8925637eadead3a0ed4cb0c223304e66567af17eb68d34f3b58",
+          "rawSha256": "2eefc396d078c4f9b6e9cf6a4ecc92f0042063a401f2591ef7dfe5121f7f08f1"
+        },
+        {
+          "name": "phase-4-error.srj.json.gz",
+          "bytes": 2355438,
+          "sha256": "2bc6f9ce2f827d324c2de10d032d9672ad0e4b87dd9841c4c73b9f45fa7a7750",
+          "rawSha256": "70500d4f426ca83f215ae8fda9462961e775d2d0c5c2134d3f26ed322bd0d861"
+        },
+        {
+          "name": "phase-4-input.srj.json.gz",
+          "bytes": 2355438,
+          "sha256": "2bc6f9ce2f827d324c2de10d032d9672ad0e4b87dd9841c4c73b9f45fa7a7750",
+          "rawSha256": "70500d4f426ca83f215ae8fda9462961e775d2d0c5c2134d3f26ed322bd0d861"
+        },
+        {
+          "name": "unrouted.circuit.json.gz",
+          "bytes": 346117,
+          "sha256": "1839658aa731ead16d482499c511c79aa67d19f989f034720944bb21070b267d",
+          "rawSha256": "073dcd1f84167b607cdee490463825587a91dfce1b98e41d4bb102ac5a9d8e65"
+        }
+      ]
+    }
+  ]
+}

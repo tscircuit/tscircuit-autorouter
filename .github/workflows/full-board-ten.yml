@@ -1,23 +1,29 @@
-name: Core accepted phase output qualification
+name: Core accepted phase all-ten regression
 
 on:
   push:
-    branches: [bench/core-accepted-phase-output-3216]
+    branches: [bench/core-publication-all-ten-3216]
 
 permissions:
   contents: read
   actions: read
 
 jobs:
-  qualify:
-    name: Frozen Core source pair and complete ButterStick circuit
+  route:
+    name: Complete circuits (${{ matrix.board }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 90
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        board: [h616, butterstick, glider, imx6, icepi]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       FULL_BOARD_EXPERIMENT: published
+      BOARD: ${{ matrix.board }}
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -29,14 +35,6 @@ jobs:
             experiments/full-board-ten
             .github/workflows/full-board-ten.yml
             AGENTS.md
-
-      - name: Checkout exact Core2402 prepublish build source
-        uses: actions/checkout@v4
-        with:
-          repository: tscircuit/core
-          ref: cfd206671da55be666f3302620b94235a2964ad7
-          path: .full-board-run/source-core
-          persist-credentials: false
 
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -66,80 +64,98 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Prepare unchanged verified published runtime
+      - name: Restore unchanged frozen3216 external runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic case and original neutral assessment
+      - name: Prepare authentic cases and published neutral assessors
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
           "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
           "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          butterstick
+          "$FULL_BOARD_ROOT/cases" "$BOARD"
 
-      - name: Authenticate published full-board control
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" baseline
-
-      - name: Prove baseline repro and fixed lifecycle tests on one frozen source graph
+      - name: Authenticate primary qualification and reuse compiled Core
+        id: prepare
         run: >-
-          python3 experiments/full-board-ten/prepare-core-source-pair.py
-          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/source-core"
+          python3 experiments/full-board-ten/prepare-core-publication-all-ten.py
+          "$FULL_BOARD_ROOT" prepare "$BOARD"
 
-      - name: Install qualified Core source control only
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Run original ButterStick source-control full circuit
+      - name: Route complete original circuit
+        if: steps.prepare.outcome == 'success'
+        continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/base-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
+          "$FULL_BOARD_ROOT/cases/candidate-$BOARD-original.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/original"
 
-      - name: Require published source-control route and physical parity
-        run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Render actual source-control CircuitJSON for visual review
+      - name: Compare original native prefix and physical output
+        id: original
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
         run: >-
-          bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
+          python3 experiments/full-board-ten/verify-core-publication-all-ten.py
+          "$FULL_BOARD_ROOT" "$BOARD" original
 
-      - name: Install reviewed Core source fix only
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" candidate
+      - name: Preserve original output and comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-publication-${{ matrix.board }}-original-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/original
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
 
-      - name: Run actual ButterStick candidate with unchanged capture limits
+      - name: Route complete spaced circuit
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/candidate-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
+          "$FULL_BOARD_ROOT/cases/candidate-$BOARD-spaced.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
 
-      - name: Require real eight-net emitted progress and unchanged native routing
-        run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" candidate
-
-      - name: Render actual candidate CircuitJSON for visual review
+      - name: Compare spaced native prefix and physical output
+        id: spaced
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
         run: >-
-          bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
+          python3 experiments/full-board-ten/verify-core-publication-all-ten.py
+          "$FULL_BOARD_ROOT" "$BOARD" spaced
 
-      - name: Restore original isolated Core alias
+      - name: Preserve spaced output and comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-publication-${{ matrix.board }}-spaced-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/spaced
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Restore original Core alias
         if: always()
         run: |
           if test -f "$FULL_BOARD_ROOT/published-runtime-manifest.json"; then
-            python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" restore
+            python3 experiments/full-board-ten/prepare-core-publication-all-ten.py "$FULL_BOARD_ROOT" restore
           fi
 
-      - name: Preserve source qualification and native output evidence
+      - name: Preserve compact shared provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-core-accepted-phase-${{ github.run_attempt }}
+          name: core-publication-${{ matrix.board }}-proof-${{ github.run_attempt }}
           path: |
-            .full-board-run/core-source-pair
-            .full-board-run/published-baseline/archive-proof.json
-            .full-board-run/results
-            .full-board-run/cases/*.json
+            .full-board-run/core-all-ten-reuse.json
             .full-board-run/*runtime-manifest.json
-            experiments/full-board-ten/core-publication-plan.json
-            experiments/full-board-ten/core-publication-*.patch
-          if-no-files-found: error
-          compression-level: 6
+            .full-board-run/cases/*.json
+            .full-board-run/baselines/*/*/archive-proof.json
+            .full-board-run/qualified-primary/core-source-pair/provenance.json
+            .full-board-run/qualified-primary/core-source-pair/*-validation.json
+            experiments/full-board-ten/core-publication-all-ten-plan.json
+          if-no-files-found: warn
           retention-days: 7
+
+      - name: Require both regression qualifications
+        if: always()
+        run: test "${{ steps.original.outcome }}" = success && test "${{ steps.spaced.outcome }}" = success
