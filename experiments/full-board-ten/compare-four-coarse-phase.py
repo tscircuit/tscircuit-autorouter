@@ -19,6 +19,25 @@ for result in [baseline, handoff]:
     for field in ['configured', 'initial', 'inputNetCount', 'innerHookInstalled']:
         assert result['baselineContract'][field]['equal'], field
 
+observations = {
+    variant: json.loads((results / variant / 'coarse-recovery-observation.json').read_text())
+    for variant in ['source-baseline', 'handoff-only']
+}
+for observation in observations.values():
+    assert not observation['observationErrors']
+attempts = {
+    variant: {solver['attempt']: solver for solver in observation['solvers'] if solver['attempt'] is not None}
+    for variant, observation in observations.items()
+}
+original_attempts = [-1, 0, 1, 2, 3]
+assert list(attempts['source-baseline']) == original_attempts
+assert list(attempts['handoff-only']) == original_attempts + [4]
+for attempt in original_attempts:
+    assert attempts['source-baseline'][attempt] == attempts['handoff-only'][attempt], attempt
+    assert not attempts['handoff-only'][attempt]['solved']
+last_attempt = attempts['handoff-only'][4]
+assert last_attempt['maxIterations'] == 50000
+
 def summarize(result):
     observation = json.loads((results / result['variant'] / 'coarse-recovery-observation.json').read_text())
     assert not observation['observationErrors']
@@ -38,9 +57,14 @@ report = {
     'publishedRuntimeMainVersion': baseline['publishedRuntimeMainVersion'],
     'inputSha256': baseline['inputSha256'], 'nativeBaselineQualified': True,
     'baseline': summarize(baseline), 'handoff': summarize(handoff),
+    'originalAttemptReportsIdentical': True,
+    'originalAttemptOrder': original_attempts,
+    'additionalConditionalAttemptIndex': 4,
+    'additionalConditionalAttemptIterationCap': 50000,
+    'additionalAttemptSolved': last_attempt['solved'],
     'phaseNewlySolved': not baseline['solved'] and handoff['solved'],
     'phaseRegressed': baseline['solved'] and not handoff['solved'],
-    'interpretation': 'Native phase pair on the same runner, fresh processes and unchanged caps. Coarse owners and HD nodes are not physically connected board nets.',
+    'interpretation': 'Native phase pair on the same runner in fresh processes. Every original attempt and cap is preserved; only after all originals fail, one conditional final attempt adds up to 50000 iterations. External deadlines are unchanged. Coarse owners and HD nodes are not physically connected board nets.',
 }
 (results / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
 print('COARSE_PHASE_COMPARISON ' + json.dumps(report))

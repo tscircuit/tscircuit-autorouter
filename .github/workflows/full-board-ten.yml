@@ -1,8 +1,8 @@
-name: Current AR1113 iMX6 recovery handoff phase comparison
+name: Current AR1113 last-attempt recovery comparison
 
 on:
   push:
-    branches: [bench/native-imx6-handoff-ar1113]
+    branches: [bench/native-imx6-last-handoff-ar1113]
 
 permissions:
   contents: read
@@ -21,7 +21,7 @@ jobs:
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      FULL_BOARD_EXPERIMENT: ar1113-recovery-handoff-phase-replay
+      FULL_BOARD_EXPERIMENT: ar1113-last-attempt-recovery-phase-replay
 
     steps:
       - name: Checkout diagnostic controller
@@ -81,7 +81,7 @@ jobs:
           "$FULL_BOARD_ROOT/phase-source-baseline-runtime.json"
           "$FULL_BOARD_ROOT/phase-results/source-baseline"
 
-      - name: Replay partial recovery handoff in a fresh process
+      - name: Replay retained progress after all original attempts
         id: handoff
         if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
         continue-on-error: true
@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: ar1113-recovery-handoff-${{ matrix.case }}-${{ github.run_attempt }}
+          name: ar1113-last-handoff-${{ matrix.case }}-${{ github.run_attempt }}
           path: |
             .full-board-run/phase-results
             .full-board-run/phase-*-runtime.json

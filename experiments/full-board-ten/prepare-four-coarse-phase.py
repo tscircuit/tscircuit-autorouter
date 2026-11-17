@@ -61,6 +61,7 @@ assert sha(Path(package["entry"]).read_bytes()) == builds["originalAutorouterSHA
 assert builds["mainVersion"] == runtime["mainVersion"]
 assert builds["routingSource"]["autorouterVersion"] == "0.0.1113"
 assert builds["routingSource"]["autorouterCommit"] == "b9f024828936f9639a696c9943747cc776cda72e"
+assert builds["routingSource"]["tinyCandidateCommit"] == "f1fe8edcfb3dfde8fd644d09d81bad18743144b3"
 for variant in ["source-baseline", "handoff-only"]:
     selected = builds["variants"][variant]
     compressed = (controller / "source-bundles" / selected["filename"]).read_bytes()
