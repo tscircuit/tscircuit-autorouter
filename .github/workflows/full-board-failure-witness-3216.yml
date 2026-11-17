@@ -1,8 +1,8 @@
-name: Published3216 Glider path witness
+name: Published3216 H616 pending-node context
 
 on:
   push:
-    branches: [diagnostic/full-board-failures-3216]
+    branches: [diagnostic/h616-pending-chain-3216]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { board: glider, experiment: published, cohorts: "spaced" }
+          - { board: h616, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json

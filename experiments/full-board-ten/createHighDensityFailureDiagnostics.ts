@@ -164,6 +164,34 @@ export function createHighDensityFailureDiagnostics(options: DiagnosticOptions):
           record.reason = hd.activeFallbackReason
           record.fixedRouteReplacements = storeData(hd.fixedRouteReplacements)
           record.removedFixedRouteConnectionNames = storeData(hd.removedFixedRouteConnectionNames)
+          if (!report!.pendingNodeAbsorptionContext) {
+            const firstB01 = report!.attempts.find((attempt: RuntimeObject): boolean => attempt.kind === "b01")
+            assert(firstB01?.final?.failed === true, "Pending-node context requires the retained first B01 failure")
+            assert.equal(solver.iterations, 0, "Pending-node context must precede regional solver execution")
+            const parentFields = ["params", "activeNode", "unsolvedNodePortPoints", "routes", "fixedRouteReplacements", "removedFixedRouteConnectionNames", "preloadedTraceMutationMasks"]
+            const parentData: RuntimeObject = Object.fromEntries(parentFields.map((field): [string, unknown] => {
+              const descriptor = Object.getOwnPropertyDescriptor(hd, field)
+              assert(descriptor && "value" in descriptor, `Missing own parent data property ${field}`)
+              return [field, descriptor.value]
+            }))
+            const savedNodesDescriptor = Object.getOwnPropertyDescriptor(pipeline!, "highDensityNodePortPoints")
+            assert(savedNodesDescriptor && "value" in savedNodesDescriptor, "Missing own pipeline HD input snapshot")
+            report!.pendingNodeAbsorptionContext = {
+              captureMoment: "first-regional-constructor-after-b01-failure",
+              regionalAttemptId: record.id,
+              regionalInitial: record.initial,
+              retainedB01AttemptId: firstB01.id,
+              parentState: stateSnapshot(hd),
+              parentParameters: parameterSnapshot(parentData.params),
+              pipelineHighDensityNodePortPoints: storeData(savedNodesDescriptor.value),
+              activeNode: storeData(parentData.activeNode),
+              pendingNodeIds: storeData(parentData.unsolvedNodePortPoints.map((node: RuntimeObject): string => node.capacityMeshNodeId)),
+              priorSamePhaseRoutes: storeData(parentData.routes),
+              fixedRouteReplacements: storeData(parentData.fixedRouteReplacements),
+              removedFixedRouteConnectionNames: storeData(parentData.removedFixedRouteConnectionNames),
+              preloadedTraceMutationMasks: storeData(parentData.preloadedTraceMutationMasks),
+            }
+          }
         } else {
           const fields = ["viaDiameter", "traceWidth", "obstacleMargin", "effort", "layerCount", "obstacles", "boardGeometry", "connMap", "nodePfById", "preserveTerminalPcbPortIds", "captureSearchDebug", "priorityDagOptions"]
           record.parameters = parameterSnapshot(Object.fromEntries(fields.filter(key => hd[field!][key] !== undefined).map(key => [key, solver[key]])))

@@ -3,6 +3,7 @@
 import gzip
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 import sys
 
@@ -14,6 +15,7 @@ result = json.loads((output / "result.json").read_text())
 progress = json.loads((output / "progress.json").read_text())
 witness = json.loads(gzip.decompress((output / "failure-witness.json.gz").read_bytes()))
 checks = {}
+context_observations = None
 
 def check(name, condition):
     checks[name] = bool(condition)
@@ -46,6 +48,53 @@ if board in ["h616", "icepi"]:
     check("each_regional_instance_captured_before_stepping", all(attempt["initial"]["iterations"] == 0 and all(key in attempt for key in ["parameters", "fixedRouteSections", "fixedObstacleRoutes", "promotedConnectionNames", "reason"]) for attempt in regional))
     check("native_connectivity_maps", bool(regional) and all("netMap" in attempt["parameters"]["connMap"] and "idToNetMap" in attempt["parameters"]["connMap"] for attempt in regional))
     check("native_inputs_bounded", witness["serializedInputBytes"] <= 24 * 1024 * 1024)
+    if board == "h616":
+        # Match the observer's JSON.stringify hashes exactly, including floats.
+        blob_proof = json.loads(subprocess.check_output(["bun", "-e", """
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
+import { createHash } from "node:crypto"
+const witness = JSON.parse(gunzipSync(readFileSync(process.argv[1])))
+const entries = Object.entries(witness.blobs)
+const invalid = entries.filter(([hash, value]) => createHash("sha256").update(JSON.stringify(value)).digest("hex") !== hash)
+console.log(JSON.stringify({ count: entries.length, valid: invalid.length === 0 }))
+""", str(output / "failure-witness.json.gz")]))
+        check("all_native_blob_digests", blob_proof["count"] > 0 and blob_proof["valid"])
+        blobs = witness["blobs"]
+        context = witness.get("pendingNodeAbsorptionContext")
+        check("pending_node_context_present", isinstance(context, dict))
+        if isinstance(context, dict):
+            def resolve_blob(reference):
+                if not isinstance(reference, dict) or set(reference) != {"$blob"} or reference["$blob"] not in blobs:
+                    raise RuntimeError("Missing complete context blob")
+                return blobs[reference["$blob"]]
+
+            parameters = context["parentParameters"]
+            nodes = resolve_blob(parameters["nodePortPoints"])
+            fixed_routes = resolve_blob(parameters["fixedHdRoutes"])
+            initial_nodes = resolve_blob(context["pipelineHighDensityNodePortPoints"])
+            pending_ids = resolve_blob(context["pendingNodeIds"])
+            active_node = resolve_blob(context["activeNode"])
+            prior_routes = resolve_blob(context["priorSamePhaseRoutes"])
+            required_context = ["fixedRouteReplacements", "removedFixedRouteConnectionNames", "preloadedTraceMutationMasks"]
+            for field in required_context:
+                resolve_blob(context[field])
+            node_ids = [item["capacityMeshNodeId"] for item in nodes]
+            node_set, pending_set = set(node_ids), set(pending_ids)
+            active_id = active_node["capacityMeshNodeId"]
+            stats = context["parentState"]["stats"]
+            check("context_is_first_regional_constructor", context["captureMoment"] == "first-regional-constructor-after-b01-failure" and bool(regional) and context["regionalAttemptId"] == regional[0]["id"] and context["regionalInitial"] == regional[0]["initial"] and context["regionalInitial"]["iterations"] == 0)
+            check("context_retains_first_b01_failure", bool(b01) and context["retainedB01AttemptId"] == b01[0]["id"] and b01[0]["final"]["failed"] is True)
+            check("context_has_complete_node_partition", len(node_ids) == len(node_set) == stats["nodeCount"] and len(pending_ids) == len(pending_set) and pending_set <= node_set and active_id == node and active_id in node_set and active_id not in pending_set and len(node_set - pending_set - {active_id}) == stats["solvedNodeCount"])
+            check("context_active_node_is_native_regional_input", context["activeNode"] == regional[0]["node"])
+            initial_node_ids = [item["capacityMeshNodeId"] for item in initial_nodes]
+            check("context_preserves_pipeline_input_snapshot", len(initial_node_ids) == len(set(initial_node_ids)) == len(node_ids) and set(initial_node_ids) == node_set)
+            context_observations = {"initialAndCurrentNodeInputsEqual": initial_nodes == nodes, "queueOrder": "native array order; parent consumes from the end", "inputNodeCount": len(nodes), "pendingNodeCount": len(pending_ids), "acceptedNodeCount": len(node_set - pending_set - {active_id}), "priorSamePhaseRouteCount": len(prior_routes), "originalFixedRouteCount": len(fixed_routes)}
+            check("context_preserves_node_pairs", all(isinstance(item.get("portPoints"), list) and (item.get("portPointsInPairs", {"$undefined": True}) == {"$undefined": True} or isinstance(item["portPointsInPairs"], list) and all(isinstance(pair, list) and len(pair) == 2 for pair in item["portPointsInPairs"])) for item in nodes))
+            check("context_preserves_prior_and_fixed_copper", isinstance(prior_routes, list) and isinstance(fixed_routes, list) and len(fixed_routes) == stats["fixedObstacleCount"])
+            check("context_has_native_connectivity_maps", "netMap" in parameters["connMap"] and "idToNetMap" in parameters["connMap"])
+            resolve_blob(parameters["connMap"]["netMap"])
+            resolve_blob(parameters["connMap"]["idToNetMap"])
 else:
     check("same_existing_coarse_diagnostics", hashlib.sha256((output / "coarse-diagnostics.json").read_bytes()).hexdigest() == baseline["coarseDiagnosticsSha256"])
     check("coarse_hook_from_start", witness.get("innerHookInstalled") is True and witness["configured"]["hookInstalledAtIteration"] == 0)
@@ -73,7 +122,7 @@ else:
     check("selected_committed_paths_complete", bool(attempts) and paths_complete)
     check("selected_goal_neighborhoods_complete", bool(attempts) and neighborhoods_complete)
 
-report = {"board": board, "baselineRun": expected["baselineRun"], "checks": checks, "valid": all(checks.values()), "notice": "Diagnostic acceptance only; the authentic board remains incomplete. Wall times include observation overhead."}
+report = {"board": board, "baselineRun": expected["baselineRun"], "checks": checks, "valid": all(checks.values()), "nativeContextObservations": context_observations, "notice": "Diagnostic acceptance only; the authentic board remains incomplete. Wall times include observation overhead."}
 (output / "failure-witness-validation.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report, indent=2))
 if not report["valid"]:
