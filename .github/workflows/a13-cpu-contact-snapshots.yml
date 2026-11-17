@@ -23,10 +23,10 @@ jobs:
           p=pathlib.Path('package.json')
           data=json.loads(p.read_text())
           data['overrides']={**data.get('overrides',{}),'csstype':'3.1.3'}
+          data['trustedDependencies']=list(dict.fromkeys([*data.get('trustedDependencies',[]),'sharp']))
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
-          bun pm trust sharp
       - name: Generate both views from the unchanged real board
         env:
           BUN_UPDATE_SNAPSHOTS: 1
