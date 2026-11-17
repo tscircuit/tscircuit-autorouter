@@ -29,7 +29,7 @@ export const getEcp5BoundaryCopperPcbSvg = ({
   })
   const svg = convertCircuitJsonToPcbSvg(view, {
     width: 1000,
-    height: focused ? 1000 : 1800,
+    height: focused ? 1000 : 600,
     backgroundColor: "white",
     renderSolderMask: false,
     drawPaddingOutsideBoard: !focused,

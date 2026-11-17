@@ -75,7 +75,9 @@ test("captures the ECP5 regional repair losing tangent RAM_A13 copper", async ()
       }
     }
     fixedRoutes = [
-      ...fixedRoutes.filter((route) => !replacedNames.has(route.connectionName)),
+      ...fixedRoutes.filter(
+        (route) => !replacedNames.has(route.connectionName),
+      ),
       ...replacements,
     ]
   }
