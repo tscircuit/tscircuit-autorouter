@@ -5,8 +5,7 @@ export const isPipeline9PriorityDrcError = (
 ): boolean => {
   const isFixedCopper = error.drc_source === "fixed_copper"
   const hasCopperContact =
-    typeof error.actual_clearance === "number" &&
-    error.actual_clearance <= 0
+    typeof error.actual_clearance === "number" && error.actual_clearance <= 0
   return !isFixedCopper || hasCopperContact
 }
 
@@ -18,8 +17,12 @@ export const isPipeline9DrcPriorityImprovement = ({
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
 }): boolean => {
-  const currentHasPriorityErrors = currentErrors.some(isPipeline9PriorityDrcError)
-  const candidateHasPriorityErrors = candidateErrors.some(isPipeline9PriorityDrcError)
+  const currentHasPriorityErrors = currentErrors.some(
+    isPipeline9PriorityDrcError,
+  )
+  const candidateHasPriorityErrors = candidateErrors.some(
+    isPipeline9PriorityDrcError,
+  )
   // Positive fixed-copper clearances follow circuit errors and physical shorts.
   // Keep that priority consistent with the errors included in the repair score.
   if (currentHasPriorityErrors !== candidateHasPriorityErrors) {
