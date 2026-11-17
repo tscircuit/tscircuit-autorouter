@@ -1,193 +1,171 @@
-diff --git a/lib/IsolatedCircuit.ts b/lib/IsolatedCircuit.ts
-index 959ca18..54dc44e 100644
---- a/lib/IsolatedCircuit.ts
-+++ b/lib/IsolatedCircuit.ts
-@@ -231,0 +232 @@ export class IsolatedCircuit {
-+          this.removeListener("autorouting:end", resume)
-@@ -235,0 +237 @@ export class IsolatedCircuit {
-+        this.on("autorouting:end", resume)
-@@ -239 +241 @@ export class IsolatedCircuit {
--      // an effect completes, rather than traversing every component on idle polls.
-+      // an effect completes or publishes an accepted routing phase.
-@@ -357,0 +360,2 @@ export class IsolatedCircuit {
-+    } else if (event === "autorouting:end") {
-+      this._hasUnrenderedUpdatesFromAsyncEffects = true
 diff --git a/lib/components/primitive-components/Group/Group.ts b/lib/components/primitive-components/Group/Group.ts
-index 6b3dd8d..f258492 100644
+index f258492..44d26ff 100644
 --- a/lib/components/primitive-components/Group/Group.ts
 +++ b/lib/components/primitive-components/Group/Group.ts
-@@ -141,0 +142,22 @@ import { computeCenterFromAnchorPosition } from "./utils/computeCenterFromAnchor
-+type PcbTraceId = PcbTrace["pcb_trace_id"]
-+type AutoroutedPcbTrace = (PcbTrace | SimplifiedPcbTrace) &
-+  Partial<Pick<PcbTrace, "subcircuit_id" | "route_thickness_mode">>
+@@ -41,7 +41,10 @@ import { isAssemblyDeviceContainer } from "lib/components/base-components/is-ass
+ import { AutorouterError } from "lib/errors/AutorouterError"
+ import type { AutorouterOptions } from "lib/utils/autorouting/CapacityMeshAutorouter"
+ import { FanoutAutorouter } from "lib/utils/autorouting/FanoutAutorouter"
+-import type { GenericLocalAutorouter } from "lib/utils/autorouting/GenericLocalAutorouter"
++import type {
++  AutorouterErrorEvent,
++  GenericLocalAutorouter,
++} from "lib/utils/autorouting/GenericLocalAutorouter"
+ import type {
+   SimpleRouteBounds,
+   SimpleRouteJson,
+@@ -1330,6 +1333,7 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+ 
+     const outputTestPoints: ConnectedRoutedTestPoint[] = []
+     let routingError: Error | undefined
++    let recordedRoutingErrors = 0
+     const outputTraces: SimplifiedPcbTrace[] = []
+     const outputJumpers: Array<{
+       jumper_footprint: string
+@@ -1405,6 +1409,28 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+     const fixedTraceIds = new Set(manualPcbTraceIds)
+     let previousStageOutputSimpleRouteJson: SimpleRouteJson | undefined
+     const skippedRemainingPhases = new Set<RoutingPhasePlan>()
++    // Ordinary authored phases can route independently against accepted copper.
++    // Transforming phases and custom algorithms may depend on earlier output.
++    const canContinueIndependentPhases =
++      !isSingleLayerBoard &&
++      !isAutoJumperPreset &&
++      !isLaserPrefabPreset &&
++      routingStages.every(
++        ({ routingPhasePlan, autorouterConfig, usesPreviousStageOutput }) =>
++          routingPhasePlan.routingPhaseIndex !== null &&
++          Boolean(routingPhasePlan.autoroutingPhase) &&
++          !routingPhasePlan.reroute &&
++          !routingPhasePlan.testPointOptions &&
++          !routingPhasePlan.routingPcbGroupId &&
++          !routingPhasePlan.fanoutRegionPcbGroupId &&
++          !routingPhasePlan.region &&
++          !routingPhasePlan.getPrecomputedRoutingResult &&
++          !usesPreviousStageOutput &&
++          !autorouterConfig.algorithmFn &&
++          (autorouterConfig.preset === undefined ||
++            autorouterConfig.preset === "default" ||
++            autorouterConfig.preset === "bus_lanes"),
++      )
+ 
+     for (const [
+       routingStageIndex,
+@@ -1773,6 +1799,7 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+         simpleRouteJson,
+       })
+       let autorouter: GenericLocalAutorouter | undefined
++      let stageRoutingError: AutorouterErrorEvent | undefined
+ 
+       try {
+         const runAutorouter = async (
+@@ -1789,6 +1816,7 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+                 debug(
+                   `[${this.getString()}] local autorouting error: ${event.error.message}`,
+                 )
++                stageRoutingError ??= event
+                 routingError = event.error
+                 reject(event.error)
+               })
+@@ -2202,10 +2230,14 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+         const { db } = this.root!
+         // Record the error
+         db.pcb_autorouting_error.insert({
+-          pcb_error_id: `pcb_autorouter_error_subcircuit_${this.subcircuit_id}`,
++          pcb_error_id:
++            recordedRoutingErrors === 0
++              ? `pcb_autorouter_error_subcircuit_${this.subcircuit_id}`
++              : `pcb_autorouter_error_subcircuit_${this.subcircuit_id}_stage_${routingStageIndex}`,
+           error_type: "pcb_autorouting_error",
+           message: error instanceof Error ? error.message : String(error),
+         })
++        recordedRoutingErrors++
+ 
+         const computeCostSummary = autorouter?.getComputeCostSummary?.()
+         this.root?.emit("autorouting:error", {
+@@ -2227,7 +2259,14 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+           simpleRouteJson,
+         })
+ 
+-        if (outputTraces.length === 0 || !routingError) throw error
++        if (!stageRoutingError || error !== stageRoutingError.error) throw error
 +
-+type GroupAutoroutingResult = {
-+  output_test_points?: ConnectedRoutedTestPoint[]
-+  output_simple_route_json?: SimpleRouteJson
-+  output_pcb_traces?: (AutoroutedPcbTrace | PcbVia)[]
-+  pcb_trace_ids_to_be_replaced?: PcbTraceId[]
-+  output_jumpers?: Array<{
-+    jumper_footprint: string
-+    center: { x: number; y: number }
-+    orientation: string
-+    pads: Array<{
-+      center: { x: number; y: number }
-+      width: number
-+      height: number
-+      layer: string
-+    }>
-+  }>
-+}
-+
-@@ -284,18 +306,4 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--  _asyncAutoroutingResult: {
--    output_test_points?: ConnectedRoutedTestPoint[]
--    output_simple_route_json?: SimpleRouteJson
--    output_pcb_traces?: (PcbTrace | PcbVia)[]
--    // PCB traces that are being re-routed
--    pcb_trace_ids_to_be_replaced?: string[]
--    output_jumpers?: Array<{
--      jumper_footprint: string
--      center: { x: number; y: number }
--      orientation: string
--      pads: Array<{
--        center: { x: number; y: number }
--        width: number
--        height: number
--        layer: string
--      }>
--    }>
--  } | null = null
-+  _asyncAutoroutingResult: GroupAutoroutingResult | null = null
-+  private _acceptedAutoroutingPhaseResult: GroupAutoroutingResult | null = null
-+  private _renderedAutoroutingResult: GroupAutoroutingResult | null = null
-+  private _renderedAutoroutingPcbTraceIds: PcbTraceId[] = []
-@@ -2070,16 +2077,0 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--        this.root?.emit("autorouting:end", {
--          ...savedPhasePaths,
--          ...(computeCostSummary !== undefined ? { computeCostSummary } : {}),
--          type: "autorouting:end",
--          subcircuit_id: this.subcircuit_id,
--          componentDisplayName: this.getString(),
--          ...(routingPhasePlan.phaseName !== undefined
--            ? {
--                phaseName: routingPhasePlan.phaseName,
--                phaseStageIndex,
--                phaseStageCount,
--              }
--            : {}),
--          ...autoroutingMetadata,
--          simpleRouteJson: outputSimpleRouteJson,
--        })
-@@ -2158,0 +2151,50 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
-+
-+        // Pours need their final clearance render. Generated components and
-+        // authored assignable vias need one final materialization/ownership pass.
-+        const acceptedTracePhase =
-+          phaseStageIndex + 1 === phaseStageCount &&
-+          routingStageIndex + 1 < routingStages.length &&
-+          !(this._getBoard() ?? this)
-+            .getDescendants()
-+            .some((component) => component.componentName === "CopperPour") &&
-+          db.pcb_copper_pour.list().length === 0 &&
-+          !db.pcb_via.list().some((via) => via.net_is_assignable) &&
-+          outputJumpers.length === 0 &&
-+          outputTestPoints.length === 0 &&
-+          !outputTraces.some((trace) =>
-+            trace.route.some((point) => point.route_type === "jumper"),
-+          )
-+        if (acceptedTracePhase) {
-+          // Saved paths can complete inside the render that starts this effect.
-+          // Publish after that render has finished clearing its dirty flags.
-+          await Promise.resolve()
-+          // Rendering normalizes routes. Later solvers must keep the untouched
-+          // accepted SRJ, and parent subcircuits must still wait for the final result.
-+          this._acceptedAutoroutingPhaseResult = {
-+            output_pcb_traces: structuredClone(outputTraces),
-+            pcb_trace_ids_to_be_replaced: [...pcbTraceIdsToDelete],
-+          }
-+          this._markDirty("PcbTraceRender")
++        if (canContinueIndependentPhases && stageRoutingError.solverFailed) {
++          skippedRemainingPhases.add(routingPhasePlan)
++          continue
 +        }
 +
-+        this.root?.emit("autorouting:end", {
-+          ...savedPhasePaths,
-+          ...(computeCostSummary !== undefined ? { computeCostSummary } : {}),
-+          type: "autorouting:end",
-+          subcircuit_id: this.subcircuit_id,
-+          componentDisplayName: this.getString(),
-+          ...(routingPhasePlan.phaseName !== undefined
-+            ? {
-+                phaseName: routingPhasePlan.phaseName,
-+                phaseStageIndex,
-+                phaseStageCount,
-+              }
-+            : {}),
-+          ...autoroutingMetadata,
-+          simpleRouteJson: outputSimpleRouteJson,
-+        })
-+        if (acceptedTracePhase) {
-+          // Let the normal render loop publish accepted copper before the next
-+          // solver starts work. The routing async effect remains pending.
-+          await new Promise<void>((resolve) => setTimeout(resolve, 0))
-+        }
-@@ -2200 +2242 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--      output_pcb_traces: outputTraces as any,
-+      output_pcb_traces: outputTraces,
-@@ -2352 +2394,7 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--    if (!this._asyncAutoroutingResult) return
-+    const autoroutingResult =
-+      this._asyncAutoroutingResult ?? this._acceptedAutoroutingPhaseResult
-+    if (
-+      !autoroutingResult ||
-+      autoroutingResult === this._renderedAutoroutingResult
-+    )
-+      return
-@@ -2355,3 +2403 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--    const { db } = this.root!
--
--    if (this._asyncAutoroutingResult.output_simple_route_json) {
-+    if (autoroutingResult.output_simple_route_json) {
-@@ -2359 +2405 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--        `[${this.getString()}] updating PCB traces from simple route json (${this._asyncAutoroutingResult.output_simple_route_json.traces?.length} traces)`,
-+        `[${this.getString()}] updating PCB traces from simple route json (${autoroutingResult.output_simple_route_json.traces?.length} traces)`,
-@@ -2361,0 +2408 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
-+      this._renderedAutoroutingResult = autoroutingResult
-@@ -2365 +2412 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--    if (this._asyncAutoroutingResult.output_pcb_traces) {
-+    if (autoroutingResult.output_pcb_traces) {
-@@ -2367 +2414 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--        `[${this.getString()}] updating PCB traces from ${this._asyncAutoroutingResult.output_pcb_traces.length} traces`,
-+        `[${this.getString()}] updating PCB traces from ${autoroutingResult.output_pcb_traces.length} traces`,
-@@ -2369 +2416,4 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--      this._updatePcbTraceRenderFromPcbTraces()
-+      this._renderedAutoroutingPcbTraceIds =
-+        this._updatePcbTraceRenderFromPcbTraces(autoroutingResult)
-+      this._renderedAutoroutingResult = autoroutingResult
-+      this._acceptedAutoroutingPhaseResult = null
-@@ -2436 +2486,3 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--  _updatePcbTraceRenderFromPcbTraces() {
-+  _updatePcbTraceRenderFromPcbTraces(
-+    autoroutingResult: GroupAutoroutingResult,
-+  ) {
-@@ -2438,2 +2490,3 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--      this._asyncAutoroutingResult!
--    if (!output_pcb_traces) return
-+      autoroutingResult
-+    const emittedPcbTraceIds: PcbTraceId[] = []
-+    if (!output_pcb_traces) return emittedPcbTraceIds
-@@ -2442 +2495 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--    const testPoints = this._asyncAutoroutingResult!.output_test_points
-+    const testPoints = autoroutingResult.output_test_points
-@@ -2445 +2498 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--      this._asyncAutoroutingResult!.output_test_points = []
-+      autoroutingResult.output_test_points = []
-@@ -2473 +2526,4 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
--      pcbTraceIdsToReplace: pcb_trace_ids_to_be_replaced,
-+      pcbTraceIdsToReplace: [
-+        ...(pcb_trace_ids_to_be_replaced ?? []),
-+        ...this._renderedAutoroutingPcbTraceIds,
-+      ],
-@@ -2549,0 +2606 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
-+          emittedPcbTraceIds.push(insertedPcbTrace.pcb_trace_id)
-@@ -2640,0 +2698 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
-+    return emittedPcbTraceIds
++        if (outputTraces.length === 0) throw error
+ 
+         // Publish completed phases, then propagate the failed phase as before.
+         break
+@@ -2237,6 +2276,8 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+       }
+     }
+ 
++    if (routingError && outputTraces.length === 0) throw routingError
++
+     // Store the result
+     this._asyncAutoroutingResult = {
+       output_pcb_traces: outputTraces,
+diff --git a/lib/utils/autorouting/BusLanesAutorouter.ts b/lib/utils/autorouting/BusLanesAutorouter.ts
+index 0a27033..93391fa 100644
+--- a/lib/utils/autorouting/BusLanesAutorouter.ts
++++ b/lib/utils/autorouting/BusLanesAutorouter.ts
+@@ -62,6 +62,7 @@ export class BusLanesAutorouter implements GenericLocalAutorouter {
+           this.isRouting = false
+           this.emit({
+             type: "error",
++            solverFailed: true,
+             error: new Error(this.solver.error ?? "Bus lanes routing failed"),
+           })
+           return
+diff --git a/lib/utils/autorouting/CapacityMeshAutorouter.ts b/lib/utils/autorouting/CapacityMeshAutorouter.ts
+index 5f1f90d..efabb50 100644
+--- a/lib/utils/autorouting/CapacityMeshAutorouter.ts
++++ b/lib/utils/autorouting/CapacityMeshAutorouter.ts
+@@ -260,6 +260,7 @@ export class TscircuitAutorouter implements GenericLocalAutorouter {
+   private async runThreadedSolver(workerCount: number): Promise<void> {
+     const run: ThreadedAutoroutingRun = { stopped: false }
+     this.threadedRun = run
++    let solverFailed = false
+     try {
+       // The selected name excludes networked Pipeline9 and legacy pipelines.
+       const status = await runThreadedAutorouter(
+@@ -284,6 +285,7 @@ export class TscircuitAutorouter implements GenericLocalAutorouter {
+       }
+       this.isRouting = false
+       if (this.solver.failed) {
++        solverFailed = true
+         throw new AutorouterError(this.solver.error || "Routing failed")
+       }
+       this.emitEvent({
+@@ -296,6 +298,7 @@ export class TscircuitAutorouter implements GenericLocalAutorouter {
+       this.isRouting = false
+       this.emitEvent({
+         type: "error",
++        solverFailed: solverFailed || undefined,
+         error: new AutorouterError(
+           error instanceof Error ? error.message : String(error),
+         ),
+@@ -329,6 +332,7 @@ export class TscircuitAutorouter implements GenericLocalAutorouter {
+         if (this.solver.failed) {
+           this.emitEvent({
+             type: "error",
++            solverFailed: true,
+             error: new AutorouterError(this.solver.error || "Routing failed"),
+           })
+         } else {
+diff --git a/lib/utils/autorouting/GenericLocalAutorouter.ts b/lib/utils/autorouting/GenericLocalAutorouter.ts
+index 448827e..c8270b9 100644
+--- a/lib/utils/autorouting/GenericLocalAutorouter.ts
++++ b/lib/utils/autorouting/GenericLocalAutorouter.ts
+@@ -10,6 +10,8 @@ export type AutorouterCompleteEvent = {
+ export type AutorouterErrorEvent = {
+   type: "error"
+   error: Error
++  /** The solver reported failure, rather than throwing an unexpected error. */
++  solverFailed?: true
+ }
+ 
+ export type AutorouterProgressEvent = {

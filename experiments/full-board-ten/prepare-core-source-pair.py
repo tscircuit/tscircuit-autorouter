@@ -118,18 +118,39 @@ def main():
                 raise RuntimeError(f"Frozen source graph member changed: {filename}")
             (frozen_directory / filename).write_bytes(content)
     shutil.copyfile(frozen_directory / "bun.lock", source / "bun.lock")
+    refresh = plan["sourceGraphRefresh"]
+    refresh_patch = controller / "core-source-lock-refresh.patch"
+    if digest(refresh_patch) != refresh["lockPatchSha256"]:
+        raise RuntimeError("Reviewed source lock refresh changed")
+    run(["patch", "--batch", "--forward", "-p1", "-i", str(refresh_patch)], source)
+    if digest(source / "bun.lock") != refresh["updatedLockSha256"]:
+        raise RuntimeError("Source lock differs from the reviewed two-record refresh")
     run(["bun", f"--config={install_config}", "install", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], source)
     lock = source / "bun.lock"
     lock_sha = digest(lock)
-    if lock_sha != frozen_graph["files"]["bun.lock"]["sha256"]:
+    if lock_sha != refresh["updatedLockSha256"]:
         raise RuntimeError("Installation changed the authenticated source lock")
     (proof / "bun.lock").write_bytes(lock.read_bytes())
     if (source / "package.json").read_bytes() != original_manifest:
         raise RuntimeError("Installation changed source manifest")
     graph = inventory(source / "node_modules")
     with gzip.open(frozen_directory / "dependency-inventory.json.gz", "rt") as stream:
-        if graph != json.load(stream):
-            raise RuntimeError("Resolved source dependency inventory differs from the first authenticated graph")
+        expected_graph = json.load(stream)
+    # Core's only dependency declaration change is AR1117 -> AR1121. Retain
+    # every old nested dependency byte and replace only the authenticated npm
+    # package's own files; no unrelated dependency is re-resolved or exempted.
+    runtime = json.loads((root / "runtime-manifest.json").read_text())
+    refreshed_package = next(package for package in runtime["packages"] if package["name"] == refresh["package"])
+    if refreshed_package["version"] != refresh["version"] or refreshed_package["integrity"] != refresh["integrity"]:
+        raise RuntimeError("Refreshed source dependency differs from the published runtime")
+    if any(row["path"].startswith("node_modules/") for row in refreshed_package["publishedFiles"]):
+        raise RuntimeError("Refreshed package must not replace nested dependency files")
+    prefix = refresh["package"] + "/"
+    own_package_file = lambda path: path.startswith(prefix) and not path.startswith(prefix + "node_modules/")
+    expected_graph = {path: value for path, value in expected_graph.items() if not own_package_file(path)}
+    expected_graph.update({prefix + row["path"]: {"sha256": row["sha256"]} for row in refreshed_package["publishedFiles"]})
+    if graph != expected_graph:
+        raise RuntimeError("Source dependency inventory differs from the reviewed package-only refresh")
     with gzip.open(proof / "dependency-inventory.json.gz", "wt") as stream:
         json.dump(graph, stream, sort_keys=True)
     packages = []
@@ -140,9 +161,14 @@ def main():
                 package = json.loads(path.read_text())
                 packages.append({"path": relative, "name": package.get("name"), "version": package.get("version"), "sha256": digest(path)})
     expected_packages = json.loads((frozen_directory / "resolved-packages.json").read_text())
+    refreshed_metadata = next(row for row in refreshed_package["publishedFiles"] if row["path"] == "package.json")
+    expected_packages = [
+        {"path": prefix + "package.json", "name": refresh["package"], "version": refresh["version"], "sha256": refreshed_metadata["sha256"]}
+        if row["path"] == prefix + "package.json" else row for row in expected_packages
+    ]
     if sorted(packages, key=lambda row: row["path"]) != sorted(expected_packages, key=lambda row: row["path"]):
         raise RuntimeError("Resolved source package inventory differs from the first authenticated graph")
-    (frozen_directory / "proof.json").write_text(json.dumps({"artifact": actual, "archiveDigestAndSizeVerified": True, "selectedFiles": frozen_graph["files"], "dependencyInventoryIdentical": True, "packageInventoryIdentical": True}, indent=2) + "\n")
+    (frozen_directory / "proof.json").write_text(json.dumps({"artifact": actual, "archiveDigestAndSizeVerified": True, "selectedFiles": frozen_graph["files"], "reviewedPackageRefresh": refresh, "dependencyInventoryMatchesReviewedRefresh": True, "packageInventoryMatchesReviewedRefresh": True}, indent=2) + "\n")
     (proof / "resolved-packages.json").write_text(json.dumps(packages, indent=2) + "\n")
     run(["patch", "--batch", "--forward", "-p1", "-i", str(test_patch)], source)
     for relative, checksum in plan["testFiles"].items():
@@ -162,7 +188,7 @@ def main():
             if (result.returncode != 1
                 or not all(text in result.stdout for text in plan["baselineFailureMustContain"])
                 or not all(re.search(pattern, result.stdout) for pattern in plan["baselineFailurePatterns"])):
-                raise RuntimeError("Baseline repro did not fail at its reviewed accepted-phase assertion")
+                raise RuntimeError("Baseline repro did not fail at its reviewed phase-continuation assertion")
         elif result.returncode != 0:
             raise RuntimeError(f"Focused Core tests failed: {name}")
         return record
@@ -224,15 +250,18 @@ def main():
     run(["bun", str(controller / "build-core-source-entry.mjs"), str(source), str(proof / "candidate")], source)
     candidate_bodies = source_bodies(proof / "candidate", source)
     changes = {key for key in base_bodies.keys() | candidate_bodies.keys() if base_bodies.get(key) != candidate_bodies.get(key)}
-    if changes != set(plan["productionFiles"]):
+    if changes != set(plan["bundledProductionFiles"]):
         raise RuntimeError(f"Unexpected bundled source change: {sorted(changes)}")
+    for relative in set(plan["productionFiles"]) - set(plan["bundledProductionFiles"]):
+        if relative in base_bodies or relative in candidate_bodies:
+            raise RuntimeError(f"Reviewed type-only source unexpectedly emitted runtime code: {relative}")
     if inventory(source / "node_modules") != graph or digest(lock) != lock_sha or (source / "package.json").read_bytes() != original_manifest:
         raise RuntimeError("Tests/builds changed the frozen dependency graph or manifest")
     entries = {}
     for lane in ["base", "candidate"]:
         folder = proof / lane
         entries[lane] = {"path": str(folder / "index.js"), "sha256": digest(folder / "index.js"), "jsFiles": [{"path": path.name, "sha256": digest(path)} for path in sorted(folder.glob("*.js"))]}
-    task = json.loads((root / "cases/butterstick-spaced.json").read_text())
+    task = json.loads((root / f"cases/{plan['case']['board']}-{plan['case']['cohort']}.json").read_text())
     evidence = {
         "passed": True, "sourceCommit": plan["corePrepublishBuildCommit"],
         "productionPatchSha256": plan["productionPatchSha256"], "productionFiles": plan["productionFiles"],

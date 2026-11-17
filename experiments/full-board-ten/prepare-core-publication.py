@@ -75,10 +75,8 @@ def main():
     proof = json.loads(proof_path.read_text())
     if not proof["passed"] or not proof["unchangedDependencyGraph"] or not proof["publishedModuleAudit"]["passed"]:
         raise RuntimeError("Source pair has not passed qualification")
-    if lane == "candidate":
-        validation = json.loads((root / "core-source-pair/base-validation.json").read_text())
-        if not validation["valid"]:
-            raise RuntimeError("Candidate routing requires full published/source-control parity")
+    if not plan["frozen"]:
+        raise RuntimeError("Qualification plan is not frozen")
     for package in published_manifest["packages"]:
         folder = Path(package["entry"]).parent
         for _ in Path(package["entryRelative"]).parts[:-1]:
@@ -131,14 +129,15 @@ def main():
     }
     replacement = {**core, "entry": str(overlay / core["entryRelative"]), "entrySha256": entry["sha256"], "publishedEntry": core["entry"], "publishedEntrySha256": core["entrySha256"], "publishedFiles": files}
     manifest = {
-        **published_manifest, "sourceOverrides": True, "experiment": f"core-accepted-phase-{lane}", "dependencyOverrides": [override],
+        **published_manifest, "sourceOverrides": True, "experiment": f"core-phase-continuation-{lane}", "dependencyOverrides": [override],
         "packages": [replacement if row["name"] == core["name"] else row for row in published_manifest["packages"]],
         "packageAliases": [{**row, "target": str(overlay), "publishedTarget": str(original)} if row["alias"] == str(alias) else row for row in published_manifest["packageAliases"]],
     }
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    task = json.loads((root / "cases/butterstick-spaced.json").read_text())
+    case_name = f"{plan['case']['board']}-{plan['case']['cohort']}"
+    task = json.loads((root / f"cases/{case_name}.json").read_text())
     task.update(experiment=manifest["experiment"], dependencyOverrides=[override])
-    (root / f"cases/{lane}-butterstick-spaced.json").write_text(json.dumps(task, indent=2) + "\n")
+    (root / f"cases/{lane}-{case_name}.json").write_text(json.dumps(task, indent=2) + "\n")
     (root / f"core-source-pair/{lane}-overlay.json").write_text(json.dumps({
         **override, "originalPackagesVerified": True, "onlyCoreOverridden": True,
         "assessmentFilesUnchanged": True, "runtimeManifestSha256": digest(manifest_path),

@@ -1,8 +1,8 @@
-name: Core accepted phase output qualification
+name: Core independent phase continuation qualification
 
 on:
   push:
-    branches: [bench/core-accepted-phase-output-3216]
+    branches: [bench/core-independent-phase-continuation-3230]
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   qualify:
-    name: Frozen Core source pair and complete ButterStick circuit
+    name: Frozen Core source qualification and H616 candidate
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 90
     env:
@@ -30,11 +30,11 @@ jobs:
             .github/workflows/full-board-ten.yml
             AGENTS.md
 
-      - name: Checkout exact Core2402 prepublish build source
+      - name: Checkout exact Core2407 prepublish build source
         uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: cfd206671da55be666f3302620b94235a2964ad7
+          ref: 7bfce91b1648255b6521b51d08e48db1120e32b1
           path: .full-board-run/source-core
           persist-credentials: false
 
@@ -75,7 +75,7 @@ jobs:
           "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
           "$FULL_BOARD_ROOT/sources/spaced"
           "$FULL_BOARD_ROOT/cases"
-          butterstick
+          h616
 
       - name: Authenticate published full-board control
         run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" baseline
@@ -85,39 +85,22 @@ jobs:
           python3 experiments/full-board-ten/prepare-core-source-pair.py
           "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/source-core"
 
-      - name: Install qualified Core source control only
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Run original ButterStick source-control full circuit
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/base-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
-
-      - name: Require published source-control route and physical parity
-        run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Render actual source-control CircuitJSON for visual review
-        run: >-
-          bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
-
       - name: Install reviewed Core source fix only
         run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" candidate
 
-      - name: Run actual ButterStick candidate with unchanged capture limits
+      - name: Run actual H616 candidate with unchanged capture limits
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/candidate-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
+          "$FULL_BOARD_ROOT/cases/candidate-h616-spaced.json"
+          "$FULL_BOARD_ROOT/results/candidate/h616/spaced"
 
-      - name: Require real eight-net emitted progress and unchanged native routing
+      - name: Require additional valid completed nets and unchanged failure prefix
         run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" candidate
 
       - name: Render actual candidate CircuitJSON for visual review
         run: >-
           bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
+          "$FULL_BOARD_ROOT/results/candidate/h616/spaced"
 
       - name: Restore original isolated Core alias
         if: always()
@@ -131,15 +114,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-core-accepted-phase-${{ github.run_attempt }}
+          name: h616-core-phase-continuation-${{ github.run_attempt }}
           path: |
             .full-board-run/core-source-pair
             .full-board-run/published-baseline/archive-proof.json
+            .full-board-run/published-baseline/pcb.svg.gz
             .full-board-run/results
             .full-board-run/cases/*.json
             .full-board-run/*runtime-manifest.json
             experiments/full-board-ten/core-publication-plan.json
             experiments/full-board-ten/core-publication-*.patch
+            experiments/full-board-ten/core-source-lock-refresh.patch
           if-no-files-found: error
           compression-level: 6
           retention-days: 7

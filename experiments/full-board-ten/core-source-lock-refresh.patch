@@ -1,0 +1,20 @@
+--- a/bun.lock
++++ b/bun.lock
+@@ -33,7 +33,7 @@
+         "@tscircuit/bus-lanes-solver": "https://jscdn.tscircuit.com/@tscircuit/bus-lanes-solver/0.0.61.tgz",
+         "@tscircuit/cableprinter": "^0.0.6",
+         "@tscircuit/cad-collision-checking": "https://jscdn.tscircuit.com/@tscircuit/cad-collision-checking/0.0.6.tgz",
+-        "@tscircuit/capacity-autorouter": "^0.0.1117",
++        "@tscircuit/capacity-autorouter": "^0.0.1121",
+         "@tscircuit/checks": "^0.0.279",
+         "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.6.tgz",
+         "@tscircuit/circuit-json-util": "^0.0.131",
+@@ -453,7 +453,7 @@
+ 
+     "@tscircuit/cad-collision-checking": ["@tscircuit/cad-collision-checking@https://jscdn.tscircuit.com/@tscircuit/cad-collision-checking/0.0.6.tgz", { "peerDependencies": { "@tscircuit/graphics-debug-3d": "*", "@tscircuit/jscad": "*", "@tscircuit/manifold-2d": "*", "@tscircuit/solver-utils": "*", "graphics-debug": "*", "typescript": "^5" } }, "sha512-UQ/4/+DzHwH9u5FOqFNRoyal/9KZ6QlITA6syH1miF3Ds5bSaB2NZv/WzpXa+E0MVjvIdl22XzwkQEgGChR1iw=="],
+ 
+-    "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.1117", "", { "dependencies": { "@tscircuit/solver-utils": "^0.0.23", "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-CCtklHIRBEUoif8plQlcN36oswpNZch822OL5r9rmI3fUdMsbIfEVwu6zEkOFxKENqRIi9RKZ271nOuCJqB52Q=="],
++    "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.1121", "", {"dependencies": {"@tscircuit/solver-utils": "^0.0.23", "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1"}}, "sha512-GcHgoID8re1C0GyBhH51Du42qEHBqYcxiWsipv6atk/bR0SF5jhCqPwWr0WhhtFVBus5GO0JVTgC2R+8chqGbw=="],
+ 
+     "@tscircuit/checks": ["@tscircuit/checks@0.0.279", "", { "dependencies": { "flatbush": "^4.6.2" }, "peerDependencies": { "@flatten-js/core": "*", "@tscircuit/circuit-json-util": "*", "@tscircuit/math-utils": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "typescript": "^5.5.3" } }, "sha512-1sXzLXNGjUFYwotHiRU8WbuMJHW6G5deH5A0PpyQ7fsIQWFsv63+jGdUmi5hGsaDTvODZgsGEzfGAuiy93fjRw=="],
+ 

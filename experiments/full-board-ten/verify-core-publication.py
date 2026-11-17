@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Qualify the source control before permitting an accepted-phase candidate."""
+"""Require added legal native completion against the authenticated published run."""
 
 import argparse
 from collections import Counter
 import gzip
 import hashlib
 import json
+import importlib.util
 from pathlib import Path
 import re
 import sys
 
 
 CONTROLLER = Path(__file__).resolve().parent
-PHASE_FILES = (
-    "phase-1-input.srj.json.gz",
-    "phase-1-output.srj.json.gz",
-    "phase-2-input.srj.json.gz",
+PHASE_FILES = tuple(
+    name for index in range(1, 5)
+    for name in ([f"phase-{index}-input.srj.json.gz", f"phase-{index}-output.srj.json.gz"]
+                 if index < 4 else ["phase-4-input.srj.json.gz", "phase-4-error.srj.json.gz"])
 )
 COPPER = {"pcb_trace", "pcb_via", "pcb_copper_pour"}
 SHARED = {
@@ -149,18 +150,22 @@ def verify_run(run, baseline, task, proof, plan, lane):
             "Case dependency override metadata disagrees")
     require(all(item["name"] == "@tscircuit/core" for item in task["dependencyOverrides"]),
             "Only Core may be overridden")
-    require(progress["status"] == "capture_deadline" and progress["renderCompleted"] is False,
-            "Observation frontier changed; preserve and review separately")
-    require(result["renderSettled"] is False and result["completeAndClean"] is False,
-            "Partial publication must not claim full-board completion")
-    require(progress["errors"] == expected["errors"], "Render error changed")
-    require(len(progress["phases"]) == 2, "Native phase advancement changed; review separately")
+    require(result["completeAndClean"] is False, "Failed phase must not claim whole-board completion")
+    require(progress["errors"] == expected["errors"], "Original failure changed or a new error occurred")
+    require(progress["status"] == "failed" and progress["renderCompleted"] is True,
+            "Successful continuation must settle while retaining the earlier failure")
+    require(len(progress["phases"]) == len(expected["phases"]) + 1, "Expected exactly one additional power phase")
+    timing = {"startedMs", "elapsedMs", "progress", "iterationsPerSecond"}
     for actual, previous in zip(progress["phases"], expected["phases"]):
-        timing = {"startedMs", "elapsedMs", "progress", "iterationsPerSecond"}
-        require(without(actual, timing) == without(previous, timing), "Native phase state changed")
-    require([without(item, {"startedMs", "elapsedMs"}) for item in progress["solvers"]] ==
+        require(without(actual, timing) == without(previous, timing), "Native prefix phase state changed")
+    power = progress["phases"][-1]
+    require(power["name"] == "power" and power["index"] == 5 and power["status"] == "completed"
+            and power["connections"] == 12 and power["terminals"] == 341,
+            "Starting power is not sufficient: the unchanged full phase must complete")
+    require([without(item, {"startedMs", "elapsedMs"}) for item in progress["solvers"][:-1]] ==
             [without(item, {"startedMs", "elapsedMs"}) for item in expected["solvers"]],
-            "Native solver lifecycle changed")
+            "Native solver prefix changed")
+    require(progress["solvers"][-1]["name"] == power["solver"], "Unexpected additional solver")
     packages = {item["name"]: item for item in progress["runtime"]["packages"]}
     prior_packages = {item["name"]: item for item in expected["runtime"]["packages"]}
     require(packages.keys() == prior_packages.keys(), "Runtime package set changed")
@@ -221,39 +226,51 @@ def physical_route(route):
     return min(canonical(points), canonical(list(reversed(points))))
 
 
-def verify_materialization(run, accepted, dq_ids):
+def verify_materialization(run, accepted, power_ids, physical):
+    """Every added copper row must come from the accepted native power result."""
     traces = {row["pcb_trace_id"]: row for row in run["circuit"] if row["type"] == "pcb_trace"}
-    expected = {row["pcb_trace_id"]: row for row in accepted["traces"]}
-    require(len(expected) == 16 and traces.keys() == expected.keys(), "Accepted trace IDs were lost, duplicated or added")
+    added = set(physical["addedTraceIds"])
+    expected_rows = [row for row in accepted["traces"] if row["connection_name"] in power_ids]
+    expected = {row["pcb_trace_id"]: row for row in expected_rows}
+    require(len(expected) == len(expected_rows) and expected.keys() == added and added,
+            "Added trace IDs differ from accepted power output")
     source_traces = {row["source_trace_id"]: row for row in run["circuit"] if row["type"] == "source_trace"}
     expected_vias = set()
+    trace_transitions = {}
+    physical_layers = ("top", "inner1", "inner2", "bottom")
     for trace_id, previous in expected.items():
         trace, owner = traces[trace_id], previous["connection_name"]
-        require(owner in dq_ids, "Accepted trace has unexpected net ownership")
         source_id = trace["source_trace_id"]
-        owners = {source_id} if source_id in dq_ids else set(source_traces[source_id]["connected_source_net_ids"])
-        require(owners == {owner}, f"Emitted net ownership changed: {trace_id}")
-        require(physical_route(trace["route"]) == physical_route(previous["route"]), f"Accepted route changed: {trace_id}")
+        owners = {source_id} if source_id in power_ids else set(source_traces[source_id]["connected_source_net_ids"])
+        require(owners == {owner}, f"Added trace has a different net owner: {trace_id}")
+        require(physical_route(trace["route"]) == physical_route(previous["route"]), f"Accepted power route changed: {trace_id}")
+        trace_transitions[trace_id] = set()
         for point in previous["route"]:
             if point["route_type"] == "via":
-                expected_vias.add((owner, point["x"], point["y"], point["via_hole_diameter"],
-                                   point["via_diameter"], tuple(sorted(point["layers"]))))
+                geometry = (point["x"], point["y"], point["via_hole_diameter"], point["via_diameter"])
+                # Core emits one physical same-net hole shared by multiple branches.
+                expected_vias.add((owner, *geometry, physical_layers))
+                trace_transitions[trace_id].add((*geometry, tuple(sorted((point["from_layer"], point["to_layer"])))))
     actual_vias = []
-    for via in (row for row in run["circuit"] if row["type"] == "pcb_via"):
-        require(via["pcb_trace_id"] in expected, "Via has no accepted trace owner")
-        actual_vias.append((expected[via["pcb_trace_id"]]["connection_name"], via["x"], via["y"],
-                            via["hole_diameter"], via["outer_diameter"], tuple(sorted(via["layers"]))))
-    require(len(actual_vias) == len(set(actual_vias)), "Duplicate owned physical via rows")
-    require(set(actual_vias) == expected_vias, "Physical via geometry/ownership differs from accepted routes")
-    require(not any(row["type"] == "pcb_copper_pour" for row in run["circuit"]), "Unexpected copper pour")
-    return len(actual_vias)
+    for via in (row for row in run["circuit"] if row["type"] == "pcb_via" and row["pcb_via_id"] in physical["addedViaIds"]):
+        require(via["pcb_trace_id"] in added, "Added via has no accepted power trace owner")
+        require(tuple(via["layers"]) == physical_layers, "Unexpected physical via span")
+        trace_id = via["pcb_trace_id"]
+        geometry = (via["x"], via["y"], via["hole_diameter"], via["outer_diameter"])
+        transition = (*geometry, tuple(sorted((via["from_layer"], via["to_layer"]))))
+        require(transition in trace_transitions[trace_id], "Via owner does not contain its exact transition")
+        actual_vias.append((expected[trace_id]["connection_name"], *geometry, physical_layers))
+    require(len(actual_vias) == len(set(actual_vias)) and set(actual_vias) == expected_vias,
+            "Added physical vias differ from accepted power routes")
+    return {"acceptedPowerTraces": len(added), "acceptedPowerVias": len(actual_vias)}
 
 
-def qualify(root, plan, lane, baseline):
+def qualify(root, plan, baseline):
+    lane = "candidate"
     proof = verify_provenance(root, plan, lane)
-    path = root / "results" / lane / "butterstick/spaced"
+    path = root / "results/candidate/h616/spaced"
     run = load_run(path)
-    task = read_json(root / f"cases/{lane}-butterstick-spaced.json")
+    task = read_json(root / "cases/candidate-h616-spaced.json")
     verify_run(run, baseline, task, proof, plan, lane)
     native_source = read_json(task["sourcePath"])
     requested_traces = [trace for trace in native_source["traces"] if len(trace["path"]) > 1]
@@ -263,51 +280,47 @@ def qualify(root, plan, lane, baseline):
     require(set(source_nets) == {trace["name"] for trace in requested_traces}, "Requested source net membership changed")
     for filename in ("unrouted.circuit.json.gz", *PHASE_FILES):
         require(read_bytes(path / filename) == read_bytes(root / "published-baseline" / filename),
-                f"Native bytes changed: {filename}")
-    require({item.name for item in path.glob("phase-*.gz")} == set(PHASE_FILES),
-            "Additional native phase output; preserve and review separately")
-    for index, expected_hash in ((1, "byte0InputSha256"), (2, "byte1InputSha256")):
+                f"Native pre-failure bytes changed: {filename}")
+    require({item.name for item in path.glob("phase-*.gz")} ==
+            set(PHASE_FILES) | {"phase-5-input.srj.json.gz", "phase-5-output.srj.json.gz"},
+            "Unexpected phase output; failed other_signals must not emit partial routes")
+    for index, expected_hash in plan["expectedNativePrefix"]["phaseInputs"].items():
         require(hashlib.sha256(read_bytes(path / f"phase-{index}-input.srj.json.gz")).hexdigest()
-                == plan["expectedNativePrefix"][expected_hash], "Native input hash changed")
-    noncopper = lambda circuit: [row for row in circuit if row["type"] not in COPPER and row["type"] != "pcb_debug_object"]
-    require(rows(noncopper(run["circuit"])) == rows(noncopper(baseline["circuit"])),
-            "Component, pad, source or other non-copper geometry/membership changed")
+                == expected_hash, "Native input hash changed")
     connected = verify_assessment(run, requested)
     previous_connected = verify_assessment(baseline, requested)
-    require(previous_connected <= connected, "Previously connected net was lost")
-    if lane == "base":
-        require(rows(run["circuit"]) == rows(baseline["circuit"]), "Source-control emitted CircuitJSON differs from published")
-        require(without(run["assessment"], {"validationMs"}) == without(baseline["assessment"], {"validationMs"}),
-                "Source-control physical assessment differs from published")
-        require(all(rows(run["findings"][group]) == rows(values) for group, values in baseline["findings"].items()),
-                "Source-control physical findings differ from published")
-        require(connected == set(), "Published control must establish 0/317 physical completion")
-        vias = 0
-    else:
-        dq = set(plan["expectedNativePrefix"]["byte0Nets"])
-        require(dq <= connected and dq.isdisjoint(previous_connected), "All eight DQ nets must physically gain completion")
-        for group in SHARED.values():
-            require(not (rows(run["findings"][group]) - rows(baseline["findings"][group])),
-                    f"New shared physical conflict: {group}")
-        accepted = read_json(path / "phase-1-output.srj.json.gz")
-        dq_ids = {source_nets[trace["name"]] for trace in requested_traces if trace["nativeNet"] in dq}
-        require({connection["name"] for connection in accepted["connections"]} == dq_ids,
-                "Accepted native phase does not contain exactly the eight DQ nets")
-        vias = verify_materialization(run, accepted, dq_ids)
+    require(len(previous_connected) == 53 and previous_connected < connected, "No additional native net completion or a prior net was lost")
+    power = [trace for trace in requested_traces if trace["group"] == "power"]
+    power_ids = {source_nets[trace["name"]] for trace in power}
+    power_names = {trace["nativeNet"] for trace in power}
+    require(len(power) == len(power_ids) == 12 and sum(len(trace["path"]) for trace in power) == 341,
+            "Authored power membership changed")
+    require(connected - previous_connected <= power_names, "New connected nets are outside the accepted power phase")
+    accepted = read_json(path / "phase-5-output.srj.json.gz")
+    power_input = read_json(path / "phase-5-input.srj.json.gz")
+    for srj in (power_input, accepted):
+        require({connection["name"] for connection in srj["connections"]} == power_ids,
+                "Power SRJ does not contain exactly the authored twelve nets")
+    spec = importlib.util.spec_from_file_location("physical", CONTROLLER / "compare-core-publication-physical.py")
+    comparator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(comparator)
+    physical = comparator.compare_physical(baseline, run, accepted_gain=True)
+    materialization = verify_materialization(run, accepted, power_ids, physical)
     return {"lane": lane, "valid": True, "passed": True, "connectedNets": len(connected),
             "gainedNets": sorted(connected - previous_connected), "requestedNets": len(requested),
-            "physicalVias": vias, "renderSettled": False, "currentPhase": "byte1",
-            "renderWallMs": run["process"]["renderWallMs"],
-            "timingIsDiagnosticOnly": True, "sourceProofSha256": digest(root / "core-source-pair/provenance.json")}
+            "physicalComparison": physical, "materialization": materialization,
+            "retainedFailedPhase": "other_signals", "completedAdditionalPhase": "power",
+            "renderWallMs": run["process"]["renderWallMs"], "timingIsDiagnosticOnly": True,
+            "comparisonPolicy": plan["comparisonPolicy"],
+            "sourceProofSha256": digest(root / "core-source-pair/provenance.json")}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
-    parser.add_argument("lane", choices=("base", "candidate"))
+    parser.add_argument("lane", choices=("candidate",))
     args = parser.parse_args()
-    destination = args.root / f"core-source-pair/{args.lane}-validation.json"
-    # A failed recheck must never leave an earlier success usable by the next lane.
+    destination = args.root / "core-source-pair/candidate-validation.json"
     destination.unlink(missing_ok=True)
     plan = read_json(CONTROLLER / "core-publication-plan.json")
     require(plan["frozen"] is True, "Source patch and harness are not frozen for qualification")
@@ -316,9 +329,7 @@ def main():
         require(path.stat().st_size == item["bytes"] and digest(path) == item["sha256"],
                 f"Authenticated published artifact changed: {item['name']}")
     baseline = load_run(args.root / "published-baseline")
-    # Recheck actual base artifacts, not a stale success flag, before candidate acceptance.
-    base = qualify(args.root, plan, "base", baseline)
-    result = base if args.lane == "base" else qualify(args.root, plan, "candidate", baseline)
+    result = qualify(args.root, plan, baseline)
     destination.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, sort_keys=True))
 
