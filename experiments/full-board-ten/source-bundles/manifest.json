@@ -1,0 +1,115 @@
+{
+  "purpose": "Diagnostic-only standalone final-rerip quota guard on four authenticated native phases",
+  "mainVersion": "0.0.3207",
+  "originalAutorouterSHA256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
+  "autorouterGitHead": "89977557a0082737afc275e69d74efb2d984de5b",
+  "tinyGitHead": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "publishedSourceMapSha256": "be13ccc765027934d63fab5c7389f747f0d3207a83fbae934974a102baa1361d",
+  "build": {
+    "engine": "esbuild0.27.0 under Node24.19.0",
+    "entry": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "format": "esm",
+    "platform": "node",
+    "target": "es2022",
+    "minify": false,
+    "sourcemap": false,
+    "externalDependencies": [
+      "@tscircuit/solver-utils",
+      "object-hash"
+    ],
+    "qualification": "Each source baseline must match its authenticated native primary configured/initial/final state and lifecycle reports after normalizing only the minified primary class name.",
+    "builderSha256": "b26b734464034c1fd1afd2101b4b2526079066430dde049f0e5891e8a8df557e"
+  },
+  "variants": {
+    "source-baseline": {
+      "filename": "source-baseline.js.gz",
+      "entrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
+      "entryBytes": 5490930,
+      "compressedSha256": "685e934c3b115a4ebc7b0d802485502d43c70f493f32ec82dd01016c6041e327",
+      "compressedBytes": 993731,
+      "sourceInputCount": 933,
+      "sourceInputHash": "ff12e92b09edf713e247515513a54a4d98ef766ab71ecbf5b178bd879e150805",
+      "candidateSourceFiles": []
+    },
+    "guard-only": {
+      "filename": "guard-only.js.gz",
+      "entrySha256": "f2e25a50c6bab9b6c44497bbca9a9672e162172e357537a34359d2842b9a8731",
+      "entryBytes": 5490958,
+      "compressedSha256": "af8dae4a99844a269f7df8f1a810a9334c0830c6f7fe0ef472729d6e273257a4",
+      "compressedBytes": 993731,
+      "sourceInputCount": 933,
+      "sourceInputHash": "e2dd3de0b71bb02cfb46501f8e6cf9d7e4013969496f2e4b0e4d3e548c38c27a",
+      "candidateSourceFiles": [
+        {
+          "repository": "tiny",
+          "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "sha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "sha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+        }
+      ]
+    }
+  },
+  "frozenDependencyOverrides": [
+    {
+      "path": "node_modules/@tscircuit/trace-simplification-solver/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts",
+      "sha256": "0add3c79612da4e81d23484c1af91482440b1f9e1f69b03422c5edf54868e5bb"
+    },
+    {
+      "path": "node_modules/@tscircuit/repair04/lib/getFixedObstacleViolations.ts",
+      "sha256": "7145b92cf9f7f7fb0aa35369a462eab890c9592ac72e24ea7505a3948eda85a7"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/validation/isCandidateGeometryValid.ts",
+      "sha256": "71b18c355914a0278dcaf43527565684f2ee01545d496aad4ad3d21b31be1aee"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/planning/selectPartialMeanderPlan.ts",
+      "sha256": "d88b4931bccb8b69b8fe362dce20cd024559109c91df561d5118ddcfacc64d37"
+    }
+  ],
+  "sourcePatches": {
+    "guard-only": {
+      "filename": "guard-only-source.patch",
+      "sha256": "3f4dbcb80f679737144f5fa898344ccc8fa8c9d5f784d5d036275a56bafd2197",
+      "bytes": 1475,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    }
+  },
+  "reusedControls": {
+    "source-baseline": {
+      "runId": 43984332779,
+      "entrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
+      "qualification": "Whole HD queue, selected Tiny state, every ledger event, failure, target geometry and first private candidate exactly match frozen published replay"
+    }
+  },
+  "variantPatchOrder": {
+    "source-baseline": [],
+    "guard-only": [
+      "guard-only"
+    ]
+  },
+  "guardScope": "Same two onOutOfCandidates quota checks moved before super; same rerip quota, iteration caps, effort and constructors. guard-only contains no AR adapter or physical via reservation changes.",
+  "runtimeInputChangesByVariant": {
+    "guard-only": {
+      "relativeTo": "source-baseline",
+      "changes": [
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "beforeSha256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79",
+          "afterSha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "beforeSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
+          "afterSha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+        }
+      ]
+    }
+  }
+}

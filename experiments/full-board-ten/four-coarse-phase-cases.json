@@ -1,0 +1,198 @@
+[
+  {
+    "id": "icepi-original",
+    "board": "icepi",
+    "cohort": "original",
+    "phase": "plane_escape",
+    "inputFilename": "phase-1-input.srj.json.gz",
+    "inputSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6",
+    "inputGzipSha256": "e5392c09a437a9992535d6250d25ea632cc06405a16340b6a088e4cdd82cfe1c",
+    "inputBytes": 12464029,
+    "inputGzipBytes": 1702305,
+    "counts": {
+      "connections": 8,
+      "traces": 0,
+      "obstacles": 2038
+    },
+    "artifactId": 14273668899,
+    "artifactBytes": 4800910,
+    "artifactSha256": "ff436945c19d6e80e6af537b4344be13aa4be520d7f8d08911bdf22bfbf2b934",
+    "sourceRunId": 43962158572,
+    "sourceCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+    "nativeFiles": [
+      {
+        "filename": "phase-1-input.srj.json.gz",
+        "bytes": 1702305,
+        "sha256": "e5392c09a437a9992535d6250d25ea632cc06405a16340b6a088e4cdd82cfe1c"
+      },
+      {
+        "filename": "progress.json",
+        "bytes": 8381,
+        "sha256": "d7b4f25ab7f58535e1c4834c7f4b728685c55ed9d5e52bc77d57905abf118e35"
+      },
+      {
+        "filename": "coarse-diagnostics.json",
+        "bytes": 97559,
+        "sha256": "8ad51e5449eddb2d32f66d88b16bc8223669a0c4ee270c50c64fbfba10374d88"
+      },
+      {
+        "filename": "result.json",
+        "bytes": 3528,
+        "sha256": "9439f198dcfca69048252c86db648467e112f3b5370b40c0ec757b919f3270a8"
+      }
+    ],
+    "constructorOptions": {
+      "capacityDepth": "undefined",
+      "targetMinCapacity": "undefined",
+      "cacheProvider": null,
+      "effort": "undefined"
+    }
+  },
+  {
+    "id": "butterstick-original",
+    "board": "butterstick",
+    "cohort": "original",
+    "phase": "plane_escape",
+    "inputFilename": "phase-1-input.srj.json.gz",
+    "inputSha256": "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a",
+    "inputGzipSha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0",
+    "inputBytes": 24631177,
+    "inputGzipBytes": 3602375,
+    "counts": {
+      "connections": 12,
+      "traces": 0,
+      "obstacles": 2733
+    },
+    "artifactId": 14274028358,
+    "artifactBytes": 8266999,
+    "artifactSha256": "9ad0fb6cc5d881420317a2fff81b55ade5ec370ebbadc447007597a2f157811e",
+    "sourceRunId": 43962158572,
+    "sourceCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+    "nativeFiles": [
+      {
+        "filename": "phase-1-input.srj.json.gz",
+        "bytes": 3602375,
+        "sha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0"
+      },
+      {
+        "filename": "progress.json",
+        "bytes": 8402,
+        "sha256": "927d0e856aa4707cd3d9ba61f5ee5430263ca8652a8a34a5481e96bd7be7de65"
+      },
+      {
+        "filename": "coarse-diagnostics.json",
+        "bytes": 105117,
+        "sha256": "623fb48f8598d39b57179cd7d8409187a33dfabb4b924025e35304c63bed2905"
+      },
+      {
+        "filename": "result.json",
+        "bytes": 3535,
+        "sha256": "ee80e10dcf6130148082194afebd513dea68c0f560db3801cb6c71c354a0078a"
+      }
+    ],
+    "constructorOptions": {
+      "capacityDepth": "undefined",
+      "targetMinCapacity": "undefined",
+      "cacheProvider": null,
+      "effort": "undefined"
+    }
+  },
+  {
+    "id": "glider-spaced",
+    "board": "glider",
+    "cohort": "spaced",
+    "phase": "other_signals",
+    "inputFilename": "phase-4-input.srj.json.gz",
+    "inputSha256": "88c4b5dbb3f1bff45743944ad11c3b3a827dd633a00f48a252712225b19c8036",
+    "inputGzipSha256": "795f44b6569b0eb5bf45e984947149c0db8f5c88058fdd63935ad7dbf9bc661e",
+    "inputBytes": 12014673,
+    "inputGzipBytes": 2199433,
+    "counts": {
+      "connections": 283,
+      "traces": 37,
+      "obstacles": 2379
+    },
+    "artifactId": 14274759886,
+    "artifactBytes": 18198204,
+    "artifactSha256": "b0ad3ce30c517ffbf58d7481489d873aa6b617d6d2be2d4660cce3f4d8ed747f",
+    "sourceRunId": 43962158572,
+    "sourceCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+    "nativeFiles": [
+      {
+        "filename": "phase-4-input.srj.json.gz",
+        "bytes": 2199433,
+        "sha256": "795f44b6569b0eb5bf45e984947149c0db8f5c88058fdd63935ad7dbf9bc661e"
+      },
+      {
+        "filename": "progress.json",
+        "bytes": 9389,
+        "sha256": "c528c7163e442062cf795fd4601ba4312c5db145e3c68c1dca05e94b8cbfb1fc"
+      },
+      {
+        "filename": "coarse-diagnostics.json",
+        "bytes": 80895,
+        "sha256": "f448cdd63b065f7ffe7fe97516d768bbf670dcfe2166263e81e313552f14565f"
+      },
+      {
+        "filename": "result.json",
+        "bytes": 3015,
+        "sha256": "38eb19406cb49e3d51d5ed9e6c0b875c272158d2f25167fb20f21bcc2fc1061f"
+      }
+    ],
+    "constructorOptions": {
+      "capacityDepth": "undefined",
+      "targetMinCapacity": "undefined",
+      "cacheProvider": null,
+      "effort": "undefined"
+    }
+  },
+  {
+    "id": "imx6-spaced",
+    "board": "imx6",
+    "cohort": "spaced",
+    "phase": "remaining",
+    "inputFilename": "phase-3-input.srj.json.gz",
+    "inputSha256": "90b6c8e95194fe75106ab420d9ae830d44c049203d0a47fc0944bad3b16c6654",
+    "inputGzipSha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986",
+    "inputBytes": 13198567,
+    "inputGzipBytes": 2294679,
+    "counts": {
+      "connections": 37,
+      "traces": 0,
+      "obstacles": 2922
+    },
+    "artifactId": 14277980843,
+    "artifactBytes": 14580404,
+    "artifactSha256": "2a9d7f1f0a36b3c69a5bb892dd37395db970827fa7eeeec7577dd8173b6984ef",
+    "sourceRunId": 43962158572,
+    "sourceCommit": "1789e29b59194023638535e61dd66bdbf1153726",
+    "nativeFiles": [
+      {
+        "filename": "phase-3-input.srj.json.gz",
+        "bytes": 2294679,
+        "sha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986"
+      },
+      {
+        "filename": "progress.json",
+        "bytes": 8722,
+        "sha256": "85deb9926061ce4c54964bdb3cd1d1e8577a78a893b197b7e13ff8a02974e5ef"
+      },
+      {
+        "filename": "coarse-diagnostics.json",
+        "bytes": 21229,
+        "sha256": "9104a10e94869f5b7865c8ea8b0e69b02bc1f8949d0fd4e280105cd021704911"
+      },
+      {
+        "filename": "result.json",
+        "bytes": 3010,
+        "sha256": "1b6c5f7cb6ac0690b158e75a3ac71d19c831d3b2e48a64b46af88992ddc3a3f0"
+      }
+    ],
+    "constructorOptions": {
+      "capacityDepth": "undefined",
+      "targetMinCapacity": "undefined",
+      "cacheProvider": null,
+      "effort": "undefined"
+    }
+  }
+]
