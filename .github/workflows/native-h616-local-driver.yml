@@ -1,0 +1,76 @@
+# Publish compiled source only. The driver reads board inputs locally at runtime.
+name: Build local H616 diagnostic driver
+on:
+  push:
+    branches: [artifacts/native-h616-local-driver]
+permissions:
+  contents: write
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Bundle source with the pure grid helper as a separate module
+        run: |
+          cat > diagnostic-driver.private.ts <<'TS'
+          import {readFileSync,writeFileSync} from "node:fs"
+          import {gunzipSync} from "node:zlib"
+          import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+          import {evaluateRelaxedDrc} from "./lib/testing/evaluate-relaxed-drc"
+          import {getBugReportSnapshotSvg} from "./lib/testing/getBugReportSnapshotSvg"
+          const fixture = JSON.parse(gunzipSync(readFileSync(process.argv[2]!)).toString("utf8"))
+          const started = performance.now()
+          const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(fixture.inputSrj,{cacheProvider:null})
+          solver.solve()
+          const referenceSrj = {
+            ...fixture.inputSrj,
+            obstacles:fixture.nativeObstacles,
+            connections:[...fixture.preloadedConnections,...fixture.inputSrj.connections],
+            traces:fixture.preloadedTraces,
+          }
+          const snapshotInput = {
+            inputSrj:referenceSrj,
+            srjWithPointPairs:{
+              ...solver.srjWithPointPairs!,
+              connections:[...fixture.preloadedConnections,...solver.srjWithPointPairs!.connections],
+            },
+            routedTraces:solver.getOutputSimplifiedPcbTraces(),
+            drcOptions:{traceClearance:0.1,viaToPadClearance:0.1},
+          }
+          const assessment=evaluateRelaxedDrc(snapshotInput)
+          const counts:Record<string,number>={}
+          for(const error of assessment.errors)counts[error.type]=(counts[error.type]??0)+1
+          console.log(JSON.stringify({solved:solver.solved,failed:solver.failed,elapsedMs:performance.now()-started,findings:assessment.errors.length,counts}))
+          writeFileSync(process.argv[3]+".svg",getBugReportSnapshotSvg(snapshotInput))
+          writeFileSync(process.argv[3]+".errors.json",JSON.stringify(assessment.errorsWithCenters,null,2))
+          TS
+          cat > bundle-driver.private.ts <<'TS'
+          const result=await Bun.build({
+            entrypoints:["./diagnostic-driver.private.ts"],
+            outdir:".github/artifacts/h616-local-driver",
+            target:"bun",
+            minify:false,
+            sourcemap:"none",
+            plugins:[{
+              name:"separate-clearance-grid-module",
+              setup(build){
+                build.onResolve({filter:/getClearanceGridAxes(?:\.ts)?$/},()=>({path:"./getClearanceGridAxes.ts",external:true}))
+              },
+            }],
+          })
+          if(!result.success)throw new AggregateError(result.logs,"Local driver bundle failed")
+          TS
+          bun bundle-driver.private.ts
+          cp node_modules/@tscircuit/repair04/lib/getClearanceGridAxes.ts .github/artifacts/h616-local-driver/getClearanceGridAxes.ts
+      - name: Publish source-only driver on this isolated branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .github/artifacts/h616-local-driver/*
+          git commit -m "Build source-only local H616 diagnostic driver"
+          git push
