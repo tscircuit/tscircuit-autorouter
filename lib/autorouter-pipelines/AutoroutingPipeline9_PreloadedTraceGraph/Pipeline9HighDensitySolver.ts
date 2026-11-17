@@ -779,7 +779,36 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
+    const immutableFixedRoutes = this.activeFallbackFixedObstacleRoutes.filter(
+      (route) => route.isFixed === true || route.isThroughObstacle === true,
+    )
+    const candidateBounds = getNodeBounds(
+      this.activeNode,
+      this.obstacleMargin + Math.max(this.traceWidth, this.viaDiameter) / 2,
+    )
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      validateImmutableCopper: (routes): boolean => {
+        for (const route of routes) {
+          for (const fixedRoute of immutableFixedRoutes) {
+            if (arePipeline9RoutesOnSameNet(route, fixedRoute, this.connMap)) {
+              continue
+            }
+            if (
+              doPipeline9RoutesHaveCopperConflict({
+                left: route,
+                right: fixedRoute,
+                clearance: this.obstacleMargin,
+                leftBounds: candidateBounds,
+                layerCount: this.layerCount,
+                allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+              })
+            ) {
+              return false
+            }
+          }
+        }
+        return true
+      },
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
