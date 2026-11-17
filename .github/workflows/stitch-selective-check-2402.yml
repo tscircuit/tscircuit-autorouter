@@ -1,7 +1,7 @@
-name: Verify planar continuity for route stitching
+name: Verify selective avoidance of routed via shortcuts
 on:
   push:
-    branches: [codex/ddr2402-stitch-check]
+    branches: [codex/ddr2402-stitch-selective-check]
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: 9479e13c9049a4e75b7ffef929d47f2643bedb57
+          ref: 7cd1da84615712b95b491a2efa06024ced5756d9
           path: router
       - uses: actions/checkout@v4
         with:
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stitch2402-${{ matrix.board }}
+          name: stitch2402b-${{ matrix.board }}
           path: results
           retention-days: 14
       - name: Export native results and phase inputs for analysis
@@ -65,10 +65,94 @@ jobs:
               for path in Path('results').rglob('*'):
                   if path.is_file() and (path.name in names):
                       archive.writestr(str(path.relative_to('results')),path.read_bytes())
-          print('STITCH2402_BOARD_EVIDENCE_BEGIN')
+          print('STITCH2402B_BOARD_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('STITCH2402_BOARD_EVIDENCE_END')
+          print('STITCH2402B_BOARD_EVIDENCE_END')
+          PY
+  paired-orange:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 33d8e85e127822a8437c6ea4f576a3af260d69c6
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          ref: 7cd1da84615712b95b491a2efa06024ced5756d9
+          path: router-after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned sources and build the selected runtime
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          ln -s "$GITHUB_WORKSPACE/router/node_modules" router-after/node_modules
+          (cd router-after && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Reroute the original DDR control and both full-board modes
+        env:
+          BOARD_ID: orangecrab
+          FULL_BOARD_CASE_IDS: orangecrab
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
+          for variant in before after; do
+            folder=router
+            if [ "$variant" = after ]; then folder=router-after; fi
+            export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/$folder/benchmark-runtime/pipeline9.js"
+            export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../$folder rev-parse HEAD)"
+            FULL_BOARD_VARIANT=pair-$variant bun plane-suite.ts ../../results/pair-$variant/full phased
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stitch2402b-paired-orange
+          path: results
+          retention-days: 14
+      - name: Export native results and phase inputs for analysis
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'environment.json','summary.json','progress.json','assessment.json','diagnostics.json','process.json','results.json','pcb.svg'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('STITCH2402B_ORANGE_PAIR_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('STITCH2402B_ORANGE_PAIR_EVIDENCE_END')
+          PY
+      - name: Compare OrangeCrab repair input geometry
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import gzip,json,hashlib
+          from pathlib import Path
+          params={variant:json.loads(gzip.decompress(next((Path('results')/('pair-'+variant)).rglob('joint-start.capture.json.gz')).read_bytes()))['params'] for variant in ['before','after']}
+          fields=[]
+          for key in sorted(set(params['before'])|set(params['after'])):
+              a=json.dumps(params['before'].get(key),sort_keys=True,separators=(',',':')).encode()
+              b=json.dumps(params['after'].get(key),sort_keys=True,separators=(',',':')).encode()
+              fields.append({'field':key,'identical':a==b,'beforeSha256':hashlib.sha256(a).hexdigest(),'afterSha256':hashlib.sha256(b).hexdigest()})
+          print('STITCH2402B_ORANGE_INPUT_RESULT',json.dumps({'identical':params['before']==params['after'],'fields':fields},separators=(',',':')))
           PY
   dataset18:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
@@ -80,7 +164,7 @@ jobs:
           path: before
       - uses: actions/checkout@v4
         with:
-          ref: 9479e13c9049a4e75b7ffef929d47f2643bedb57
+          ref: 7cd1da84615712b95b491a2efa06024ced5756d9
           path: after
       - uses: oven-sh/setup-bun@v2
         with:
@@ -98,7 +182,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stitch2402-paired-dataset18
+          name: stitch2402b-paired-dataset18
           path: |
             before/benchmark-result.json
             before/benchmark-snapshots.html
@@ -116,7 +200,7 @@ jobs:
               root=Path(variant)
               report=json.loads((root/'benchmark-result.json').read_text())
               reports[variant]=report
-              print('STITCH2402_DATASET18_PAIR',variant,json.dumps(report,separators=(',',':')))
+              print('STITCH2402B_DATASET18_PAIR',variant,json.dumps(report,separators=(',',':')))
               snapshots[variant]={}
               for section in re.findall(r'<section class="snapshot">(.*?)</section>',(root/'benchmark-snapshots.html').read_text(),re.S):
                   sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
@@ -128,6 +212,6 @@ jobs:
               after=next(row for row in reports['after']['tests'] if row['sampleNumber']==sample)
               rows.append({'sample':sample,'beforeMs':before['elapsedTimeMs'],'afterMs':after['elapsedTimeMs'],'beforeSolved':before['didSolve'],'afterSolved':after['didSolve'],'beforeDrcPassed':before['relaxedDrcPassed'],'afterDrcPassed':after['relaxedDrcPassed'],'beforeVias':before.get('viaCount'),'afterVias':after.get('viaCount'),'beforeSvgSha256':snapshots['before'].get(sample),'afterSvgSha256':snapshots['after'].get(sample)})
           result={'beforeSummary':reports['before']['summary'],'afterSummary':reports['after']['summary'],'beforeMeanMs':statistics.mean(row['beforeMs'] for row in rows),'afterMeanMs':statistics.mean(row['afterMs'] for row in rows),'rows':rows}
-          print('STITCH2402_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
+          print('STITCH2402B_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
           assert len(rows)==16 and all(row['beforeSolved'] and row['afterSolved'] and row['beforeDrcPassed'] and row['afterDrcPassed'] for row in rows)
           PYREPORT

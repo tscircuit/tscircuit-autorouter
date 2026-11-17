@@ -124,6 +124,11 @@ const algorithmFn: AutoroutingPhaseProps["algorithmFn"] = async (input): Promise
   const captureStageInputs = (): void => {
     if (!captureEnabled) return
     const runtime = solver as any
+    if (runtime.highDensityStitchSolver && !captured.has("stitch-start")) {
+      captured.add("stitch-start")
+      const step = runtime.pipelineDef.find((entry: any) => entry.solverName === "highDensityStitchSolver")
+      captureJson("stitch-start", { params: step.getConstructorParams(runtime)[0] })
+    }
     const joint = runtime.pipeline9JointDrcRepairSolver
     if (joint && !captured.has("joint-start")) {
       captured.add("joint-start")
