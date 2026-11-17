@@ -1,0 +1,417 @@
+diff --git a/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx b/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx
+new file mode 100644
+index 0000000..91d80d8
+--- /dev/null
++++ b/tests/features/autoroutingphase-publishes-accepted-traces.test.tsx
+@@ -0,0 +1,154 @@
++import { expect, test } from "bun:test"
++import { Group } from "lib/components/primitive-components/Group/Group"
++import type { SimplifiedPcbTrace } from "lib/utils/autorouting/SimpleRouteJson"
++import { createBasicAutorouter } from "tests/fixtures/createBasicAutorouter"
++import { getTestFixture } from "tests/fixtures/get-test-fixture"
++
++test("accepted phase traces render while the next routing phase is pending", async () => {
++  const { circuit } = getTestFixture()
++  const secondPhaseStarted = Promise.withResolvers<void>()
++  const releaseSecondPhase = Promise.withResolvers<void>()
++  let firstPhaseTraces: SimplifiedPcbTrace[] = []
++  let firstPhaseSnapshot: SimplifiedPcbTrace[] = []
++  let renderingSettled = false
++  let secondPhaseInputTraces: SimplifiedPcbTrace[] | undefined
++  circuit.on("autorouting:error", ({ error }) => {
++    secondPhaseStarted.reject(new Error(error.message))
++  })
++
++  const routePhase = createBasicAutorouter(async (simpleRouteJson) => {
++    const traces = simpleRouteJson.connections.map(
++      (connection): SimplifiedPcbTrace => ({
++        type: "pcb_trace",
++        pcb_trace_id: `${connection.name}_routed`,
++        connection_name: connection.source_trace_id ?? connection.name,
++        route: connection.pointsToConnect.map((point) => ({
++          route_type: "wire",
++          x: point.x,
++          y: point.y,
++          width: 0.15,
++          layer: point.layer,
++        })),
++      }),
++    )
++    if (firstPhaseTraces.length === 0) {
++      const [start, end] = traces[0].route
++      if (start.route_type !== "wire" || end.route_type !== "wire") {
++        throw new Error("The first phase needs two pad endpoints")
++      }
++      const viaX = (start.x + end.x) / 2
++      traces[0].route = [
++        start,
++        { ...start, x: viaX - 1 },
++        {
++          route_type: "via",
++          x: viaX - 1,
++          y: start.y,
++          from_layer: "top",
++          to_layer: "bottom",
++        },
++        { ...start, x: viaX - 1, layer: "bottom" },
++        { ...end, x: viaX + 1, layer: "bottom" },
++        {
++          route_type: "via",
++          x: viaX + 1,
++          y: end.y,
++          from_layer: "bottom",
++          to_layer: "top",
++        },
++        { ...end, x: viaX + 1 },
++        end,
++      ]
++      firstPhaseTraces = traces
++      firstPhaseSnapshot = structuredClone(traces)
++    } else {
++      secondPhaseInputTraces = structuredClone(simpleRouteJson.traces)
++      secondPhaseStarted.resolve()
++      await releaseSecondPhase.promise
++    }
++    return traces
++  })
++
++  circuit.add(
++    <board width={16} height={12} schematicDisabled>
++      <subcircuit name="PHASED">
++        <resistor
++          name="R1"
++          resistance="1k"
++          footprint="0402"
++          pcbX={-5}
++          pcbY={2}
++        />
++        <resistor
++          name="R2"
++          resistance="1k"
++          footprint="0402"
++          pcbX={5}
++          pcbY={2}
++        />
++        <resistor
++          name="R3"
++          resistance="1k"
++          footprint="0402"
++          pcbX={-5}
++          pcbY={-2}
++        />
++        <resistor
++          name="R4"
++          resistance="1k"
++          footprint="0402"
++          pcbX={5}
++          pcbY={-2}
++        />
++        <pcbnotetext text="Accepted phase: R1 to R2" pcbX={0} pcbY={4} />
++        <pcbnotetext text="Routing continues: R3 to R4" pcbX={0} pcbY={-4} />
++        <autoroutingphase
++          phaseIndex={0}
++          name="accepted"
++          algorithmFn={routePhase}
++        />
++        <autoroutingphase
++          phaseIndex={1}
++          name="pending"
++          algorithmFn={routePhase}
++        />
++        <trace from=".R1 > .pin1" to=".R2 > .pin1" routingPhaseIndex={0} />
++        <trace from=".R3 > .pin1" to=".R4 > .pin1" routingPhaseIndex={1} />
++      </subcircuit>
++    </board>,
++  )
++
++  const rendering = circuit.renderUntilSettled().then(() => {
++    renderingSettled = true
++    secondPhaseStarted.reject(
++      new Error("Routing settled before the held phase started"),
++    )
++  })
++  try {
++    await secondPhaseStarted.promise
++    const child = circuit.selectOne(".PHASED")
++    const board = circuit.firstChild
++    if (!(child instanceof Group) || !(board instanceof Group)) {
++      throw new Error("Expected a board containing the phased subcircuit")
++    }
++    expect(child._asyncAutoroutingResult).toBeNull()
++    expect(board._areChildSubcircuitsRouted()).toBeFalse()
++    expect(secondPhaseInputTraces).toEqual(firstPhaseSnapshot)
++    expect(renderingSettled).toBeFalse()
++    expect(circuit.isDoneRendering()).toBeFalse()
++    expect(firstPhaseTraces).toEqual(firstPhaseSnapshot)
++    await expect(circuit.getCircuitJson()).toMatchPcbSnapshot(import.meta.path)
++    expect(circuit.db.pcb_trace.list()).toHaveLength(1)
++    expect(circuit.db.pcb_via.list()).toHaveLength(2)
++    const acceptedCircuitJson = structuredClone(circuit.getCircuitJson())
++    circuit.render()
++    expect(circuit.getCircuitJson()).toEqual(acceptedCircuitJson)
++  } finally {
++    releaseSecondPhase.resolve()
++    await rendering
++  }
++
++  expect(circuit.isDoneRendering()).toBeTrue()
++  expect(circuit.db.pcb_trace.list()).toHaveLength(2)
++  expect(circuit.db.pcb_via.list()).toHaveLength(2)
++})
+diff --git a/tests/features/autoroutingphase-replaces-accepted-traces.test.tsx b/tests/features/autoroutingphase-replaces-accepted-traces.test.tsx
+new file mode 100644
+index 0000000..d8f5978
+--- /dev/null
++++ b/tests/features/autoroutingphase-replaces-accepted-traces.test.tsx
+@@ -0,0 +1,146 @@
++import { expect, test } from "bun:test"
++import type { PcbTrace, PcbVia } from "circuit-json"
++import type {
++  SimpleRouteJson,
++  SimplifiedPcbTrace,
++} from "lib/utils/autorouting/SimpleRouteJson"
++import { createBasicAutorouter } from "tests/fixtures/createBasicAutorouter"
++import { getTestFixture } from "tests/fixtures/get-test-fixture"
++
++function routeWithVia({
++  simpleRouteJson,
++  reroute,
++}: {
++  simpleRouteJson: SimpleRouteJson
++  reroute: boolean
++}): SimplifiedPcbTrace[] {
++  return simpleRouteJson.connections.map((connection) => {
++    const [start, end] = connection.pointsToConnect
++    const viaX = (start.x + end.x) / 2 + (reroute ? 1 : 0)
++    return {
++      type: "pcb_trace",
++      pcb_trace_id: `${connection.name}_${reroute ? "replacement" : "original"}`,
++      connection_name: connection.source_trace_id ?? connection.name,
++      route: [
++        { route_type: "wire", ...start, width: 0.15 },
++        {
++          route_type: "wire",
++          x: viaX,
++          y: start.y,
++          layer: start.layer,
++          width: 0.15,
++        },
++        {
++          route_type: "via",
++          x: viaX,
++          y: start.y,
++          from_layer: start.layer,
++          to_layer: end.layer,
++        },
++        {
++          route_type: "wire",
++          x: viaX,
++          y: start.y,
++          layer: end.layer,
++          width: 0.15,
++        },
++        { route_type: "wire", ...end, width: 0.15 },
++      ],
++    }
++  })
++}
++
++test("a later phase replaces published copper and keeps it after a routing error", async () => {
++  const { circuit } = getTestFixture()
++  const lastPhaseStarted = Promise.withResolvers<void>()
++  const releaseLastPhase = Promise.withResolvers<void>()
++  let originalPcbTraceId: PcbTrace["pcb_trace_id"] | undefined
++  let originalPcbViaId: PcbVia["pcb_via_id"] | undefined
++
++  circuit.add(
++    <board width={16} height={12} schematicDisabled>
++      <resistor name="R1" resistance="1k" footprint="0402" pcbX={-5} pcbY={2} />
++      <resistor
++        name="R2"
++        resistance="1k"
++        footprint="0402"
++        pcbX={5}
++        pcbY={2}
++        layer="bottom"
++      />
++      <resistor
++        name="R3"
++        resistance="1k"
++        footprint="0402"
++        pcbX={-5}
++        pcbY={-2}
++      />
++      <resistor name="R4" resistance="1k" footprint="0402" pcbX={5} pcbY={-2} />
++      <pcbnotetext text="Accepted replacement: one via" pcbX={0} pcbY={4} />
++      <pcbnotetext
++        text="Later phase fails; accepted copper remains"
++        pcbX={0}
++        pcbY={-4}
++        fontSize={0.5}
++      />
++      <autoroutingphase
++        phaseIndex={0}
++        algorithmFn={createBasicAutorouter(async (simpleRouteJson) =>
++          routeWithVia({ simpleRouteJson, reroute: false }),
++        )}
++      />
++      <autoroutingphase
++        phaseIndex={1}
++        reroute
++        connection="R1.pin1"
++        algorithmFn={createBasicAutorouter(async (simpleRouteJson) => {
++          originalPcbTraceId = circuit.db.pcb_trace.list()[0]?.pcb_trace_id
++          originalPcbViaId = circuit.db.pcb_via.list()[0]?.pcb_via_id
++          return routeWithVia({ simpleRouteJson, reroute: true })
++        })}
++      />
++      <autoroutingphase
++        phaseIndex={2}
++        algorithmFn={createBasicAutorouter(async () => {
++          lastPhaseStarted.resolve()
++          await releaseLastPhase.promise
++          throw new Error("The last phase intentionally fails")
++        })}
++      />
++      <trace from="R1.pin1" to="R2.pin1" routingPhaseIndex={0} />
++      <trace from="R3.pin1" to="R4.pin1" routingPhaseIndex={2} />
++    </board>,
++  )
++
++  circuit.on("autorouting:error", ({ error }) => {
++    lastPhaseStarted.reject(new Error(error.message))
++  })
++  const rendering = circuit.renderUntilSettled().then(() => {
++    lastPhaseStarted.reject(
++      new Error("Routing settled before the held phase started"),
++    )
++  })
++  try {
++    await lastPhaseStarted.promise
++    expect(originalPcbTraceId).toBeDefined()
++    expect(originalPcbViaId).toBeDefined()
++    expect(circuit.db.pcb_trace.list()).toHaveLength(1)
++    expect(circuit.db.pcb_via.list()).toHaveLength(1)
++    expect(circuit.db.pcb_trace.list()[0].pcb_trace_id).not.toBe(
++      originalPcbTraceId,
++    )
++    expect(circuit.db.pcb_via.list()[0].pcb_via_id).not.toBe(originalPcbViaId)
++    expect(circuit.isDoneRendering()).toBeFalse()
++    await expect(circuit.getCircuitJson()).toMatchPcbSnapshot(import.meta.path)
++  } finally {
++    releaseLastPhase.resolve()
++    await rendering
++  }
++
++  expect(circuit.db.pcb_autorouting_error.list()).toHaveLength(1)
++  expect(circuit.db.pcb_trace.list()).toHaveLength(1)
++  expect(circuit.db.pcb_via.list()).toHaveLength(1)
++  expect(circuit.db.pcb_trace.list()[0].pcb_trace_id).not.toBe(
++    originalPcbTraceId,
++  )
++})
+diff --git a/tests/features/autoroutingphase-publishes-saved-traces.test.tsx b/tests/features/autoroutingphase-publishes-saved-traces.test.tsx
+new file mode 100644
+index 0000000..cf4a9bf
+--- /dev/null
++++ b/tests/features/autoroutingphase-publishes-saved-traces.test.tsx
+@@ -0,0 +1,99 @@
++import { expect, test } from "bun:test"
++import type { SimplifiedPcbTrace } from "lib/utils/autorouting/SimpleRouteJson"
++import { createBasicAutorouter } from "tests/fixtures/createBasicAutorouter"
++import { getTestFixture } from "tests/fixtures/get-test-fixture"
++
++test("synchronous saved phases publish after the initiating render", async () => {
++  const { circuit } = getTestFixture()
++  const nextPhaseStarted = Promise.withResolvers<void>()
++  const releaseNextPhase = Promise.withResolvers<void>()
++  circuit.on("autorouting:error", ({ error }) => {
++    nextPhaseStarted.reject(new Error(error.message))
++  })
++  circuit.add(
++    <board width={16} height={12} schematicDisabled>
++      <chip
++        name="U1"
++        pcbX={-5}
++        pcbY={2}
++        pinLabels={{ pin1: "START" }}
++        footprint={
++          <footprint>
++            <smtpad portHints={["1"]} width={0.6} height={0.6} shape="rect" />
++          </footprint>
++        }
++      />
++      <chip
++        name="U2"
++        pcbX={5}
++        pcbY={2}
++        pinLabels={{ pin1: "END" }}
++        footprint={
++          <footprint>
++            <smtpad portHints={["1"]} width={0.6} height={0.6} shape="rect" />
++          </footprint>
++        }
++      />
++      <resistor
++        name="R1"
++        resistance="1k"
++        footprint="0402"
++        pcbX={-5}
++        pcbY={-2}
++      />
++      <resistor name="R2" resistance="1k" footprint="0402" pcbX={5} pcbY={-2} />
++      <autoroutingphase
++        phaseIndex={0}
++        connection="U1.1"
++        pcbTracePaths={[
++          {
++            connection: "U1.START",
++            route: [
++              { route_type: "wire", x: -5, y: 2, width: 0.2, layer: "top" },
++              { route_type: "wire", x: 5, y: 2, width: 0.2, layer: "top" },
++            ],
++          },
++        ]}
++      />
++      <autoroutingphase
++        phaseIndex={1}
++        algorithmFn={createBasicAutorouter(async (simpleRouteJson) => {
++          nextPhaseStarted.resolve()
++          await releaseNextPhase.promise
++          return simpleRouteJson.connections.map(
++            (connection): SimplifiedPcbTrace => ({
++              type: "pcb_trace",
++              pcb_trace_id: `${connection.name}_routed`,
++              connection_name: connection.source_trace_id ?? connection.name,
++              route: connection.pointsToConnect.map((point) => ({
++                route_type: "wire",
++                ...point,
++                width: 0.15,
++              })),
++            }),
++          )
++        })}
++      />
++      <trace from="U1.1" to="U2.1" routingPhaseIndex={0} />
++      <trace from="R1.1" to="R2.1" routingPhaseIndex={1} />
++    </board>,
++  )
++
++  const rendering = circuit.renderUntilSettled().then(() => {
++    nextPhaseStarted.reject(
++      new Error("Routing settled before the held phase started"),
++    )
++  })
++  try {
++    await nextPhaseStarted.promise
++    expect(circuit.isDoneRendering()).toBeFalse()
++    expect(circuit.db.pcb_trace.list()).toHaveLength(1)
++    expect(circuit.db.pcb_trace.list()[0].pcb_trace_id).toStartWith(
++      "saved_phase_",
++    )
++  } finally {
++    releaseNextPhase.resolve()
++    await rendering
++  }
++  expect(circuit.db.pcb_trace.list()).toHaveLength(2)
++})

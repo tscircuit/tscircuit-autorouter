@@ -1,0 +1,192 @@
+{
+  "status": "preparation only; source patch and harness review required before push/run",
+  "baselineRun": 44096144980,
+  "baselineHead": "8ea7c957afe84651fbe3682590d1632247e7d702",
+  "baselineArtifact": {
+    "id": 14335981098,
+    "node_id": "MDg6QXJ0aWZhY3QxNDMzNTk4MTA5OA==",
+    "name": "full-board-butterstick-published-spaced-1",
+    "size_in_bytes": 6813853,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14335981098",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14335981098/zip",
+    "expired": false,
+    "digest": "sha256:099359a3f66ecceb35d496ad055bebf88a9ab2c35a4e45aa26373d23150bba7a",
+    "created_at": "2026-11-17T14:09:20Z",
+    "updated_at": "2026-11-17T14:09:20Z",
+    "expires_at": "2026-11-24T14:09:18Z",
+    "workflow_run": {
+      "id": 44096144980,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "bench/full-board-ten-3216-20261117",
+      "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+    }
+  },
+  "case": {
+    "board": "butterstick",
+    "cohort": "spaced",
+    "sourceSha256": "62b2e7b8716f92baf49e9d2c445e8b1eb07443343168c96a85970f33423d0fbf",
+    "components": 350,
+    "requestedNets": 317,
+    "padsAndHoles": 1623
+  },
+  "runtime": {
+    "main": "0.0.3216",
+    "core": "0.0.2402",
+    "eval": "0.0.1796",
+    "autorouter": "0.0.1117",
+    "busLanesBundled": "0.0.61",
+    "bun": "1.4.3"
+  },
+  "corePublishedCommit": "33d8e85e127822a8437c6ea4f576a3af260d69c6",
+  "corePrepublishBuildCommit": "cfd206671da55be666f3302620b94235a2964ad7",
+  "coreEmbeddedVersion": "0.0.2401",
+  "corePackageVersion": "0.0.2402",
+  "publishedCoreEntrySha256": "ca8489bf5ae86ce1e8620d4c4d116868878afe40c78567b6bc03a4baf49f2656",
+  "productionFiles": {
+    "lib/IsolatedCircuit.ts": {
+      "beforeSha256": "4629596aecd4c698ce8aff859e566f13198d4d955641626cc6c8bb0fb30f5b9b",
+      "afterSha256": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34"
+    },
+    "lib/components/primitive-components/Group/Group.ts": {
+      "beforeSha256": "7d0ebbb22d795700256d4164d3c4cbd5795b85e23ef2151921d65d309952de30",
+      "afterSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
+    }
+  },
+  "sourcePatch": null,
+  "limitsMs": {
+    "capture": 900000,
+    "hard": 960000,
+    "assessment": 180000
+  },
+  "expectedNativePrefix": {
+    "byte0InputSha256": "78871ac62e4fdc8f1e7ae7f7aed8cfd53e8a8336a7681371d7f9e9d3285380b6",
+    "byte1InputSha256": "76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e",
+    "byte0AcceptedTraces": 16,
+    "byte0ViaInstructions": 16,
+    "byte0Nets": [
+      "/FPGA-DDR3L/DQ0",
+      "/FPGA-DDR3L/DQ1",
+      "/FPGA-DDR3L/DQ2",
+      "/FPGA-DDR3L/DQ3",
+      "/FPGA-DDR3L/DQ4",
+      "/FPGA-DDR3L/DQ5",
+      "/FPGA-DDR3L/DQ6",
+      "/FPGA-DDR3L/DQ7"
+    ]
+  },
+  "frozenArtifactFiles": [
+    {
+      "name": "result.json",
+      "bytes": 3023,
+      "sha256": "30d302e3d6ed3c21eaf866e68d0f5f15ef3e76f5a1c003fdf783f20574d1d588"
+    },
+    {
+      "name": "assessment.json",
+      "bytes": 7704,
+      "sha256": "1d69c99da6a219d9138bd9f74a834ebda70708be8daece3df9e791f47326e04b"
+    },
+    {
+      "name": "progress.json",
+      "bytes": 7838,
+      "sha256": "18502717704797d94090afb9a576fb089036c45ccde23bc9c1954a02b514478a"
+    },
+    {
+      "name": "process.json",
+      "bytes": 346,
+      "sha256": "33eeb4302aaf906135230bb490ea8860820289adc704e7da1596cdf184af0136"
+    },
+    {
+      "name": "worker.log",
+      "bytes": 456,
+      "sha256": "b88918e8983d194975fe0a24922d149775ec298272c983d10d061c115283a165"
+    },
+    {
+      "name": "circuit.json.gz",
+      "bytes": 286578,
+      "sha256": "f44af5e68993da8115042d78477093c95f4be3b55f9499c5fdbe9fd375027d45"
+    },
+    {
+      "name": "findings.json.gz",
+      "bytes": 36005,
+      "sha256": "1a0971b2e44c9da4f0f419b509575419c10b6c7d5c40b040b11ec233132d041b"
+    },
+    {
+      "name": "phase-1-input.srj.json.gz",
+      "bytes": 2059085,
+      "sha256": "425229028203e91a7854a4e10a1e7e3040163e23592b6bf68c12c46efcc5737d"
+    },
+    {
+      "name": "phase-1-output.srj.json.gz",
+      "bytes": 2062333,
+      "sha256": "c9b8917a3edcc2b2417734555c530c53daf7d9e6ab4f8894f2e26308f5eb722e"
+    },
+    {
+      "name": "phase-2-input.srj.json.gz",
+      "bytes": 2062394,
+      "sha256": "f443b05bce41c591a18a9e98407bb372f254e98d22cb9824c6e0f438ac1af3c5"
+    },
+    {
+      "name": "unrouted.circuit.json.gz",
+      "bytes": 286563,
+      "sha256": "89792a80651a987e1f9fc8ed8eef3c00418daf24dbe137eaaf131e93bbcac328"
+    }
+  ],
+  "originalUnroutedGeometry": null,
+  "publishedHasSourceMap": false,
+  "nativeRuns": 0,
+  "frozen": true,
+  "productionPatchSha256": "41c6cd24c13f3dccbbe1cef741339ca260e5db86cd1b75f5ab86617a6eb8d7a9",
+  "testPatchSha256": "22f9c63d5ca6ef5d958d548f00e52fb8b4f068dbf2b69f87ec55dae2d60c61b9",
+  "testFiles": {
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx": "29e250be6f9762d022128b33e1bb0c8f5f7403f4ed1858f005dd2661ce1f9f9b",
+    "tests/features/autoroutingphase-replaces-accepted-traces.test.tsx": "932cb72a60683176954ba6165ecc6bb2511e45fb8494965aa8d279cb1481358b",
+    "tests/features/autoroutingphase-publishes-saved-traces.test.tsx": "d9a257e75c02308e9412b5d6dcee77241d6db0e0a0662f6ac459b32e2481a475"
+  },
+  "existingTests": [
+    "tests/features/autoroutingphase-algorithm-fn.test.tsx",
+    "tests/features/autoroutingphase-event-error-index.test.tsx",
+    "tests/features/autoroutingphase-event-index.test.tsx",
+    "tests/features/autoroutingphase-event-stage-index.test.tsx",
+    "tests/features/autoroutingphase-connection-reroute.test.tsx",
+    "tests/features/autoroutingphase-region-reroute.test.tsx",
+    "tests/features/autoroutingphase-saved-trace-paths.test.tsx",
+    "tests/features/autoroutingphase-test-points.test.tsx",
+    "tests/features/auto-jumper-autorouting.test.tsx",
+    "tests/footprint/render-until-settled-skips-idle-polls.test.tsx",
+    "tests/repros/repro-subcircuit-child-route-blocks-parent-simple.test.tsx",
+    "tests/utils/autorouting/simple-route-json-assignable-via.test.tsx"
+  ],
+  "reproTest": "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx",
+  "baselineFailureMustContain": [
+    "expect(circuit.db.pcb_trace.list()).toHaveLength(1)",
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx"
+  ],
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+    "run-one.ts": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "release.json": "999f1dbd33d71920be7fa816131120c3bea2d83f91b138c0da250b9739a067d1",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "runtime/package.json": "40eb583eabf9aaaeb72360497015d13723cb884ceab5326f2210f547ce090b8e",
+    "runtime/bun.lock": "e4f779525bc8a0c2293673a8828c342c3692dda8db07107cfe28558ad84cd7f8",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "candidateTests": [
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx",
+    "tests/features/autoroutingphase-replaces-accepted-traces.test.tsx",
+    "tests/features/autoroutingphase-publishes-saved-traces.test.tsx"
+  ],
+  "reviewedFullPatchSha256": "041884d3fe6278492b899ec9980696bf1111df3eb3eca2492a5c2e13f95f8290",
+  "baselineFailurePatterns": [
+    "Expected length:\\s*1",
+    "Received length:\\s*0"
+  ],
+  "reviewedProductionPatchSha256": "c7eeb054488d0261186d14e17fbab2fd0983ca3f22a9fdd6204105cac4528b86"
+}
