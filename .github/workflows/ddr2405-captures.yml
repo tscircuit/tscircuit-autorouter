@@ -1,0 +1,41 @@
+name: Collect frozen full-board phase inputs
+on:
+  push:
+    branches: [codex/ddr2405-captures]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  collect:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, glider, imx6, icepi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44162030777
+          name: refresh2405-${{ matrix.board }}
+          path: evidence
+      - name: Export original captured phase inputs and physical findings
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          python3 - <<'PY'
+          import base64,io,os,zipfile
+          from pathlib import Path
+          board=os.environ['BOARD_ID']
+          root=next(Path('evidence').rglob(board+'-phased'))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for name in ['joint-start.capture.json.gz','circuit.json','unrouted.circuit.json','findings.json']:
+                  path=root/name
+                  if path.exists(): archive.writestr(name,path.read_bytes())
+          print('REFRESH2405_PHASE_INPUT_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('REFRESH2405_PHASE_INPUT_END')
+          PY
