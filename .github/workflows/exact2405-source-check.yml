@@ -1,0 +1,22 @@
+name: Check isolated reference DRC source formatting
+on:
+  push:
+    branches: [codex/exact2405-source-check]
+permissions:
+  contents: read
+jobs:
+  source:
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [d5b27096d3beda51d1f70b8cc402150f78eb28b5, 03e5d66f3049e5a64a90e17ca105be8decff010f]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - run: bun run format:check
