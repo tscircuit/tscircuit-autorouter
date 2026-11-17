@@ -1,22 +1,28 @@
-name: Verify rebased DDR corner repro
+name: Native A13 physical pad snapshots
 on:
   push:
     branches: [artifacts/a13-cpu-pad-contact-snapshots]
 permissions:
-  contents: read
+  contents: write
 jobs:
   snapshot:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { ref: 7c8c15d591d6321d90a8a227910cc73737599079, branch: repro/a13-cpu-pad-contact }
+          - { ref: 129c78f09e7055565afda3ae2bfe522904013dbe, branch: fix/a13-direct-route-inset }
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 79a190562db320d73b9a21b6577033cf8c2ca509
+          ref: ${{ matrix.ref }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Install the declared routing dependencies
+      - name: Install declared routing and renderer dependencies
         run: |
           python3 - <<'PY'
           import pathlib,json
@@ -27,49 +33,31 @@ jobs:
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
-      - uses: actions/checkout@v4
-        with:
-          ref: b3f205ef18e07c61bcd8316c4876e34fee942298
-          path: comparison-base
-          persist-credentials: false
-      - name: Type check the fix
-        run: bunx tsc --noEmit
-      - name: Compare the changed ESP32 snapshot with the base
-        run: |
-          ln -s "$GITHUB_WORKSPACE/node_modules" comparison-base/node_modules
-          cat > .snapshot-qualification.ts <<'TS'
-          import { AutoroutingPipelineSolver7_MultiGraph } from "./lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-          import { evaluateRelaxedDrc } from "./lib/testing/evaluate-relaxed-drc"
-          const caseName = Bun.argv[3]
-          const bugReport = await Bun.file(`./fixtures/bug-reports/${caseName}/${caseName}.json`).json()
-          const input = bugReport.simple_route_json
-          const solver = new AutoroutingPipelineSolver7_MultiGraph(input)
-          solver.solve()
-          const traces = solver.getOutputSimplifiedPcbTraces()
-          const { errors } = evaluateRelaxedDrc({
-            inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces
-          })
-          const report = { solved: solver.solved, failed: solver.failed, routes: traces.length, errors: errors.length, byType: Object.fromEntries([...new Set(errors.map(e => e.error_type))].map(type => [type, errors.filter(e => e.error_type === type).length])) }
-          console.log("CASE_QUALIFICATION=" + JSON.stringify({caseName,...report}))
-          await Bun.write(Bun.argv[2], JSON.stringify(report))
-          
-          TS
-          cp .snapshot-qualification.ts comparison-base/
-          for case_name in bugreport47-8ee80e-esp32-breakout bugreport62-0f6ca4; do
-            bun .snapshot-qualification.ts /tmp/head.json "$case_name"
-            (cd comparison-base && bun .snapshot-qualification.ts /tmp/base.json "$case_name")
-            python3 - <<'PY'
-          import json
-          base=json.load(open('/tmp/base.json'))
-          head=json.load(open('/tmp/head.json'))
-          assert head['solved'] and not head['failed'], head
-          assert head['routes'] >= base['routes'], (base,head)
-          assert head['errors'] <= base['errors'], (base,head)
-          PY
-          done
-          rm .snapshot-qualification.ts
-          rm comparison-base/.snapshot-qualification.ts
-      - name: Update the changed ESP32 SVG after its DRC comparison
-        run: bun test ./tests/bugs/bugreport47-8ee80e-esp32-breakout.test.ts ./tests/bugs/bugreport62-0f6ca4.test.ts ./tests/repro/pipeline9-h3-ddr-strobe-via-access.test.ts --timeout 9999999
-      - name: Generate both views from the unchanged real board
+      - name: Generate the native CPU pad view and full-board clearance view
+        env:
+          BUN_UPDATE_SNAPSHOTS: 1
         run: bun test ./tests/repro/pipeline9-a13-regional-repair-shorts.test.ts --timeout 9999999
+      - name: Commit generated SVGs
+        uses: actions/github-script@v7
+        env:
+          TARGET_BRANCH: ${{ matrix.branch }}
+        with:
+          script: |
+            const fs = require("fs")
+            const branch = process.env.TARGET_BRANCH
+            for (const name of [
+              "pipeline9-a13-regional-repair-shorts.snap.svg",
+              "pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg"
+            ]) {
+              const path = "tests/repro/__snapshots__/" + name
+              const content = fs.readFileSync(path).toString("base64")
+              const { data } = await github.rest.repos.getContent({
+                ...context.repo, path, ref: branch
+              })
+              if (data.content.replace(/\s/g, "") === content) continue
+              await github.rest.repos.createOrUpdateFileContents({
+                ...context.repo, branch, path, content, sha: data.sha,
+                message: "Record physical A13 pad snapshot " + name
+              })
+              console.log("Recorded native renderer view: " + name)
+            }
