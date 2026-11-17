@@ -1,8 +1,8 @@
-name: Published3230 full-board ten-case benchmark
+name: Published3230 ButterStick byte1 lifecycle diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3230-20261117]
+    branches: [diagnostic/butterstick-bus-lifecycle-3230]
 
 permissions:
   contents: read
@@ -14,14 +14,10 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: butterstick, experiment: bus-lifecycle, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -29,6 +25,7 @@ jobs:
       BOARD: ${{ matrix.board }}
       FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
       FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      BUS_BYTE1_INPUT_SHA256: "76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e"
 
     steps:
       - name: Checkout benchmark controller
@@ -109,6 +106,38 @@ jobs:
           "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
           "$FULL_BOARD_ROOT/results/$BOARD/spaced"
 
+      - name: Require valid observation and unchanged incomplete board
+        if: always()
+        run: |
+          python3 - <<'PYTHON'
+          import gzip, hashlib, json, os
+          from pathlib import Path
+          folder = Path(os.environ["FULL_BOARD_ROOT"]) / "results/butterstick/spaced"
+          read = lambda name: json.loads((folder / name).read_text())
+          expected_raw = {'unrouted.circuit.json.gz': '12931517ac56df57d24c08074a4d4db3b76dabf999e1098d374ae5dbfeda1f6f', 'phase-1-input.srj.json.gz': '78871ac62e4fdc8f1e7ae7f7aed8cfd53e8a8336a7681371d7f9e9d3285380b6', 'phase-1-output.srj.json.gz': 'f371bc5c52104a73097663eacbf9420e449823c2e9cea58e2e6049bae2ccf592', 'phase-2-input.srj.json.gz': '76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e', 'circuit.json.gz': '2b7d2f3498655050d7401d2df98654760ffd37cffb09d1f77fdfcae45131092a', 'findings.json.gz': '1573f37576b34c2d6f679f7781be38fdb7fca86eebd68f37f5b455b2625a5f3f'}
+          expected_runtime = {'tscircuit': ['0.0.3230', 'cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3'], '@tscircuit/core': ['0.0.2407', '53798b0d37ae966acca93e503de4d20e6bb98086d9ec27313646030c364ec519'], '@tscircuit/eval': ['0.0.1801', '71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465'], '@tscircuit/capacity-autorouter': ['0.0.1121', '4de1a991d2b0041948fd71d389d5480e6b4a918cae290bc4ee065368606352c7']}
+          expected_result = {'connectedNets': 8, 'requestedRoutableNets': 317, 'sharedDrcErrorCount': 0, 'geometryErrorCount': 0, 'completeSourceCounts': True, 'routingPolicyObserved': True, 'assessmentReady': True, 'hardTimedOut': False, 'renderExitCode': 124, 'completeAndClean': False}
+          actual_raw = {name: hashlib.sha256(gzip.decompress((folder / name).read_bytes())).hexdigest() for name in expected_raw}
+          progress, result, assessment, diagnostic = [read(name) for name in ["progress.json", "result.json", "assessment.json", "bus-byte1-lifecycle.json"]]
+          missing_digest = hashlib.sha256(json.dumps(sorted(assessment["unconnectedNets"]), separators=(",", ":")).encode()).hexdigest()
+          checks = {
+              "freshInputsAndOutputUnchanged": actual_raw == expected_raw,
+              "nativeConnectedNamesUnchanged": missing_digest == 'a56fb13970aa6dc6f34255cb82a1359ee83398c75ef5163384db53da561c0d59',
+              "nativeAssessmentUnchanged": {key: result[key] for key in expected_result} == expected_result,
+              "publishedRuntimeUnchanged": {p["name"]: [p["version"], p["entrySha256"]] for p in progress["runtime"]["packages"]} == expected_runtime,
+              "sourceUnchanged": progress["sourceSha256"] == '62b2e7b8716f92baf49e9d2c445e8b1eb07443343168c96a85970f33423d0fbf',
+              "noRoutingOverrides": progress["runtime"]["candidateOverride"] is False and progress["runtime"]["routingSourceOverride"] is False and progress["runtime"]["cacheEngine"] is False and result["dependencyOverrides"] == [],
+              "originalDeadlines": (progress["captureDeadlineMs"], progress["hardDeadlineMs"], progress["assessmentDeadlineMs"]) == (900000, 960000, 180000),
+              "samePhaseFrontier": [(p["name"], p["status"]) for p in progress["phases"]] == [("byte0", "completed"), ("byte1", "running")],
+              "observerValid": diagnostic["captureValid"] is True and diagnostic["restored"] is True and diagnostic["originalStepExactlyOnce"] is True and diagnostic["calls"] == diagnostic["originalCalls"] and diagnostic["calls"] > 0 and diagnostic["observerErrors"] == [] and diagnostic["capped"] == [],
+              "observerInputBound": diagnostic["inputSha256"] == os.environ["BUS_BYTE1_INPUT_SHA256"],
+          }
+          proof = {"baselineRun": 44179934754, "baselineHead": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e", "baselineArtifact": 14372554326, "diagnosticHead": os.environ["GITHUB_SHA"], "checks": checks, "rawHashes": actual_raw, "acceptedDiagnostic": all(checks.values()), "boardCompleteAndClean": result["completeAndClean"], "scope": "Observation integrity only; unchanged incomplete board is not a successful route"}
+          (folder / "bus-byte1-parity.json").write_text(json.dumps(proof, indent=2) + "\n")
+          print(json.dumps(proof))
+          assert all(checks.values()), "Diagnostic parity failed; do not infer a routing gain or neutral observation"
+          PYTHON
+
       - name: Preserve spaced geometry and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -137,13 +166,11 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/assessment.json
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/results/${{ matrix.board }}/*/bus-byte1-lifecycle.json
+            .full-board-run/results/${{ matrix.board }}/*/bus-byte1-parity.json
             .full-board-run/runtime-manifest.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

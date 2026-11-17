@@ -13,8 +13,8 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 15595,
+      "sha256": "e9a7e3d092da1f9fb765fa3c382d0a3f5b00d0efbeba08b12d28114c6332bd22"
     },
     {
       "name": "run-one.ts",
@@ -40,7 +40,12 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "createBusLifecycleDiagnostics.ts",
+      "bytes": 8137,
+      "sha256": "fe688285e29fb8e097baedf919b9f5b1b7987eb5d2ce41fb5d593e2afe131c8c"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Existing coarse observer plus bounded published-instance Bus lifecycle observation during fresh-input-bound spaced ButterStick byte1 only. Each original _step called once; no routing input/options/limits changed. Timings include observation overhead."
 }
