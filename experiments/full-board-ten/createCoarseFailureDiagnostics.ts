@@ -50,7 +50,7 @@ export function createCoarseFailureDiagnostics(options: Options): {
     assert.equal(solver.iterations, 0, "Coarse witness must start before routing")
     inner = solver
     const { state, topology, problem } = solver
-    const queue = state.candidateQueue
+    let queue: RuntimeObject | undefined
     const capacity = solver.candidateHopCapacity
     assert(Number.isInteger(capacity) && capacity > 0 && capacity <= 2_000_000, "Unexpected compact hop capacity")
     assert(state.candidateBestCostByHopId instanceof Float64Array)
@@ -118,11 +118,24 @@ export function createCoarseFailureDiagnostics(options: Options): {
     const candidateDetail = (candidate: RuntimeObject): RuntimeObject => ({
       iteration: solver.iterations, hopId: candidate.hopId, ...point(candidate.portId),
       nextRegionId: candidate.nextRegionId, regionZMask: topology.regionAvailableZMask?.[candidate.nextRegionId] ?? null,
-      g: jsonNumber(candidate.g), h: jsonNumber(candidate.h), f: jsonNumber(candidate.f), queueLength: queue.length,
+      g: jsonNumber(candidate.g), h: jsonNumber(candidate.h), f: jsonNumber(candidate.f), queueLength: state.candidateQueue.length,
     })
 
     wrap(solver, "_step", (original, self, args) => {
       counts.mainStepCalls++
+      if (!queue) {
+        // DistanceAware._setup replaces the constructor queue. BaseSolver runs
+        // setup before the first _step, so bind here before its first dequeue.
+        assert.equal(self._setupDone, true)
+        assert.equal(self.iterations, 1)
+        assert.equal(counts.mainStepCalls, 1)
+        assert.equal(self.state, state)
+        queue = state.candidateQueue
+        wrap(queue!, "dequeue", observeDequeue)
+        report!.configured.queueHookInstalledAtIteration = self.iterations
+        report!.configured.queueHookInstalledAfterSetup = self._setupDone
+        report!.configured.queueHookInstalledBeforeDequeueCount = counts.queueDequeueCalls
+      }
       if (self.state.candidateQueue !== queue) counts.stepsWithReplacedQueue++
       const before = counts.queueDequeueCalls
       try { return Reflect.apply(original, self, args) }
@@ -132,7 +145,7 @@ export function createCoarseFailureDiagnostics(options: Options): {
         if (pops > 1) counts.stepsWithMultipleQueuePops++
       }
     })
-    wrap(queue, "dequeue", (original, self, args) => {
+    const observeDequeue = (original: Function, self: RuntimeObject, args: any[]): any => {
       const candidate = Reflect.apply(original, self, args)
       counts.queueDequeueCalls++
       const row = attempt()
@@ -176,7 +189,7 @@ export function createCoarseFailureDiagnostics(options: Options): {
       row.poppedByRegionZMask[mask] = (row.poppedByRegionZMask[mask] ?? 0) + 1
       if (samplePops.has(row.pops)) row.samples.push(candidateDetail(candidate))
       return candidate
-    })
+    }
     wrap(solver, "computeG", (original, self, args) => {
       const value = Reflect.apply(original, self, args)
       const row = attempt()

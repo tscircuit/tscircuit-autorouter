@@ -62,8 +62,8 @@ export function createHighDensityFailureDiagnostics(options: DiagnosticOptions):
       assert("value" in descriptor, `Unexpected parameter accessor ${key}`)
       const value = descriptor.value
       if (key === "connMap" && value !== undefined && value !== null) {
-        assert(value && value.netMap, "Missing connectivity netMap")
-        result[key] = { className: value.constructor.name, netMap: storeData(value.netMap) }
+        assert(value.netMap && value.idToNetMap, "Missing native connectivity maps")
+        result[key] = { className: value.constructor.name, netMap: storeData(value.netMap), idToNetMap: storeData(value.idToNetMap) }
       } else if (value !== null && typeof value === "object") result[key] = storeData(value)
       else result[key] = copyData(value)
     }
@@ -80,10 +80,11 @@ export function createHighDensityFailureDiagnostics(options: DiagnosticOptions):
   const failureTree = (root: RuntimeObject): RuntimeObject[] => {
     const rows: RuntimeObject[] = []
     const visited = new Map<RuntimeObject, number>()
+    let candidateSummaryCount = 0
     const visit = (solver: RuntimeObject, parent: number | null, relation: string, hyperParameters?: unknown): void => {
       if (!solver) return
       if (visited.has(solver)) { rows.push({ parent, relation, solverRef: visited.get(solver) }); return }
-      assert(visited.size < 384, "Native candidate tree exceeded 384 solver instances; capture invalid")
+      assert(visited.size < 384, "Native coordinator tree exceeded 384 solver instances; capture invalid")
       const id = visited.size
       visited.set(solver, id)
       const row: RuntimeObject = { id, parent, relation, ...stateSnapshot(solver) }
@@ -91,9 +92,20 @@ export function createHighDensityFailureDiagnostics(options: DiagnosticOptions):
       if (solver.nodeSolveMetadataById instanceof Map) row.nodeSolveMetadata = storeData(solver.nodeSolveMetadataById)
       if (hyperParameters !== undefined) row.hyperParameters = copyData(hyperParameters)
       rows.push(row)
+      if (Array.isArray(solver.supervisedSolvers)) {
+        candidateSummaryCount += solver.supervisedSolvers.length
+        assert(candidateSummaryCount <= 8192, "Native portfolio exceeded 8192 candidate summaries; capture invalid")
+        // A candidate can retain hundreds of internal search solvers. Capture
+        // every portfolio candidate's outcome, without walking those searches.
+        row.portfolioCandidates = solver.supervisedSolvers.map((candidate: RuntimeObject) => ({
+          ...stateSnapshot(candidate.solver), hyperParameters: copyData(candidate.hyperParameters),
+          internalSearchTreeCaptured: false,
+        }))
+        row.activeCandidateIndex = solver.supervisedSolvers.findIndex((candidate: RuntimeObject) => candidate.solver === solver.activeSubSolver)
+        return
+      }
       for (const name of ["highDensitySolver", "activeSubSolver", "forceImproveSolver", "repairSolver", "winningSolver"]) if (solver[name]) visit(solver[name], id, name)
       for (const name of ["failedSolvers", "failedSubSolvers"]) if (Array.isArray(solver[name])) for (const child of solver[name]) visit(child, id, name)
-      if (Array.isArray(solver.supervisedSolvers)) for (const candidate of solver.supervisedSolvers) visit(candidate.solver, id, "supervisedSolvers", candidate.hyperParameters)
     }
     visit(root, null, "root")
     return rows

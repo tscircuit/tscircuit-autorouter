@@ -38,19 +38,21 @@ if board in ["h616", "icepi"]:
     node, pair = ("topology_merge_7204", "source_net_116") if board == "h616" else ("topology_merge_17108", "source_net_34_mst6")
     check("complete_native_capture", witness.get("captureValid") is True and witness.get("captureErrors") == [])
     check("native_target_identity", witness["targetNode"] == node and witness["targetConnection"] == pair and witness["connections"]["pointPair"]["name"] == pair)
-    check("same_native_hd_failure", witness["highDensityFinal"]["failed"] and witness["highDensityFinal"]["error"] in result["lastError"])
+    check("same_native_hd_failure", witness.get("highDensityFinal", {}).get("failed") is True and isinstance(witness.get("highDensityFinal", {}).get("error"), str) and witness["highDensityFinal"]["error"] in result["lastError"])
     b01 = [attempt for attempt in witness["attempts"] if attempt["kind"] == "b01"]
     regional = [attempt for attempt in witness["attempts"] if attempt["kind"] == "regional"]
     check("b01_failure_retained", bool(b01) and any(attempt["final"]["failed"] and pair in attempt["final"]["error"] and "lastBeforeStep" in attempt for attempt in b01))
-    check("regional_failure_retained", bool(regional) and any(attempt["final"]["failed"] and attempt["candidates"] for attempt in regional))
+    check("regional_failure_retained", bool(regional) and any(attempt["final"]["failed"] and attempt.get("candidates") for attempt in regional))
     check("each_regional_instance_captured_before_stepping", all(attempt["initial"]["iterations"] == 0 and all(key in attempt for key in ["parameters", "fixedRouteSections", "fixedObstacleRoutes", "promotedConnectionNames", "reason"]) for attempt in regional))
+    check("native_connectivity_maps", bool(regional) and all("netMap" in attempt["parameters"]["connMap"] and "idToNetMap" in attempt["parameters"]["connMap"] for attempt in regional))
     check("native_inputs_bounded", witness["serializedInputBytes"] <= 24 * 1024 * 1024)
 else:
     check("same_existing_coarse_diagnostics", hashlib.sha256((output / "coarse-diagnostics.json").read_bytes()).hexdigest() == baseline["coarseDiagnosticsSha256"])
     check("coarse_hook_from_start", witness.get("innerHookInstalled") is True and witness["configured"]["hookInstalledAtIteration"] == 0)
+    check("coarse_queue_bound_after_setup", witness["configured"].get("queueHookInstalledAtIteration") == 1 and witness["configured"].get("queueHookInstalledAfterSetup") is True and witness["configured"].get("queueHookInstalledBeforeDequeueCount") == 0)
     counts = witness["counts"]
     check("coarse_step_accounting", counts["mainStepCalls"] == witness["final"]["iterations"] and counts["stepsWithMultipleQueuePops"] == 0 and counts["stepsWithReplacedQueue"] == 0)
-    check("coarse_pop_accounting", counts["queueDequeueCalls"] == sum(counts[key] for key in ["emptyQueuePops", "staleQueuePops", "foreignRegionPops", "eligibleExpansions"]))
+    check("coarse_pop_accounting", counts["queueDequeueCalls"] > 0 and counts["queueDequeueCalls"] == sum(counts[key] for key in ["emptyQueuePops", "staleQueuePops", "foreignRegionPops", "eligibleExpansions"]))
     attempts = witness["attempts"]
     check("selected_native_route_attempts", all(any(row["routeId"] == route_id and "committedAtIteration" in row and "commitCandidate" in row for row in attempts) for route_id in [18, 19, 22, 23]))
     check("selected_pop_accounting", all(row["pops"] == row["stalePops"] + row["foreignRegionPops"] + row["eligibleExpansions"] for row in attempts))
