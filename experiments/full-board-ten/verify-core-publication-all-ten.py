@@ -75,18 +75,21 @@ def connected(run, requested, cohort):
     return names
 
 
-def verify(root, board, cohort, plan):
+def verify(root, board, cohort, plan, comparison_folder=None):
     case = next(row for row in plan["cases"] if (row["board"], row["cohort"]) == (board, cohort))
-    before_folder = root / "baselines" / board / cohort
+    before_folder = comparison_folder or root / "baselines" / board / cohort
     after_folder = root / "results" / board / cohort
-    for row in case["requiredArtifactFiles"]:
-        path = before_folder / row["name"]
-        require(path.stat().st_size == row["bytes"] and digest(path) == row["sha256"], "Baseline evidence changed")
+    if comparison_folder is None:
+        for row in case["requiredArtifactFiles"]:
+            path = before_folder / row["name"]
+            require(path.stat().st_size == row["bytes"] and digest(path) == row["sha256"], "Baseline evidence changed")
     before, after = load_run(before_folder), load_run(after_folder)
     reuse = read(root / "core-all-ten-reuse.json")
     require(reuse["passed"] and reuse["coreBuilds"] == 0 and reuse["coreSourceDependencyResolutions"] == 0,
             "Qualified compiled graph was not reused")
-    require(reuse["primaryArtifact"] == plan["primary"]["artifact"], "Primary artifact binding changed")
+    for field in ("id", "name", "size_in_bytes", "digest", "workflow_run"):
+        require(reuse["primaryArtifact"][field] == plan["primary"]["artifact"][field],
+                f"Primary artifact binding changed: {field}")
     require(reuse["candidateEntry"]["sha256"] == plan["primary"]["candidateEntrySha256"], "Candidate entry changed")
     manifest = read(root / "runtime-manifest.json")
     require(digest(root / "runtime-manifest.json") == reuse["runtimeManifestSha256"], "Runtime manifest changed")

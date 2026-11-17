@@ -1,8 +1,8 @@
-name: Core accepted phase all-ten regression
+name: Core original iMX6 same-VM comparison
 
 on:
   push:
-    branches: [bench/core-publication-all-ten-3216]
+    branches: [bench/core-imx6-paired-control-3216]
 
 permissions:
   contents: read
@@ -10,20 +10,15 @@ permissions:
 
 jobs:
   route:
-    name: Complete circuits (${{ matrix.board }})
+    name: Published then candidate original iMX6
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        board: [h616, butterstick, glider, imx6, icepi]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       FULL_BOARD_EXPERIMENT: published
-      BOARD: ${{ matrix.board }}
+      BOARD: imx6
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -74,13 +69,38 @@ jobs:
           "$FULL_BOARD_ROOT/sources/spaced"
           "$FULL_BOARD_ROOT/cases" "$BOARD"
 
+      - name: Record published pre-run filesystem inventory
+        run: python3 experiments/full-board-ten/verify-core-imx6-pair.py "$FULL_BOARD_ROOT" published-before
+
+      - name: Route complete original iMX6 with published3216
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/imx6-original.json"
+          "$FULL_BOARD_ROOT/paired-control/imx6/original"
+
+      - name: Verify published post-run filesystem inventory
+        run: python3 experiments/full-board-ten/verify-core-imx6-pair.py "$FULL_BOARD_ROOT" published-after
+
+      - name: Preserve published original output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-imx6-paired-published-${{ github.run_attempt }}
+          path: .full-board-run/paired-control/imx6/original
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
       - name: Authenticate primary qualification and reuse compiled Core
         id: prepare
         run: >-
           python3 experiments/full-board-ten/prepare-core-publication-all-ten.py
           "$FULL_BOARD_ROOT" prepare "$BOARD"
 
-      - name: Route complete original circuit
+      - name: Record candidate pre-run filesystem inventory
+        run: python3 experiments/full-board-ten/verify-core-imx6-pair.py "$FULL_BOARD_ROOT" candidate-before
+
+      - name: Route complete original iMX6 with qualified candidate
         if: steps.prepare.outcome == 'success'
         continue-on-error: true
         run: >-
@@ -88,46 +108,20 @@ jobs:
           "$FULL_BOARD_ROOT/cases/candidate-$BOARD-original.json"
           "$FULL_BOARD_ROOT/results/$BOARD/original"
 
-      - name: Compare original native prefix and physical output
-        id: original
+      - name: Compare same-VM native prefix and physical output
+        id: comparison
         if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         continue-on-error: true
         run: >-
-          python3 experiments/full-board-ten/verify-core-publication-all-ten.py
-          "$FULL_BOARD_ROOT" "$BOARD" original
+          python3 experiments/full-board-ten/verify-core-imx6-pair.py
+          "$FULL_BOARD_ROOT" verify
 
       - name: Preserve original output and comparison
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: core-publication-${{ matrix.board }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Route complete spaced circuit
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/candidate-$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Compare spaced native prefix and physical output
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          python3 experiments/full-board-ten/verify-core-publication-all-ten.py
-          "$FULL_BOARD_ROOT" "$BOARD" spaced
-
-      - name: Preserve spaced output and comparison
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: core-publication-${{ matrix.board }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
+          name: core-imx6-paired-candidate-${{ github.run_attempt }}
+          path: .full-board-run/results/imx6/original
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
@@ -144,9 +138,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: core-publication-${{ matrix.board }}-proof-${{ github.run_attempt }}
+          name: core-imx6-paired-proof-${{ github.run_attempt }}
           path: |
             .full-board-run/core-all-ten-reuse.json
+            .full-board-run/imx6-pair
             .full-board-run/*runtime-manifest.json
             .full-board-run/cases/*.json
             .full-board-run/baselines/*/*/archive-proof.json
@@ -156,6 +151,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Require both regression qualifications
+      - name: Require same-VM regression qualification
         if: always()
-        run: test "${{ steps.original.outcome }}" = success && test "${{ steps.spaced.outcome }}" = success
+        run: test "${{ steps.comparison.outcome }}" = success
