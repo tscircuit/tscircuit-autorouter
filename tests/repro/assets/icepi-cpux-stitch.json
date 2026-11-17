@@ -1,0 +1,1934 @@
+{
+  "stitch": {
+    "connectionName": "CPUX",
+    "hdRoutes": [
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "endPcbPortId": "U1.276",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.47,
+            "y": -2.9,
+            "z": 0
+          },
+          {
+            "x": 15.45,
+            "y": -2.9,
+            "z": 0
+          },
+          {
+            "x": 15.35,
+            "y": -2.9,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.47,
+            "y": -2.9,
+            "z": 0
+          },
+          {
+            "x": 15.607,
+            "y": -2.78,
+            "z": 0
+          },
+          {
+            "x": 15.743,
+            "y": -2.78,
+            "z": 0
+          },
+          {
+            "x": 15.88,
+            "y": -2.9,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.567,
+            "y": -2.13,
+            "z": 0
+          },
+          {
+            "x": 15.55,
+            "y": -2.15,
+            "z": 0
+          },
+          {
+            "x": 15.47,
+            "y": -2.25,
+            "z": 0
+          },
+          {
+            "x": 15.493,
+            "y": -2.35,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.493,
+            "y": -2.35,
+            "z": 0
+          },
+          {
+            "x": 15.5,
+            "y": -2.35,
+            "z": 0
+          },
+          {
+            "x": 15.515,
+            "y": -2.37,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.88,
+            "y": -2.473,
+            "z": 0
+          },
+          {
+            "x": 15.743,
+            "y": -2.37,
+            "z": 0
+          },
+          {
+            "x": 15.607,
+            "y": -2.37,
+            "z": 0
+          },
+          {
+            "x": 15.515,
+            "y": -2.37,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -0.83,
+            "z": 0
+          },
+          {
+            "x": 15.518,
+            "y": -0.823,
+            "z": 0
+          },
+          {
+            "x": 15.47000099999874,
+            "y": -0.7500010000000142,
+            "z": 0
+          },
+          {
+            "x": 15.566370385790838,
+            "y": -0.7500010000000142,
+            "z": 0
+          },
+          {
+            "x": 15.566370385790838,
+            "y": -0.7500010000000142,
+            "z": 2
+          },
+          {
+            "x": 15.47,
+            "y": -0.758,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -0.823,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -0.83,
+            "z": 2
+          }
+        ],
+        "vias": [
+          {
+            "x": 15.566370385790838,
+            "y": -0.7500010000000142
+          }
+        ]
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -1.07,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -1.07,
+            "z": 0
+          },
+          {
+            "x": 15.56410442545713,
+            "y": -1.2306415429933917,
+            "z": 0
+          },
+          {
+            "x": 15.508,
+            "y": -1.138,
+            "z": 0
+          },
+          {
+            "x": 15.505,
+            "y": -1.193,
+            "z": 0
+          },
+          {
+            "x": 15.47,
+            "y": -1.27,
+            "z": 0
+          },
+          {
+            "x": 15.518,
+            "y": -1.35,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -1.35,
+            "z": 0
+          },
+          {
+            "x": 15.5,
+            "y": -1.35,
+            "z": 0
+          },
+          {
+            "x": 15.6,
+            "y": -1.45,
+            "z": 0
+          },
+          {
+            "x": 15.605,
+            "y": -1.48,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.675,
+            "y": -1.72,
+            "z": 0
+          },
+          {
+            "x": 15.653,
+            "y": -1.72,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -1.7204724708605343,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.470000999998742,
+            "y": -2.1299990000000175,
+            "z": 0
+          },
+          {
+            "x": 15.548,
+            "y": -2.104,
+            "z": 0
+          },
+          {
+            "x": 15.567,
+            "y": -2.13,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.605,
+            "y": -1.48,
+            "z": 0
+          },
+          {
+            "x": 15.62019999999873,
+            "y": -1.5,
+            "z": 0
+          },
+          {
+            "x": 15.7,
+            "y": -1.6,
+            "z": 0
+          },
+          {
+            "x": 15.675,
+            "y": -1.72,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.94,
+            "y": -2.78,
+            "z": 0
+          },
+          {
+            "x": 15.962,
+            "y": -2.78,
+            "z": 0
+          },
+          {
+            "x": 16.104294335456895,
+            "y": -2.7797896769448562,
+            "z": 0
+          },
+          {
+            "x": 16.104495052609533,
+            "y": -2.7797896769448562,
+            "z": 0
+          },
+          {
+            "x": 16.104495052609533,
+            "y": -2.7797896769448562,
+            "z": 0
+          },
+          {
+            "x": 16.104495052609533,
+            "y": -2.7797896769448562,
+            "z": 0
+          },
+          {
+            "x": 16.07806688789056,
+            "y": -2.5812464430514503,
+            "z": 0
+          },
+          {
+            "x": 16.07806688789056,
+            "y": -2.5812464430514503,
+            "z": 1
+          },
+          {
+            "x": 15.96,
+            "y": -2.37,
+            "z": 1
+          },
+          {
+            "x": 15.888,
+            "y": -2.383,
+            "z": 1
+          },
+          {
+            "x": 15.88,
+            "y": -2.409,
+            "z": 1
+          },
+          {
+            "x": 15.88,
+            "y": -2.42,
+            "z": 1
+          },
+          {
+            "x": 15.883,
+            "y": -2.375,
+            "z": 1
+          },
+          {
+            "x": 15.884,
+            "y": -2.375,
+            "z": 1
+          },
+          {
+            "x": 15.883,
+            "y": -2.373,
+            "z": 1
+          },
+          {
+            "x": 15.882,
+            "y": -2.372,
+            "z": 1
+          },
+          {
+            "x": 15.882,
+            "y": -2.372,
+            "z": 1
+          },
+          {
+            "x": 15.884,
+            "y": -2.372,
+            "z": 1
+          },
+          {
+            "x": 15.884,
+            "y": -2.372,
+            "z": 1
+          },
+          {
+            "x": 15.888,
+            "y": -2.376,
+            "z": 1
+          },
+          {
+            "x": 16.051526358672966,
+            "y": -2.5385308434025395,
+            "z": 1
+          },
+          {
+            "x": 16.051526358672966,
+            "y": -2.5385308434025395,
+            "z": 0
+          },
+          {
+            "x": 15.92206327683633,
+            "y": -2.370001000000018,
+            "z": 0
+          },
+          {
+            "x": 15.88,
+            "y": -2.441,
+            "z": 0
+          },
+          {
+            "x": 15.88,
+            "y": -2.473,
+            "z": 0
+          }
+        ],
+        "vias": [
+          {
+            "x": 16.07806688789056,
+            "y": -2.5812464430514503
+          },
+          {
+            "x": 16.051526358672966,
+            "y": -2.5385308434025395
+          }
+        ]
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.94,
+            "y": -2.78,
+            "z": 0
+          },
+          {
+            "x": 15.95,
+            "y": -2.8,
+            "z": 0
+          },
+          {
+            "x": 15.88,
+            "y": -2.9,
+            "z": 0
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -1.07,
+            "z": 2
+          },
+          {
+            "x": 15.5,
+            "y": -1.05,
+            "z": 2
+          },
+          {
+            "x": 15.5,
+            "y": -0.95,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -0.83,
+            "z": 2
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.518,
+            "y": -1.07,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -1.083,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -1.14,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -1.157,
+            "z": 2
+          },
+          {
+            "x": 15.518,
+            "y": -1.164,
+            "z": 2
+          },
+          {
+            "x": 15.519,
+            "y": -1.17,
+            "z": 2
+          },
+          {
+            "x": 15.52,
+            "y": -1.172,
+            "z": 2
+          },
+          {
+            "x": 15.536,
+            "y": -1.168,
+            "z": 2
+          },
+          {
+            "x": 15.56666566666542,
+            "y": -1.1754680822225638,
+            "z": 2
+          },
+          {
+            "x": 15.56666566666542,
+            "y": -1.1754680822225638,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.546480276864154,
+            "y": -1.3499990000000086,
+            "z": 3
+          },
+          {
+            "x": 15.518,
+            "y": -1.337,
+            "z": 3
+          },
+          {
+            "x": 15.518,
+            "y": -1.35,
+            "z": 3
+          }
+        ],
+        "vias": [
+          {
+            "x": 15.56666566666542,
+            "y": -1.1754680822225638
+          }
+        ]
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "startPcbPortId": "C15.2",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 14.812,
+            "y": -2.575,
+            "z": 3
+          },
+          {
+            "x": 14.8,
+            "y": -2.6,
+            "z": 3
+          },
+          {
+            "x": 14.9,
+            "y": -2.699,
+            "z": 3
+          },
+          {
+            "x": 15,
+            "y": -2.8,
+            "z": 3
+          },
+          {
+            "x": 15.122,
+            "y": -2.818,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.122,
+            "y": -2.818,
+            "z": 3
+          },
+          {
+            "x": 15.125,
+            "y": -2.812,
+            "z": 3
+          },
+          {
+            "x": 15.17,
+            "y": -2.817,
+            "z": 3
+          },
+          {
+            "x": 15.178,
+            "y": -2.817,
+            "z": 3
+          },
+          {
+            "x": 15.2,
+            "y": -2.812,
+            "z": 3
+          },
+          {
+            "x": 15.23,
+            "y": -2.818,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.23,
+            "y": -2.818,
+            "z": 3
+          },
+          {
+            "x": 15.47,
+            "y": -2.9,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.47,
+            "y": -2.9,
+            "z": 3
+          },
+          {
+            "x": 15.47,
+            "y": -2.9,
+            "z": 3
+          },
+          {
+            "x": 15.47,
+            "y": -2.8,
+            "z": 3
+          },
+          {
+            "x": 15.535,
+            "y": -2.78,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.535,
+            "y": -1.72,
+            "z": 3
+          },
+          {
+            "x": 15.498,
+            "y": -1.72,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7200010000000174,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7200010000000174,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7200010000000174,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7200010000000174,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7200010000000174,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7516740465222185,
+            "z": 3
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -1.7516740465222185,
+            "z": 0
+          },
+          {
+            "x": 15.6,
+            "y": -1.72,
+            "z": 0
+          },
+          {
+            "x": 15.546,
+            "y": -1.812,
+            "z": 0
+          },
+          {
+            "x": 15.538,
+            "y": -1.841,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.858,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.874,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.892,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.911,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.93,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.949,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.971,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -1.995,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.02,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.045,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.071,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.095,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.12,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.143,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.168,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.19,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.206,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.218,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.224,
+            "z": 0
+          },
+          {
+            "x": 15.537,
+            "y": -2.226,
+            "z": 0
+          },
+          {
+            "x": 15.539,
+            "y": -2.223,
+            "z": 0
+          },
+          {
+            "x": 15.558,
+            "y": -2.2,
+            "z": 0
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -2.188643091228288,
+            "z": 0
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -2.188643091228288,
+            "z": 3
+          },
+          {
+            "x": 15.576,
+            "y": -2.305,
+            "z": 3
+          },
+          {
+            "x": 15.55,
+            "y": -2.322,
+            "z": 3
+          },
+          {
+            "x": 15.53,
+            "y": -2.306,
+            "z": 3
+          },
+          {
+            "x": 15.47,
+            "y": -2.35,
+            "z": 3
+          },
+          {
+            "x": 15.502,
+            "y": -2.35,
+            "z": 3
+          }
+        ],
+        "vias": [
+          {
+            "x": 15.599998999998766,
+            "y": -1.7516740465222185
+          },
+          {
+            "x": 15.599998999998766,
+            "y": -2.188643091228288
+          }
+        ]
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.502,
+            "y": -2.37,
+            "z": 3
+          },
+          {
+            "x": 15.5,
+            "y": -2.35,
+            "z": 3
+          },
+          {
+            "x": 15.502,
+            "y": -2.35,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.535,
+            "y": -2.78,
+            "z": 3
+          },
+          {
+            "x": 15.55,
+            "y": -2.78,
+            "z": 3
+          },
+          {
+            "x": 15.564,
+            "y": -2.68,
+            "z": 3
+          },
+          {
+            "x": 15.564,
+            "y": -2.594,
+            "z": 3
+          },
+          {
+            "x": 15.55,
+            "y": -2.5,
+            "z": 3
+          },
+          {
+            "x": 15.502,
+            "y": -2.37,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.535,
+            "y": -1.48,
+            "z": 3
+          },
+          {
+            "x": 15.478582215099278,
+            "y": -1.4085822150992775,
+            "z": 3
+          },
+          {
+            "x": 15.47634056157801,
+            "y": -1.4736594384219905,
+            "z": 3
+          },
+          {
+            "x": 15.518,
+            "y": -1.35,
+            "z": 3
+          }
+        ],
+        "vias": []
+      },
+      {
+        "connectionName": "CPUX",
+        "rootConnectionName": "CPUX",
+        "traceThickness": 0.1,
+        "viaDiameter": 0.45,
+        "route": [
+          {
+            "x": 15.535,
+            "y": -1.72,
+            "z": 3
+          },
+          {
+            "x": 15.55,
+            "y": -1.7,
+            "z": 3
+          },
+          {
+            "x": 15.55,
+            "y": -1.6,
+            "z": 3
+          },
+          {
+            "x": 15.535,
+            "y": -1.48,
+            "z": 3
+          }
+        ],
+        "vias": []
+      }
+    ],
+    "start": {
+      "x": 14.812407999998754,
+      "y": -2.575092000000008,
+      "layer": "bottom",
+      "pointId": "C15.2",
+      "pcb_port_id": "C15.2",
+      "z": 3
+    },
+    "end": {
+      "x": 15.349999999998744,
+      "y": -2.9000000000000172,
+      "layer": "top",
+      "pointId": "U1.276",
+      "pcb_port_id": "U1.276",
+      "z": 0
+    }
+  },
+  "srj": {
+    "layerCount": 4,
+    "minTraceWidth": 0.1,
+    "minViaPadDiameter": 0.45,
+    "minViaHoleDiameter": 0.2,
+    "bounds": {
+      "minX": 13.5,
+      "maxX": 17,
+      "minY": -4,
+      "maxY": 0
+    },
+    "obstacles": [
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -3.550000000000017
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P7"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -2.9000000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P8"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -2.2500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P9"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -1.6000000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P10"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -0.9500000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P11"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.049999999998743,
+          "y": -0.30000000000001714
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "P12"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -3.550000000000017
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R7"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -2.9000000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R8"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -2.2500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R9"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -1.6000000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R10"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -0.9500000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R11"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 14.699999999998743,
+          "y": -0.30000000000001714
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "R12"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -3.550000000000017
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T7"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -2.9000000000000172
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T8",
+          "pcb_port_id": "U1.276"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -2.2500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "Net-(U1G-GND-CPUFB)"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T9"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -1.6000000000000174
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "/H3/PWR_CPUFB"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T10"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -0.9500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T11"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.349999999998744,
+          "y": -0.30000000000001725
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "+1V5"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "T12"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.999999999998744,
+          "y": -2.2500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "U9"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 15.999999999998744,
+          "y": -0.9500000000000173
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "+1V5"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "U11"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 16.649999999998744,
+          "y": -1.6000000000000174
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "Net-(U1A-SZQ)"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "V10"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 16.649999999998744,
+          "y": -0.9500000000000174
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "unconnected-(U1A-SODT1-PadV11)"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "V11"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "top"
+        ],
+        "center": {
+          "x": 16.649999999998744,
+          "y": -0.30000000000001736
+        },
+        "width": 0.24,
+        "height": 0.24,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "/DDR3/A13"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "U1",
+          "source_port_name": "V12"
+        },
+        "shape": "circle"
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 14.022407999998752,
+          "y": -0.565092000000007
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C37",
+          "source_port_name": "1"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 14.982407999998753,
+          "y": -0.565092000000007
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 0,
+        "connectedTo": [
+          "+1V5"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C37",
+          "source_port_name": "2"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 13.96240799999876,
+          "y": -3.470000000000017
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C13",
+          "source_port_name": "2"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 13.92240799999875,
+          "y": -2.53509200000002
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C16",
+          "source_port_name": "2"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 14.812407999998754,
+          "y": -1.6150920000000082
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 270.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C15",
+          "source_port_name": "1"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 14.812407999998754,
+          "y": -2.575092000000008
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 270.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C15",
+          "source_port_name": "2",
+          "pcb_port_id": "C15.2"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 16.074999999998766,
+          "y": -3.3250000000000113
+        },
+        "width": 0.9,
+        "height": 0.95,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C12",
+          "source_port_name": "1"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 16.074999999998766,
+          "y": -1.7750000000000115
+        },
+        "width": 0.9,
+        "height": 0.95,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "GND"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C12",
+          "source_port_name": "2"
+        }
+      },
+      {
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 14.882407999998748,
+          "y": -3.470000000000017
+        },
+        "width": 0.56,
+        "height": 0.62,
+        "ccwRotationDegrees": 90.0,
+        "connectedTo": [
+          "CPUX"
+        ],
+        "circuitJsonMetadata": {
+          "source_component_name": "C14",
+          "source_port_name": "2"
+        }
+      }
+    ],
+    "connections": [
+      {
+        "name": "CPUX",
+        "pointsToConnect": [
+          {
+            "x": 14.812407999998754,
+            "y": -2.575092000000008,
+            "layer": "bottom",
+            "pointId": "C15.2",
+            "pcb_port_id": "C15.2"
+          },
+          {
+            "x": 15.349999999998744,
+            "y": -2.9000000000000172,
+            "layer": "top",
+            "pointId": "U1.276",
+            "pcb_port_id": "U1.276"
+          }
+        ]
+      }
+    ]
+  }
+}
