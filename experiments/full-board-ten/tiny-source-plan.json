@@ -1,0 +1,69 @@
+{
+  "frozen": true,
+  "autorouterCommit": "b7951b41ff87c16f0bd0880e7b9c6a989ada244d",
+  "tinyCurrentCommit": "40e3c7a980d9dd3840c429e92006603d2c868790",
+  "tinyPin": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+  "tinyLibTree": "f46c194a194ea99d4b9a907ad8ac34b2259ce68c",
+  "publishedSourceMapSha256": "55904469ecd6e05eb738a0f2682956d03df9ba09948a6bb8b04c46da37d63614",
+  "productionPatchSha256": "7fe55441baf31d8f19fd2d695d12eb8cc82d45d94a080bcf18fb69dbf913b651",
+  "reviewedFullPatchSha256": "d5e4c3f38d24ca4f753b8be58e8ac334c691626923a71fc4b7c92cc45cb3bc63",
+  "requiredSourcePins": {
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+    "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
+    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0",
+    "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590",
+    "@tscircuit/math-utils": "0.0.39"
+  },
+  "productionFiles": {
+    "lib/bus-solver/TinyHyperGraphBusSolver.ts": {
+      "beforeSha256": "d1becec5a495801c5b95b35cb807215c340622bac744b2b6dedc04e19f4d3133",
+      "afterSha256": "160497398dd2ee0b8c9de4b2b5f046e422910ba9a4b54a1c52a70d60bc102488"
+    },
+    "lib/bus-solver/previewRoutingState.ts": {
+      "beforeSha256": "e22df541f0f4ab8a2bae1bde00cc1a475a546b0767b779b27126ff86234eed73",
+      "afterSha256": "01c13f4cc0dfa505e48137121784f775faeac55000d6cab15911a2bdfcd98ece"
+    },
+    "lib/core.ts": {
+      "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+      "afterSha256": "5b25e03c25b7d0e6a94c50344711524a7dc623381a36bbb3434f0e4069f4147e"
+    },
+    "lib/prepared/DenseRoutingWorkspace.ts": {
+      "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+      "afterSha256": "0bea5c47b1c419069ddd4977ce6e1ba5cc4001888d50cfcb9926c775eb0da50e"
+    },
+    "lib/section-solver/index.ts": {
+      "beforeSha256": "209f6638abbaec500f2d9e0188ffcfb1a86ec87c717f64b241543a2ae1919b38",
+      "afterSha256": "c85f96c0adfdfa6d1a56f7e8aa0fb2167f11bc0dcb4ce72bb6f3e30612fa75ef"
+    },
+    "lib/types.ts": {
+      "beforeSha256": "06e853251f4ab990e316bda4e21c8cf6788eae7cc6626e8a33f5290a0123f72a",
+      "afterSha256": "148da412e9c19cbcf989b52f4ea85ca38f7376893c6feb2715b444e643b5ce05"
+    }
+  },
+  "baselineArtifact": {
+    "id": 14335721447,
+    "node_id": "MDg6QXJ0aWZhY3QxNDMzNTcyMTQ0Nw==",
+    "name": "full-board-glider-published-spaced-1",
+    "size_in_bytes": 18065290,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14335721447",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14335721447/zip",
+    "expired": false,
+    "digest": "sha256:628678bc208a1bd2bca68968a1becc72dc9bcb655fcb1ef387b1ae1815973aba",
+    "created_at": "2026-11-17T14:05:51Z",
+    "updated_at": "2026-11-17T14:05:51Z",
+    "expires_at": "2026-11-24T14:05:49Z",
+    "workflow_run": {
+      "id": 44096144980,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "bench/full-board-ten-3216-20261117",
+      "head_sha": "8ea7c957afe84651fbe3682590d1632247e7d702"
+    }
+  },
+  "inputSha256": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4",
+  "coarseSha256": "8ee2c55ef5f7d302ca348444960c618da0dd73ae0c1ebfe56a38bc4bc44816e2",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineMs": 960000,
+  "assessmentDeadlineMs": 180000
+}

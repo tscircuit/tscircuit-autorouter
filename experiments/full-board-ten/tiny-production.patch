@@ -1,0 +1,137 @@
+diff --git a/lib/bus-solver/TinyHyperGraphBusSolver.ts b/lib/bus-solver/TinyHyperGraphBusSolver.ts
+index 9cd9a36..7b6158c 100644
+--- a/lib/bus-solver/TinyHyperGraphBusSolver.ts
++++ b/lib/bus-solver/TinyHyperGraphBusSolver.ts
+@@ -1461,0 +1462,2 @@ export class TinyHyperGraphBusSolver extends TinyHyperGraphSolver {
++      regionCache.firstPortIds = EMPTY_PREVIEW_INT32_ARRAY
++      regionCache.secondPortIds = EMPTY_PREVIEW_INT32_ARRAY
+diff --git a/lib/bus-solver/previewRoutingState.ts b/lib/bus-solver/previewRoutingState.ts
+index c537b75..c1eaa30 100644
+--- a/lib/bus-solver/previewRoutingState.ts
++++ b/lib/bus-solver/previewRoutingState.ts
+@@ -57,0 +58,2 @@ export const snapshotPreviewRoutingState = (
++    firstPortIds: new Int32Array(cache.firstPortIds),
++    secondPortIds: new Int32Array(cache.secondPortIds),
+@@ -80,0 +83,2 @@ export const restorePreviewRoutingState = (
++      firstPortIds: new Int32Array(cache.firstPortIds),
++      secondPortIds: new Int32Array(cache.secondPortIds),
+diff --git a/lib/core.ts b/lib/core.ts
+index 9e02c78..b391bb3 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -45,0 +46,2 @@ export const createEmptyRegionIntersectionCache =
++    firstPortIds: EMPTY_INT32_ARRAY,
++    secondPortIds: EMPTY_INT32_ARRAY,
+@@ -73,0 +76,2 @@ const cloneRegionIntersectionCache = (
++    firstPortIds: new Int32Array(regionIntersectionCache.firstPortIds),
++    secondPortIds: new Int32Array(regionIntersectionCache.secondPortIds),
+@@ -1341,0 +1346,19 @@ export class TinyHyperGraphSolver extends BaseSolver {
++  hasExistingSameNetSegment(
++    candidate: Pick<Candidate, "portId" | "nextRegionId">,
++    neighborPortId: PortId,
++  ): boolean {
++    const cache = this.state.regionIntersectionCaches[candidate.nextRegionId]
++    const firstPortId = Math.min(candidate.portId, neighborPortId)
++    const secondPortId = Math.max(candidate.portId, neighborPortId)
++    for (let index = 0; index < cache.netIds.length; index++) {
++      if (
++        cache.netIds[index] === this.state.currentRouteNetId &&
++        cache.firstPortIds[index] === firstPortId &&
++        cache.secondPortIds[index] === secondPortId
++      ) {
++        return true
++      }
++    }
++    return false
++  }
++
+@@ -1348,0 +1372,23 @@ export class TinyHyperGraphSolver extends BaseSolver {
++    // Ownership remains per route in regionSegments. Count shared copper once,
++    // including when rebuilding the cache from surviving or initial owners.
++    if (
++      this.hasExistingSameNetSegment(
++        { portId: port1Id, nextRegionId: regionId },
++        port2Id,
++      )
++    ) {
++      const existingRegionCost = this.computeRegionCostForRegion(
++        regionId,
++        regionCache.existingSameLayerIntersections,
++        regionCache.existingCrossingLayerIntersections,
++        regionCache.existingEntryExitLayerChanges,
++        regionCache.existingSegmentCount,
++      )
++      if (existingRegionCost !== regionCache.existingRegionCost) {
++        state.regionIntersectionCaches[regionId] = {
++          ...regionCache,
++          existingRegionCost,
++        }
++      }
++      return
++    }
+@@ -1364,0 +1411,7 @@ export class TinyHyperGraphSolver extends BaseSolver {
++    const firstPortIds = new Int32Array(nextLength)
++    firstPortIds.set(regionCache.firstPortIds)
++    firstPortIds[nextLength - 1] = Math.min(port1Id, port2Id)
++    const secondPortIds = new Int32Array(nextLength)
++    secondPortIds.set(regionCache.secondPortIds)
++    secondPortIds[nextLength - 1] = Math.max(port1Id, port2Id)
++
+@@ -1387,0 +1441,2 @@ export class TinyHyperGraphSolver extends BaseSolver {
++      firstPortIds,
++      secondPortIds,
+@@ -2069,9 +2124,14 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-    const newRegionCost =
+-      this.computeRegionCostForRegion(
+-        nextRegionId,
+-        regionCache.existingSameLayerIntersections + newSameLayerIntersections,
+-        regionCache.existingCrossingLayerIntersections +
+-          newCrossLayerIntersections,
+-        regionCache.existingEntryExitLayerChanges + newEntryExitLayerChanges,
+-        regionCache.existingSegmentCount + 1,
+-      ) - regionCache.existingRegionCost
++    const newRegionCost = this.hasExistingSameNetSegment(
++      currentCandidate,
++      neighborPortId,
++    )
++      ? 0
++      : this.computeRegionCostForRegion(
++          nextRegionId,
++          regionCache.existingSameLayerIntersections +
++            newSameLayerIntersections,
++          regionCache.existingCrossingLayerIntersections +
++            newCrossLayerIntersections,
++          regionCache.existingEntryExitLayerChanges + newEntryExitLayerChanges,
++          regionCache.existingSegmentCount + 1,
++        ) - regionCache.existingRegionCost
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index b13339a..49005e2 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -221,0 +222,3 @@ export class DenseRoutingWorkspace {
++      const regionCost = solver.hasExistingSameNetSegment(c, port)
++        ? 0
++        : row.costs[2 * same + cross + (uz !== vz ? 1 : 0)]!
+@@ -223,6 +226 @@ export class DenseRoutingWorkspace {
+-      const g =
+-        c.g +
+-        row.costs[2 * same + cross + (uz !== vz ? 1 : 0)]! +
+-        congestion +
+-        penalty +
+-        distanceCost
++      const g = c.g + regionCost + congestion + penalty + distanceCost
+diff --git a/lib/section-solver/index.ts b/lib/section-solver/index.ts
+index 926b864..97815d9 100644
+--- a/lib/section-solver/index.ts
++++ b/lib/section-solver/index.ts
+@@ -102,0 +103,2 @@ const cloneRegionIntersectionCache = (
++  firstPortIds: new Int32Array(regionIntersectionCache.firstPortIds),
++  secondPortIds: new Int32Array(regionIntersectionCache.secondPortIds),
+diff --git a/lib/types.ts b/lib/types.ts
+index b109000..582d8b3 100644
+--- a/lib/types.ts
++++ b/lib/types.ts
+@@ -27,0 +28,3 @@ export interface RegionIntersectionCache extends DynamicAnglePairArrays {
++  /** Exact min/max port IDs for each unique segment, aligned with netIds. */
++  firstPortIds: Int32Array
++  secondPortIds: Int32Array
