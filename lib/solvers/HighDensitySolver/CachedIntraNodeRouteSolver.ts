@@ -24,8 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 6 replaces typed object serialization with tagged JSON.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
+// Version 7 keeps direct same-layer routes inside the node's boundary inset.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver

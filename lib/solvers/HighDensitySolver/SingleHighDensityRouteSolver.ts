@@ -246,7 +246,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  handleSimpleCases() {
+  handleSimpleCases(): void {
     this.solved = true
     const { A, B } = this
     const route =
@@ -261,6 +261,27 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
+    if (
+      A.z === B.z &&
+      this.boundsSize.width > this.obstacleMargin &&
+      this.boundsSize.height > this.obstacleMargin &&
+      this.isNodeTooCloseToEdge({
+        x: (A.x + B.x) / 2,
+        y: (A.y + B.y) / 2,
+      })
+    ) {
+      const inset = this.obstacleMargin / 2
+      const minX = this.bounds.minX + inset
+      const maxX = this.bounds.maxX - inset
+      const minY = this.bounds.minY + inset
+      const maxY = this.bounds.maxY - inset
+      route.splice(
+        1,
+        0,
+        { x: clamp(A.x, minX, maxX), y: clamp(A.y, minY, maxY), z: A.z },
+        { x: clamp(B.x, minX, maxX), y: clamp(B.y, minY, maxY), z: B.z },
+      )
+    }
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -409,7 +430,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return false
   }
 
-  isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
+  isNodeTooCloseToEdge(node: Pick<Node, "x" | "y">, isVia?: boolean): boolean {
     const margin = isVia
       ? this.viaDiameter / 2 + this.obstacleMargin / 2
       : this.obstacleMargin / 2
