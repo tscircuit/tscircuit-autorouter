@@ -1,0 +1,29 @@
+{
+  "originalCoreSHA256": "8377980807ef6bc753a60ac789f67a0d65631feeee47c394f6f0e72eb1ed7851",
+  "expectedCandidateCoreSHA256": "ff81769971e58063a648cc03feaf68d7f11c9399c6c8897694fd6f764fc0d015",
+  "oldBlock": "var boardGrids = /* @__PURE__ */ new WeakMap();\nvar maxBoardGridBytes = 8 * 1024 * 1024;\nfunction getBoardGrid({\n  input,\n  copperRadiusMm,\n  xs,\n  ys,\n  step\n}) {\n  const key = JSON.stringify([\n    xs[0],\n    ys[0],\n    xs.length,\n    ys.length,\n    step,\n    copperRadiusMm,\n    input.bounds,\n    input.outline,\n    input.minBoardEdgeClearance\n  ]);\n  const previous = boardGrids.get(input);\n  if (previous?.key === key) return previous.blocked;\n  const blocked = new Uint8Array(xs.length * ys.length);\n  for (let y2 = 0; y2 < ys.length; y2++)\n    for (let x2 = 0; x2 < xs.length; x2++) {\n      const point52 = { x: xs[x2], y: ys[y2] };\n      if (!boardSegmentIsClear({\n        input,\n        start: point52,\n        end: point52,\n        copperRadiusMm\n      }))\n        blocked[x2 + y2 * xs.length] = 1;\n    }\n  if (blocked.byteLength <= maxBoardGridBytes)\n    boardGrids.set(input, { key, blocked });\n  return blocked;\n}\n",
+  "newBlock": "var boardGrids = /* @__PURE__ */ new WeakMap();\nvar maxBoardGridBytes = 16 * 1024 * 1024;\nfunction getBoardGrid({\n  input,\n  copperRadiusMm,\n  xs,\n  ys,\n  step\n}) {\n  const key = JSON.stringify([\n    xs[0],\n    ys[0],\n    xs.length,\n    ys.length,\n    step,\n    copperRadiusMm,\n    input.bounds,\n    input.outline,\n    input.minBoardEdgeClearance\n  ]);\n  const grids = boardGrids.get(input) ?? new Map();\n  const previous = grids.get(key);\n  if (previous) {\n    grids.delete(key);\n    grids.set(key, previous);\n    return previous;\n  }\n  const blocked = new Uint8Array(xs.length * ys.length);\n  for (let y2 = 0; y2 < ys.length; y2++)\n    for (let x2 = 0; x2 < xs.length; x2++) {\n      const point52 = { x: xs[x2], y: ys[y2] };\n      if (!boardSegmentIsClear({\n        input,\n        start: point52,\n        end: point52,\n        copperRadiusMm\n      }))\n        blocked[x2 + y2 * xs.length] = 1;\n    }\n  if (blocked.byteLength <= maxBoardGridBytes) {\n    let retained = [...grids.values()].reduce(\n      (sum, grid) => sum + grid.byteLength,\n      0\n    );\n    while (retained + blocked.byteLength > maxBoardGridBytes && grids.size) {\n      const oldest = grids.keys().next().value;\n      retained -= grids.get(oldest).byteLength;\n      grids.delete(oldest);\n    }\n    grids.set(key, blocked);\n    boardGrids.set(input, grids);\n  }\n  return blocked;\n}\n",
+  "oldBlockSHA256": "2291f3f42c358b7737bfb7fbd52b331206eb806d826e17728103a8818f529050",
+  "newBlockSHA256": "eee4f79dd5d0be67c7b6dd6b3dd796e61dc8b591006df5afa047b5d237492bb1",
+  "oldBlockOccurrences": 1,
+  "newBlockOccurrencesInOriginal": 0,
+  "blockByteOffset": 2370437,
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "aa94f20bed8356a9b37e5c46cd9d6a5a797da516",
+    "commit": "0f1c5ca41a1dccad289662e68228ef7e58afa071",
+    "changedFiles": [
+      "lib/board-grid.ts",
+      "tests/board-grid-cache.test.ts"
+    ],
+    "baseSourceSHA256": "caed7d0e2a200d8ad515ecbb4dcf994942b4c17d5f68927e3fc90f5647c520ea",
+    "candidateSourceSHA256": "0bf8b997b9731cb786bc6977a0767e52f25f08341d248b9c728bb1c17a3ec0cd",
+    "sourceToReplacementTokensEqual": true,
+    "normalization": "Strip import/export, normalize the two module-level const declarations to bundled var and existing Core x2/y2/point52 local names, then transpile both sides with the same Bun1.4.3 syntax transformer (treeShaking:false); this normalizes declaration joining and literal constant folding equally. Finally ignore no-argument Map/WeakMap constructor parentheses, comments, trailing commas and whitespace.",
+    "priorHeldSourceTip": "b04aee29cbeaa00041274bf981c1ac72bd703e1a"
+  },
+  "scope": "Board-raster content-key LRU only,16MiB retained array-byte budget per live input (not a global heap cap); unchanged point classifier and content keys. No full Core/tscircuit import, build, install, or native routing; only cache/raster unit tests and syntax checks performed locally.",
+  "controlRunId": 44049457297,
+  "unchangedAutorouterSHA256": "e6778a9ccc1a73776c64ec8ec408a5938bae66f9b0e74de5fb602cdeda070477",
+  "qualificationScope": "Prepared only: proposed one same-VM base-first full-board pair, case chosen by root after new published3209 baseline; original 900/960/180 limits. No timing or completion claim."
+}

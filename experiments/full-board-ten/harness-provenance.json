@@ -13,13 +13,13 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14590,
+      "sha256": "4de0d741fede8034668f60be62928013db308e0a5132f904d9182a134f29dbd4"
     },
     {
       "name": "run-one.ts",
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
+      "bytes": 11088,
+      "sha256": "14f8ffbf84bd5ff169e920ae6b4f744411eacea2c409eea6e809052c18988abe"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -40,7 +40,18 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "board-grid-cache-runtime.py",
+      "bytes": 9687,
+      "sha256": "a6f3d7925529ff40147808bd34ad63c525c3590ba24ccff280826b9f438088f7"
+    },
+    {
+      "name": "board-grid-cache-anchor.json",
+      "bytes": 4515,
+      "sha256": "07ae852b266dbb6cde79fd742b06cb8ed199c688fd32254e915d6934babeb927"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
+  "candidatePreparation": "Only the candidate Core board-grid cache block changes; both lanes use identical diagnostic controllers, authentic input/options/deadlines, and original-Core assessment after restoring the candidate alias."
 }
