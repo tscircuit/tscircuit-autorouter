@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import input from "../../fixtures/repro/pocket-mic-rx/pocket-mic-rx.srj.json" with {
@@ -17,7 +18,7 @@ function hasNonOctilinearSegment(route: SimplifiedPcbTrace["route"]): boolean {
   })
 }
 
-test("reproduces doglegs introduced by Pipeline 9 power expansion on Pocket Mic RX", async (): Promise<void> => {
+test("widens Pocket Mic RX DAC power traces without doglegs", async (): Promise<void> => {
   const inputSrj = input as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
@@ -48,13 +49,17 @@ test("reproduces doglegs introduced by Pipeline 9 power expansion on Pocket Mic 
       ),
     ).toBe(true)
     expect(hasNonOctilinearSegment(narrowRoute)).toBe(false)
-    expect(hasNonOctilinearSegment(wideRoute)).toBe(true)
+    expect(hasNonOctilinearSegment(wideRoute)).toBe(false)
+    expect(wideRoute.length).toBeLessThanOrEqual(6)
   }
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const snapshotInput = {
+    inputSrj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  // The baseline SRJ has four relaxed DRC findings.
+  expect(evaluateRelaxedDrc(snapshotInput).errors.length).toBeLessThanOrEqual(4)
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
