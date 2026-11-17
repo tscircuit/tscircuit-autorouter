@@ -1,0 +1,41 @@
+{
+  "scope": "One paired original ICE/Pi full-board published/candidate evaluation on frozen3216; fresh processes, unchanged900/960/180limits, published control first",
+  "branch": "bench/icepi-existing-junctions-full-3216",
+  "baselineCommit": "8ea7c957afe84651fbe3682590d1632247e7d702",
+  "baselineRun": 44096144980,
+  "publishedAutorouterVersion": "0.0.1117",
+  "publishedAutorouterGitHead": "b7951b41ff87c16f0bd0880e7b9c6a989ada244d",
+  "publishedEntrySha256": "e6778a9ccc1a73776c64ec8ec408a5938bae66f9b0e74de5fb602cdeda070477",
+  "sourceBaseCommit": "dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f",
+  "helperSourceSha256": "508d3025b4a154d0e4cc69aac4695937ac78a6845e6613a7aaaad4a1ab72d1d9",
+  "multipleSourceSha256": "ffe8aaca2a025e7f6f0c4de06def364369267d1b5ffc86d595ca63ad6258b942",
+  "mathFunction": "function ge(e,t,n,o){const i=t.x-e.x,r=t.y-e.y,s=o.x-n.x,a=o.y-n.y,c=e.x-n.x,l=e.y-n.y,h=i*a-r*s;if(Math.abs(h)<1e-10)return null;const d=(l*s-c*a)/h,u=(i*l-r*c)/h,p=1e-9;if(d>=-1e-9&&d<=1+p&&u>=-1e-9&&u<=1+p){return{x:e.x+d*i,y:e.y+d*r}}return null}",
+  "mathFunctionSha256": "7ebd57df13202e8996909d2d90e3e50d0255a2679ef7e08ee416d5cb284e51ac",
+  "mathSource": "../node_modules/@tscircuit/math-utils/src/line-intersections.ts",
+  "mathProvenance": "Exact unique function bytes plus equivalence to source contents; npm map generated positions are not used because they do not correspond to its minified entry",
+  "oldBlock": "const o=[...e.hdRoutes].sort(N2);this.clearanceValidator=new v2({hdRoutes:[...o,...e.otherHdRoutes??[]],minClearance:e.minClearance});const i=o[0];",
+  "oldBlockSha256": "270cc5671f7766c5ef4256904b95281f18e664dcde0498c2d27b70801709d90c",
+  "newBlock": "const __icepiOriginalHdRoutes=[...e.hdRoutes].sort(N2);const o=__icepiExistingJunctions(__icepiOriginalHdRoutes,(connectionName,point)=>this.endpointIndex.getEndpointKey(connectionName,point)).sort(N2);this.clearanceValidator=new v2({hdRoutes:[...__icepiOriginalHdRoutes,...e.otherHdRoutes??[]],minClearance:e.minClearance});const i=__icepiOriginalHdRoutes[0];",
+  "newBlockSha256": "9d6f8d12846aacc7c9c77f842381d9330ceab7ae4461423149d9e62df83d7fd7",
+  "nativeInputSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6",
+  "baselineCoarseDiagnosticSha256": "0c745cfb268c2b0beed61bb7c9b9045f4cdea3766c8ea9ac6f0111612b3c644f",
+  "limits": {
+    "captureMs": 900000,
+    "hardKillMs": 960000,
+    "assessmentMs": 180000
+  },
+  "candidateEntrySha256": "ccc4bc958f1d84c9aa2bd94273fc2fef002707341139eabd9e98fe9e399c0dde",
+  "prefixSha256": "87dbc4620a16638f7a1c4416c7259bb53a111fa76dbb5bd79ecffff63c3e498e",
+  "mathSourceFunctionSha256": "e3cb29a4491ef0a92fe35f75efe70103843ffa4130bc926e7677f65c2ce59e62",
+  "mathSourceFileSha256": "1764eeb21159672ed1ef51cc3a36988594599ca2298f8197f710333b4b1bbd98",
+  "mainVersion": "0.0.3216",
+  "qualifiedNativePhaseRun": 44060578875,
+  "qualifiedNativePhaseHead": "71e467a9cd36e2e56624094c0e521856fb91edd5",
+  "baselineFiles": {
+    "assessment.json": "3075b3cddd484964928c09857a658524e835275aa954bf331436f3f7fbbe253a",
+    "coarse-diagnostics.json": "0c745cfb268c2b0beed61bb7c9b9045f4cdea3766c8ea9ac6f0111612b3c644f"
+  },
+  "baselineCircuitSha256": "846be740e95d01505e8e6ffba74885fac4e9c0a0b468b4dfa7cb4b751a3a0d39",
+  "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+  "baselineError": "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\" (capacity-autorouter@0.0.1117)"
+}

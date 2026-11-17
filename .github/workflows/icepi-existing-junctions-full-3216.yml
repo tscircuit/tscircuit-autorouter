@@ -1,0 +1,125 @@
+name: Published3216 ICE existing-junction full-board pair
+
+on:
+  push:
+    branches: [bench/icepi-existing-junctions-full-3216]
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Original ICE full board, published then existing junctions
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - name: Checkout reviewed benchmark controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/icepi-existing-junctions-full-3216.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuits
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced sources for runtime provenance
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged frozen3216 package runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Prepare published authentic original ICE case and assessor
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/published-cases" icepi
+
+      - name: Run published original ICE end to end
+        id: published
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/published-cases/icepi-original.json"
+          "$FULL_BOARD_ROOT/results/published"
+
+      - name: Require exact fresh-baseline control before applying candidate
+        run: >-
+          python3 experiments/full-board-ten/verify-stitch-full-board.py
+          "$FULL_BOARD_ROOT" control
+
+      - name: Apply previously qualified exact stitch source overlay
+        run: >-
+          bun experiments/full-board-ten/prepare-stitch-candidate.ts
+          "$FULL_BOARD_ROOT"
+
+      - name: Prepare candidate authentic original ICE case and published assessor
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/candidate-cases" icepi
+
+      - name: Run candidate original ICE end to end in a fresh process
+        id: candidate
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/candidate-cases/icepi-original.json"
+          "$FULL_BOARD_ROOT/results/candidate"
+
+      - name: Compare real physical output and require a qualified gain
+        if: always()
+        run: >-
+          python3 experiments/full-board-ten/verify-stitch-full-board.py
+          "$FULL_BOARD_ROOT" compare
+
+      - name: Preserve both actual board circuits and compact provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: icepi-existing-junctions-full-3216-${{ github.run_attempt }}
+          path: |
+            .full-board-run/results
+            .full-board-run/published-cases/icepi-original.json
+            .full-board-run/candidate-cases/icepi-original.json
+            .full-board-run/published-cases/assessment-helper-proof.json
+            .full-board-run/candidate-cases/assessment-helper-proof.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/published-runtime-manifest.json
+            .full-board-run/stitch-overlay-proof.json
+            experiments/full-board-ten/stitch-candidate-plan.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
