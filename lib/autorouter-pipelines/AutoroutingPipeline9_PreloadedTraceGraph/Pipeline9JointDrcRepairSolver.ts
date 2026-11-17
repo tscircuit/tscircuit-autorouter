@@ -1720,6 +1720,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: cachedReferenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: maxRepairIterations,
       enableBroadFallback: false,
