@@ -263,13 +263,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           ]
     // A diagonal between boundary ports can clip the neighboring corner.
     const isDiagonalShortcut = A.x !== B.x && A.y !== B.y
+    // Endpoint exceptions in the grid check must not hide boundary ports.
+    const aBoundaryDistance = Math.min(
+      A.x - this.bounds.minX,
+      this.bounds.maxX - A.x,
+      A.y - this.bounds.minY,
+      this.bounds.maxY - A.y,
+    )
+    const bBoundaryDistance = Math.min(
+      B.x - this.bounds.minX,
+      this.bounds.maxX - B.x,
+      B.y - this.bounds.minY,
+      this.bounds.maxY - B.y,
+    )
     if (
       A.z === B.z &&
       isDiagonalShortcut &&
       this.boundsSize.width > this.obstacleMargin &&
       this.boundsSize.height > this.obstacleMargin &&
-      this.isNodeTooCloseToEdge(A) &&
-      this.isNodeTooCloseToEdge(B) &&
+      aBoundaryDistance < 1e-6 &&
+      bBoundaryDistance < 1e-6 &&
       this.isNodeTooCloseToEdge({
         x: (A.x + B.x) / 2,
         y: (A.y + B.y) / 2,
