@@ -135,8 +135,7 @@ test("repairs the remaining i.MX6 DDR via clearance with native board geometry",
     ...checkViasOffBoard(circuitJson),
     ...checkViasInPads(circuitJson),
   ]
-  expect(findings).toHaveLength(1)
-  expect(findings[0]?.type).toBe("pcb_via_trace_clearance_error")
+  expect(findings).toEqual([])
   const originalFindings = checkViaTraceClearance(
     fixture.circuitJson,
     clearanceOptions,
