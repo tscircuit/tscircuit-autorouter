@@ -42,6 +42,7 @@ jobs:
           sparse-checkout: |
             lib
             scripts
+            types
 
       - name: Checkout reviewed current Tiny library
         uses: actions/checkout@v4

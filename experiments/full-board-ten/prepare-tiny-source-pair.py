@@ -4,11 +4,13 @@
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import zipfile
 
 
 def digest(path: Path) -> str:
@@ -92,14 +94,29 @@ def main() -> None:
             raise RuntimeError(f"Unexpected source dependency pin: {name}")
     install_config = proof / "install.bunfig.toml"
     install_config.write_text("[install.lockfile]\nsave = true\n")
-    run(["bun", f"--config={install_config}", "install", "--save-text-lockfile", "--ignore-scripts", "--backend", "copy"], source)
+    seed = plan["sourceGraphSeed"]
+    artifact = seed["artifact"]
+    api = f"repos/tscircuit/tscircuit-autorouter/actions/artifacts/{artifact['id']}"
+    actual = json.loads(subprocess.check_output(["gh", "api", api]))
+    for field in ["id", "name", "size_in_bytes", "digest", "workflow_run"]:
+        if actual[field] != artifact[field]:
+            raise RuntimeError(f"Source graph artifact changed: {field}")
+    archive = subprocess.check_output(["gh", "api", api + "/zip"])
+    if len(archive) != artifact["size_in_bytes"] or "sha256:" + hashlib.sha256(archive).hexdigest() != artifact["digest"]:
+        raise RuntimeError("Source graph archive failed authentication")
+    with zipfile.ZipFile(io.BytesIO(archive)) as packet:
+        lock_bytes = packet.read(".full-board-run/source-pair/bun.lock")
+        inventory_bytes = packet.read(".full-board-run/source-pair/dependency-inventory.json.gz")
+    if hashlib.sha256(lock_bytes).hexdigest() != seed["lockSha256"] or hashlib.sha256(inventory_bytes).hexdigest() != seed["inventorySha256"]:
+        raise RuntimeError("Source graph seed bytes changed")
     lock = source / "bun.lock"
-    lock_sha = digest(lock)
-    shutil.copyfile(lock, proof / "bun.lock")
-    # Recheck the resolved graph under frozen mode before either build.
+    lock.write_bytes(lock_bytes)
+    lock_sha = seed["lockSha256"]
     run(["bun", f"--config={install_config}", "install", "--frozen-lockfile", "--ignore-scripts", "--backend", "copy"], source)
     if digest(lock) != lock_sha or (source / "package.json").read_bytes() != package_bytes:
         raise RuntimeError("Dependency resolution changed the frozen source manifest or lock")
+    shutil.copyfile(lock, proof / "bun.lock")
+    (proof / "source-graph-seed-proof.json").write_text(json.dumps({"artifact": actual, "lockSha256": lock_sha, "inventorySha256": seed["inventorySha256"], "archiveAuthenticated": True}, indent=2) + "\n")
     tiny = (source / "node_modules/tiny-hypergraph").resolve()
     if not tiny.is_relative_to(source / "node_modules"):
         raise RuntimeError("Tiny alias escapes the isolated source graph")
@@ -112,6 +129,8 @@ def main() -> None:
             raise RuntimeError(f"Candidate source preimage changed: {relative}")
     tiny_package = (tiny / "package.json").read_bytes()
     graph_before = inventory(source / "node_modules")
+    if graph_before != json.loads(gzip.decompress(inventory_bytes)):
+        raise RuntimeError("Restored dependency graph bytes differ from the authenticated first attempt")
     with gzip.open(proof / "dependency-inventory.json.gz", "wt") as stream:
         json.dump(graph_before, stream, sort_keys=True)
     run(["bun", str(controller / "build-tiny-source-entry.mjs"), str(source), str(proof / "base")], source)
@@ -147,6 +166,7 @@ def main() -> None:
         "passed": True, "autorouterCommit": plan["autorouterCommit"], "tinyPin": plan["tinyPin"],
         "tinyCurrentCommit": plan["tinyCurrentCommit"], "tinyLibTree": plan["tinyLibTree"],
         "lockSha256": lock_sha, "sourceManifestSha256": hashlib.sha256(package_bytes).hexdigest(),
+        "sourceGraphSeedArtifact": artifact["id"], "sourceGraphMatchesSeedBytes": True,
         "tinyPackageSha256": hashlib.sha256(tiny_package).hexdigest(), "tinyPackage": json.loads(tiny_package),
         "currentTinyMetadataUsed": False, "publishedSourceCount": len(published_bodies),
         "nonTinySourceBodiesIdentical": True, "changedBundledSources": sorted(body_changes),
