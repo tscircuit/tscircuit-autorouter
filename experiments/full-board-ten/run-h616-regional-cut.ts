@@ -16,11 +16,23 @@ mkdirSync(output, { recursive: true })
 const hash = (value: Buffer | string): string => createHash("sha256").update(typeof value === "string" ? value : new Uint8Array(value)).digest("hex")
 let emittedBytes = 0
 const write = (name: string, value: unknown): void => {
-  const data = JSON.stringify(value, null, 2)
-  emittedBytes += Buffer.byteLength(data) + 1
-  assert(emittedBytes <= plan.maxDiagnosticBytes, "Diagnostic cap exceeded")
+  const data = JSON.stringify(value)
+  const bytes = Buffer.byteLength(data) + 1
+  // Keep room for a compact fatal report without raising the capture cap.
+  assert(emittedBytes + bytes + 8192 <= plan.maxDiagnosticBytes, "Diagnostic cap exceeded")
   writeFileSync(join(output, name), data + "\n")
+  emittedBytes += bytes
 }
+let diagnosticPhase = "bootstrap"
+let lastNativeState: Data | null = null
+process.on("uncaughtException", (error: any): void => {
+  const failure = { diagnosticPhase, name: error.name, code: error.code, message: String(error.message).slice(0, 2048),
+    lastNativeState, stack: String(error.stack).split("\n").slice(0, 4).join("\n").slice(0, 2048) }
+  const data = JSON.stringify(failure)
+  if (emittedBytes + Buffer.byteLength(data) <= plan.maxDiagnosticBytes) writeFileSync(join(output, "failure.json"), data + "\n")
+  console.error(JSON.stringify(failure))
+  process.exit(1)
+})
 if (workerMode !== "worker") {
   const log = openSync(join(output, "worker.log"), "w")
   const worker = Bun.spawn([process.execPath, import.meta.path, root, mode!, "worker"], { stdout: log, stderr: log })
@@ -104,6 +116,23 @@ const copyData = (value: any): any => {
 }
 const parameterData = (params: Data): Data => Object.fromEntries(Object.entries(params).map(([key, value]) => [key,
   key === "connMap" ? { className: value.constructor.name, netMap: copyData(value.netMap), idToNetMap: copyData(value.idToNetMap) } : copyData(value)]))
+const compactTree = (rows: Data[]): Data => {
+  const blobs: Data = {}
+  const blob = (value: unknown): Data => {
+    const data = JSON.stringify(value)
+    const digest = hash(data)
+    if (!Object.hasOwn(blobs, digest)) blobs[digest] = value
+    return { $blob: digest }
+  }
+  const parameters = (values: Data): Data => Object.fromEntries(Object.entries(values).map(([key, value]) => [key,
+    key === "connMap" ? { className: value.className, netMap: blob(value.netMap), idToNetMap: blob(value.idToNetMap) }
+      : value !== null && typeof value === "object" && !value.$undefined && !value.$callback && !value.$number ? blob(value) : value]))
+  const tree = rows.map(row => ({ ...row,
+    ...(row.parameters ? { parameters: parameters(row.parameters) } : {}),
+    ...(row.nodeSolveMetadata ? { nodeSolveMetadata: blob(row.nodeSolveMetadata) } : {}),
+  }))
+  return { tree, blobs }
+}
 const context = decode(packet.pendingNodeAbsorptionContext)
 const params = context.parentParameters
 assert.equal(context.fixedRouteReplacements.size, 0)
@@ -181,20 +210,28 @@ const stepUntilDone = (solver: Data): void => {
   }
   assert.equal(wasmUsage.routingOrUnknownAttempts, 0)
 }
+diagnosticPhase = "original constructor parity"
 const control = build(context.activeNode)
 assert.deepEqual(parameterData(control.activeFallbackSolver.params), copyData(decode(originalRegional.parameters)))
 assert.deepEqual(copyData(control.activeFallbackFixedRouteSections), copyData(decode(originalRegional.fixedRouteSections)))
 assert.deepEqual(copyData(control.activeFallbackFixedObstacleRoutes), copyData(decode(originalRegional.fixedObstacleRoutes)))
 if (mode === "control") {
+  diagnosticPhase = "original regional control"
   stepUntilDone(control.activeFallbackSolver)
   const actualState = state(control.activeFallbackSolver), actualTree = tree(control.activeFallbackSolver)
-  write("native-state.json", { state: actualState, tree: actualTree })
+  lastNativeState = actualState
+  write("control-state.json", actualState)
+  diagnosticPhase = "original state parity"
   assert.deepEqual(actualState, originalRegional.final)
+  diagnosticPhase = "original complete coordinator and portfolio parity"
   assert.deepEqual(actualTree, expandObservation(originalRegional.candidates))
+  diagnosticPhase = "original control evidence serialization"
+  write("native-state.json", { state: actualState, ...compactTree(actualTree) })
   write("result.json", { valid: true, controlExactParity: true, originalIterations: actualState.iterations, wasmUsage, helperProof, wallMs: performance.now() - started })
   console.log(JSON.stringify({ mode, valid: true, iterations: actualState.iterations, error: actualState.error }))
   process.exit(0)
 }
+diagnosticPhase = "candidate ownership preflight"
 const controlResult = JSON.parse(readFileSync(join(root, "h616-regional-cut-results/control/result.json"), "utf8"))
 assert.equal(controlResult.controlExactParity, true)
 const beforeParamsHash = hash(JSON.stringify(copyData(params)))
@@ -281,6 +318,9 @@ const fixedObstacles = helpers.getPipeline9FixedRouteObstacles({ fixedObstacleRo
 const NativeRegional = control.activeFallbackSolver.constructor
 const candidate = new NativeRegional({ ...candidateParent.activeFallbackSolver.params,
   obstacles: [...params.obstacles, ...fixedObstacles] })
+const rejectionExamples: Data[] = []
+let rejectionExampleBytes = 0
+const rejectionCategories = new Set<string>()
 const validationCounts: Data = { calls: 0, nativeRejected: 0, guardRejected: 0, reasons: {} }
 const validationInput = { helpers, mergedNode: candidate.params.nodeWithPortPoints, parentParams: params, connMap, absorbedNodeIds: plan.absorbedNodeIds,
   originalNodes: params.nodePortPoints, pendingNodeIds: context.pendingNodeIds, acceptedRoutes, immutablePreloadRoutes, boardCircuitJson }
@@ -292,13 +332,26 @@ candidate.validateCandidateRoutes = (routes: Data[]): boolean => {
   const result = guard(routes)
   if (!result.valid) {
     validationCounts.guardRejected++
+    const categories = Object.keys(result.failureCounts).sort().join(",")
+    if (rejectionExamples.length < 3 && !rejectionCategories.has(categories)) {
+      const example = { validationCall: validationCounts.calls, failureCounts: result.failureCounts, firstFailures: result.firstFailures, actualRoutes: copyData(routes) }
+      const bytes = Buffer.byteLength(JSON.stringify(example))
+      if (rejectionExampleBytes + bytes <= 256 * 1024) {
+        rejectionExamples.push(example)
+        rejectionCategories.add(categories)
+        rejectionExampleBytes += bytes
+      }
+    }
     for (const [kind, count] of Object.entries(result.failureCounts)) validationCounts.reasons[kind] = (validationCounts.reasons[kind] ?? 0) + Number(count)
   }
   return result.valid
 }
 write("case.json", { ownershipProof, bounds, margin, retainedPorts: copyData(retained), originalRetainedPorts: copyData(originalRetained), sections: copyData(sections), immutableFragmentCount: immutablePreloadRoutes.length,
   acceptedRouteCount: acceptedRoutes.length, parameters: parameterData(candidate.params) })
+diagnosticPhase = "candidate regional screen"
 stepUntilDone(candidate)
+lastNativeState = state(candidate)
+diagnosticPhase = "candidate output and splice validation"
 const result: Data = { valid: true, regionalSolved: candidate.solved, regionalFailed: candidate.failed, state: state(candidate), validationCounts,
   fullBoardGainMeasured: false, wasmUsage, controlExactParity: true, wallMs: performance.now() - started }
 if (candidate.solved) {
@@ -341,6 +394,7 @@ if (candidate.solved) {
 }
 assert.equal(hash(JSON.stringify(copyData(context.priorSamePhaseRoutes))), beforeAcceptedHash, "Accepted same-phase copper changed")
 assert.equal(hash(JSON.stringify(copyData(params))), beforeParamsHash, "Original parent input or immutable geometry changed")
-write("native-state.json", { state: state(candidate), tree: tree(candidate) })
+write("native-state.json", { state: state(candidate), ...compactTree(tree(candidate)) })
+write("guard-rejection-examples.json", { examples: rejectionExamples, bytes: rejectionExampleBytes, capBytes: 256 * 1024 })
 write("result.json", result)
 console.log(JSON.stringify(result))
