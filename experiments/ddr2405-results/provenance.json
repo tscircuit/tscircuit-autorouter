@@ -1,0 +1,30 @@
+{
+  "baselineRouter": "820711e3aebb07ceeafdc410ba5e24f595fe473a",
+  "candidateRouter": "358ad0328db36ef475ebc5832d27d6224fca6303",
+  "measuredCandidateRouter": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1",
+  "core": "0c16ff6c1382bad4653c9302b852251343a7de9e",
+  "versions": {
+    "tscircuit": "0.0.3228",
+    "core": "0.0.2405",
+    "autorouter": "0.0.1120",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "bun": "1.4.3"
+  },
+  "baselineRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44162030777",
+  "candidateRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422",
+  "finalSourceValidationRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179632591",
+  "sourceTestRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336",
+  "reproPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3911",
+  "fixPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3912",
+  "conclusion": "All six full circuits were rerouted fresh using the latest published stack at the start of this analysis. Neither routing mode completes a clean full board: 0/6 before and after. Phased routing retains 29/1,580 complete nets and 827 physical findings; fanout retains 22/1,580 complete nets and emits no signal traces. The selected fix removes a reproduced clearance violation during exact repair of earlier copper, with fewer vias, while preserving these board results.",
+  "controlsConclusion": "All six original DDR controls pass all 310 nets before and after with zero physical findings and identical trace counts, via counts and wire lengths. Paired pipeline 9 / dataset 18 passes 16/16 before and after, with identical native PCB SVG hashes and 212.25 average vias. Its mean time changes by +0.31%; this is a single paired run and does not establish a speed improvement.",
+  "remainingBlockers": "The full-board completion bottlenecks remain: dense BGA fanout cannot escape within the available boundary on iCE/Pi, i.MX6 and ButterStick, while other fanout runs exhaust their budget. In phased routing, ButterStick exhausts port-point pathing iterations; H616 fails the DDR bus solver's surface-approach geometry/matching check; OrangeCrab, Glider, i.MX6 and iCE/Pi exhaust the routing budget, with repeated joint DRC work prominent in captured timings. The broader plane-continuity correction reduced false findings but worsened Glider's actual copper, so it was rejected. The scoped reference guard addresses a demonstrated physical correctness issue; it is not a full-board completion improvement.",
+  "limitations": [
+    "A successful Actions job means evidence was collected, not that the full board routed successfully.",
+    "The archived candidate workflow's formatting check failed on test formatting. The final source changes only that formatting; separate final-source formatting and byte-equivalence checks pass.",
+    "Fresh plane-routing contexts are excluded from the reference guard until their external anchors can be validated with plane geometry.",
+    "Native partial pours can differ between timed-out fanout runs; H616's fanout SVG differs while its complete nets, zero signal traces and physical findings remain unchanged.",
+    "The existing SEPIC repro retains tscircuit 0.0.3186 on both sides to isolate the router change; the six complete-board runs use the latest frozen stack above."
+  ]
+}

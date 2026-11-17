@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "coreCommit": "0c16ff6c1382bad4653c9302b852251343a7de9e",
+  "benchmarkRevision": "sha256:07241d5c0af855ba5f7d0516d9cdbf62e00f0a048df8c7011165bcce697eb73c",
+  "assessmentRevision": "sha256:07241d5c0af855ba5f7d0516d9cdbf62e00f0a048df8c7011165bcce697eb73c",
+  "fixtureHashes": {
+    "imx6": "285fb424a345174cf4da3da44726d47a212bb0e59e8850d40a5ff14f254b1c3d"
+  },
+  "bunVersion": "1.4.3",
+  "platform": "linux arm64",
+  "cpu": "unknown",
+  "dependencies": {
+    "@tscircuit/bus-lanes-solver": "0.0.61",
+    "@tscircuit/capacity-autorouter": "0.0.1120",
+    "@tscircuit/fanout-solver": "0.0.84",
+    "@tscircuit/checks": "0.0.279",
+    "@tscircuit/props": "0.0.732",
+    "circuit-json": "0.0.551"
+  },
+  "timeoutSeconds": 600,
+  "geometryOnly": false,
+  "cases": [
+    {
+      "circuit": "imx6",
+      "title": "i.MX6 Demo Board",
+      "status": "passed",
+      "wallMs": 114485.229234,
+      "peakRssMb": 2310.92578125,
+      "progress": {
+        "renderCompleted": true,
+        "renderMs": 112846.410628,
+        "phases": [
+          {
+            "phase": "byte0",
+            "stage": 0,
+            "solver": "BusLanesPipelineSolver",
+            "status": "completed",
+            "startedMs": 1371.7144790000002,
+            "durationMs": 534.594928,
+            "connections": 8,
+            "cacheStatus": "disabled"
+          },
+          {
+            "phase": "byte1",
+            "stage": 1,
+            "solver": "BusLanesPipelineSolver",
+            "status": "completed",
+            "startedMs": 1914.1082350000001,
+            "durationMs": 1517.2867660000002,
+            "connections": 8,
+            "cacheStatus": "disabled"
+          },
+          {
+            "phase": "remaining",
+            "stage": 2,
+            "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+            "status": "completed",
+            "startedMs": 3448.543857,
+            "durationMs": 108555.424438,
+            "connections": 37,
+            "cacheStatus": "disabled"
+          }
+        ],
+        "errors": [],
+        "solverEvents": [
+          {
+            "type": "solver:started",
+            "solverName": "LayoutPipelineSolver",
+            "componentName": "<board#473 />",
+            "elapsedMs": 659.4541079999999
+          },
+          {
+            "type": "solver:ended",
+            "solverName": "LayoutPipelineSolver",
+            "componentName": "<board#473 />",
+            "solved": true,
+            "failed": false,
+            "iterations": 25,
+            "error": null,
+            "elapsedMs": 662.6279720000002
+          },
+          {
+            "type": "solver:started",
+            "solverName": "BusLanesPipelineSolver",
+            "componentName": "<board#473 />",
+            "elapsedMs": 1377.875082
+          },
+          {
+            "type": "solver:started",
+            "solverName": "BusLanesPipelineSolver",
+            "componentName": "<board#473 />",
+            "elapsedMs": 1920.635828
+          },
+          {
+            "type": "solver:started",
+            "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+            "componentName": "<board#473 />",
+            "elapsedMs": 3476.212793
+          }
+        ]
+      },
+      "assessment": {
+        "requestedNets": 53,
+        "connectedNets": 53,
+        "unconnectedNets": [],
+        "pcbTraces": 66,
+        "vias": 134,
+        "wireLengthMm": 1463.7964138519394,
+        "findings": {
+          "missing_traces": 0,
+          "disconnected_ports": 0,
+          "trace_overlap": 0,
+          "pad_trace": 0,
+          "via_trace": 0,
+          "via_pad": 0,
+          "via_spacing": 0,
+          "contiguous": 0,
+          "via_in_pad": 0,
+          "hole_trace": 0,
+          "width": 0
+        },
+        "geometryErrors": [],
+        "validationMs": 523.026339
+      }
+    }
+  ]
+}

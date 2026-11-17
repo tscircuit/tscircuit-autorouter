@@ -1,0 +1,33 @@
+{
+  "reproCommit": "d5b27096d3beda51d1f70b8cc402150f78eb28b5",
+  "fixCommit": "358ad0328db36ef475ebc5832d27d6224fca6303",
+  "before": {
+    "coreTraceErrors": 1,
+    "vias": 18,
+    "minimumSameLayerVccGateGapMm": 0.04933774869521804
+  },
+  "after": {
+    "coreTraceErrors": 0,
+    "vias": 16,
+    "minimumSameLayerVccGateGapMm": 2.2519091430245184
+  },
+  "requiredClearanceMm": 0.1,
+  "viaReductionPercent": 11.11111111111111,
+  "traceErrorReductionPercent": 100,
+  "nativeCopperViewport": {
+    "center": {
+      "x": -5.25,
+      "y": -5.5
+    },
+    "width": 6,
+    "height": 4
+  },
+  "manualTracesPreserved": 8,
+  "gapMeasurement": "Minimum centerline segment distance minus the two wire half-widths, restricted to same-layer segments in the emitted VCC/GATE traces.",
+  "measuredRouter": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1",
+  "reproRuntime": {
+    "tscircuit": "0.0.3186",
+    "declaredCoreRange": "^0.0.2374",
+    "policy": "The existing repro keeps its pinned Core runtime constant to isolate the router change."
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "tests": {
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336",
+    "jobs": [
+      {
+        "name": "test (4)",
+        "conclusion": "success",
+        "databaseId": 134379646544,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379646544"
+      },
+      {
+        "name": "test (9)",
+        "conclusion": "success",
+        "databaseId": 134379646974,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379646974"
+      },
+      {
+        "name": "test (5)",
+        "conclusion": "success",
+        "databaseId": 134379647125,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647125"
+      },
+      {
+        "name": "test (7)",
+        "conclusion": "success",
+        "databaseId": 134379647165,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647165"
+      },
+      {
+        "name": "test (3)",
+        "conclusion": "success",
+        "databaseId": 134379647316,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647316"
+      },
+      {
+        "name": "test (1)",
+        "conclusion": "success",
+        "databaseId": 134379647335,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647335"
+      },
+      {
+        "name": "test (8)",
+        "conclusion": "success",
+        "databaseId": 134379647367,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647367"
+      },
+      {
+        "name": "test (2)",
+        "conclusion": "success",
+        "databaseId": 134379647393,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647393"
+      },
+      {
+        "name": "test (6)",
+        "conclusion": "success",
+        "databaseId": 134379647516,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179437336/job/134379647516"
+      }
+    ]
+  },
+  "formatAndProductionEquivalence": {
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179632591",
+    "jobs": [
+      {
+        "name": "source",
+        "conclusion": "success",
+        "databaseId": 134380151279,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44179632591/job/134380151279"
+      }
+    ]
+  },
+  "measurements": {
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422",
+    "jobs": [
+      {
+        "name": "dataset18",
+        "conclusion": "success",
+        "databaseId": 134376599172,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376599172"
+      },
+      {
+        "name": "boards (h616)",
+        "conclusion": "success",
+        "databaseId": 134376599722,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376599722"
+      },
+      {
+        "name": "source-format",
+        "conclusion": "failure",
+        "databaseId": 134376599863,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376599863"
+      },
+      {
+        "name": "boards (icepi)",
+        "conclusion": "success",
+        "databaseId": 134376600279,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376600279"
+      },
+      {
+        "name": "boards (imx6)",
+        "conclusion": "success",
+        "databaseId": 134376600308,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376600308"
+      },
+      {
+        "name": "boards (glider)",
+        "conclusion": "success",
+        "databaseId": 134376600343,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376600343"
+      },
+      {
+        "name": "boards (butterstick)",
+        "conclusion": "success",
+        "databaseId": 134376600388,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376600388"
+      },
+      {
+        "name": "boards (orangecrab)",
+        "conclusion": "success",
+        "databaseId": 134376600962,
+        "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44178612422/job/134376600962"
+      }
+    ]
+  },
+  "local": {
+    "targetedTests": "5 passed, 48 expectations",
+    "nativeImx6DdrRegression": "passed unchanged, 3 expectations",
+    "typescript": "passed",
+    "build": "ESM and declarations passed"
+  },
+  "archivedMeasurementStyleFailure": "The measured source has one test-formatting error. The final commit fixes only that formatting; routing sources and dependency files are byte-identical. Final-source formatting CI passes."
+}

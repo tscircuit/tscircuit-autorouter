@@ -1,0 +1,45 @@
+{
+  "id": "icepi",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 631458.337664,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "completed",
+      "connections": 8,
+      "startedMs": 26744.667834,
+      "elapsedMs": 569267.174749
+    },
+    {
+      "name": "byte0",
+      "solver": "BusLanesPipelineSolver",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 596876.262266,
+      "elapsedMs": 22695.600783
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "none",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3228",
+    "core": "0.0.2405",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "820711e3aebb07ceeafdc410ba5e24f595fe473a"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 36,
+    "importedSavedCopper": false
+  }
+}

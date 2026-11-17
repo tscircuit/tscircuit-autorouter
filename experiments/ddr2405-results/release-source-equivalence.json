@@ -1,0 +1,12 @@
+{
+  "package": "@tscircuit/capacity-autorouter",
+  "version": "0.0.1120",
+  "npmGitHead": "7eff3b555aaa083bb97e4ecc7ed113ef6aa1e2d1",
+  "baselineSource": "820711e3aebb07ceeafdc410ba5e24f595fe473a",
+  "checkedPaths": [
+    "lib",
+    "package.json",
+    "bun.lock"
+  ],
+  "differentPaths": []
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "candidate": "f0f60ff3f46ef86b121f7224d7f4c17bdaeec7ce",
+    "run": 44164887997,
+    "change": "external copper continuity correction",
+    "status": "rejected",
+    "gliderPhysicalFindingsBefore": 42,
+    "gliderPhysicalFindingsAfter": 52
+  },
+  {
+    "candidate": "d1d6b77c7c68574e0a79ec45f4132ed8712920ce",
+    "run": 44169545292,
+    "change": "external copper correction plus reference DRC guard",
+    "status": "rejected",
+    "gliderPhysicalFindingsBefore": 42,
+    "gliderPhysicalFindingsAfter": 52
+  },
+  {
+    "candidate": "03e5d66f3049e5a64a90e17ca105be8decff010f",
+    "run": 44172933183,
+    "change": "unscoped raw reference DRC guard",
+    "status": "rejected",
+    "gliderPhysicalFindingsBefore": 42,
+    "gliderPhysicalFindingsAfter": 53,
+    "board1726RelaxedDrcErrorsBefore": 0,
+    "board1726RelaxedDrcErrorsAfter": 433
+  }
+]

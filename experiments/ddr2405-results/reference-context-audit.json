@@ -1,0 +1,35 @@
+[
+  {
+    "board": "orangecrab",
+    "hasNativePreloadedTraces": false,
+    "guard": false
+  },
+  {
+    "board": "h616",
+    "hasNativePreloadedTraces": false,
+    "guard": false
+  },
+  {
+    "board": "glider",
+    "hasNativePreloadedTraces": false,
+    "guard": false
+  },
+  {
+    "board": "imx6",
+    "hasNativePreloadedTraces": false,
+    "guard": false
+  },
+  {
+    "board": "icepi",
+    "hasNativePreloadedTraces": false,
+    "guard": false
+  },
+  {
+    "board": "sepic",
+    "hasNativePreloadedTraces": false,
+    "guard": true,
+    "coreTraceErrors": 0,
+    "vias": 16,
+    "minimumSameLayerVccGateGapMm": 2.2519091430245184
+  }
+]

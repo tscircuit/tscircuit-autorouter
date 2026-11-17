@@ -1,0 +1,12 @@
+{
+  "frozenRouter": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1",
+  "finalRouter": "358ad0328db36ef475ebc5832d27d6224fca6303",
+  "checkedPaths": [
+    "lib",
+    "package.json",
+    "bun.lock"
+  ],
+  "differentPaths": [],
+  "productionSourceByteIdentical": true,
+  "onlyFinalChange": "Formatting of the reference-priority regression test"
+}

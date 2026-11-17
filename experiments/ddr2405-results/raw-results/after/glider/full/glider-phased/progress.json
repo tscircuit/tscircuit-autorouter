@@ -1,0 +1,45 @@
+{
+  "id": "glider",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 613268.393102,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "completed",
+      "connections": 5,
+      "startedMs": 10488.950208,
+      "elapsedMs": 265169.97317799996
+    },
+    {
+      "name": "byte0",
+      "solver": "BusLanesPipelineSolver",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 276867.149876,
+      "elapsedMs": 323626.23114300007
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "none",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3228",
+    "core": "0.0.2405",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 5,
+    "importedSavedCopper": false
+  }
+}

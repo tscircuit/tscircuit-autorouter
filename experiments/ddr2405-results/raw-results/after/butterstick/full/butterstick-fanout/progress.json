@@ -1,0 +1,37 @@
+{
+  "id": "butterstick",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 589717.3534690001,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 91,
+      "startedMs": 129719.72597099999,
+      "elapsedMs": 458102.4920550001
+    }
+  ],
+  "errors": [
+    "Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Error: Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3228",
+    "core": "0.0.2405",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 53,
+    "importedSavedCopper": false
+  }
+}

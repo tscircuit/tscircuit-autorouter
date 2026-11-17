@@ -1,0 +1,3367 @@
+[
+  {
+    "id": "imx6",
+    "mode": "fanout",
+    "variant": "candidate",
+    "exitCode": 0,
+    "timedOut": false,
+    "wallMs": 475094.781404,
+    "peakRssMb": 2171.75,
+    "auditExitCode": 0,
+    "auditTimedOut": false,
+    "progress": {
+      "id": "imx6",
+      "mode": "fanout",
+      "status": "failed",
+      "renderCompleted": true,
+      "elapsedMs": 471692.70358699997,
+      "phases": [
+        {
+          "name": "fanout preparation",
+          "solver": "FanoutSolver",
+          "status": "failed",
+          "connections": 32,
+          "startedMs": 245143.627847,
+          "elapsedMs": 223482.67637599996
+        }
+      ],
+      "errors": [
+        "Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Error: Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+        "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+        "Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      ],
+      "stage": "initializing",
+      "initialCopperElements": 0,
+      "runtime": {
+        "tscircuit": "0.0.3228",
+        "core": "0.0.2405",
+        "fanout": "0.0.84",
+        "busLanes": "0.0.61",
+        "autorouter": "workspace Pipeline 9",
+        "routerCommit": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1"
+      },
+      "planeIntent": {
+        "enabled": true,
+        "zones": 61,
+        "importedSavedCopper": false
+      }
+    },
+    "assessment": {
+      "id": "imx6",
+      "components": 498,
+      "expectedComponents": 498,
+      "pads": 1904,
+      "expectedPads": 1904,
+      "nets": 588,
+      "expectedNets": 588,
+      "routableNets": 404,
+      "connectedNets": 3,
+      "pcbTraces": 0,
+      "vias": 0,
+      "copperPours": 372,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "missingCopper": [
+        {
+          "name": "+1.8V",
+          "members": 31
+        },
+        {
+          "name": "+3V3_DCDC",
+          "members": 100
+        },
+        {
+          "name": "+3V3_FTDI",
+          "members": 9
+        },
+        {
+          "name": "+3V3_STAND_BY",
+          "members": 9
+        },
+        {
+          "name": "+5V_LCD",
+          "members": 6
+        },
+        {
+          "name": "+5V_VBUS",
+          "members": 15
+        },
+        {
+          "name": "+5V_VBUS_USB1",
+          "members": 4
+        },
+        {
+          "name": "+5V_VBUS_USB2",
+          "members": 4
+        },
+        {
+          "name": "+VDD_DRAM",
+          "members": 44
+        },
+        {
+          "name": "+VDD_HIGH_CAP",
+          "members": 7
+        },
+        {
+          "name": "+VDD_SOC",
+          "members": 16
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2C1.SCL",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2C1.SDA",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_ADCDAT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_BCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_DACDAT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_LRCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_MCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/IN2_L",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/IN2_R",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/LINE_OUT_L",
+          "members": 5
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/LINE_OUT_R",
+          "members": 5
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/BOOT_MODE_0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/BOOT_MODE_1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA0",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA1",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA10",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA11",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA12",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA13",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA14",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA15",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA16",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA17",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA18",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA19",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA20",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA21",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA22",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA23",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA3",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA4",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA5",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA6",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA7",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA8",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA9",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DOTCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_HSYNC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_RESET",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_VSYNC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/FTDI_RX",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/FTDI_TX",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TCK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TDI",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TDO",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TMS",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_VREF",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_ACTIVITY",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_EMMC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_NETWORK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SD",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_RCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_SER",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_SRCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/PMIC_POWER_GOOD",
+          "members": 9
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/UART1.RX",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/UART1.TX",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/USBD_N",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/USBD_P",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/_USBD_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/_USBD_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/~{JTAG_TRST}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/~{LED_SR_SRCLR}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A10",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A11",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A12",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A13",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A14",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A15",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A8",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A9",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_EN0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_EN1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_N",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_P",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_ODT0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_ODT1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/ENET_CLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_BACK_LIGHT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_SPI_MOSI",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_SPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/NVCC_PLL",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/ONOFF",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/PMIC_ON_REQ",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_CRS_DV{slash}CONFIG2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_MDC",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_MDIO",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXD0{slash}DUPLEX",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXD1{slash}PHYAD2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXER{slash}ISO",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXD0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXD1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXEN",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_CMD",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA3",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_SCLK",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.X1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.X2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.Y1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.Y2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB1.DN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB1.DP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB2.DN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB2.DP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_ARM_CAP",
+          "members": 8
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_SNVS_CAP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_SOC_CAP",
+          "members": 15
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_CLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_CMD",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CAS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CS0}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CS1}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_RAS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_WE}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{LCD_SPI_CS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{POWER_ON_RESET}",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{QSPI_CS}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{SD_CARD_CD}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{eMMC_RESET}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/+1V2_ENET",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/B-CAST_OFF",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/CONFIG0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/CONFIG1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_INTRP{slash}~{NAND_TREE}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_RX_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_RX_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_TX_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_TX_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/NWAYEN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/PHYAD0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/PHYAD1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/SPEED",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/~{ENET_RST}",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_BL",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_SW",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_VIN",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_LED_A",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_X1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_X2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_Y1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_Y2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_VCOM",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_VDD",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/VCOM_M",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/VSUP",
+          "members": 7
+        },
+        {
+          "name": "/i.MX6ULL MAIN/POWER/+5V_SW",
+          "members": 12
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA10",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA11",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA12",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA13",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA14",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA15",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA8",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA9",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DML",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DMU",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSL_N",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSL_P",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSU_N",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSU_P",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/~{DRAM_RESET}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/USB TYPE A/USB1_VBUS",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/USB TYPE A/USB2_VBUS",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/eMMC QSPI SD/+VDD_SD",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/eMMC QSPI SD/eMMC_VDDI",
+          "members": 2
+        },
+        {
+          "name": "DRAM_VREF",
+          "members": 9
+        },
+        {
+          "name": "GNDREF",
+          "members": 381
+        },
+        {
+          "name": "LCD_AVDD",
+          "members": 6
+        },
+        {
+          "name": "LCD_VGH",
+          "members": 3
+        },
+        {
+          "name": "LCD_VGL",
+          "members": 4
+        },
+        {
+          "name": "Net-(C112-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C117-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C123-Pad1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C124-Pad1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C156-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(C48-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(C65-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(CN6-CC1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(CN6-CC2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D15-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D17-common)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D18-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D18-common)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D20-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D21-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D24-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D25-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D26-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D27-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D28-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D30-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D30-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D31-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D31-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D32-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D32-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D33-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D33-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D34-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D34-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D35-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D35-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D36-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D36-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D37-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D37-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CD{slash}DAT3)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CLK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CMD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT0)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-~{CD})",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-GK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-RC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-TC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-YK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J6-Pad45)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J6-Pad50)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J6-Pad53)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q1-D)",
+          "members": 4
+        },
+        {
+          "name": "Net-(Q1-G)",
+          "members": 4
+        },
+        {
+          "name": "Net-(Q2-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q2-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q3-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q3-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q4-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q4-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q5-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q5-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q6-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q6-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R126-Pad1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(R13-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R151-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R152-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R153-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R154-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R155-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R156-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U1-ADJ)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U13-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U14-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-REXT)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-VDDA_3.3)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U16-AVDD)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U16-CPCA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPCB)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPVOUTN)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPVOUTP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-GPIO1_{slash}_IRQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-HPOUTL)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-HPOUTR)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN1L_{slash}_DMICDAT1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN1R_{slash}_DMICDAT2)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN2L)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-IN2R)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-MICBIAS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-VMIDC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U17-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-ADJ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-COMP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-CTRL)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DLY1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DLY2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DRVN)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DRVP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U18-FBN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-FBP)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-FDLY)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-IN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-REF)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U19-+)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U19--)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U2-EN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U2-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-A1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-A2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-B1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-B2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U21-VCC)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U22-~{OE})",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-EN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U3-PG)",
+          "members": 6
+        },
+        {
+          "name": "Net-(U4-ADJ)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U5-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U6-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7A-ADC_VREFH)",
+          "members": 5
+        },
+        {
+          "name": "Net-(U7A-VDD_HIGH_IN)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7B-DRAM_ZQPAD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7F-ENET1_TX_CLK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7H-VDD_USB_CAP)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-CCM_CLK1_N)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-CCM_CLK1_P)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-CCM_PMIC_STBY_REQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-JTAG_MOD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-RTC_XTAL_I)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-RTC_XTAL_O)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-SNVS_TAMPER5)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-TEST_MODE)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-UART2_RX_DATA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-UART2_TX_DATA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-XTAL_I)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7J-XTAL_O)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U8-~{RESET})",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-NC_(ZQ1))",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-ZQ0)",
+          "members": 2
+        }
+      ],
+      "findings": {
+        "routing": 2,
+        "overlap": 0,
+        "padTrace": 0,
+        "viaTrace": 0,
+        "viaPad": 0,
+        "viaSpacing": 0,
+        "contiguous": 0,
+        "viaInPad": 0,
+        "holeTrace": 0
+      },
+      "connectivityPolicy": "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets."
+    }
+  },
+  {
+    "id": "imx6",
+    "mode": "phased",
+    "variant": "candidate",
+    "exitCode": 0,
+    "timedOut": false,
+    "wallMs": 606189.252737,
+    "peakRssMb": 6325.18359375,
+    "auditExitCode": 0,
+    "auditTimedOut": false,
+    "progress": {
+      "id": "imx6",
+      "mode": "phased",
+      "status": "failed",
+      "renderCompleted": true,
+      "elapsedMs": 602783.815774,
+      "phases": [
+        {
+          "name": "plane_escape",
+          "solver": "workspace Pipeline 9",
+          "status": "failed",
+          "connections": 8,
+          "startedMs": 62259.956701,
+          "elapsedMs": 537756.618039
+        }
+      ],
+      "errors": [
+        "Full-board routing budget exhausted",
+        "Error: Full-board routing budget exhausted",
+        "Full-board routing budget exhausted"
+      ],
+      "stage": "pipeline9JointDrcRepairSolver",
+      "initialCopperElements": 0,
+      "runtime": {
+        "tscircuit": "0.0.3228",
+        "core": "0.0.2405",
+        "fanout": "0.0.84",
+        "busLanes": "0.0.61",
+        "autorouter": "workspace Pipeline 9",
+        "routerCommit": "965375c0d78a8539ab55ebc00ca0cbb8a77285a1"
+      },
+      "planeIntent": {
+        "enabled": true,
+        "zones": 61,
+        "importedSavedCopper": false
+      }
+    },
+    "assessment": {
+      "id": "imx6",
+      "components": 498,
+      "expectedComponents": 498,
+      "pads": 1904,
+      "expectedPads": 1904,
+      "nets": 588,
+      "expectedNets": 588,
+      "routableNets": 404,
+      "connectedNets": 3,
+      "pcbTraces": 0,
+      "vias": 0,
+      "copperPours": 140,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "missingCopper": [
+        {
+          "name": "+1.8V",
+          "members": 31
+        },
+        {
+          "name": "+3V3_DCDC",
+          "members": 100
+        },
+        {
+          "name": "+3V3_FTDI",
+          "members": 9
+        },
+        {
+          "name": "+3V3_STAND_BY",
+          "members": 9
+        },
+        {
+          "name": "+5V_LCD",
+          "members": 6
+        },
+        {
+          "name": "+5V_VBUS",
+          "members": 15
+        },
+        {
+          "name": "+5V_VBUS_USB1",
+          "members": 4
+        },
+        {
+          "name": "+5V_VBUS_USB2",
+          "members": 4
+        },
+        {
+          "name": "+VDD_DRAM",
+          "members": 44
+        },
+        {
+          "name": "+VDD_HIGH_CAP",
+          "members": 7
+        },
+        {
+          "name": "+VDD_SOC",
+          "members": 16
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2C1.SCL",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2C1.SDA",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_ADCDAT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_BCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_DACDAT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_LRCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/I2S_MCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/IN2_L",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/IN2_R",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/LINE_OUT_L",
+          "members": 5
+        },
+        {
+          "name": "/i.MX6ULL MAIN/AUDIO CODEC/LINE_OUT_R",
+          "members": 5
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/BOOT_MODE_0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/BOOT_MODE_1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA0",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA1",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA10",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA11",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA12",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA13",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA14",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA15",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA16",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA17",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA18",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA19",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA20",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA21",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA22",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA23",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA3",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA4",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA5",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA6",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA7",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA8",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DATA9",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_DOTCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_HSYNC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_RESET",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/BOOT CONFIG/LCD_VSYNC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/FTDI_RX",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/FTDI_TX",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TCK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TDI",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TDO",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_TMS",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/JTAG_VREF",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_ACTIVITY",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_EMMC",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_NETWORK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SD",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_RCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_SER",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/LED_SR_SRCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/PMIC_POWER_GOOD",
+          "members": 9
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/UART1.RX",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/UART1.TX",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/USBD_N",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/USBD_P",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/_USBD_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/_USBD_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/~{JTAG_TRST}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CONTROL GPIO/~{LED_SR_SRCLR}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A10",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A11",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A12",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A13",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A14",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A15",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A8",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_A9",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_BA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_EN0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_EN1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_N",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_CLK_P",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_ODT0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/DRAM_ODT1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/ENET_CLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_BACK_LIGHT",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_SPI_MOSI",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/LCD_SPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/NVCC_PLL",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/ONOFF",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/PMIC_ON_REQ",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/QSPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_CRS_DV{slash}CONFIG2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_MDC",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_MDIO",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXD0{slash}DUPLEX",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXD1{slash}PHYAD2",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_RXER{slash}ISO",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXD0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXD1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/RMII_TXEN",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_CMD",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_DATA3",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/SD_CARD_SCLK",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.X1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.X2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.Y1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/TOUCH.Y2",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB1.DN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB1.DP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB2.DN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/USB2.DP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_ARM_CAP",
+          "members": 8
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_SNVS_CAP",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/VDD_SOC_CAP",
+          "members": 15
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_CLK",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_CMD",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/eMMC_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CAS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CS0}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_CS1}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_RAS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{DRAM_WE}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{LCD_SPI_CS}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{POWER_ON_RESET}",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{QSPI_CS}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{SD_CARD_CD}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/CPU/~{eMMC_RESET}",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/+1V2_ENET",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/B-CAST_OFF",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/CONFIG0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/CONFIG1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_INTRP{slash}~{NAND_TREE}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_RX_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_RX_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_TX_N",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/ENET_TX_P",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/NWAYEN",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/PHYAD0",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/PHYAD1",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/SPEED",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/ETHERNET/~{ENET_RST}",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/CAP6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_BL",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_SW",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_DCDC_VIN",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_LED_A",
+          "members": 6
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_X1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_X2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_Y1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_TOUCH_Y2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_VCOM",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/LCD_VDD",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/VCOM_M",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/LCD/VSUP",
+          "members": 7
+        },
+        {
+          "name": "/i.MX6ULL MAIN/POWER/+5V_SW",
+          "members": 12
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA10",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA11",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA12",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA13",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA14",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA15",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA8",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DATA9",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DML",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DMU",
+          "members": 2
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSL_N",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSL_P",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSU_N",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/DRAM_DQSU_P",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/RAM DDR3/~{DRAM_RESET}",
+          "members": 3
+        },
+        {
+          "name": "/i.MX6ULL MAIN/USB TYPE A/USB1_VBUS",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/USB TYPE A/USB2_VBUS",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/eMMC QSPI SD/+VDD_SD",
+          "members": 4
+        },
+        {
+          "name": "/i.MX6ULL MAIN/eMMC QSPI SD/eMMC_VDDI",
+          "members": 2
+        },
+        {
+          "name": "DRAM_VREF",
+          "members": 9
+        },
+        {
+          "name": "GNDREF",
+          "members": 381
+        },
+        {
+          "name": "LCD_AVDD",
+          "members": 6
+        },
+        {
+          "name": "LCD_VGH",
+          "members": 3
+        },
+        {
+          "name": "LCD_VGL",
+          "members": 4
+        },
+        {
+          "name": "Net-(C112-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C117-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C123-Pad1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C124-Pad1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(C156-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(C48-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(C65-Pad1)",
+          "members": 4
+        },
+        {
+          "name": "Net-(CN6-CC1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(CN6-CC2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D15-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D17-common)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D18-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D18-common)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D20-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D21-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D24-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D25-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D26-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D27-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D28-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D30-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D30-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D31-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D31-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D32-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D32-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D33-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D33-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D34-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D34-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D35-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D35-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D36-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D36-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D37-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D37-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CD{slash}DAT3)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CLK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-CMD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT0)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-DAT2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-~{CD})",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-GK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-RC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-TC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J2-YK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J6-Pad45)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J6-Pad50)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J6-Pad53)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q1-D)",
+          "members": 4
+        },
+        {
+          "name": "Net-(Q1-G)",
+          "members": 4
+        },
+        {
+          "name": "Net-(Q2-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q2-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q3-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q3-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q4-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q4-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q5-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q5-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q6-B)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q6-C)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R126-Pad1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(R13-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R151-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R152-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R153-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R154-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R155-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(R156-Pad2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN10D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN11D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN12D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN13D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN14D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN15D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN16D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1A-R1.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1B-R2.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1C-R3.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1D-R4.1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN1D-R4.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9A-R1.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9B-R2.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(RN9C-R3.2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U1-ADJ)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U13-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U14-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-REXT)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-VDDA_3.3)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U16-AVDD)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U16-CPCA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPCB)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPVOUTN)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-CPVOUTP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-GPIO1_{slash}_IRQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-HPOUTL)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-HPOUTR)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN1L_{slash}_DMICDAT1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN1R_{slash}_DMICDAT2)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U16-IN2L)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-IN2R)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-MICBIAS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U16-VMIDC)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U17-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-ADJ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-COMP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-CTRL)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DLY1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DLY2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DRVN)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-DRVP)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U18-FBN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-FBP)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-FDLY)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U18-IN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U18-REF)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U19-+)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U19--)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U2-EN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U2-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-A1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-A2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-B1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-B2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U21-VCC)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U22-~{OE})",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-EN)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U3-PG)",
+          "members": 6
+        },
+        {
+          "name": "Net-(U4-ADJ)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U5-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U6-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7A-ADC_VREFH)",
+          "members": 5
+        },
+        {
+          "name": "Net-(U7A-VDD_HIGH_IN)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7B-DRAM_ZQPAD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7F-ENET1_TX_CLK)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7H-VDD_USB_CAP)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-CCM_CLK1_N)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-CCM_CLK1_P)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-CCM_PMIC_STBY_REQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-JTAG_MOD)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-RTC_XTAL_I)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-RTC_XTAL_O)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U7J-SNVS_TAMPER5)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-TEST_MODE)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-UART2_RX_DATA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-UART2_TX_DATA)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U7J-XTAL_I)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U7J-XTAL_O)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U8-~{RESET})",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-NC_(ZQ1))",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-ZQ0)",
+          "members": 2
+        }
+      ],
+      "findings": {
+        "routing": 1,
+        "overlap": 0,
+        "padTrace": 0,
+        "viaTrace": 0,
+        "viaPad": 0,
+        "viaSpacing": 0,
+        "contiguous": 0,
+        "viaInPad": 0,
+        "holeTrace": 0
+      },
+      "connectivityPolicy": "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets."
+    }
+  }
+]

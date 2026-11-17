@@ -1,0 +1,37 @@
+{
+  "id": "butterstick",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 601817.6884,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 91,
+      "startedMs": 136706.97675600002,
+      "elapsedMs": 463301.04069799994
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3228",
+    "core": "0.0.2405",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "820711e3aebb07ceeafdc410ba5e24f595fe473a"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 53,
+    "importedSavedCopper": false
+  }
+}

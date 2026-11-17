@@ -1,0 +1,9 @@
+{
+  "id": "icepi",
+  "mode": "phased",
+  "variant": "latest",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 634084.7924009999,
+  "peakRssMb": 6227.6484375
+}

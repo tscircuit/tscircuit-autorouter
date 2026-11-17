@@ -1,0 +1,3010 @@
+[
+  {
+    "id": "glider",
+    "mode": "fanout",
+    "variant": "latest",
+    "exitCode": 0,
+    "timedOut": false,
+    "wallMs": 604769.615373,
+    "peakRssMb": 1433.06640625,
+    "auditExitCode": 0,
+    "auditTimedOut": false,
+    "progress": {
+      "id": "glider",
+      "mode": "fanout",
+      "status": "failed",
+      "renderCompleted": true,
+      "elapsedMs": 601985.668749,
+      "phases": [
+        {
+          "name": "fanout preparation",
+          "solver": "FanoutSolver",
+          "status": "failed",
+          "connections": 95,
+          "startedMs": 90172.362939,
+          "elapsedMs": 509831.263181
+        }
+      ],
+      "errors": [
+        "Full-board routing budget exhausted",
+        "Error: Full-board routing budget exhausted",
+        "Full-board routing budget exhausted"
+      ],
+      "stage": "initializing",
+      "initialCopperElements": 0,
+      "runtime": {
+        "tscircuit": "0.0.3228",
+        "core": "0.0.2405",
+        "fanout": "0.0.84",
+        "busLanes": "0.0.61",
+        "autorouter": "workspace Pipeline 9",
+        "routerCommit": "820711e3aebb07ceeafdc410ba5e24f595fe473a"
+      },
+      "planeIntent": {
+        "enabled": true,
+        "zones": 5,
+        "importedSavedCopper": false
+      }
+    },
+    "assessment": {
+      "id": "glider",
+      "components": 379,
+      "expectedComponents": 379,
+      "pads": 1700,
+      "expectedPads": 1700,
+      "nets": 459,
+      "expectedNets": 459,
+      "routableNets": 356,
+      "connectedNets": 0,
+      "pcbTraces": 0,
+      "vias": 0,
+      "copperPours": 1,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "missingCopper": [
+        {
+          "name": "+1V2_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V2_FPGA",
+          "members": 17
+        },
+        {
+          "name": "+1V35",
+          "members": 47
+        },
+        {
+          "name": "+1V35_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V8_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V8_VID",
+          "members": 23
+        },
+        {
+          "name": "+3V3",
+          "members": 89
+        },
+        {
+          "name": "+3V3A",
+          "members": 6
+        },
+        {
+          "name": "+3V3_DCDC",
+          "members": 19
+        },
+        {
+          "name": "+3V3_VID",
+          "members": 17
+        },
+        {
+          "name": "+5V",
+          "members": 20
+        },
+        {
+          "name": "+5V2_FL",
+          "members": 5
+        },
+        {
+          "name": "+5V_DCDC",
+          "members": 11
+        },
+        {
+          "name": "+5V_EG",
+          "members": 6
+        },
+        {
+          "name": "+5V_EPD",
+          "members": 16
+        },
+        {
+          "name": "+5V_ES",
+          "members": 6
+        },
+        {
+          "name": "+5V_HDMI",
+          "members": 4
+        },
+        {
+          "name": "+DRAM_VREF",
+          "members": 12
+        },
+        {
+          "name": "+VBUS",
+          "members": 8
+        },
+        {
+          "name": "+VGH",
+          "members": 7
+        },
+        {
+          "name": "+VP",
+          "members": 8
+        },
+        {
+          "name": "-VCOM",
+          "members": 5
+        },
+        {
+          "name": "-VGL",
+          "members": 10
+        },
+        {
+          "name": "-VN",
+          "members": 15
+        },
+        {
+          "name": "/dp_in/CC1",
+          "members": 5
+        },
+        {
+          "name": "/dp_in/CC2",
+          "members": 5
+        },
+        {
+          "name": "/dp_in/DP0N",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP0P",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP1N",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP1P",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DPAUXN",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DPAUXP",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX1N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX1NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX1P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX1PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX2N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX2NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX2P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX2PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/SBU1",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/SBU2",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX1P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX2N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX2NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX2P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX2PC",
+          "members": 2
+        },
+        {
+          "name": "/epd_power/+5V_VGH",
+          "members": 5
+        },
+        {
+          "name": "/epd_power/+5V_VSH",
+          "members": 5
+        },
+        {
+          "name": "/epd_power/EN_VGL",
+          "members": 3
+        },
+        {
+          "name": "/epd_power/EN_VN",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR10",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR11",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR12",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR13",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR14",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR3",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR4",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR5",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR6",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR7",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR8",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR9",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CASB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKE",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKN",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKP",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CSB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA10",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA11",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA12",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA13",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA14",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA15",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA8",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA9",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDM",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDQSN",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDQSP",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ODT",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_RASB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_RST",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDM",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDQSN",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDQSP",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_WEB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_io/LED",
+          "members": 2
+        },
+        {
+          "name": "/mcu/G_LED",
+          "members": 2
+        },
+        {
+          "name": "/mcu/OSC32_IN",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC32_OUT",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC_IN",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC_OUT",
+          "members": 2
+        },
+        {
+          "name": "/mcu/R_LED",
+          "members": 2
+        },
+        {
+          "name": "/power/EVDD",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/ADV_CK",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_DE",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_HS",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P0",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P1",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P10",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P11",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P12",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P13",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P14",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P15",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P16",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P17",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P18",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P19",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P2",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P20",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P21",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P22",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P23",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P3",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P4",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P5",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P6",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P7",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P8",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P9",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_VS",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/HDMI_HPD",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/HDMI_SCL",
+          "members": 3
+        },
+        {
+          "name": "/tmds_in/HDMI_SDA",
+          "members": 3
+        },
+        {
+          "name": "/tmds_in/TMDS_CKN",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_CKP",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D0N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D0P",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D1N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D1P",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D2N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D2P",
+          "members": 4
+        },
+        {
+          "name": "DEC_RST",
+          "members": 3
+        },
+        {
+          "name": "DPI_B2",
+          "members": 2
+        },
+        {
+          "name": "DPI_B3",
+          "members": 2
+        },
+        {
+          "name": "DPI_B4",
+          "members": 2
+        },
+        {
+          "name": "DPI_B5",
+          "members": 2
+        },
+        {
+          "name": "DPI_B6",
+          "members": 2
+        },
+        {
+          "name": "DPI_B7",
+          "members": 2
+        },
+        {
+          "name": "DPI_DE",
+          "members": 2
+        },
+        {
+          "name": "DPI_G2",
+          "members": 2
+        },
+        {
+          "name": "DPI_G3",
+          "members": 2
+        },
+        {
+          "name": "DPI_G4",
+          "members": 2
+        },
+        {
+          "name": "DPI_G5",
+          "members": 2
+        },
+        {
+          "name": "DPI_G6",
+          "members": 2
+        },
+        {
+          "name": "DPI_G7",
+          "members": 2
+        },
+        {
+          "name": "DPI_HS",
+          "members": 2
+        },
+        {
+          "name": "DPI_PCLK",
+          "members": 2
+        },
+        {
+          "name": "DPI_R2",
+          "members": 2
+        },
+        {
+          "name": "DPI_R3",
+          "members": 2
+        },
+        {
+          "name": "DPI_R4",
+          "members": 2
+        },
+        {
+          "name": "DPI_R5",
+          "members": 2
+        },
+        {
+          "name": "DPI_R6",
+          "members": 2
+        },
+        {
+          "name": "DPI_R7",
+          "members": 2
+        },
+        {
+          "name": "DPI_VS",
+          "members": 2
+        },
+        {
+          "name": "DP_HPD",
+          "members": 2
+        },
+        {
+          "name": "DP_PDN",
+          "members": 3
+        },
+        {
+          "name": "EPDC_CLKN",
+          "members": 2
+        },
+        {
+          "name": "EPDC_CLKP",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D0N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D0P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D10N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D10P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D11N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D11P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D1N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D1P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D2N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D2P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D3N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D3P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D4N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D4P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D5N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D5P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D6N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D6P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D7N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D7P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D8N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D8P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D9N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D9P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDCLK",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDOE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDSP",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDCE0",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDLE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDOE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SE_CLK",
+          "members": 2
+        },
+        {
+          "name": "EPD_POS_EN",
+          "members": 3
+        },
+        {
+          "name": "EPD_PWR_EN",
+          "members": 3
+        },
+        {
+          "name": "EPD_THROT",
+          "members": 2
+        },
+        {
+          "name": "FL_EN",
+          "members": 2
+        },
+        {
+          "name": "FL_PWM1",
+          "members": 2
+        },
+        {
+          "name": "FL_PWM2",
+          "members": 2
+        },
+        {
+          "name": "FMC_A16",
+          "members": 2
+        },
+        {
+          "name": "FMC_D0",
+          "members": 2
+        },
+        {
+          "name": "FMC_D1",
+          "members": 2
+        },
+        {
+          "name": "FMC_D2",
+          "members": 2
+        },
+        {
+          "name": "FMC_D3",
+          "members": 2
+        },
+        {
+          "name": "FMC_D4",
+          "members": 2
+        },
+        {
+          "name": "FMC_D5",
+          "members": 2
+        },
+        {
+          "name": "FMC_D6",
+          "members": 2
+        },
+        {
+          "name": "FMC_D7",
+          "members": 2
+        },
+        {
+          "name": "FMC_NE1",
+          "members": 2
+        },
+        {
+          "name": "FMC_NOE",
+          "members": 2
+        },
+        {
+          "name": "FMC_NWE",
+          "members": 2
+        },
+        {
+          "name": "FPGA_CS",
+          "members": 2
+        },
+        {
+          "name": "FPGA_DONE",
+          "members": 3
+        },
+        {
+          "name": "FPGA_MISO",
+          "members": 2
+        },
+        {
+          "name": "FPGA_MOSI",
+          "members": 2
+        },
+        {
+          "name": "FPGA_PROG",
+          "members": 3
+        },
+        {
+          "name": "FPGA_SCLK",
+          "members": 2
+        },
+        {
+          "name": "FPGA_SUSP",
+          "members": 3
+        },
+        {
+          "name": "FPGA_TCK",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TDI",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TDO",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TMS",
+          "members": 2
+        },
+        {
+          "name": "GCLK",
+          "members": 3
+        },
+        {
+          "name": "GND",
+          "members": 375
+        },
+        {
+          "name": "HPD_EN",
+          "members": 3
+        },
+        {
+          "name": "I2C1_SCL",
+          "members": 8
+        },
+        {
+          "name": "I2C1_SDA",
+          "members": 9
+        },
+        {
+          "name": "KEY1",
+          "members": 4
+        },
+        {
+          "name": "KEY2",
+          "members": 2
+        },
+        {
+          "name": "KEY3",
+          "members": 2
+        },
+        {
+          "name": "LVDS_BKLTEN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_AN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_AP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_BN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_BP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_CN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_CP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_AN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_AP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_BN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_BP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CKN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CKP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_PVCCEN",
+          "members": 2
+        },
+        {
+          "name": "MCU_SWCLK",
+          "members": 2
+        },
+        {
+          "name": "MCU_SWDIO",
+          "members": 2
+        },
+        {
+          "name": "Net-(C10-Pad1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(C117-Pad1)",
+          "members": 6
+        },
+        {
+          "name": "Net-(C118-Pad1)",
+          "members": 6
+        },
+        {
+          "name": "Net-(C145-Pad2)",
+          "members": 6
+        },
+        {
+          "name": "Net-(D1-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D1-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D15-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D17-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D19-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D2-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D20-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D3-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D4-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D8-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-D+-PadA6)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J1-D--PadA7)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q1-G)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q2-B)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q6-G)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q6-S)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q7-G)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q8-D)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q8-G)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U10-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U10-VOUT)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U11-+)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U12-ZQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-BST1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-BST2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U13-SW1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U13-SW2)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U13-VIN)",
+          "members": 6
+        },
+        {
+          "name": "Net-(U15-HPA_A{slash}INT2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-XTALN)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U15-XTALP)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U19-TESTMODE)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U1D-IO_L1P_3)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U2-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U2-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U2-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U20-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U20-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U23-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U24-FB)",
+          "members": 5
+        },
+        {
+          "name": "Net-(U26-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U26-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U28-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U28-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U28-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-NRST)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U3-PE11)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U4-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U5-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U5-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U5-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U6-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(X1-OUT)",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD0",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD1",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD2",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD3",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SS",
+          "members": 2
+        },
+        {
+          "name": "SDIO_CLK",
+          "members": 2
+        },
+        {
+          "name": "SDIO_CMD",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT0",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT1",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT2",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT3",
+          "members": 2
+        },
+        {
+          "name": "TCPC_INT",
+          "members": 2
+        },
+        {
+          "name": "TYPEC_ORI",
+          "members": 2
+        },
+        {
+          "name": "USB_DN",
+          "members": 2
+        },
+        {
+          "name": "USB_DP",
+          "members": 2
+        },
+        {
+          "name": "USER_PB8",
+          "members": 2
+        },
+        {
+          "name": "USER_PB9",
+          "members": 2
+        },
+        {
+          "name": "USER_PD10",
+          "members": 2
+        },
+        {
+          "name": "USER_PD13",
+          "members": 2
+        },
+        {
+          "name": "USER_PD8",
+          "members": 2
+        },
+        {
+          "name": "USER_PD9",
+          "members": 2
+        },
+        {
+          "name": "VBUS_MEA",
+          "members": 4
+        },
+        {
+          "name": "VCOM_DAC",
+          "members": 3
+        },
+        {
+          "name": "VCOM_EN",
+          "members": 2
+        },
+        {
+          "name": "VCOM_MEA",
+          "members": 4
+        },
+        {
+          "name": "VCOM_MEA_EN",
+          "members": 2
+        },
+        {
+          "name": "VGH_DAC",
+          "members": 2
+        },
+        {
+          "name": "VGH_MEA",
+          "members": 4
+        },
+        {
+          "name": "VGL_MEA",
+          "members": 4
+        },
+        {
+          "name": "VN_MEA",
+          "members": 4
+        },
+        {
+          "name": "VP_MEA",
+          "members": 4
+        }
+      ],
+      "findings": {
+        "routing": 1,
+        "overlap": 0,
+        "padTrace": 0,
+        "viaTrace": 0,
+        "viaPad": 0,
+        "viaSpacing": 0,
+        "contiguous": 0,
+        "viaInPad": 0,
+        "holeTrace": 0
+      },
+      "connectivityPolicy": "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets."
+    }
+  },
+  {
+    "id": "glider",
+    "mode": "phased",
+    "variant": "latest",
+    "exitCode": 0,
+    "timedOut": false,
+    "wallMs": 620973.610769,
+    "peakRssMb": 5215.875,
+    "auditExitCode": 0,
+    "auditTimedOut": false,
+    "progress": {
+      "id": "glider",
+      "mode": "phased",
+      "status": "failed",
+      "renderCompleted": true,
+      "elapsedMs": 617817.055577,
+      "phases": [
+        {
+          "name": "plane_escape",
+          "solver": "workspace Pipeline 9",
+          "status": "completed",
+          "connections": 5,
+          "startedMs": 10498.917108,
+          "elapsedMs": 315641.582511
+        },
+        {
+          "name": "byte0",
+          "solver": "BusLanesPipelineSolver",
+          "status": "failed",
+          "connections": 8,
+          "startedMs": 327399.088152,
+          "elapsedMs": 274530.39191
+        }
+      ],
+      "errors": [
+        "Full-board routing budget exhausted",
+        "Error: Full-board routing budget exhausted",
+        "Full-board routing budget exhausted"
+      ],
+      "stage": "none",
+      "initialCopperElements": 0,
+      "runtime": {
+        "tscircuit": "0.0.3228",
+        "core": "0.0.2405",
+        "fanout": "0.0.84",
+        "busLanes": "0.0.61",
+        "autorouter": "workspace Pipeline 9",
+        "routerCommit": "820711e3aebb07ceeafdc410ba5e24f595fe473a"
+      },
+      "planeIntent": {
+        "enabled": true,
+        "zones": 5,
+        "importedSavedCopper": false
+      }
+    },
+    "assessment": {
+      "id": "glider",
+      "components": 379,
+      "expectedComponents": 379,
+      "pads": 1700,
+      "expectedPads": 1700,
+      "nets": 459,
+      "expectedNets": 459,
+      "routableNets": 356,
+      "connectedNets": 1,
+      "pcbTraces": 537,
+      "vias": 322,
+      "copperPours": 1,
+      "geometryErrors": [],
+      "membershipErrors": [],
+      "missingCopper": [
+        {
+          "name": "+1V2_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V2_FPGA",
+          "members": 17
+        },
+        {
+          "name": "+1V35",
+          "members": 47
+        },
+        {
+          "name": "+1V35_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V8_DCDC",
+          "members": 6
+        },
+        {
+          "name": "+1V8_VID",
+          "members": 23
+        },
+        {
+          "name": "+3V3",
+          "members": 89
+        },
+        {
+          "name": "+3V3A",
+          "members": 6
+        },
+        {
+          "name": "+3V3_DCDC",
+          "members": 19
+        },
+        {
+          "name": "+3V3_VID",
+          "members": 17
+        },
+        {
+          "name": "+5V",
+          "members": 20
+        },
+        {
+          "name": "+5V2_FL",
+          "members": 5
+        },
+        {
+          "name": "+5V_DCDC",
+          "members": 11
+        },
+        {
+          "name": "+5V_EG",
+          "members": 6
+        },
+        {
+          "name": "+5V_EPD",
+          "members": 16
+        },
+        {
+          "name": "+5V_ES",
+          "members": 6
+        },
+        {
+          "name": "+5V_HDMI",
+          "members": 4
+        },
+        {
+          "name": "+DRAM_VREF",
+          "members": 12
+        },
+        {
+          "name": "+VBUS",
+          "members": 8
+        },
+        {
+          "name": "+VGH",
+          "members": 7
+        },
+        {
+          "name": "+VP",
+          "members": 8
+        },
+        {
+          "name": "-VCOM",
+          "members": 5
+        },
+        {
+          "name": "-VGL",
+          "members": 10
+        },
+        {
+          "name": "-VN",
+          "members": 15
+        },
+        {
+          "name": "/dp_in/CC1",
+          "members": 5
+        },
+        {
+          "name": "/dp_in/CC2",
+          "members": 5
+        },
+        {
+          "name": "/dp_in/DP0N",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP0P",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP1N",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DP1P",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DPAUXN",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/DPAUXP",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX1N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX1NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX1P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX1PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX2N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX2NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/RX2P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/RX2PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/SBU1",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/SBU2",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX1P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX1PC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX2N",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX2NC",
+          "members": 2
+        },
+        {
+          "name": "/dp_in/TX2P",
+          "members": 4
+        },
+        {
+          "name": "/dp_in/TX2PC",
+          "members": 2
+        },
+        {
+          "name": "/epd_power/+5V_VGH",
+          "members": 5
+        },
+        {
+          "name": "/epd_power/+5V_VSH",
+          "members": 5
+        },
+        {
+          "name": "/epd_power/EN_VGL",
+          "members": 3
+        },
+        {
+          "name": "/epd_power/EN_VN",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR10",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR11",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR12",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR13",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR14",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR3",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR4",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR5",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR6",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR7",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR8",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ADDR9",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_BA2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CASB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKE",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKN",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CKP",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_CSB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA0",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA1",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA10",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA11",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA12",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA13",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA14",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA15",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA2",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA3",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA4",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA5",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA6",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA7",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA8",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_DATA9",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDM",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDQSN",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_LDQSP",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_ODT",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_RASB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_RST",
+          "members": 3
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDM",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDQSN",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_UDQSP",
+          "members": 2
+        },
+        {
+          "name": "/fpga_ddr/DRAM_WEB",
+          "members": 2
+        },
+        {
+          "name": "/fpga_io/LED",
+          "members": 2
+        },
+        {
+          "name": "/mcu/G_LED",
+          "members": 2
+        },
+        {
+          "name": "/mcu/OSC32_IN",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC32_OUT",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC_IN",
+          "members": 3
+        },
+        {
+          "name": "/mcu/OSC_OUT",
+          "members": 2
+        },
+        {
+          "name": "/mcu/R_LED",
+          "members": 2
+        },
+        {
+          "name": "/power/EVDD",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/ADV_CK",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_DE",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_HS",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P0",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P1",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P10",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P11",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P12",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P13",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P14",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P15",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P16",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P17",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P18",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P19",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P2",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P20",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P21",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P22",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P23",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P3",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P4",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P5",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P6",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P7",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P8",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_P9",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/ADV_VS",
+          "members": 2
+        },
+        {
+          "name": "/tmds_in/HDMI_HPD",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/HDMI_SCL",
+          "members": 3
+        },
+        {
+          "name": "/tmds_in/HDMI_SDA",
+          "members": 3
+        },
+        {
+          "name": "/tmds_in/TMDS_CKN",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_CKP",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D0N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D0P",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D1N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D1P",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D2N",
+          "members": 4
+        },
+        {
+          "name": "/tmds_in/TMDS_D2P",
+          "members": 4
+        },
+        {
+          "name": "DEC_RST",
+          "members": 3
+        },
+        {
+          "name": "DPI_B2",
+          "members": 2
+        },
+        {
+          "name": "DPI_B3",
+          "members": 2
+        },
+        {
+          "name": "DPI_B4",
+          "members": 2
+        },
+        {
+          "name": "DPI_B5",
+          "members": 2
+        },
+        {
+          "name": "DPI_B6",
+          "members": 2
+        },
+        {
+          "name": "DPI_B7",
+          "members": 2
+        },
+        {
+          "name": "DPI_DE",
+          "members": 2
+        },
+        {
+          "name": "DPI_G2",
+          "members": 2
+        },
+        {
+          "name": "DPI_G3",
+          "members": 2
+        },
+        {
+          "name": "DPI_G4",
+          "members": 2
+        },
+        {
+          "name": "DPI_G5",
+          "members": 2
+        },
+        {
+          "name": "DPI_G6",
+          "members": 2
+        },
+        {
+          "name": "DPI_G7",
+          "members": 2
+        },
+        {
+          "name": "DPI_HS",
+          "members": 2
+        },
+        {
+          "name": "DPI_PCLK",
+          "members": 2
+        },
+        {
+          "name": "DPI_R2",
+          "members": 2
+        },
+        {
+          "name": "DPI_R3",
+          "members": 2
+        },
+        {
+          "name": "DPI_R4",
+          "members": 2
+        },
+        {
+          "name": "DPI_R5",
+          "members": 2
+        },
+        {
+          "name": "DPI_R6",
+          "members": 2
+        },
+        {
+          "name": "DPI_R7",
+          "members": 2
+        },
+        {
+          "name": "DPI_VS",
+          "members": 2
+        },
+        {
+          "name": "DP_HPD",
+          "members": 2
+        },
+        {
+          "name": "DP_PDN",
+          "members": 3
+        },
+        {
+          "name": "EPDC_CLKN",
+          "members": 2
+        },
+        {
+          "name": "EPDC_CLKP",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D0N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D0P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D10N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D10P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D11N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D11P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D1N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D1P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D2N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D2P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D3N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D3P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D4N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D4P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D5N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D5P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D6N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D6P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D7N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D7P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D8N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D8P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D9N",
+          "members": 2
+        },
+        {
+          "name": "EPDC_D9P",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDCLK",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDOE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_GDSP",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDCE0",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDLE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SDOE",
+          "members": 2
+        },
+        {
+          "name": "EPDC_SE_CLK",
+          "members": 2
+        },
+        {
+          "name": "EPD_POS_EN",
+          "members": 3
+        },
+        {
+          "name": "EPD_PWR_EN",
+          "members": 3
+        },
+        {
+          "name": "EPD_THROT",
+          "members": 2
+        },
+        {
+          "name": "FL_EN",
+          "members": 2
+        },
+        {
+          "name": "FL_PWM1",
+          "members": 2
+        },
+        {
+          "name": "FL_PWM2",
+          "members": 2
+        },
+        {
+          "name": "FMC_A16",
+          "members": 2
+        },
+        {
+          "name": "FMC_D0",
+          "members": 2
+        },
+        {
+          "name": "FMC_D1",
+          "members": 2
+        },
+        {
+          "name": "FMC_D2",
+          "members": 2
+        },
+        {
+          "name": "FMC_D3",
+          "members": 2
+        },
+        {
+          "name": "FMC_D4",
+          "members": 2
+        },
+        {
+          "name": "FMC_D5",
+          "members": 2
+        },
+        {
+          "name": "FMC_D6",
+          "members": 2
+        },
+        {
+          "name": "FMC_D7",
+          "members": 2
+        },
+        {
+          "name": "FMC_NE1",
+          "members": 2
+        },
+        {
+          "name": "FMC_NOE",
+          "members": 2
+        },
+        {
+          "name": "FMC_NWE",
+          "members": 2
+        },
+        {
+          "name": "FPGA_CS",
+          "members": 2
+        },
+        {
+          "name": "FPGA_DONE",
+          "members": 3
+        },
+        {
+          "name": "FPGA_MISO",
+          "members": 2
+        },
+        {
+          "name": "FPGA_MOSI",
+          "members": 2
+        },
+        {
+          "name": "FPGA_PROG",
+          "members": 3
+        },
+        {
+          "name": "FPGA_SCLK",
+          "members": 2
+        },
+        {
+          "name": "FPGA_SUSP",
+          "members": 3
+        },
+        {
+          "name": "FPGA_TCK",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TDI",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TDO",
+          "members": 2
+        },
+        {
+          "name": "FPGA_TMS",
+          "members": 2
+        },
+        {
+          "name": "GCLK",
+          "members": 3
+        },
+        {
+          "name": "HPD_EN",
+          "members": 3
+        },
+        {
+          "name": "I2C1_SCL",
+          "members": 8
+        },
+        {
+          "name": "I2C1_SDA",
+          "members": 9
+        },
+        {
+          "name": "KEY1",
+          "members": 4
+        },
+        {
+          "name": "KEY2",
+          "members": 2
+        },
+        {
+          "name": "KEY3",
+          "members": 2
+        },
+        {
+          "name": "LVDS_BKLTEN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_AN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_AP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_BN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_BP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_CN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_EVEN_CP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_AN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_AP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_BN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_BP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CKN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CKP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CN",
+          "members": 2
+        },
+        {
+          "name": "LVDS_ODD_CP",
+          "members": 2
+        },
+        {
+          "name": "LVDS_PVCCEN",
+          "members": 2
+        },
+        {
+          "name": "MCU_SWCLK",
+          "members": 2
+        },
+        {
+          "name": "MCU_SWDIO",
+          "members": 2
+        },
+        {
+          "name": "Net-(C10-Pad1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(C117-Pad1)",
+          "members": 6
+        },
+        {
+          "name": "Net-(C118-Pad1)",
+          "members": 6
+        },
+        {
+          "name": "Net-(C145-Pad2)",
+          "members": 6
+        },
+        {
+          "name": "Net-(D1-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D1-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D15-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D17-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D19-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D2-A)",
+          "members": 3
+        },
+        {
+          "name": "Net-(D20-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D3-K)",
+          "members": 4
+        },
+        {
+          "name": "Net-(D4-K)",
+          "members": 2
+        },
+        {
+          "name": "Net-(D8-A)",
+          "members": 2
+        },
+        {
+          "name": "Net-(J1-D+-PadA6)",
+          "members": 3
+        },
+        {
+          "name": "Net-(J1-D--PadA7)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q1-G)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q2-B)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q6-G)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q6-S)",
+          "members": 3
+        },
+        {
+          "name": "Net-(Q7-G)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q8-D)",
+          "members": 2
+        },
+        {
+          "name": "Net-(Q8-G)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U10-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U10-VOUT)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U11-+)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U12-ZQ)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-BST1)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-BST2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U13-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U13-SW1)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U13-SW2)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U13-VIN)",
+          "members": 6
+        },
+        {
+          "name": "Net-(U15-HPA_A{slash}INT2)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U15-XTALN)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U15-XTALP)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U19-TESTMODE)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U1D-IO_L1P_3)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U2-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U2-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U2-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U20-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U20-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U20-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U23-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U24-FB)",
+          "members": 5
+        },
+        {
+          "name": "Net-(U26-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U26-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U28-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U28-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U28-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U3-NRST)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U3-PE11)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U4-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U5-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U5-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(U5-SW)",
+          "members": 3
+        },
+        {
+          "name": "Net-(U6-SET)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-BS)",
+          "members": 2
+        },
+        {
+          "name": "Net-(U9-FB)",
+          "members": 4
+        },
+        {
+          "name": "Net-(X1-OUT)",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SCLK",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD0",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD1",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD2",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SD3",
+          "members": 2
+        },
+        {
+          "name": "QSPI_SS",
+          "members": 2
+        },
+        {
+          "name": "SDIO_CLK",
+          "members": 2
+        },
+        {
+          "name": "SDIO_CMD",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT0",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT1",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT2",
+          "members": 2
+        },
+        {
+          "name": "SDIO_DAT3",
+          "members": 2
+        },
+        {
+          "name": "TCPC_INT",
+          "members": 2
+        },
+        {
+          "name": "TYPEC_ORI",
+          "members": 2
+        },
+        {
+          "name": "USB_DN",
+          "members": 2
+        },
+        {
+          "name": "USB_DP",
+          "members": 2
+        },
+        {
+          "name": "USER_PB8",
+          "members": 2
+        },
+        {
+          "name": "USER_PB9",
+          "members": 2
+        },
+        {
+          "name": "USER_PD10",
+          "members": 2
+        },
+        {
+          "name": "USER_PD13",
+          "members": 2
+        },
+        {
+          "name": "USER_PD8",
+          "members": 2
+        },
+        {
+          "name": "USER_PD9",
+          "members": 2
+        },
+        {
+          "name": "VBUS_MEA",
+          "members": 4
+        },
+        {
+          "name": "VCOM_DAC",
+          "members": 3
+        },
+        {
+          "name": "VCOM_EN",
+          "members": 2
+        },
+        {
+          "name": "VCOM_MEA",
+          "members": 4
+        },
+        {
+          "name": "VCOM_MEA_EN",
+          "members": 2
+        },
+        {
+          "name": "VGH_DAC",
+          "members": 2
+        },
+        {
+          "name": "VGH_MEA",
+          "members": 4
+        },
+        {
+          "name": "VGL_MEA",
+          "members": 4
+        },
+        {
+          "name": "VN_MEA",
+          "members": 4
+        },
+        {
+          "name": "VP_MEA",
+          "members": 4
+        }
+      ],
+      "findings": {
+        "routing": 1,
+        "overlap": 16,
+        "padTrace": 12,
+        "viaTrace": 9,
+        "viaPad": 3,
+        "viaSpacing": 1,
+        "contiguous": 0,
+        "viaInPad": 1,
+        "holeTrace": 0
+      },
+      "connectivityPolicy": "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets."
+    }
+  }
+]

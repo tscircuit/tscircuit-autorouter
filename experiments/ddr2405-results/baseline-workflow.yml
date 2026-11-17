@@ -1,0 +1,103 @@
+name: Rerun full DDR boards on released core 2405 and router 1120
+on:
+  push:
+    branches: [codex/ddr-refresh-2405]
+permissions:
+  contents: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 820711e3aebb07ceeafdc410ba5e24f595fe473a
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 0c16ff6c1382bad4653c9302b852251343a7de9e
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned sources and build the selected runtime
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Reroute the original DDR control and both full-board modes
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
+          BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
+            --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
+            --out "$GITHUB_WORKSPACE/results/latest/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/latest/ddr/$BOARD_ID/"*.log; exit 1; }
+          FULL_BOARD_VARIANT=latest bun plane-suite.ts ../../results/latest/full
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: refresh2405-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export native results and phase inputs for analysis
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'environment.json','summary.json','progress.json','assessment.json','diagnostics.json','process.json','results.json','pcb.svg'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('REFRESH2405_BOARD_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('REFRESH2405_BOARD_EVIDENCE_END')
+          PY
+  dataset18:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 820711e3aebb07ceeafdc410ba5e24f595fe473a
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - name: Measure the complete released dataset18 baseline
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: refresh2405-dataset18
+          path: |
+            benchmark-result.json
+            benchmark-result.txt
+            benchmark-snapshots.html
+      - name: Export the measured report
+        if: always()
+        run: |
+          python3 - <<'PYREPORT'
+          import json
+          from pathlib import Path
+          print('REFRESH2405_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
+          PYREPORT
