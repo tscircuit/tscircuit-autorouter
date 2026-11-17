@@ -66,6 +66,8 @@ interface PointOwner {
 }
 
 export interface EscapeViaLocationSolverOptions {
+  /** Net connectivity for ogSrj, reused from the pipeline after preprocessing. */
+  connMap?: ConnectivityMap
   viaDiameter?: number
   minTraceWidth?: number
   obstacleMargin?: number
@@ -139,7 +141,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.createdEscapeVias = []
     this.initiallyConnectedMap =
       getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
-    this.connMap = getConnectivityMapFromSimpleRouteJson(ogSrj)
+    this.connMap = opts.connMap ?? getConnectivityMapFromSimpleRouteJson(ogSrj)
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { EscapeViaLocationSolver } from "lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { existingPlaneVias } from "tests/fixtures/existing-plane-vias"
 
 test("existing plane access requires physical connectivity, layer reach and the same plane region", (): void => {
@@ -170,6 +171,13 @@ test("existing plane access requires physical connectivity, layer reach and the 
     escape.solve()
     expect(escape.solved).toBeTrue()
     const output = escape.getOutputSimpleRouteJson()
+    const precomputed = new EscapeViaLocationSolver(input, {
+      connMap: getConnectivityMapFromSimpleRouteJson(input),
+    })
+    precomputed.solve()
+    expect(precomputed.solved).toBeTrue()
+    expect(precomputed.getOutputSimpleRouteJson()).toEqual(output)
+    expect(precomputed.createdEscapeVias).toEqual(escape.createdEscapeVias)
     const pairs = new NetToPointPairsSolver2_OffBoardConnection(
       output,
       {},

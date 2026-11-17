@@ -294,6 +294,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         cms.srj,
         {
+          connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
