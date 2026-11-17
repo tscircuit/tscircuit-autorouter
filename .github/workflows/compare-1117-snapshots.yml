@@ -1,0 +1,65 @@
+name: Compare all dataset18 native PCB snapshots
+on:
+  push:
+    branches: [codex/ddr1117-snapshot-compare]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for the candidate evidence to finish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 180); do
+            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/44053004333 --jq .status)
+            if [ "$status" = completed ]; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44048944659
+          name: refresh1117-dataset18
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44053004333
+          name: selector1117-dataset18
+          path: after
+      - name: Compare native copper and measured quality for every sample
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,re,statistics
+          from pathlib import Path
+          roots={variant:Path(variant) for variant in ['before','after']}
+          reports={variant:json.loads((root/'benchmark-result.json').read_text()) for variant,root in roots.items()}
+          snapshots={}
+          for variant,root in roots.items():
+              document=(root/'benchmark-snapshots.html').read_text()
+              snapshots[variant]={}
+              for section in re.findall(r'<section class="snapshot">(.*?)</section>',document,re.S):
+                  sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                  svg=re.search(r'<svg\b.*?</svg>',section,re.S).group(0)
+                  snapshots[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+          rows=[]
+          for before in sorted(reports['before']['tests'],key=lambda row:row['sampleNumber']):
+              sample=before['sampleNumber']
+              after=next(row for row in reports['after']['tests'] if row['sampleNumber']==sample)
+              rows.append({'sample':sample,'beforeMs':before['elapsedTimeMs'],'afterMs':after['elapsedTimeMs'],'beforeSolved':before['didSolve'],'afterSolved':after['didSolve'],'beforeDrcPassed':before['relaxedDrcPassed'],'afterDrcPassed':after['relaxedDrcPassed'],'beforeVias':before['viaCount'],'afterVias':after['viaCount'],'beforeSvgSha256':snapshots['before'][sample],'afterSvgSha256':snapshots['after'][sample],'svgIdentical':snapshots['before'][sample]==snapshots['after'][sample]})
+          result={'beforeSummary':reports['before']['summary'],'afterSummary':reports['after']['summary'],'beforeMeanMs':statistics.mean(row['beforeMs'] for row in rows),'afterMeanMs':statistics.mean(row['afterMs'] for row in rows),'rows':rows}
+          Path('dataset18-native-equivalence.json').write_text(json.dumps(result,indent=2))
+          print('SELECTOR1117_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
+          assert len(rows)==16 and all(row['beforeSolved'] and row['afterSolved'] and row['beforeDrcPassed'] and row['afterDrcPassed'] and row['svgIdentical'] and row['beforeVias']==row['afterVias'] for row in rows)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selector1117-dataset18-native-equivalence
+          path: dataset18-native-equivalence.json
