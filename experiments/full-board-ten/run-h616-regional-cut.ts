@@ -161,9 +161,13 @@ assert.equal(manifest.sourceOverrides, false)
 coldPublishedImport = true
 const published = await import(pathToFileURL(ar.entry).href)
 coldPublishedImport = false
-const nativeCache = published.getGlobalInMemoryCache()
-assert(nativeCache instanceof published.InMemoryCache, "Expected the actual published global cache implementation")
-const cacheCounters = (): Data => ({ hits: nativeCache.cacheHits, misses: nativeCache.cacheMisses, entries: nativeCache.cache.size, missesByPrefix: { ...nativeCache.cacheMissesByPrefix } })
+// The qualified helper module initializes this shared singleton before the
+// published entry. Its source body is identical; do not replace or reset it.
+const sharedCache = published.getGlobalInMemoryCache()
+assert.equal(sharedCache, (globalThis as any).TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE)
+assert(sharedCache.cache instanceof Map)
+for (const value of [sharedCache.cacheHits, sharedCache.cacheMisses]) assert(Number.isInteger(value) && value >= 0)
+const cacheCounters = (): Data => ({ hits: sharedCache.cacheHits, misses: sharedCache.cacheMisses, entries: sharedCache.cache.size, missesByPrefix: { ...sharedCache.cacheMissesByPrefix } })
 const initialCacheCounters = cacheCounters()
 const pipeline = new published.AutoroutingPipelineSolver9_PreloadedTraceGraph(readInput("phase-4-input.srj.json.gz"))
 const connMap = pipeline.connMap
