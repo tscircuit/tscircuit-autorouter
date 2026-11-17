@@ -1,0 +1,95 @@
+name: Profile full ButterStick cramped-port preparation
+on:
+  push:
+    branches: [codex/ddr2408-reachability-profile]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: bfc6509a20959b11ebdea7e38d7fb5fe0fef2097
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build the frozen latest stack
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Capture the fresh first phase before routing
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="bfc6509a20959b11ebdea7e38d7fb5fe0fef2097"
+          export FULL_BOARD_ROUTING_BUDGET_MS=1
+          set +e
+          bun render.tsx butterstick "$GITHUB_WORKSPACE/fresh-input" phased
+          capture_status=$?
+          set -e
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['GITHUB_WORKSPACE'])/'fresh-input'
+          progress=json.loads((root/'progress.json').read_text())
+          assert 'Full-board routing budget exhausted' in progress['errors'],progress['errors']
+          assert (root/'phase-1-input.srj.json').is_file()
+          assert progress['initialCopperElements']==0
+          PY
+      - name: Profile the unmodified preparation stage
+        run: |
+          cp experiments/full-board-priority-analysis/profile-reachability.ts router/profile-reachability.ts
+          cd router
+          bun --cpu-prof --cpu-prof-dir "$GITHUB_WORKSPACE/profile" --cpu-prof-name butterstick-reachability.cpuprofile profile-reachability.ts "$PWD" "$GITHUB_WORKSPACE/fresh-input/phase-1-input.srj.json" "$GITHUB_WORKSPACE/profile"
+      - name: Summarize sampled CPU cost and export stage input
+        run: |
+          python3 - <<'PY'
+          import base64,collections,io,json,zipfile
+          from pathlib import Path
+          root=Path('profile')
+          p=json.loads((root/'butterstick-reachability.cpuprofile').read_text())
+          nodes={n['id']:n for n in p['nodes']}
+          parents={c:n['id'] for n in p['nodes'] for c in n.get('children',[])}
+          own=collections.Counter();inclusive=collections.Counter()
+          for sample,delta in zip(p['samples'],p['timeDeltas']):
+              own[sample]+=delta
+              current=sample
+              while current is not None:
+                  inclusive[current]+=delta
+                  current=parents.get(current)
+          def rows(counter):
+              return [{'ms':round(t/1000,2),**nodes[n]['callFrame']} for n,t in counter.most_common(35)]
+          report={'self':rows(own),'inclusive':rows(inclusive)}
+          (root/'cpu-summary.json').write_text(json.dumps(report,indent=2))
+          print('REACHABILITY_CPU_SUMMARY',json.dumps(report,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for name in ['reachability-report.json','necessary-cramped-input.json.gz','necessary-cramped-output.json.gz','cpu-summary.json']:
+                  archive.write(root/name,name)
+          print('REACHABILITY_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('REACHABILITY_EVIDENCE_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: butterstick-2408-reachability-profile
+          path: |
+            profile
+            fresh-input/phase-1-input.srj.json
+          retention-days: 14
