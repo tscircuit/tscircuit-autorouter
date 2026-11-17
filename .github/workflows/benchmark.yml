@@ -25,22 +25,10 @@ jobs:
           bun install
           ln -s "$(pwd)/node_modules" ../srj18-before/node_modules
           ln -s "$(pwd)/node_modules" ../srj18-optimized/node_modules
-      - name: Balanced full-dataset comparison
-        env:
-          BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
-        run: |
-          mkdir -p investigation-results
-          for variant in before merged optimized optimized merged before; do
-            number=$(find investigation-results -maxdepth 1 -name '*-benchmark-result.json' | wc -l)
-            root="$(realpath ../srj18-$variant)"
-            echo "INVESTIGATION_PASS $number $variant"
-            (cd "$root" && bash benchmark.sh --dataset 18 --concurrency 3 --sample-timeout 240s)
-            cp "$root/benchmark-result.json" "investigation-results/$number-$variant-benchmark-result.json"
-            cp "$root/benchmark-result.txt" "investigation-results/$number-$variant-benchmark-result.txt"
-            bun -e 'const p = await Bun.file(process.argv[1]).json(); console.log("INVESTIGATION_RESULT " + JSON.stringify({pass:process.argv[2],variant:process.argv[3],runtime:p.runtime,summary:p.summary,tests:p.tests.map(({benchmarkSnapshot,...test})=>test)}))' "investigation-results/$number-$variant-benchmark-result.json" "$number" "$variant"
-          done
+      - name: Repeated captured-input distribution benchmark
+        run: bun scripts/srj18-investigation/distribution.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: srj18-balanced-comparison
-          path: investigation-results
+          name: srj18-stage-comparison
+          path: stage-result.json
