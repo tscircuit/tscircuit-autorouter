@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
           - role: repro
-            revision: d1a2424340f37c33e76d062378fb7140ae8162e8
+            revision: 71f4fa94aef31ecdc7e5eb3a2d5d163e54dfb854
           - role: fix
-            revision: 3b5c0bcb7fd45b1562640806ff6db72b5c914d14
+            revision: b3d5c4ecfc1089c6de1f31bf8e35399186cf9d8f
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
