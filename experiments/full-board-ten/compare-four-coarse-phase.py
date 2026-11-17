@@ -7,12 +7,12 @@ import sys
 root = Path(sys.argv[1]).resolve()
 results = root / 'phase-results'
 baseline = json.loads((results / 'source-baseline/result.json').read_text())
-guard = json.loads((results / 'guard-only/result.json').read_text())
+handoff = json.loads((results / 'handoff-only/result.json').read_text())
 assert baseline['baselineQualified'] and baseline['diagnosticObservationValid']
-assert guard['diagnosticObservationValid']
+assert handoff['diagnosticObservationValid']
 for field in ['case', 'inputSha256', 'originalAutorouterSha256', 'limitsMs', 'constructor', 'packages']:
-    assert baseline[field] == guard[field], field
-for result in [baseline, guard]:
+    assert baseline[field] == handoff[field], field
+for result in [baseline, handoff]:
     assert not result['timedOut'] and not result['thrownError']
     assert result['wasmUsage']['routingOrUnknownAttempts'] == 0
     for field in ['configured', 'initial', 'inputNetCount', 'innerHookInstalled']:
@@ -34,9 +34,9 @@ def summarize(result):
 report = {
     'case': baseline['case']['id'], 'phase': baseline['case']['phase'],
     'inputSha256': baseline['inputSha256'], 'nativeBaselineQualified': True,
-    'baseline': summarize(baseline), 'guard': summarize(guard),
-    'phaseNewlySolved': not baseline['solved'] and guard['solved'],
-    'phaseRegressed': baseline['solved'] and not guard['solved'],
+    'baseline': summarize(baseline), 'handoff': summarize(handoff),
+    'phaseNewlySolved': not baseline['solved'] and handoff['solved'],
+    'phaseRegressed': baseline['solved'] and not handoff['solved'],
     'interpretation': 'Native phase pair on the same runner, fresh processes and unchanged caps. Coarse owners and HD nodes are not physically connected board nets.',
 }
 (results / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
@@ -45,7 +45,7 @@ if os.environ.get('GITHUB_STEP_SUMMARY'):
     with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
         summary.write(f"### {report['case']} / {report['phase']}\n\n")
         summary.write('| Variant | Phase solved | HD nodes accepted | Routing seconds |\n|---|---:|---:|---:|\n')
-        for label in ['baseline', 'guard']:
+        for label in ['baseline', 'handoff']:
             row = report[label]
             accepted = row['highDensity']['acceptedNodeCount'] if row['highDensity'] else 0
             summary.write(f"| {label} | {row['solved']} | {accepted} | {row['elapsedMs']/1000:.2f} |\n")

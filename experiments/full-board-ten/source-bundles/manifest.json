@@ -1,5 +1,5 @@
 {
-  "purpose": "Diagnostic-only standalone final-rerip quota guard on four authenticated native phases",
+  "purpose": "Diagnostic-only transfer of successful partial recovery progress to the first existing greedy attempt on two authenticated native phases",
   "mainVersion": "0.0.3207",
   "originalAutorouterSHA256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
   "autorouterGitHead": "89977557a0082737afc275e69d74efb2d984de5b",
@@ -18,7 +18,7 @@
       "object-hash"
     ],
     "qualification": "Each source baseline must match its authenticated native primary configured/initial/final state and lifecycle reports after normalizing only the minified primary class name.",
-    "builderSha256": "b26b734464034c1fd1afd2101b4b2526079066430dde049f0e5891e8a8df557e"
+    "builderSha256": "1b7f57d7b1f5e2c48b80a4d97b44510ff691dd64d005c456fe9c794c29149bb0"
   },
   "variants": {
     "source-baseline": {
@@ -28,27 +28,22 @@
       "compressedSha256": "685e934c3b115a4ebc7b0d802485502d43c70f493f32ec82dd01016c6041e327",
       "compressedBytes": 993731,
       "sourceInputCount": 933,
-      "sourceInputHash": "ff12e92b09edf713e247515513a54a4d98ef766ab71ecbf5b178bd879e150805",
+      "sourceInputHash": "d710d82b7f30af4ea9ffc341f2e757aa40b589368783acd59b5e90f9bccbdfe8",
       "candidateSourceFiles": []
     },
-    "guard-only": {
-      "filename": "guard-only.js.gz",
-      "entrySha256": "f2e25a50c6bab9b6c44497bbca9a9672e162172e357537a34359d2842b9a8731",
-      "entryBytes": 5490958,
-      "compressedSha256": "af8dae4a99844a269f7df8f1a810a9334c0830c6f7fe0ef472729d6e273257a4",
-      "compressedBytes": 993731,
+    "handoff-only": {
+      "filename": "handoff-only.js.gz",
+      "entrySha256": "1d37b55b0ba2103b1a764ae001c00cee160f049e21739a88e80d32af6bd6a885",
+      "entryBytes": 5491886,
+      "compressedSha256": "d1cc04c6310f6612ee111ac634cace1f686fd86ee9799b6fbf07b3db5674244b",
+      "compressedBytes": 993901,
       "sourceInputCount": 933,
-      "sourceInputHash": "e2dd3de0b71bb02cfb46501f8e6cf9d7e4013969496f2e4b0e4d3e548c38c27a",
+      "sourceInputHash": "ba95bddf0e21da0b36af4dca097ad40b4513d35e2b400d20f56e1524eabea804",
       "candidateSourceFiles": [
         {
           "repository": "tiny",
-          "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
-          "sha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
-        },
-        {
-          "repository": "tiny",
-          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "sha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+          "path": "lib/core.ts",
+          "sha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
         }
       ]
     }
@@ -72,10 +67,10 @@
     }
   ],
   "sourcePatches": {
-    "guard-only": {
-      "filename": "guard-only-source.patch",
-      "sha256": "3f4dbcb80f679737144f5fa898344ccc8fa8c9d5f784d5d036275a56bafd2197",
-      "bytes": 1475,
+    "handoff-only": {
+      "filename": "handoff-only-source.patch",
+      "sha256": "98c25970e5d2160d42d40bdd328be4b63c3fdcc85e6251bd3c13366addddeada",
+      "bytes": 2841,
       "applyOptions": [
         "--unidiff-zero"
       ]
@@ -85,31 +80,35 @@
     "source-baseline": {
       "runId": 43984332779,
       "entrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
-      "qualification": "Whole HD queue, selected Tiny state, every ledger event, failure, target geometry and first private candidate exactly match frozen published replay"
+      "qualification": "Whole HD queue, selected Tiny state, every ledger event, failure, target geometry and first private candidate exactly match frozen published replay",
+      "fourCoarseNativeQualification": {
+        "runId": 43993210274,
+        "cases": [
+          "glider-spaced",
+          "imx6-spaced"
+        ],
+        "evidence": "Complete configured, initial, final and lifecycle native primary parity verified against archived3207 full-board run before candidate ran"
+      }
     }
   },
   "variantPatchOrder": {
     "source-baseline": [],
-    "guard-only": [
-      "guard-only"
+    "handoff-only": [
+      "handoff-only"
     ]
   },
-  "guardScope": "Same two onOutOfCandidates quota checks moved before super; same rerip quota, iteration caps, effort and constructors. guard-only contains no AR adapter or physical via reservation changes.",
   "runtimeInputChangesByVariant": {
-    "guard-only": {
+    "handoff-only": {
       "relativeTo": "source-baseline",
       "changes": [
         {
-          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/prepared/PreparedPortPointRoutingSolver.ts",
-          "beforeSha256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79",
-          "afterSha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
-        },
-        {
-          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "beforeSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
-          "afterSha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/core.ts",
+          "beforeSha256": "16de23a295391193c3122d03291636ad7edb5b87f9ecd1dbe60f33c66195b112",
+          "afterSha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
         }
       ]
     }
-  }
+  },
+  "sourceInputHashFormat": "SHA256 of compact sorted-key JSON array of build input path and SHA256, in build input order",
+  "handoffScope": "Only Tiny lib/core.ts: seed first existing greedy attempt from incomplete cost-aware child when fewer pending routes and parent partial/outside-in routing disabled. Carry graph and actual pending/current IDs together. Later shuffled attempts retain original parent. No quota, iteration cap, acceptance or via changes."
 }

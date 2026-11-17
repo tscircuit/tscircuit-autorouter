@@ -58,7 +58,7 @@ srj = json.loads(input_bytes)
 assert {"connections": len(srj["connections"]), "traces": len(srj.get("traces", [])), "obstacles": len(srj["obstacles"])} == case["counts"]
 package = next(package for package in runtime["packages"] if package["name"] == "@tscircuit/capacity-autorouter")
 assert sha(Path(package["entry"]).read_bytes()) == builds["originalAutorouterSHA256"]
-for variant in ["source-baseline", "guard-only"]:
+for variant in ["source-baseline", "handoff-only"]:
     selected = builds["variants"][variant]
     compressed = (controller / "source-bundles" / selected["filename"]).read_bytes()
     assert len(compressed) == selected["compressedBytes"] and sha(compressed) == selected["compressedSha256"]
@@ -82,4 +82,4 @@ for variant in ["source-baseline", "guard-only"]:
         "packages": [{"name": item["name"], "version": item["version"], "entrySha256": item["entrySha256"]} for item in runtime["packages"]],
     }
     (root / f"phase-{variant}-runtime.json").write_text(json.dumps(proof, indent=2) + "\n")
-print(json.dumps({"case": case_id, "inputSha256": sha(input_bytes), "archiveAuthenticated": True, "variants": ["source-baseline", "guard-only"]}))
+print(json.dumps({"case": case_id, "inputSha256": sha(input_bytes), "archiveAuthenticated": True, "variants": ["source-baseline", "handoff-only"]}))

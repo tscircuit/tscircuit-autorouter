@@ -1,8 +1,8 @@
-name: Frozen3207 four coarse phases quota comparison
+name: Frozen3207 partial recovery handoff comparison
 
 on:
   push:
-    branches: [bench/full-board-four-coarse-guard-3207]
+    branches: [bench/full-board-recovery-handoff-3207]
 
 permissions:
   contents: read
@@ -15,13 +15,13 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 2
       matrix:
-        case: [icepi-original, butterstick-original, glider-spaced, imx6-spaced]
+        case: [glider-spaced, imx6-spaced]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      FULL_BOARD_EXPERIMENT: four-coarse-phase-replay
+      FULL_BOARD_EXPERIMENT: recovery-handoff-phase-replay
 
     steps:
       - name: Checkout diagnostic controller
@@ -81,19 +81,19 @@ jobs:
           "$FULL_BOARD_ROOT/phase-source-baseline-runtime.json"
           "$FULL_BOARD_ROOT/phase-results/source-baseline"
 
-      - name: Replay standalone quota guard in a fresh process
-        id: guard
+      - name: Replay partial recovery handoff in a fresh process
+        id: handoff
         if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
         continue-on-error: true
         run: >-
           timeout --signal=KILL 960s
           bun experiments/full-board-ten/run-four-coarse-phase.ts
-          "$FULL_BOARD_ROOT/phase-guard-only-runtime.json"
-          "$FULL_BOARD_ROOT/phase-results/guard-only"
+          "$FULL_BOARD_ROOT/phase-handoff-only-runtime.json"
+          "$FULL_BOARD_ROOT/phase-results/handoff-only"
 
       - name: Compare phase completion and recovery states
         id: compare
-        if: ${{ !cancelled() && steps.baseline.outcome == 'success' && steps.guard.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' && steps.handoff.outcome == 'success' }}
         run: python3 experiments/full-board-ten/compare-four-coarse-phase.py "$FULL_BOARD_ROOT"
 
       - name: Preserve bounded observations and runtime proof
@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: four-coarse-${{ matrix.case }}-${{ github.run_attempt }}
+          name: recovery-handoff-${{ matrix.case }}-${{ github.run_attempt }}
           path: |
             .full-board-run/phase-results
             .full-board-run/phase-*-runtime.json
@@ -115,5 +115,5 @@ jobs:
         if: always()
         run: >-
           test "${{ steps.baseline.outcome }}" = success &&
-          test "${{ steps.guard.outcome }}" = success &&
+          test "${{ steps.handoff.outcome }}" = success &&
           test "${{ steps.compare.outcome }}" = success

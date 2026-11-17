@@ -5,9 +5,9 @@ import { createHash } from "node:crypto"
 import { gzipSync } from "node:zlib"
 
 const frozenPlan = "/tmp/full-board-ten-20261116/via-reservation-plan-3207"
-const plan = "/tmp/full-board-ten-20261116/final-rerip-quota-plan-3207"
+const plan = "/tmp/full-board-ten-20261116/recovery-handoff-plan-3207"
 const variant = process.argv[2]
-if (!["source-baseline", "guard-only"].includes(variant)) throw new Error("Expected source-baseline or guard-only")
+if (!["source-baseline", "handoff-only"].includes(variant)) throw new Error("Expected source-baseline or handoff-only")
 const baseline = join(frozenPlan, "source-baseline")
 const arRoot = join(baseline, "autorouter")
 const tinyRoot = join(baseline, "tiny")
