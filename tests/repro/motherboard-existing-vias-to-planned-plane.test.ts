@@ -88,11 +88,11 @@ test("full motherboard reuses existing vias when planning plane connections", as
       map.getNetConnectedToId(point.pointId!) === firstGroundGroup,
   ).length
   expect(existingGroundEndpoints).toHaveLength(125)
-  // Record the current failure; the stacked fix updates these and the same SVG.
-  expect(recognized).toBe(0)
-  expect(pairs).toHaveLength(1888)
-  expect(groundPairs).toHaveLength(657)
-  expect(ddrPowerPairs).toHaveLength(58)
+  // Existing STM32 and DDR escapes now remove redundant connection requests.
+  expect(recognized).toBe(125)
+  expect(pairs).toHaveLength(1745)
+  expect(groundPairs).toHaveLength(532)
+  expect(ddrPowerPairs).toHaveLength(40)
   expect(escapeSolver.createdEscapeVias).toHaveLength(535)
   expect(groundViaPlans).toHaveLength(516)
 
