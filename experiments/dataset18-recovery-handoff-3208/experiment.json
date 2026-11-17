@@ -1,0 +1,31 @@
+{
+  "frozen": true,
+  "name": "dataset18-recovery-handoff-3208",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "harnessCommit": "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6",
+  "datasetCommit": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "@tscircuit/core": "0.0.2399",
+    "@tscircuit/eval": "0.0.1793",
+    "@tscircuit/capacity-autorouter": "0.0.1112"
+  },
+  "runtimeEntrySha256": {
+    "tscircuit": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+    "@tscircuit/core": "eea7b8d97114e081111ed7ef2d760508cc3e1b47bdd2616b8e9182992151c310",
+    "@tscircuit/eval": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+    "@tscircuit/capacity-autorouter": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee"
+  },
+  "sourceEntrySha256": {
+    "base": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
+    "pr": "c90c064e6d25d92fcf3ca6ef4af59f4177036ecf20ebd93643617c406d40e9fc"
+  },
+  "sourcePatchSha256": "07068764c152b68aa9487886e06d5a6b37273fa36bea1dd963456c3758f7d0a3",
+  "scenarioCount": 16,
+  "sampleTimeoutMs": 360000,
+  "requestedConcurrency": 4,
+  "threadsPerSample": 1,
+  "sameVmSequential": true,
+  "status": "Prepared only; no routing, commit or push"
+}

@@ -1,0 +1,111 @@
+{
+  "purpose": "Latest3208 diagnostic source baseline and isolated Tiny recovery handoff; native qualification pending",
+  "mainVersion": "0.0.3208",
+  "originalAutorouterSHA256": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee",
+  "autorouterGitHead": "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6",
+  "tinyGitHead": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "publishedSourceMapSha256": "20c143300709f62afe25cb4cbb3bffa80457ff584b36499f0314ef1914cd9025",
+  "build": {
+    "engine": "esbuild0.27.0 under Node24.19.0",
+    "entry": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "format": "esm",
+    "platform": "node",
+    "target": "es2022",
+    "minify": false,
+    "sourcemap": false,
+    "externalDependencies": [
+      "@tscircuit/solver-utils",
+      "object-hash"
+    ],
+    "qualification": "AR1112 published source-map delta and all compiled inputs audited; latest native/fullboard baseline qualification is required.",
+    "builderSha256": "10fa88157ed12f0aa1cad58d0b6f8505d16801ce076d2307e6719011effa853b"
+  },
+  "variants": {
+    "source-baseline": {
+      "filename": "source-baseline.js.gz",
+      "entrySha256": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
+      "entryBytes": 5490985,
+      "compressedSha256": "431f770107f59adc3c88244d748519b17780839c1a713507a944689ccab0f22f",
+      "compressedBytes": 993728,
+      "sourceInputCount": 933,
+      "candidateSourceFiles": []
+    },
+    "handoff-only": {
+      "filename": "handoff-only.js.gz",
+      "entrySha256": "c90c064e6d25d92fcf3ca6ef4af59f4177036ecf20ebd93643617c406d40e9fc",
+      "entryBytes": 5491941,
+      "compressedSha256": "159ce46f59282966dfcb447b73b90315cf6fd58733f52b1e375341c68d087bf6",
+      "compressedBytes": 993898,
+      "sourceInputCount": 933,
+      "candidateSourceFiles": [
+        {
+          "repository": "tiny",
+          "path": "lib/core.ts",
+          "sha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
+        }
+      ]
+    }
+  },
+  "frozenDependencyOverrides": [
+    {
+      "path": "node_modules/@tscircuit/trace-simplification-solver/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts",
+      "sha256": "0add3c79612da4e81d23484c1af91482440b1f9e1f69b03422c5edf54868e5bb"
+    },
+    {
+      "path": "node_modules/@tscircuit/repair04/lib/getFixedObstacleViolations.ts",
+      "sha256": "7145b92cf9f7f7fb0aa35369a462eab890c9592ac72e24ea7505a3948eda85a7"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/validation/isCandidateGeometryValid.ts",
+      "sha256": "71b18c355914a0278dcaf43527565684f2ee01545d496aad4ad3d21b31be1aee"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/planning/selectPartialMeanderPlan.ts",
+      "sha256": "d88b4931bccb8b69b8fe362dce20cd024559109c91df561d5118ddcfacc64d37"
+    }
+  ],
+  "sourcePatches": {
+    "handoff-only": {
+      "filename": "handoff-only-source.patch",
+      "sha256": "98c25970e5d2160d42d40bdd328be4b63c3fdcc85e6251bd3c13366addddeada",
+      "bytes": 2841,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    }
+  },
+  "reusedControls": {
+    "source-baseline": {
+      "priorAR1111EntrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
+      "newAR1112QualificationPending": true,
+      "releaseInputChanges": [
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/autorouter/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+          "beforeSha256": "75dbe4f280ce243da899793d35d732c5820d254b2d2c1830cbf253938ada059a",
+          "afterSha256": "5a22521e015952626f2c1863e65fed4a709bf253fa337cfaaf6efc9fcaa3330c"
+        }
+      ],
+      "sourceMapDeltaProof": "../published-source-delta.json"
+    }
+  },
+  "variantPatchOrder": {
+    "source-baseline": [],
+    "handoff-only": [
+      "handoff-only"
+    ]
+  },
+  "runtimeInputChangesByVariant": {
+    "handoff-only": {
+      "relativeTo": "source-baseline",
+      "changes": [
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/core.ts",
+          "beforeSha256": "16de23a295391193c3122d03291636ad7edb5b87f9ecd1dbe60f33c66195b112",
+          "afterSha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
+        }
+      ]
+    }
+  },
+  "sourceInputHashFormat": "SHA256 of compact sorted-key JSON array of build input path and SHA256, in build input order",
+  "handoffScope": "Only Tiny lib/core.ts: seed first existing greedy attempt from incomplete cost-aware child when fewer pending routes and parent partial/outside-in routing disabled. Carry graph and actual pending/current IDs together. Later shuffled attempts retain original parent. No quota, iteration cap, acceptance or via changes."
+}
