@@ -50,6 +50,9 @@ export interface TraceWidthSolverInput {
   minTraceWidth: number
   obstacleMargin?: number
   minTraceToHoleEdgeClearance?: number
+  bounds?: SimpleRouteJson["bounds"]
+  outline?: SimpleRouteJson["outline"]
+  minBoardEdgeClearance?: number
   layerCount: number
 }
 
@@ -79,6 +82,8 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceWidth: number
   obstacleMargin: number
   minTraceToHoleEdgeClearance?: number
+  minBoardEdgeClearance?: number
+  boardEdges: Array<{ start: Point2D; end: Point2D }> = []
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
 
@@ -113,6 +118,26 @@ export class TraceWidthSolver extends BaseSolver {
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
+    this.minBoardEdgeClearance = input.minBoardEdgeClearance
+    if (
+      this.minBoardEdgeClearance !== undefined &&
+      this.minBoardEdgeClearance > 0
+    ) {
+      const boundaryPoints: Point2D[] = input.outline?.length
+        ? input.outline
+        : input.bounds
+          ? [
+              { x: input.bounds.minX, y: input.bounds.minY },
+              { x: input.bounds.maxX, y: input.bounds.minY },
+              { x: input.bounds.maxX, y: input.bounds.maxY },
+              { x: input.bounds.minX, y: input.bounds.maxY },
+            ]
+          : []
+      this.boardEdges = boundaryPoints.map((start, index) => ({
+        start,
+        end: boundaryPoints[(index + 1) % boundaryPoints.length]!,
+      }))
+    }
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
 
@@ -425,6 +450,23 @@ export class TraceWidthSolver extends BaseSolver {
     let minClearance = Infinity
     this.lastCollidingObstacles = []
     this.lastCollidingRoutes = []
+
+    if (
+      this.boardEdges.length > 0 &&
+      this.minBoardEdgeClearance !== undefined
+    ) {
+      let minBoardDistance = Infinity
+      for (const edge of this.boardEdges) {
+        minBoardDistance = Math.min(
+          minBoardDistance,
+          segmentToSegmentMinDistance(start, end, edge.start, edge.end),
+        )
+      }
+      minClearance = Math.min(
+        minClearance,
+        minBoardDistance - (this.minBoardEdgeClearance - this.obstacleMargin),
+      )
+    }
 
     // Query the complete clearance envelope, using explicit bounds rather than
     // passing a radius to an API that expects full width and height.

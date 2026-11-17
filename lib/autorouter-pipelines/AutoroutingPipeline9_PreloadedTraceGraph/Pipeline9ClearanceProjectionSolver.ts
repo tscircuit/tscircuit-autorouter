@@ -9,6 +9,7 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { getViaPairCopperClearance } from "lib/utils/getViaPairCopperClearance"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
@@ -128,8 +129,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
         viaClearance:
-          (params.originalSrj.minPadEdgeToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.viaClearance) +
+          getViaPairCopperClearance(params.originalSrj) +
           VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })
