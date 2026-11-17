@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { UniformPortDistributionSolverInput } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("Pipeline9 only validates redistributed ports when preloaded copper exists", (): void => {
@@ -34,7 +35,8 @@ test("Pipeline9 only validates redistributed ports when preloaded copper exists"
       (step) => step.solverName === "uniformPortDistributionSolver",
     )!
     const [input] = stage.getConstructorParams(solver)
-    const validate = input.isPortPointClear
+    const validate = (input as UniformPortDistributionSolverInput)
+      .isPortPointClear
     if (traces?.length) {
       expect(validate).toBeFunction()
       expect(validate!({ x: 1, y: 1, z: 0, connectionName: "other" })).toBeFalse()
