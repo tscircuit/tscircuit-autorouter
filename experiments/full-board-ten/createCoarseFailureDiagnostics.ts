@@ -12,6 +12,8 @@ type Options = {
 // read from the actual new solver; they are not inferred from SRJ array order.
 const selectedRouteIds = new Set([18, 19, 22, 23])
 const samplePops = new Set([1, 1024, 8192, 32768, 65536, 98304, 114688, 120000])
+const maximumPathNodes = 4096
+const maximumGoalNeighborhoodPorts = 4096
 const jsonNumber = (value: number): number | string => Number.isFinite(value) ? value : String(value)
 
 /** Observe published instances only. Timings from this run are diagnostic. */
@@ -89,9 +91,76 @@ export function createCoarseFailureDiagnostics(options: Options): {
         distanceToCost: solver.DISTANCE_TO_COST, addSegmentDistanceToG: solver.ADD_SEGMENT_DISTANCE_TO_G,
         selectedRoutes: [...selectedRouteIds].map(detail),
       },
-      counts, attempts: [],
+      counts, attempts: [], captureBoundsViolations: [],
+      captureLimits: { maximumPathNodes, maximumGoalNeighborhoodPorts, maximumGoalRegions: 8 },
       counterMeaning: "Eligible expansion excludes only the stale/foreign-region early returns; it includes dead ends and goal handling. Duplicate-hop counts and f ties cover selected attempts only. Child recovery solvers are not counted.",
     })
+    const boundsViolation = (routeId: number, field: string): void => {
+      if (report!.captureBoundsViolations.length < 32) report!.captureBoundsViolations.push({ routeId, field, iteration: solver.iterations })
+    }
+    const regionFacts = (regionId: number): RuntimeObject => {
+      const cache = state.regionIntersectionCaches[regionId]
+      return {
+        regionId, width: topology.regionWidth[regionId], height: topology.regionHeight[regionId],
+        availableZMask: topology.regionAvailableZMask?.[regionId] ?? null,
+        reservedNetId: problem.regionNetId[regionId], congestion: state.regionCongestionCost[regionId],
+        segmentCount: cache.existingSegmentCount, cost: jsonNumber(cache.existingRegionCost),
+        sameLayerIntersections: cache.existingSameLayerIntersections,
+        crossingLayerIntersections: cache.existingCrossingLayerIntersections,
+        entryExitLayerChanges: cache.existingEntryExitLayerChanges,
+      }
+    }
+    const goalNeighborhood = (routeId: number): RuntimeObject => {
+      const goal = state.goalPortId
+      const regions: RuntimeObject[] = []
+      let portCount = 0
+      let minimum = Infinity
+      const incident = topology.incidentPortRegion[goal]
+      if (incident.length > 8) {
+        boundsViolation(routeId, "goal region count")
+        return { complete: false }
+      }
+      for (const regionId of incident) {
+        const ports = topology.regionIncidentPorts[regionId]
+        if (portCount + ports.length > maximumGoalNeighborhoodPorts) {
+          boundsViolation(routeId, "goal neighborhood port count")
+          return { complete: false, regions }
+        }
+        portCount += ports.length
+        regions.push({ ...regionFacts(regionId), ports: ports.map((portId: number) => {
+          const connectsToNonTerminalRegion = topology.incidentPortRegion[portId].some((other: number) =>
+            other !== regionId && topology.regionIncidentPorts[other].length > 1)
+          const penalty = problem.portPenalty?.[portId] ?? 0
+          if (ports.length > 1 && portId !== goal && connectsToNonTerminalRegion) minimum = Math.min(minimum, penalty)
+          return { ...point(portId), penalty: jsonNumber(penalty), connectsToNonTerminalRegion }
+        }) })
+      }
+      // This is PR276's immutable radius-one calculation, observed without
+      // using it for routing or making any admissibility claim.
+      return { complete: true, goalPortId: goal, goalPortPenalty: jsonNumber(problem.portPenalty?.[goal] ?? 0),
+        portCount, pr276MinimumEntryPenalty: Number.isFinite(minimum) ? minimum : 0, regions }
+    }
+    const candidatePath = (candidate: RuntimeObject, routeId: number): RuntimeObject => {
+      const nodes: RuntimeObject[] = []
+      const visited = new Set<RuntimeObject>()
+      let cursor: RuntimeObject | undefined = candidate
+      while (cursor) {
+        if (nodes.length === maximumPathNodes || visited.has(cursor)) {
+          boundsViolation(routeId, visited.has(cursor) ? "candidate chain cycle" : "candidate path node count")
+          return { complete: false, nodes: nodes.reverse() }
+        }
+        visited.add(cursor)
+        const previous: RuntimeObject | undefined = cursor.prevCandidate
+        nodes.push({
+          ...point(cursor.portId), hopId: cursor.hopId, nextRegionId: cursor.nextRegionId,
+          g: jsonNumber(cursor.g), h: jsonNumber(cursor.h), f: jsonNumber(cursor.f),
+          portPenalty: jsonNumber(problem.portPenalty?.[cursor.portId] ?? 0),
+          incomingRegion: previous ? regionFacts(previous.nextRegionId) : null,
+        })
+        cursor = previous
+      }
+      return { complete: true, capturedBeforeCommit: true, nodeCount: nodes.length, nodes: nodes.reverse() }
+    }
     let active: RuntimeObject | undefined
     let previousF: number | undefined
     let equalFRun = 0
@@ -111,6 +180,7 @@ export function createCoarseFailureDiagnostics(options: Options): {
         repeatedHopPops: 0, untrackedHopPops: 0, exactAdjacentFTies: 0, longestEqualFRun: 0,
         fDecreases: 0, minF: Infinity, maxF: -Infinity, poppedByZ: {}, poppedByRegionZMask: {},
         goalApproaches: 0, goalCosts: [], samples: [],
+        goalNeighborhood: goalNeighborhood(routeId),
       }
       report!.attempts.push(active)
       return active
@@ -222,12 +292,15 @@ export function createCoarseFailureDiagnostics(options: Options): {
     wrap(solver, "onPathFound", (original, self, args) => {
       const row = attempt()
       const routeId = state.currentRouteId
+      const path = row && args[0].portId === state.goalPortId ? candidatePath(args[0], routeId) : undefined
       if (row && args[0].portId !== state.goalPortId) {
         row.goalApproaches++
         row.firstGoalApproachIteration ??= self.iterations
       }
       const result = Reflect.apply(original, self, args)
       if (row && state.currentRouteId !== routeId) {
+        if (!path) boundsViolation(routeId, "committed without final goal candidate")
+        row.committedPath = path ?? null
         row.committedAtIteration = self.iterations
         row.commitCandidate = candidateDetail(args[0])
         row.iterationsAfterFirstGoalApproach = row.firstGoalApproachIteration === undefined ? null : self.iterations - row.firstGoalApproachIteration

@@ -56,6 +56,22 @@ else:
     attempts = witness["attempts"]
     check("selected_native_route_attempts", all(any(row["routeId"] == route_id and "committedAtIteration" in row and "commitCandidate" in row for row in attempts) for route_id in [18, 19, 22, 23]))
     check("selected_pop_accounting", all(row["pops"] == row["stalePops"] + row["foreignRegionPops"] + row["eligibleExpansions"] for row in attempts))
+    check("path_capture_bounds", witness.get("captureBoundsViolations") == [])
+    selected_routes = {route["routeId"]: route for route in witness["configured"]["selectedRoutes"]}
+    paths_complete = True
+    neighborhoods_complete = True
+    for row in attempts:
+        path = row.get("committedPath") or {}
+        nodes = path.get("nodes", [])
+        paths_complete = paths_complete and path.get("complete") is True and path.get("capturedBeforeCommit") is True and 0 < len(nodes) <= 4096 and path.get("nodeCount") == len(nodes)
+        if nodes:
+            paths_complete = paths_complete and nodes[0]["portId"] == selected_routes[row["routeId"]]["start"]["portId"] and nodes[-1]["portId"] == row["goal"]["portId"] and nodes[-1]["g"] == row["commitCandidate"]["g"]
+        neighborhood = row.get("goalNeighborhood") or {}
+        regions = neighborhood.get("regions", [])
+        ports = sum(len(region["ports"]) for region in regions)
+        neighborhoods_complete = neighborhoods_complete and neighborhood.get("complete") is True and neighborhood.get("goalPortId") == row["goal"]["portId"] and 0 < len(regions) <= 8 and 0 < ports <= 4096 and neighborhood.get("portCount") == ports
+    check("selected_committed_paths_complete", bool(attempts) and paths_complete)
+    check("selected_goal_neighborhoods_complete", bool(attempts) and neighborhoods_complete)
 
 report = {"board": board, "baselineRun": expected["baselineRun"], "checks": checks, "valid": all(checks.values()), "notice": "Diagnostic acceptance only; the authentic board remains incomplete. Wall times include observation overhead."}
 (output / "failure-witness-validation.json").write_text(json.dumps(report, indent=2) + "\n")

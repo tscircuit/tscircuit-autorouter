@@ -1,4 +1,4 @@
-name: Published3216 native failure witnesses
+name: Published3216 Glider path witness
 
 on:
   push:
@@ -14,11 +14,9 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 1
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "spaced" }
-          - { board: icepi, experiment: published, cohorts: "spaced" }
           - { board: glider, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
