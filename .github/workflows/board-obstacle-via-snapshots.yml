@@ -1,0 +1,58 @@
+name: Inspect native board-obstacle routing snapshots
+on:
+  push:
+    branches: [artifacts/board-obstacle-via-snapshots]
+permissions:
+  contents: write
+jobs:
+  snapshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        circuit: [a13, h616]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: |
+          python3 - <<'PY'
+          import pathlib,json
+          p=pathlib.Path('package.json')
+          data=json.loads(p.read_text())
+          data['overrides']={**data.get('overrides',{}),'csstype':'3.1.3'}
+          p.write_text(json.dumps(data,indent=2)+'\n')
+          PY
+          bun install --ignore-scripts
+      - name: Run unchanged native circuit regression
+        env:
+          CIRCUIT: ${{ matrix.circuit }}
+          BUN_UPDATE_SNAPSHOTS: 1
+        run: |
+          if [ "$CIRCUIT" = a13 ]; then
+            bun test tests/repro/pipeline9-a13-regional-repair-shorts.test.ts --timeout 9999999
+          else
+            bun test tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts --timeout 9999999
+          fi
+      - name: Save generated SVG for visual review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs")
+            const circuit = "${{ matrix.circuit }}"
+            const names = {
+              a13: "pipeline9-a13-regional-repair-shorts.snap.svg",
+              h616: "pipeline9-h616-full-board-ddr-clearance.snap.svg"
+            }
+            const file = "tests/repro/__snapshots__/" + names[circuit]
+            const dest = "previews/" + names[circuit]
+            const branch = "artifacts/board-obstacle-via-snapshots"
+            const content = fs.readFileSync(file).toString("base64")
+            await github.rest.repos.createOrUpdateFileContents({
+              ...context.repo, branch, path:dest, content,
+              message:"Save native " + circuit + " snapshot for review"
+            })
