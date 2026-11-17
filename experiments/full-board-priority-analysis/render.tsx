@@ -202,6 +202,10 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
         obstacles:event.simpleRouteJson.obstacles.length,
         aliases:event.simpleRouteJson.obstacles.reduce((n:number,o:any)=>n+o.connectedTo.length,0)})
       writeFileSync(join(output, `phase-${progress.phases.length}-input.srj.json`), JSON.stringify(event.simpleRouteJson))
+      if (process.env.FULL_BOARD_STOP_AT_START === "1") {
+        save(true); saveDiagnostics()
+        throw new Error("Diagnostic stop after initial routing input extraction")
+      }
     } else {
       const phase = progress.phases.findLast((p) => p.status === "running")
       if (!phase && eventName !== "autorouting:error") throw new Error(`Routing finish without start: ${name}`)

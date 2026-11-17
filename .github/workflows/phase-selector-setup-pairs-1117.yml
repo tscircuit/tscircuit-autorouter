@@ -1,0 +1,77 @@
+name: Paired full-board routing setup measurements
+on:
+  push:
+    branches: [codex/ddr1117-phase-selector-check]
+permissions:
+  contents: read
+jobs:
+  setup:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 701339c13c9f1cba5c71bf9801fac787a60de937
+          path: core-before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 47cdc02e0bffa662e141fbf4e8ad436d7761fdbf
+          path: core-after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install identical dependencies and build the released router
+        run: |
+          (cd router && bun install --ignore-scripts)
+          (cd core-before && bun install --ignore-scripts)
+          ln -s "$GITHUB_WORKSPACE/core-before/node_modules" core-after/node_modules
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+      - name: Measure setup before and after without running either router
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT=dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_STOP_AT_START=1
+          for variant in before after; do
+            export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core-$variant"
+            bun build-core.ts "$FULL_BOARD_CORE_SOURCE"
+            for mode in phased fanout; do
+              bun render.tsx "$BOARD_ID" "$GITHUB_WORKSPACE/results/setup/$variant/$BOARD_ID-$mode" "$mode"
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selector1117-setup-${{ matrix.board }}
+          path: results/setup
+          retention-days: 14
+      - name: Export paired setup times and input hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path('results/setup').rglob('progress.json')):
+              progress=json.loads(path.read_text())
+              srj=path.with_name('phase-1-input.srj.json')
+              rows.append({'variant':path.parent.parent.name,'board':os.environ.get('BOARD_ID',path.parent.name.rsplit('-',1)[0]),'mode':progress['mode'],'startedMs':progress['phases'][0]['startedMs'],'initialCopperElements':progress['initialCopperElements'],'inputSha256':hashlib.sha256(srj.read_bytes()).hexdigest(),'inputBytes':srj.stat().st_size,'errors':progress['errors']})
+          print('SELECTOR1117_SETUP_RESULT',json.dumps(rows,separators=(',',':')))
+          PY
