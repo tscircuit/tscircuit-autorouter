@@ -1,0 +1,164 @@
+[
+  {
+    "type": "pcb_trace_error",
+    "error_type": "pcb_trace_error",
+    "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+    "pcb_trace_id": "CPUX",
+    "center": {
+      "x": 15.599999999998767,
+      "y": -2.188643091228288
+    },
+    "source_trace_id": "",
+    "pcb_trace_error_id": "overlap_CPUX_C12.2",
+    "pcb_component_ids": [],
+    "pcb_port_ids": [
+      "C15.2",
+      "U1.276"
+    ]
+  },
+  {
+    "type": "pcb_trace_error",
+    "error_type": "pcb_trace_error",
+    "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+    "pcb_trace_id": "CPUX",
+    "center": {
+      "x": 15.468999999999372,
+      "y": -0.9500000000000173
+    },
+    "source_trace_id": "",
+    "pcb_trace_error_id": "overlap_CPUX_U1.T11",
+    "pcb_component_ids": [],
+    "pcb_port_ids": [
+      "C15.2",
+      "U1.276"
+    ]
+  },
+  {
+    "type": "pcb_trace_error",
+    "error_type": "pcb_trace_error",
+    "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+    "pcb_trace_id": "CPUX",
+    "center": {
+      "x": 15.434749237340272,
+      "y": -2.1652507626584883
+    },
+    "source_trace_id": "",
+    "pcb_trace_error_id": "overlap_CPUX_U1.T9",
+    "pcb_component_ids": [],
+    "pcb_port_ids": [
+      "C15.2",
+      "U1.276"
+    ]
+  },
+  {
+    "type": "pcb_trace_error",
+    "error_type": "pcb_trace_error",
+    "message": "PCB trace unnamed trace overlaps with pcb_smtpad \"unnamed SMD pad\" (accidental contact)",
+    "pcb_trace_id": "CPUX",
+    "center": {
+      "x": 15.941968039914359,
+      "y": -2.3393531695908676
+    },
+    "source_trace_id": "",
+    "pcb_trace_error_id": "overlap_CPUX_U1.U9",
+    "pcb_component_ids": [],
+    "pcb_port_ids": [
+      "C15.2",
+      "U1.276"
+    ]
+  },
+  {
+    "type": "pcb_pad_trace_clearance_error",
+    "pcb_pad_trace_clearance_error_id": "pad_trace_clearance_U1.T10_CPUX",
+    "error_type": "pcb_pad_trace_clearance_error",
+    "message": "Pad unnamed SMD pad and trace unnamed trace are too close (clearance: 0mm, minimum: 0.1mm)",
+    "pcb_pad_id": "U1.T10",
+    "pcb_trace_id": "CPUX",
+    "minimum_clearance": 0.1,
+    "actual_clearance": 0.000040748752285837964,
+    "center": {
+      "x": 15.434700667639845,
+      "y": -1.6850334473401145
+    }
+  },
+  {
+    "type": "pcb_pad_pad_clearance_error",
+    "pcb_pad_pad_clearance_error_id": "via_pad_clearance_via_0_U1.T11",
+    "error_type": "pcb_pad_pad_clearance_error",
+    "message": "Via unnamed via and pad unnamed SMD pad are too close (clearance: 0mm, minimum: 0.1mm)",
+    "pcb_pad_ids": [
+      "via_0",
+      "U1.T11"
+    ],
+    "minimum_clearance": 0.1,
+    "actual_clearance": 0,
+    "center": {
+      "x": 15.419755645662965,
+      "y": -0.8856101979984785
+    },
+    "pcb_via_ids": [
+      "via_0"
+    ],
+    "pcb_trace_id": "CPUX"
+  },
+  {
+    "type": "pcb_pad_pad_clearance_error",
+    "pcb_pad_pad_clearance_error_id": "via_pad_clearance_via_0_C37.2",
+    "error_type": "pcb_pad_pad_clearance_error",
+    "message": "Via unnamed via and pad unnamed SMD pad are too close (clearance: 0.079mm, minimum: 0.1mm)",
+    "pcb_pad_ids": [
+      "via_0",
+      "C37.2"
+    ],
+    "minimum_clearance": 0.1,
+    "actual_clearance": 0.07925766666666867,
+    "center": {
+      "x": 15.302036833332085,
+      "y": -0.7500010000000142
+    },
+    "pcb_via_ids": [
+      "via_0"
+    ],
+    "pcb_trace_id": "CPUX"
+  },
+  {
+    "type": "pcb_pad_pad_clearance_error",
+    "pcb_pad_pad_clearance_error_id": "via_pad_clearance_via_1_U1.T11",
+    "error_type": "pcb_pad_pad_clearance_error",
+    "message": "Via unnamed via and pad unnamed SMD pad are too close (clearance: 0mm, minimum: 0.1mm)",
+    "pcb_pad_ids": [
+      "via_1",
+      "U1.T11"
+    ],
+    "minimum_clearance": 0.1,
+    "actual_clearance": 0,
+    "center": {
+      "x": 15.419755645662965,
+      "y": -0.8856101979984785
+    },
+    "pcb_via_ids": [
+      "via_1"
+    ],
+    "pcb_trace_id": "CPUX"
+  },
+  {
+    "type": "pcb_pad_pad_clearance_error",
+    "pcb_pad_pad_clearance_error_id": "via_pad_clearance_via_1_C37.2",
+    "error_type": "pcb_pad_pad_clearance_error",
+    "message": "Via unnamed via and pad unnamed SMD pad are too close (clearance: 0.079mm, minimum: 0.1mm)",
+    "pcb_pad_ids": [
+      "via_1",
+      "C37.2"
+    ],
+    "minimum_clearance": 0.1,
+    "actual_clearance": 0.07925766666666867,
+    "center": {
+      "x": 15.302036833332085,
+      "y": -0.7500010000000142
+    },
+    "pcb_via_ids": [
+      "via_1"
+    ],
+    "pcb_trace_id": "CPUX"
+  }
+]

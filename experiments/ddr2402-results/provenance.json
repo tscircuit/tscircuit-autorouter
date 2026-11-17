@@ -87,5 +87,10 @@
     "originalNewHdRoutes"
   ],
   "fixReadyForReview": true,
-  "completedAtUtc": "2026-11-17T15:03:00Z"
+  "completedAtUtc": "2026-11-17T15:03:00Z",
+  "viaReviewRun": 44123569958,
+  "emittedCpuxViaSites": 1,
+  "emittedCpuxViaSpanRecords": 2,
+  "emittedCpuxTerminalAnchorsVerified": true,
+  "emittedCpuxLocalDrcFindings": 9
 }

@@ -1,0 +1,76 @@
+{
+  "baseline": "4c49c57598ffeed73d717610f77bad36ec31aca4",
+  "fix": "d1e323efbb082408784e93957cbc854c08cf86ca",
+  "fullBoardRun": 44105388766,
+  "artifactInspectionRun": 44123569958,
+  "stitchSnapshot": {
+    "beforeViaSites": 3,
+    "afterViaSites": 6,
+    "beforeLengthMm": 5.1124553586749455,
+    "afterLengthMm": 8.764707295260884
+  },
+  "pipeline": [
+    {
+      "variant": "before",
+      "stage": "Failed at stitching: 1/2 terminals",
+      "viaSites": 3,
+      "viaSpanRecords": 3,
+      "vias": [
+        {
+          "route_type": "via",
+          "x": 16.07806688789056,
+          "y": -2.5812464430514503,
+          "from_layer": "top",
+          "to_layer": "inner1",
+          "via_diameter": 0.45
+        },
+        {
+          "route_type": "via",
+          "x": 16.051526358672966,
+          "y": -2.5385308434025395,
+          "from_layer": "inner1",
+          "to_layer": "top",
+          "via_diameter": 0.45
+        },
+        {
+          "route_type": "via",
+          "x": 15.566370385790838,
+          "y": -0.7500010000000142,
+          "from_layer": "inner2",
+          "to_layer": "top",
+          "via_diameter": 0.45
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "stage": "Actual emitted CPUX: 2/2 terminals",
+      "viaSites": 1,
+      "viaSpanRecords": 2,
+      "vias": [
+        {
+          "route_type": "via",
+          "x": 15.56666566666542,
+          "y": -0.7500010000000142,
+          "from_layer": "inner2",
+          "to_layer": "bottom",
+          "via_diameter": 0.45,
+          "via_hole_diameter": 0.2
+        },
+        {
+          "route_type": "via",
+          "x": 15.56666566666542,
+          "y": -0.7500010000000142,
+          "from_layer": "top",
+          "to_layer": "inner2",
+          "via_diameter": 0.45,
+          "via_hole_diameter": 0.2
+        }
+      ]
+    }
+  ],
+  "note": "Before failed during stitching. After is the actual emitted route after simplification and joint repair from the same six-board benchmark. A via site counts unique XY positions; the emitted site has two consecutive layer-span records. These figures do not assert a DRC-clean full board.",
+  "postSimplificationHdViaCount": 1,
+  "emittedTraceTerminalAnchorsVerified": true,
+  "emittedRouteDrcFindingsInOriginalPadCrop": 9
+}
