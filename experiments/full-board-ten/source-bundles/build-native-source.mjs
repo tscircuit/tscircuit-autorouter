@@ -5,7 +5,7 @@ import { createHash } from "node:crypto"
 import { gzipSync } from "node:zlib"
 
 const frozenPlan = "/tmp/full-board-ten-20261116/via-reservation-plan-3207"
-const plan = "/tmp/full-board-ten-20261116/recovery-handoff-plan-1113-integration"
+const plan = "/tmp/full-board-ten-20261116/recovery-handoff-last-attempt-plan-1113"
 const variant = process.argv[2]
 const use1112Control = process.argv[3] === "1112-control"
 if (process.argv[3] && !use1112Control) throw new Error("Unexpected build mode")

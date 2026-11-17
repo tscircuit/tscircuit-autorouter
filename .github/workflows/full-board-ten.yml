@@ -1,8 +1,8 @@
-name: Frozen3208 full-board AR1113 source handoff validation
+name: Frozen3208 full-board AR1113 final recovery validation
 
 on:
   push:
-    branches: [bench/full-board-completion-overlay-1113]
+    branches: [bench/full-board-completion-last-attempt-1113]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { board: imx6, experiment: handoff-only, measurement: handoff-source1113-secondary-1800s, capture: 1800, hard: 1860, cohorts: "spaced" }
+          - { board: imx6, experiment: handoff-only, measurement: last-attempt-source1113-secondary-1800s, capture: 1800, hard: 1860, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json

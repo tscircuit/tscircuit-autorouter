@@ -1,5 +1,5 @@
 {
-  "purpose": "Matched current AR1113 P9 source baseline and one Tiny recovery handoff; published main runtime remains frozen3208; native and Dataset18 qualification pending",
+  "purpose": "Matched AR0.0.1113 source baseline and refined final recovery attempt; frozen published main3208 runtime. Diagnostic qualification pending.",
   "mainVersion": "0.0.3208",
   "originalAutorouterSHA256": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee",
   "autorouterGitHead": "b9f024828936f9639a696c9943747cc776cda72e",
@@ -17,8 +17,11 @@
       "@tscircuit/solver-utils",
       "object-hash"
     ],
-    "qualification": "All1648 published1113 map sources audited versus1112; only regionalrepair and unbundledpackage changed. All933 compiled inputs audited; matched baseline/candidate differ only Tiny core. Actual native and Dataset18 qualification pending.",
-    "builderSha256": "7c4636479e4999265fb432a6d6f83667fa6d8bfa10742ebfdfd29d272a338576"
+    "qualification": "All 933 source inputs and import edges audited. Matched baseline/candidate differ only in Tiny lib/core.ts. Previous baseline identity retained; refined native qualification pending.",
+    "builderSha256": "22aecbdf2851f04a010c4584bb0d5e86440aaaf84aae2bb82012b3d2b7b91271",
+    "builderArguments": [
+      "handoff-only"
+    ]
   },
   "variants": {
     "source-baseline": {
@@ -32,16 +35,16 @@
     },
     "handoff-only": {
       "filename": "handoff-only.js.gz",
-      "entrySha256": "22dceb5030035800db67a071aa0fdf7aee01732b7d1d4c68a5c7d2899841f7a8",
-      "entryBytes": 5491959,
-      "compressedSha256": "8f7c5550173fdfa610e47044b1cf1622ec7e35b20a19704048ed1e28e335a8e9",
-      "compressedBytes": 993895,
+      "entrySha256": "07febb562901ff47a69294bd8b8731407a8848db3361a3dd82cf0260146f19d9",
+      "entryBytes": 5492135,
+      "compressedSha256": "a2ae8427e84767b0160e8aedca1120f82bb0352a831a4a0a04ee5bd86a88b3e4",
+      "compressedBytes": 993923,
       "sourceInputCount": 933,
       "candidateSourceFiles": [
         {
           "repository": "tiny",
           "path": "lib/core.ts",
-          "sha256": "072fc433afb499c4ea6b61207fae67d1c3f1add652bc978f1bbc74bf7568d5bc"
+          "sha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b"
         }
       ]
     }
@@ -67,8 +70,8 @@
   "sourcePatches": {
     "handoff-only": {
       "filename": "handoff-only-source.patch",
-      "sha256": "cee69b116c5d51625b68bed4a7ac3b5e653ff6f27b425dac38a5cc5232b3c346",
-      "bytes": 2907,
+      "sha256": "45d2c4dda16a9b948182655c5e0cba760bd19385e85a980525ad8b89e5137963",
+      "bytes": 3526,
       "applyOptions": [
         "--unidiff-zero"
       ]
@@ -76,16 +79,10 @@
   },
   "reusedControls": {
     "source-baseline": {
-      "priorAR1112EntrySha256": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
-      "newAR1113QualificationPending": true,
-      "releaseInputChanges": [
-        {
-          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/autorouter/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver.ts",
-          "beforeSha256": "7feac168de5e3c67666a212c70c60923ef48b2363a12feeb875679afb97f8ef5",
-          "afterSha256": "442464746b5d4bd7d78ac1eb64ffe483267511d5f6dbf1891009bacdb4256150"
-        }
-      ],
-      "sourceMapDeltaProof": "../published1113-audit.json"
+      "entrySha256": "6ca2debe379721d0a78cde1b8cb690bb2944961be285be08e8f5ccfd8e738dc7",
+      "compressedSha256": "d6cafd91eb082908950ceb221ca616eae1b16787a7cb4e30e04e8f87c53b98ae",
+      "priorPlan": "/tmp/full-board-ten-20261116/recovery-handoff-plan-1113-integration",
+      "qualification": "Existing authenticated baseline; repeat matched native control in this validation."
     }
   },
   "variantPatchOrder": {
@@ -101,13 +98,13 @@
         {
           "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/core.ts",
           "beforeSha256": "16de23a295391193c3122d03291636ad7edb5b87f9ecd1dbe60f33c66195b112",
-          "afterSha256": "072fc433afb499c4ea6b61207fae67d1c3f1add652bc978f1bbc74bf7568d5bc"
+          "afterSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b"
         }
       ]
     }
   },
   "sourceInputHashFormat": "SHA256 of compact sorted-key JSON array of build input path and SHA256, in build input order",
-  "handoffScope": "Only Tiny lib/core.ts: seed first existing greedy attempt from incomplete cost-aware child when fewer pending routes and parent partial/outside-in routing disabled. Carry graph and actual pending/current IDs together. Later shuffled attempts retain original parent. No quota, iteration cap, acceptance or via changes.",
+  "handoffScope": "Only Tiny lib/core.ts: preserve all original cost-aware and greedy attempts and their successful outputs. Save improved cost-aware partial progress with its matching graph/pending/current IDs; only after every original greedy attempt fails, try that state in one additional final greedy attempt capped at 50000 iterations. Original per-attempt caps remain unchanged; the conditional additional attempt increases the maximum total search budget by 50000 iterations. Parent partial/outside-in routing remains excluded. No acceptance, geometry, quota, via or unrelated solver changes.",
   "originalPublishedAutorouterVersion": "0.0.1112",
   "routingSource": {
     "autorouterVersion": "0.0.1113",
@@ -115,6 +112,7 @@
     "publishedNpmGitHead": "f589df4b00bd436ea33a74471b3dbaf25adf509b",
     "publishedReferenceEntrySha256": "910c284c7ec165f430cf83884b345ac65341860336fe18faee53f6dc20673bb1",
     "publishedReferenceSourceMapSha256": "794187667e01a523ca56045ee86080f3ea73730ebb8134170fc40f0d643e477d",
-    "tinyCandidateCommit": "2689cae7844edc994a5a3155d9b1a16647cdc84e"
+    "tinyCandidateCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+    "tinyCanonicalBaseCommit": "f6d6a681147773fa55c4fa475b9998f0d96aefc7"
   }
 }
