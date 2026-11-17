@@ -29,9 +29,8 @@ test("captures the iCE/Pi CPUX crop through stitching and simplification", async
   })
   solver.solve()
   expect(fixture.stitch.hdRoutes).toHaveLength(24)
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("PCB terminal layers")
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 
   const plannedVias = hdRoutes.flatMap((fragment) => fragment.vias)
   for (const segment of convertHdRouteToSimplifiedRoute(
@@ -84,7 +83,7 @@ test("captures the iCE/Pi CPUX crop through stitching and simplification", async
       terminal.z === endpoint.z &&
       Math.hypot(terminal.x - endpoint.x, terminal.y - endpoint.y) < 0.001,
   ).length
-  expect(reachedTerminals).toBe(1)
+  expect(reachedTerminals).toBe(2)
 
   const trace: SimplifiedPcbTrace = {
     type: "pcb_trace",
@@ -94,8 +93,8 @@ test("captures the iCE/Pi CPUX crop through stitching and simplification", async
   }
   const vias = trace.route.filter((segment) => segment.route_type === "via")
   const viaSites = new Set(vias.map((segment) => getXyPointKey(segment)))
-  expect(vias).toHaveLength(3)
-  expect(viaSites.size).toBe(3)
+  expect(vias).toHaveLength(2)
+  expect(viaSites.size).toBe(1)
   await expect(
     getIcepiCpuxStitchSnapshotSvg({
       input,

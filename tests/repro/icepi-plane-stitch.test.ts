@@ -24,8 +24,9 @@ test("captures the full iCE/Pi plane phase before DRC repair", async (): Promise
   const solver = new MultipleHighDensityRouteStitchSolver3(capture.params)
   solver.solve()
   expect(capture.params.connections).toHaveLength(559)
-  expect(solver.mergedHdRoutes).toHaveLength(537)
-  expect(solver.error).toContain("PCB terminal layers")
+  expect(solver.mergedHdRoutes).toHaveLength(559)
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 
   await expect(
     getIcepiPlaneStitchSnapshotSvg({
