@@ -23,7 +23,8 @@ const runLane = async (lane: number): Promise<void> => {
       const [scenarioName, scenario] = scenarios[sample - 1]!
       const task: WorkerTaskMessage = { taskId: sample * 100 + pass, task: { datasetName: "srj18", solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph", scenarioName, sampleNumber: sample, scenario } }
       const started = performance.now()
-      const child = Bun.spawn([process.execPath, "scripts/benchmark/benchmark.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`ablation-results/${lane}-${sample}-${pass}.stderr.log`) })
+      const stderr = resolve(`ablation-results/${lane}-${sample}-${pass}.stderr.log`)
+      const child = Bun.spawn([process.execPath, "scripts/benchmark/benchmark.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(stderr) })
       const deadline = setTimeout(() => child.kill("SIGKILL"), 240000)
       const outputPromise = new Response(child.stdout).text()
       child.stdin.write(JSON.stringify(task) + "\n")
@@ -33,9 +34,12 @@ const runLane = async (lane: number): Promise<void> => {
       const processWallMs = performance.now() - started
       const messages = stdout.split("\n").filter((line) => line.startsWith('{"taskId":')).map((line) => JSON.parse(line))
       const payload = messages.findLast((message) => message.result)
-      if (exitCode !== 0 || !payload?.result) throw new Error(`Ablation process failed: ${sample}/${variant}/${pass}`)
+      if (exitCode !== 0 || !payload?.result) throw new Error(`Ablation process failed: ${sample}/${variant}/${pass}; ${readFileSync(stderr, "utf8").slice(-3000)}`)
       const { benchmarkSnapshot, ...result } = payload.result as WorkerResultWithImage
-      const record = { lane, sample, variant, pass, processWallMs, usage: child.resourceUsage(), result }
+      const rawUsage = child.resourceUsage()
+      if (!rawUsage) throw new Error("Completed child has no resource usage")
+      const usage = { ...rawUsage, cpuTime: { user: Number(rawUsage.cpuTime.user), system: Number(rawUsage.cpuTime.system), total: Number(rawUsage.cpuTime.total) } }
+      const record = { lane, sample, variant, pass, processWallMs, usage, result }
       records.push(record)
       writeFileSync(`ablation-results/lane-${lane}.json`, JSON.stringify(records, null, 2))
       console.log("ABLATION_RESULT " + JSON.stringify(record))

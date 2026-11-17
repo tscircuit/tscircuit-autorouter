@@ -11,7 +11,8 @@ for (const sample of samples) {
   for (const [pass, variant] of ["base", "head", "factory", "factory", "head", "base"].entries()) {
     for (const [path, source] of Object.entries(variants[variant]!)) writeFileSync(resolve(root, path), source)
     const output = resolve(`profile-results/${sample}-${pass}-${variant}.json`)
-    const child = Bun.spawn([process.execPath, "scripts/srj18-investigation/diagnostic.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`profile-results/${sample}-${pass}-${variant}.stderr.log`), env: { ...process.env, BUN_JSC_reportTotalCompileTimes: "1", DIAGNOSTIC_OUTPUT: output } })
+    const stderr = resolve(`profile-results/${sample}-${pass}-${variant}.stderr.log`)
+    const child = Bun.spawn([process.execPath, "scripts/srj18-investigation/diagnostic.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(stderr), env: { ...process.env, BUN_JSC_reportTotalCompileTimes: "1", DIAGNOSTIC_OUTPUT: output } })
     const deadline = setTimeout(() => child.kill("SIGKILL"), 240000)
     const stdoutPromise = new Response(child.stdout).text()
     const [scenarioName, scenario] = scenarios[sample - 1]!
@@ -19,9 +20,12 @@ for (const sample of samples) {
     child.stdin.end()
     const [code, stdout] = await Promise.all([child.exited, stdoutPromise])
     clearTimeout(deadline)
-    if (code !== 0) throw new Error(`Profile process failed: ${sample}/${variant}/${pass}; ${stdout.slice(-1000)}`)
+    if (code !== 0) throw new Error(`Profile process failed: ${sample}/${variant}/${pass}; ${readFileSync(stderr, "utf8").slice(-3000)}`)
     const line = stdout.split("\n").find((line) => line.startsWith("DIAGNOSTIC_RESULT "))
     if (!line) throw new Error("Missing diagnostic result")
-    console.log("PROFILE_VARIANT " + JSON.stringify({ sample, pass, variant, usage: child.resourceUsage(), diagnostic: JSON.parse(line.slice("DIAGNOSTIC_RESULT ".length)) }))
+    const rawUsage = child.resourceUsage()
+    if (!rawUsage) throw new Error("Completed profile child has no resource usage")
+    const usage = { ...rawUsage, cpuTime: { user: Number(rawUsage.cpuTime.user), system: Number(rawUsage.cpuTime.system), total: Number(rawUsage.cpuTime.total) } }
+    console.log("PROFILE_VARIANT " + JSON.stringify({ sample, pass, variant, usage, diagnostic: JSON.parse(line.slice("DIAGNOSTIC_RESULT ".length)) }))
   }
 }
