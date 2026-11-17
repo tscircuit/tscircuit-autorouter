@@ -1,0 +1,199 @@
+{
+  "purpose": "Diagnostic-only exact source baseline and candidate entries; never production fixtures",
+  "mainVersion": "0.0.3207",
+  "originalAutorouterSHA256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
+  "autorouterGitHead": "89977557a0082737afc275e69d74efb2d984de5b",
+  "tinyGitHead": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+  "publishedSourceMapSha256": "be13ccc765027934d63fab5c7389f747f0d3207a83fbae934974a102baa1361d",
+  "build": {
+    "engine": "esbuild0.27.0 under Node24.19.0",
+    "entry": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "format": "esm",
+    "platform": "node",
+    "target": "es2022",
+    "minify": false,
+    "sourcemap": false,
+    "externalDependencies": [
+      "@tscircuit/solver-utils",
+      "object-hash"
+    ],
+    "qualification": "Source baseline must reproduce published native coarse roles, complete HD queue, accepted prefix, failure and private candidate geometry before candidate conclusions.",
+    "builderSha256": "b4b31d1fb11a142d2c5a88a8c62b96e6e4a29c455d0e114c484957cb0b4f4118"
+  },
+  "variants": {
+    "source-baseline": {
+      "filename": "source-baseline.js.gz",
+      "entrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
+      "entryBytes": 5490930,
+      "compressedSha256": "685e934c3b115a4ebc7b0d802485502d43c70f493f32ec82dd01016c6041e327",
+      "compressedBytes": 993731,
+      "sourceInputCount": 933,
+      "sourceInputHash": "ff12e92b09edf713e247515513a54a4d98ef766ab71ecbf5b178bd879e150805",
+      "candidateSourceFiles": []
+    },
+    "via-reservation": {
+      "filename": "via-reservation.js.gz",
+      "entrySha256": "048ca5a403f8cec8271b90576f8fd7b48688795ea7b9128c1dc37c7f953a28fc",
+      "entryBytes": 5502012,
+      "compressedSha256": "b3c0f7822ee556564f5ba0f042ebcb6b998b2214ab741939fa42fcb79479c1a1",
+      "compressedBytes": 995756,
+      "sourceInputCount": 934,
+      "sourceInputHash": "b12578906c439013f7dcbd97369f91c9605d66880dd0afae43023c35bfe9d6f0",
+      "candidateSourceFiles": [
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts",
+          "sha256": "c6797151653ccbd667e94363317d6c9a79a144dd5d9080c877062fa3ccae67d9"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts",
+          "sha256": "b1676a0255df716f196125b79f81029c74fb114d404187cc26b0a4de8fe4a4ed"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+          "sha256": "016e7223deb054bcc9564dfed19add999ab4833c39ea446fb572651433d741fa"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+          "sha256": "7098bfa79a23c4845bb91240edd82a191480ddd494e1fee5e0f4289ae9f4e637"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/compat/loadSerializedHyperGraph.ts",
+          "sha256": "1d858e68a927318e12c819bf4e5c85972ba0e458afc03e1c6b3e79bb2a6c0fff"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/core.ts",
+          "sha256": "a20d2dbbaa0a872aacc7b2a7e0e9b4a92ef360cd0c865bbabfe62756d3cdfc04"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/prepared/DenseRoutingWorkspace.ts",
+          "sha256": "ef96880a2905d42ecff8f5c0c902f5549948d776591a0d25b26d17ca605c9cd9"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
+          "sha256": "3e5f070d890ead983a6b810a998344707ab627d41fd8f882757396d9c42c7055"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/section-solver/index.ts",
+          "sha256": "c825819d84e96648f46ebf347c0d56d758212d0c48be0fe60f0f9be5f48ea7c1"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "sha256": "2cb3e74090e62072788b49d9ae00b994f9ed6be1e3dd8bfbf89bd30fb6dbcbd1"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
+          "sha256": "19a9222a51252adbb901aca7171a8fc809703b24d3ac91383f2d84adc3abf4d3"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip/relaxedBlockerSearchTypes.ts",
+          "sha256": "2ef33d771022da99a973a2e472510a95948c04c5947f9bd093ae86015e207118"
+        }
+      ]
+    }
+  },
+  "frozenDependencyOverrides": [
+    {
+      "path": "node_modules/@tscircuit/trace-simplification-solver/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts",
+      "sha256": "0add3c79612da4e81d23484c1af91482440b1f9e1f69b03422c5edf54868e5bb"
+    },
+    {
+      "path": "node_modules/@tscircuit/repair04/lib/getFixedObstacleViolations.ts",
+      "sha256": "7145b92cf9f7f7fb0aa35369a462eab890c9592ac72e24ea7505a3948eda85a7"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/validation/isCandidateGeometryValid.ts",
+      "sha256": "71b18c355914a0278dcaf43527565684f2ee01545d496aad4ad3d21b31be1aee"
+    },
+    {
+      "path": "node_modules/@tscircuit/length-matching-solver/lib/length-matching/planning/selectPartialMeanderPlan.ts",
+      "sha256": "d88b4931bccb8b69b8fe362dce20cd024559109c91df561d5118ddcfacc64d37"
+    }
+  ],
+  "sourcePatches": {
+    "autorouter": {
+      "filename": "autorouter-source.patch",
+      "sha256": "2cdc504f90a0683562c83b395c171ae38bd8910777246409afcdecba5cb4249b",
+      "bytes": 8916,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    },
+    "tiny": {
+      "filename": "tiny-source.patch",
+      "sha256": "930df6d811cd24e420e5bed8e466e330ffe5005aa262a78a654894f82463a40f",
+      "bytes": 13872,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    }
+  },
+  "runtimeInputChanges": [
+    {
+      "path": "autorouter/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "beforeSha256": "75dbe4f280ce243da899793d35d732c5820d254b2d2c1830cbf253938ada059a",
+      "afterSha256": "7098bfa79a23c4845bb91240edd82a191480ddd494e1fee5e0f4289ae9f4e637"
+    },
+    {
+      "path": "autorouter/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+      "afterSha256": "016e7223deb054bcc9564dfed19add999ab4833c39ea446fb572651433d741fa"
+    },
+    {
+      "path": "autorouter/lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts",
+      "beforeSha256": null,
+      "afterSha256": "c6797151653ccbd667e94363317d6c9a79a144dd5d9080c877062fa3ccae67d9"
+    },
+    {
+      "path": "autorouter/lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts",
+      "beforeSha256": "b3772d2db01749f296180e7718e3a9016a2c02dbd534752d2bc4fb76468f3d7f",
+      "afterSha256": "b1676a0255df716f196125b79f81029c74fb114d404187cc26b0a4de8fe4a4ed"
+    },
+    {
+      "path": "tiny/lib/compat/loadSerializedHyperGraph.ts",
+      "beforeSha256": "83a771ae576ac98db9a11f78e6aa50ce06b291a245a40aaef9efd9b4b37b6d93",
+      "afterSha256": "1d858e68a927318e12c819bf4e5c85972ba0e458afc03e1c6b3e79bb2a6c0fff"
+    },
+    {
+      "path": "tiny/lib/core.ts",
+      "beforeSha256": "16de23a295391193c3122d03291636ad7edb5b87f9ecd1dbe60f33c66195b112",
+      "afterSha256": "a20d2dbbaa0a872aacc7b2a7e0e9b4a92ef360cd0c865bbabfe62756d3cdfc04"
+    },
+    {
+      "path": "tiny/lib/prepared/DenseRoutingWorkspace.ts",
+      "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+      "afterSha256": "ef96880a2905d42ecff8f5c0c902f5549948d776591a0d25b26d17ca605c9cd9"
+    },
+    {
+      "path": "tiny/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
+      "beforeSha256": "8d8391f89ac747869734c2f2c4ae5d6bd2996d60c08e3d04d4c1b5a4961cb7bf",
+      "afterSha256": "3e5f070d890ead983a6b810a998344707ab627d41fd8f882757396d9c42c7055"
+    },
+    {
+      "path": "tiny/lib/section-solver/index.ts",
+      "beforeSha256": "209f6638abbaec500f2d9e0188ffcfb1a86ec87c717f64b241543a2ae1919b38",
+      "afterSha256": "c825819d84e96648f46ebf347c0d56d758212d0c48be0fe60f0f9be5f48ea7c1"
+    },
+    {
+      "path": "tiny/lib/selective-rerip-tiny-hyper-graph-solver.ts",
+      "beforeSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
+      "afterSha256": "2cb3e74090e62072788b49d9ae00b994f9ed6be1e3dd8bfbf89bd30fb6dbcbd1"
+    },
+    {
+      "path": "tiny/lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
+      "beforeSha256": "ec052f55f7ae0502f0e9ee27b3e2d56b2e1da40cadb77bea97d1b1d3ec73c2d7",
+      "afterSha256": "19a9222a51252adbb901aca7171a8fc809703b24d3ac91383f2d84adc3abf4d3"
+    }
+  ]
+}

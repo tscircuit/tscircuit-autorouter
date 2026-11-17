@@ -1,0 +1,210 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+index 17246ea04..bc71153e9 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+@@ -17,0 +18 @@ import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointp
++import { getPreloadedTraceVias } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias"
+@@ -551,0 +553,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
++            preloadedTraceVias: getPreloadedTraceVias({
++              traces: cms.srjWithPointPairs!.traces ?? [],
++              layerCount: cms.srj.layerCount,
++              defaultViaDiameter: cms.viaDiameter,
++              allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
++            }),
+diff --git a/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts b/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
+index ea1be8851..7e0d0e8aa 100644
+--- a/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
++++ b/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
+@@ -41,0 +42 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
++import type { PreloadedTraceVia } from "./getPreloadedTraceVias"
+@@ -76,0 +78,4 @@ type TinyRouteConnection = ConnectionHgWithSimpleRouteConnection
++type TinyHypergraphPortPointPathingSolverParams =
++  HgPortPointPathingSolverParams & {
++    preloadedTraceVias?: PreloadedTraceVia[]
++  }
+@@ -78 +83 @@ type TinyHypergraphInput = Omit<
+-  HgPortPointPathingSolverParams,
++  TinyHypergraphPortPointPathingSolverParams,
+@@ -185,0 +191 @@ type TinyRegionMetadata = {
++  _assignableVia?: boolean
+@@ -415,0 +422 @@ const toSerializedRegionData = (
++    ...(regionMetadata._assignableVia && { _assignableVia: true }),
+@@ -640 +647,4 @@ const buildSerializedTinyGraph = (
+-  serializePreloadedTraceAssignments(serializedHyperGraph)
++  serializePreloadedTraceAssignments(
++    serializedHyperGraph,
++    params.preloadedTraceVias,
++  )
+@@ -1101 +1111 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+-  constructor(private params: HgPortPointPathingSolverParams) {
++  constructor(private params: TinyHypergraphPortPointPathingSolverParams) {
+diff --git a/lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts b/lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts
+index 3656d2fc5..5093ad5e5 100644
+--- a/lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts
++++ b/lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts
+@@ -3,0 +4 @@ import type { TraceId } from "lib/types"
++import type { PreloadedTraceVia } from "./getPreloadedTraceVias"
+@@ -47,0 +49,10 @@ type PreloadedAssignmentSegment = {
++type SerializedPhysicalViaReservation = {
++  connectionId: PreloadedTraceConnectionId
++  fromPortId: string
++  toPortId: string
++  center: { x: number; y: number }
++  diameter: number
++  z1: number
++  z2: number
++}
++
+@@ -149,0 +161,38 @@ const getEndpointRegionId = (
++const getRegionPreloadedTraceVias = ({
++  segment,
++  region,
++  vias,
++}: {
++  segment: PreloadedAssignmentSegment
++  region: SerializedRegion
++  vias: PreloadedTraceVia[]
++}): PreloadedTraceVia[] => {
++  const geometry = region.d
++  if (
++    !geometry?.center ||
++    !(geometry.width > 0) ||
++    !(geometry.height > 0) ||
++    geometry._containsObstacle ||
++    geometry._containsTarget ||
++    geometry._tinyTerminal ||
++    geometry._assignableVia ||
++    geometry._offBoardConnectionId ||
++    geometry.netId >= 0 ||
++    geometry.NetId >= 0
++  ) {
++    return []
++  }
++
++  // Boundary vias can belong to two cells. Only a via strictly inside one
++  // original trace interval establishes ownership of a physical conductor.
++  return vias.filter(
++    (via) =>
++      via.routePosition >
++        segment.from.assignment.routePosition + ROUTE_POSITION_TOLERANCE &&
++      via.routePosition <
++        segment.to.assignment.routePosition - ROUTE_POSITION_TOLERANCE &&
++      Math.abs(via.center.x - geometry.center.x) <= geometry.width / 2 &&
++      Math.abs(via.center.y - geometry.center.y) <= geometry.height / 2,
++  )
++}
++
+@@ -155,0 +205 @@ export const serializePreloadedTraceAssignments = (
++  preloadedTraceVias: PreloadedTraceVia[] = [],
+@@ -156,0 +207,11 @@ export const serializePreloadedTraceAssignments = (
++  const viasByTraceId = new Map<string, PreloadedTraceVia[]>()
++  const certifiedViasByRegion = new Map<
++    SerializedRegion,
++    Set<PreloadedTraceVia>
++  >()
++  const regionsWithUnassignedTransitions = new Set<SerializedRegion>()
++  for (const via of preloadedTraceVias) {
++    const traceVias = viasByTraceId.get(via.traceId) ?? []
++    traceVias.push(via)
++    viasByTraceId.set(via.traceId, traceVias)
++  }
+@@ -313,0 +375,31 @@ export const serializePreloadedTraceAssignments = (
++        const regionVias = getRegionPreloadedTraceVias({
++          segment,
++          region,
++          vias: viasByTraceId.get(traceId) ?? [],
++        })
++        if (
++          segment.from.assignment.z !== segment.to.assignment.z &&
++          regionVias.length === 0
++        ) {
++          regionsWithUnassignedTransitions.add(region)
++        }
++        if (regionVias.length > 0) {
++          const certifiedVias =
++            certifiedViasByRegion.get(region) ?? new Set<PreloadedTraceVia>()
++          for (const via of regionVias) certifiedVias.add(via)
++          certifiedViasByRegion.set(region, certifiedVias)
++          const physicalViaReservations: SerializedPhysicalViaReservation[] =
++            regionVias.map((via) => ({
++              connectionId,
++              fromPortId: segment.from.port.portId,
++              toPortId: segment.to.port.portId,
++              center: { ...via.center },
++              diameter: via.diameter,
++              z1: via.z1,
++              z2: via.z2,
++            }))
++          region.d.physicalViaReservations = [
++            ...(region.d.physicalViaReservations ?? []),
++            ...physicalViaReservations,
++          ]
++        }
+@@ -362,0 +455,20 @@ export const serializePreloadedTraceAssignments = (
++  for (const [region, certifiedVias] of certifiedViasByRegion) {
++    const geometry = region.d
++    const hasUnassignedPhysicalVia = preloadedTraceVias.some(
++      (via) =>
++        Math.abs(via.center.x - geometry.center.x) <=
++          geometry.width / 2 + TRACE_POINT_TOLERANCE_MM &&
++        Math.abs(via.center.y - geometry.center.y) <=
++          geometry.height / 2 + TRACE_POINT_TOLERANCE_MM &&
++        !certifiedVias.has(via),
++    )
++    // Tiny may reserve space only when every existing via in the cell has
++    // an original owner. An omitted boundary via must not look like free space.
++    if (
++      hasUnassignedPhysicalVia ||
++      regionsWithUnassignedTransitions.has(region)
++    ) {
++      delete region.d.physicalViaReservations
++    }
++  }
++
+diff --git a/lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts b/lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts
+new file mode 100644
+index 000000000..a4c310379
+--- /dev/null
++++ b/lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts
+@@ -0,0 +1,41 @@
++import type { SimplifiedPcbTrace } from "lib/types"
++
++export type PreloadedTraceVia = {
++  traceId: string
++  routePosition: number
++  center: { x: number; y: number }
++  diameter: number
++  z1: number
++  z2: number
++}
++
++export const getPreloadedTraceVias = ({
++  traces,
++  layerCount,
++  defaultViaDiameter,
++  allowBlindAndBuriedVias,
++}: {
++  traces: SimplifiedPcbTrace[]
++  layerCount: number
++  defaultViaDiameter: number
++  allowBlindAndBuriedVias?: boolean
++}): PreloadedTraceVia[] => {
++  // This allocation certificate applies to through vias. Blind/buried boards
++  // can use existing conductors with different physical layer spans.
++  if (allowBlindAndBuriedVias === true) return []
++  const vias: PreloadedTraceVia[] = []
++  for (const trace of traces) {
++    for (const [routePosition, point] of trace.route.entries()) {
++      if (point.route_type !== "via") continue
++      vias.push({
++        traceId: trace.pcb_trace_id,
++        routePosition,
++        center: { x: point.x, y: point.y },
++        diameter: point.via_diameter ?? defaultViaDiameter,
++        z1: 0,
++        z2: layerCount - 1,
++      })
++    }
++  }
++  return vias
++}

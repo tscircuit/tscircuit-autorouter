@@ -1,8 +1,8 @@
-name: Published3207 isolated native VREF region replay
+name: Frozen3207 native physical-via allocation replay
 
 on:
   push:
-    branches: [bench/full-board-hd-phase-replay-3207]
+    branches: [bench/full-board-via-reservation-3207]
 
 permissions:
   contents: read
@@ -15,9 +15,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 2
       matrix:
-        variant: [target-regional-expansion]
+        variant: [source-baseline, via-reservation]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
@@ -98,7 +98,7 @@ jobs:
             .full-board-run/phase-results
             .full-board-run/phase-replay-runtime.json
             .full-board-run/runtime-manifest.json
-            experiments/full-board-ten/regional-expansion-anchor.json
+            experiments/full-board-ten/source-bundles/manifest.json
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7

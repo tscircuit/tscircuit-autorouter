@@ -1,0 +1,327 @@
+diff --git a/lib/compat/loadSerializedHyperGraph.ts b/lib/compat/loadSerializedHyperGraph.ts
+index afcafc7..2bfb1a7 100644
+--- a/lib/compat/loadSerializedHyperGraph.ts
++++ b/lib/compat/loadSerializedHyperGraph.ts
+@@ -2,0 +3 @@ import type {
++  PhysicalViaReservation,
+@@ -8,0 +10,10 @@ import { getAvailableZFromMask, getZLayerLabel } from "../layerLabels"
++type SerializedPhysicalViaReservation = {
++  connectionId: string
++  fromPortId: string
++  toPortId: string
++  center: { x: number; y: number }
++  diameter: number
++  z1: number
++  z2: number
++}
++
+@@ -604,0 +616,52 @@ export const loadSerializedHyperGraph = (
++  const physicalViaReservationsByRegion = filteredHyperGraph.regions.map(
++    (region, regionIndex): PhysicalViaReservation[] | undefined => {
++      const reservations: SerializedPhysicalViaReservation[] | undefined =
++        region.d?.physicalViaReservations
++      if (reservations === undefined) return undefined
++      if (!Array.isArray(reservations)) {
++        throw new Error(
++          `Region "${region.regionId}" has invalid physical via reservations`,
++        )
++      }
++      return reservations.map((reservation): PhysicalViaReservation => {
++        const routeId = routeIndexByConnectionId.get(reservation.connectionId)
++        const fromPortId = portIdToIndex.get(reservation.fromPortId)
++        const toPortId = portIdToIndex.get(reservation.toPortId)
++        if (
++          routeId === undefined ||
++          fromPortId === undefined ||
++          toPortId === undefined ||
++          !regionIncidentPorts[regionIndex]!.includes(fromPortId) ||
++          !regionIncidentPorts[regionIndex]!.includes(toPortId)
++        ) {
++          throw new Error(
++            `Region "${region.regionId}" physical via references an unknown original assignment`,
++          )
++        }
++        if (
++          !Number.isFinite(reservation.center?.x) ||
++          !Number.isFinite(reservation.center?.y) ||
++          !Number.isFinite(reservation.diameter) ||
++          reservation.diameter <= 0 ||
++          !Number.isInteger(reservation.z1) ||
++          !Number.isInteger(reservation.z2) ||
++          reservation.z1 < 0 ||
++          reservation.z2 <= reservation.z1
++        ) {
++          throw new Error(
++            `Region "${region.regionId}" has invalid physical via geometry`,
++          )
++        }
++        return {
++          routeId,
++          fromPortId,
++          toPortId,
++          center: reservation.center,
++          diameter: reservation.diameter,
++          z1: reservation.z1,
++          z2: reservation.z2,
++        }
++      })
++    },
++  )
++
+@@ -620,0 +684,3 @@ export const loadSerializedHyperGraph = (
++    ...(physicalViaReservationsByRegion.some(
++      (reservations) => reservations?.length,
++    ) && { physicalViaReservationsByRegion }),
+diff --git a/lib/core.ts b/lib/core.ts
+index e1b07ea..cda79a6 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -134,0 +135,10 @@ export interface TinyHyperGraphTopology {
++export interface PhysicalViaReservation {
++  routeId: RouteId
++  fromPortId: PortId
++  toPortId: PortId
++  center: { x: number; y: number }
++  diameter: number
++  z1: number
++  z2: number
++}
++
+@@ -167,0 +178,7 @@ export interface TinyHyperGraphProblem {
++  /**
++   * Complete original via assignments for ordinary physical regions, independent
++   * of later optimizer seeds. Omit regions with ambiguous conductor ownership.
++   * Their sites stay allocated until the original tuple is removed. This is
++   * conservative when another part of the same preload section changes.
++   */
++  physicalViaReservationsByRegion?: Array<PhysicalViaReservation[] | undefined>
+@@ -540,0 +558,5 @@ export class TinyHyperGraphSolver extends BaseSolver {
++  private physicalViaReservationDiameter = -1
++  private readonly coveredPhysicalViasByRegion = new Map<
++    RegionId,
++    PhysicalViaReservation[]
++  >()
+@@ -895,0 +918,13 @@ export class TinyHyperGraphSolver extends BaseSolver {
++      if (
++        problem.physicalViaReservationsByRegion?.[
++          currentCandidate.nextRegionId
++        ]?.length &&
++        this.getPhysicalViaBlockerRouteIds({
++          regionId: currentCandidate.nextRegionId,
++          fromPortId: currentCandidate.portId,
++          toPortId: neighborPortId,
++          routeId: state.currentRouteId!,
++        }).length > 0
++      ) {
++        continue
++      }
+@@ -1048,0 +1084,13 @@ export class TinyHyperGraphSolver extends BaseSolver {
++      if (
++        problem.physicalViaReservationsByRegion?.[
++          currentCandidate.nextRegionId
++        ]?.length &&
++        this.getPhysicalViaBlockerRouteIds({
++          regionId: currentCandidate.nextRegionId,
++          fromPortId: currentCandidate.portId,
++          toPortId: neighborPortId,
++          routeId: state.currentRouteId!,
++        }).length > 0
++      ) {
++        continue
++      }
+@@ -1977,0 +2026,92 @@ export class TinyHyperGraphSolver extends BaseSolver {
++  getPhysicalViaBlockerRouteIds(params: {
++    regionId: RegionId
++    fromPortId: PortId
++    toPortId: PortId
++    routeId: RouteId
++  }): RouteId[] {
++    const reservations = this.problem.physicalViaReservationsByRegion
++    if (!reservations?.[params.regionId]) return []
++    if (this.physicalViaReservationDiameter !== this.minViaPadDiameter) {
++      this.coveredPhysicalViasByRegion.clear()
++      for (let regionId = 0; regionId < reservations.length; regionId++) {
++        const regionReservations = reservations[regionId]
++        if (!regionReservations?.length) continue
++        // A cell with several existing physical nets can contain valid vias
++        // smaller than the requested new diameter. Leave those cells alone.
++        const physicalNetId =
++          this.problem.routeNet[regionReservations[0]!.routeId]
++        if (
++          regionReservations.some(
++            ({ routeId }) => this.problem.routeNet[routeId] !== physicalNetId,
++          )
++        ) {
++          continue
++        }
++        const covered = regionReservations.filter((reservation) => {
++          const dx =
++            Math.abs(
++              this.topology.regionCenterX[regionId]! - reservation.center.x,
++            ) + this.topology.regionWidth[regionId]! / 2
++          const dy =
++            Math.abs(
++              this.topology.regionCenterY[regionId]! - reservation.center.y,
++            ) + this.topology.regionHeight[regionId]! / 2
++          const radii = (reservation.diameter + this.minViaPadDiameter) / 2
++          return dx * dx + dy * dy < radii * radii
++        })
++        if (covered.length > 0) {
++          this.coveredPhysicalViasByRegion.set(regionId, covered)
++        }
++      }
++      this.physicalViaReservationDiameter = this.minViaPadDiameter
++    }
++
++    const owners = new Set<RouteId>()
++    const { regionId, fromPortId, toPortId, routeId } = params
++    const fromZ = this.topology.portZ[fromPortId]!
++    const toZ = this.topology.portZ[toPortId]!
++    const netId = this.problem.routeNet[routeId]!
++    for (const reservation of this.coveredPhysicalViasByRegion.get(regionId) ??
++      []) {
++      const restoresOriginalVia =
++        routeId === reservation.routeId &&
++        ((fromPortId === reservation.fromPortId &&
++          toPortId === reservation.toPortId) ||
++          (fromPortId === reservation.toPortId &&
++            toPortId === reservation.fromPortId))
++      if (restoresOriginalVia) {
++        // Restoring an original tuple also restores its allocation. Otherwise
++        // rip, route a foreign via, then restore could recreate the conflict.
++        for (const [ownerRouteId, ownerFromPortId, ownerToPortId] of this.state
++          .regionSegments[regionId]!) {
++          const ownerFromZ = this.topology.portZ[ownerFromPortId]!
++          const ownerToZ = this.topology.portZ[ownerToPortId]!
++          if (
++            this.problem.routeNet[ownerRouteId] !== netId &&
++            ownerFromZ !== ownerToZ &&
++            Math.min(ownerFromZ, ownerToZ) <= reservation.z2 &&
++            Math.max(ownerFromZ, ownerToZ) >= reservation.z1
++          ) {
++            owners.add(ownerRouteId)
++          }
++        }
++      } else if (
++        this.problem.routeNet[reservation.routeId] !== netId &&
++        fromZ !== toZ &&
++        Math.min(fromZ, toZ) <= reservation.z2 &&
++        Math.max(fromZ, toZ) >= reservation.z1 &&
++        this.state.regionSegments[regionId]!.some(
++          ([ownerRouteId, ownerFromPortId, ownerToPortId]) =>
++            ownerRouteId === reservation.routeId &&
++            ((ownerFromPortId === reservation.fromPortId &&
++              ownerToPortId === reservation.toPortId) ||
++              (ownerFromPortId === reservation.toPortId &&
++                ownerToPortId === reservation.fromPortId)),
++        )
++      ) {
++        owners.add(reservation.routeId)
++      }
++    }
++    return [...owners]
++  }
++
+@@ -1986,0 +2127,11 @@ export class TinyHyperGraphSolver extends BaseSolver {
++    if (
++      this.problem.physicalViaReservationsByRegion?.[nextRegionId]?.length &&
++      this.getPhysicalViaBlockerRouteIds({
++        regionId: nextRegionId,
++        fromPortId: currentCandidate.portId,
++        toPortId: neighborPortId,
++        routeId: state.currentRouteId!,
++      }).length > 0
++    ) {
++      return Number.POSITIVE_INFINITY
++    }
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index b13339a..12cfe8b 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -183,0 +184,11 @@ export class DenseRoutingWorkspace {
++      if (
++        p.physicalViaReservationsByRegion?.[region]?.length &&
++        solver.getPhysicalViaBlockerRouteIds({
++          regionId: region,
++          fromPortId: c.portId,
++          toPortId: port,
++          routeId: state.currentRouteId!,
++        }).length > 0
++      ) {
++        continue
++      }
+diff --git a/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts b/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts
+index 1f9140d..7b2c244 100644
+--- a/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts
++++ b/lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts
+@@ -125,0 +126 @@ const createProblemWithPortSectionMask = (
++  physicalViaReservationsByRegion: problem.physicalViaReservationsByRegion,
+diff --git a/lib/section-solver/index.ts b/lib/section-solver/index.ts
+index 926b864..5ea60d3 100644
+--- a/lib/section-solver/index.ts
++++ b/lib/section-solver/index.ts
+@@ -568,0 +569 @@ const createSectionRoutePlans = (
++      physicalViaReservationsByRegion: problem.physicalViaReservationsByRegion,
+diff --git a/lib/selective-rerip-tiny-hyper-graph-solver.ts b/lib/selective-rerip-tiny-hyper-graph-solver.ts
+index 494f5ff..ae14d02 100644
+--- a/lib/selective-rerip-tiny-hyper-graph-solver.ts
++++ b/lib/selective-rerip-tiny-hyper-graph-solver.ts
+@@ -591,2 +591,2 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
+-    // In multilayer regions, reservations and blocker resources depend only
+-    // on the destination. Share their immutable metadata across incoming hops;
++    // Without physical via allocations, multilayer blocker resources depend
++    // only on the destination. Share that metadata across incoming hops;
+@@ -596 +596,2 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
+-      !this.isKnownSingleLayerRegion(state.nextRegionId)
++      !this.isKnownSingleLayerRegion(state.nextRegionId) &&
++      !this.problem.physicalViaReservationsByRegion?.[state.nextRegionId]?.length
+@@ -726,0 +728,18 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
++    if (this.problem.physicalViaReservationsByRegion?.[params.regionId]?.length) {
++      const physicalViaOwners = this.getPhysicalViaBlockerRouteIds({
++        regionId: params.regionId,
++        fromPortId: params.fromPortId,
++        toPortId: params.toPortId,
++        routeId: this.state.currentRouteId!,
++      })
++      if (physicalViaOwners.length > 0) {
++        resources.push({
++          kind: "physical_via",
++          regionId: params.regionId,
++          fromPortId: params.fromPortId,
++          toPortId: params.toPortId,
++          owners: physicalViaOwners,
++        })
++      }
++    }
++
+diff --git a/lib/selective-rerip/inspectRelaxedBlockerReachability.ts b/lib/selective-rerip/inspectRelaxedBlockerReachability.ts
+index d9c442d..eb12d5e 100644
+--- a/lib/selective-rerip/inspectRelaxedBlockerReachability.ts
++++ b/lib/selective-rerip/inspectRelaxedBlockerReachability.ts
+@@ -72,2 +72,6 @@ function expandReachabilityState(
+-  const singleLayer = solver.isKnownSingleLayerRegion(state.nextRegionId)
+-  if (!singleLayer) {
++  const entryDependent =
++    solver.isKnownSingleLayerRegion(state.nextRegionId) ||
++    Boolean(
++      solver.problem.physicalViaReservationsByRegion?.[state.nextRegionId]?.length,
++    )
++  if (!entryDependent) {
+@@ -76 +80 @@ function expandReachabilityState(
+-    // better owner-free classification. Single-layer crossings depend on entry.
++    // better owner-free classification. Crossings and via allocations depend on entry.
+@@ -85 +89 @@ function expandReachabilityState(
+-  if (singleLayer) {
++  if (entryDependent) {
+diff --git a/lib/selective-rerip/relaxedBlockerSearchTypes.ts b/lib/selective-rerip/relaxedBlockerSearchTypes.ts
+index ea4f6df..29d9664 100644
+--- a/lib/selective-rerip/relaxedBlockerSearchTypes.ts
++++ b/lib/selective-rerip/relaxedBlockerSearchTypes.ts
+@@ -14,2 +14,2 @@ export type PortBlockerResource = {
+-type SameLayerIntersectionBlockerResource = {
+-  kind: "same_layer_intersection"
++type RegionalBlockerResource = {
++  kind: "same_layer_intersection" | "physical_via"
+@@ -24 +24 @@ export type SelectiveReripBlockerResource =
+-  | SameLayerIntersectionBlockerResource
++  | RegionalBlockerResource

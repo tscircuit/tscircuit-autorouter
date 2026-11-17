@@ -5,6 +5,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHighDensityPhaseObserver } from "./createHighDensityPhaseObserver"
+import { createViaReservationObserver } from "./createViaReservationObserver"
 
 const [runtimePath, output] = process.argv.slice(2)
 assert(runtimePath && output, "Usage: run-phase-replay.ts RUNTIME.json OUTPUT")
@@ -66,6 +67,7 @@ const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
 })
 assert.equal(typeof pipeline.stepAsync, "undefined", "Core stepping contract changed")
 const observer = createHighDensityPhaseObserver({})
+const viaObserver = createViaReservationObserver()
 const started = performance.now()
 let lastFlush = started
 let timedOut = false
@@ -73,6 +75,7 @@ let thrownError: string | null = null
 let outputSummary: Record<string, unknown> | null = null
 const checkpoint = (): void => {
   atomicJson("phase-observation.json", observer.getReport())
+  atomicJson("via-reservation-observation.json", viaObserver.getReport())
   atomicJson("progress.json", {
     variant: runtime.variant, elapsedMs: performance.now() - started,
     solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
@@ -81,11 +84,13 @@ const checkpoint = (): void => {
 }
 try {
   observer.afterPipelineStep(pipeline)
+  viaObserver.afterPipelineStep(pipeline)
   while (!pipeline.solved && !pipeline.failed) {
     const batchStarted = performance.now()
     do {
       pipeline.step()
       observer.afterPipelineStep(pipeline)
+      viaObserver.afterPipelineStep(pipeline)
       if (performance.now() - started >= 900000) { timedOut = true; break }
     } while (!pipeline.solved && !pipeline.failed && performance.now() - batchStarted < 250)
     if (performance.now() - lastFlush >= 10000) {
@@ -123,16 +128,28 @@ const nativeTinyRolesReproduced = tinySegments.length === 3 && vrefSegments.leng
     segment.numericNet === vrefSegments[0].numericNet && segment.fromZ === 3 && segment.toZ === 0 && segment.routeIsFixed === 0) &&
   preloadSegments[0].numericNet !== vrefSegments[0].numericNet && preloadSegments[0].fromZ === 1 && preloadSegments[0].toZ === 0 &&
   preloadSegments[0].routeIsFixed === 0
+const viaObservation = viaObserver.getReport()
+const originalVia = viaObservation.originalSerialized?.nativeVias?.[0]
+const activeNativeReservation = viaObservation.firstNumeric?.targetReservations?.find((reservation: any) =>
+  reservation.metadata.preloadedTraceSection?.traceId === "source_net_20_0" &&
+  Math.abs(reservation.center.x - 21.33) < 1e-9 &&
+  Math.abs(reservation.center.y - 18.186797048414103) < 1e-9 &&
+  reservation.diameter === 0.45 && reservation.z1 === 0 && reservation.z2 === 3)
+const nativeReservationActivated = viaObservation.originalSerialized?.rawViaCount === 92 &&
+  viaObservation.originalSerialized?.nativeVias?.length === 1 && originalVia?.routePosition === 55 &&
+  viaObservation.originalSerialized?.targetReservations?.length === 1 && Boolean(activeNativeReservation)
 const result = {
   ...runtime, elapsedMs: performance.now() - started,
   solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
   iterations: pipeline.iterations, timedOut, thrownError, outputSummary, wasmUsage,
   nativeFailureReproduced: pipeline.failed && String(pipeline.error).includes("topology_merge_17108"),
-  nativeTinyRolesReproduced,
-  diagnosticObservationValid: observation.observationErrors.length === 0 && Boolean(observation.queue) && nativeTinyRolesReproduced,
+  nativeTinyRolesReproduced, nativeReservationActivated,
+  diagnosticObservationValid: observation.observationErrors.length === 0 && viaObserver.getReport().observationErrors.length === 0 &&
+    Boolean(viaObserver.getReport().originalSerialized) && Boolean(viaObserver.getReport().firstNumeric) &&
+    (runtime.variant === "via-reservation" ? nativeReservationActivated : (Boolean(observation.queue) && nativeTinyRolesReproduced)),
   interpretation: "Phase diagnostic only. Compare baseline constructor, target Tiny state and failure with the full native run before using candidate node history. No full-board connectivity gain is measured here.",
 }
 atomicJson("result.json", result)
 console.log(`HD_PHASE_RESULT ${JSON.stringify({ variant: runtime.variant, solved: result.solved, failed: result.failed, error: result.error, timedOut, thrownError, nativeFailureReproduced: result.nativeFailureReproduced, elapsedMs: result.elapsedMs })}`)
 if (timedOut || thrownError || wasmUsage.routingOrUnknownAttempts > 0 || !result.diagnosticObservationValid ||
-    (runtime.variant === "published" && !result.nativeFailureReproduced)) process.exitCode = 1
+    (runtime.variant === "source-baseline" && !result.nativeFailureReproduced)) process.exitCode = 1
