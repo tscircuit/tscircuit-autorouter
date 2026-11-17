@@ -7,6 +7,9 @@ const [caseFile, outputArg, executionMode = "full"] = process.argv.slice(2)
 if (!caseFile || !outputArg) throw new Error("Usage: run-one.ts CASE.json OUTPUT")
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
 const task = JSON.parse(readFileSync(caseFile, "utf8"))
+const captureDeadlineMs = task.captureDeadlineMs ?? 900000
+const hardDeadlineMs = task.hardDeadlineMs ?? 960000
+if (![900000, 1800000].includes(captureDeadlineMs) || hardDeadlineMs !== captureDeadlineMs + 60000 || task.assessmentDeadlineMs !== 180000) throw new Error("Unexpected external capture deadlines")
 const output = resolve(outputArg)
 mkdirSync(output, { recursive: true })
 const environment = { ...process.env }
@@ -22,7 +25,7 @@ const sample = setInterval((): void => {
     if (match) peakRssKb = Math.max(peakRssKb, Number(match[1]))
   } catch (error: any) { if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error }
 }, 1000)
-const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, 960000)
+const watchdog = setTimeout((): void => { hardTimedOut = true; worker.kill("SIGKILL") }, hardDeadlineMs)
 const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
@@ -42,7 +45,7 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", measurement: task.measurement ?? task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs, hardDeadlineMs, assessmentDeadlineMs: 180000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 let auditExitCode: number | null = null, auditTimedOut = false

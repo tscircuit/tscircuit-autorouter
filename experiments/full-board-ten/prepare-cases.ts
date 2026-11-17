@@ -10,6 +10,9 @@ const originalRoot = resolve(originalArg), spacedRoot = resolve(spacedArg), outp
 const manifestPath = process.env.FULL_BOARD_RUNTIME_MANIFEST
 if (!manifestPath) throw new Error("FULL_BOARD_RUNTIME_MANIFEST must name the verified compatible published package chain")
 const runtimeManifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+const captureDeadlineMs = Number(process.env.FULL_BOARD_CAPTURE_SECONDS ?? "900") * 1000
+const hardDeadlineMs = Number(process.env.FULL_BOARD_HARD_SECONDS ?? String(captureDeadlineMs / 1000 + 60)) * 1000
+if (![900000, 1800000].includes(captureDeadlineMs) || hardDeadlineMs !== captureDeadlineMs + 60000) throw new Error("Allowed external deadlines are 900/960 or 1800/1860 seconds")
 const digest = (value: Uint8Array): string => createHash("sha256").update(value).digest("hex")
 mkdirSync(output, { recursive: true })
 if (!existsSync(join(output, "node_modules"))) symlinkSync(realpathSync(join(import.meta.dir, "node_modules")), join(output, "node_modules"))
@@ -51,6 +54,7 @@ for (const id of onlyId ? [onlyId] : knownIds) for (const cohort of ["original",
   const task = {
     id, cohort, mode: "phased", fanout: false, planes: cohort === "original",
     experiment: runtimeManifest.experiment ?? "published",
+    measurement: process.env.FULL_BOARD_MEASUREMENT ?? runtimeManifest.experiment ?? "published",
     dependencyOverrides: runtimeManifest.dependencyOverrides ?? [],
     sourcePath, sourceSha256: digest(bytes), boardModule, layoutModule,
     implementationFiles: implementation.map(path => ({ path, sha256: digest(readFileSync(path)) })),
@@ -64,7 +68,7 @@ for (const id of onlyId ? [onlyId] : knownIds) for (const cohort of ["original",
     assessmentCopperModule: cohort === "original" ? bridge : undefined,
     assessmentHelperProof: cohort === "original" ? join(output, "assessment-helper-proof.json") : undefined,
     runtimeRoot: import.meta.dir, runtimeManifestPath: resolve(manifestPath),
-    captureDeadlineMs: 900000, hardDeadlineMs: 960000, assessmentDeadlineMs: 180000,
+    captureDeadlineMs, hardDeadlineMs, assessmentDeadlineMs: 180000,
   }
   const caseFile = join(output, `${id}-${cohort}.json`)
   writeFileSync(caseFile, JSON.stringify(task, null, 2))

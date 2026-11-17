@@ -18,7 +18,7 @@ for cohort in cohorts:
     if path.exists():
         result = json.loads(path.read_text())
         record = {key: result[key] for key in [
-            "id", "cohort", "status", "completeAndClean", "renderExitCode",
+            "id", "cohort", "measurement", "captureDeadlineMs", "hardDeadlineMs", "status", "completeAndClean", "renderExitCode",
             "hardTimedOut", "renderWallMs", "peakRssMiB", "auditExitCode",
             "auditTimedOut", "assessmentReady", "renderSettled", "phasesCompleted",
             "completeSourceCounts", "requestedRoutableNets", "connectedNets",
@@ -49,14 +49,15 @@ for cohort in cohorts:
     escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
     print(f"FULL_BOARD_RESULT {message}")
     print(f"::notice title=Full-board {board} {cohort}::{escaped}")
-summary = {"board": board, "experiment": experiment, "cases": records, "allClean": all(record["completeAndClean"] for record in records)}
+measurement = os.environ.get("FULL_BOARD_MEASUREMENT", experiment)
+summary = {"board": board, "experiment": experiment, "measurement": measurement, "cases": records, "allClean": all(record["completeAndClean"] for record in records)}
 destination = root / "results" / board
 destination.mkdir(parents=True, exist_ok=True)
 (destination / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
     output.write("all_clean=" + str(summary["allClean"]).lower() + "\n")
 with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as output:
-    output.write(f"### {board}: {experiment} full-board cases\n\n")
+    output.write(f"### {board}: {measurement} full-board cases\n\n")
     output.write("| Cohort | Status | Connected/requested | Listed findings | Shared DRC | Last phase |\n|---|---|---|---|---|---|\n")
     for record in records:
         phase = record.get("lastPhase")
