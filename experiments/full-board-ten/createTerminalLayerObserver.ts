@@ -65,7 +65,7 @@ export function createTerminalLayerObserver(pipeline: RuntimeObject): {
     restorations.push((): void => { definition.getConstructorParams = original })
   }
   const registerSingle = (single: RuntimeObject | null): Observation | undefined => {
-    if (!single || single.mergedHdRoute.connectionName !== targetConnection) return undefined
+    if (!single || single.mergedHdRoute?.connectionName !== targetConnection) return undefined
     let attempt = attempts.get(single)
     if (!attempt) {
       attempt = {

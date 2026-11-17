@@ -13,8 +13,8 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 14613,
+      "sha256": "430f3e3987de62dae301e2bac6d7742883fc70f92777f76ebd5c5918d1606ca2"
     },
     {
       "name": "run-one.ts",
@@ -40,7 +40,34 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "createTerminalLayerObserver.ts",
+      "bytes": 7548,
+      "sha256": "b3a6d9b28d7900bb4ad45ae0e049858e93961c8bd45530e45271c9539945c78d"
+    },
+    {
+      "name": "run-terminal-layer-witness.ts",
+      "bytes": 14927,
+      "sha256": "633b02450b53f53c195b332f30dc338c3a8baf830b6b6783fbdf1faf67c45689"
+    },
+    {
+      "name": "prepare-stitch-candidate.ts",
+      "bytes": 6456,
+      "sha256": "bfa17586870f32ff59c022aff0caea52ea5446df8d9171c0b3c1e4fa240bb50d"
+    },
+    {
+      "name": "splitDisconnectedRoutesAtIntersections.ts",
+      "bytes": 7015,
+      "sha256": "508d3025b4a154d0e4cc69aac4695937ac78a6845e6613a7aaaad4a1ab72d1d9"
+    },
+    {
+      "name": "stitch-candidate-plan.json",
+      "bytes": 2980,
+      "sha256": "6f046029b984e921e5c29b9102b5895fa21448730b3b86aa1a00b885c17407a9"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
+  "experiment": "existing-planar-junctions",
+  "candidateOverlay": "Exact declared autorouter entry overlay; renderer changes only metadata to accurately report source override"
 }

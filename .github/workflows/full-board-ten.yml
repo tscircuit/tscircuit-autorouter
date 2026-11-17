@@ -1,8 +1,8 @@
-name: Published3209 native ICE terminal-layer witness
+name: Published3209 ICE existing-junction candidate
 
 on:
   push:
-    branches: [bench/icepi-terminal-layer-witness-3209]
+    branches: [bench/icepi-existing-junctions-phase-3209]
 
 permissions:
   contents: read
@@ -10,9 +10,11 @@ permissions:
 
 jobs:
   replay:
-    name: Published ICE plane_escape witness
+    name: Candidate complete native ICE plane_escape
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 30
+    outputs:
+      qualified: ${{ steps.qualify.outputs.qualified }}
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
@@ -74,7 +76,12 @@ jobs:
           python3 experiments/full-board-ten/prepare-terminal-layer-witness.py
           "$FULL_BOARD_ROOT"
 
-      - name: Observe only the native plane_escape phase
+      - name: Apply the reviewed byte-exact stitch candidate
+        run: >-
+          bun experiments/full-board-ten/prepare-stitch-candidate.ts
+          "$FULL_BOARD_ROOT"
+
+      - name: Qualify the complete native plane_escape phase
         id: replay
         continue-on-error: true
         run: >-
@@ -88,16 +95,147 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: terminal-witness-icepi-published-${{ github.run_attempt }}
+          name: existing-junctions-icepi-native-phase-${{ github.run_attempt }}
           path: |
             .full-board-run/phase-results
             .full-board-run/terminal-witness-runtime.json
             .full-board-run/runtime-manifest.json
+            .full-board-run/published-runtime-manifest.json
+            .full-board-run/stitch-overlay-proof.json
+            experiments/full-board-ten/stitch-candidate-plan.json
             experiments/full-board-ten/terminal-witness-plan.json
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Require a valid diagnostic observation
+      - name: Require the complete native phase to qualify
+        id: qualify
         if: always()
-        run: test "${{ steps.replay.outcome }}" = success
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          result = json.loads((Path(os.environ["FULL_BOARD_ROOT"]) / "phase-results/result.json").read_text())
+          assert result["nativePhaseQualified"], result.get("error")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("qualified=true\n")
+          PYCODE
+          test "${{ steps.replay.outcome }}" = success
+
+  full-board:
+    name: Candidate original ICE full Core render (held for phase review)
+    needs: replay
+    if: ${{ false && needs.replay.outputs.qualified == 'true' }}
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - name: Checkout diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            AGENTS.md
+
+      - name: Checkout immutable original sources for runtime provenance
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced sources for runtime provenance
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged frozen package runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Download the authenticated native phase source artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44049457297
+          artifact-ids: 14313970220
+          github-token: ${{ github.token }}
+          path: .full-board-run/native-artifact
+          merge-multiple: true
+
+      - name: Verify authenticated input and unchanged published entry
+        run: >-
+          python3 experiments/full-board-ten/prepare-terminal-layer-witness.py
+          "$FULL_BOARD_ROOT"
+
+      - name: Apply the reviewed byte-exact stitch candidate
+        run: >-
+          bun experiments/full-board-ten/prepare-stitch-candidate.ts
+          "$FULL_BOARD_ROOT"
+
+
+      - name: Prepare unchanged authentic Core board and assessors
+        env:
+          FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/cases" icepi
+
+      - name: Run original ICE end to end with unchanged capture and assessment limits
+        id: board
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/icepi-original.json"
+          "$FULL_BOARD_ROOT/board-results"
+
+      - name: Preserve physical results, native circuit and before/after provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: existing-junctions-icepi-original-full-${{ github.run_attempt }}
+          path: |
+            .full-board-run/board-results
+            .full-board-run/cases/icepi-original.json
+            .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/published-runtime-manifest.json
+            .full-board-run/stitch-overlay-proof.json
+            experiments/full-board-ten/stitch-candidate-plan.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Require a usable physical assessment
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          result = json.loads((Path(os.environ["FULL_BOARD_ROOT"]) / "board-results/result.json").read_text())
+          assert result["assessmentReady"] and result["completeSourceCounts"] and result["routingPolicyObserved"]
+          PYCODE
+          test "${{ steps.board.outcome }}" = success
