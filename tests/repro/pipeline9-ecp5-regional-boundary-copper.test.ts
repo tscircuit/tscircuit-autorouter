@@ -8,15 +8,11 @@ import {
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import { spliceFixedRouteSection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getEcp5BoundaryCopperPcbSvg } from "tests/fixtures/getEcp5BoundaryCopperPcbSvg"
 import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
-
-type FixedRouteConnectionName = string
 
 type RegionalBoundaryFixture = {
   params: Omit<
@@ -28,7 +24,7 @@ type RegionalBoundaryFixture = {
   circuitJson: AnyCircuitElement[]
 }
 
-test("captures the ECP5 regional repair losing tangent RAM_A13 copper", async (): Promise<void> => {
+test("routes the ECP5 region while retaining tangent RAM_A13 copper", async (): Promise<void> => {
   // Captured from the full TSX board's ordinary-signal phase after DDR routing.
   const fixture = JSON.parse(
     gunzipSync(
@@ -50,37 +46,27 @@ test("captures the ECP5 regional repair losing tangent RAM_A13 copper", async ()
 
   solver.solve()
 
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toBe(
-    "Pipeline9 promoted regional fallback could not resolve immutable fixed route conflict(s): source_net_114_fixed_1_0",
-  )
+  expect(solver.error).toBeNull()
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
   expect(fixture).toEqual(original)
-
-  let fixedRoutes = solver.getUpdatedFixedHdRoutes()
-  if (solver.failed) {
-    // Show the rejected candidate with omitted copper restored, exactly as
-    // the outer conflict check sees it. It is not accepted board routing.
-    const candidateRoutes = solver.activeFallbackSolver!.getOutput()
-    const replacedNames = new Set<FixedRouteConnectionName>()
-    const replacements: PreloadedHighDensityRoute[] = []
-    for (const [name, section] of solver.activeFallbackFixedRouteSections) {
-      const replacement = candidateRoutes.find(
-        (route) => route.connectionName === name,
-      )
-      if (!replacement) continue
-      replacements.push(spliceFixedRouteSection(section, replacement))
-      for (const route of section.sourceRoutes) {
-        replacedNames.add(route.connectionName)
-      }
-    }
-    fixedRoutes = [
-      ...fixedRoutes.filter(
-        (route) => !replacedNames.has(route.connectionName),
+  const node = fixture.params.nodePortPoints[0]!
+  expect(solver.routes).toHaveLength(node.portPoints.length / 2)
+  for (const port of node.portPoints) {
+    const route = solver.routes.find(
+      (route) => route.connectionName === port.connectionName,
+    )!
+    expect(route).toBeDefined()
+    expect(
+      [route.route[0]!, route.route.at(-1)!].some(
+        (endpoint) =>
+          endpoint.z === port.z &&
+          Math.hypot(endpoint.x - port.x, endpoint.y - port.y) <=
+            route.traceThickness / 2,
       ),
-      ...replacements,
-    ]
+    ).toBeTrue()
   }
+  const fixedRoutes = solver.getUpdatedFixedHdRoutes()
 
   // Native RAM_A13 and RAM_RAS# in the captured Core input.
   const affectedNetIds = new Set(["source_net_114", "source_net_51"])
@@ -112,7 +98,7 @@ test("captures the ECP5 regional repair losing tangent RAM_A13 copper", async ()
     ...checkViaTraceClearance(circuitJson, clearanceOptions),
     ...checkDifferentNetViaSpacing(circuitJson),
   ]
-  expect(findings).toHaveLength(3)
+  expect(findings).toEqual([])
   const view = {
     circuitJson,
     node: fixture.params.nodePortPoints[0]!,
