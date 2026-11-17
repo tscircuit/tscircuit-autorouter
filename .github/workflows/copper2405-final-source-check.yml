@@ -1,0 +1,22 @@
+name: Verify final copper handoff source and formatting
+on:
+  push:
+    branches: [codex/copper2405-final-source-check]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 358ad0328db36ef475ebc5832d27d6224fca6303
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Verify production source matches the frozen benchmark revision
+        run: |
+          git fetch origin 965375c0d78a8539ab55ebc00ca0cbb8a77285a1 --depth=1
+          git diff --exit-code 965375c0d78a8539ab55ebc00ca0cbb8a77285a1 HEAD -- lib package.json bun.lock
+      - run: bun install --ignore-scripts
+      - run: bun run format:check
