@@ -1,145 +1,53 @@
-name: Core accepted phase output qualification
+name: Core saved-cohort snapshot qualification
 
 on:
   push:
-    branches: [bench/core-accepted-phase-output-3216]
+    branches: [bench/core-saved-cohort-snapshot-3216]
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   qualify:
-    name: Frozen Core source pair and complete ButterStick circuit
+    name: Verify retained saved escapes and one snapshot
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 90
+    timeout-minutes: 25
     env:
-      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
-      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
-      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      FULL_BOARD_EXPERIMENT: published
-      GH_TOKEN: ${{ github.token }}
-
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.core-saved-cohort/cache
     steps:
-      - name: Checkout reviewed controller
+      - name: Checkout reviewed single-test controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           sparse-checkout: |
-            experiments/full-board-ten
+            experiments/full-board-ten/saved-cohort
             .github/workflows/full-board-ten.yml
-            AGENTS.md
-
-      - name: Checkout exact Core2402 prepublish build source
+      - name: Checkout exact Core fix head
         uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: cfd206671da55be666f3302620b94235a2964ad7
-          path: .full-board-run/source-core
+          ref: 8a3e33bbc6019c1f0fba2e9678938aaf9246dc08
+          path: .core-saved-cohort/source
           persist-credentials: false
-
-      - name: Checkout immutable original circuits
-        uses: actions/checkout@v4
-        with:
-          repository: tscircuit/tscircuit-autorouter
-          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
-          path: .full-board-run/sources/original
-          persist-credentials: false
-          sparse-checkout: experiments/full-board-priority-analysis
-
-      - name: Checkout immutable spaced circuits
-        uses: actions/checkout@v4
-        with:
-          repository: ShiboSoftwareDev/core-ddr-benchmark
-          ref: a3679559d6027aea2c441c1078853d58925d3a12
-          path: .full-board-run/sources/spaced
-          persist-credentials: false
-          sparse-checkout: |
-            full-boards
-            circuits
-            scripts
-            licenses
-            provenance
-
-      - name: Setup Bun
+      - name: Setup CI Bun version
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
-
-      - name: Prepare unchanged verified published runtime
-        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
-
-      - name: Prepare authentic case and original neutral assessment
+          bun-version: 1.4.2
+      - name: Update one snapshot, verify it, and typecheck Core
         run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          butterstick
-
-      - name: Authenticate published full-board control
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" baseline
-
-      - name: Prove baseline repro and fixed lifecycle tests on one frozen source graph
-        run: >-
-          python3 experiments/full-board-ten/prepare-core-source-pair.py
-          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/source-core"
-
-      - name: Install qualified Core source control only
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Run original ButterStick source-control full circuit
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/base-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
-
-      - name: Require published source-control route and physical parity
-        run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" base
-
-      - name: Render actual source-control CircuitJSON for visual review
-        run: >-
-          bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/base/butterstick/spaced"
-
-      - name: Install reviewed Core source fix only
-        run: python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" candidate
-
-      - name: Run actual ButterStick candidate with unchanged capture limits
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/candidate-butterstick-spaced.json"
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
-
-      - name: Require real eight-net emitted progress and unchanged native routing
-        run: python3 experiments/full-board-ten/verify-core-publication.py "$FULL_BOARD_ROOT" candidate
-
-      - name: Render actual candidate CircuitJSON for visual review
-        run: >-
-          bun experiments/full-board-ten/render-core-publication-svg.ts
-          "$FULL_BOARD_ROOT/results/candidate/butterstick/spaced"
-
-      - name: Restore original isolated Core alias
-        if: always()
-        run: |
-          if test -f "$FULL_BOARD_ROOT/published-runtime-manifest.json"; then
-            python3 experiments/full-board-ten/prepare-core-publication.py "$FULL_BOARD_ROOT" restore
-          fi
-
-      - name: Preserve source qualification and native output evidence
+          python3 experiments/full-board-ten/saved-cohort/qualify.py
+          "$GITHUB_WORKSPACE/.core-saved-cohort/source"
+          "$GITHUB_WORKSPACE/.core-saved-cohort/proof"
+      - name: Preserve exact test evidence and one actual snapshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-core-accepted-phase-${{ github.run_attempt }}
+          name: core-saved-cohort-snapshot-${{ github.run_attempt }}
           path: |
-            .full-board-run/core-source-pair
-            .full-board-run/published-baseline/archive-proof.json
-            .full-board-run/results
-            .full-board-run/cases/*.json
-            .full-board-run/*runtime-manifest.json
-            experiments/full-board-ten/core-publication-plan.json
-            experiments/full-board-ten/core-publication-*.patch
+            .core-saved-cohort/proof
+            experiments/full-board-ten/saved-cohort/plan.json
+            experiments/full-board-ten/saved-cohort/test.patch
           if-no-files-found: error
           compression-level: 6
           retention-days: 7

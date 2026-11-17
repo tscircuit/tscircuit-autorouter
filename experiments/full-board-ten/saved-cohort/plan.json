@@ -1,0 +1,40 @@
+{
+  "baseCommit": "8a3e33bbc6019c1f0fba2e9678938aaf9246dc08",
+  "testPath": "tests/repros/length-matched-bus-partial-global-cohort.test.tsx",
+  "snapshotPath": "tests/repros/__snapshots__/length-matched-bus-partial-global-cohort-pcb.snap.svg",
+  "patchSha256": "c3f473a67a84d19c0e7af486ad0572dc1ba44830443503f587772a9fa5733a1c",
+  "beforeSha256": "853e752c450a1154a7f6eba5225650d1eb449f150083b3f785a4f2ed7a685bb3",
+  "afterSha256": "3bc7a1e62b1cad9c50456d90aada6ddbb75c910b48d35c9affedf158af832df7",
+  "productionUnchanged": true,
+  "reviewedExpectedRoutes": [
+    {
+      "from": [
+        -10,
+        3
+      ],
+      "to": [
+        -7,
+        3
+      ],
+      "layer": "top"
+    },
+    {
+      "from": [
+        -10,
+        -3
+      ],
+      "to": [
+        -7,
+        -3
+      ],
+      "layer": "top"
+    }
+  ],
+  "productionFiles": {
+    "lib/IsolatedCircuit.ts": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34",
+    "lib/components/primitive-components/Group/Group.ts": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
+  },
+  "bunVersion": "1.4.2",
+  "autorouterVersion": "0.0.1119",
+  "reviewedPatchSha256": "f8f7e2cb4a68aa1c7e50583510153953af8ccbae859be8ec389b582d70484b00"
+}

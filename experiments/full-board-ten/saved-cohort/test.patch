@@ -1,0 +1,24 @@
+diff --git a/tests/repros/length-matched-bus-partial-global-cohort.test.tsx b/tests/repros/length-matched-bus-partial-global-cohort.test.tsx
+index 87129bb..3dbd9c9 100644
+--- a/tests/repros/length-matched-bus-partial-global-cohort.test.tsx
++++ b/tests/repros/length-matched-bus-partial-global-cohort.test.tsx
+@@ -85 +85 @@ test("complete fanout escapes cannot hide a split matched global bus", async ()
+-        text="0.1mm DATA limit stops FIRST_DATA; no routes committed."
++        text="0.1mm DATA limit stops FIRST_DATA; saved TX escapes remain."
+@@ -96 +96,15 @@ test("complete fanout escapes cannot hide a split matched global bus", async ()
+-  expect(circuit.db.pcb_trace.list()).toHaveLength(0)
++  expect(circuit.db.pcb_trace.list()).toHaveLength(2)
++  expect(circuit.db.pcb_trace.list()).toMatchObject([
++    {
++      route: [
++        { route_type: "wire", x: -10, y: 3, layer: "top" },
++        { route_type: "wire", x: -7, y: 3, layer: "top" },
++      ],
++    },
++    {
++      route: [
++        { route_type: "wire", x: -10, y: -3, layer: "top" },
++        { route_type: "wire", x: -7, y: -3, layer: "top" },
++      ],
++    },
++  ])
