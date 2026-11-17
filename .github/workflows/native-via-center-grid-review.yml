@@ -1,0 +1,62 @@
+# Render existing real-board tests; export only their requested SVG/PNG review images.
+name: Preserve via centers native DDR review
+on:
+  push:
+    branches: [artifacts/native-via-center-grid-review]
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: review
+      - uses: actions/checkout@v4
+        with:
+          ref: d32fbec8493db791ba9427a1147b3dbc038b9fc8
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 87b2852f4ac92af98d082f82ed331b4fab1e59c9
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Run unchanged native board repros
+        run: |
+          mkdir -p review/.github/artifacts
+          for variant in base head; do
+            (
+              cd "$variant"
+              bun install > install.private.log 2>&1
+              BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-ecp5-fixed-copper-clearance.test.ts --timeout 9999999 > snapshot.private.log 2>&1
+              VARIANT="$variant" bun -e '
+                import {readFileSync,writeFileSync} from "node:fs";
+                import {Resvg} from "@resvg/resvg-js";
+                for (const [name,file] of [
+                  ["a13","pipeline9-a13-regional-repair-shorts.snap.svg"],
+                  ["h616","pipeline9-h616-full-board-ddr-clearance.snap.svg"],
+                  ["ecp5","pipeline9-ecp5-fixed-copper-clearance.snap.svg"],
+                  ["ecp5-gap","pipeline9-ecp5-fixed-copper-clearance-clearance.snap.svg"]
+                ]) {
+                  const svg=readFileSync("tests/repro/__snapshots__/"+file,"utf8");
+                  const prefix="../review/.github/artifacts/"+name+"-"+process.env.VARIANT;
+                  writeFileSync(prefix+".svg",svg);
+                  writeFileSync(prefix+".png",new Resvg(svg,{fitTo:{mode:"width",value:950}}).render().asPng());
+                  console.log("NATIVE_DRC_COUNT="+JSON.stringify({name,variant:process.env.VARIANT,label:svg.match(/Relaxed DRC errors: [0-9]+/)?.[0]}));
+                }
+              '
+            )
+          done
+      - name: Save only requested review images
+        working-directory: review
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .github/artifacts/*.svg .github/artifacts/*.png
+          git commit -m "Render existing native DDR repros while preserving via centers"
+          git push
