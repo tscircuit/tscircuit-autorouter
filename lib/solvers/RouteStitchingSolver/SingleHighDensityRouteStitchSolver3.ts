@@ -87,7 +87,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   private getLayerTransitionPenalty(start: Point3, end: Point3): number {
     const isPlannedTransition =
-      this.allowedLayerTransitionPointKeys?.has(getXyPointKey(start)) ||
+      this.allowedLayerTransitionPointKeys?.has(getXyPointKey(end)) ||
       this.remainingHdRoutes.some((route) =>
         route.vias.some((via) => distance(via, start) < GEOMETRIC_TOLERANCE),
       )
