@@ -13,10 +13,8 @@ import {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
-// Prefer a planar splice over changing layers at coincident endpoints.
-// Otherwise the stitch can bypass a routed via and strand its terminal path.
-const VIA_PENALTY = 100000
-const GAP_PENALTY = 1000
+const VIA_PENALTY = 1000
+const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
@@ -86,6 +84,30 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+
+  private getLayerTransitionPenalty(start: Point3, end: Point3): number {
+    const isPlannedTransition =
+      this.allowedLayerTransitionPointKeys?.has(getXyPointKey(start)) ||
+      this.remainingHdRoutes.some((route) =>
+        route.vias.some((via) => distance(via, start) < GEOMETRIC_TOLERANCE),
+      )
+    if (isPlannedTransition) return VIA_PENALTY
+
+    // Avoid bypassing a routed via with another hop at coincident endpoints.
+    // The existing via path must remain available to reach the terminal.
+    const hasRoutedTransition = this.remainingHdRoutes.some((route) =>
+      route.route.some((point, index) => {
+        const next = route.route[index + 1]
+        return (
+          next !== undefined &&
+          distance(point, next) < GEOMETRIC_TOLERANCE &&
+          ((point.z === start.z && next.z === end.z) ||
+            (point.z === end.z && next.z === start.z))
+        )
+      }),
+    )
+    return hasRoutedTransition ? GAP_PENALTY + VIA_PENALTY : VIA_PENALTY
+  }
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -457,7 +479,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(firstPointInCandidate),
           ))
       ) {
-        scoreFirst = VIA_PENALTY + distToFirst
+        scoreFirst =
+          this.getLayerTransitionPenalty(lastMergedPoint, firstPointInCandidate) +
+          distToFirst
       }
 
       if (scoreFirst < bestScore) {
@@ -489,7 +513,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(lastPointInCandidate),
           ))
       ) {
-        scoreLast = VIA_PENALTY + distToLast
+        scoreLast =
+          this.getLayerTransitionPenalty(lastMergedPoint, lastPointInCandidate) +
+          distToLast
       }
 
       if (scoreLast < bestScore) {
