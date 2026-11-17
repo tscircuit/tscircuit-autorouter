@@ -1,12 +1,12 @@
-name: SRJ18 clearance investigation
+name: SRJ18 order-bias controls
 on:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
-  compare:
+  same-code:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
-    permissions:
-      contents: read
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
@@ -14,21 +14,45 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Prepare identical dependencies and isolated revisions
+      - name: Prepare one baseline checkout
         run: |
-          git worktree add --detach ../srj18-before fe3953fd4469c9c7ff84fb7b5712e50c607d5246
-          git worktree add --detach ../srj18-merged cfa81399685a89858415e30e19d92d915579702c
-          git worktree add --detach ../srj18-optimized cfa81399685a89858415e30e19d92d915579702c
-          git diff 73f2a0c8a05a06d85e0ddf126cb903e3949523d6 70feba0fe0c84a1b60bb3c1fc2639dd2e2ef6857 -- lib > /tmp/clearance-optimization.patch
-          git -C ../srj18-optimized apply /tmp/clearance-optimization.patch
-          cd ../srj18-merged
+          git worktree add --detach ../control-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
+          cd ../control-base
           bun install
-          ln -s "$(pwd)/node_modules" ../srj18-before/node_modules
-          ln -s "$(pwd)/node_modules" ../srj18-optimized/node_modules
-      - name: Repeated captured-input distribution benchmark
-        run: bun scripts/srj18-investigation/distribution.ts
+      - name: Run identical code twice in normal benchmark order
+        run: |
+          mkdir -p aa-results
+          for pass in first second; do
+            (cd ../control-base && bash benchmark.sh --dataset 18 --concurrency 3 --sample-timeout 240s)
+            cp ../control-base/benchmark-result.json "aa-results/$pass.json"
+            bun -e 'const p=await Bun.file(process.argv[1]).json(); console.log("AA_RESULT "+JSON.stringify({pass:process.argv[2],runtime:p.runtime,summary:p.summary,tests:p.tests.map(({benchmarkSnapshot,...t})=>t)}))' "aa-results/$pass.json" "$pass"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: srj18-stage-comparison
-          path: stage-result.json
+          name: same-code-controls
+          path: aa-results
+  interleaved:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Prepare exact PR revisions with shared dependencies
+        run: |
+          git worktree add --detach ../pair-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
+          git worktree add --detach ../pair-head 0702b0aa5c9bf3304aae6dca14462787e174587d
+          cd ../pair-base
+          bun install
+          ln -s "$(pwd)/node_modules" ../pair-head/node_modules
+      - name: Interleave matched samples on fixed CPU lanes
+        run: bun scripts/srj18-investigation/interleaved.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interleaved-controls
+          path: interleaved-results
