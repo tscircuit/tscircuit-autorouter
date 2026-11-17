@@ -9,14 +9,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [h616, h616, butterstick, glider, imx6, icepi]
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: f0f60ff3
+          ref: f0f60ff3f46ef86b121f7224d7f4c17bdaeec7ce
           path: router
       - uses: actions/checkout@v4
         with:
@@ -86,7 +86,7 @@ jobs:
           path: core
       - uses: actions/checkout@v4
         with:
-          ref: f0f60ff3
+          ref: f0f60ff3f46ef86b121f7224d7f4c17bdaeec7ce
           path: router-after
       - uses: oven-sh/setup-bun@v2
         with:
@@ -164,7 +164,7 @@ jobs:
           path: before
       - uses: actions/checkout@v4
         with:
-          ref: f0f60ff3
+          ref: f0f60ff3f46ef86b121f7224d7f4c17bdaeec7ce
           path: after
       - uses: oven-sh/setup-bun@v2
         with:
