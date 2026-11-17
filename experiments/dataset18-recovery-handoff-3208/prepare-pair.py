@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare an exact published-AR pair with identical Dataset18 evaluation code."""
+"""Prepare matched AR1113 P9 source variants with identical Dataset18 evaluation."""
 
 import argparse
 import gzip
@@ -103,7 +103,7 @@ def main() -> None:
     artifact.mkdir()
     for folder in [base, candidate]:
         if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=folder, text=True).strip() != frozen["harnessCommit"]:
-            raise RuntimeError("Dataset18 source is not exact AR1112")
+            raise RuntimeError("Dataset18 evaluation source is not exact AR1113")
         if subprocess.check_output(["git", "status", "--porcelain"], cwd=folder):
             raise RuntimeError("Dataset18 source checkout is not pristine")
         if (folder / "node_modules").exists():

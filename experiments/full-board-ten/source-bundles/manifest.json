@@ -1,10 +1,10 @@
 {
-  "purpose": "Latest3208 diagnostic source baseline and isolated Tiny recovery handoff; native qualification pending",
+  "purpose": "Matched current AR1113 P9 source baseline and one Tiny recovery handoff; published main runtime remains frozen3208; native and Dataset18 qualification pending",
   "mainVersion": "0.0.3208",
   "originalAutorouterSHA256": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee",
-  "autorouterGitHead": "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6",
+  "autorouterGitHead": "b9f024828936f9639a696c9943747cc776cda72e",
   "tinyGitHead": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
-  "publishedSourceMapSha256": "20c143300709f62afe25cb4cbb3bffa80457ff584b36499f0314ef1914cd9025",
+  "publishedSourceMapSha256": "794187667e01a523ca56045ee86080f3ea73730ebb8134170fc40f0d643e477d",
   "build": {
     "engine": "esbuild0.27.0 under Node24.19.0",
     "entry": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -17,31 +17,31 @@
       "@tscircuit/solver-utils",
       "object-hash"
     ],
-    "qualification": "AR1112 published source-map delta and all compiled inputs audited; latest native/fullboard baseline qualification is required.",
-    "builderSha256": "10fa88157ed12f0aa1cad58d0b6f8505d16801ce076d2307e6719011effa853b"
+    "qualification": "All1648 published1113 map sources audited versus1112; only regionalrepair and unbundledpackage changed. All933 compiled inputs audited; matched baseline/candidate differ only Tiny core. Actual native and Dataset18 qualification pending.",
+    "builderSha256": "7c4636479e4999265fb432a6d6f83667fa6d8bfa10742ebfdfd29d272a338576"
   },
   "variants": {
     "source-baseline": {
       "filename": "source-baseline.js.gz",
-      "entrySha256": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
-      "entryBytes": 5490985,
-      "compressedSha256": "431f770107f59adc3c88244d748519b17780839c1a713507a944689ccab0f22f",
-      "compressedBytes": 993728,
+      "entrySha256": "6ca2debe379721d0a78cde1b8cb690bb2944961be285be08e8f5ccfd8e738dc7",
+      "entryBytes": 5491027,
+      "compressedSha256": "d6cafd91eb082908950ceb221ca616eae1b16787a7cb4e30e04e8f87c53b98ae",
+      "compressedBytes": 993725,
       "sourceInputCount": 933,
       "candidateSourceFiles": []
     },
     "handoff-only": {
       "filename": "handoff-only.js.gz",
-      "entrySha256": "c90c064e6d25d92fcf3ca6ef4af59f4177036ecf20ebd93643617c406d40e9fc",
-      "entryBytes": 5491941,
-      "compressedSha256": "159ce46f59282966dfcb447b73b90315cf6fd58733f52b1e375341c68d087bf6",
-      "compressedBytes": 993898,
+      "entrySha256": "22dceb5030035800db67a071aa0fdf7aee01732b7d1d4c68a5c7d2899841f7a8",
+      "entryBytes": 5491959,
+      "compressedSha256": "8f7c5550173fdfa610e47044b1cf1622ec7e35b20a19704048ed1e28e335a8e9",
+      "compressedBytes": 993895,
       "sourceInputCount": 933,
       "candidateSourceFiles": [
         {
           "repository": "tiny",
           "path": "lib/core.ts",
-          "sha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
+          "sha256": "072fc433afb499c4ea6b61207fae67d1c3f1add652bc978f1bbc74bf7568d5bc"
         }
       ]
     }
@@ -67,8 +67,8 @@
   "sourcePatches": {
     "handoff-only": {
       "filename": "handoff-only-source.patch",
-      "sha256": "98c25970e5d2160d42d40bdd328be4b63c3fdcc85e6251bd3c13366addddeada",
-      "bytes": 2841,
+      "sha256": "cee69b116c5d51625b68bed4a7ac3b5e653ff6f27b425dac38a5cc5232b3c346",
+      "bytes": 2907,
       "applyOptions": [
         "--unidiff-zero"
       ]
@@ -76,16 +76,16 @@
   },
   "reusedControls": {
     "source-baseline": {
-      "priorAR1111EntrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
-      "newAR1112QualificationPending": true,
+      "priorAR1112EntrySha256": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
+      "newAR1113QualificationPending": true,
       "releaseInputChanges": [
         {
-          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/autorouter/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
-          "beforeSha256": "75dbe4f280ce243da899793d35d732c5820d254b2d2c1830cbf253938ada059a",
-          "afterSha256": "5a22521e015952626f2c1863e65fed4a709bf253fa337cfaaf6efc9fcaa3330c"
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/autorouter/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver.ts",
+          "beforeSha256": "7feac168de5e3c67666a212c70c60923ef48b2363a12feeb875679afb97f8ef5",
+          "afterSha256": "442464746b5d4bd7d78ac1eb64ffe483267511d5f6dbf1891009bacdb4256150"
         }
       ],
-      "sourceMapDeltaProof": "../published-source-delta.json"
+      "sourceMapDeltaProof": "../published1113-audit.json"
     }
   },
   "variantPatchOrder": {
@@ -101,11 +101,20 @@
         {
           "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/core.ts",
           "beforeSha256": "16de23a295391193c3122d03291636ad7edb5b87f9ecd1dbe60f33c66195b112",
-          "afterSha256": "b2323cdd31f0bbd892d461d87d728b38e164ad747ddfd03ecdeb6838e67067a2"
+          "afterSha256": "072fc433afb499c4ea6b61207fae67d1c3f1add652bc978f1bbc74bf7568d5bc"
         }
       ]
     }
   },
   "sourceInputHashFormat": "SHA256 of compact sorted-key JSON array of build input path and SHA256, in build input order",
-  "handoffScope": "Only Tiny lib/core.ts: seed first existing greedy attempt from incomplete cost-aware child when fewer pending routes and parent partial/outside-in routing disabled. Carry graph and actual pending/current IDs together. Later shuffled attempts retain original parent. No quota, iteration cap, acceptance or via changes."
+  "handoffScope": "Only Tiny lib/core.ts: seed first existing greedy attempt from incomplete cost-aware child when fewer pending routes and parent partial/outside-in routing disabled. Carry graph and actual pending/current IDs together. Later shuffled attempts retain original parent. No quota, iteration cap, acceptance or via changes.",
+  "originalPublishedAutorouterVersion": "0.0.1112",
+  "routingSource": {
+    "autorouterVersion": "0.0.1113",
+    "autorouterCommit": "b9f024828936f9639a696c9943747cc776cda72e",
+    "publishedNpmGitHead": "f589df4b00bd436ea33a74471b3dbaf25adf509b",
+    "publishedReferenceEntrySha256": "910c284c7ec165f430cf83884b345ac65341860336fe18faee53f6dc20673bb1",
+    "publishedReferenceSourceMapSha256": "794187667e01a523ca56045ee86080f3ea73730ebb8134170fc40f0d643e477d",
+    "tinyCandidateCommit": "2689cae7844edc994a5a3155d9b1a16647cdc84e"
+  }
 }

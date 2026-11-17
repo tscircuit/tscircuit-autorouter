@@ -8,7 +8,8 @@ const entry = JSON.parse(readFileSync(new URL("./selected-entry.json", import.me
 if (createHash("sha256").update(readFileSync(entry.entry)).digest("hex") !== entry.sha256) throw new Error("Selected AR entry differs")
 if (createHash("sha256").update(readFileSync(entry.sourceEntry)).digest("hex") !== entry.sourceSha256) throw new Error("Selected P9 source differs")
 if (selected.AutoroutingPipelineSolver !== selected.AutoroutingPipelineSolver9_PreloadedTraceGraph) throw new Error("P9 aliases differ")
-if (selected.AUTOROUTER_VERSION !== "0.0.1112") throw new Error("Expected AR1112 exports")
+if (selected.AUTOROUTER_VERSION !== entry.originalPublishedAutorouterVersion || entry.originalPublishedAutorouterVersion !== "0.0.1112") throw new Error("Expected preserved frozen3208 AR1112 exports")
+if (entry.routingSource.autorouterVersion !== "0.0.1113") throw new Error("Expected explicit AR1113 P9 source override")
 const scenarios = await loadScenarios("srj18")
 if (scenarios.length !== 16) throw new Error("Dataset18 scenario count changed")
 const fixtures = scenarios.map(([name, scenario]) => ({ name,

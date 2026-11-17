@@ -1,9 +1,9 @@
 {
   "frozen": true,
-  "name": "dataset18-recovery-handoff-3208",
+  "name": "dataset18-handoff-ar1113",
   "diagnosticOnly": true,
   "productionFixProposed": false,
-  "harnessCommit": "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6",
+  "harnessCommit": "b9f024828936f9639a696c9943747cc776cda72e",
   "datasetCommit": "100e8957ce789b5b288e14c476dc83f4efc5214b",
   "runtime": {
     "tscircuit": "0.0.3208",
@@ -18,14 +18,29 @@
     "@tscircuit/capacity-autorouter": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee"
   },
   "sourceEntrySha256": {
-    "base": "32a54b661ec4ed8338989f52a8bc1ac087439e7226735a95b0c17261a4604ea7",
-    "pr": "c90c064e6d25d92fcf3ca6ef4af59f4177036ecf20ebd93643617c406d40e9fc"
+    "base": "6ca2debe379721d0a78cde1b8cb690bb2944961be285be08e8f5ccfd8e738dc7",
+    "pr": "22dceb5030035800db67a071aa0fdf7aee01732b7d1d4c68a5c7d2899841f7a8"
   },
-  "sourcePatchSha256": "07068764c152b68aa9487886e06d5a6b37273fa36bea1dd963456c3758f7d0a3",
+  "sourcePatchSha256": "79bcab25695fe9fc90c4f919c1655e25111daad5196c986194118f28b59933b3",
   "scenarioCount": 16,
   "sampleTimeoutMs": 360000,
   "requestedConcurrency": 4,
   "threadsPerSample": 1,
   "sameVmSequential": true,
-  "status": "Prepared only; no routing, commit or push"
+  "status": "Prepared matched AR1113 P9 source override on frozen3208 dependencies; actual CI factory preflight and routing pending",
+  "routingSource": {
+    "autorouterVersion": "0.0.1113",
+    "autorouterCommit": "b9f024828936f9639a696c9943747cc776cda72e",
+    "tinyBaselineCommit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+    "tinyCandidateCommit": "2689cae7844edc994a5a3155d9b1a16647cdc84e",
+    "mainPackageRun": false
+  },
+  "publishedSourceReference": {
+    "autorouterVersion": "0.0.1113",
+    "npmGitHead": "f589df4b00bd436ea33a74471b3dbaf25adf509b",
+    "entrySha256": "910c284c7ec165f430cf83884b345ac65341860336fe18faee53f6dc20673bb1",
+    "sourceMapSha256": "794187667e01a523ca56045ee86080f3ea73730ebb8134170fc40f0d643e477d",
+    "runtimeEntryReplaced": false,
+    "scope": "Both P9 source variants include the published AR1113 regional trace-clearance change; unrelated exports and frozen3208 dependency graph retain the original AR1112 entry."
+  }
 }

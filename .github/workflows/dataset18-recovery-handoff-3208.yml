@@ -1,8 +1,8 @@
-name: Dataset18 source-baseline and isolated recovery handoff comparison
+name: Dataset18 AR1113 source-baseline and isolated recovery handoff comparison
 
 on:
   push:
-    branches: [bench/dataset18-recovery-handoff-3208]
+    branches: [bench/dataset18-handoff-ar1113]
 
 permissions:
   contents: read
@@ -51,17 +51,17 @@ jobs:
             licenses
             provenance
 
-      - name: Checkout exact AR1112 evaluation source for baseline
+      - name: Checkout exact AR1113 evaluation source for baseline
         uses: actions/checkout@v4
         with:
-          ref: d930c5cb4844ec6b2972a9a194fbfee690f1a5e6
+          ref: b9f024828936f9639a696c9943747cc776cda72e
           path: same-machine-base
           persist-credentials: false
 
       - name: Checkout identical evaluation source for diagnostic
         uses: actions/checkout@v4
         with:
-          ref: d930c5cb4844ec6b2972a9a194fbfee690f1a5e6
+          ref: b9f024828936f9639a696c9943747cc776cda72e
           path: same-machine-pr
           persist-credentials: false
 
@@ -97,7 +97,7 @@ jobs:
           RUNNER_NAME: ${{ runner.name }}
         run: |
           if [ -f same-machine-results/base/benchmark-result.json ] && [ -f same-machine-results/pr/benchmark-result.json ]; then
-            bun same-machine-base/scripts/benchmark/same-machine-results.ts --base-report same-machine-results/base/benchmark-result.json --pr-report same-machine-results/pr/benchmark-result.json --base-sha d930c5cb4844ec6b2972a9a194fbfee690f1a5e6 --pr-sha d930c5cb4844ec6b2972a9a194fbfee690f1a5e6 --repository "${{ github.repository }}" --runner-name "$RUNNER_NAME" --output same-machine-results/comparison.md
+            bun same-machine-base/scripts/benchmark/same-machine-results.ts --base-report same-machine-results/base/benchmark-result.json --pr-report same-machine-results/pr/benchmark-result.json --base-sha b9f024828936f9639a696c9943747cc776cda72e --pr-sha b9f024828936f9639a696c9943747cc776cda72e --repository "${{ github.repository }}" --runner-name "$RUNNER_NAME" --output same-machine-results/comparison.md
           fi
           python3 experiments/dataset18-recovery-handoff-3208/report-pair.py "$GITHUB_WORKSPACE"
 
@@ -106,7 +106,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: dataset18-recovery-handoff-diagnostic-${{ github.run_attempt }}
+          name: dataset18-ar1113-recovery-handoff-diagnostic-${{ github.run_attempt }}
           path: |
             same-machine-results/*/benchmark-result.json
             same-machine-results/*/benchmark-result.txt

@@ -1,5 +1,5 @@
 diff --git a/lib/core.ts b/lib/core.ts
-index e1b07ea..8a98049 100644
+index e1b07ea..61f653a 100644
 --- a/lib/core.ts
 +++ b/lib/core.ts
 @@ -1754,7 +1754,11 @@ export class TinyHyperGraphSolver extends BaseSolver {
@@ -21,19 +21,20 @@ index e1b07ea..8a98049 100644
 +      }),
 +    }
 +    let firstGreedySeed = originalSeed
-@@ -1771,0 +1776,2 @@ export class TinyHyperGraphSolver extends BaseSolver {
-+      const seed =
-+        greedyFinalRouteIter === 0 ? firstGreedySeed : originalSeed
-@@ -1774 +1780 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1771,0 +1776 @@ export class TinyHyperGraphSolver extends BaseSolver {
++      const seed = greedyFinalRouteIter === 0 ? firstGreedySeed : originalSeed
+@@ -1774,5 +1779,2 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -          ? remainingRouteIds
-+          ? seed.routeIds
-@@ -1776 +1782 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-          : shuffle(
 -              remainingRouteIds,
-+              seed.routeIds,
-@@ -1796 +1802 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-              this.state.ripCount + greedyFinalRouteIter,
+-            )
++          ? seed.routeIds
++          : shuffle(seed.routeIds, this.state.ripCount + greedyFinalRouteIter)
+@@ -1796 +1798 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -        startingSnapshot,
 +        seed.snapshot,
-@@ -1801,0 +1808,23 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1801,0 +1804,23 @@ export class TinyHyperGraphSolver extends BaseSolver {
 +        if (
 +          greedyFinalRouteIter === -1 &&
 +          !this.PARTIAL_RIP_ENABLED &&
@@ -57,6 +58,6 @@ index e1b07ea..8a98049 100644
 +            }
 +          }
 +        }
-@@ -1820 +1849 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1820 +1845 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -        greedyFinalRouteRemainingRouteCount: remainingRouteIds.length,
 +        greedyFinalRouteRemainingRouteCount: routeIds.length,

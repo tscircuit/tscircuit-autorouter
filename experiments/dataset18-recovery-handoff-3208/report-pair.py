@@ -99,8 +99,8 @@ for name in sorted(set(new_solve_failures + new_drc_failures)):
     print("DATASET18_NEW_FAILURE " + json.dumps({"sample": name, "base": {key: tests["base"][name].get(key) for key in fields + ["drcErrorTypes", "drcErrorMessages"]}, "pr": {key: tests["pr"][name].get(key) for key in fields + ["drcErrorTypes", "drcErrorMessages"]}}))
 
 ordinary = output / "comparison.md"
-parts = ["# Dataset18: source baseline versus isolated recovery handoff\n",
-         "Both lanes use the same AR1112 evaluation source, fixtures, and published routing dependencies. Only the first existing greedy attempt may inherit useful committed recovery progress. Search limits and later shuffled seeds are unchanged. This is diagnostic evidence; full-board physical qualification is separate.\n",
+parts = ["# Dataset18: AR1113 source baseline versus isolated recovery handoff\n",
+         "Both lanes use the same AR1113 evaluation source and P9 source base, with the same fixtures and frozen3208 routing dependencies. Only the first existing greedy attempt may inherit useful committed recovery progress. Search limits and later shuffled seeds are unchanged. This is an AR1113 source override, not a newly published main-package run; full-board physical qualification is separate.\n",
          "Base entry: `" + summary["entryHashes"]["base"] + "`; diagnostic entry: `" + summary["entryHashes"]["pr"] + "`.\n"]
 if ordinary.exists():
     parts.append(ordinary.read_text())

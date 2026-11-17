@@ -16,6 +16,9 @@ const bundlesFolder = join(import.meta.dir, "../full-board-ten/source-bundles")
 const bundleManifestPath = join(bundlesFolder, "manifest.json")
 const bundles = JSON.parse(readFileSync(bundleManifestPath, "utf8"))
 assert(frozen.frozen && manifest.mainVersion === "0.0.3208" && !manifest.sourceOverrides && !manifest.dependencyOverrides.length)
+assert.equal(frozen.routingSource.autorouterVersion, "0.0.1113")
+assert.equal(frozen.routingSource.mainPackageRun, false)
+assert.equal(bundles.autorouterGitHead, frozen.routingSource.autorouterCommit)
 assert.deepStrictEqual(new Set(manifest.packages.map((item) => item.name)), new Set(Object.keys(frozen.runtime)))
 for (const item of manifest.packages) {
   assert.equal(item.version, frozen.runtime[item.name])
@@ -37,6 +40,9 @@ const proof = {
   diagnosticOnly: true,
   routingSourceOverride: true,
   productionFixProposed: false,
+  routingSource: frozen.routingSource,
+  originalPublishedAutorouterVersion: original.version,
+  publishedSourceReference: frozen.publishedSourceReference,
   sourceBundleManifestSha256: hash(readFileSync(bundleManifestPath)),
   sourcePatchSha256: frozen.sourcePatchSha256,
   sharedRoutingDependencies: sharedDependencies,
@@ -122,6 +128,7 @@ for (const [lane, variant] of [["base", "source-baseline"], ["pr", "handoff-only
   }
   proof[lane] = {
     variant, entry, sha256: hash(readFileSync(entry)), packageFolder,
+    routingSource: frozen.routingSource, originalPublishedAutorouterVersion: original.version,
     sourceEntry, sourceSha256: selected.entrySha256,
     originalEntry: original.entry, originalSha256: original.entrySha256,
     sourceManifest: selected, isolatedSourceRuntime: { original: runtimeOriginal, private: runtimePrivate, version: runtimeMetadata.version, files: runtimeFiles }, preservedExportCount: Object.keys(published).length,
