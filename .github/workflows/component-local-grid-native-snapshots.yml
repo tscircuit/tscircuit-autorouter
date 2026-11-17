@@ -1,0 +1,58 @@
+# Regenerate existing native DDR SVG snapshots only, preserving all test assertions.
+name: Review native DDR component-local channels
+on:
+  push:
+    branches: [artifacts/component-local-grid-native-snapshots]
+permissions:
+  contents: write
+jobs:
+  snapshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Update the unchanged native routing tests
+        run: |
+          status=0
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-ecp5-declared-clearance.test.ts tests/repro/pipeline9-ecp5-fixed-copper-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/repro/pipeline9-h616-native-ddr-clearance.test.ts tests/repro/pipeline9-orangecrab-through-via-layer-span.test.ts tests/repro/pipeline9-a13-declared-trace-clearance.test.ts tests/repro/pipeline9-icepi-retained-vias.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-icepi-circular-clearance.test.ts tests/repro/pipeline9-ddr-force-clearance.test.ts tests/repro/pipeline9-imx6-published-ddr-clearance.test.ts tests/repro/pipeline9-a13-fixed-copper-checks.test.ts tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-ecp5-regional-boundary-copper-contact.test.ts --timeout 9999999 --reporter=junit --reporter-outfile=snapshots.private.xml > snapshots.private.log 2>&1 || status=$?
+          python3 - <<'PY'
+          import json,xml.etree.ElementTree as ET
+          root=ET.parse("snapshots.private.xml").getroot()
+          print("NATIVE_TEST_COUNTS="+json.dumps({"tests":root.get("tests"),"failures":root.get("failures"),"failedNames":[case.get("name") for case in root.findall(".//testcase") if case.find("failure") is not None]}))
+          PY
+          exit "$status"
+      - name: Render changed native SVGs for review
+        run: |
+          git fetch --depth=1 origin b1c9349348bf68a9fbdca966efb0c0609acfe0c3
+          cat > render-snapshots.private.ts <<'TS'
+          import {execFileSync} from "node:child_process"
+          import {readFileSync,writeFileSync,mkdirSync} from "node:fs"
+          import {basename} from "node:path"
+          import {Resvg} from "@resvg/resvg-js"
+          const paths=execFileSync("git",["diff","--name-only","b1c9349348bf68a9fbdca966efb0c0609acfe0c3","--","tests/repro/__snapshots__"],{encoding:"utf8"}).trim().split("\n").filter(path=>path.endsWith(".snap.svg"))
+          mkdirSync(".github/artifacts",{recursive:true})
+          for (const path of paths) {
+            const svg=readFileSync(path,"utf8")
+            const before=execFileSync("git",["show","b1c9349348bf68a9fbdca966efb0c0609acfe0c3:"+path],{encoding:"utf8"})
+            const labels=(value:string): string[] => value.match(/(?:Relaxed DRC errors|Native DRC errors|DRC errors|Native clearance errors|Physical findings)[^\d<]*\d+/gi) ?? []
+            console.log("SNAPSHOT_DRC_COUNTS="+JSON.stringify({snapshot:basename(path),before:labels(before),after:labels(svg)}))
+            writeFileSync(".github/artifacts/"+basename(path,".svg")+"-before.png",new Resvg(before,{fitTo:{mode:"width",value:950}}).render().asPng())
+            writeFileSync(".github/artifacts/"+basename(path,".svg")+".png",new Resvg(svg,{fitTo:{mode:"width",value:950}}).render().asPng())
+          }
+          console.log("CHANGED_SNAPSHOT_COUNT="+paths.length)
+          TS
+          bun render-snapshots.private.ts
+      - name: Save only the requested SVG diffs and review PNGs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/repro/__snapshots__/*.snap.svg
+          git add -f .github/artifacts/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate existing native DDR snapshots for component-pad repair axes"
+            git push
+          fi
