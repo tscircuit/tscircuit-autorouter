@@ -1,0 +1,35 @@
+{
+  "scope": "One regional feasibility screen; no production changes or board-completion claim",
+  "capture": {
+    "runId": 44123194023,
+    "head": "44bec0c0e398dc7d6ac90e0d2827afa3c968f199",
+    "artifactId": 14346627297,
+    "name": "failure-witness-h616-published-spaced-1",
+    "bytes": 5303424,
+    "digest": "sha256:49efb4ab526a1fd846418483f03d4518a0fd2a897aa8795e720b25568d5feef2"
+  },
+  "files": {
+    "failure-witness.json.gz": "2ce678331646b19d80add0b94449d4c6fe48ca15923940aaf2f393d79a02dc98",
+    "phase-4-input.srj.json.gz": "6b8be42d73cd8b1b8aab892953fea2a62c90c1a36e25b43df20adc36c4fcd7a6",
+    "circuit.json.gz": "884b03bc598d85f3d5ec329154bc4e3630f01ebc6a315a62519ef608c7c4416e",
+    "failure-witness-validation.json": "522f85caca32cc5ee9fb6acbfe08acc69dedcc5820bf3c3b19ac6d5ed2e4317e"
+  },
+  "absorbedNodeIds": [
+    "topology_merge_7204",
+    "topology_merge_7125__sub_43_0",
+    "topology_merge_6908",
+    "topology_merge_6705"
+  ],
+  "retainedPortIds": [
+    "ce32665_pp0_z2::2",
+    "ce30108_pp0_z0::0"
+  ],
+  "mutablePreloadNames": [
+    "source_net_90_fixed_0_6",
+    "source_net_63_fixed_27_2"
+  ],
+  "envelope": "all-chain-port-extents + viaDiameter/2 + obstacleMargin",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineMs": 960000,
+  "maxDiagnosticBytes": 25165824
+}

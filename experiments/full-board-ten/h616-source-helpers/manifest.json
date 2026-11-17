@@ -1,0 +1,42 @@
+{
+  "autorouterCommit": "b7951b41ff87c16f0bd0880e7b9c6a989ada244d",
+  "sourceArtifact": {
+    "id": 14344877229,
+    "name": "glider-tiny-reuse-qualification-1",
+    "size_in_bytes": 42332295,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14344877229",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14344877229/zip",
+    "expired": false,
+    "created_at": "2026-11-17T16:00:40Z",
+    "expires_at": "2026-11-24T16:00:34Z",
+    "updated_at": "2026-11-17T16:00:40Z",
+    "digest": "sha256:5ba5a7dd6de7d683d61dbabd6677337dd5909a4d453b008eec48bb269093263e",
+    "workflow_run": {
+      "id": 44120191669,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "bench/tiny-exact-segment-reuse-3216",
+      "head_sha": "5fe97b21080a14fcf786ba5b395d0ad3705d5808"
+    }
+  },
+  "lockSha256": "1620d94b91d52be22ad49181a38338aa5d340e185913ff324afc7661ee5c4996",
+  "inventorySha256": "68041a769fef9aacf5742a51ebacaddaef992044368fc9534f36bcb519cbeb85",
+  "publishedSourceMapSha256": "55904469ecd6e05eb738a0f2682956d03df9ba09948a6bb8b04c46da37d63614",
+  "barrelSha256": "bfcb231ec92138175143144ccf9ee25da2edbde6585d23953d9f17fff079db3e",
+  "exports": [
+    "arePipeline9RoutesOnSameNet",
+    "doPipeline9RoutesHaveCopperConflict",
+    "getPipeline9FixedRouteObstacles",
+    "getPipeline9RouteCopperGeometry",
+    "isPipeline9ObstacleConnectedToRoute",
+    "minimumDistanceBetweenSegments",
+    "spliceFixedRouteSectionWithMutationMask"
+  ],
+  "helperSourceBodies": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper.ts": "1c5a1ccc46ca7065a470309b5b4c7d62492232c3304b74068784e0be0f73cf2a",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts": "a002a2f4b193d584f1c7065df64c285bed127135979b3825d88729fa250f45d4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts": "8c73f86a73a30be9ccfd488792494bbebc6cbe7f9ebe5684499a689557235e53",
+    "lib/utils/minimumDistanceBetweenSegments.ts": "84c1440e22cf9a4279066d443c4f36eea855739bebaca71fa576927daf10773a"
+  },
+  "scope": "Diagnostic helpers only. No changed production source, no source solver constructors or runtime overlay. Private byte-identical helper solver-utils isolates unused import-side registrations; all actual routing uses frozen published constructors and shared runtime."
+}

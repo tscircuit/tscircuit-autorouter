@@ -1,17 +1,18 @@
-name: Published3216 H616 pending-node context
+name: Published3216 H616 regional cut feasibility
 
 on:
   push:
-    branches: [diagnostic/h616-pending-chain-3216]
+    branches: [bench/h616-regional-cut-screen-3216]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   route:
-    name: Native failure witness (${{ matrix.board }})
+    name: Native regional control and four-node cut
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 25
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -60,6 +61,18 @@ jobs:
             licenses
             provenance
 
+      - name: Checkout immutable helper source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: b7951b41ff87c16f0bd0880e7b9c6a989ada244d
+          path: .full-board-run/helper-source
+          persist-credentials: false
+          sparse-checkout: |
+            lib
+            types
+            scripts
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -68,66 +81,52 @@ jobs:
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
-        id: prepare
+      - name: Prepare authenticated unchanged source helpers
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
+          python3 experiments/full-board-ten/h616-source-helpers/prepare.py
+          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/helper-source"
 
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+      - name: Prepare authenticated native H616 capture
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-h616-regional-cut.py "$FULL_BOARD_ROOT"
 
-      - name: Verify native failure capture against the fresh baseline
-        id: witness
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        run: python3 experiments/full-board-ten/verify-failure-witness.py "$FULL_BOARD_ROOT" "$BOARD"
+      - name: Require exact native original regional control
+        id: control
+        run: bun experiments/full-board-ten/run-h616-regional-cut.ts "$FULL_BOARD_ROOT" control
 
-      - name: Preserve spaced geometry and diagnostics
+      - name: Screen one compact four-node repair
+        id: candidate
+        run: bun experiments/full-board-ten/run-h616-regional-cut.ts "$FULL_BOARD_ROOT" candidate
+
+      - name: Compress authenticated helper evidence
+        if: always()
+        run: |
+          if test -f "$FULL_BOARD_ROOT/h616-source-helpers/index.js"; then gzip -k "$FULL_BOARD_ROOT/h616-source-helpers/index.js"; fi
+          if test -f "$FULL_BOARD_ROOT/h616-source-helpers/index.js.map"; then gzip -k "$FULL_BOARD_ROOT/h616-source-helpers/index.js.map"; fi
+
+      - name: Preserve bounded regional evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: failure-witness-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
+          name: h616-regional-cut-${{ github.run_attempt }}
+          path: |
+            .full-board-run/h616-regional-cut-results
+            .full-board-run/h616-regional-cut-input/input-proof.json
+            .full-board-run/h616-source-helpers/index.js.gz
+            .full-board-run/h616-source-helpers/index.js.map.gz
+            .full-board-run/h616-source-helpers/helper-proof.json
+            .full-board-run/h616-source-helpers/source-body-audit.json
+            .full-board-run/h616-source-helpers/compiler.json
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/h616-regional-cut-plan.json
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Publish compact result notices and summary
-        id: report
+      - name: Require completed control and diagnostic
         if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: failure-witness-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
-          path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
-            .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
-            experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
-            experiments/full-board-ten/failure-witness-baseline.json
-            .full-board-run/results/${{ matrix.board }}/spaced/failure-witness-validation.json
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Require a valid unchanged-output witness
-        if: always()
-        run: test "${{ steps.witness.outcome }}" = success
+        run: test "${{ steps.control.outcome }}" = success -a "${{ steps.candidate.outcome }}" = success
