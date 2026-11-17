@@ -1,0 +1,77 @@
+name: Compare completed OrangeCrab phase copper and native DDR controls
+on:
+  push:
+    branches: [codex/ddr2408-orange-output-check]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  phase:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: before
+            revision: bfc6509a20959b11ebdea7e38d7fb5fe0fef2097
+          - variant: after
+            revision: bcc2094a1d0911594a1aa08c1f0ee7a517ac3723
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.revision }}
+          path: router
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: refresh2408-orangecrab
+          run-id: 44190481894
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Complete the same first-phase input without the board deadline
+        run: |
+          (cd router && bun install --ignore-scripts)
+          cp experiments/full-board-priority-analysis/check-phase-output.ts router/check-phase-output.ts
+          cd router
+          bun check-phase-output.ts "$GITHUB_WORKSPACE/captured/latest/full/orangecrab-phased/phase-1-input.srj.json" "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: orange2408-matched-${{ matrix.variant }}
+          path: results
+          retention-days: 14
+  controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: refresh2408-orangecrab
+          run-id: 44190481894
+          github-token: ${{ github.token }}
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          name: expand2408-orangecrab
+          run-id: 44191895492
+          github-token: ${{ github.token }}
+          path: after
+      - name: Export native routed DDR comparison
+        run: |
+          python3 - <<'PY'
+          import base64,io,json,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for variant in ['before','after']:
+                  paths=[p for p in Path(variant).rglob('*.svg') if 'ddr' in p.parts]
+                  print('ORANGE2408_DDR_SVGS',variant,[str(p) for p in paths])
+                  for p in paths:archive.write(p,str(p))
+          print('ORANGE2408_DDR_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('ORANGE2408_DDR_EVIDENCE_END')
+          PY
