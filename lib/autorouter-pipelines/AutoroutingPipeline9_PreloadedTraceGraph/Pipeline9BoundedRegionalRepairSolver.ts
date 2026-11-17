@@ -16,6 +16,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
+import { getViaPairCopperClearance } from "lib/utils/getViaPairCopperClearance"
 import {
   getPipeline9BoundedRepairAllowance,
   PIPELINE9_BOUNDED_REPAIR_BUDGET,
@@ -607,9 +608,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       traceClearance:
         context.srj.minTraceToPadEdgeClearance ??
         RELAXED_DRC_OPTIONS.traceClearance,
-      viaClearance:
-        context.srj.minPadEdgeToPadEdgeClearance ??
-        RELAXED_DRC_OPTIONS.viaClearance,
+      viaClearance: getViaPairCopperClearance(
+        context.srj,
+        this.params.viaHoleDiameter,
+      ),
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
     })
