@@ -1,0 +1,59 @@
+{
+  "source": {
+    "repository": "tscircuit/core",
+    "baseCommit": "f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73",
+    "path": "lib/components/base-components/Renderable.ts",
+    "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
+    "afterSha256": "312c7cabf299881c18a41afb19661ff2de337058a6185142bd8db18c17a4869e",
+    "patchSha256": "0f551dfc6f54ef043eb055b3676de307f84f54921ed1243250bfb78af4c881eb",
+    "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
+    "testSha256": "0c49c4b7599fca4120cf37b18e4fefd115f9a33f75044b77e155744bcd432656"
+  },
+  "bunVersion": "1.4.3",
+  "lockSha256": "d13dc403d1c8a4e90b8d342ef5b465ec62a3ff17c57f0843492d0d05a966f9d9",
+  "firstTests": [
+    "tests/components/base-components/compact-phase-state-async.test.ts",
+    "tests/components/base-components/compact-phase-state-subtree-async.test.ts",
+    "tests/assembly/assembly-explosion-collision-async.test.tsx",
+    "tests/assembly/assembly-explosion-async-cad.test.tsx",
+    "tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts"
+  ],
+  "relatedTests": [
+    "tests/components/base-components/renderable-dirty-pattern.test.tsx",
+    "tests/components/base-components/disabled-drc-no-async-effect.test.tsx",
+    "tests/components/base-components/board-render-phase-start-order.test.tsx",
+    "tests/footprint/async-footprint-library-map-render-complete-race.test.tsx",
+    "tests/footprint/render-until-settled-skips-idle-polls.test.tsx",
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx",
+    "tests/features/autoroutingphase-event-error-index.test.tsx",
+    "tests/features/autorouting-compute-cost-error.test.tsx",
+    "tests/features/remote-ordinary-copper-pour.test.tsx",
+    "tests/features/remote-autorouting-7-preset-config.test.tsx",
+    "tests/features/skip-autorouting-on-placement-errors1.test.tsx",
+    "tests/features/skip-autorouting-on-placement-errors2.test.tsx",
+    "tests/features/board-via-tenting-stitching.test.tsx",
+    "tests/components/primitive-components/copperpour-with-via.test.tsx",
+    "tests/repros/repro-copper-pour-terminal-other-layer.test.tsx",
+    "tests/subcircuits/subcircuit3-dependent-autorouting.test.tsx",
+    "tests/components/normal-components/component-availability-warning-update.test.tsx",
+    "tests/components/normal-components/component-availability-warning-parts-engine.test.tsx",
+    "tests/components/normal-components/supplier-footprint-mismatch-warning.test.tsx",
+    "tests/components/normal-components/part-orientation-analysis.test.tsx",
+    "tests/components/normal-components/chip-pin-attributes-shared-fetch-isolation.test.tsx",
+    "tests/components/normal-components/parts-engine-datasheet-timeout-fallback.test.tsx",
+    "tests/components/normal-components/connector-usbc-pinned-supplier-part.test.tsx",
+    "tests/components/primitive-components/silkscreen-graphic.test.tsx",
+    "tests/features/schematic-sheet/schematic-graphic-failed-image-url-fallback.test.tsx",
+    "tests/features/schematic-sheet/schematic-graphic-invalid-inline-image-url.test.tsx",
+    "tests/features/spice-analysis/spice-analysis01-platform-config.test.tsx",
+    "tests/features/spice-analysis/spice-analysis07-simulation-fails.test.tsx",
+    "tests/assembly/assembly-explosion-collision-model-load-failure.test.tsx",
+    "tests/assembly/assembly-drawing-dimension.test.tsx",
+    "tests/subcircuits/subcircuit-isolated-render5-equivalence.test.tsx",
+    "tests/scripts/"
+  ],
+  "sourceChangesPermitted": [
+    "lib/components/base-components/Renderable.ts"
+  ],
+  "purpose": "Actual Core source validation and repo-matcher snapshots; no publish, no production PR mutation"
+}
