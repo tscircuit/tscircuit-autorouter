@@ -1,0 +1,9 @@
+{
+  "id": "glider",
+  "mode": "fanout",
+  "variant": "latest",
+  "exitCode": 137,
+  "timedOut": true,
+  "wallMs": 660092.780177,
+  "peakRssMb": 1471.90234375
+}

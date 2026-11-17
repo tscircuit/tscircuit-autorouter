@@ -1,0 +1,1421 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Six full DDR boards — released router1117 and setup fix</title><style>body{font:16px/1.5 system-ui;margin:auto;max-width:1500px;padding:24px;color:#1e293b;background:#f4f6f8}section{background:white;padding:24px;margin:28px 0;border:1px solid #dbe0e8;border-radius:8px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}img{width:100%;height:auto}a{color:#1455a5}th,td{padding:10px;text-align:left;border-bottom:1px solid #dbe0e8}table{border-collapse:collapse;width:100%;background:white}pre{overflow:auto;white-space:pre-wrap;font-size:12px}.status{border-left:5px solid #b7791f;background:#fff2d5;padding:16px}@media(max-width:800px){.pair{grid-template-columns:1fr}table{font-size:12px}}</style><h1>Six full DDR boards: latest release and phase-planning fix</h1><p>tscircuit0.0.3209 · core0.0.2400 · autorouter0.0.1117 · fanout0.0.84 · bus lanes0.0.60. Frozen revisions and commands are recorded in <a href="state.json">state.json</a> and the workflow files.</p><p class="status"><b>Fanout setup across six boards: 1328.0s → 544.8s (59.0% faster).</b> This measures elapsed time to the first autorouting:start event. All twelve first-phase inputs (six boards × two modes) are byte-identical. Original DDR controls remain 6/6 and 310/310 nets. Complete full boards remain 0/6 → 0/6 phased and 0/6 → 0/6 fanout.</p><p><a href="https://github.com/tscircuit/core/pull/5605">Passing repro #5605</a> · <a href="https://github.com/tscircuit/core/pull/5606">Stacked fix #5606</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44048944659">Released baseline</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44053004333">Full reroutes after fix</a> · <a href="https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44053004479">Paired setup measurements</a> · <a href="analysis.json">Analysis JSON</a> · <a href="circuits-and-pcb-results.zip">Download models and results</a></p><table><tr><th>Board</th><th>DDR nets</th><th>Full phased nets</th><th>Emitted traces</th><th>Remaining blocker</th></tr><tr><td>OrangeCrab rev 0.2.1 ECP5 DDR3</td><td>50/50</td><td>3 → 7/152</td><td>0 → 430</td><td>Full-board routing budget exhausted</td></tr><tr><td>Allwinner H616 Devboard DDR3</td><td>53/53</td><td>2 → 2/121</td><td>221 → 221</td><td>Generated native surface approaches could not satisfy full-path geometry and matching</td></tr><tr><td>ButterStick r1.0</td><td>55/55</td><td>9 → 9/317</td><td>0 → 0</td><td>PreparedPortPointRoutingSolver ran out of iterations</td></tr><tr><td>Glider mainboard</td><td>49/49</td><td>1 → 1/356</td><td>537 → 537</td><td>Full-board routing budget exhausted</td></tr><tr><td>i.MX6 Demo Board</td><td>53/53</td><td>3 → 3/404</td><td>0 → 0</td><td>Full-board routing budget exhausted</td></tr><tr><td>iCE/Pi CM0 SBC</td><td>50/50</td><td>7 → 7/230</td><td>0 → 0</td><td>Route stitching did not reach the PCB terminal layers for &quot;source_net_0_mst8&quot;</td></tr></table><section><h2>Most beneficial measured issue: repeated selector searches</h2><p>The i.MX6 CPU profile identifies repeated component-tree searches during phase planning; Group_getRoutingPhasePlans accounts for366.59s inclusive in the624.46s profiled initialization. Each phase/bus selector was resolved again for every candidate trace, and pin aliases also repeatedly resolved each trace's ports. The fix caches both for one planning invocation, with selectors keyed by subcircuit. Later calls resolve the current tree again. Native endpoint matching, aliases, phase ambiguity errors and scope tests pass.</p><p>The routed16-bit memory-bus repro records984 →96 selector searches, a90.2% reduction. Its copper is identical; the measured count updates in the same native PCB snapshot. The repro and fix are separate PRs. The real-board routed results below retain the same 600s total budget. OrangeCrab publishes partial plane copper only in the after run: its plane stage finishes at about 592s, close to the limit. The router and first-phase input are unchanged, so this timing-sensitive copper difference is not claimed as an algorithmic routing improvement. Incomplete or dirty copper is not counted as success.</p><div class="pair"><div><h3>Before ·984 searches</h3><img src="selector-repro-before.svg"></div><div><h3>After ·96 searches</h3><img src="selector-repro-after.svg"></div></div><table><tr><th>Fanout setup</th><th>Before</th><th>After</th><th>Reduction</th><th>Router input</th></tr><tr><td>orangecrab</td><td>56.17s</td><td>20.04s</td><td>64.3%</td><td>Identical</td></tr><tr><td>h616</td><td>49.43s</td><td>15.52s</td><td>68.6%</td><td>Identical</td></tr><tr><td>butterstick</td><td>255.48s</td><td>110.58s</td><td>56.7%</td><td>Identical</td></tr><tr><td>glider</td><td>251.87s</td><td>80.28s</td><td>68.1%</td><td>Identical</td></tr><tr><td>imx6</td><td>477.64s</td><td>217.87s</td><td>54.4%</td><td>Identical</td></tr><tr><td>icepi</td><td>237.45s</td><td>100.54s</td><td>57.7%</td><td>Identical</td></tr></table><p>Each pair runs sequentially on the same8-vCPU ARM Blacksmith worker with identical dependencies and no CPU profiler. Setup diagnostic runs request a stop at the first routing event; other asynchronous effects may still settle before exit. Their later errors do not affect this recorded timestamp. The full routing runs are measured separately, with phased/fanout concurrency2 and unchanged600s routing/660s process caps. <a href="setup-pairs.json">All12 pairs</a> · <a href="initialization-profile.md">CPU profile</a>.</p></section><section><h2>Dataset18 and original DDR controls</h2><p>All16 dataset18 samples solve and pass relaxed DRC before and after; all16 native PCB SVGs are byte-identical, with3407 via entries in each run. This core-only change leaves the router executable unchanged, so dataset18 timing differences are run-to-run variation and are not claimed as an algorithm speedup.</p><table><tr><th>Dataset18</th><th>Before</th><th>After</th><th>Change</th></tr><tr><td>P50</td><td>26.97s</td><td>25.78s</td><td>-4.4%</td></tr><tr><td>P95</td><td>89.15s</td><td>86.22s</td><td>-3.3%</td></tr><tr><td>Mean</td><td>35.42s</td><td>34.77s</td><td>-1.8%</td></tr></table><p><a href="dataset18-native-equivalence.json">Per-sample times, quality and SVG hashes</a> · <a href="ddr-control-equivalence.json">All310 original DDR nets and physical metrics</a> · <a href="ci.json">CI status</a>. Local guards cover QFP, OrangeCrab start vias, terminal vias and terminal layers.</p></section><section><h2>OrangeCrab rev 0.2.1 ECP5 DDR3</h2><p><a href='full-board-models/orangecrab/board.tsx'>Full TSX</a> · <a href='full-board-models/orangecrab/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 3/152 nets · 0 traces · 0 vias</h4><a href='orangecrab-phased-before.pcb.svg'><img loading='lazy' src='orangecrab-phased-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 152,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 29,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 11,
+      &quot;startedMs&quot;: 5833.40487,
+      &quot;elapsedMs&quot;: 595012.887506
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;powerTraceExpansionSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;orangecrab&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 603070.0818040001,
+    &quot;peakRssMb&quot;: 3834.03125
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 11,
+      &quot;terminals&quot;: 434,
+      &quot;obstacles&quot;: 1592,
+      &quot;aliases&quot;: 479296
+    }
+  ],
+  &quot;svg&quot;: &quot;orangecrab-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;4695a14ef9c7ddbaf883b80ab5ecb0135e2c22cb1ae7baeba5baed2fbea98a2f&quot;
+}</pre></details></div><div><h4>After · 7/152 nets · 430 traces · 271 vias</h4><a href='orangecrab-phased-after.pcb.svg'><img loading='lazy' src='orangecrab-phased-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 7,
+  &quot;routableNets&quot;: 152,
+  &quot;traces&quot;: 430,
+  &quot;vias&quot;: 271,
+  &quot;pours&quot;: 29,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 326,
+    &quot;padTrace&quot;: 120,
+    &quot;viaTrace&quot;: 109,
+    &quot;viaPad&quot;: 61,
+    &quot;viaSpacing&quot;: 48,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 13,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;connections&quot;: 11,
+      &quot;startedMs&quot;: 5932.258016,
+      &quot;elapsedMs&quot;: 586422.840699
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 592646.287403,
+      &quot;elapsedMs&quot;: 7357.5790199999465
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;none&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;orangecrab&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 604323.648046,
+    &quot;peakRssMb&quot;: 3809.17578125
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 11,
+      &quot;terminals&quot;: 434,
+      &quot;obstacles&quot;: 1592,
+      &quot;aliases&quot;: 479296
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 16,
+      &quot;obstacles&quot;: 1592,
+      &quot;aliases&quot;: 479296
+    }
+  ],
+  &quot;svg&quot;: &quot;orangecrab-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;ebdc5fd6d03d263240a7e2e2470504d36bd48c08d9c77ca068255a6e8a324338&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 3/152 nets · 0 traces · 0 vias</h4><a href='orangecrab-fanout-before.pcb.svg'><img loading='lazy' src='orangecrab-fanout-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 152,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 29,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 273,
+      &quot;startedMs&quot;: 58824.19618,
+      &quot;elapsedMs&quot;: 541185.271349
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;orangecrab&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 602125.350045,
+    &quot;peakRssMb&quot;: 1762.57421875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 273,
+      &quot;terminals&quot;: 380,
+      &quot;obstacles&quot;: 1592,
+      &quot;aliases&quot;: 542109
+    }
+  ],
+  &quot;svg&quot;: &quot;orangecrab-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;a29dfcd7494414f63ebcb7e6ef5449474021a98fa2d388832f16c025ed4f687a&quot;
+}</pre></details></div><div><h4>After · 3/152 nets · 0 traces · 0 vias</h4><a href='orangecrab-fanout-after.pcb.svg'><img loading='lazy' src='orangecrab-fanout-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 152,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 52,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 273,
+      &quot;startedMs&quot;: 20000.958580000002,
+      &quot;elapsedMs&quot;: 580003.2651140001
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;orangecrab&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 606324.158075,
+    &quot;peakRssMb&quot;: 1279.34375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 273,
+      &quot;terminals&quot;: 380,
+      &quot;obstacles&quot;: 1592,
+      &quot;aliases&quot;: 542109
+    }
+  ],
+  &quot;svg&quot;: &quot;orangecrab-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;9e656bf61aac26608e32d4e00e0ee2a22a5cc19c44e8fdf589f9327599ca084d&quot;
+}</pre></details></div></div></section><section><h2>Allwinner H616 Devboard DDR3</h2><p><a href='full-board-models/h616/board.tsx'>Full TSX</a> · <a href='full-board-models/h616/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 2/121 nets · 221 traces · 140 vias</h4><a href='h616-phased-before.pcb.svg'><img loading='lazy' src='h616-phased-before.pcb.svg'></a><p>Generated native surface approaches could not satisfy full-path geometry and matching</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 2,
+  &quot;routableNets&quot;: 121,
+  &quot;traces&quot;: 221,
+  &quot;vias&quot;: 140,
+  &quot;pours&quot;: 17,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 1,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 1,
+    &quot;viaPad&quot;: 1,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;connections&quot;: 2,
+      &quot;startedMs&quot;: 2286.926698,
+      &quot;elapsedMs&quot;: 87011.463025
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 89514.500688,
+      &quot;elapsedMs&quot;: 238600.29024400003
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Generated native surface approaches could not satisfy full-path geometry and matching&quot;,
+    &quot;Error: Generated native surface approaches could not satisfy full-path geometry and matching&quot;
+  ],
+  &quot;stage&quot;: &quot;none&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;h616&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 331746.54079600004,
+    &quot;peakRssMb&quot;: 2395.21875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 2,
+      &quot;terminals&quot;: 224,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 394356
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 16,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 394356
+    }
+  ],
+  &quot;svg&quot;: &quot;h616-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;bf6e638335cb3371e87381c771b67bf15b0588361d0e42eadeda9be2fdc42330&quot;
+}</pre></details></div><div><h4>After · 2/121 nets · 221 traces · 140 vias</h4><a href='h616-phased-after.pcb.svg'><img loading='lazy' src='h616-phased-after.pcb.svg'></a><p>Generated native surface approaches could not satisfy full-path geometry and matching</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 2,
+  &quot;routableNets&quot;: 121,
+  &quot;traces&quot;: 221,
+  &quot;vias&quot;: 140,
+  &quot;pours&quot;: 17,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 1,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 1,
+    &quot;viaPad&quot;: 1,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;connections&quot;: 2,
+      &quot;startedMs&quot;: 2261.551617,
+      &quot;elapsedMs&quot;: 85340.27382399999
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 87816.23344,
+      &quot;elapsedMs&quot;: 239792.78796000005
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Generated native surface approaches could not satisfy full-path geometry and matching&quot;,
+    &quot;Error: Generated native surface approaches could not satisfy full-path geometry and matching&quot;
+  ],
+  &quot;stage&quot;: &quot;none&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;h616&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 331156.263671,
+    &quot;peakRssMb&quot;: 2536.9375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 2,
+      &quot;terminals&quot;: 224,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 394356
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 16,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 394356
+    }
+  ],
+  &quot;svg&quot;: &quot;h616-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;bf6e638335cb3371e87381c771b67bf15b0588361d0e42eadeda9be2fdc42330&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 0/121 nets · 0 traces · 0 vias</h4><a href='h616-fanout-before.pcb.svg'><img loading='lazy' src='h616-fanout-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 0,
+  &quot;routableNets&quot;: 121,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 231,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 174,
+      &quot;startedMs&quot;: 52762.707473,
+      &quot;elapsedMs&quot;: 547248.41247
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;h616&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 616620.63334,
+    &quot;peakRssMb&quot;: 1984.06640625
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 174,
+      &quot;terminals&quot;: 286,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 434942
+    }
+  ],
+  &quot;svg&quot;: &quot;h616-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;3c6b2f4523f04130ea8f5a4ce3074fba4970449aa47186afb67d5a0d139fae23&quot;
+}</pre></details></div><div><h4>After · 0/121 nets · 0 traces · 0 vias</h4><a href='h616-fanout-after.pcb.svg'><img loading='lazy' src='h616-fanout-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 0,
+  &quot;routableNets&quot;: 121,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 231,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 174,
+      &quot;startedMs&quot;: 16196.986524000002,
+      &quot;elapsedMs&quot;: 583817.3600310001
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;h616&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 605583.135608,
+    &quot;peakRssMb&quot;: 1681.6328125
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 174,
+      &quot;terminals&quot;: 286,
+      &quot;obstacles&quot;: 1094,
+      &quot;aliases&quot;: 434942
+    }
+  ],
+  &quot;svg&quot;: &quot;h616-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;3c6b2f4523f04130ea8f5a4ce3074fba4970449aa47186afb67d5a0d139fae23&quot;
+}</pre></details></div></div></section><section><h2>ButterStick r1.0</h2><p><a href='full-board-models/butterstick/board.tsx'>Full TSX</a> · <a href='full-board-models/butterstick/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 9/317 nets · 0 traces · 0 vias</h4><a href='butterstick-phased-before.pcb.svg'><img loading='lazy' src='butterstick-phased-before.pcb.svg'></a><p>PreparedPortPointRoutingSolver ran out of iterations</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 9,
+  &quot;routableNets&quot;: 317,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 39,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 12,
+      &quot;startedMs&quot;: 26289.509268,
+      &quot;elapsedMs&quot;: 327799.430844
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+    &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+  ],
+  &quot;stage&quot;: &quot;portPointPathingSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;butterstick&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 357667.608854,
+    &quot;peakRssMb&quot;: 5225.296875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 12,
+      &quot;terminals&quot;: 642,
+      &quot;obstacles&quot;: 2733,
+      &quot;aliases&quot;: 1342203
+    }
+  ],
+  &quot;svg&quot;: &quot;butterstick-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;be974c96de78fa9adcc0f6617ca85bd945787ef440981653c553e2d079404503&quot;
+}</pre></details></div><div><h4>After · 9/317 nets · 0 traces · 0 vias</h4><a href='butterstick-phased-after.pcb.svg'><img loading='lazy' src='butterstick-phased-after.pcb.svg'></a><p>PreparedPortPointRoutingSolver ran out of iterations</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 9,
+  &quot;routableNets&quot;: 317,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 39,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 12,
+      &quot;startedMs&quot;: 25284.629182999997,
+      &quot;elapsedMs&quot;: 336320.47115
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;PreparedPortPointRoutingSolver ran out of iterations&quot;,
+    &quot;Error: PreparedPortPointRoutingSolver ran out of iterations&quot;
+  ],
+  &quot;stage&quot;: &quot;portPointPathingSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;butterstick&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 365450.95994200004,
+    &quot;peakRssMb&quot;: 5334.6953125
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 12,
+      &quot;terminals&quot;: 642,
+      &quot;obstacles&quot;: 2733,
+      &quot;aliases&quot;: 1342203
+    }
+  ],
+  &quot;svg&quot;: &quot;butterstick-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;be974c96de78fa9adcc0f6617ca85bd945787ef440981653c553e2d079404503&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 9/317 nets · 0 traces · 0 vias</h4><a href='butterstick-fanout-before.pcb.svg'><img loading='lazy' src='butterstick-fanout-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 9,
+  &quot;routableNets&quot;: 317,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 39,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 91,
+      &quot;startedMs&quot;: 282576.94846,
+      &quot;elapsedMs&quot;: 317428.51664100005
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;butterstick&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 603562.8212280001,
+    &quot;peakRssMb&quot;: 1992.96875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 91,
+      &quot;terminals&quot;: 144,
+      &quot;obstacles&quot;: 2733,
+      &quot;aliases&quot;: 1450005
+    }
+  ],
+  &quot;svg&quot;: &quot;butterstick-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;68664920fb512a80415e32085190eaf6bcfe2e6e084a1c68319ba4661e8121c1&quot;
+}</pre></details></div><div><h4>After · 9/317 nets · 0 traces · 0 vias</h4><a href='butterstick-fanout-after.pcb.svg'><img loading='lazy' src='butterstick-fanout-after.pcb.svg'></a><p>Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 9,
+  &quot;routableNets&quot;: 317,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 39,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 91,
+      &quot;startedMs&quot;: 115961.637436,
+      &quot;elapsedMs&quot;: 458741.82249500003
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+    &quot;Error: Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;butterstick&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 578875.7664399999,
+    &quot;peakRssMb&quot;: 1785.625
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 91,
+      &quot;terminals&quot;: 144,
+      &quot;obstacles&quot;: 2733,
+      &quot;aliases&quot;: 1450005
+    }
+  ],
+  &quot;svg&quot;: &quot;butterstick-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;68664920fb512a80415e32085190eaf6bcfe2e6e084a1c68319ba4661e8121c1&quot;
+}</pre></details></div></div></section><section><h2>Glider mainboard</h2><p><a href='full-board-models/glider/board.tsx'>Full TSX</a> · <a href='full-board-models/glider/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 1/356 nets · 537 traces · 322 vias</h4><a href='glider-phased-before.pcb.svg'><img loading='lazy' src='glider-phased-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 1,
+  &quot;routableNets&quot;: 356,
+  &quot;traces&quot;: 537,
+  &quot;vias&quot;: 322,
+  &quot;pours&quot;: 1,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 16,
+    &quot;padTrace&quot;: 12,
+    &quot;viaTrace&quot;: 9,
+    &quot;viaPad&quot;: 3,
+    &quot;viaSpacing&quot;: 1,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 1,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;connections&quot;: 5,
+      &quot;startedMs&quot;: 9235.140271,
+      &quot;elapsedMs&quot;: 255004.56236299998
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 265364.74938999995,
+      &quot;elapsedMs&quot;: 334866.10324100003
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;none&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;glider&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 615687.220963,
+    &quot;peakRssMb&quot;: 5127.375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 5,
+      &quot;terminals&quot;: 536,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 988169
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 16,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 988169
+    }
+  ],
+  &quot;svg&quot;: &quot;glider-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;663dcc3c56393c71260888e749949d248ae95a7415e83b36c614517e0e54206f&quot;
+}</pre></details></div><div><h4>After · 1/356 nets · 537 traces · 322 vias</h4><a href='glider-phased-after.pcb.svg'><img loading='lazy' src='glider-phased-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 1,
+  &quot;routableNets&quot;: 356,
+  &quot;traces&quot;: 537,
+  &quot;vias&quot;: 322,
+  &quot;pours&quot;: 1,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 16,
+    &quot;padTrace&quot;: 12,
+    &quot;viaTrace&quot;: 9,
+    &quot;viaPad&quot;: 3,
+    &quot;viaSpacing&quot;: 1,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 1,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;connections&quot;: 5,
+      &quot;startedMs&quot;: 8893.930061000001,
+      &quot;elapsedMs&quot;: 291540.24273
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;solver&quot;: &quot;BusLanesPipelineSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 301382.037733,
+      &quot;elapsedMs&quot;: 298962.1984509999
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;none&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;glider&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 614599.6211969999,
+    &quot;peakRssMb&quot;: 5177.375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 5,
+      &quot;terminals&quot;: 536,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 988169
+    },
+    {
+      &quot;name&quot;: &quot;byte0&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 16,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 988169
+    }
+  ],
+  &quot;svg&quot;: &quot;glider-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;663dcc3c56393c71260888e749949d248ae95a7415e83b36c614517e0e54206f&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 0/356 nets · 0 traces · 0 vias</h4><a href='glider-fanout-before.pcb.svg'><img loading='lazy' src='glider-fanout-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 0,
+  &quot;routableNets&quot;: 356,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 0,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 95,
+      &quot;startedMs&quot;: 360737.606799,
+      &quot;elapsedMs&quot;: 239272.20914799994
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;glider&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 137,
+    &quot;timedOut&quot;: true,
+    &quot;wallMs&quot;: 660092.780177,
+    &quot;peakRssMb&quot;: 1471.90234375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 95,
+      &quot;terminals&quot;: 147,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 1028190
+    }
+  ],
+  &quot;svg&quot;: &quot;glider-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;7f371436d66d9850fa7f01c4568f83045bdb67c7fb322292d7dbcd1a40b7b811&quot;
+}</pre></details></div><div><h4>After · 0/356 nets · 0 traces · 0 vias</h4><a href='glider-fanout-after.pcb.svg'><img loading='lazy' src='glider-fanout-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 0,
+  &quot;routableNets&quot;: 356,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 1,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 95,
+      &quot;startedMs&quot;: 63283.283408,
+      &quot;elapsedMs&quot;: 536726.518558
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;glider&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 604243.744855,
+    &quot;peakRssMb&quot;: 1536.9140625
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 95,
+      &quot;terminals&quot;: 147,
+      &quot;obstacles&quot;: 2286,
+      &quot;aliases&quot;: 1028190
+    }
+  ],
+  &quot;svg&quot;: &quot;glider-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;6dae593027da8e44ad36dc2ebf24359f879183619d5bbd52c4b4423fd58fa37d&quot;
+}</pre></details></div></div></section><section><h2>i.MX6 Demo Board</h2><p><a href='full-board-models/imx6/board.tsx'>Full TSX</a> · <a href='full-board-models/imx6/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 3/404 nets · 0 traces · 0 vias</h4><a href='imx6-phased-before.pcb.svg'><img loading='lazy' src='imx6-phased-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 404,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 140,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 65979.026081,
+      &quot;elapsedMs&quot;: 537229.7889919999
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;pipeline9JointDrcRepairSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;imx6&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 609308.710181,
+    &quot;peakRssMb&quot;: 6035.49609375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 606,
+      &quot;obstacles&quot;: 3212,
+      &quot;aliases&quot;: 1701578
+    }
+  ],
+  &quot;svg&quot;: &quot;imx6-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;bbed3ebdbe5ed8f13b0cf3f77ed77a4b6ab200fdf0cb366bcdd3ea51c9dbe434&quot;
+}</pre></details></div><div><h4>After · 3/404 nets · 0 traces · 0 vias</h4><a href='imx6-phased-after.pcb.svg'><img loading='lazy' src='imx6-phased-after.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 404,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 140,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 61582.493459,
+      &quot;elapsedMs&quot;: 539161.1802829999
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;pipeline9JointDrcRepairSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;imx6&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 606630.948428,
+    &quot;peakRssMb&quot;: 6404.01171875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 606,
+      &quot;obstacles&quot;: 3212,
+      &quot;aliases&quot;: 1701578
+    }
+  ],
+  &quot;svg&quot;: &quot;imx6-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;bbed3ebdbe5ed8f13b0cf3f77ed77a4b6ab200fdf0cb366bcdd3ea51c9dbe434&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 3/404 nets · 0 traces · 0 vias</h4><a href='imx6-fanout-before.pcb.svg'><img loading='lazy' src='imx6-fanout-before.pcb.svg'></a><p>Full-board routing budget exhausted</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 404,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 372,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 32,
+      &quot;startedMs&quot;: 543232.19244,
+      &quot;elapsedMs&quot;: 112662.37944399996
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Full-board routing budget exhausted&quot;,
+    &quot;Error: Full-board routing budget exhausted&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;imx6&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 137,
+    &quot;timedOut&quot;: true,
+    &quot;wallMs&quot;: 660247.129248,
+    &quot;peakRssMb&quot;: 3141.8671875
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 32,
+      &quot;terminals&quot;: 44,
+      &quot;obstacles&quot;: 3212,
+      &quot;aliases&quot;: 1785132
+    }
+  ],
+  &quot;svg&quot;: &quot;imx6-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;e247dcbb7f88c9079f40cca27c807be581d19167205a4c2981b59e358b1cef7f&quot;
+}</pre></details></div><div><h4>After · 3/404 nets · 0 traces · 0 vias</h4><a href='imx6-fanout-after.pcb.svg'><img loading='lazy' src='imx6-fanout-after.pcb.svg'></a><p>Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 3,
+  &quot;routableNets&quot;: 404,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 372,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 32,
+      &quot;startedMs&quot;: 216322.273801,
+      &quot;elapsedMs&quot;: 205248.12263699996
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+    &quot;Error: Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+    &quot;Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;imx6&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 427681.272541,
+    &quot;peakRssMb&quot;: 2177.2265625
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 32,
+      &quot;terminals&quot;: 44,
+      &quot;obstacles&quot;: 3212,
+      &quot;aliases&quot;: 1785132
+    }
+  ],
+  &quot;svg&quot;: &quot;imx6-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;e247dcbb7f88c9079f40cca27c807be581d19167205a4c2981b59e358b1cef7f&quot;
+}</pre></details></div></div></section><section><h2>iCE/Pi CM0 SBC</h2><p><a href='full-board-models/icepi/board.tsx'>Full TSX</a> · <a href='full-board-models/icepi/source.json'>Full component, pad and net source</a></p><h3>Phased routing</h3><div class="pair"><div><h4>Before · 7/230 nets · 0 traces · 0 vias</h4><a href='icepi-phased-before.pcb.svg'><img loading='lazy' src='icepi-phased-before.pcb.svg'></a><p>Route stitching did not reach the PCB terminal layers for &quot;source_net_0_mst8&quot;</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 7,
+  &quot;routableNets&quot;: 230,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 70,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 26928.930097,
+      &quot;elapsedMs&quot;: 258963.169816
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Route stitching did not reach the PCB terminal layers for \&quot;source_net_0_mst8\&quot;&quot;,
+    &quot;Error: Route stitching did not reach the PCB terminal layers for \&quot;source_net_0_mst8\&quot;&quot;
+  ],
+  &quot;stage&quot;: &quot;highDensityStitchSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;icepi&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 289460.274072,
+    &quot;peakRssMb&quot;: 5274.234375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 567,
+      &quot;obstacles&quot;: 2038,
+      &quot;aliases&quot;: 674092
+    }
+  ],
+  &quot;svg&quot;: &quot;icepi-phased-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;3f8019cbab45f5ec5a8a3b84572a317d32fcbb928f5dbc0bb97020c19d9e234c&quot;
+}</pre></details></div><div><h4>After · 7/230 nets · 0 traces · 0 vias</h4><a href='icepi-phased-after.pcb.svg'><img loading='lazy' src='icepi-phased-after.pcb.svg'></a><p>Route stitching did not reach the PCB terminal layers for &quot;source_net_0_mst8&quot;</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 7,
+  &quot;routableNets&quot;: 230,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 70,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;solver&quot;: &quot;workspace Pipeline 9&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 8,
+      &quot;startedMs&quot;: 25489.278267,
+      &quot;elapsedMs&quot;: 264661.684731
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Route stitching did not reach the PCB terminal layers for \&quot;source_net_0_mst8\&quot;&quot;,
+    &quot;Error: Route stitching did not reach the PCB terminal layers for \&quot;source_net_0_mst8\&quot;&quot;
+  ],
+  &quot;stage&quot;: &quot;highDensityStitchSolver&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;icepi&quot;,
+    &quot;mode&quot;: &quot;phased&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 293704.425895,
+    &quot;peakRssMb&quot;: 5311.01953125
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;plane_escape&quot;,
+      &quot;connections&quot;: 8,
+      &quot;terminals&quot;: 567,
+      &quot;obstacles&quot;: 2038,
+      &quot;aliases&quot;: 674092
+    }
+  ],
+  &quot;svg&quot;: &quot;icepi-phased-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;3f8019cbab45f5ec5a8a3b84572a317d32fcbb928f5dbc0bb97020c19d9e234c&quot;
+}</pre></details></div></div><h3>Fanout routing</h3><div class="pair"><div><h4>Before · 7/230 nets · 0 traces · 0 vias</h4><a href='icepi-fanout-before.pcb.svg'><img loading='lazy' src='icepi-fanout-before.pcb.svg'></a><p>Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 7,
+  &quot;routableNets&quot;: 230,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 70,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 32,
+      &quot;startedMs&quot;: 219953.594415,
+      &quot;elapsedMs&quot;: 233118.14891400002
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+    &quot;Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;icepi&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;latest&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 456618.213666,
+    &quot;peakRssMb&quot;: 2227.69140625
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 32,
+      &quot;terminals&quot;: 44,
+      &quot;obstacles&quot;: 2038,
+      &quot;aliases&quot;: 724443
+    }
+  ],
+  &quot;svg&quot;: &quot;icepi-fanout-before.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;c679aa8834741acf73d43b7d09b8ee451d0c5e1187d5f5d75e0f89dbd29793f5&quot;
+}</pre></details></div><div><h4>After · 7/230 nets · 0 traces · 0 vias</h4><a href='icepi-fanout-after.pcb.svg'><img loading='lazy' src='icepi-fanout-after.pcb.svg'></a><p>Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.</p><details><summary>Physical checks and routing stages</summary><pre>{
+  &quot;passed&quot;: false,
+  &quot;status&quot;: &quot;failed&quot;,
+  &quot;connectedNets&quot;: 7,
+  &quot;routableNets&quot;: 230,
+  &quot;traces&quot;: 0,
+  &quot;vias&quot;: 0,
+  &quot;pours&quot;: 70,
+  &quot;initialCopperElements&quot;: 0,
+  &quot;geometryErrors&quot;: [],
+  &quot;membershipErrors&quot;: [],
+  &quot;physicalFindings&quot;: {
+    &quot;overlap&quot;: 0,
+    &quot;padTrace&quot;: 0,
+    &quot;viaTrace&quot;: 0,
+    &quot;viaPad&quot;: 0,
+    &quot;viaSpacing&quot;: 0,
+    &quot;contiguous&quot;: 0,
+    &quot;viaInPad&quot;: 0,
+    &quot;holeTrace&quot;: 0
+  },
+  &quot;phases&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;solver&quot;: &quot;FanoutSolver&quot;,
+      &quot;status&quot;: &quot;failed&quot;,
+      &quot;connections&quot;: 32,
+      &quot;startedMs&quot;: 97274.593146,
+      &quot;elapsedMs&quot;: 193099.515534
+    }
+  ],
+  &quot;errors&quot;: [
+    &quot;Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;,
+    &quot;Error: Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout&#x27;s padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.&quot;
+  ],
+  &quot;stage&quot;: &quot;initializing&quot;,
+  &quot;process&quot;: {
+    &quot;id&quot;: &quot;icepi&quot;,
+    &quot;mode&quot;: &quot;fanout&quot;,
+    &quot;variant&quot;: &quot;candidate&quot;,
+    &quot;exitCode&quot;: 0,
+    &quot;timedOut&quot;: false,
+    &quot;wallMs&quot;: 294042.78977800003,
+    &quot;peakRssMb&quot;: 1772.33984375
+  },
+  &quot;phaseInputs&quot;: [
+    {
+      &quot;name&quot;: &quot;fanout preparation&quot;,
+      &quot;connections&quot;: 32,
+      &quot;terminals&quot;: 44,
+      &quot;obstacles&quot;: 2038,
+      &quot;aliases&quot;: 724443
+    }
+  ],
+  &quot;svg&quot;: &quot;icepi-fanout-after.pcb.svg&quot;,
+  &quot;svgSha256&quot;: &quot;c679aa8834741acf73d43b7d09b8ee451d0c5e1187d5f5d75e0f89dbd29793f5&quot;
+}</pre></details></div></div></section><section><h2>Remaining issues</h2><p>Latest release baseline still fails all full boards. iCE/Pi now gets past its previous global-pathing limit but fails terminal-layer stitching; the exact failing constructor input is retained as <a href="icepi-stitch-start.capture.json.gz">compressed JSON</a>. OrangeCrab's new release baseline exhausts its budget in power expansion without publishing the430 plane traces seen in the previous1112 run. This fix targets measured setup work and does not suppress either failure. ButterStick dense plane pathing, joint DRC repair, native DDR surface approaches and fanout capacity remain separate issues.</p><p>All full models preserve component placement, pad geometry and net membership. Original tracks, vias and poured copper are removed. Fresh pours come only from authored plane intent. The native SVGs show actual emitted partial copper; physical findings remain visible. A successful collection job does not imply that a board passed routing.</p></section></html>

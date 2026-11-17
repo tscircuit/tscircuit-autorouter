@@ -1,0 +1,354 @@
+{
+  "repro": {
+    "head": "626290e5e7a6d6d72590d430480e5d6e0f96a5da",
+    "run": 44053269721,
+    "jobs": [
+      {
+        "id": 133936096612,
+        "name": "test (6)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096629,
+        "name": "test (10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096631,
+        "name": "test (5)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096801,
+        "name": "test (9)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096803,
+        "name": "test (3)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096826,
+        "name": "test (1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096845,
+        "name": "test (7)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096854,
+        "name": "test (8)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096946,
+        "name": "test (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936096964,
+        "name": "test (2)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "checks": [
+      {
+        "name": "Continuous Releases",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://pkg.pr.new"
+      },
+      {
+        "name": "Format code",
+        "conclusion": "pass",
+        "duration": "15s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269744/job/133936096649"
+      },
+      {
+        "name": "Vercel",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://vercel.com/tscircuit/tscircuit-core-benchmarks/HmjB7XxBdunwXpegawio3zVTJq38"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://vercel.com/github"
+      },
+      {
+        "name": "class-exports",
+        "conclusion": "pass",
+        "duration": "23s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269920/job/133936096707"
+      },
+      {
+        "name": "format-check",
+        "conclusion": "pass",
+        "duration": "15s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269808/job/133936098084"
+      },
+      {
+        "name": "preview",
+        "conclusion": "pass",
+        "duration": "1m18s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269616/job/133936095999"
+      },
+      {
+        "name": "smoke-test",
+        "conclusion": "pass",
+        "duration": "1m27s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269733/job/133936096458"
+      },
+      {
+        "name": "test (1)",
+        "conclusion": "pass",
+        "duration": "1m41s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096826"
+      },
+      {
+        "name": "test (10)",
+        "conclusion": "pass",
+        "duration": "1m47s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096629"
+      },
+      {
+        "name": "test (2)",
+        "conclusion": "pass",
+        "duration": "2m25s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096964"
+      },
+      {
+        "name": "test (3)",
+        "conclusion": "pass",
+        "duration": "2m6s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096803"
+      },
+      {
+        "name": "test (4)",
+        "conclusion": "pass",
+        "duration": "1m36s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096946"
+      },
+      {
+        "name": "test (5)",
+        "conclusion": "pass",
+        "duration": "1m58s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096631"
+      },
+      {
+        "name": "test (6)",
+        "conclusion": "pass",
+        "duration": "1m17s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096612"
+      },
+      {
+        "name": "test (7)",
+        "conclusion": "pass",
+        "duration": "2m7s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096845"
+      },
+      {
+        "name": "test (8)",
+        "conclusion": "pass",
+        "duration": "2m3s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096854"
+      },
+      {
+        "name": "test (9)",
+        "conclusion": "pass",
+        "duration": "3m17s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269721/job/133936096801"
+      },
+      {
+        "name": "type-check",
+        "conclusion": "pass",
+        "duration": "1m7s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053269679/job/133936096218"
+      }
+    ]
+  },
+  "fix": {
+    "head": "e3e252679af0104daf14798e15f0e4ee8c8fff00",
+    "run": 44053421537,
+    "jobs": [
+      {
+        "id": 133936600503,
+        "name": "test (5)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600713,
+        "name": "test (8)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600735,
+        "name": "test (3)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600746,
+        "name": "test (10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600793,
+        "name": "test (1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600824,
+        "name": "test (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600907,
+        "name": "test (9)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600949,
+        "name": "test (6)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936600957,
+        "name": "test (2)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 133936601017,
+        "name": "test (7)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "checks": [
+      {
+        "name": "Continuous Releases",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://pkg.pr.new"
+      },
+      {
+        "name": "Format code",
+        "conclusion": "pass",
+        "duration": "25s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421640/job/133936600106"
+      },
+      {
+        "name": "Vercel",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://vercel.com/tscircuit/tscircuit-core-benchmarks/AmMXunkcUUjB5tWBaphFt2eg3yeN"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "conclusion": "pass",
+        "duration": "0",
+        "url": "https://vercel.com/github"
+      },
+      {
+        "name": "preview",
+        "conclusion": "pass",
+        "duration": "55s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421465/job/133936599432"
+      },
+      {
+        "name": "smoke-test",
+        "conclusion": "pass",
+        "duration": "1m27s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421483/job/133936599756"
+      },
+      {
+        "name": "test (1)",
+        "conclusion": "pass",
+        "duration": "1m21s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600793"
+      },
+      {
+        "name": "test (10)",
+        "conclusion": "pass",
+        "duration": "2m41s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600746"
+      },
+      {
+        "name": "test (2)",
+        "conclusion": "pass",
+        "duration": "2m30s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600957"
+      },
+      {
+        "name": "test (3)",
+        "conclusion": "pass",
+        "duration": "3m43s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600735"
+      },
+      {
+        "name": "test (4)",
+        "conclusion": "pass",
+        "duration": "2m3s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600824"
+      },
+      {
+        "name": "test (5)",
+        "conclusion": "pass",
+        "duration": "1m25s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600503"
+      },
+      {
+        "name": "test (6)",
+        "conclusion": "pass",
+        "duration": "2m1s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600949"
+      },
+      {
+        "name": "test (7)",
+        "conclusion": "pass",
+        "duration": "3m30s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936601017"
+      },
+      {
+        "name": "test (8)",
+        "conclusion": "pass",
+        "duration": "1m36s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600713"
+      },
+      {
+        "name": "test (9)",
+        "conclusion": "pass",
+        "duration": "3m58s",
+        "url": "https://github.com/tscircuit/core/actions/runs/44053421537/job/133936600907"
+      }
+    ]
+  },
+  "local": {
+    "typecheckPassed": true,
+    "buildPassed": true,
+    "focusedCoreTestsPassed": 9,
+    "routerGuardTestsPassed": 6
+  }
+}

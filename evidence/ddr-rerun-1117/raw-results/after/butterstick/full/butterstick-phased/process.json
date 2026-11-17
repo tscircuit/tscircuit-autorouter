@@ -1,0 +1,9 @@
+{
+  "id": "butterstick",
+  "mode": "phased",
+  "variant": "candidate",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 365450.95994200004,
+  "peakRssMb": 5334.6953125
+}

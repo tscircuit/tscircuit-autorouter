@@ -1,0 +1,13 @@
+{
+  "bun": "1.4.3",
+  "arch": "arm64",
+  "cpu": "unknown",
+  "cpus": 8,
+  "memory": 25151705088,
+  "concurrency": 2,
+  "routerCommit": "dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f",
+  "coreCommit": "47cdc02e0bffa662e141fbf4e8ad436d7761fdbf",
+  "coreVersion": "0.0.2400",
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000
+}

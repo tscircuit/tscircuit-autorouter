@@ -1,0 +1,16 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": null,
+  "fanoutLastState": null,
+  "phaseInputs": [
+    {
+      "name": "fanout preparation",
+      "connections": 32,
+      "terminals": 44,
+      "obstacles": 3212,
+      "aliases": 1785132
+    }
+  ]
+}

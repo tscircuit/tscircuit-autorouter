@@ -1,0 +1,362 @@
+[
+  {
+    "board": "orangecrab",
+    "mode": "phased",
+    "before": {
+      "nets": 3,
+      "total": 152,
+      "traces": 0,
+      "vias": 0,
+      "pours": 29,
+      "startMs": 5833.40487,
+      "elapsedMs": 601379.821829,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 7,
+      "total": 152,
+      "traces": 430,
+      "vias": 271,
+      "pours": 29,
+      "startMs": 5932.258016,
+      "elapsedMs": 602391.3421240001,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "orangecrab",
+    "mode": "fanout",
+    "before": {
+      "nets": 3,
+      "total": 152,
+      "traces": 0,
+      "vias": 0,
+      "pours": 29,
+      "startMs": 58824.19618,
+      "elapsedMs": 600559.564707,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 3,
+      "total": 152,
+      "traces": 0,
+      "vias": 0,
+      "pours": 52,
+      "startMs": 20000.958580000002,
+      "elapsedMs": 604681.4974240001,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "h616",
+    "mode": "phased",
+    "before": {
+      "nets": 2,
+      "total": 121,
+      "traces": 221,
+      "vias": 140,
+      "pours": 17,
+      "startMs": 2286.926698,
+      "elapsedMs": 330109.187422,
+      "error": "Generated native surface approaches could not satisfy full-path geometry and matching",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 2,
+      "total": 121,
+      "traces": 221,
+      "vias": 140,
+      "pours": 17,
+      "startMs": 2261.551617,
+      "elapsedMs": 329545.18746000004,
+      "error": "Generated native surface approaches could not satisfy full-path geometry and matching",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "h616",
+    "mode": "fanout",
+    "before": {
+      "nets": 0,
+      "total": 121,
+      "traces": 0,
+      "vias": 0,
+      "pours": 231,
+      "startMs": 52762.707473,
+      "elapsedMs": 614889.4126980001,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 0,
+      "total": 121,
+      "traces": 0,
+      "vias": 0,
+      "pours": 231,
+      "startMs": 16196.986524000002,
+      "elapsedMs": 603947.783083,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "butterstick",
+    "mode": "phased",
+    "before": {
+      "nets": 9,
+      "total": 317,
+      "traces": 0,
+      "vias": 0,
+      "pours": 39,
+      "startMs": 26289.509268,
+      "elapsedMs": 355402.219693,
+      "error": "PreparedPortPointRoutingSolver ran out of iterations",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 9,
+      "total": 317,
+      "traces": 0,
+      "vias": 0,
+      "pours": 39,
+      "startMs": 25284.629182999997,
+      "elapsedMs": 363096.219103,
+      "error": "PreparedPortPointRoutingSolver ran out of iterations",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "butterstick",
+    "mode": "fanout",
+    "before": {
+      "nets": 9,
+      "total": 317,
+      "traces": 0,
+      "vias": 0,
+      "pours": 39,
+      "startMs": 282576.94846,
+      "elapsedMs": 601384.461399,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 9,
+      "total": 317,
+      "traces": 0,
+      "vias": 0,
+      "pours": 39,
+      "startMs": 115961.637436,
+      "elapsedMs": 576432.622209,
+      "error": "Fanout failed for U11: only 5 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "glider",
+    "mode": "phased",
+    "before": {
+      "nets": 1,
+      "total": 356,
+      "traces": 537,
+      "vias": 322,
+      "pours": 1,
+      "startMs": 9235.140271,
+      "elapsedMs": 613126.151197,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 1,
+      "total": 356,
+      "traces": 537,
+      "vias": 322,
+      "pours": 1,
+      "startMs": 8893.930061000001,
+      "elapsedMs": 612219.6324,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "glider",
+    "mode": "fanout",
+    "before": {
+      "nets": 0,
+      "total": 356,
+      "traces": 0,
+      "vias": 0,
+      "pours": 0,
+      "startMs": 360737.606799,
+      "elapsedMs": 601080.286691,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 0,
+      "total": 356,
+      "traces": 0,
+      "vias": 0,
+      "pours": 1,
+      "startMs": 63283.283408,
+      "elapsedMs": 601716.111899,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "imx6",
+    "mode": "phased",
+    "before": {
+      "nets": 3,
+      "total": 404,
+      "traces": 0,
+      "vias": 0,
+      "pours": 140,
+      "startMs": 65979.026081,
+      "elapsedMs": 605925.796708,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 3,
+      "total": 404,
+      "traces": 0,
+      "vias": 0,
+      "pours": 140,
+      "startMs": 61582.493459,
+      "elapsedMs": 603429.9220499999,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "imx6",
+    "mode": "fanout",
+    "before": {
+      "nets": 3,
+      "total": 404,
+      "traces": 0,
+      "vias": 0,
+      "pours": 372,
+      "startMs": 543232.19244,
+      "elapsedMs": 657760.9071750001,
+      "error": "Full-board routing budget exhausted",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 3,
+      "total": 404,
+      "traces": 0,
+      "vias": 0,
+      "pours": 372,
+      "startMs": 216322.273801,
+      "elapsedMs": 424442.418227,
+      "error": "Fanout failed for U10: only 2 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "icepi",
+    "mode": "phased",
+    "before": {
+      "nets": 7,
+      "total": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "startMs": 26928.930097,
+      "elapsedMs": 287205.110801,
+      "error": "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\"",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 7,
+      "total": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "startMs": 25489.278267,
+      "elapsedMs": 291485.48991,
+      "error": "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\"",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  },
+  {
+    "board": "icepi",
+    "mode": "fanout",
+    "before": {
+      "nets": 7,
+      "total": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "startMs": 219953.594415,
+      "elapsedMs": 454436.21062300005,
+      "error": "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    },
+    "after": {
+      "nets": 7,
+      "total": 230,
+      "traces": 0,
+      "vias": 0,
+      "pours": 70,
+      "startMs": 97274.593146,
+      "elapsedMs": 291840.351852,
+      "error": "Fanout failed for U22: only 1 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+      "geometryErrors": 0,
+      "membershipErrors": 0,
+      "initialCopperElements": 0
+    }
+  }
+]

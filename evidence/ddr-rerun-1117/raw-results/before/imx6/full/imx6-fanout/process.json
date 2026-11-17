@@ -1,0 +1,9 @@
+{
+  "id": "imx6",
+  "mode": "fanout",
+  "variant": "latest",
+  "exitCode": 137,
+  "timedOut": true,
+  "wallMs": 660247.129248,
+  "peakRssMb": 3141.8671875
+}

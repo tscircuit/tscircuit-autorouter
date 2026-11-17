@@ -1,0 +1,37 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/features/autoroutingphase-bus-routing-phase.test.tsx:
+(pass) a bus routing phase assigns its traces to that phase [281.42ms]
+(pass) a bus without a phase does not change its trace phases [47.34ms]
+
+tests/repros/phase-planning-repeated-port-selectors.test.tsx:
+Each child in a list should have a unique "key" prop.
+
+Check the render method of `board`. See https://react.dev/link/warning-keys for more information.
+Each child in a list should have a unique "key" prop.
+
+Check the top-level render call using <footprint>. See https://react.dev/link/warning-keys for more information.
+(pass) phase planning resolves shared bus selectors and pin aliases [792.94ms]
+
+tests/autorouting-phase-selectors/named-traces.test.tsx:
+(pass) phase names and endpoints select and deduplicate the requested traces [640.04ms]
+
+tests/autorouting-phase-selectors/reroute-selector.test.tsx:
+(pass) reroute-selector [41.83ms]
+
+tests/autorouting-phase-selectors/ambiguous-selector.test.tsx:
+(pass) ambiguous-selector [16.65ms]
+
+tests/autorouting-phase-selectors/unmatched-selector.test.tsx:
+(pass) unmatched-selector [12.28ms]
+
+tests/autorouting-phase-selectors/breakout-ownership.test.tsx:
+(pass) a resolved breakout trace stays owned by its breakout [260.56ms]
+
+tests/autorouting-phase-selectors/subcircuit-scope.test.tsx:
+(pass) same trace names in sibling subcircuits resolve locally [772.96ms]
+
+ 9 pass
+ 0 fail
+ 25 expect() calls
+Ran 9 tests across 8 files. [4.42s]

@@ -1,0 +1,37 @@
+{
+  "id": "icepi",
+  "mode": "phased",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 291485.48991,
+  "phases": [
+    {
+      "name": "plane_escape",
+      "solver": "workspace Pipeline 9",
+      "status": "failed",
+      "connections": 8,
+      "startedMs": 25489.278267,
+      "elapsedMs": 264661.684731
+    }
+  ],
+  "errors": [
+    "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\"",
+    "Error: Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\"",
+    "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\""
+  ],
+  "stage": "highDensityStitchSolver",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3209",
+    "core": "0.0.2400",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.60",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 36,
+    "importedSavedCopper": false
+  }
+}

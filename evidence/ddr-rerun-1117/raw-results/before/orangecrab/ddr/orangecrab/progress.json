@@ -1,0 +1,73 @@
+{
+  "renderCompleted": true,
+  "renderMs": 84084.534809,
+  "phases": [
+    {
+      "phase": "byte0",
+      "stage": 0,
+      "solver": "BusLanesPipelineSolver",
+      "status": "completed",
+      "startedMs": 1010.7221029999998,
+      "durationMs": 419.1254990000002,
+      "connections": 8,
+      "cacheStatus": "disabled"
+    },
+    {
+      "phase": "byte1",
+      "stage": 1,
+      "solver": "BusLanesPipelineSolver",
+      "status": "completed",
+      "startedMs": 1437.5497670000002,
+      "durationMs": 453.7821409999997,
+      "connections": 8,
+      "cacheStatus": "disabled"
+    },
+    {
+      "phase": "remaining",
+      "stage": 2,
+      "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "status": "completed",
+      "startedMs": 1899.6199880000001,
+      "durationMs": 81535.30610799999,
+      "connections": 34,
+      "cacheStatus": "disabled"
+    }
+  ],
+  "errors": [],
+  "solverEvents": [
+    {
+      "type": "solver:started",
+      "solverName": "LayoutPipelineSolver",
+      "componentName": "<board#446 />",
+      "elapsedMs": 326.8043050000001
+    },
+    {
+      "type": "solver:ended",
+      "solverName": "LayoutPipelineSolver",
+      "componentName": "<board#446 />",
+      "solved": true,
+      "failed": false,
+      "iterations": 25,
+      "error": null,
+      "elapsedMs": 329.448756
+    },
+    {
+      "type": "solver:started",
+      "solverName": "BusLanesPipelineSolver",
+      "componentName": "<board#446 />",
+      "elapsedMs": 1016.7537629999999
+    },
+    {
+      "type": "solver:started",
+      "solverName": "BusLanesPipelineSolver",
+      "componentName": "<board#446 />",
+      "elapsedMs": 1443.743752
+    },
+    {
+      "type": "solver:started",
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "componentName": "<board#446 />",
+      "elapsedMs": 1920.431621
+    }
+  ]
+}

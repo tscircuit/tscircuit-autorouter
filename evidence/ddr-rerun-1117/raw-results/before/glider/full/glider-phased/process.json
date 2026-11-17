@@ -1,0 +1,9 @@
+{
+  "id": "glider",
+  "mode": "phased",
+  "variant": "latest",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 615687.220963,
+  "peakRssMb": 5127.375
+}

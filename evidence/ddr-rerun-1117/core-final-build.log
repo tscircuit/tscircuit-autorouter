@@ -1,0 +1,17 @@
+$ bun run scripts/build-test-point-rerouter-types.ts && tsup-node
+CLI Building entry: index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: /workspace/core-phase-selector-cache/tsup.config.ts
+CLI Target: esnext
+ESM Build start
+DTS Build start
+ESM dist/chunk-JS6HQFPD.js                                            85.97 KB
+ESM dist/check-circuit-json-assembly-explosion-collisions-SDYLNTA3.js 173.00 B
+ESM dist/chunk-NQP4QDVK.js                                            27.08 KB
+ESM dist/resolve-drawing-dimensions-YGXE6KQP.js                       17.57 KB
+ESM dist/chunk-45V42254.js                                            70.67 KB
+ESM dist/index.js                                                     6.87 MB
+ESM ⚡️ Build success in 1310ms
+DTS ⚡️ Build success in 51689ms
+DTS dist/index.d.ts 11.31 MB

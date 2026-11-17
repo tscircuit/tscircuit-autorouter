@@ -1,0 +1,110 @@
+[
+  {
+    "board": "orangecrab",
+    "mode": "fanout",
+    "beforeMs": 56167.566743999996,
+    "afterMs": 20038.140287,
+    "reductionPercent": 64.3243575454681,
+    "inputIdentical": true,
+    "inputSha256": "80a0423a1aab0f433d330831f9bb82f0188d24eb13c2b323333b06c4c9575876"
+  },
+  {
+    "board": "orangecrab",
+    "mode": "phased",
+    "beforeMs": 5876.011781,
+    "afterMs": 5603.675214,
+    "reductionPercent": 4.634717852006299,
+    "inputIdentical": true,
+    "inputSha256": "a44bcf322b2eaa1755d5e2f2bb755d418b87eac880112d18595cc5f206e1862d"
+  },
+  {
+    "board": "h616",
+    "mode": "fanout",
+    "beforeMs": 49434.254405,
+    "afterMs": 15517.850069,
+    "reductionPercent": 68.60911476105836,
+    "inputIdentical": true,
+    "inputSha256": "e6e2b9a422e100ae0f83e780bc2219e919cbc330086a5b52d708b296ab9e8ce1"
+  },
+  {
+    "board": "h616",
+    "mode": "phased",
+    "beforeMs": 2319.354264,
+    "afterMs": 2207.430362,
+    "reductionPercent": 4.825649265281884,
+    "inputIdentical": true,
+    "inputSha256": "a999954e24f468a22ea43a8b1ff1a771fb20d3c4c02e07c76269d50bcf4c4506"
+  },
+  {
+    "board": "butterstick",
+    "mode": "fanout",
+    "beforeMs": 255482.29564,
+    "afterMs": 110579.220344,
+    "reductionPercent": 56.71746252827745,
+    "inputIdentical": true,
+    "inputSha256": "47aa80a3e154e3302a74ce1226e39422e628f4f6b4dc9fbaaad9a85f558b1234"
+  },
+  {
+    "board": "butterstick",
+    "mode": "phased",
+    "beforeMs": 22964.798174,
+    "afterMs": 23837.624914,
+    "reductionPercent": -3.800715919150499,
+    "inputIdentical": true,
+    "inputSha256": "4eb3338edc596bc0d725c41dc2f289e3f3f88fa41547d8fd01039d7ea1aa2f5a"
+  },
+  {
+    "board": "glider",
+    "mode": "fanout",
+    "beforeMs": 251865.736431,
+    "afterMs": 80276.10332600001,
+    "reductionPercent": 68.12742198937723,
+    "inputIdentical": true,
+    "inputSha256": "bd8843332c5bda311753c6958e6aad7c79e1ccf6e42cef1fe1078dfdd3ec8c23"
+  },
+  {
+    "board": "glider",
+    "mode": "phased",
+    "beforeMs": 8913.645994,
+    "afterMs": 8951.666207999999,
+    "reductionPercent": -0.42653942085641994,
+    "inputIdentical": true,
+    "inputSha256": "cae7f6a75de6d85b9a4e050eeee49ea82808e7a769cc6adf003a40250a49f8d8"
+  },
+  {
+    "board": "imx6",
+    "mode": "fanout",
+    "beforeMs": 477639.349693,
+    "afterMs": 217870.761427,
+    "reductionPercent": 54.385927045785664,
+    "inputIdentical": true,
+    "inputSha256": "ea0271f05cb4c18bd604af15a0ceb5d5d9290dc8e847c98b7157258310f01e02"
+  },
+  {
+    "board": "imx6",
+    "mode": "phased",
+    "beforeMs": 58738.323166,
+    "afterMs": 59271.900416000004,
+    "reductionPercent": -0.9083971438749838,
+    "inputIdentical": true,
+    "inputSha256": "53f879b34a258031059303904be4ace642a3b2e493f3ec6f4dbdb304a38e5857"
+  },
+  {
+    "board": "icepi",
+    "mode": "fanout",
+    "beforeMs": 237450.349668,
+    "afterMs": 100538.51252799999,
+    "reductionPercent": 57.65914319832688,
+    "inputIdentical": true,
+    "inputSha256": "c535fae80416f3c02ee14b782f076939c02f5c752bddc89f686968509f2092f9"
+  },
+  {
+    "board": "icepi",
+    "mode": "phased",
+    "beforeMs": 23635.948608,
+    "afterMs": 25790.810557,
+    "reductionPercent": -9.116883712763912,
+    "inputIdentical": true,
+    "inputSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6"
+  }
+]
