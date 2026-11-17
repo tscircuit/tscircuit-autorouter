@@ -43,8 +43,12 @@ def main():
         destination = root / "published-baseline"
         destination.mkdir()
         with zipfile.ZipFile(io.BytesIO(archive)) as packet:
+            names = packet.namelist()
+            if len(names) != len(set(names)):
+                raise RuntimeError("Baseline archive contains duplicate member names")
             for row in plan["frozenArtifactFiles"]:
-                matches = [name for name in packet.namelist() if name.endswith("/butterstick/spaced/" + row["name"])]
+                # upload-artifact's single directory root produces flat members.
+                matches = [name for name in names if name == row["name"]]
                 if len(matches) != 1:
                     raise RuntimeError(f"Missing or ambiguous native baseline file: {row['name']}")
                 content = packet.read(matches[0])
