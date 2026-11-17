@@ -23,15 +23,30 @@ test("route the native A13 remaining signals after the four data phases", async 
   })
   solver.solve()
   expect(solver.solved).toBe(true)
+  const snapshotInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  }
   await expect(
     getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      ...snapshotInput,
       drcOptions: {
         traceClearance: input.minTraceToPadEdgeClearance,
         viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
       },
     }),
   ).toMatchSvgSnapshot(import.meta.path)
+
+  // Show actual copper contacts separately from the declared-clearance view.
+  await expect(
+    getBugReportSnapshotSvg({
+      ...snapshotInput,
+      drcOptions: {
+        traceClearance: 0,
+        viaClearance: 0,
+        viaToPadClearance: 0,
+      },
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "copper-contacts" })
 })
