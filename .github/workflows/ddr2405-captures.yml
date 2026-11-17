@@ -6,48 +6,11 @@ permissions:
   contents: read
   actions: read
 jobs:
-  collect:
-    strategy:
-      fail-fast: false
-      matrix:
-        board: [glider, imx6]
-        part: [0, 1]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          repository: tscircuit/tscircuit-autorouter
-          run-id: 44162030777
-          name: refresh2405-${{ matrix.board }}
-          path: evidence
-      - name: Export original captured phase inputs and physical findings
-        env:
-          BOARD_ID: ${{ matrix.board }}
-          EXPORT_PART: ${{ matrix.part }}
-        run: |
-          python3 - <<'PY'
-          import base64,io,os,zipfile
-          from pathlib import Path
-          board=os.environ['BOARD_ID']
-          root=next(Path('evidence').rglob(board+'-phased'))
-          stream=io.BytesIO()
-          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
-              for name in ['joint-start.capture.json.gz','circuit.json','unrouted.circuit.json','findings.json']:
-                  path=root/name
-                  if path.exists(): archive.writestr(name,path.read_bytes())
-          print('REFRESH2405_PHASE_INPUT_BEGIN')
-          encoded=base64.b64encode(stream.getvalue()).decode()
-          midpoint=((len(encoded)//2+3)//4)*4
-          encoded=encoded[:midpoint] if os.environ['EXPORT_PART']=='0' else encoded[midpoint:]
-          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('REFRESH2405_PHASE_INPUT_END')
-          PY
   source-checks:
     strategy:
       fail-fast: false
       matrix:
-        ref: [ef2be60d428e127283bb0966197a2b74eef1b1c4, 4b7f03cd358ee7fd10b99267a4b790403e76211a]
+        ref: [ef2be60d428e127283bb0966197a2b74eef1b1c4, f35a5f65fae0526beb2fd6a4ca05cd8ec62241f2]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
