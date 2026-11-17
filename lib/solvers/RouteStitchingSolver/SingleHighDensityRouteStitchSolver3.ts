@@ -93,20 +93,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       )
     if (isPlannedTransition) return VIA_PENALTY
 
-    // Avoid bypassing a nearby routed via with another hop at coincident endpoints.
-    // The existing via path must remain available to reach the terminal.
-    const hasRoutedTransition = this.remainingHdRoutes.some((route) =>
-      route.route.some((point, index) => {
-        const next = route.route[index + 1]
-        return (
-          next !== undefined &&
-          distance(start, point) <= MAX_STITCH_GAP_DISTANCE_3 &&
-          distance(point, next) < GEOMETRIC_TOLERANCE &&
-          ((point.z === start.z && next.z === end.z) ||
-            (point.z === end.z && next.z === start.z))
-        )
-      }),
-    )
+    // Prefer an existing layer transition whose endpoints can be joined locally.
+    // An internal via with same-layer endpoints is not an accessible bridge.
+    const hasRoutedTransition = this.remainingHdRoutes.some((hdRoute) => {
+      const first = hdRoute.route[0]!
+      const last = hdRoute.route.at(-1)!
+      return (
+        (first.z === start.z &&
+          last.z === end.z &&
+          distance(start, first) <= MAX_STITCH_GAP_DISTANCE_3 &&
+          distance(end, last) <= MAX_STITCH_GAP_DISTANCE_3) ||
+        (last.z === start.z &&
+          first.z === end.z &&
+          distance(start, last) <= MAX_STITCH_GAP_DISTANCE_3 &&
+          distance(end, first) <= MAX_STITCH_GAP_DISTANCE_3)
+      )
+    })
     return hasRoutedTransition ? GAP_PENALTY + VIA_PENALTY : VIA_PENALTY
   }
 
