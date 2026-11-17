@@ -11,7 +11,7 @@ for (const sample of samples) {
   for (const [pass, variant] of ["base", "head", "factory", "factory", "head", "base"].entries()) {
     for (const [path, source] of Object.entries(variants[variant]!)) writeFileSync(resolve(root, path), source)
     const output = resolve(`profile-results/${sample}-${pass}-${variant}.json`)
-    const child = Bun.spawn(["bun", "scripts/srj18-investigation/diagnostic.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`profile-results/${sample}-${pass}-${variant}.stderr.log`), env: { ...process.env, BUN_JSC_reportTotalCompileTimes: "1", DIAGNOSTIC_OUTPUT: output } })
+    const child = Bun.spawn([process.execPath, "scripts/srj18-investigation/diagnostic.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`profile-results/${sample}-${pass}-${variant}.stderr.log`), env: { ...process.env, BUN_JSC_reportTotalCompileTimes: "1", DIAGNOSTIC_OUTPUT: output } })
     const deadline = setTimeout(() => child.kill("SIGKILL"), 240000)
     const stdoutPromise = new Response(child.stdout).text()
     const [scenarioName, scenario] = scenarios[sample - 1]!

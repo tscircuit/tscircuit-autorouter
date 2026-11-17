@@ -21,7 +21,11 @@ jobs:
           git worktree add --detach ../same-machine-pr 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
           (cd ../same-machine-base && bun install)
           (cd ../same-machine-pr && bun install)
-          cmp ../same-machine-base/bun.lock ../same-machine-pr/bun.lock
+          (cd ../same-machine-base && bun pm ls --all > /tmp/base-packages.txt)
+          (cd ../same-machine-pr && bun pm ls --all > /tmp/pr-packages.txt)
+          tail -n +2 /tmp/base-packages.txt > /tmp/base-package-versions.txt
+          tail -n +2 /tmp/pr-packages.txt > /tmp/pr-package-versions.txt
+          diff -u /tmp/base-package-versions.txt /tmp/pr-package-versions.txt
       - name: Separate-path same-code and same-path code comparisons
         run: |
           mkdir -p checkout-results

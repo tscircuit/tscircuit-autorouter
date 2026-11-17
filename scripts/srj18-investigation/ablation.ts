@@ -23,7 +23,7 @@ const runLane = async (lane: number): Promise<void> => {
       const [scenarioName, scenario] = scenarios[sample - 1]!
       const task: WorkerTaskMessage = { taskId: sample * 100 + pass, task: { datasetName: "srj18", solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph", scenarioName, sampleNumber: sample, scenario } }
       const started = performance.now()
-      const child = Bun.spawn(["bun", "scripts/benchmark/benchmark.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`ablation-results/${lane}-${sample}-${pass}.stderr.log`) })
+      const child = Bun.spawn([process.execPath, "scripts/benchmark/benchmark.child.ts"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: Bun.file(`ablation-results/${lane}-${sample}-${pass}.stderr.log`) })
       const deadline = setTimeout(() => child.kill("SIGKILL"), 240000)
       const outputPromise = new Response(child.stdout).text()
       child.stdin.write(JSON.stringify(task) + "\n")
