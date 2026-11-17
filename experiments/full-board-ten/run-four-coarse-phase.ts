@@ -65,6 +65,8 @@ const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
   effort: undefined,
 })
 assert.equal(typeof pipeline.stepAsync, "undefined", "Core stepping contract changed")
+assert.equal(typeof pipeline.getCurrentPhase, "function", "Missing native P9 phase accessor")
+assert.equal(typeof pipeline.getOutputSimpleRouteJson, "function", "Missing native P9 output accessor")
 const nativeObserver = createCoarseRoutingDiagnostics({
   pipelineClass: AutoroutingPipelineSolver9_PreloadedTraceGraph,
   registeredPipelineClass: AutoroutingPipelineSolver9_PreloadedTraceGraph,
@@ -85,7 +87,7 @@ const observePipeline = (): void => {
   const active = pipeline.activeSubSolver
   if (active && stages.at(-1)?.solver !== active) {
     assert(stages.length < 64, "Unexpected pipeline stage count")
-    stages.push({ name: pipeline.getCurrentStageName(), solver: active, firstPipelineIteration: pipeline.iterations })
+    stages.push({ name: pipeline.getCurrentPhase(), solver: active, firstPipelineIteration: pipeline.iterations })
   }
   if (pipeline.highDensityRouteSolver) highDensity = pipeline.highDensityRouteSolver
   if (highDensity?.activeNode) activeHdNode = highDensity.activeNode.capacityMeshNodeId
@@ -102,7 +104,7 @@ const checkpoint = (): void => {
   const progress = {
     case: runtime.case.id, variant: runtime.variant, elapsedMs: performance.now() - started,
     solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
-    iterations: pipeline.iterations, stage: pipeline.getCurrentStageName(), wasmUsage,
+    iterations: pipeline.iterations, stage: pipeline.getCurrentPhase(), wasmUsage,
   }
   atomicJson("progress.json", progress)
   console.log(`COARSE_PHASE_PROGRESS ${JSON.stringify(progress)}`)
@@ -138,8 +140,11 @@ try {
   atomicJson("coarse-recovery-observation.json", JSON.parse(JSON.stringify(coarseReport,
     (_key, value) => typeof value === "number" && !Number.isFinite(value) ? String(value) : value)))
 }
+atomicJson("routing-termination.json", { timedOut, thrownError, routingElapsedMs,
+  iterations: pipeline.iterations, solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error })
+if (thrownError) console.error(`COARSE_PHASE_THROWN ${thrownError}`)
 if (pipeline.solved) {
-  const srjOutput = pipeline.getOutput()
+  const srjOutput = pipeline.getOutputSimpleRouteJson()
   const serialized = JSON.stringify(srjOutput)
   const compressed = gzipSync(serialized)
   assert(compressed.byteLength <= 16 * 1024 * 1024, "Solved phase output exceeded artifact scope")
