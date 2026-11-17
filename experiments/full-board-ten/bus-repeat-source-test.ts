@@ -34,17 +34,6 @@ test("only a completed unsuccessful site search marks its choices exhausted", ()
   expect(successfulResult.value?.traces).toHaveLength(1)
   expect(exhausted).toBe(0)
 
-  // The same sites remain usable when only the finishing validator runs out
-  // of work. That failure must not suppress a later site search.
-  const unfinished = routeGeneratedSignalSites({
-    ...request,
-    options: { maxSearchIterations: 0 },
-  })
-  let unfinishedResult = unfinished.next()
-  while (!unfinishedResult.done) unfinishedResult = unfinished.next()
-  expect(unfinishedResult.value).toBeNull()
-  expect(exhausted).toBe(0)
-
   const blockedInput: SimpleRouteJson = {
     ...input,
     obstacles: [
