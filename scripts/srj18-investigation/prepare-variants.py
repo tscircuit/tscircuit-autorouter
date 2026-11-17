@@ -10,7 +10,7 @@ paths = [
     'lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver.ts',
     'lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedPortValidator.ts',
 ]
-paths.extend(p for p in subprocess.check_output(['git', 'diff', '--name-only', before, base, '--', 'lib'], text=True).splitlines() if p not in paths)
+paths.extend(p for p in subprocess.check_output(['git', 'diff', '--no-renames', '--name-only', before, base, '--', 'lib'], text=True).splitlines() if p not in paths)
 def source(ref, path):
     result = subprocess.run(['git', 'show', f'{ref}:{path}'], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     return result.stdout if result.returncode == 0 else ''
