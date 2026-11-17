@@ -14,6 +14,9 @@ assert(runtimePath && output, "Expected PHASE_RUNTIME.json OUTPUT")
 assert.equal(Bun.version, "1.4.3")
 mkdirSync(output, { recursive: true })
 const runtime = JSON.parse(readFileSync(runtimePath, "utf8"))
+const targetPhase = runtime.targetPhase ?? "other_signals"
+assert(["other_signals", "plane_escape"].includes(targetPhase))
+const captureSelectedPaths = targetPhase === "other_signals"
 const sha = (bytes: string | Buffer): string => createHash("sha256").update(typeof bytes === "string" ? bytes : new Uint8Array(bytes)).digest("hex")
 assert.equal(sha(readFileSync(runtime.selectedAutorouterEntry)), runtime.selectedAutorouterSha256)
 assert.equal(runtime.captureDeadlineMs, 900000)
@@ -72,12 +75,12 @@ const pipeline = new Pipeline9(input, {
 assert.equal(typeof pipeline.stepAsync, "undefined")
 let coarseReport: RuntimeObject | null = null
 let pathReport: RuntimeObject | null = null
-const common = { pipelineClass: Pipeline9, registeredPipelineClass: Pipeline9, targetPhase: "other_signals" }
+const common = { pipelineClass: Pipeline9, registeredPipelineClass: Pipeline9, targetPhase }
 const coarse = createCoarseRoutingDiagnostics({ ...common, onSnapshot: report => { coarseReport = report } })
-const path = createCoarseFailureDiagnostics({ ...common, onSnapshot: report => { pathReport = report } })
+const path = captureSelectedPaths ? createCoarseFailureDiagnostics({ ...common, onSnapshot: report => { pathReport = report } }) : undefined
 const event = { solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph", solverParams: { input } }
-coarse.onSolverStarted(event, "other_signals")
-path.onSolverStarted(event, "other_signals")
+coarse.onSolverStarted(event, targetPhase)
+path?.onSolverStarted(event, targetPhase)
 const started = performance.now()
 let lastFlush = started
 let timedOut = false
@@ -85,7 +88,7 @@ let thrownError: string | null = null
 let outputSummary: RuntimeObject | null = null
 const checkpoint = (): void => {
   atomicJson("coarse-diagnostics.json", { reports: coarseReport ? [coarseReport] : [] })
-  atomicJson("path-witness.json", pathReport)
+  if (captureSelectedPaths) atomicJson("path-witness.json", pathReport)
   atomicJson("progress.json", { variant: runtime.variant, elapsedMs: performance.now() - started, solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error, iterations: pipeline.iterations, wasmUsage })
 }
 try {
@@ -112,7 +115,7 @@ try {
 } catch (error) {
   thrownError = error instanceof Error ? `${error.message}\n${error.stack ?? ""}`.slice(0, 8000) : String(error).slice(0, 8000)
 } finally {
-  pathReport = path.finish()
+  pathReport = path?.finish() ?? null
   coarseReport = coarse.finish()
   globalThis.WebAssembly = nativeWasm
   checkpoint()

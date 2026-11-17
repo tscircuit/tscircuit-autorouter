@@ -1,8 +1,8 @@
-name: Glider exact same-net segment reuse qualification
+name: ButterStick exact same-net segment reuse phase qualification
 
 on:
   push:
-    branches: [bench/tiny-exact-segment-reuse-3216]
+    branches: [bench/butter-exact-segment-reuse-3216]
 
 permissions:
   contents: read
@@ -10,16 +10,16 @@ permissions:
 
 jobs:
   qualify:
-    name: Frozen1117 source pair and native Glider completion
+    name: Retained source pair and native ButterStick plane escape
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 95
+    timeout-minutes: 45
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      FULL_BOARD_COHORTS: spaced
-      FULL_BOARD_EXPERIMENT: tiny-exact-segment-reuse
-      BOARD: glider
+      FULL_BOARD_COHORTS: original
+      FULL_BOARD_EXPERIMENT: butter-exact-segment-reuse
+      BOARD: butterstick
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -31,27 +31,6 @@ jobs:
             experiments/full-board-ten
             .github/workflows/full-board-ten.yml
             AGENTS.md
-
-      - name: Checkout exact autorouter1117 NPM source
-        uses: actions/checkout@v4
-        with:
-          repository: tscircuit/tscircuit-autorouter
-          ref: b7951b41ff87c16f0bd0880e7b9c6a989ada244d
-          path: .full-board-run/source-autorouter
-          persist-credentials: false
-          sparse-checkout: |
-            lib
-            scripts
-            types
-
-      - name: Checkout reviewed current Tiny library
-        uses: actions/checkout@v4
-        with:
-          repository: tscircuit/tiny-hypergraph
-          ref: 40e3c7a980d9dd3840c429e92006603d2c868790
-          path: .full-board-run/source-tiny-current
-          persist-credentials: false
-          sparse-checkout: lib
 
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -84,85 +63,46 @@ jobs:
       - name: Prepare unchanged verified published runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Build source pair and require exact published dependency closure
-        run: >-
-          python3 experiments/full-board-ten/prepare-tiny-source-pair.py
-          --root "$FULL_BOARD_ROOT"
-          --source "$FULL_BOARD_ROOT/source-autorouter"
-          --tiny-current "$FULL_BOARD_ROOT/source-tiny-current"
+      - name: Authenticate retained source entries and native Butter input
+        run: python3 experiments/full-board-ten/prepare-butter-phase.py "$FULL_BOARD_ROOT"
 
-      - name: Authenticate actual native Glider phase and baseline witness
-        run: python3 experiments/full-board-ten/prepare-tiny-phase.py "$FULL_BOARD_ROOT"
-
-      - name: Run unchanged source control on actual native phase
+      - name: Run unchanged source control on native plane escape
         run: >-
           timeout 960s bun experiments/full-board-ten/run-tiny-source-phase.ts
           "$FULL_BOARD_ROOT/phase-runtime-base.json"
           "$FULL_BOARD_ROOT/native-phase/base"
 
-      - name: Require complete source-control parity
-        run: python3 experiments/full-board-ten/verify-tiny-source-phase.py "$FULL_BOARD_ROOT" base
+      - name: Require complete source-control coarse parity
+        run: python3 experiments/full-board-ten/verify-butter-phase.py "$FULL_BOARD_ROOT" base
 
-      - name: Run reviewed source candidate on entire actual native phase
+      - name: Run candidate on the entire native plane-escape phase
         run: >-
           timeout 960s bun experiments/full-board-ten/run-tiny-source-phase.ts
           "$FULL_BOARD_ROOT/phase-runtime-candidate.json"
           "$FULL_BOARD_ROOT/native-phase/candidate"
 
-      - name: Require genuine whole-phase completion before full-board test
-        run: python3 experiments/full-board-ten/verify-tiny-source-phase.py "$FULL_BOARD_ROOT" candidate
+      - name: Require actual whole-phase completion
+        run: python3 experiments/full-board-ten/verify-butter-phase.py "$FULL_BOARD_ROOT" candidate
 
-      - name: Prepare qualified whole-package candidate
-        run: bun experiments/full-board-ten/prepare-tiny-full-board.ts "$FULL_BOARD_ROOT"
-
-      - name: Prepare authentic full-board case
-        id: prepare
-        run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
-
-      - name: Run actual spaced Glider end to end
-        id: full
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/glider-spaced.json"
-          "$FULL_BOARD_ROOT/results/glider/spaced"
-
-      - name: Report actual full-board connectivity and physical result
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" glider
-
-      - name: Preserve source qualification and native phase evidence
+      - name: Preserve evidence even when completion fails
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: glider-tiny-reuse-qualification-${{ github.run_attempt }}
+          name: butter-tiny-reuse-phase-${{ github.run_attempt }}
           path: |
-            .full-board-run/source-pair
             .full-board-run/native-input
             .full-board-run/native-phase
             .full-board-run/phase-runtime-*.json
-            .full-board-run/*runtime-manifest.json
-            .full-board-run/tiny-full-board-overlay-proof.json
-            experiments/full-board-ten/tiny-source-plan.json
-            experiments/full-board-ten/tiny-production.patch
+            .full-board-run/runtime-manifest.json
+            .full-board-run/butter-artifact-proof.json
+            .full-board-run/retained-source/provenance.json
+            .full-board-run/retained-source/published-closure-audit.json
+            .full-board-run/retained-source/glider-control-validation.json
+            .full-board-run/retained-source/base/index.js
+            .full-board-run/retained-source/base/index.js.map
+            .full-board-run/retained-source/candidate/index.js
+            .full-board-run/retained-source/candidate/index.js.map
+            experiments/full-board-ten/butter-phase-plan.json
           if-no-files-found: error
-          retention-days: 7
-
-      - name: Preserve full-board output and original assessor results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: glider-tiny-reuse-full-board-${{ github.run_attempt }}
-          path: |
-            .full-board-run/results/glider
-            .full-board-run/cases/assessment-helper-proof.json
-          if-no-files-found: warn
-          compression-level: 0
           retention-days: 7
