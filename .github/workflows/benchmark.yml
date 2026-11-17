@@ -1,4 +1,4 @@
-name: SRJ18 source and runtime diagnostics
+name: SRJ18 dependency identity probe
 on:
   workflow_dispatch:
 permissions:
@@ -22,18 +22,11 @@ jobs:
           sed -i 's/save = false/save = true/' ../same-machine-base/bunfig.toml ../same-machine-pr/bunfig.toml
           (cd ../same-machine-base && bun install --save-text-lockfile)
           (cd ../same-machine-pr && bun install --save-text-lockfile)
-          cmp ../same-machine-base/bun.lock ../same-machine-pr/bun.lock
-      - name: Separate-path same-code and same-path code comparisons
-        run: |
           mkdir -p checkout-results
-          for spec in 0:base:base 1:base:pr 2:head:pr 3:head:pr 4:base:pr 5:base:base; do
-            IFS=: read -r pass variant location <<< "$spec"
-            root="$(realpath ../same-machine-$location)"
-            python3 scripts/srj18-investigation/apply-variant.py "$root" "$variant"
-            (cd "$root" && bash benchmark.sh --dataset 18 --sample-numbers 1,3,7,10,11,12,16 --concurrency 3 --sample-timeout 240s)
-            cp "$root/benchmark-result.json" "checkout-results/$pass-$variant-$location.json"
-            bun -e 'const p=await Bun.file(process.argv[1]).json(); console.log("CHECKOUT_RESULT "+JSON.stringify({pass:process.argv[2],variant:process.argv[3],location:process.argv[4],runtime:p.runtime,tests:p.tests.map(({benchmarkSnapshot,...t})=>t)}))' "checkout-results/$pass-$variant-$location.json" "$pass" "$variant" "$location"
-          done
+          cp ../same-machine-base/bun.lock checkout-results/base.bun.lock
+          cp ../same-machine-pr/bun.lock checkout-results/pr.bun.lock
+          diff -u ../same-machine-base/bun.lock ../same-machine-pr/bun.lock > checkout-results/dependency-lock.diff || test "$?" -eq 1
+          cat checkout-results/dependency-lock.diff
       - uses: actions/upload-artifact@v4
         if: always()
         with:
