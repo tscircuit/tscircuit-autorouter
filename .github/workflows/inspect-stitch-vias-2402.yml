@@ -1,0 +1,41 @@
+name: Inspect actual iCE Pi vias after simplification and repair
+on:
+  push:
+    branches: [codex/ddr2402-via-review]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44105388766
+          name: stitch2402final-icepi
+          path: evidence
+      - name: Inspect captured simplification output and emitted trace
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,io,json,math,zipfile
+          from pathlib import Path
+          root=next(Path('evidence').rglob('icepi-phased'))
+          capture=json.loads(gzip.decompress((root/'joint-start.capture.json.gz').read_bytes()))
+          params=capture['params']
+          routes=[route for route in params['newHdRoutes'] if route['connectionName']=='source_net_0_mst8']
+          circuit=json.loads((root/'circuit.json').read_text())
+          matching=[]
+          terminal=(15.35,-2.9)
+          for item in circuit:
+              if item['type']!='pcb_trace' or not item.get('route'): continue
+              ends=[item['route'][0],item['route'][-1]]
+              if any('x' in p and math.hypot(p['x']-terminal[0],p['y']-terminal[1])<0.001 for p in ends): matching.append(item)
+          summary={'paramsKeys':list(params),'afterSimplification':routes,'publishedTraces':matching,'publishedVias':[item for item in circuit if item['type']=='pcb_via' and any(item.get('pcb_trace_id')==trace['pcb_trace_id'] for trace in matching)]}
+          encoded=base64.b64encode(gzip.compress(json.dumps(summary,separators=(',',':')).encode())).decode()
+          print('ICEPI_VIA_REVIEW_BEGIN')
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('ICEPI_VIA_REVIEW_END')
+          print('MATCHED_ROUTES',len(routes),'MATCHED_PUBLISHED_TRACES',len(matching))
+          PY
