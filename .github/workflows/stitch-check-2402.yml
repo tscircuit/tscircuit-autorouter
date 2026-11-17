@@ -1,7 +1,7 @@
-name: Rerun full DDR boards on released core 2402 and router 1117
+name: Verify planar continuity for route stitching
 on:
   push:
-    branches: [codex/ddr-refresh-2402]
+    branches: [codex/ddr2402-stitch-check]
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          ref: 9479e13c9049a4e75b7ffef929d47f2643bedb57
           path: router
       - uses: actions/checkout@v4
         with:
@@ -45,12 +45,12 @@ jobs:
           export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
           BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
             --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
-            --out "$GITHUB_WORKSPACE/results/latest/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/latest/ddr/$BOARD_ID/"*.log; exit 1; }
-          FULL_BOARD_VARIANT=latest bun plane-suite.ts ../../results/latest/full
+            --out "$GITHUB_WORKSPACE/results/candidate/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/candidate/ddr/$BOARD_ID/"*.log; exit 1; }
+          FULL_BOARD_VARIANT=candidate bun plane-suite.ts ../../results/candidate/full
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh2402-${{ matrix.board }}
+          name: stitch2402-${{ matrix.board }}
           path: results
           retention-days: 14
       - name: Export native results and phase inputs for analysis
@@ -65,10 +65,10 @@ jobs:
               for path in Path('results').rglob('*'):
                   if path.is_file() and (path.name in names):
                       archive.writestr(str(path.relative_to('results')),path.read_bytes())
-          print('REFRESH2402_BOARD_EVIDENCE_BEGIN')
+          print('STITCH2402_BOARD_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
-          print('REFRESH2402_BOARD_EVIDENCE_END')
+          print('STITCH2402_BOARD_EVIDENCE_END')
           PY
   dataset18:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
@@ -77,27 +77,57 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: 9479e13c9049a4e75b7ffef929d47f2643bedb57
+          path: after
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - run: bun install --ignore-scripts
-      - name: Measure the complete released dataset18 baseline
+      - name: Install the two frozen router sources
+        run: |
+          for variant in before after; do (cd "$variant" && bun install --ignore-scripts); done
+      - name: Measure the entire dataset18 before and after on the same worker
         env:
           BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
-        run: bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s
+        run: |
+          for variant in before after; do
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s)
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: refresh2402-dataset18
+          name: stitch2402-paired-dataset18
           path: |
-            benchmark-result.json
-            benchmark-result.txt
-            benchmark-snapshots.html
-      - name: Export the measured report
+            before/benchmark-result.json
+            before/benchmark-snapshots.html
+            after/benchmark-result.json
+            after/benchmark-snapshots.html
+      - name: Export both reports and native SVG comparisons
         if: always()
         run: |
           python3 - <<'PYREPORT'
-          import json
+          import json,re,hashlib,statistics
           from pathlib import Path
-          print('REFRESH2402_DATASET18_RESULT',json.dumps(json.loads(Path('benchmark-result.json').read_text()),separators=(',',':')))
+          reports={}
+          snapshots={}
+          for variant in ['before','after']:
+              root=Path(variant)
+              report=json.loads((root/'benchmark-result.json').read_text())
+              reports[variant]=report
+              print('STITCH2402_DATASET18_PAIR',variant,json.dumps(report,separators=(',',':')))
+              snapshots[variant]={}
+              for section in re.findall(r'<section class="snapshot">(.*?)</section>',(root/'benchmark-snapshots.html').read_text(),re.S):
+                  sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                  svg=re.search(r'<svg\b.*?</svg>',section,re.S).group(0)
+                  snapshots[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+          rows=[]
+          for before in sorted(reports['before']['tests'],key=lambda row:row['sampleNumber']):
+              sample=before['sampleNumber']
+              after=next(row for row in reports['after']['tests'] if row['sampleNumber']==sample)
+              rows.append({'sample':sample,'beforeMs':before['elapsedTimeMs'],'afterMs':after['elapsedTimeMs'],'beforeSolved':before['didSolve'],'afterSolved':after['didSolve'],'beforeDrcPassed':before['relaxedDrcPassed'],'afterDrcPassed':after['relaxedDrcPassed'],'beforeVias':before.get('viaCount'),'afterVias':after.get('viaCount'),'beforeSvgSha256':snapshots['before'].get(sample),'afterSvgSha256':snapshots['after'].get(sample)})
+          result={'beforeSummary':reports['before']['summary'],'afterSummary':reports['after']['summary'],'beforeMeanMs':statistics.mean(row['beforeMs'] for row in rows),'afterMeanMs':statistics.mean(row['afterMs'] for row in rows),'rows':rows}
+          print('STITCH2402_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
+          assert len(rows)==16 and all(row['beforeSolved'] and row['afterSolved'] and row['beforeDrcPassed'] and row['afterDrcPassed'] for row in rows)
           PYREPORT
