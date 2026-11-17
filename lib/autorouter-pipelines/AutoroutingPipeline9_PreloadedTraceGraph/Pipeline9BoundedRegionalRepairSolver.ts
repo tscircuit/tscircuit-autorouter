@@ -1,4 +1,6 @@
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
+import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -33,6 +35,7 @@ import { removeCopiedPipeline9TerminalApproaches } from "./removeCopiedPipeline9
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
 type FixedViolations = ReturnType<typeof getFixedObstacleViolations>
+type FixedViolationKey = string
 type RepairAllowance = ReturnType<typeof getPipeline9BoundedRepairAllowance>
 
 type InitialContext = {
@@ -51,7 +54,7 @@ type RegionalContext = ReferencedContext & {
   srj: SimpleRouteJson & { traces: undefined }
   obstacleCenterById: Map<string, { x: number; y: number }>
   attemptedRegions: Array<{ bounds: Bounds; size: number }>
-  fixedViolations: Map<string, number>
+  fixedViolations: Map<FixedViolationKey, number>
 }
 
 type NegotiationContext = {
@@ -145,10 +148,20 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private repairCandidate?: HighDensityRoute[]
   private reservedChildMaximum = 0
+  private readonly fixedCopperObstacleIndexes: ReadonlySet<number>
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
     this.params = params
+    const representedPadObstacleIndexes = new Set<number>()
+    convertToCircuitJson(params.originalSrj, [], {
+      originalSrj: params.originalSrj,
+      representedPadObstacleIndexes,
+    })
+    this.fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
+      inputSrj: params.originalSrj,
+      representedPadObstacleIndexes,
+    })
     this.budget = params.budget ?? PIPELINE9_BOUNDED_REPAIR_BUDGET
     this.result = {
       routes: params.routes,
@@ -383,11 +396,11 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       obstacleCenterById,
       currentRoutes,
       attemptedRegions: [],
-      fixedViolations: new Map(
-        getFixedObstacleViolations({ srj, routes: currentRoutes }).map(
-          ({ key, severity }) => [key, severity],
-        ),
-      ),
+      fixedViolations: this.getFixedViolationSeverities({
+        srj,
+        routes: currentRoutes,
+        violations: getFixedObstacleViolations({ srj, routes: currentRoutes }),
+      }),
     }
     this.state = { phase: "select-region", context: regional }
   }
@@ -706,6 +719,38 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.startChild(solver)
   }
 
+  private getFixedViolationSeverities({
+    srj,
+    routes,
+    violations,
+  }: {
+    srj: SimpleRouteJson
+    routes: HighDensityRoute[]
+    violations: FixedViolations
+  }): Map<FixedViolationKey, number> {
+    const severities = new Map<FixedViolationKey, number>()
+    for (const violation of violations) {
+      let key = violation.key
+      if (this.fixedCopperObstacleIndexes.has(violation.obstacleIndex)) {
+        const obstacle = srj.obstacles[violation.obstacleIndex]!
+        // Neighboring rectangles can represent the same completed wire.
+        // Retain the copper owner and layer while a detour crosses that seam.
+        key = JSON.stringify([
+          routes[violation.routeIndex]!.connectionName,
+          violation.kind,
+          obstacle.shape,
+          [...obstacle.layers].sort(),
+          [...obstacle.connectedTo].sort(),
+        ])
+      }
+      severities.set(
+        key,
+        Math.max(severities.get(key) ?? 0, violation.severity),
+      )
+    }
+    return severities
+  }
+
   private validateCandidate(
     state: Extract<BoundedRepairState, { phase: "candidate-physical" }>,
   ): void {
@@ -715,8 +760,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       routes: candidateRoutes,
     })
     if (
-      !candidateFixedViolations.every(
-        ({ key, severity }): boolean =>
+      ![...this.getFixedViolationSeverities({
+        srj: context.srj,
+        routes: candidateRoutes,
+        violations: candidateFixedViolations,
+      })].every(
+        ([key, severity]): boolean =>
           context.fixedViolations.has(key) &&
           severity <= context.fixedViolations.get(key)! + 1e-8,
       ) ||
@@ -779,12 +828,11 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.repairCandidate = state.candidateRoutes
     context.currentErrors = candidateErrors
     context.reference = candidateReference
-    context.fixedViolations = new Map(
-      state.candidateFixedViolations.map(({ key, severity }) => [
-        key,
-        severity,
-      ]),
-    )
+    context.fixedViolations = this.getFixedViolationSeverities({
+      srj: context.srj,
+      routes: state.candidateRoutes,
+      violations: state.candidateFixedViolations,
+    })
     this.result.acceptedRegionCount++
     // Accepted neighboring changes can reopen an already visited region.
     if (this.budget.revisitChangedRegions) context.attemptedRegions.length = 0
