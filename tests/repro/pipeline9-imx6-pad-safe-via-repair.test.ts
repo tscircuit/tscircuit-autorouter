@@ -93,7 +93,9 @@ test("repairs the remaining i.MX6 DDR via clearance with native board geometry",
       ...members[0]!,
       source_trace_id: netId,
       connected_source_port_ids: [
-        ...new Set(members.flatMap((member) => member.connected_source_port_ids)),
+        ...new Set(
+          members.flatMap((member) => member.connected_source_port_ids),
+        ),
       ],
     }
   })
@@ -111,14 +113,13 @@ test("repairs the remaining i.MX6 DDR via clearance with native board geometry",
   // Continuity needs the native pads of the routed DDR nets only.
   const continuityCircuit = circuitJson.filter(
     (element) =>
-      (element.type !== "pcb_smtpad" &&
-        element.type !== "pcb_plated_hole") ||
+      (element.type !== "pcb_smtpad" && element.type !== "pcb_plated_hole") ||
       (element.pcb_port_id !== undefined &&
         routedPcbPortIds.has(element.pcb_port_id)),
   )
-  expect(checkTraceContinuity([...continuityCircuit, ...nativeNetTraces])).toEqual(
-    [],
-  )
+  expect(
+    checkTraceContinuity([...continuityCircuit, ...nativeNetTraces]),
+  ).toEqual([])
   const clearanceOptions = {
     minClearance: fixture.originalSrj.minTraceToPadEdgeClearance!,
   }
