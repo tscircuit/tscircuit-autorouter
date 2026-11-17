@@ -1,0 +1,68 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": {
+    "phase": "plane_escape",
+    "stage": "highDensityStitchSolver",
+    "iterations": 2246147,
+    "times": {
+      "preprocessSimpleRouteJsonSolver": 903.4309379999977,
+      "componentDetectionSolver": 21.71354799999972,
+      "escapeViaLocationSolver": 10427.330915000006,
+      "netToPointPairsSolver": 387.52937499999825,
+      "topologyPlanningSolver": 5855.714399999997,
+      "topologyMergingSolver": 11142.009358000003,
+      "nodeDimensionSubdivisionSolver": 63.890457999994396,
+      "edgeSolver": 4703.726134000011,
+      "availableSegmentPointSolver": 1293.386400000003,
+      "necessaryCrampedPortPointSolver": 5275.870179000005,
+      "preloadedTraceGraphSolver": 26.02396900000167,
+      "portPointPathingSolver": 72917.370535,
+      "uniformPortDistributionSolver": 920.8279299999995,
+      "highDensityRouteSolver": 39769.28859500002,
+      "highDensityForceImproveSolver": 7430.558646999998,
+      "highDensityRepairSolver": 66063.877626,
+      "highDensityStitchSolver": 0
+    },
+    "active": null,
+    "joint": null,
+    "jointChild": null,
+    "jointGrandchild": null,
+    "prepared": {
+      "name": "PreparedPortPointRoutingSolver",
+      "iterations": 2000000,
+      "maxIterations": 2000000,
+      "stats": {
+        "neverSuccessfullyRoutedRouteCount": 0,
+        "acceptedGreedyFinalRouteOnTimeout": true,
+        "greedyFinalRouteIter": 4,
+        "finalRoutingStrategy": "greedy",
+        "greedyFinalRouteRemainingRouteCount": 60,
+        "greedyFinalRouteMaxIterations": 50000,
+        "maxRegionCost": 3549.9702558001177,
+        "totalRegionCost": 14783.993935181843,
+        "bestMaxRegionCost": 3549.9702558001177,
+        "bestTotalRegionCost": 14783.993935181843
+      },
+      "error": null,
+      "failed": false,
+      "solved": true,
+      "state": {
+        "candidateBestCostGeneration": 163,
+        "goalPortId": -1,
+        "ripCount": 0
+      }
+    }
+  },
+  "fanoutLastState": null,
+  "phaseInputs": [
+    {
+      "name": "plane_escape",
+      "connections": 8,
+      "terminals": 567,
+      "obstacles": 2038,
+      "aliases": 674092
+    }
+  ]
+}

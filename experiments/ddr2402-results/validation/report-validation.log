@@ -1,0 +1,22 @@
+{
+  "totals": {
+    "before": {
+      "ddrPassed": 6,
+      "ddrNets": 310,
+      "fullPhasedPassed": 0,
+      "fullFanoutPassed": 0,
+      "fullPhasedConnectedNets": 29,
+      "fullFanoutConnectedNets": 22
+    },
+    "after": {
+      "ddrPassed": 6,
+      "ddrNets": 310,
+      "fullPhasedPassed": 0,
+      "fullFanoutPassed": 0,
+      "fullPhasedConnectedNets": 29,
+      "fullFanoutConnectedNets": 22
+    }
+  },
+  "identicalDdrMetrics": false,
+  "dataset18IdenticalSvgs": 15
+}

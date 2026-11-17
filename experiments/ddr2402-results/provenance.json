@@ -1,0 +1,91 @@
+{
+  "status": "complete",
+  "versions": {
+    "tscircuit": "0.0.3216",
+    "core": "0.0.2402",
+    "autorouter": "0.0.1117",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.61"
+  },
+  "routerBaseline": "dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f",
+  "core": "33d8e85e127822a8437c6ea4f576a3af260d69c6",
+  "baselineHarnessCommit": "96320b1d6b6827258f2f49cada074a7c34010736",
+  "baselineRun": 44093764087,
+  "candidateSource": "84c94aec4f72b4013aab07ab2edba4ad7d4d2823",
+  "candidateHarnessCommit": "d76dc0bd85489a26cee7d2d9d71da93962cd88d9",
+  "candidateRun": 44105388766,
+  "reproPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3893",
+  "fixPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3894",
+  "reproCommit": "4c49c57598ffeed73d717610f77bad36ec31aca4",
+  "fixCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
+  "selectedFix": "Preserve locally accessible routed via bridges instead of taking unplanned cross-layer endpoint hops",
+  "fixCiRun": 44106427242,
+  "fixFormatCiRun": 44106426955,
+  "fixTypecheckCiRun": 44106427224,
+  "reproCiRun": 44106345799,
+  "fixBase": "repro/icepi-planar-stitch",
+  "focusedLocalTests": 27,
+  "focusedLocalTestsPassed": true,
+  "productionEquivalentToBenchmarkedFix": true,
+  "nativeEvidenceRun": 44108091626,
+  "nativeEvidenceHarnessCommit": "49a271006e8b03d03b243a507dbde9223609ec89",
+  "icepiFullPhasedBefore": {
+    "connectedNets": 7,
+    "routableNets": 230,
+    "traces": 0
+  },
+  "icepiFullPhasedAfter": {
+    "connectedNets": 11,
+    "routableNets": 230,
+    "traces": 559,
+    "connectedNetIncreasePercent": 57.14285714285714
+  },
+  "icepiCapturedStageIncreasePercent": 4.096834264432037,
+  "latestStitchConstructorMatchesReproCapture": true,
+  "reproCapturedConnections": 559,
+  "reproCapturedFragments": 8935,
+  "dataset18NativeSvgsVerified": 32,
+  "dataset18RunPassed": true,
+  "dataset18ChangedSvgSamples": [
+    8
+  ],
+  "dataset18ViaTotalBefore": 3407,
+  "dataset18ViaTotalAfter": 3407,
+  "originalCopperRemoved": {
+    "segments": 49583,
+    "vias": 4706,
+    "zones": 685
+  },
+  "evidenceBranch": "analysis/ddr2402-results",
+  "benchmarkJobs": {
+    "pairedOrange": 134116209826,
+    "imx6": 134116209922,
+    "butterstick": 134116209927,
+    "orangecrab": 134116209993,
+    "h616": 134116210056,
+    "glider": 134116210142,
+    "dataset18": 134116210165,
+    "icepi": 134116210296
+  },
+  "reproCiPassed": true,
+  "fixCiPassed": true,
+  "baselineComplete": true,
+  "candidateComplete": true,
+  "controlledOrangeComplete": true,
+  "controlledOrangeBefore": {
+    "connectedNets": 3,
+    "traces": 0,
+    "stage": "powerTraceExpansionSolver"
+  },
+  "controlledOrangeAfter": {
+    "connectedNets": 3,
+    "traces": 0,
+    "stage": "powerTraceExpansionSolver"
+  },
+  "controlledOrangeChangedRepairFields": [
+    "newHdRoutes",
+    "originalNewHdRoutes"
+  ],
+  "fixReadyForReview": true,
+  "completedAtUtc": "2026-11-17T15:03:00Z"
+}

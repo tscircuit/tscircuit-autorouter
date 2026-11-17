@@ -1,0 +1,46 @@
+name: Collect final native DDR reroute evidence
+on:
+  push:
+    branches: [codex/ddr2402-final-artifacts]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44105388766
+          name: stitch2402final-paired-dataset18
+          path: dataset18
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44105388766
+          name: stitch2402final-icepi
+          path: icepi
+      - name: Export native snapshots and captured stage input
+        run: |
+          python3 - <<'PY'
+          import base64,io,json,re,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for variant in ['before','after']:
+                  root=Path('dataset18')/variant
+                  archive.writestr('dataset18-'+variant+'.json',(root/'benchmark-result.json').read_bytes())
+                  for section in re.findall(r'<section class="snapshot">(.*?)</section>',(root/'benchmark-snapshots.html').read_text(),re.S):
+                      sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                      svg=re.search(r'<svg\b.*?</svg>',section,re.S).group(0)
+                      archive.writestr('dataset18-native/sample%02d-%s.svg'%(sample,variant),svg)
+              for path in Path('icepi').rglob('stitch-start.capture.json.gz'):
+                  archive.writestr('icepi-final-stitch-start.capture.json.gz',path.read_bytes())
+          print('STITCH2402FINAL_NATIVE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('STITCH2402FINAL_NATIVE_END')
+          PY

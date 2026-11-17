@@ -1,0 +1,65 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/stitch-solver/multilayer-connection-stitch.test.ts:
+(pass) source_net_1 should have no vias when properly stitched on z:2 layer [3.99ms]
+(pass) multilayer connection stitch solver visualization [672.40ms]
+
+tests/stitch-solver/close-multilayer-terminal-shortcut.test.ts:
+(pass) does not replace nearby multilayer terminals with a reversed layer shortcut [8.00ms]
+
+tests/stitch-solver/through-obstacle-anchor.test.ts:
+(pass) stitching preserves exact through-obstacle anchors and reversed edge metadata [0.53ms]
+
+tests/stitch-solver/internal-via-preserves-layer-join.test.ts:
+(pass) an internal via does not expose a different-layer fragment endpoint [0.29ms]
+
+tests/stitch-solver/multilayer-endpoint-path-selection.test.ts:
+(pass) endpoint paths retain a farther same-layer branch before a buried via [0.31ms]
+
+tests/stitch-solver/terminal-snapping-preserves-layer.test.ts:
+(pass) does not assign a bottom-layer PCB terminal to a top-layer island [0.04ms]
+
+tests/stitch-solver/unreached-terminal-layer.test.ts:
+(pass) fails when the stitched copper cannot reach a tagged PCB terminal layer [0.22ms]
+
+tests/stitch-solver/declared-site-preserves-layer-join.test.ts:
+(pass) declared transition anchors retain their priority within stitch tolerance [0.37ms]
+
+tests/stitch-solver/known-net-terminal-transit.test.ts:
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+(pass) allows an intermediate terminal only when the source connections place it on the same net [1.00ms]
+
+tests/stitch-solver/disconnected-island-after-terminal-route.test.ts:
+(pass) drops a disconnected island after routing both PCB terminals [0.63ms]
+
+tests/stitch-solver/distant-via-preserves-layer-join.test.ts:
+(pass) a distant via does not divert a terminal path into a planar stub [0.19ms]
+
+tests/stitch-solver/single-high-density-route-stitch-gap-bridge.test.ts:
+(pass) single stitch bridges small same-layer gaps [0.19ms]
+(pass) single stitch does not bridge large same-layer gaps [0.12ms]
+(pass) single stitch can cap a modest terminal endpoint gap [0.08ms]
+(pass) single stitch accepts fan-out terminal tags [0.11ms]
+
+tests/stitch-solver/collision-aware-stitch-selection-visual.test.ts:
+(pass) visualizes choosing a clear stitch instead of the nearest colliding stitch [1700.29ms]
+
+tests/stitch-solver/alias-net-terminal-transit.test.ts:
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+(pass) accepts intermediate terminals on aliased nets [3.75ms]
+
+tests/stitch-solver/opposite-layer-terminal-snapping.test.ts:
+(pass) stitches nearly coincident pads on opposite layers to distinct PCB terminals [0.45ms]
+
+tests/repro/icepi-plane-stitch.test.ts:
+(pass) captures the full iCE/Pi plane phase before DRC repair [10508.76ms]
+
+tests/repro/icepi-planar-stitch.test.ts:
+(pass) captures the iCE/Pi CPU supply stitch between C15 and U1 [1308.17ms]
+
+ 21 pass
+ 0 fail
+ 114 expect() calls
+Ran 21 tests across 17 files. [14.57s]

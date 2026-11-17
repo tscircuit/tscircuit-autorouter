@@ -1,0 +1,72 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": null,
+  "fanoutLastState": {
+    "iterations": 26131,
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 2/32 connections",
+    "stats": {
+      "phase": "complete-assignment",
+      "assignment": 256,
+      "assignmentCount": 256,
+      "routedBuses": "2/32",
+      "routedConnections": "2/32",
+      "failedBuses": "connection:breakout:pcb_breakout_point_1, connection:breakout:pcb_breakout_point_6, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_0, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_9, ESC_U10_pin127, ESC_U10_pin142, ESC_U10_pin115, ESC_U10_pin129, ESC_U10_pin143, ESC_U10_pin32, ESC_U10_pin144, ESC_U10_pin101, ESC_U10_pin130, ESC_U10_pin73, ESC_U10_pin89, ESC_U10_pin34, ESC_U10_pin90, ESC_U10_pin145, ESC_U10_pin6, ESC_U10_pin55, ESC_U10_pin100, ESC_U10_pin65, ESC_U10_pin54, ESC_U10_pin82",
+      "bestScore": 33000004.664213564
+    },
+    "properties": [
+      "MAX_ITERATIONS",
+      "solved",
+      "failed",
+      "iterations",
+      "progress",
+      "error",
+      "activeSubSolver",
+      "failedSubSolvers",
+      "timeToSolve",
+      "stats",
+      "_setupDone",
+      "inputSrj",
+      "options",
+      "preparedBuses",
+      "attempts",
+      "layerAssignments",
+      "config",
+      "routingSrj",
+      "escapeLayersByBusId",
+      "boundaryBuses",
+      "fixedPlaneAssignments",
+      "evaluatedAssignmentKeys",
+      "queuedAssignmentKeys",
+      "assignmentRepairDepthByKey",
+      "pendingRepairAssignments",
+      "routeStaticClearanceCache",
+      "routingPrefixCache",
+      "layerReservedRoutingEvaluated",
+      "groupedBeamEvaluated",
+      "routingInitialized",
+      "nextCandidateLayerBusIndex",
+      "nextAssignmentIndex",
+      "nextGeneratedAssignmentIndex",
+      "activeOperation",
+      "inProgressPlans",
+      "activeRoutingVisualization",
+      "activeAdaptiveVisualization",
+      "bestAttempt",
+      "lengthMatchingFailure",
+      "endpointCompletion"
+    ]
+  },
+  "phaseInputs": [
+    {
+      "name": "fanout preparation",
+      "connections": 32,
+      "terminals": 44,
+      "obstacles": 3212,
+      "aliases": 1785132
+    }
+  ]
+}

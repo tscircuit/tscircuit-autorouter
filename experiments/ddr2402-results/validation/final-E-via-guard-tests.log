@@ -1,0 +1,22 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/bugs/bugreport102-qfp16-pipeline9-extra-vias.test.ts:
+✓ SVG snapshot matches (0.590% difference, within 1% threshold)
+(pass) bugreport102 compares Pipeline 7 and Pipeline 9 QFP16 routing [3336.91ms]
+
+tests/features/pipeline9-terminal-layer-indices-by-pcb-port-id.test.ts:
+(pass) coincident single-layer pads do not impersonate a multilayer PCB terminal [0.21ms]
+
+tests/solvers/trace-simplification-orangecrab-start-via.test.ts:
+(pass) OrangeCrab start via survives simplification and Pipeline 9 validation [1.98ms]
+
+tests/solvers/useless-via-removal-preserves-pcb-terminal-layer.test.ts:
+(pass) preserves authoritative single-layer PCB-port terminals across simplification passes [134.08ms]
+
+tests/repro/lm5155evm-fly-terminal-layers.test.ts:
+(pass) LM5155EVM-FLY Pipeline 9 keeps routed terminal layers connected [6471.12ms]
+
+ 5 pass
+ 0 fail
+ 24 expect() calls
+Ran 5 tests across 5 files. [10.38s]
