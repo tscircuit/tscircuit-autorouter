@@ -10,9 +10,9 @@ const runLane = async (lane: number): Promise<void> => {
   const root = resolve(`../warm-${lane}`)
   const records = []
   for (const sample of plans[lane]!) {
-    const order = sample % 2 ? ["base", "head", "control"] : ["control", "head", "base"]
+    const order = sample % 2 ? ["before3873", "base", "head", "control"] : ["control", "head", "base", "before3873"]
     for (const variant of order) {
-      for (const mode of ["default", "no-ftl"]) {
+      for (const mode of ["default"]) {
         for (const [path, source] of Object.entries(variants[variant]!)) writeFileSync(resolve(root, path), source)
         const env = { ...process.env, BUN_JSC_reportTotalCompileTimes: "1" }
         if (mode === "no-ftl") env.BUN_JSC_useFTLJIT = "0"

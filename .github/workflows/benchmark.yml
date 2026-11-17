@@ -4,39 +4,6 @@ on:
 permissions:
   contents: read
 jobs:
-  checkout-control:
-    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-      - name: Prepare two identical checkouts as in ordinary PR workflow
-        run: |
-          python3 scripts/srj18-investigation/prepare-variants.py
-          git worktree add --detach ../same-machine-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
-          git worktree add --detach ../same-machine-pr 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
-          (cd ../same-machine-base && bun install)
-          ln -s "$(realpath ../same-machine-base/node_modules)" ../same-machine-pr/node_modules
-      - name: Separate-path same-code and same-path code comparisons
-        run: |
-          mkdir -p checkout-results
-          for spec in 0:base:base 1:base:pr 2:head:pr 3:head:pr 4:base:pr 5:base:base; do
-            IFS=: read -r pass variant location <<< "$spec"
-            root="$(realpath ../same-machine-$location)"
-            python3 scripts/srj18-investigation/apply-variant.py "$root" "$variant"
-            (cd "$root" && bash benchmark.sh --dataset 18 --sample-numbers 1,3,7,10,11,12,16 --concurrency 3 --sample-timeout 240s)
-            cp "$root/benchmark-result.json" "checkout-results/$pass-$variant-$location.json"
-            bun -e 'const p=await Bun.file(process.argv[1]).json(); console.log("CHECKOUT_RESULT "+JSON.stringify({pass:process.argv[2],variant:process.argv[3],location:process.argv[4],runtime:p.runtime,tests:p.tests.map(({benchmarkSnapshot,...t})=>t)}))' "checkout-results/$pass-$variant-$location.json" "$pass" "$variant" "$location"
-          done
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: checkout-controls
-          path: checkout-results
   cold-warm:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 40
@@ -60,7 +27,7 @@ jobs:
           ln -s "$(realpath ../warm-0/node_modules)" ../warm-2/node_modules
           BUN_JSC_dumpOptions=2 bun -e 'void 0' > jsc-options.stdout 2> jsc-options.stderr
           cat jsc-options.stderr | rg 'CompilerThreads|ConcurrentJIT|FTLJIT|GCMarkers|ParallelGC' || true
-      - name: Compare cold and warm solves with route caching disabled
+      - name: Compare cold and warm solves with the global route cache reset before every solve
         run: bun scripts/srj18-investigation/warm-variants.ts
       - uses: actions/upload-artifact@v4
         if: always()
