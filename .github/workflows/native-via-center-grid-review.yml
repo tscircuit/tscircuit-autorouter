@@ -29,11 +29,18 @@ jobs:
       - name: Run unchanged native board repros
         run: |
           mkdir -p review/.github/artifacts
-          for variant in base head; do
+          for variant in head; do
             (
               cd "$variant"
               bun install > install.private.log 2>&1
-              BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-ecp5-fixed-copper-clearance.test.ts --timeout 9999999 > snapshot.private.log 2>&1
+              status=0
+              BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-ecp5-fixed-copper-clearance.test.ts --timeout 9999999 --reporter=junit --reporter-outfile=snapshot.private.xml > snapshot.private.log 2>&1 || status=$?
+              python3 - <<'PY'
+          import json,xml.etree.ElementTree as ET
+          root=ET.parse("snapshot.private.xml").getroot()
+          print("NATIVE_TEST_COUNTS="+json.dumps({"tests":root.get("tests"),"failures":root.get("failures"),"failedNames":[case.get("name") for case in root.findall(".//testcase") if case.find("failure") is not None]}))
+          PY
+              if [ "$status" -ne 0 ]; then exit "$status"; fi
               VARIANT="$variant" bun -e '
                 import {readFileSync,writeFileSync} from "node:fs";
                 import {Resvg} from "@resvg/resvg-js";
