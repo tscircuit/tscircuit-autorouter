@@ -14,9 +14,7 @@ test("Pipeline9 routes corrected SRJ23 sample 4 without moving preloaded copper"
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount),
-  ).toBe(0)
+  expect(Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount)).toBe(0)
   expect(solver.getMutatedPreloadedTraces()).toEqual([])
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
