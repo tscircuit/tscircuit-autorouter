@@ -1,0 +1,10 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/repro/icepi-planar-stitch.test.ts:
+Updating SVG snapshot at /workspace/router-icepi-stitch-repro/tests/repro/__snapshots__/icepi-planar-stitch.snap.svg
+(pass) captures the iCE/Pi CPUX crop through stitching and simplification [6180.26ms]
+
+ 1 pass
+ 0 fail
+ 11 expect() calls
+Ran 1 test across 1 file. [6.49s]

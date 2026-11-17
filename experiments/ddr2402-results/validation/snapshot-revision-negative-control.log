@@ -1,0 +1,22 @@
+bun test v1.4.3 (c6da4a4d3)
+
+../ddr-snapshot-revision-3894/without-fix.test.ts:
+29 |     isStitchSegmentClear: () => true,
+30 |     stitchClearanceMode: "prefer_clear",
+31 |   })
+32 |   solver.solve()
+33 |   expect(fixture.stitch.hdRoutes).toHaveLength(24)
+34 |   expect(solver.solved).toBe(true)
+                             ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/workspace/ddr-snapshot-revision-3894/without-fix.test.ts:34:25)
+(fail) captures the iCE/Pi CPUX crop through stitching and simplification [4.61ms]
+
+ 0 pass
+ 1 fail
+ 2 expect() calls
+Ran 1 test across 1 file. [387.00ms]

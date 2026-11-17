@@ -1,0 +1,31 @@
+{
+  "reproCommit": "f61dd600779f4a5d6eb1741c00734610b2aca927",
+  "fixCommit": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
+  "originalBenchmarkedPrCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
+  "productionAndDependenciesByteIdentical": true,
+  "libraryTreeOid": "762baa753a50fd4d4a3d59af814c863fb8ee636f",
+  "cropPads": 32,
+  "routeFragments": 24,
+  "before": {
+    "reachedTerminals": 1,
+    "viaSites": 3,
+    "viaSpanRecords": 3,
+    "relaxedDrcFindings": 12,
+    "stage": "failed at stitching"
+  },
+  "after": {
+    "reachedTerminals": 2,
+    "viaSites": 1,
+    "viaSpanRecords": 2,
+    "relaxedDrcFindings": 6,
+    "stage": "native simplification completed"
+  },
+  "wholeBoardJointDrcRepairIncluded": false,
+  "focusedLocalTestsPassed": 27,
+  "fixCiRun": 44126930273,
+  "reproCiRun": 44126914482,
+  "negativeControlRejectsOldSolver": true,
+  "negativeControlExpectedFailure": "stitch solver.solved is false when the after-test requires true",
+  "fixCiPassed": true,
+  "reproCiPassed": true
+}

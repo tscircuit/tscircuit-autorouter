@@ -1,0 +1,12 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/repro/icepi-plane-stitch.test.ts:
+(pass) captures the full iCE/Pi plane phase before DRC repair [10571.65ms]
+
+tests/repro/icepi-planar-stitch.test.ts:
+(pass) captures the iCE/Pi CPUX crop through stitching and simplification [893.93ms]
+
+ 2 pass
+ 0 fail
+ 15 expect() calls
+Ran 2 tests across 2 files. [11.80s]

@@ -2,7 +2,10 @@
   "identical": true,
   "sha256": "e87aa85c65ef64a71cfdd8354d1cfc5a83ee0bb8fbdf37a9e3add299f274751b",
   "benchmarkSource": "84c94aec4f72b4013aab07ab2edba4ad7d4d2823",
-  "fixCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
+  "fixCommit": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
   "method": "bun build --target bun --packages external --minify, compared byte-identical bundles",
-  "allOtherLibraryFilesAndDependencyLocksIdentical": true
+  "allOtherLibraryFilesAndDependencyLocksIdentical": true,
+  "originalBenchmarkedPrCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
+  "allProductionAndDependencyFilesByteIdenticalToPreviousPr": true,
+  "libraryTreeOid": "762baa753a50fd4d4a3d59af814c863fb8ee636f"
 }
