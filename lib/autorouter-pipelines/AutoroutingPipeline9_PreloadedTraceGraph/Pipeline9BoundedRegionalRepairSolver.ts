@@ -9,7 +9,11 @@ import {
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import {
+  type DrcEvaluator,
+  type SimpleRouteJson as RepairSimpleRouteJson,
+  TraceContactGuard,
+} from "high-density-repair03/lib"
 import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
@@ -145,10 +149,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private repairCandidate?: HighDensityRoute[]
   private reservedChildMaximum = 0
+  private readonly traceContactGuard: TraceContactGuard
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
     this.params = params
+    this.traceContactGuard = new TraceContactGuard({
+      srj: params.originalSrj as RepairSimpleRouteJson,
+      inputRoutes: params.routes,
+      connMap: params.connMap,
+    })
     this.budget = params.budget ?? PIPELINE9_BOUNDED_REPAIR_BUDGET
     this.result = {
       routes: params.routes,
@@ -725,7 +735,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         viaClearance: context.srj.minViaEdgeToPadEdgeClearance,
         previousRoutes: context.currentRoutes,
         routes: candidateRoutes,
-      }).length > 0
+      }).length > 0 ||
+      this.traceContactGuard.getNewContactPairs(candidateRoutes).length > 0
     ) {
       this.state = { phase: "select-region", context }
       return
