@@ -1,0 +1,27 @@
+name: Read native ButterStick preparation profile
+on:
+  push:
+    branches: [codex/ddr2408-profile-summary]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: butterstick-2408-reachability-profile
+          run-id: 44190793289
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Read compact measurements
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ['reachability-report.json','cpu-summary.json']:
+              matches=list(Path('captured').rglob(name))
+              assert len(matches)==1,matches
+              print('PROFILE2408_SUMMARY',name,json.dumps(json.loads(matches[0].read_text()),separators=(',',':')))
+          PY
