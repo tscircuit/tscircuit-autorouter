@@ -197,6 +197,10 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
         if (progress.initialCopperElements !== 0) throw new Error("Fresh-route input contains existing copper")
       }
       progress.phases.push({ name, solver: event.solverName ?? (event.phaseName ? "workspace Pipeline 9" : "FanoutSolver"), status: "running", connections: event.simpleRouteJson.connections.length, startedMs: performance.now()-started })
+      if (process.env.FULL_BOARD_STOP_AT_START === "1") {
+        save(true); saveDiagnostics()
+        throw new Error("Diagnostic stop after initial routing input extraction")
+      }
       diagnostics.phaseInputs.push({name,connections:event.simpleRouteJson.connections.length,
         terminals:event.simpleRouteJson.connections.reduce((n:number,c:any)=>n+c.pointsToConnect.length,0),
         obstacles:event.simpleRouteJson.obstacles.length,

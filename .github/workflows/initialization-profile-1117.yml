@@ -1,0 +1,65 @@
+name: Profile i.MX6 initialization on router 1117 and core 2400
+on:
+  push:
+    branches: [codex/ddr1117-initialization-profile]
+permissions:
+  contents: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [imx6]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: dd3383cfcb5c82960952bd44e6e1dc1d95a7f84f
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 701339c13c9f1cba5c71bf9801fac787a60de937
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned sources and build the selected runtime
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Reroute the original DDR control and both full-board modes
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          mkdir -p ../../results/profile
+          FULL_BOARD_STOP_AT_START=1 bun --cpu-prof --cpu-prof-md --cpu-prof-name=imx6-init.cpuprofile --cpu-prof-dir="$GITHUB_WORKSPACE/results/profile" render.tsx imx6 "$GITHUB_WORKSPACE/results/profile/imx6-fanout" fanout
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: initialization1117-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export the profiler summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('results/profile').rglob('*.md'):
+              print('INITIALIZATION1117_PROFILE_BEGIN',str(path))
+              print(path.read_text()[:80000])
+              print('INITIALIZATION1117_PROFILE_END')
+          PY
