@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: b34d0e13a1fe41b5f165216ea93200d23bf21213
+          ref: f069b4218ad94cd656b87f0f92e813c24bcfa594
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -27,6 +27,49 @@ jobs:
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
+      - uses: actions/checkout@v4
+        with:
+          ref: 6e5ea125ddbaf0f3fbed483f881623073713d73d
+          path: comparison-base
+          persist-credentials: false
+      - name: Type check the fix
+        run: bunx tsc --noEmit
+      - name: Compare the changed ESP32 snapshot with the base
+        run: |
+          ln -s "$GITHUB_WORKSPACE/node_modules" comparison-base/node_modules
+          cat > .snapshot-qualification.ts <<'TS'
+          import { AutoroutingPipelineSolver7_MultiGraph } from "./lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+          import { evaluateRelaxedDrc } from "./lib/testing/evaluate-relaxed-drc"
+          import bugReport from "./fixtures/bug-reports/bugreport47-8ee80e-esp32-breakout/bugreport47-8ee80e-esp32-breakout.json"
+          const input = bugReport.simple_route_json
+          const solver = new AutoroutingPipelineSolver7_MultiGraph(input)
+          solver.solve()
+          const traces = solver.getOutputSimplifiedPcbTraces()
+          const { errors } = evaluateRelaxedDrc({
+            inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces
+          })
+          const report = { solved: solver.solved, failed: solver.failed, routes: traces.length, errors: errors.length, byType: Object.fromEntries([...new Set(errors.map(e => e.error_type))].map(type => [type, errors.filter(e => e.error_type === type).length])) }
+          console.log("ESP32_QUALIFICATION=" + JSON.stringify(report))
+          await Bun.write(Bun.argv[2], JSON.stringify(report))
+          
+          TS
+          cp .snapshot-qualification.ts comparison-base/
+          bun .snapshot-qualification.ts /tmp/head.json
+          (cd comparison-base && bun .snapshot-qualification.ts /tmp/base.json)
+          python3 - <<'PY'
+          import json
+          base=json.load(open('/tmp/base.json'))
+          head=json.load(open('/tmp/head.json'))
+          assert head['solved'] and not head['failed'], head
+          assert head['routes'] >= base['routes'], (base,head)
+          assert head['errors'] <= base['errors'], (base,head)
+          PY
+          rm .snapshot-qualification.ts
+          rm comparison-base/.snapshot-qualification.ts
+      - name: Update the changed ESP32 SVG after its DRC comparison
+        env:
+          BUN_UPDATE_SNAPSHOTS: 1
+        run: bun test tests/bugs/bugreport47-8ee80e-esp32-breakout.test.ts --timeout 9999999
       - name: Generate both views from the unchanged real board
         env:
           BUN_UPDATE_SNAPSHOTS: 1
@@ -37,11 +80,11 @@ jobs:
           script: |
             const fs = require("fs")
             const branch = "fix/a13-direct-route-inset"
-            for (const name of [
-              "pipeline9-a13-regional-repair-shorts.snap.svg",
-              "pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg"
+            for (const path of [
+              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg",
+              "tests/bugs/__snapshots__/bugreport47-8ee80e-esp32-breakout.snap.svg"
             ]) {
-              const path = "tests/repro/__snapshots__/" + name
               const content = fs.readFileSync(path).toString("base64")
               let sha
               try {
@@ -55,8 +98,8 @@ jobs:
               }
               await github.rest.repos.createOrUpdateFileContents({
                 ...context.repo, branch, path, content, sha,
-                message: "Record native A13 " + name
+                message: "Record checked routing snapshot " + path
               })
               const count = fs.readFileSync(path, "utf8").match(/Relaxed DRC errors: (\d+)/)
-              console.log(name + " findings=" + count[1])
+              console.log(path + " findings=" + (count ? count[1] : "native solver view"))
             }
