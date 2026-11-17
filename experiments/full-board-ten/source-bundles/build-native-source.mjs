@@ -5,8 +5,11 @@ import { createHash } from "node:crypto"
 import { gzipSync } from "node:zlib"
 
 const frozenPlan = "/tmp/full-board-ten-20261116/via-reservation-plan-3207"
-const plan = "/tmp/full-board-ten-20261116/recovery-handoff-plan-3208"
+const plan = "/tmp/full-board-ten-20261116/recovery-handoff-plan-1113-integration"
 const variant = process.argv[2]
+const use1112Control = process.argv[3] === "1112-control"
+if (process.argv[3] && !use1112Control) throw new Error("Unexpected build mode")
+const integrationAudit = JSON.parse(readFileSync(join(plan, "published1113-audit.json"), "utf8"))
 if (!["source-baseline", "handoff-only"].includes(variant)) throw new Error("Expected source-baseline or handoff-only")
 const baseline = join(frozenPlan, "source-baseline")
 const arRoot = join(baseline, "autorouter")
@@ -31,6 +34,12 @@ const updatedAutorouterPath = "lib/autorouter-pipelines/AutoroutingPipeline9_Pre
 const updatedAutorouterSource = publishedSources.get(`../${updatedAutorouterPath}`)
 if (typeof updatedAutorouterSource !== "string") throw new Error("Missing exact AR1112 pipeline source")
 overrides.set(join(arRoot, updatedAutorouterPath), { contents: updatedAutorouterSource, source: `npm1112/${updatedAutorouterPath}`, role: "published AR1112 source" })
+if (!use1112Control) {
+  const regionalPath = "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver.ts"
+  const regionalSource = readFileSync(join(plan, "Pipeline9BoundedRegionalRepairSolver.ts"), "utf8")
+  if (sha(regionalSource) !== "442464746b5d4bd7d78ac1eb64ffe483267511d5f6dbf1891009bacdb4256150") throw new Error("Published AR1113 regional source changed")
+  overrides.set(join(arRoot, regionalPath), { contents: regionalSource, source: `npm1113/${regionalPath}`, role: "published AR1113 source" })
+}
 const candidateSourcePaths = []
 if (variant !== "source-baseline") {
   const paths = JSON.parse(readFileSync(join(plan, `${variant}-source-paths.json`), "utf8"))
@@ -44,7 +53,7 @@ if (variant !== "source-baseline") {
   }
 }
 const loadedOverrides = []
-const outputDir = join(plan, "build", variant)
+const outputDir = join(plan, "build", variant + (use1112Control ? "-1112-control" : ""))
 mkdirSync(outputDir, { recursive: true })
 const entry = join(arRoot, "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
 const result = await build({
@@ -93,10 +102,12 @@ const inputs = Object.entries(result.metafile.inputs).map(([path, info]) => {
 })
 const proof = {
   variant,
-  autorouterGitHead: "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6",
+  autorouterGitHead: use1112Control ? "d930c5cb4844ec6b2972a9a194fbfee690f1a5e6" : "b9f024828936f9639a696c9943747cc776cda72e",
   tinyGitHead: "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
-  publishedEntrySha256: "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee",
-  publishedSourceMapSha256: sha(readFileSync(publishedMapPath)),
+  publishedEntrySha256: use1112Control ? "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee" : integrationAudit.entrySha256,
+  frozenDependencySourceMapSha256: sha(readFileSync(publishedMapPath)),
+  publishedSourceMapSha256: use1112Control ? sha(readFileSync(publishedMapPath)) : integrationAudit.sourceMapSha256,
+  sourceMapDeltaAuditSha256: sha(readFileSync(join(plan, "published1113-audit.json"))),
   esbuildVersion: JSON.parse(readFileSync(join(depsRoot, "node_modules/esbuild/package.json"), "utf8")).version,
   entrySha256: sha(entryBytes), entryBytes: entryBytes.length,
   compressedSha256: sha(compressed), compressedBytes: compressed.length,
