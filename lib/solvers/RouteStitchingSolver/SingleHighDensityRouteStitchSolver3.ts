@@ -13,8 +13,10 @@ import {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
-const VIA_PENALTY = 1000
-const GAP_PENALTY = 100000
+// Prefer a planar splice over changing layers at coincident endpoints.
+// Otherwise the stitch can bypass a routed via and strand its terminal path.
+const VIA_PENALTY = 100000
+const GAP_PENALTY = 1000
 const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
