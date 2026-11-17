@@ -7,8 +7,8 @@ type AliasHash = string
 type Restore = () => void
 type ObserverOptions = { onSnapshot?: (report: RuntimeObject) => void }
 
-const TARGET_NODE_IDS = ["topology_merge_17108", "new-cmn_8-79__sub_3_0"]
-const MAX_REPORT_BYTES = 512 * 1024
+const TARGET_NODE_IDS = ["topology_merge_7204"]
+const MAX_REPORT_BYTES = 1024 * 1024
 
 function summarize(serializable: unknown): RuntimeObject {
   const serialized = JSON.stringify(serializable)
@@ -114,7 +114,7 @@ export function createHighDensityPhaseObserver(options: ObserverOptions = {}): {
   let highDensity: RuntimeObject | undefined
   let finished = false
   let disposed = false
-  let validation: { regional: RuntimeObject; call: number } | undefined
+  let validation: { regional: RuntimeObject; call: number; rawRoutes?: RuntimeObject[]; forceImprovedRoutes?: RuntimeObject[] } | undefined
   const report: RuntimeObject = {
     instrumentation: "Owned-instance method observation only; no routing policy changes",
     targetNodeIds: TARGET_NODE_IDS, reportLimitBytes: MAX_REPORT_BYTES,
@@ -264,8 +264,14 @@ export function createHighDensityPhaseObserver(options: ObserverOptions = {}): {
       if (validation?.regional === this) validation.call++
       const result = Reflect.apply(original, this, args)
       const call = validation?.regional === this ? validation.call : null
+      if (validation?.regional === this && result === true) observe("accepted-candidate-stage", () => {
+        if (call === 1) validation!.rawRoutes = args[0].map(cloneRoute)
+        if (call === 2) validation!.forceImprovedRoutes = args[0].map(cloneRoute)
+      })
       if (result === false && call !== null && !attempt.rejectedCandidates[call]) observe("rejected-candidate", () => {
-        attempt.rejectedCandidates[call] = { call, routes: args[0].map(cloneRoute), chain: candidateChain(this) }
+        attempt.rejectedCandidates[call] = { call, routes: args[0].map(cloneRoute), chain: candidateChain(this),
+          rawRoutesBeforeCleanup: validation?.rawRoutes,
+          forceImprovedRoutesBeforeRepair: validation?.forceImprovedRoutes }
       })
       return result
     })

@@ -57,6 +57,9 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
 
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph } = await import(pathToFileURL(runtime.selectedAutorouterEntry).href)
 importingPublishedAutorouter = false
+for (const method of ["step", "getSolverName", "getOutputSimpleRouteJson"]) {
+  assert.equal(typeof AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype[method], "function", `Missing native P9 method ${method}`)
+}
 // Exact constructor used by frozen Core's auto-local phase solver.
 const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
   capacityDepth: undefined,
@@ -97,7 +100,7 @@ try {
     if (!pipeline.solved && !pipeline.failed) await new Promise(resolve => setTimeout(resolve, 0))
   }
   if (pipeline.solved) {
-    const srjOutput = pipeline.getOutput()
+    const srjOutput = pipeline.getOutputSimpleRouteJson()
     const serialized = JSON.stringify(srjOutput)
     writeFileSync(join(output, "phase-output.srj.json.gz"), gzipSync(serialized))
     outputSummary = { sha256: sha(serialized), traceCount: srjOutput.traces?.length ?? null }
@@ -113,26 +116,25 @@ try {
 assert.equal(sha(readFileSync(runtime.originalAutorouterEntry)), runtime.originalAutorouterSha256)
 assert.equal(sha(readFileSync(runtime.selectedAutorouterEntry)), runtime.selectedAutorouterSha256)
 const observation = observer.getReport()
+const target = observation.nodes.find((node: { nodeId: string }) => node.nodeId === "topology_merge_7204")
+const nativeError = JSON.parse(readFileSync(runtime.nativeResultPath, "utf8")).lastError
+const currentError = `${pipeline.error} (capacity-autorouter@0.0.1111)`
 const tinySegments = observation.targetTinyContext?.segments ?? []
-const vrefSegments = tinySegments.filter((segment: { metadata: { connectionId?: string } }) =>
-  ["source_net_34_mst0", "source_net_34_mst6"].includes(segment.metadata.connectionId ?? ""))
-const preloadSegments = tinySegments.filter((segment: { metadata: { preloadedTraceSection?: { traceId?: string } } }) =>
-  segment.metadata.preloadedTraceSection?.traceId === "source_net_20_0")
-const nativeTinyRolesReproduced = tinySegments.length === 3 && vrefSegments.length === 2 && preloadSegments.length === 1 &&
-  vrefSegments.every((segment: { numericNet: number; fromZ: number; toZ: number; routeIsFixed: number }) =>
-    segment.numericNet === vrefSegments[0].numericNet && segment.fromZ === 3 && segment.toZ === 0 && segment.routeIsFixed === 0) &&
-  preloadSegments[0].numericNet !== vrefSegments[0].numericNet && preloadSegments[0].fromZ === 1 && preloadSegments[0].toZ === 0 &&
-  preloadSegments[0].routeIsFixed === 0
+const targetRoutePresent = tinySegments.some((segment: { metadata: { connectionId?: string } }) =>
+  segment.metadata.connectionId === "source_net_116")
+const nativeFailureReproduced = pipeline.failed && currentError === nativeError
+const rejectionStages = target?.attempts.flatMap((attempt: { rejectedCandidates: Record<string, unknown> }) =>
+  Object.keys(attempt.rejectedCandidates)) ?? []
 const result = {
   ...runtime, elapsedMs: performance.now() - started,
   solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
   iterations: pipeline.iterations, timedOut, thrownError, outputSummary, wasmUsage,
-  nativeFailureReproduced: pipeline.failed && String(pipeline.error).includes("topology_merge_17108"),
-  nativeTinyRolesReproduced,
-  diagnosticObservationValid: observation.observationErrors.length === 0 && Boolean(observation.queue) && nativeTinyRolesReproduced,
-  interpretation: "Phase diagnostic only. Compare baseline constructor, target Tiny state and failure with the full native run before using candidate node history. No full-board connectivity gain is measured here.",
+  nativeFailureReproduced, targetRoutePresent, rejectionStages,
+  diagnosticObservationValid: observation.observationErrors.length === 0 && Boolean(observation.queue) &&
+    targetRoutePresent && rejectionStages.includes("1"),
+  interpretation: "Phase diagnostic only. Uses the unchanged published entry and exact archived phase input. Final error is compared with the original native run; earlier native HD prefix was not captured, so cold-cache equivalence of internal routing is not established. No full-board connectivity gain is measured here.",
 }
 atomicJson("result.json", result)
 console.log(`HD_PHASE_RESULT ${JSON.stringify({ variant: runtime.variant, solved: result.solved, failed: result.failed, error: result.error, timedOut, thrownError, nativeFailureReproduced: result.nativeFailureReproduced, elapsedMs: result.elapsedMs })}`)
 if (timedOut || thrownError || wasmUsage.routingOrUnknownAttempts > 0 || !result.diagnosticObservationValid ||
-    (runtime.variant === "published" && !result.nativeFailureReproduced)) process.exitCode = 1
+    !result.nativeFailureReproduced) process.exitCode = 1

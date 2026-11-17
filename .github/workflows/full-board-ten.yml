@@ -1,8 +1,8 @@
-name: Published3207 native high-density phase replay
+name: Published3207 native H616 regional rejection witness
 
 on:
   push:
-    branches: [bench/full-board-hd-phase-replay-3207]
+    branches: [bench/full-board-h616-witness-3207]
 
 permissions:
   contents: read
@@ -10,18 +10,13 @@ permissions:
 
 jobs:
   replay:
-    name: Native phase (${{ matrix.variant }})
+    name: Native H616 other_signals
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        variant: [published, regional-expansion]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      FULL_BOARD_EXPERIMENT: hd-phase-replay
+      FULL_BOARD_EXPERIMENT: h616-native-witness
 
     steps:
       - name: Checkout diagnostic controller
@@ -64,20 +59,12 @@ jobs:
       - name: Prepare unchanged frozen package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Download the authenticated native phase source artifact
-        uses: actions/download-artifact@v4
-        with:
-          repository: tscircuit/tscircuit-autorouter
-          run-id: 43972696308
-          artifact-ids: 14279817246
-          github-token: ${{ github.token }}
-          path: .full-board-run/native-artifact
-          merge-multiple: true
-
-      - name: Verify native input and select isolated autorouter entry
+      - name: Authenticate native input and unchanged published entry
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python3 experiments/full-board-ten/prepare-phase-replay.py
-          "$FULL_BOARD_ROOT" "${{ matrix.variant }}"
+          "$FULL_BOARD_ROOT"
 
       - name: Replay only the native other_signals phase
         id: replay
@@ -93,12 +80,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: hd-phase-icepi-${{ matrix.variant }}-${{ github.run_attempt }}
+          name: h616-native-witness-published-${{ github.run_attempt }}
           path: |
             .full-board-run/phase-results
             .full-board-run/phase-replay-runtime.json
             .full-board-run/runtime-manifest.json
-            experiments/full-board-ten/regional-expansion-anchor.json
+            experiments/full-board-ten/h616-native-input.json
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7

@@ -1,0 +1,40 @@
+{
+  "artifactId": 14274763235,
+  "artifactBytes": 3996819,
+  "artifactSha256": "64c2d94eb1b83419b85ee3bdcf5fbed862d774acf9f0385ca14a3f20d5e0bc5e",
+  "runId": 43962158572,
+  "head": "1789e29b59194023638535e61dd66bdbf1153726",
+  "inputSha256": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102",
+  "counts": {
+    "connections": 56,
+    "traces": 41,
+    "obstacles": 1695
+  },
+  "members": [
+    {
+      "filename": "phase-4-input.srj.json.gz",
+      "bytes": 472180,
+      "sha256": "6b8be42d73cd8b1b8aab892953fea2a62c90c1a36e25b43df20adc36c4fcd7a6"
+    },
+    {
+      "filename": "phase-4-error.srj.json.gz",
+      "bytes": 472180,
+      "sha256": "6b8be42d73cd8b1b8aab892953fea2a62c90c1a36e25b43df20adc36c4fcd7a6"
+    },
+    {
+      "filename": "progress.json",
+      "bytes": 10936,
+      "sha256": "9ca27cdf06bdbb1725cefeacd7564776ee9e5e393d54f06a3aa528156f2c750c"
+    },
+    {
+      "filename": "process.json",
+      "bytes": 337,
+      "sha256": "96dce18f1f4c578b31c58b32b7f497b55a26845e68aafc169bf5fb6045ef3b86"
+    },
+    {
+      "filename": "result.json",
+      "bytes": 3528,
+      "sha256": "4c8855ff47551ce6138511d7228a3c017f3904e15c9296c5c86ff94af4ebbfbc"
+    }
+  ]
+}
