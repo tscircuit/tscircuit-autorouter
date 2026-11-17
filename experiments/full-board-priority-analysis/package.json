@@ -7,7 +7,7 @@
     "render": "bun run.ts"
   },
   "dependencies": {
-    "tscircuit": "0.0.3216",
+    "tscircuit": "0.0.3228",
     "react": "19.3.1",
     "transformation-matrix": "2.16.1",
     "typescript": "5.9.3",
