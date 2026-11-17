@@ -195,6 +195,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (isPortPointClear) {
       for (const z of portCountByLayer.keys()) {
         const layerFamily = redistributed.filter((point) => point.z === z)
+        if (layerFamily.every((point) => isPortPointClear(point))) continue
         const originalPortPoints = layerFamily.map(
           (point) =>
             familyRaw.find(
@@ -202,7 +203,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
             )!,
         )
         if (
-          layerFamily.every((point) => isPortPointClear(point)) ||
           !originalPortPoints.every((point) =>
             isPortPointClear(point, {
               includeClearance:

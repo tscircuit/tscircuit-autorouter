@@ -595,12 +595,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-          isPortPointClear: createPreloadedPortValidator({
-            srj: cms.srj,
-            connMap: cms.connMap,
-            traceWidth: cms.minTraceWidth,
-            viaDiameter: cms.viaDiameter,
-          }),
+          isPortPointClear: cms.srj.traces?.length
+            ? createPreloadedPortValidator({
+                srj: cms.srj,
+                connMap: cms.connMap,
+                traceWidth: cms.minTraceWidth,
+                viaDiameter: cms.viaDiameter,
+              })
+            : undefined,
         },
       ],
     ),
