@@ -1,11 +1,16 @@
 {
-  "identical": true,
-  "sha256": "e87aa85c65ef64a71cfdd8354d1cfc5a83ee0bb8fbdf37a9e3add299f274751b",
+  "routingLogicEquivalent": true,
   "benchmarkSource": "84c94aec4f72b4013aab07ab2edba4ad7d4d2823",
-  "fixCommit": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
-  "method": "bun build --target bun --packages external --minify, compared byte-identical bundles",
-  "allOtherLibraryFilesAndDependencyLocksIdentical": true,
-  "originalBenchmarkedPrCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
-  "allProductionAndDependencyFilesByteIdenticalToPreviousPr": true,
-  "libraryTreeOid": "762baa753a50fd4d4a3d59af814c863fb8ee636f"
+  "fixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "previousPrCommit": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
+  "productionChangeSincePreviousPr": "import order only",
+  "solverBodySha256": "043e4d1d075ba38f1cfa5c9c5085ecd6aa00628c854eb951c76fc767340c5123",
+  "pipeline9RuntimeByteIdentical": true,
+  "pipeline9RuntimeSha256": [
+    "5b9cb9a69d4260b2c81ba994d4cf6ce1c274037aa31929cea249cfd056a46d0f",
+    "5b9cb9a69d4260b2c81ba994d4cf6ce1c274037aa31929cea249cfd056a46d0f"
+  ],
+  "dependencyVersionsAndLockUnchanged": true,
+  "nativeSnapshotsByteIdentical": true,
+  "method": "Compare minified Pipeline9 bundles built from the frozen benchmark source and current PR; verify the solver body is unchanged and regenerated native snapshots match byte for byte."
 }

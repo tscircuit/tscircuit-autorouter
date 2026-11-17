@@ -1,0 +1,17 @@
+{
+  "workflowRun": 44131058940,
+  "base": "f61dd600779f4a5d6eb1741c00734610b2aca927",
+  "head": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
+  "scenarios": 16,
+  "baseCompleted": 16,
+  "headCompleted": 16,
+  "baseRelaxedDrcPassed": 16,
+  "headRelaxedDrcPassed": 16,
+  "baseDrcIssues": 0,
+  "headDrcIssues": 0,
+  "baseAverageViasReported": 212.94,
+  "headAverageViasReported": 212.94,
+  "improvedOutcomes": 0,
+  "regressedOutcomes": 0,
+  "note": "User-triggered sequential same-worker benchmark; the cleanup retains the same compiled routing runtime."
+}

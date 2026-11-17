@@ -1,19 +1,19 @@
-build	pass	1m16s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126929629/job/134193153410	
-check-added-code	pass	37s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126929781/job/134193154893	
-check-dependency-patches	pass	38s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126929881/job/134193154096	
-format-check	pass	33s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126929637/job/134193155066	
-test (1)	pass	6m33s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157504	
-test (2)	pass	8m58s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157403	
-test (3)	pass	7m8s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157726	
-test (4)	pass	13m16s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157427	
-test (5)	pass	6m35s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157832	
-test (6)	pass	10m32s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157727	
-test (7)	pass	7m41s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157531	
-test (9)	pass	15m39s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193156959	
-type-check	pass	1m8s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930007/job/134193155623	
-effort-comparison	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44127371283/job/134194846764	
-test (8)	pass	12m17s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930273/job/134193157755	
-vercel-build	pass	1m47s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44126930160/job/134193155576	
-Build benchmark history dashboard	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44127371283/job/134194734754	
-Run benchmark	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44127371283/job/134194792041	
-Same machine benchmark	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44127371283/job/134194732868	
+build	pass	1m9s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966789/job/134218323528	
+check-added-code	pass	35s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966770/job/134218323585	
+check-dependency-patches	pass	37s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133967281/job/134218321762	
+format-check	pass	38s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966967/job/134218322781	
+test (1)	pass	6m3s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218317832	
+test (2)	pass	9m37s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218324730	
+test (3)	pass	9m31s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218326847	
+test (4)	pass	14m56s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218316987	
+test (5)	pass	6m18s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218317108	
+test (6)	pass	11m3s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218317451	
+test (7)	pass	7m31s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218317812	
+test (8)	pass	9m31s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218318878	
+test (9)	pass	10m54s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966518/job/134218319177	
+type-check	pass	1m19s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966797/job/134218327865	
+vercel-build	pass	1m55s	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44133966707/job/134218329429	
+Build benchmark history dashboard	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44134855982/job/134221488944	
+Run benchmark	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44134855982/job/134221587606	
+Same machine benchmark	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44134855982/job/134221487595	
+effort-comparison	skipping	0	https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44134855982/job/134221556053	

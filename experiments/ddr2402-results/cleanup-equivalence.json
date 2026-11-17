@@ -1,0 +1,27 @@
+{
+  "routingLogicUnchanged": true,
+  "productionChange": "new import ordering only",
+  "solverBodySha256": "043e4d1d075ba38f1cfa5c9c5085ecd6aa00628c854eb951c76fc767340c5123",
+  "reproHelpersIdenticalToFix": true,
+  "nativeSnapshotsByteIdentical": true,
+  "originalPrCommit": "6e46f2fed4d7435253b76c62f35b88555d2317c7",
+  "pipeline9RuntimeByteIdentical": true,
+  "pipeline9RuntimeSha256": [
+    "5b9cb9a69d4260b2c81ba994d4cf6ce1c274037aa31929cea249cfd056a46d0f",
+    "5b9cb9a69d4260b2c81ba994d4cf6ce1c274037aa31929cea249cfd056a46d0f"
+  ],
+  "reproCommit": "93193735a959e0721fc7df083aaa7ab09eebf4d0",
+  "fixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "fixCiRun": 44133966518,
+  "reproCiRun": 44133958500,
+  "sourceGuidelines": [
+    "AGENTS.md",
+    "https://github.com/tscircuit/handbook/blob/main/guides/code.md"
+  ],
+  "reviewExamples": [
+    "https://github.com/tscircuit/tscircuit-autorouter/pull/3748#discussion_r4595554071",
+    "https://github.com/tscircuit/tscircuit-autorouter/pull/3643#discussion_r4527565675"
+  ],
+  "fixCiPassed": true,
+  "reproCiPassed": true
+}
