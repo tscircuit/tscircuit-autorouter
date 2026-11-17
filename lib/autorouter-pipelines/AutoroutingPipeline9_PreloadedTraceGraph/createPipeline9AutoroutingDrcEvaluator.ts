@@ -14,6 +14,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 import { checkBoardTraceClearance } from "lib/utils/autorouting-drc/checkBoardTraceClearance"
 import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
+import { createExternalCopperConnectionEvaluator } from "lib/utils/autorouting-drc/createExternalCopperConnectionEvaluator"
 import { checkViaPairClearance } from "lib/utils/autorouting-drc/checkViaPairClearance"
 import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
@@ -65,6 +66,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       })
     : undefined
   const representedPadObstacleIndexes = new Set<number>()
+  const evaluateExternalCopper = createExternalCopperConnectionEvaluator([
+    ...inputSrj.connections,
+    ...srjWithPointPairs.connections,
+  ])
   const staticCircuitJson = convertToCircuitJson(srjWithPointPairs, [], {
     ...conversionOptions,
     representedPadObstacleIndexes,
@@ -115,7 +120,9 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []
-        : checkTraceContinuity(circuitJson)),
+        : checkTraceContinuity(circuitJson, {
+            externalCopperConnections: evaluateExternalCopper(circuitJson),
+          })),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),
