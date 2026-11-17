@@ -246,6 +246,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       minClearance: this.params.minClearance,
       viaCopperClearance: this.params.viaCopperClearance,
       connMap: this.params.connMap,
+      layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
     })
     repairSolver.solve()
     if (repairSolver.failed) {
