@@ -1,0 +1,38 @@
+name: Read captured ButterStick scene in compact parts
+on:
+  push:
+    branches: [codex/ddr2408-scene-export]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    strategy:
+      matrix:
+        part: [0, 1]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: prep2408-scene
+          run-id: 44192780484
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Export captured bytes
+        env:
+          SCENE_PART: ${{ matrix.part }}
+        run: |
+          python3 - <<'PY'
+          import base64,os
+          from pathlib import Path
+          matches=list(Path('captured').rglob('butterstick-worst-target.json.gz'))
+          assert len(matches)==1,matches
+          content=matches[0].read_bytes()
+          part=int(os.environ['SCENE_PART'])
+          middle=(len(content)+1)//2
+          chunk=content[:middle] if part==0 else content[middle:]
+          print('PREP2408_SCENE_PART_BEGIN')
+          encoded=base64.b64encode(chunk).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('PREP2408_SCENE_PART_END')
+          PY
