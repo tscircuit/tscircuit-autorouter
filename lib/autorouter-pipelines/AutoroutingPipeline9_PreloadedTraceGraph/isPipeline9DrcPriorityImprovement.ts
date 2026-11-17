@@ -1,5 +1,15 @@
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
+export const isPipeline9PriorityDrcError = (
+  error: Pipeline9DrcError,
+): boolean => {
+  const isFixedCopper = error.drc_source === "fixed_copper"
+  const hasCopperContact =
+    typeof error.actual_clearance === "number" &&
+    error.actual_clearance <= 0
+  return !isFixedCopper || hasCopperContact
+}
+
 /** Compare reference errors after the physical candidate guards have passed. */
 export const isPipeline9DrcPriorityImprovement = ({
   currentErrors,
@@ -8,16 +18,12 @@ export const isPipeline9DrcPriorityImprovement = ({
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
 }): boolean => {
-  const currentHasCircuitJsonErrors = currentErrors.some(
-    (error): boolean => error.drc_source !== "fixed_copper",
-  )
-  const candidateHasCircuitJsonErrors = candidateErrors.some(
-    (error): boolean => error.drc_source !== "fixed_copper",
-  )
-  // Clearing circuit errors can reveal inherited fixed-copper contacts.
-  // Compare priority before count so that this progress is retained.
-  if (currentHasCircuitJsonErrors !== candidateHasCircuitJsonErrors) {
-    return !candidateHasCircuitJsonErrors
+  const currentHasPriorityErrors = currentErrors.some(isPipeline9PriorityDrcError)
+  const candidateHasPriorityErrors = candidateErrors.some(isPipeline9PriorityDrcError)
+  // Positive fixed-copper clearances follow circuit errors and physical shorts.
+  // Keep that priority consistent with the errors included in the repair score.
+  if (currentHasPriorityErrors !== candidateHasPriorityErrors) {
+    return !candidateHasPriorityErrors
   }
   return candidateErrors.length < currentErrors.length
 }

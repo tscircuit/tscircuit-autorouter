@@ -3,6 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
+import { isPipeline9PriorityDrcError } from "./isPipeline9DrcPriorityImprovement"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -57,18 +58,12 @@ import {
 import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
-// Finish Circuit JSON repairs before targeting projected earlier copper.
-// The reference score can be zero only when both groups are clear.
+// Retain physical shorts while repairing Circuit JSON clearance errors.
 const prioritizeCircuitJsonDrcErrors = <T extends Record<string, unknown>>(
   errors: T[],
 ): T[] => {
-  const circuitJsonErrors = errors.filter(
-    (error) =>
-      error.drc_source !== "fixed_copper" ||
-      (typeof error.actual_clearance === "number" &&
-        error.actual_clearance <= 0),
-  )
-  return circuitJsonErrors.length > 0 ? circuitJsonErrors : errors
+  const priorityErrors = errors.filter(isPipeline9PriorityDrcError)
+  return priorityErrors.length > 0 ? priorityErrors : errors
 }
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
