@@ -1,0 +1,46 @@
+name: SRJ18 clearance investigation
+on:
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Prepare identical dependencies and isolated revisions
+        run: |
+          git worktree add --detach ../srj18-before fe3953fd4469c9c7ff84fb7b5712e50c607d5246
+          git worktree add --detach ../srj18-merged cfa81399685a89858415e30e19d92d915579702c
+          git worktree add --detach ../srj18-optimized cfa81399685a89858415e30e19d92d915579702c
+          git diff 73f2a0c8a05a06d85e0ddf126cb903e3949523d6 70feba0fe0c84a1b60bb3c1fc2639dd2e2ef6857 -- lib > /tmp/clearance-optimization.patch
+          git -C ../srj18-optimized apply /tmp/clearance-optimization.patch
+          cd ../srj18-merged
+          bun install
+          ln -s "$(pwd)/node_modules" ../srj18-before/node_modules
+          ln -s "$(pwd)/node_modules" ../srj18-optimized/node_modules
+      - name: Balanced full-dataset comparison
+        env:
+          BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+        run: |
+          mkdir -p investigation-results
+          for variant in before merged optimized optimized merged before; do
+            number=$(find investigation-results -maxdepth 1 -name '*-benchmark-result.json' | wc -l)
+            root="$(realpath ../srj18-$variant)"
+            echo "INVESTIGATION_PASS $number $variant"
+            (cd "$root" && bash benchmark.sh --dataset 18 --concurrency 3 --sample-timeout 240s)
+            cp "$root/benchmark-result.json" "investigation-results/$number-$variant-benchmark-result.json"
+            cp "$root/benchmark-result.txt" "investigation-results/$number-$variant-benchmark-result.txt"
+            bun -e 'const p = await Bun.file(process.argv[1]).json(); console.log("INVESTIGATION_RESULT " + JSON.stringify({pass:process.argv[2],variant:process.argv[3],runtime:p.runtime,summary:p.summary,tests:p.tests.map(({benchmarkSnapshot,...test})=>test)}))' "investigation-results/$number-$variant-benchmark-result.json" "$number" "$variant"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: srj18-balanced-comparison
+          path: investigation-results
