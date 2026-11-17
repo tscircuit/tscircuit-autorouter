@@ -261,13 +261,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
-    // A diagonal shortcut can clip the obstacle beyond a shared corner.
+    // A diagonal between boundary ports can clip the neighboring corner.
     const isDiagonalShortcut = A.x !== B.x && A.y !== B.y
     if (
       A.z === B.z &&
       isDiagonalShortcut &&
       this.boundsSize.width > this.obstacleMargin &&
       this.boundsSize.height > this.obstacleMargin &&
+      this.isNodeTooCloseToEdge(A) &&
+      this.isNodeTooCloseToEdge(B) &&
       this.isNodeTooCloseToEdge({
         x: (A.x + B.x) / 2,
         y: (A.y + B.y) / 2,
