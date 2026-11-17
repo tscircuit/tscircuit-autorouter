@@ -80,6 +80,18 @@ function readablePackage(folder: string, name: string): boolean {
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
 const { RootCircuit, SOLVERS } = await import("tscircuit")
+let coreChunkBinding: any = null
+let reviewedRenderable: any = null
+if (task.runtimeChunkProof) {
+  const core = expectedRuntime.find((row: any) => row.name === "@tscircuit/core")
+  const main = runtime.find((row: any) => row.name === "tscircuit")!
+  const actualEntry = Bun.resolveSync("@tscircuit/core", dirname(main.entry))
+  const actualChunk = join(dirname(actualEntry), "chunk-MS7QPCOY.js")
+  if (realpathSync(actualEntry) !== realpathSync(core.entry) || sha(readFileSync(actualChunk)) !== task.runtimeChunkProof.afterSha256) throw new Error("Main package did not load the reviewed Core chunk")
+  if (RootCircuit !== (await import("@tscircuit/core")).RootCircuit) throw new Error("Main and Core resolved different circuit classes")
+  reviewedRenderable = (await import(pathToFileURL(actualChunk).href)).Renderable
+  coreChunkBinding = { actualEntry, actualChunk, sha256: sha(readFileSync(actualChunk)), mainAndCoreClassIdentical: true }
+}
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
 const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardModule)).href)
@@ -90,7 +102,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false, coreChunkBinding },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -130,6 +142,12 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
     const name = event.phaseName ?? event.componentDisplayName ?? "unnamed"
     if (eventName === "autorouting:start") {
       if (progress.phases.length === 0) {
+        if (reviewedRenderable) {
+          if ((circuit as any).firstChild?._queueAsyncEffect !== reviewedRenderable.prototype._queueAsyncEffect) throw new Error("Native board does not inherit the reviewed Renderable method")
+          if ((circuit as any).firstChild?._parsedProps.enableViaStitching !== false) throw new Error("Authentic H616 via-stitching policy changed")
+          coreChunkBinding.nativeBoardMethodIdentical = true
+          coreChunkBinding.viaStitchingEnabled = false
+        }
         const json = circuit.getCircuitJson()
         atomic("unrouted.circuit.json.gz", gzipSync(JSON.stringify(json), { level: 1 }))
         progress.initialCopperCounts = Object.fromEntries(["pcb_trace", "pcb_via", "pcb_copper_pour"].map(type => [type, json.filter(item => item.type === type).length]))

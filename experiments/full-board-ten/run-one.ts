@@ -27,6 +27,10 @@ const renderExitCode = await worker.exited
 clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
+if (task.restorePublishedCoreBeforeAssessment) {
+  const restored = Bun.spawnSync(["python3", join(import.meta.dir, "prepare-core-reentrancy.py"), task.restorePublishedCoreBeforeAssessment, "restore"], { stdout: "inherit", stderr: "inherit" })
+  if (restored.exitCode !== 0) throw new Error("Published Core restoration failed before neutral assessment")
+}
 const diagnosticPath = join(output, "coarse-diagnostics.json")
 if (existsSync(diagnosticPath)) {
   const diagnostic = JSON.parse(readFileSync(diagnosticPath, "utf8"))

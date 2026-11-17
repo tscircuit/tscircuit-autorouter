@@ -1,37 +1,26 @@
-name: Published3230 full-board ten-case benchmark
+name: Core render effect registration qualification
 
 on:
   push:
-    branches: [bench/full-board-ten-3230-20261117]
+    branches: [bench/core-render-reentrancy-3230]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+  qualify:
+    name: Exact Core source repro and authentic original H616
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
-
+      FULL_BOARD_EXPERIMENT: published
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout benchmark controller
+      - name: Checkout reviewed controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -39,7 +28,15 @@ jobs:
             experiments/full-board-ten
             .github/workflows/full-board-ten.yml
             AGENTS.md
-
+      - name: Checkout immutable Core source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
+          path: .full-board-run/source-core
+          persist-credentials: false
+          sparse-checkout: lib/components/base-components/Renderable.ts
+          sparse-checkout-cone-mode: false
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
         with:
@@ -48,8 +45,7 @@ jobs:
           path: .full-board-run/sources/original
           persist-credentials: false
           sparse-checkout: experiments/full-board-priority-analysis
-
-      - name: Checkout immutable spaced circuits
+      - name: Checkout immutable spaced source for unchanged bootstrap
         uses: actions/checkout@v4
         with:
           repository: ShiboSoftwareDev/core-ddr-benchmark
@@ -62,88 +58,75 @@ jobs:
             scripts
             licenses
             provenance
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-
-      - name: Prepare verified package runtime
+      - name: Prepare verified published3230 runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
-
-      - name: Prepare authentic paired cases
-        id: prepare
+      - name: Prepare authentic H616 case and neutral original assessor
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
           "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
-
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
+          "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" h616
+      - name: Authenticate saved published control and runtime graph
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" baseline
+      - name: Prove exact source mapping and real paired circuit repro
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" source
+      - name: Qualify complete via and pour geometry audit
+        run: python3 experiments/full-board-ten/audit-via-pour.py --self-test --output "$FULL_BOARD_ROOT/core-reentrancy/audit-self-test.json"
+      - name: Require the real focused repro to clear the signal via physically
+        run: >-
+          python3 experiments/full-board-ten/audit-via-pour.py
+          --baseline "$FULL_BOARD_ROOT/core-reentrancy/base.circuit.json"
+          --candidate "$FULL_BOARD_ROOT/core-reentrancy/candidate.circuit.json"
+          --output "$FULL_BOARD_ROOT/core-reentrancy/tiny-via-pour-audit.json"
+      - name: Install only reviewed Renderable chunk
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" candidate
+      - name: Run authentic original H616 and restore Core before assessment
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
-
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
+          "$FULL_BOARD_ROOT/cases/candidate-h616-original.json"
+          "$FULL_BOARD_ROOT/results/candidate/h616/original"
+      - name: Compare physical through-via and foreign-plane geometry
         run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+          python3 experiments/full-board-ten/audit-via-pour.py
+          --baseline "$FULL_BOARD_ROOT/published-baseline/circuit.json.gz"
+          --candidate "$FULL_BOARD_ROOT/results/candidate/h616/original/circuit.json.gz"
+          --case-task "$FULL_BOARD_ROOT/cases/h616-original.json"
+          --output "$FULL_BOARD_ROOT/core-reentrancy/native-via-pour-audit.json"
+      - name: Require preserved accepted routes and corrected native pours
+        if: always()
+        run: |
+          if test -f "$FULL_BOARD_ROOT/results/candidate/h616/original/result.json"; then
+            python3 experiments/full-board-ten/verify-core-reentrancy.py "$FULL_BOARD_ROOT"
+          fi
+      - name: Restore original package for neutral inspection
+        if: always()
+        run: |
+          if test -f "$FULL_BOARD_ROOT/candidate-runtime-manifest.json"; then
+            python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" restore
+          fi
+      - name: Preserve source proof, real repro, native outputs and audits
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: h616-core-render-reentrancy-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
-            .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
-            experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
-          if-no-files-found: warn
+            .full-board-run/core-reentrancy/*.json
+            .full-board-run/core-reentrancy/*.json.gz
+            .full-board-run/core-reentrancy/*.log
+            .full-board-run/core-reentrancy/*.svg
+            .full-board-run/core-reentrancy/*.ts
+            .full-board-run/core-reentrancy/*.tsx
+            .full-board-run/published-baseline/archive-proof.json
+            .full-board-run/results
+            .full-board-run/cases/*.json
+            .full-board-run/*runtime-manifest.json
+            experiments/full-board-ten/core-reentrancy-plan.json
+            experiments/full-board-ten/core-reentrancy-production.patch
+            experiments/full-board-ten/core-reentrancy-repro.test.tsx
+          if-no-files-found: error
+          compression-level: 6
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

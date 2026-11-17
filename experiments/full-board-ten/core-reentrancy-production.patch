@@ -1,0 +1,14 @@
+diff --git a/lib/components/base-components/Renderable.ts b/lib/components/base-components/Renderable.ts
+index f3d054889031b79d9cbf4a2f2094e854b66d8acd..17aa509acfbe164805fd17ff25cfcf0854fc25fb 100644
+--- a/lib/components/base-components/Renderable.ts
++++ b/lib/components/base-components/Renderable.ts
+@@ -375,7 +375,8 @@ export abstract class Renderable implements IRenderable {
+     const asyncEffectId = `${this._renderId}:${globalAsyncEffectCounter++}`
+     const asyncEffect: AsyncEffect = {
+       asyncEffectId,
+-      promise: effect(), // TODO don't start effects until end of render cycle
++      // Register the effect before its callbacks can inspect the circuit.
++      promise: Promise.resolve().then(effect),
+       phase: this._currentRenderPhase!,
+       effectName,
+       complete: false,
