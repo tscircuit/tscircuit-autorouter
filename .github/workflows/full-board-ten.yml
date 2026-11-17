@@ -1,37 +1,30 @@
-name: Published3208 full-board ten-case benchmark
+name: Current AR1113 iMX6 recovery handoff phase comparison
 
 on:
   push:
-    branches: [bench/full-board-ten-3208-20261117]
+    branches: [bench/native-imx6-handoff-ar1113]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+  replay:
+    name: Native pair (${{ matrix.case }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+        case: [imx6-spaced]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
-      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_EXPERIMENT: ar1113-recovery-handoff-phase-replay
 
     steps:
-      - name: Checkout benchmark controller
+      - name: Checkout diagnostic controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -71,79 +64,56 @@ jobs:
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
+      - name: Authenticate native input and prepare paired source entries
         id: prepare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
+          python3 experiments/full-board-ten/prepare-four-coarse-phase.py
+          "$FULL_BOARD_ROOT" "${{ matrix.case }}"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
+      - name: Replay and qualify source baseline
+        id: baseline
         continue-on-error: true
         run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+          timeout --signal=KILL 960s
+          bun experiments/full-board-ten/run-four-coarse-phase.ts
+          "$FULL_BOARD_ROOT/phase-source-baseline-runtime.json"
+          "$FULL_BOARD_ROOT/phase-results/source-baseline"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+      - name: Replay partial recovery handoff in a fresh process
+        id: handoff
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
         continue-on-error: true
         run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+          timeout --signal=KILL 960s
+          bun experiments/full-board-ten/run-four-coarse-phase.ts
+          "$FULL_BOARD_ROOT/phase-handoff-only-runtime.json"
+          "$FULL_BOARD_ROOT/phase-results/handoff-only"
 
-      - name: Preserve spaced geometry and diagnostics
+      - name: Compare phase completion and recovery states
+        id: compare
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' && steps.handoff.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/compare-four-coarse-phase.py "$FULL_BOARD_ROOT"
+
+      - name: Preserve bounded observations and runtime proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: ar1113-recovery-handoff-${{ matrix.case }}-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/phase-results
+            .full-board-run/phase-*-runtime.json
             .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
-            experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/source-bundles/manifest.json
           if-no-files-found: warn
+          compression-level: 0
           retention-days: 7
 
-      - name: Require selected full circuits to be complete and clean
+      - name: Require both valid observations and a qualified native baseline
         if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true
+        run: >-
+          test "${{ steps.baseline.outcome }}" = success &&
+          test "${{ steps.handoff.outcome }}" = success &&
+          test "${{ steps.compare.outcome }}" = success

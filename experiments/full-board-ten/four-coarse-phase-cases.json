@@ -1,0 +1,51 @@
+[
+  {
+    "id": "imx6-spaced",
+    "board": "imx6",
+    "cohort": "spaced",
+    "phase": "remaining",
+    "inputFilename": "phase-3-input.srj.json.gz",
+    "inputSha256": "90b6c8e95194fe75106ab420d9ae830d44c049203d0a47fc0944bad3b16c6654",
+    "inputGzipSha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986",
+    "inputBytes": 13198567,
+    "inputGzipBytes": 2294679,
+    "counts": {
+      "connections": 37,
+      "traces": 0,
+      "obstacles": 2922
+    },
+    "artifactId": 14292912145,
+    "artifactBytes": 14580357,
+    "artifactSha256": "a5665e7eacf889a956d9c380e8496501aaf9139d2458d04be8a96fab21c3c847",
+    "sourceRunId": 43999261296,
+    "sourceCommit": "674ddb82964a3b325fa77eaf3c42231ae066465e",
+    "nativeFiles": [
+      {
+        "filename": "phase-3-input.srj.json.gz",
+        "bytes": 2294679,
+        "sha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986"
+      },
+      {
+        "filename": "progress.json",
+        "bytes": 8709,
+        "sha256": "850dd171554fcfd8fa304ee79a39dd4e2ad9f32832176aca4dc05099b3e7e867"
+      },
+      {
+        "filename": "coarse-diagnostics.json",
+        "bytes": 21229,
+        "sha256": "9104a10e94869f5b7865c8ea8b0e69b02bc1f8949d0fd4e280105cd021704911"
+      },
+      {
+        "filename": "result.json",
+        "bytes": 3010,
+        "sha256": "c024d7873dc02ba4f6305fd5bf247a4d1221677080139635474a64cfd03f65d5"
+      }
+    ],
+    "constructorOptions": {
+      "capacityDepth": "undefined",
+      "targetMinCapacity": "undefined",
+      "cacheProvider": null,
+      "effort": "undefined"
+    }
+  }
+]
