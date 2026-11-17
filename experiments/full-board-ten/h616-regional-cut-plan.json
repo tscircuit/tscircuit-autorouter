@@ -31,5 +31,6 @@
   "envelope": "all-chain-port-extents + viaDiameter/2 + obstacleMargin",
   "captureDeadlineMs": 900000,
   "hardDeadlineMs": 960000,
-  "maxDiagnosticBytes": 25165824
+  "maxDiagnosticBytes": 25165824,
+  "controlParity": "Exact regional state, constructor/splice inputs and all coordinator/portfolio behavior; only the global cumulative intraNodeCacheMisses statistic may differ, with zero cache hits and a recorded exhaustive diff."
 }

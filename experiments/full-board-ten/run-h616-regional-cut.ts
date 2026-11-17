@@ -161,6 +161,10 @@ assert.equal(manifest.sourceOverrides, false)
 coldPublishedImport = true
 const published = await import(pathToFileURL(ar.entry).href)
 coldPublishedImport = false
+const nativeCache = published.getGlobalInMemoryCache()
+assert(nativeCache instanceof published.InMemoryCache, "Expected the actual published global cache implementation")
+const cacheCounters = (): Data => ({ hits: nativeCache.cacheHits, misses: nativeCache.cacheMisses, entries: nativeCache.cache.size, missesByPrefix: { ...nativeCache.cacheMissesByPrefix } })
+const initialCacheCounters = cacheCounters()
 const pipeline = new published.AutoroutingPipelineSolver9_PreloadedTraceGraph(readInput("phase-4-input.srj.json.gz"))
 const connMap = pipeline.connMap
 assert.deepEqual(Object.keys(connMap).sort(), ["idToNetMap", "netMap"])
@@ -223,17 +227,67 @@ if (mode === "control") {
   write("control-state.json", actualState)
   diagnosticPhase = "original state parity"
   assert.deepEqual(actualState, originalRegional.final)
-  diagnosticPhase = "original complete coordinator and portfolio parity"
-  assert.deepEqual(actualTree, expandObservation(originalRegional.candidates))
   diagnosticPhase = "original control evidence serialization"
   write("native-state.json", { state: actualState, ...compactTree(actualTree) })
-  write("result.json", { valid: true, controlExactParity: true, originalIterations: actualState.iterations, wasmUsage, helperProof, wallMs: performance.now() - started })
+  diagnosticPhase = "original complete coordinator and portfolio behavior parity"
+  const expectedTree = expandObservation(originalRegional.candidates)
+  const hdIndex = actualTree.findIndex(row => row.parent === 0 && row.relation === "highDensitySolver")
+  assert(hdIndex >= 0)
+  assert.equal(actualTree[hdIndex].className, control.activeFallbackSolver.highDensitySolver.constructor.name)
+  assert.equal(expectedTree[hdIndex].relation, "highDensitySolver")
+  assert.equal(expectedTree[hdIndex].className, actualTree[hdIndex].className)
+  const actualCacheStats = actualTree[hdIndex].stats
+  const expectedCacheStats = expectedTree[hdIndex].stats
+  const finalCacheCounters = cacheCounters()
+  assert.equal(initialCacheCounters.hits, 0)
+  assert.equal(finalCacheCounters.hits, 0)
+  assert.equal(actualCacheStats.intraNodeCacheHits, 0)
+  assert.equal(expectedCacheStats.intraNodeCacheHits, 0)
+  assert.equal(actualCacheStats.intraNodeCacheMisses, finalCacheCounters.misses)
+  const rawDifferences: Data[] = []
+  let rawDifferenceCount = 0
+  const compare = (actual: any, expected: any, path: string): void => {
+    if (Object.is(actual, expected)) return
+    if (actual !== null && expected !== null && typeof actual === "object" && typeof expected === "object" && Array.isArray(actual) === Array.isArray(expected)) {
+      for (const key of new Set([...Object.keys(actual), ...Object.keys(expected)])) {
+        if (Object.hasOwn(actual, key) !== Object.hasOwn(expected, key)) {
+          rawDifferenceCount++
+          if (rawDifferences.length < 64) rawDifferences.push({ path: `${path}.${key}`, difference: "key presence" })
+        } else compare(actual[key], expected[key], `${path}.${key}`)
+      }
+      return
+    }
+    rawDifferenceCount++
+    if (rawDifferences.length < 64) rawDifferences.push({ path, actual: typeof actual === "object" ? { sha256: hash(JSON.stringify(actual)) } : actual, expected: typeof expected === "object" ? { sha256: hash(JSON.stringify(expected)) } : expected })
+  }
+  compare(actualTree, expectedTree, "tree")
+  const telemetryException = {
+    path: `tree.${hdIndex}.stats.intraNodeCacheMisses`, baselineCumulativeMisses: expectedCacheStats.intraNodeCacheMisses,
+    replayCumulativeMisses: actualCacheStats.intraNodeCacheMisses,
+    inferredPriorProcessOffset: expectedCacheStats.intraNodeCacheMisses - actualCacheStats.intraNodeCacheMisses,
+    baselineStartingTotalCaptured: false, replayInitialCounters: initialCacheCounters, replayFinalCounters: finalCacheCounters,
+    replayMissDelta: finalCacheCounters.misses - initialCacheCounters.misses, cacheHitDelta: 0,
+    source: ["HighDensitySolver.updateCacheStats copies the global aggregate", "InMemoryCache.getCachedSolutionSync increments misses only for undefined lookups", "InMemoryCache.clearCache resets counters and stored entries", "setupGlobalCaches stores a globalThis singleton"],
+    notice: "Only cumulative miss telemetry is excluded. No baseline starting counter or baseline miss delta was captured. No cached result was reused in the control.",
+  }
+  write("control-tree-comparison.json", { rawDifferenceCount, rawDifferences, telemetryException })
+  assert(rawDifferenceCount === 0 || (rawDifferenceCount === 1 && rawDifferences[0].path === telemetryException.path), "Unexpected native behavior difference")
+  const comparableActual = structuredClone(actualTree), comparableExpected = structuredClone(expectedTree)
+  delete comparableActual[hdIndex].stats.intraNodeCacheMisses
+  delete comparableExpected[hdIndex].stats.intraNodeCacheMisses
+  assert.deepEqual(comparableActual, comparableExpected)
+  write("result.json", { valid: true, controlBehaviorParity: true, rawWholeTreeIdentical: rawDifferenceCount === 0,
+    regionalStateExact: true, allOtherTreeFieldsExact: true, telemetryException, originalIterations: actualState.iterations,
+    wasmUsage, helperProof, wallMs: performance.now() - started })
   console.log(JSON.stringify({ mode, valid: true, iterations: actualState.iterations, error: actualState.error }))
   process.exit(0)
 }
 diagnosticPhase = "candidate ownership preflight"
 const controlResult = JSON.parse(readFileSync(join(root, "h616-regional-cut-results/control/result.json"), "utf8"))
-assert.equal(controlResult.controlExactParity, true)
+assert.equal(controlResult.controlBehaviorParity, true)
+assert.equal(controlResult.regionalStateExact, true)
+assert.equal(controlResult.allOtherTreeFieldsExact, true)
+assert.equal(controlResult.telemetryException.cacheHitDelta, 0)
 const beforeParamsHash = hash(JSON.stringify(copyData(params)))
 const beforeAcceptedHash = hash(JSON.stringify(copyData(context.priorSamePhaseRoutes)))
 const selected = plan.absorbedNodeIds.map((id: string) => {
@@ -353,7 +407,7 @@ stepUntilDone(candidate)
 lastNativeState = state(candidate)
 diagnosticPhase = "candidate output and splice validation"
 const result: Data = { valid: true, regionalSolved: candidate.solved, regionalFailed: candidate.failed, state: state(candidate), validationCounts,
-  fullBoardGainMeasured: false, wasmUsage, controlExactParity: true, wallMs: performance.now() - started }
+  fullBoardGainMeasured: false, wasmUsage, controlBehaviorParity: true, controlTelemetryException: controlResult.telemetryException, wallMs: performance.now() - started }
 if (candidate.solved) {
   const routes = candidate.getOutput()
   assert.equal(guard(routes).valid, true)
