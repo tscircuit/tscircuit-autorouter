@@ -143,15 +143,21 @@ export const getPipeline9AxisAlignedWireApproximations = (
     return [
       {
         center,
-        width: Math.abs(dx) > Math.abs(dy) ? segmentLength : segment.width,
-        height: Math.abs(dx) > Math.abs(dy) ? segment.width : segmentLength,
+        width:
+          Math.abs(dx) > Math.abs(dy)
+            ? segmentLength + segment.width
+            : segment.width,
+        height:
+          Math.abs(dx) > Math.abs(dy)
+            ? segment.width
+            : segmentLength + segment.width,
       },
     ]
   }
   return generateApproximatingRects(
     {
       center,
-      width: segmentLength,
+      width: segmentLength + segment.width,
       height: segment.width,
       rotation: (Math.atan2(dy, dx) * 180) / Math.PI,
     },
