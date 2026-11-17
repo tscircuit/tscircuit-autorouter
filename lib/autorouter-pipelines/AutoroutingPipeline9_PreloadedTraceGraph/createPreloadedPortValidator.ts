@@ -3,6 +3,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute, PortPoint } from "lib/types/high-density-types"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -18,10 +19,13 @@ type CopperPrimitive = {
   maxZ: number
   radius: number
 }
-type PortValidator = (point: PortPoint) => boolean
+type PortValidator = (
+  point: PortPoint,
+  options?: { includeClearance?: boolean },
+) => boolean
 
-/** Inner-layer crossings are not bounded by the surface-pad mesh. */
-export function createPreloadedInnerLayerPortValidator({
+/** Validate crossings against preloaded wire and via copper. */
+export function createPreloadedPortValidator({
   srj,
   connMap,
   traceWidth,
@@ -32,7 +36,7 @@ export function createPreloadedInnerLayerPortValidator({
   traceWidth: number
   viaDiameter: number
 }): PortValidator {
-  if (!srj.traces?.length || srj.layerCount <= 2) return () => true
+  if (!srj.traces?.length) return () => true
   const copper: CopperPrimitive[] = srj.traces.flatMap((trace, index) =>
     convertPreloadedTraceToHdRoutes(
       trace,
@@ -74,9 +78,13 @@ export function createPreloadedInnerLayerPortValidator({
     )
   }
   index.finish()
-  return (point): boolean => {
-    if (point.z === 0 || point.z === srj.layerCount - 1) return true
-    const radius = traceWidth / 2
+  const clearance =
+    srj.minTraceToPadEdgeClearance ??
+    srj.defaultObstacleMargin ??
+    RELAXED_DRC_OPTIONS.traceClearance
+  return (point, options): boolean => {
+    const radius =
+      traceWidth / 2 + (options?.includeClearance === false ? 0 : clearance)
     return index
       .search(
         point.x - radius,

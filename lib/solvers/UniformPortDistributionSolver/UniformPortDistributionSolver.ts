@@ -33,6 +33,7 @@ export interface UniformPortDistributionSolverInput {
   preserveSolitaryPorts?: boolean
   isPortPointClear?: (
     point: NodeWithPortPoints["portPoints"][number],
+    options?: { includeClearance?: boolean },
   ) => boolean
 }
 
@@ -188,22 +189,34 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    // Keep a valid planned crossing when centering would overlap fixed copper.
-    for (const point of redistributed) {
-      if (
-        !this.input.preserveSolitaryPorts ||
-        portCountByLayer.get(point.z) !== 1 ||
-        !this.input.isPortPointClear ||
-        this.input.isPortPointClear(point)
-      ) {
-        continue
-      }
-      const original = familyRaw.find(
-        (candidate) => candidate.portPointId === point.portPointId,
-      )!
-      if (this.input.isPortPointClear(original)) {
-        point.x = original.x
-        point.y = original.y
+    // Preserve solitary crossings that avoid copper. Restore crowded layer
+    // families only when every planned crossing satisfies clearance.
+    const isPortPointClear = this.input.isPortPointClear
+    if (isPortPointClear) {
+      for (const z of portCountByLayer.keys()) {
+        const layerFamily = redistributed.filter((point) => point.z === z)
+        const originalPortPoints = layerFamily.map(
+          (point) =>
+            familyRaw.find(
+              (candidate) => candidate.portPointId === point.portPointId,
+            )!,
+        )
+        if (
+          layerFamily.every((point) => isPortPointClear(point)) ||
+          !originalPortPoints.every((point) =>
+            isPortPointClear(point, {
+              includeClearance:
+                !this.input.preserveSolitaryPorts ||
+                portCountByLayer.get(z) !== 1,
+            }),
+          )
+        ) {
+          continue
+        }
+        for (let index = 0; index < layerFamily.length; index++) {
+          layerFamily[index]!.x = originalPortPoints[index]!.x
+          layerFamily[index]!.y = originalPortPoints[index]!.y
+        }
       }
     }
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
