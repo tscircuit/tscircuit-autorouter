@@ -5,13 +5,14 @@ import { dirname, join, relative, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { gunzipSync } from "node:zlib"
 
-const [rootArg, outputArg] = process.argv.slice(2)
-assert(rootArg && outputArg && Bun.version === "1.4.3", "Usage: Bun1.4.3 prepare-entries.mjs VERIFIED_RUNTIME_ROOT OUTPUT")
+const [rootArg, outputArg, experimentArg] = process.argv.slice(2)
+assert(rootArg && outputArg, "Usage: prepare-entries.mjs VERIFIED_RUNTIME_ROOT OUTPUT [EXPERIMENT]")
 const root = resolve(rootArg)
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex")
 const manifestPath = join(root, "runtime-manifest.json")
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
-const frozen = JSON.parse(readFileSync(join(import.meta.dir, "experiment.json"), "utf8"))
+const frozen = JSON.parse(readFileSync(experimentArg ?? join(import.meta.dir, "experiment.json"), "utf8"))
+assert.equal(Bun.version, frozen.bunVersion ?? "1.4.3")
 const bundlesFolder = join(import.meta.dir, "../full-board-ten/source-bundles")
 const bundleManifestPath = join(bundlesFolder, "manifest.json")
 const bundles = JSON.parse(readFileSync(bundleManifestPath, "utf8"))

@@ -1,0 +1,53 @@
+{
+  "frozen": true,
+  "name": "h616-last-attempt-handoff",
+  "diagnosticOnly": true,
+  "productionFixProposed": false,
+  "harnessCommit": "b9f024828936f9639a696c9943747cc776cda72e",
+  "runtime": {
+    "tscircuit": "0.0.3208",
+    "@tscircuit/core": "0.0.2399",
+    "@tscircuit/eval": "0.0.1793",
+    "@tscircuit/capacity-autorouter": "0.0.1112"
+  },
+  "runtimeEntrySha256": {
+    "tscircuit": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+    "@tscircuit/core": "eea7b8d97114e081111ed7ef2d760508cc3e1b47bdd2616b8e9182992151c310",
+    "@tscircuit/eval": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+    "@tscircuit/capacity-autorouter": "d22b6e6a6e31585d2ba005e6fcc47fb8418584e431694960d932dfd1e86a82ee"
+  },
+  "sourceEntrySha256": {
+    "base": "6ca2debe379721d0a78cde1b8cb690bb2944961be285be08e8f5ccfd8e738dc7",
+    "pr": "07febb562901ff47a69294bd8b8731407a8848db3361a3dd82cf0260146f19d9"
+  },
+  "sourcePatchSha256": "b449d8c7f424caaec2c6dc33bcb5c5ed8e9e86a63fb11c089a75f578656123d4",
+  "status": "Authenticated refined AR1113 source pair; exact native import preflight and test execution required in CI; no local routing",
+  "routingSource": {
+    "autorouterVersion": "0.0.1113",
+    "autorouterCommit": "b9f024828936f9639a696c9943747cc776cda72e",
+    "tinyBaselineCommit": "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
+    "tinyCandidateCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+    "mainPackageRun": false
+  },
+  "publishedSourceReference": {
+    "autorouterVersion": "0.0.1113",
+    "npmGitHead": "f589df4b00bd436ea33a74471b3dbaf25adf509b",
+    "entrySha256": "910c284c7ec165f430cf83884b345ac65341860336fe18faee53f6dc20673bb1",
+    "sourceMapSha256": "794187667e01a523ca56045ee86080f3ea73730ebb8134170fc40f0d643e477d",
+    "runtimeEntryReplaced": false,
+    "scope": "Both P9 source variants include the published AR1113 regional trace-clearance change; unrelated exports and frozen3208 dependency graph retain the original AR1112 entry."
+  },
+  "bunVersion": "1.4.3",
+  "test": {
+    "path": "tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts",
+    "nativeClearance": 0.1,
+    "expectedNativeDrc": "<44",
+    "placementErrors": 0,
+    "snapshotUpdates": false,
+    "outputParityRequired": true,
+    "externalTestTimeoutMs": 900000,
+    "hardContainmentSeconds": 960,
+    "actualCiEvidence": "job133785454638:setup/testBun1.4.3; ordinaryDataset18Bun1.4.2 is separate"
+  },
+  "candidatePolicy": "Keep every original final-route attempt and successful output; only after all original attempts fail, try retained cost-aware progress once with the existing50000-step greedy cap."
+}

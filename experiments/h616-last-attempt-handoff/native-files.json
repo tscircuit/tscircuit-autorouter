@@ -1,0 +1,85 @@
+{
+  "sourceCommit": "b9f024828936f9639a696c9943747cc776cda72e",
+  "files": [
+    {
+      "path": "tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts",
+      "gitBlob": "27e131a71759f36c99a3b1858f318d6ceaf320ae",
+      "sha256": "bdc7380e9a82dc9ab1db04514f575643032cacdbf275e364fc5dca0af14901d7",
+      "bytes": 2537
+    },
+    {
+      "path": "tests/fixtures/assets/h616-full-board-ddr-clearance.json.gz",
+      "gitBlob": "6d25136fadc8518801dd86b7c3d0ef10cf2a557d",
+      "sha256": "17c1e7600ff14d4c26bee27ef76941603493bcc2a1607505c6cf26990dc141f1",
+      "bytes": 128925,
+      "uncompressedSha256": "0cdba9842c0c453157aa85746fccab860c6f4b775b778e477d766112bec29df8",
+      "uncompressedBytes": 4895266,
+      "fixtureFields": [
+        "inputSrj",
+        "preloadedConnections",
+        "preloadedTraces",
+        "nativeObstacles"
+      ],
+      "inputShape": {
+        "bounds": {
+          "minX": -14.25,
+          "maxX": 14.259999999999998,
+          "minY": -37.25,
+          "maxY": 37.25
+        },
+        "layerCount": 4,
+        "minTraceWidth": 0.08,
+        "minViaDiameter": 0.35,
+        "connections": 37,
+        "obstacles": 1679,
+        "preloadedConnections": 16,
+        "preloadedTraces": 16,
+        "nativeObstacles": 760
+      }
+    },
+    {
+      "path": "lib/testing/evaluate-relaxed-drc.ts",
+      "gitBlob": "f0c1b52b0eea5e2c82422d0b29f49ee9c4d35e3d",
+      "sha256": "933b14ac5bc6688d50918c196c0ab53bbe38eb114310a3a45ad1f07e46d14f69",
+      "bytes": 2715
+    },
+    {
+      "path": "lib/testing/getBugReportSnapshotSvg.ts",
+      "gitBlob": "66b79b328f1930bab5399a4b73890d81c6993608",
+      "sha256": "b7ad7e8f611ebfa42bcd1cdd1b9375893b8d7356fa30b0fcda5143a61bc1cd6f",
+      "bytes": 1900
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator.ts",
+      "gitBlob": "0316d7e3313c95e918b67ceb3bf133b75e37d219",
+      "sha256": "fa8c23c4f9e2f3076460c6bcd7184265cfd1c3415ac3a733ce1b4f6905603b8e",
+      "bytes": 5730
+    },
+    {
+      "path": "tests/repro/__snapshots__/pipeline9-h616-full-board-ddr-clearance.snap.svg",
+      "gitBlob": "2985cfcd565c51178a2151507ee4082dbfbb5585",
+      "sha256": "9729c61df7d44c5cb3d09644ef5faff665cea50e8be94d514a6a672647a46172",
+      "bytes": 335801
+    },
+    {
+      "path": "tests/fixtures/preload.ts",
+      "sha256": "2d38bfd0502a2bc739190e975a57af023e408c7462e7d08210474706d804634b",
+      "bytes": 55
+    },
+    {
+      "path": "tests/fixtures/svg-matcher.ts",
+      "sha256": "bffa96d3ae5fc9fabfce47d9e5746680e33bb04b94a9e4f8d99b335077961652",
+      "bytes": 5645
+    },
+    {
+      "path": "bunfig.toml",
+      "sha256": "02f7e1b922f1af0bd9e5d5d0b0de1e968e6af8635341d1acd157460e703494bb",
+      "bytes": 82
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "198b805ffe2e4ee0bae603190d6f78cb15acf2608b8037bc5800737b4f2b1116",
+      "bytes": 1790
+    }
+  ]
+}

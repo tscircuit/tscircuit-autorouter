@@ -1,0 +1,149 @@
+name: H616 native fixture last-attempt handoff regression
+
+on:
+  push:
+    branches: [bench/h616-last-attempt-handoff]
+
+permissions:
+  contents: read
+
+jobs:
+  h616:
+    name: Native H616 fixture before and after
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      RUNTIME_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.h616-bun-cache
+      FULL_BOARD_EXPERIMENT: published
+
+    steps:
+      - name: Checkout diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            experiments/dataset18-recovery-handoff-3208
+            experiments/h616-last-attempt-handoff
+
+      - name: Checkout immutable original source for unchanged bootstrap
+        uses: actions/checkout@v4
+        with:
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced source for unchanged bootstrap
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Checkout exact native test and helpers for baseline
+        uses: actions/checkout@v4
+        with:
+          ref: b9f024828936f9639a696c9943747cc776cda72e
+          path: same-machine-base
+          persist-credentials: false
+
+      - name: Checkout identical native test and helpers for candidate
+        uses: actions/checkout@v4
+        with:
+          ref: b9f024828936f9639a696c9943747cc776cda72e
+          path: same-machine-pr
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged frozen3208 routing graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$RUNTIME_ROOT"
+
+      - name: Authenticate native files and actual selected-class imports
+        id: prepare
+        run: >-
+          python3 experiments/h616-last-attempt-handoff/prepare.py
+          --workspace "$GITHUB_WORKSPACE" --runtime-root "$RUNTIME_ROOT"
+
+      - name: Run unchanged native baseline test
+        id: baseline
+        continue-on-error: true
+        working-directory: same-machine-base
+        env:
+          H616_ENTRY_IDENTITY: ${{ env.RUNTIME_ROOT }}/h616-results/base/selected-entry.json
+          H616_CAPTURE_PATH: ${{ env.RUNTIME_ROOT }}/h616-results/base/actual-output.json.gz
+        run: timeout --signal=KILL 960s bun test --timeout 900000 tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts
+
+      - name: Assess actual baseline output using native helpers
+        id: baseline_assessment
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
+        working-directory: same-machine-base
+        run: timeout --signal=KILL 180s bun h616-assess-output.ts "$RUNTIME_ROOT/h616-results/base"
+
+      - name: Run unchanged native candidate test
+        id: candidate
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' && steps.baseline_assessment.outcome == 'success' }}
+        continue-on-error: true
+        working-directory: same-machine-pr
+        env:
+          H616_ENTRY_IDENTITY: ${{ env.RUNTIME_ROOT }}/h616-results/pr/selected-entry.json
+          H616_CAPTURE_PATH: ${{ env.RUNTIME_ROOT }}/h616-results/pr/actual-output.json.gz
+        run: timeout --signal=KILL 960s bun test --timeout 900000 tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts
+
+      - name: Assess actual candidate output using native helpers
+        id: candidate_assessment
+        if: ${{ !cancelled() && steps.candidate.outcome != 'skipped' }}
+        continue-on-error: true
+        working-directory: same-machine-pr
+        run: timeout --signal=KILL 180s bun h616-assess-output.ts "$RUNTIME_ROOT/h616-results/pr"
+
+      - name: Require complete native output parity
+        id: compare
+        if: ${{ !cancelled() && steps.candidate.outcome == 'success' && steps.candidate_assessment.outcome == 'success' }}
+        run: python3 experiments/h616-last-attempt-handoff/compare.py "$RUNTIME_ROOT"
+
+      - name: Verify immutable sources, snapshots and dependency graphs
+        id: postcheck
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        run: >-
+          python3 experiments/h616-last-attempt-handoff/prepare.py
+          --workspace "$GITHUB_WORKSPACE" --runtime-root "$RUNTIME_ROOT" --verify-only
+
+      - name: Preserve bounded native evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: h616-last-attempt-native-${{ github.run_attempt }}
+          path: |
+            .full-board-run/h616-results
+            .full-board-run/h616-proof
+            .full-board-run/runtime-manifest.json
+            experiments/h616-last-attempt-handoff/experiment.json
+            experiments/h616-last-attempt-handoff/native-files.json
+            experiments/full-board-ten/source-bundles/manifest.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Require both unchanged native tests and qualified parity
+        if: always()
+        run: >-
+          test "${{ steps.baseline.outcome }}" = success &&
+          test "${{ steps.baseline_assessment.outcome }}" = success &&
+          test "${{ steps.candidate.outcome }}" = success &&
+          test "${{ steps.candidate_assessment.outcome }}" = success &&
+          test "${{ steps.compare.outcome }}" = success &&
+          test "${{ steps.postcheck.outcome }}" = success
