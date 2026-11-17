@@ -33,6 +33,7 @@ export interface UniformPortDistributionSolverInput {
   preserveSolitaryPorts?: boolean
   isPortPointClear?: (
     point: NodeWithPortPoints["portPoints"][number],
+    options?: { includeClearance?: boolean },
   ) => boolean
 }
 
@@ -188,8 +189,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    // Reject centering that violates copper clearance. Keep the planned layer
-    // family together so accepting individual moves cannot invert its order.
+    // Preserve solitary crossings that avoid copper. Restore crowded layer
+    // families only when every planned crossing satisfies clearance.
     const isPortPointClear = this.input.isPortPointClear
     if (isPortPointClear) {
       for (const z of portCountByLayer.keys()) {
@@ -200,7 +201,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
               (candidate) => candidate.portPointId === point.portPointId,
             )!,
         )
-        if (layerFamily.every(isPortPointClear)) continue
+        if (
+          layerFamily.every((point) => isPortPointClear(point)) ||
+          !originalPortPoints.every((point) =>
+            isPortPointClear(point, {
+              includeClearance:
+                !this.input.preserveSolitaryPorts ||
+                portCountByLayer.get(z) !== 1,
+            }),
+          )
+        ) {
+          continue
+        }
         for (let index = 0; index < layerFamily.length; index++) {
           layerFamily[index]!.x = originalPortPoints[index]!.x
           layerFamily[index]!.y = originalPortPoints[index]!.y

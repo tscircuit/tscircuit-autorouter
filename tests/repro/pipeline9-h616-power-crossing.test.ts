@@ -68,7 +68,9 @@ test("H616 ground crossings beside completed DDR copper", async (): Promise<void
     node,
     connMap,
   )
-  expect(normalizedNode.portPoints.every(isPortPointClear)).toBeTrue()
+  expect(
+    normalizedNode.portPoints.every((point) => isPortPointClear(point)),
+  ).toBeTrue()
   const solver = new HighDensitySolverB01({
     ...fixture.b01,
     nodeWithPortPoints: normalizedNode,

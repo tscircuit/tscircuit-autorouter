@@ -19,7 +19,10 @@ type CopperPrimitive = {
   maxZ: number
   radius: number
 }
-type PortValidator = (point: PortPoint) => boolean
+type PortValidator = (
+  point: PortPoint,
+  options?: { includeClearance?: boolean },
+) => boolean
 
 /** Validate crossings against preloaded wire and via copper. */
 export function createPreloadedPortValidator({
@@ -75,12 +78,13 @@ export function createPreloadedPortValidator({
     )
   }
   index.finish()
-  return (point): boolean => {
+  const clearance =
+    srj.minTraceToPadEdgeClearance ??
+    srj.defaultObstacleMargin ??
+    RELAXED_DRC_OPTIONS.traceClearance
+  return (point, options): boolean => {
     const radius =
-      traceWidth / 2 +
-      (srj.minTraceToPadEdgeClearance ??
-        srj.defaultObstacleMargin ??
-        RELAXED_DRC_OPTIONS.traceClearance)
+      traceWidth / 2 + (options?.includeClearance === false ? 0 : clearance)
     return index
       .search(
         point.x - radius,

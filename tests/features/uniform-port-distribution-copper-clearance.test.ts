@@ -82,8 +82,14 @@ test("shared crossings preserve clearance from preloaded copper on every layer",
     expect(
       isPortPointClear({ ...ports[0]!, x: 0.5, connectionName: "ddr" }),
     ).toBeTrue()
+    expect(isPortPointClear({ ...ports[0]!, x: 0.77 })).toBeFalse()
+    expect(
+      isPortPointClear({ ...ports[0]!, x: 0.77 }, { includeClearance: false }),
+    ).toBeTrue()
     for (const node of solver.getOutput()) {
-      expect(node.portPoints.every(isPortPointClear)).toBeTrue()
+      expect(
+        node.portPoints.every((point) => isPortPointClear(point)),
+      ).toBeTrue()
       expect(
         node.portPoints
           .filter((point) => point.z === z)
@@ -99,5 +105,51 @@ test("shared crossings preserve clearance from preloaded copper on every layer",
       ])
     }
     expect(nodes[0]!.portPoints[2]!.x).toBe(1.6)
+
+    // Crowded plans need clearance before restoration; preserve the existing
+    // solitary-crossing behavior when the planned point avoids copper.
+    for (const { plannedX, solitary, expectedXs } of [
+      { plannedX: 0.64, solitary: false, expectedXs: [0.5, 1.5] },
+      { plannedX: 0.77, solitary: false, expectedXs: [0.5, 1.5] },
+      { plannedX: 0.77, solitary: true, expectedXs: [1] },
+    ]) {
+      const plannedCrossingSolver = new UniformPortDistributionSolver({
+        nodeWithPortPoints: nodes.map((node) => ({
+          ...node,
+          portPointsInPairs: solitary ? undefined : node.portPointsInPairs,
+          portPoints: node.portPoints
+            .filter(
+              (port) => !solitary || port.portPointId?.startsWith("left-"),
+            )
+            .map((port) => ({
+              ...port,
+              x: port.x === 1.6 ? plannedX : port.x,
+            })),
+        })),
+        inputNodesWithPortPoints: inputNodes.map((node) => ({
+          ...node,
+          portPoints: node.portPoints
+            .filter((port) => !solitary || port.portPointId.startsWith("left-"))
+            .map((port) => ({
+              ...port,
+              x: port.x === 1.6 ? plannedX : port.x,
+            })),
+        })),
+        obstacles: [],
+        layerCount,
+        useLayerAwareGeometry: true,
+        preserveSolitaryPorts: true,
+        isPortPointClear,
+      })
+      plannedCrossingSolver.solve()
+      expect(plannedCrossingSolver.solved).toBeTrue()
+      for (const node of plannedCrossingSolver.getOutput()) {
+        expect(
+          node.portPoints
+            .filter((point) => point.z === z)
+            .map((point) => point.x),
+        ).toEqual(expectedXs)
+      }
+    }
   }
 })
