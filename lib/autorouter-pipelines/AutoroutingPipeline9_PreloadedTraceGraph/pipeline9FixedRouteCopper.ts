@@ -4,7 +4,6 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
 
 export type Pipeline9RouteWireSegment = {
@@ -167,7 +166,7 @@ export const getPipeline9FixedRouteObstacles = ({
   layerCount,
   allowBlindAndBuriedVias,
 }: {
-  fixedObstacleRoutes: PreloadedHighDensityRoute[]
+  fixedObstacleRoutes: HighDensityRoute[]
   layerCount: number
   allowBlindAndBuriedVias?: boolean
 }): Obstacle[] => {
