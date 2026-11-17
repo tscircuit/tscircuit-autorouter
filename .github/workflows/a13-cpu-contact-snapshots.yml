@@ -1,9 +1,9 @@
-name: Native A13 CPU contact snapshots
+name: Verify rebased DDR corner repro
 on:
   push:
     branches: [artifacts/a13-cpu-pad-contact-snapshots]
 permissions:
-  contents: write
+  contents: read
 jobs:
   snapshot:
     runs-on: ubuntu-24.04
@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1da31fe14be393a110260d64c17b53b3538bab1d
+          ref: 79a190562db320d73b9a21b6577033cf8c2ca509
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -29,7 +29,7 @@ jobs:
           bun install
       - uses: actions/checkout@v4
         with:
-          ref: 6e5ea125ddbaf0f3fbed483f881623073713d73d
+          ref: b3f205ef18e07c61bcd8316c4876e34fee942298
           path: comparison-base
           persist-credentials: false
       - name: Type check the fix
@@ -70,41 +70,6 @@ jobs:
           rm .snapshot-qualification.ts
           rm comparison-base/.snapshot-qualification.ts
       - name: Update the changed ESP32 SVG after its DRC comparison
-        env:
-          BUN_UPDATE_SNAPSHOTS: 1
         run: bun test ./tests/bugs/bugreport47-8ee80e-esp32-breakout.test.ts ./tests/bugs/bugreport62-0f6ca4.test.ts ./tests/repro/pipeline9-h3-ddr-strobe-via-access.test.ts --timeout 9999999
       - name: Generate both views from the unchanged real board
-        env:
-          BUN_UPDATE_SNAPSHOTS: 1
         run: bun test ./tests/repro/pipeline9-a13-regional-repair-shorts.test.ts --timeout 9999999
-      - name: Commit the generated SVGs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require("fs")
-            const branch = "fix/a13-direct-route-inset"
-            for (const path of [
-              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg",
-              "tests/bugs/__snapshots__/bugreport47-8ee80e-esp32-breakout.snap.svg",
-              "tests/bugs/__snapshots__/bugreport62-0f6ca4.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-h3-ddr-strobe-via-access.snap.svg"
-            ]) {
-              const content = fs.readFileSync(path).toString("base64")
-              let sha
-              try {
-                const { data } = await github.rest.repos.getContent({
-                  ...context.repo, path, ref: branch
-                })
-                if (data.content.replace(/\s/g, "") === content) continue
-                sha = data.sha
-              } catch (error) {
-                if (error.status !== 404) throw error
-              }
-              await github.rest.repos.createOrUpdateFileContents({
-                ...context.repo, branch, path, content, sha,
-                message: "Record checked routing snapshot " + path
-              })
-              const count = fs.readFileSync(path, "utf8").match(/Relaxed DRC errors: (\d+)/)
-              console.log(path + " findings=" + (count ? count[1] : "native solver view"))
-            }
