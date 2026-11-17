@@ -1,34 +1,26 @@
-name: Published3230 full-board ten-case benchmark
+name: Published3230 H616 phase3 stage diagnostic
 
 on:
   push:
-    branches: [bench/full-board-ten-3230-20261117]
+    branches: [bench/h616-stage-provenance-3230]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    name: H616 published phase3 immutable stage snapshots
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      BOARD: h616
+      FULL_BOARD_COHORTS: spaced
+      FULL_BOARD_EXPERIMENT: published
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout benchmark controller
@@ -80,70 +72,29 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
-        continue-on-error: true
+      - name: Run authentic H616 spaced circuit once
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+          "$FULL_BOARD_ROOT/cases/h616-spaced.json"
+          "$FULL_BOARD_ROOT/results/h616/spaced"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
+      - name: Require unchanged native output and authenticated stage evidence
+        run: python3 experiments/full-board-ten/verify-h616-stage-diagnostic.py "$FULL_BOARD_ROOT"
 
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+      - name: Preserve immutable native stages and parity proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: h616-published-stage-diagnostic-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/results/h616/spaced
             .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
-            experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
-          if-no-files-found: warn
+            .full-board-run/cases/h616-spaced.json
+            .full-board-run/h616-stage-parity.json
+            experiments/full-board-ten/h616-stage-diagnostic-plan.json
+            experiments/full-board-ten/harness-provenance.json
+            experiments/full-board-ten/h616-stage-provenance.txt
+          if-no-files-found: error
+          compression-level: 6
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createH616StageDiagnostics } from "./createH616StageDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -118,6 +119,14 @@ const targetPhase = executionMode === "full" ? diagnosticTargets[`${task.id}-${t
 progress.coarseRoutingInstrumentation = { enabled: Boolean(targetPhase), targetPhase: targetPhase ?? null, mode: "observational published-instance lifecycle hooks" }
 const coarseReports: Record<string, any>[] = []
 let coarseObserver: ReturnType<typeof createCoarseRoutingDiagnostics> | undefined
+const stageDiagnosticEnabled = executionMode === "full" && task.id === "h616" && task.cohort === "spaced"
+progress.pipelineStageInstrumentation = { enabled: stageDiagnosticEnabled, targetPhase: "remaining", mode: "immutable published-stage geometry snapshots" }
+let stageObserver: ReturnType<typeof createH616StageDiagnostics> | undefined
+const finishStageDiagnostics = (): void => {
+  stageObserver?.finish()
+  stageObserver = undefined
+}
+
 const finishCoarseDiagnostics = (): void => {
   const report = coarseObserver?.finish()
   coarseObserver = undefined
@@ -144,6 +153,10 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))
       if (eventName === "autorouting:error") progress.errors.push(event.error?.message ?? String(event.error))
     }
+    if (name === "remaining" && eventName !== "autorouting:start") {
+      if (eventName === "autorouting:end") stageObserver?.onAutoroutingEnd(event, name)
+      finishStageDiagnostics()
+    }
     save(true)
     console.log(JSON.stringify({ event: eventName, name, elapsedMs: progress.elapsedMs }))
   })
@@ -169,6 +182,14 @@ circuit.on("solver:started", (event: any): void => {
     })
     coarseObserver.onSolverStarted(event, phaseName)
   }
+  if (stageDiagnosticEnabled && phaseName === "remaining" && event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph") {
+    if (stageObserver) throw new Error("H616 stage observer already installed")
+    stageObserver = createH616StageDiagnostics({
+      pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
+      onSnapshot: report => atomic("h616-stage-diagnostics.json.gz", gzipSync(JSON.stringify(report), { level: 1 })),
+    })
+    stageObserver.onSolverStarted(event, phaseName)
+  }
   progress.solvers.push({ name: event.solverName, component: event.componentName, status: "running", startedMs: performance.now() - started, cacheProvider: options?.cacheProvider ? "present" : null })
 })
 circuit.on("solver:ended", (event: any): void => {
@@ -181,6 +202,7 @@ const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
   finishCoarseDiagnostics()
+  finishStageDiagnostics()
   save(true)
   process.exit(124)
 }, 900000)
@@ -198,6 +220,7 @@ try {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
   finishCoarseDiagnostics()
+  finishStageDiagnostics()
   save(true)
   try {
     atomic("pcb.svg.gz", gzipSync(convertCircuitJsonToPcbSvg(circuit.getCircuitJson(), { width: 1600, height: 1100, backgroundColor: "white", shouldDrawRatsNest: false, shouldDrawErrors: false, showPcbGroups: false }), { level: 1 }))

@@ -1,0 +1,191 @@
+{
+  "frozen": true,
+  "status": "Frozen diagnostic review candidate; pending root and independent approval before one native run",
+  "case": {
+    "id": "h616",
+    "cohort": "spaced",
+    "phase": "remaining",
+    "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+    "components": 125,
+    "padsAndHoles": 760,
+    "requestedNets": 121
+  },
+  "runtime": {
+    "main": "0.0.3230",
+    "core": "0.0.2407",
+    "eval": "0.0.1801",
+    "autorouter": "0.0.1121",
+    "bun": "1.4.3"
+  },
+  "limitsMs": {
+    "capture": 900000,
+    "hard": 960000,
+    "assessment": 180000
+  },
+  "baselineArtifact": {
+    "id": 14372457413,
+    "name": "full-board-h616-published-spaced-1",
+    "size_in_bytes": 3989494,
+    "digest": "sha256:e6080d2879df15bc1f2633f70862366285232a7cba5747d2696823a532524b74",
+    "workflow_run": {
+      "id": 44179934754,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "bench/full-board-ten-3230-20261117",
+      "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
+    }
+  },
+  "baselineFiles": [
+    {
+      "name": "result.json",
+      "bytes": 3555,
+      "sha256": "aaebf83b6f11e4f982a0f73e7a98f63224a846aed21347429b8022ef2be9a120"
+    },
+    {
+      "name": "assessment.json",
+      "bytes": 1807,
+      "sha256": "c9eb953ea06772d45d1040d96372f01a15a9240fb699ef4460335ad87542b448"
+    },
+    {
+      "name": "progress.json",
+      "bytes": 11040,
+      "sha256": "c509706821a97192245996d21af2f67b1e086cabeb0908df9f12cb767bc6b815"
+    },
+    {
+      "name": "process.json",
+      "bytes": 337,
+      "sha256": "ca1404a07e2d62a5e1830c78dacb00aa912e9d542b002aa6d9c57c2b57025d00"
+    },
+    {
+      "name": "worker.log",
+      "bytes": 3171,
+      "sha256": "75bd17043a1b0e3507e36a66bccbbad46fc31c3f691a71993f9d525aeda9e0fd"
+    },
+    {
+      "name": "audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "circuit.json.gz",
+      "bytes": 155483,
+      "sha256": "47ae870c6fb6479bc6805bf6f4379f6d7cb9921274814e3cea09d1c8919a0b35"
+    },
+    {
+      "name": "pcb.svg.gz",
+      "bytes": 61008,
+      "sha256": "4d29443cb1adf818432eb1b2ed90155c999ed50e1c5f7583eb5181c0a4d82b1b"
+    },
+    {
+      "name": "findings.json.gz",
+      "bytes": 13821,
+      "sha256": "ecf03c7a934287cd44acdd8ac08bc5099a990398845d8fcd60bc4709120bf3c9"
+    },
+    {
+      "name": "phase-1-output.srj.json.gz",
+      "bytes": 436887,
+      "sha256": "dcb237fd6541627176371c71d712fc6e4f850da468af62908ed733d7a7bceaa2"
+    },
+    {
+      "name": "phase-1-input.srj.json.gz",
+      "bytes": 435371,
+      "sha256": "0751854a922c2da4782db2c51921116de21b986d18ade22092daef675d267602"
+    },
+    {
+      "name": "phase-2-input.srj.json.gz",
+      "bytes": 436883,
+      "sha256": "fa8ce087aa344feeb720bd2487140e5b1d64cf84f93bdeed80b15b3ca78d7474"
+    },
+    {
+      "name": "phase-2-output.srj.json.gz",
+      "bytes": 438377,
+      "sha256": "a606fea7e19b80d8870736a8d1b2ef720d22c3ec3b01ff3e9657dedd4573eeb9"
+    },
+    {
+      "name": "phase-3-input.srj.json.gz",
+      "bytes": 455345,
+      "sha256": "d1738b713c24ff88945bf314a2c69318d632840398019d0798c5cfd3a3041ac3"
+    },
+    {
+      "name": "phase-4-error.srj.json.gz",
+      "bytes": 470892,
+      "sha256": "1570a142ed767cfa749b1c52a7eb418a3d5d08cffe47deb84807d04d32fc1c9d"
+    },
+    {
+      "name": "phase-3-output.srj.json.gz",
+      "bytes": 468579,
+      "sha256": "1d207f464a081162bc7f82491622e5eb584bf7b200e1f12eb45e4c51416a7aee"
+    },
+    {
+      "name": "phase-4-input.srj.json.gz",
+      "bytes": 470892,
+      "sha256": "1570a142ed767cfa749b1c52a7eb418a3d5d08cffe47deb84807d04d32fc1c9d"
+    },
+    {
+      "name": "unrouted.circuit.json.gz",
+      "bytes": 123692,
+      "sha256": "ba066e7759d94a8b2a900934d70e4a7235da6d4cdd1e9e7c660c883edad4d40d"
+    }
+  ],
+  "baselinePhase3InputRawSha256": "23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49",
+  "baselinePhase3OutputRawSha256": "5948d6f23b9fccc60bef8d9d1b1e1d54924aed4c294dcfd8118998c80e4552d9",
+  "nativeRuns": 1,
+  "routingChanges": false,
+  "diagnosticScope": "Immutable snapshots only at reviewed phase3 pipeline boundaries; no per-step geometry dump",
+  "observer": {
+    "reportFile": "h616-stage-diagnostics.json.gz",
+    "requiredStages": [
+      "highDensityRouteSolver",
+      "highDensityForceImproveSolver",
+      "highDensityRepairSolver",
+      "highDensityStitchSolver",
+      "traceSimplificationSolver",
+      "traceWidthSolver",
+      "globalDrcForceImproveSolver",
+      "pipeline9JointDrcRepairSolver",
+      "effortCleanupSolver",
+      "lengthMatchingPostProcessingSolver",
+      "powerTraceExpansionSolver"
+    ],
+    "optionalJointStages": [
+      "joint.clearanceProjectionSolver",
+      "joint.initialBoundedRegionalRepairSolver",
+      "joint.regionalB01RepairSolver",
+      "joint.boundedRegionalRepairSolver",
+      "joint.exactRepairSolver",
+      "joint.traceContactRepairSolver"
+    ],
+    "targetRoots": [
+      "source_net_67",
+      "source_net_68",
+      "source_net_69"
+    ],
+    "targetPad": "pcb_smtpad_475",
+    "callsOutputGetters": false,
+    "maxSnapshots": 32,
+    "maxAggregateSnapshotBytes": 8000000,
+    "onlyStageBoundaryGeometry": true
+  },
+  "unchangedFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "run-one.ts": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "release.json": "96e08807976db44ebaa50d577434017e65f26f377f19cd24c6fd0be37a21a257",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "runtime/package.json": "3053c3388c39f1d9e34b6f50e29e6ad0268b6167f0fdc6e907a393171ed2fb66",
+    "runtime/bun.lock": "48d6176171adaa6a6f2a0704b562d6e80d773a43a5ac511fc124411cd50e79ba",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "diagnosticFiles": {
+    "render-published.tsx": "b35b798874e1a2444140cd3da258af9f9ae9f3ead12a883abb7c2692865754af",
+    "createH616StageDiagnostics.ts": "6a4ac9ef4574bea5ed2ebdd2ada2d48c20dadf23daa48c2d92568aa614e64375",
+    "verify-h616-stage-diagnostic.py": "3128c3230e7520b225aff8eaf789ea9f569f43e13f88d4d3741b5a03ea65f74e",
+    "harness-provenance.json": "d7c618ba8b72e4814ff2f31cff82dd52bd07a45789d12b9892fa6fbcb0fe54ec",
+    "h616-stage-provenance.txt": "e0c313244b9124c7174ada60e3717d8a0171ae03d19ef42498a1b78a2ae343b1"
+  }
+}

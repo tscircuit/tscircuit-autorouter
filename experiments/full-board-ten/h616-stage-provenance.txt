@@ -1,0 +1,43 @@
+H616 remaining-phase contact stage diagnostic
+
+Runtime: unmodified published tscircuit 0.0.3230 / Core 0.0.2407 / autorouter 0.0.1121.
+Fresh baseline: run 44179934754; H616 artifact 14372457413.
+Raw remaining-phase SRJ SHA256: 23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49.
+Published3216 and published3230 H616-spaced phase3 input SRJs are JSON-equal. The new pad contact is already in fresh phase3 output.
+Targets: source_net_67=/DRAM/SDQS0N; source_net_68=/DRAM/SDQS0P; source_net_69=/DRAM/SDQM1.
+Foreign pad: pcb_smtpad_475 / U1.R1 / pcb_port_496 / source_net_67; center (1.34,16.7), top, circle radius0.175mm.
+Stored final net68 route segment21 passes0.196813198419mm from the pad center at width0.08mm: copper overlap0.018186801581mm.
+The other two findings are positive edge gaps0.080/0.094mm against0.100mm clearance, not physical intersections.
+
+Observer contract
+- Bind raw input hash at solver:started, then verify actual published P9 instance shares its connection/trace arrays.
+- Save normalized originalSrj hash separately: constructor clamps board-valid obstacle layers.
+- Wrap only P9._step, call original exactly once, preserve return/throw; never invoke an output getter, solver, DRC, or visualization.
+- Reconstruct completed ForceImprove/Repair outputs using their source-proven original-route/map expressions; use stored output fields for other stages.
+- Joint output follows combinedOutput, exactRepairSolver.outputHdRoutes, inputNewHdRoutes fallback; target roots are not synthetic preloaded routes.
+- Copy the three target nets at eleven top-level boundaries, actual completed joint-repair child boundaries, and the real autorouting:end SRJ.
+- Raw parent/child route records preserve route points, layer/z, per-point widths, trace thickness, via coordinates/diameters and connection identity.
+- Every required completed boundary must contain all three target roots; missing data invalidates observation.
+- Snapshots copy plain data descriptors, reject accessors, and are bounded to32 snapshots/8MB total.
+- End/error restores original prototype before phase4; finish drops live phase3 solver/input references.
+- Compare observed last native output with actual autorouting:end output. Any difference is a separate final-materialization interval, not attributed to the preceding child.
+- Full fresh baseline route/input/circuit/assessment parity is required. Observation failure or missing boundaries invalidates diagnostic.
+
+Audited source-map modules (SHA256 of embedded source; no runtime imports):
+3726f1254e58769b088b6f6cd1d620b81f1e63d19b588acffc4eff68cd177b98  ../node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
+fd4a00ce2fe394f84f9cee496b68a3f9742e3a8ed738f7e0a027ba925511621c  ../node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcBranchPortfolioSolver.ts
+7a39729eff60f4af9f3234267bc3dfc424629e3ef1db5c832f527dbdbbba218e  ../node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/TraceContactRepairSolver.ts
+54bf6d16c5a5fb6fccdda07ab59630926fca50e98edf4bd683dcbf42ef56630a  ../lib/solvers/TraceWidthSolver/TraceWidthSolver.ts
+68a170294caf007d759720d9c428e9bb621458cab1a3e7694cb512785c7dcb58  ../node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts
+eb209e8df1353da36d77703e46320905ea1eaf6c572f78cbf7ff4e8d6029cb83  ../lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts
+db19f2dbc12421f89c47e25991d75646043b400331968ac89e8a269a529b7b5a  ../lib/solvers/length-matching-post-processing-solver.ts
+e752838f74c304ad2d9cb2b977a5364de0ebd31ee0f769684d4908fd39b4c6cf  ../node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts
+307e22db2d06bc8c96ae63e04932fcd1a2b840049057c453daf1c6a18b722cfe  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9EffortCleanupSolver.ts
+1c269acf4c7676c854e7d192e4bb92a6e06bff64fc90042d0d1e940f039f181d  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver.ts
+f2286190314069543298e679c4dbad41f9314f3ee929a3246b7fe9218c05509e  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver.ts
+442464746b5d4bd7d78ac1eb64ffe483267511d5f6dbf1891009bacdb4256150  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver.ts
+1f8af5a4f0a75479f71bc6752fe01ffc150ef9af520989112bae8ef3716aaffd  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts
+33472a9c96d9a1afa0fb8c0cc9e66198cff56195fce78ffc369b2afe2086f086  ../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+
+Observer helper SHA256: 6a4ac9ef4574bea5ed2ebdd2ada2d48c20dadf23daa48c2d92568aa614e64375
+Source-map gzip SHA256: af31e23dc600d028089bae206bbe2ae980a4e5cbd2b6fda9dde91247861e2a31

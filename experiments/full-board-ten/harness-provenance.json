@@ -13,8 +13,8 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 14522,
-      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731"
+      "bytes": 15851,
+      "sha256": "b35b798874e1a2444140cd3da258af9f9ae9f3ead12a883abb7c2692865754af"
     },
     {
       "name": "run-one.ts",
@@ -40,7 +40,12 @@
       "name": "createCoarseRoutingDiagnostics.ts",
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
+    },
+    {
+      "name": "createH616StageDiagnostics.ts",
+      "bytes": 12695,
+      "sha256": "6a4ac9ef4574bea5ed2ebdd2ada2d48c20dadf23daa48c2d92568aa614e64375"
     }
   ],
-  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead."
+  "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead. Additional H616-spaced phase3 immutable target-route snapshots at reviewed published pipeline stage boundaries; final native output must match the authenticated published baseline."
 }
