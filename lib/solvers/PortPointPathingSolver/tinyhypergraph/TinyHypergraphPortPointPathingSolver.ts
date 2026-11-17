@@ -108,6 +108,10 @@ type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
 // trace dispersion without materially increasing predicted failure pressure.
+/** A node with no legal via center prices a layer change at ten times its area
+ * cost instead of forbidding it: forbidding layer changes there pushed H616's
+ * vias into crowded nodes nearby and raised its DRC findings from 43 to 124. */
+const NO_VIA_SITE_AREA_FRACTION = 0.1
 const TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT = 30
 const TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT = 99
 const TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM = 4
@@ -390,7 +394,22 @@ const toSerializedRegionData = (
   netId?: number,
 ) => {
   const regionMetadata = region.d as typeof region.d & TinyRegionMetadata
-  const bounds = regionMetadata.bounds
+  // tiny-hypergraph prices layer changes per unit of region width x height.
+  // A node with no legal via center is priced as if it had only
+  // NO_VIA_SITE_AREA_FRACTION of its area. Bounds keep it drawn at full size.
+  const areaScale = region.d._lacksViaSite
+    ? Math.sqrt(NO_VIA_SITE_AREA_FRACTION)
+    : 1
+  const bounds =
+    regionMetadata.bounds ??
+    (region.d._lacksViaSite
+      ? {
+          minX: region.d.center.x - region.d.width / 2,
+          maxX: region.d.center.x + region.d.width / 2,
+          minY: region.d.center.y - region.d.height / 2,
+          maxY: region.d.center.y + region.d.height / 2,
+        }
+      : undefined)
 
   return {
     capacityMeshNodeId: region.d.capacityMeshNodeId,
@@ -398,8 +417,8 @@ const toSerializedRegionData = (
       x: region.d.center.x,
       y: region.d.center.y,
     },
-    width: region.d.width,
-    height: region.d.height,
+    width: region.d.width * areaScale,
+    height: region.d.height * areaScale,
     availableZ: [...region.d.availableZ],
     ...(bounds
       ? {

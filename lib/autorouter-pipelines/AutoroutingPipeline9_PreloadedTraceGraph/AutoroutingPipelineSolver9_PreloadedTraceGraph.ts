@@ -1,4 +1,6 @@
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { markNodesWithoutViaSite } from "./markNodesWithoutViaSite"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -438,7 +440,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+          cms.capacityNodes = markNodesWithoutViaSite({
+            nodes: cms.nodeDimensionSubdivisionSolver!.outputNodes,
+            srj: cms.srj,
+            connMap: cms.connMap,
+            viaDiameter: cms.viaDiameter,
+            viaToPadClearance:
+              getViaToPadClearance(cms.srj) ??
+              cms.srj.defaultObstacleMargin ??
+              0.15,
+          })
         },
       },
     ),
