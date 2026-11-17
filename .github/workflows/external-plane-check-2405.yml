@@ -1,0 +1,217 @@
+name: Verify physical external plane connectivity
+on:
+  push:
+    branches: [codex/external-plane-check-2405]
+permissions:
+  contents: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [h616, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: f0f60ff3
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 0c16ff6c1382bad4653c9302b852251343a7de9e
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned sources and build the selected runtime
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Reroute the original DDR control and both full-board modes
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CASE_IDS: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
+          BUN_OPTIONS="--preload=$PWD/select-ddr-router.mjs" bun "$GITHUB_WORKSPACE/core/node_modules/@tscircuit/core-ddr-benchmark/scripts/run.ts" \
+            --core "$GITHUB_WORKSPACE/core" --circuit "$BOARD_ID" \
+            --out "$GITHUB_WORKSPACE/results/candidate/ddr" --timeout 600 || { cat "$GITHUB_WORKSPACE/results/candidate/ddr/$BOARD_ID/"*.log; exit 1; }
+          FULL_BOARD_VARIANT=candidate bun plane-suite.ts ../../results/candidate/full
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external2405-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export native results and phase inputs for analysis
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'environment.json','summary.json','progress.json','assessment.json','diagnostics.json','process.json','results.json','pcb.svg'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('EXTERNAL2405_BOARD_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('EXTERNAL2405_BOARD_EVIDENCE_END')
+          PY
+  paired-h616:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 820711e3aebb07ceeafdc410ba5e24f595fe473a
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 0c16ff6c1382bad4653c9302b852251343a7de9e
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          ref: f0f60ff3
+          path: router-after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned sources and build the selected runtime
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          ln -s "$GITHUB_WORKSPACE/router/node_modules" router-after/node_modules
+          (cd router-after && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Reroute the original DDR control and both full-board modes
+        env:
+          BOARD_ID: h616
+          FULL_BOARD_CASE_IDS: h616
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../router rev-parse HEAD)"
+          for variant in before after; do
+            folder=router
+            if [ "$variant" = after ]; then folder=router-after; fi
+            export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/$folder/benchmark-runtime/pipeline9.js"
+            export FULL_BOARD_ROUTER_COMMIT="$(git -C ../../$folder rev-parse HEAD)"
+            FULL_BOARD_VARIANT=pair-$variant bun plane-suite.ts ../../results/pair-$variant/full phased
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external2405-paired-h616
+          path: results
+          retention-days: 14
+      - name: Export native results and phase inputs for analysis
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'environment.json','summary.json','progress.json','assessment.json','diagnostics.json','process.json','results.json','pcb.svg'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('EXTERNAL2405_H616_PAIR_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('EXTERNAL2405_H616_PAIR_EVIDENCE_END')
+          PY
+      - name: Compare H616 repair input geometry
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import gzip,json,hashlib
+          from pathlib import Path
+          params={variant:json.loads(gzip.decompress(next((Path('results')/('pair-'+variant)).rglob('joint-start.capture.json.gz')).read_bytes()))['params'] for variant in ['before','after']}
+          fields=[]
+          for key in sorted(set(params['before'])|set(params['after'])):
+              a=json.dumps(params['before'].get(key),sort_keys=True,separators=(',',':')).encode()
+              b=json.dumps(params['after'].get(key),sort_keys=True,separators=(',',':')).encode()
+              fields.append({'field':key,'identical':a==b,'beforeSha256':hashlib.sha256(a).hexdigest(),'afterSha256':hashlib.sha256(b).hexdigest()})
+          print('EXTERNAL2405_H616_INPUT_RESULT',json.dumps({'identical':params['before']==params['after'],'fields':fields},separators=(',',':')))
+          PY
+  dataset18:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 820711e3aebb07ceeafdc410ba5e24f595fe473a
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: f0f60ff3
+          path: after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the two frozen router sources
+        run: |
+          for variant in before after; do (cd "$variant" && bun install --ignore-scripts); done
+      - name: Measure the entire dataset18 before and after on the same worker
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '240000'
+        run: |
+          for variant in before after; do
+            (cd "$variant" && bash benchmark.sh --pipeline 9 --dataset 18 --concurrency 2 --sample-timeout 240s)
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external2405-paired-dataset18
+          path: |
+            before/benchmark-result.json
+            before/benchmark-snapshots.html
+            after/benchmark-result.json
+            after/benchmark-snapshots.html
+      - name: Export both reports and native SVG comparisons
+        if: always()
+        run: |
+          python3 - <<'PYREPORT'
+          import json,re,hashlib,statistics
+          from pathlib import Path
+          reports={}
+          snapshots={}
+          for variant in ['before','after']:
+              root=Path(variant)
+              report=json.loads((root/'benchmark-result.json').read_text())
+              reports[variant]=report
+              print('EXTERNAL2405_DATASET18_PAIR',variant,json.dumps(report,separators=(',',':')))
+              snapshots[variant]={}
+              for section in re.findall(r'<section class="snapshot">(.*?)</section>',(root/'benchmark-snapshots.html').read_text(),re.S):
+                  sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                  svg=re.search(r'<svg\b.*?</svg>',section,re.S).group(0)
+                  snapshots[variant][sample]=hashlib.sha256(svg.encode()).hexdigest()
+          rows=[]
+          for before in sorted(reports['before']['tests'],key=lambda row:row['sampleNumber']):
+              sample=before['sampleNumber']
+              after=next(row for row in reports['after']['tests'] if row['sampleNumber']==sample)
+              rows.append({'sample':sample,'beforeMs':before['elapsedTimeMs'],'afterMs':after['elapsedTimeMs'],'beforeSolved':before['didSolve'],'afterSolved':after['didSolve'],'beforeDrcPassed':before['relaxedDrcPassed'],'afterDrcPassed':after['relaxedDrcPassed'],'beforeVias':before.get('viaCount'),'afterVias':after.get('viaCount'),'beforeSvgSha256':snapshots['before'].get(sample),'afterSvgSha256':snapshots['after'].get(sample)})
+          result={'beforeSummary':reports['before']['summary'],'afterSummary':reports['after']['summary'],'beforeMeanMs':statistics.mean(row['beforeMs'] for row in rows),'afterMeanMs':statistics.mean(row['afterMs'] for row in rows),'rows':rows}
+          print('EXTERNAL2405_SNAPSHOT_RESULT',json.dumps(result,separators=(',',':')))
+          assert len(rows)==16 and all(row['beforeSolved'] and row['afterSolved'] and row['beforeDrcPassed'] and row['afterDrcPassed'] for row in rows)
+          PYREPORT
