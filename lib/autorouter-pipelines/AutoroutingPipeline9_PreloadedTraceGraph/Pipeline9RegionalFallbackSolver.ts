@@ -61,7 +61,7 @@ export const getPointToObstacleDistance = (
   return Math.hypot(outsideX, outsideY)
 }
 
-const getObstacleZLayers = (
+export const getObstacleZLayers = (
   obstacle: Obstacle,
   layerCount: number,
 ): number[] => {

@@ -1,8 +1,10 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { CapacityMeshNode } from "lib/types/capacity-mesh-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { getPointToObstacleDistance } from "./Pipeline9RegionalFallbackSolver"
+import {
+  getObstacleZLayers,
+  getPointToObstacleDistance,
+} from "./Pipeline9RegionalFallbackSolver"
 
 type Bounds = { minX: number; maxX: number; minY: number; maxY: number }
 type MarkNodesWithoutViaSiteParams = {
@@ -27,22 +29,88 @@ const getObstacleBounds = (obstacle: Obstacle): Bounds => {
   }
 }
 
-/** Candidate coordinates along one axis of the via-center region: its ends,
- * every obstacle keep-out boundary inside it and the midpoints between them. */
-const getAxisSamples = (
-  min: number,
-  max: number,
-  boundaries: number[],
-): number[] => {
-  const cuts = [
-    ...new Set([
-      min,
-      max,
-      ...boundaries.filter((value) => value > min && value < max),
-    ]),
-  ].sort((a, b) => a - b)
-  return cuts.flatMap((cut, index) =>
-    index + 1 < cuts.length ? [cut, (cut + cuts[index + 1]!) / 2] : [cut],
+/** Smallest searched cell edge, in mm. A via center that fits only inside a
+ * smaller gap would clear the keep-out by less than this. */
+const MIN_SEARCH_CELL_SIZE = 0.005
+
+type KeepOutObstacle = { obstacle: Obstacle; bounds: Bounds }
+
+const isRoutedNetObstacle = (
+  obstacle: Obstacle,
+  connMap: ConnectivityMap,
+  routedNetIds: ReadonlySet<string>,
+): boolean =>
+  [obstacle.obstacleId, ...obstacle.connectedTo].some((id) => {
+    if (!id) return false
+    const netId = connMap.getNetConnectedToId(id)
+    return netId !== undefined && routedNetIds.has(netId)
+  })
+
+/**
+ * True when some point of the cell is at least keepOut from every obstacle.
+ * Distance to a rectangle (rotated or not) or a circle is convex, so a cell
+ * whose four corners all lie closer than keepOut to one obstacle lies inside
+ * that obstacle's keep-out entirely. Otherwise the cell is halved along its
+ * longer side until a legal point turns up or each part is covered; a part
+ * under MIN_SEARCH_CELL_SIZE with no legal corner or center counts as covered.
+ */
+const hasViaSiteInCell = (
+  cell: Bounds,
+  obstacles: KeepOutObstacle[],
+  keepOut: number,
+): boolean => {
+  const corners = [
+    { x: cell.minX, y: cell.minY },
+    { x: cell.maxX, y: cell.minY },
+    { x: cell.minX, y: cell.maxY },
+    { x: cell.maxX, y: cell.maxY },
+  ]
+  const center = {
+    x: (cell.minX + cell.maxX) / 2,
+    y: (cell.minY + cell.maxY) / 2,
+  }
+  for (const point of [center, ...corners]) {
+    if (
+      obstacles.every(
+        ({ obstacle }) =>
+          getPointToObstacleDistance(point, obstacle) >= keepOut,
+      )
+    )
+      return true
+  }
+  if (
+    obstacles.some(({ obstacle }) =>
+      corners.every(
+        (corner) => getPointToObstacleDistance(corner, obstacle) < keepOut,
+      ),
+    )
+  )
+    return false
+  const width = cell.maxX - cell.minX
+  const height = cell.maxY - cell.minY
+  if (Math.max(width, height) <= MIN_SEARCH_CELL_SIZE) return false
+  const halves: Bounds[] =
+    width >= height
+      ? [
+          { ...cell, maxX: center.x },
+          { ...cell, minX: center.x },
+        ]
+      : [
+          { ...cell, maxY: center.y },
+          { ...cell, minY: center.y },
+        ]
+  return halves.some((half) =>
+    hasViaSiteInCell(
+      half,
+      obstacles.filter(
+        ({ bounds }) =>
+          bounds.minX - keepOut < half.maxX &&
+          bounds.maxX + keepOut > half.minX &&
+          bounds.minY - keepOut < half.maxY &&
+          bounds.maxY + keepOut > half.minY,
+      ),
+      keepOut,
+    ),
   )
 }
 
@@ -55,10 +123,12 @@ const getAxisSamples = (
  * a via center inside it keeps the via-to-pad clearance from the copper of nets
  * this request does not route, such as pads and traces fixed by earlier
  * phases, on the layers the node offers. Copper of nets it routes is skipped:
- * their own vias may sit beside it. Copper on layers the node does not offer, such as a plane, is left to
- * the stages that already handle vias through it. Component topology nodes,
- * which apply their own via rules, and nodes too small for any via are left
- * unchanged. Board coordinates in mm, +X right, +Y up.
+ * their own vias may sit beside it. Copper on layers the node does not offer,
+ * such as a plane, is left to the stages that already handle vias through it.
+ * Component topology nodes, which apply their own via rules, are left
+ * unchanged. So are nodes narrower than a via: marking them too (about 2,000
+ * nodes on H616) raised H616's full-board DRC findings from 43 to 113, and
+ * A13's from 7 to 10. Board coordinates in mm, +X right, +Y up.
  */
 export const markNodesWithoutViaSite = ({
   nodes,
@@ -73,21 +143,13 @@ export const markNodesWithoutViaSite = ({
         connMap.getNetConnectedToId(connection.name) ?? connection.name,
     ),
   )
-  const isRoutedNetObstacle = (obstacle: Obstacle): boolean =>
-    [obstacle.obstacleId, ...obstacle.connectedTo].some((id) => {
-      if (!id) return false
-      const netId = connMap.getNetConnectedToId(id)
-      return netId !== undefined && routedNetIds.has(netId)
-    })
   const keepOut = viaDiameter / 2 + viaToPadClearance
   const hardObstacles = srj.obstacles
-    .filter((obstacle) => !isRoutedNetObstacle(obstacle))
+    .filter((obstacle) => !isRoutedNetObstacle(obstacle, connMap, routedNetIds))
     .map((obstacle) => ({
       obstacle,
       bounds: getObstacleBounds(obstacle),
-      zLayers:
-        obstacle.zLayers ??
-        obstacle.layers.map((layer) => mapLayerNameToZ(layer, srj.layerCount)),
+      zLayers: getObstacleZLayers(obstacle, srj.layerCount),
     }))
   return nodes.map((node): CapacityMeshNode => {
     if (
@@ -103,8 +165,7 @@ export const markNodesWithoutViaSite = ({
       minY: node.center.y - node.height / 2 + viaDiameter / 2,
       maxY: node.center.y + node.height / 2 - viaDiameter / 2,
     }
-    if (centers.minX > centers.maxX || centers.minY > centers.maxY)
-      return node
+    if (centers.minX > centers.maxX || centers.minY > centers.maxY) return node
     const nearby = hardObstacles.filter(
       ({ bounds, zLayers }) =>
         zLayers.some((z) => node.availableZ.includes(z)) &&
@@ -114,30 +175,7 @@ export const markNodesWithoutViaSite = ({
         bounds.maxY + keepOut > centers.minY,
     )
     if (nearby.length === 0) return node
-    const xs = getAxisSamples(
-      centers.minX,
-      centers.maxX,
-      nearby.flatMap(({ bounds }) => [
-        bounds.minX - keepOut,
-        bounds.maxX + keepOut,
-      ]),
-    )
-    const ys = getAxisSamples(
-      centers.minY,
-      centers.maxY,
-      nearby.flatMap(({ bounds }) => [
-        bounds.minY - keepOut,
-        bounds.maxY + keepOut,
-      ]),
-    )
-    const hasViaSite = xs.some((x) =>
-      ys.some((y) =>
-        nearby.every(
-          ({ obstacle }) =>
-            getPointToObstacleDistance({ x, y }, obstacle) >= keepOut,
-        ),
-      ),
-    )
+    const hasViaSite = hasViaSiteInCell(centers, nearby, keepOut)
     return hasViaSite ? node : { ...node, _lacksViaSite: true }
   })
 }
