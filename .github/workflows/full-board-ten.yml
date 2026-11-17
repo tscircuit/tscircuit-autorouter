@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tscircuit/bus-lanes-solver
-          ref: 0f1c5ca41a1dccad289662e68228ef7e58afa071
+          ref: cbd27db2e7de5697d24fc63928c43fb92d3431d1
           path: .full-board-run/bus-source
           persist-credentials: false
           sparse-checkout-cone-mode: false
