@@ -1,8 +1,8 @@
-name: Published3207 full-board ten-case benchmark
+name: Frozen3207 full-board source handoff comparison
 
 on:
   push:
-    branches: [bench/full-board-ten-3207-20261116]
+    branches: [bench/full-board-completion-overlay-3207]
 
 permissions:
   contents: read
@@ -14,14 +14,11 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 2
       matrix:
         include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+          - { board: imx6, experiment: source-baseline, cohorts: "spaced" }
+          - { board: imx6, experiment: handoff-only, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -71,6 +68,17 @@ jobs:
       - name: Prepare verified package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
+      - name: Install authenticated private P9 source overlay
+        run: >-
+          python3 experiments/full-board-ten/install-source-overlay.py
+          "$FULL_BOARD_ROOT" experiments/full-board-ten/source-bundles
+          "${{ matrix.experiment }}"
+
+      - name: Verify all exports and actual Core constructor bindings
+        run: >-
+          bun experiments/full-board-ten/verify-source-overlay.ts
+          "$FULL_BOARD_RUNTIME_MANIFEST" "$FULL_BOARD_ROOT/source-overlay-preflight.json"
+
       - name: Prepare authentic paired cases
         id: prepare
         run: >-
@@ -82,7 +90,7 @@ jobs:
 
       - name: Run original full circuit
         id: original
-        if: matrix.experiment == 'published'
+        if: contains(matrix.cohorts, 'original')
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -90,7 +98,7 @@ jobs:
           "$FULL_BOARD_ROOT/results/$BOARD/original"
 
       - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
+        if: ${{ always() && contains(matrix.cohorts, 'original') }}
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
@@ -102,7 +110,7 @@ jobs:
 
       - name: Run spaced full circuit
         id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' && contains(matrix.cohorts, 'spaced') }}
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
@@ -138,6 +146,10 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json
+            .full-board-run/published-runtime-manifest.json
+            .full-board-run/source-overlay.json
+            .full-board-run/source-overlay-preflight.json
+            experiments/full-board-ten/source-bundles/manifest.json
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json

@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { verifySourceOverlay } from "./verify-source-overlay"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -59,9 +60,10 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
-if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
-const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
+// Core uses its normal package imports and solver registry.
+if (!task.runtimeManifestPath) throw new Error("Explicit verified runtime identity manifest required")
+const runtimeManifest = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
+const expectedRuntime = runtimeManifest.packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (expectedRuntime.length !== 4 || expectedNames.some(name => !expectedRuntime.some((row: any) => row.name === name))) throw new Error("Runtime manifest must identify the complete compatible four-package chain")
 const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: string; version: string; entrySha256: string }) => {
@@ -72,13 +74,16 @@ const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: str
     folder = dirname(folder)
   }
   const pkg = JSON.parse(readFileSync(join(folder, "package.json"), "utf8"))
-  if (pkg.version !== version || sha(readFileSync(entry)) !== entrySha256) throw new Error(`Published runtime identity mismatch for ${name}`)
+  if (pkg.version !== version || sha(readFileSync(entry)) !== entrySha256) throw new Error(`Verified runtime identity mismatch for ${name}`)
   return { name, version, entry, entrySha256, gitHead: pkg.gitHead }
 })
 function readablePackage(folder: string, name: string): boolean {
   try { return JSON.parse(readFileSync(join(folder, "package.json"), "utf8")).name === name }
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
+const sourceOverlay = runtimeManifest.sourceOverrides
+  ? await verifySourceOverlay(task.runtimeManifestPath)
+  : null
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
@@ -90,7 +95,8 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: Boolean(sourceOverlay) || (task.dependencyOverrides?.length ?? 0) > 0,
+    routingSourceOverride: Boolean(sourceOverlay), sourceOverlay, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
@@ -159,6 +165,7 @@ circuit.on("solver:started", (event: any): void => {
   }
   const options = event.solverParams?.options
   if (options?.cacheProvider) throw new Error("Unexpected solver cache provider")
+  if (circuit.platform?.autorouterThreads !== undefined) throw new Error("Source overlay requires normal synchronous Core routing")
   const phaseName = running()?.name
   if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && targetPhase && (targetPhase === "*" || phaseName === targetPhase)) {
     finishCoarseDiagnostics()
