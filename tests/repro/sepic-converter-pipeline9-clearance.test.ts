@@ -7,7 +7,7 @@ import { getMinimumTraceGap } from "tests/fixtures/getMinimumTraceGap"
 
 // Render the original circuit TSX, including its eight manual traces.
 // The pinned Core generates routing input; this repository's Pipeline 9 routes it.
-test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearance", async (): Promise<void> => {
+test("pipeline9 preserves SEPIC trace clearance during exact repair", async (): Promise<void> => {
   const { input, solver, circuitJson } = await renderSepicRepro()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
@@ -15,7 +15,7 @@ test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearanc
   const errors = circuitJson.filter(
     (element) => element.type === "pcb_trace_error",
   )
-  expect(errors).toHaveLength(1)
+  expect(errors).toHaveLength(0)
   const traces = solver.getOutputSimplifiedPcbTraces()
   const vcc = traces.find(
     (trace) => trace.pcb_trace_id === "source_net_8_mst1_0",
@@ -25,7 +25,7 @@ test("repro: pipeline9 finishes the SEPIC board with insufficient trace clearanc
   )
   if (!vcc || !gate) throw new Error("Missing routed VCC or GATE trace")
   const gap = getMinimumTraceGap(vcc, gate)
-  expect(gap).toBeLessThan(input.minTraceToPadEdgeClearance!)
+  expect(gap).toBeGreaterThanOrEqual(input.minTraceToPadEdgeClearance!)
   for (const [trace, width] of [
     [vcc, 0.15],
     [gate, 0.2],

@@ -5,6 +5,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import { createPipeline9ReferenceDrcGuard } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9ReferenceDrcGuard"
 import { isPipeline9DrcPriorityImprovement } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9DrcPriorityImprovement"
 import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
@@ -103,6 +104,10 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
     candidateErrors: candidateReference,
   })
   expect(accepted).toBe(true)
+  const guard = createPipeline9ReferenceDrcGuard(projection.params.drcEvaluator)
+  expect(getPipeline9DrcErrors(guard, currentRoutes).length).toBeGreaterThan(0)
+  expect(getPipeline9DrcErrors(guard, proposedRoutes)).toEqual([])
+  expect(candidateReference.length).toBeGreaterThan(0)
   expect(fixture).toEqual(original)
   expect(
     proposedRoutes.find(
