@@ -1,0 +1,46 @@
+# Regenerate existing native DDR SVG snapshots only, preserving all test assertions.
+name: Review existing DDR snapshots with component-pad axes
+on:
+  push:
+    branches: [artifacts/pad-grid-1119-existing-snapshots]
+permissions:
+  contents: write
+jobs:
+  snapshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Update the unchanged native routing tests
+        run: |
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-ecp5-fixed-copper-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-icepi-circular-clearance.test.ts tests/repro/pipeline9-ddr-force-clearance.test.ts tests/repro/pipeline9-imx6-published-ddr-clearance.test.ts tests/repro/pipeline9-ecp5-regional-boundary-copper-contact.test.ts --timeout 9999999 > snapshots.private.log 2>&1
+      - name: Render changed native SVGs for review
+        run: |
+          cat > render-snapshots.private.ts <<'TS'
+          import {execFileSync} from "node:child_process"
+          import {readFileSync,writeFileSync,mkdirSync} from "node:fs"
+          import {basename} from "node:path"
+          import {Resvg} from "@resvg/resvg-js"
+          const paths=execFileSync("git",["diff","--name-only","--","tests/repro/__snapshots__"],{encoding:"utf8"}).trim().split("\n").filter(path=>path.endsWith(".snap.svg"))
+          mkdirSync(".github/artifacts",{recursive:true})
+          for (const path of paths) {
+            const svg=readFileSync(path,"utf8")
+            writeFileSync(".github/artifacts/"+basename(path,".svg")+".png",new Resvg(svg,{fitTo:{mode:"width",value:950}}).render().asPng())
+          }
+          console.log("CHANGED_SNAPSHOT_COUNT="+paths.length)
+          TS
+          bun render-snapshots.private.ts
+      - name: Save only the requested SVG diffs and review PNGs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/repro/__snapshots__/*.snap.svg
+          git add -f .github/artifacts/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate existing native DDR snapshots for component-pad repair axes"
+            git push
+          fi
