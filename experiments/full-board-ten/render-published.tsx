@@ -189,7 +189,7 @@ circuit.on("asyncEffect:end", (event: any): void => { if (event.error) progress.
 const heartbeat = setInterval(() => save(), 2000)
 const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
-  progress.errors.push(`${captureDeadlineMs / 1000} second external capture deadline; solver budgets unchanged`)
+  progress.errors.push(`${captureDeadlineMs / 1000} second external capture deadline`)
   finishCoarseDiagnostics()
   save(true)
   process.exit(124)

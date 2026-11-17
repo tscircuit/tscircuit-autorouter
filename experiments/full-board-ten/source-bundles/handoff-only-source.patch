@@ -1,8 +1,8 @@
 diff --git a/lib/core.ts b/lib/core.ts
-index e1b07ea..8a98049 100644
+index e1b07ea..9e02c78 100644
 --- a/lib/core.ts
 +++ b/lib/core.ts
-@@ -1754,7 +1754,11 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1754,7 +1754,12 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -    const startingSnapshot = cloneSolvedStateSnapshot({
 -      portAssignment: this.state.portAssignment,
 -      regionSegments: this.state.regionSegments,
@@ -20,20 +20,28 @@ index e1b07ea..8a98049 100644
 +        ripCount: this.state.ripCount,
 +      }),
 +    }
-+    let firstGreedySeed = originalSeed
-@@ -1771,0 +1776,2 @@ export class TinyHyperGraphSolver extends BaseSolver {
-+      const seed =
-+        greedyFinalRouteIter === 0 ? firstGreedySeed : originalSeed
-@@ -1774 +1780 @@ export class TinyHyperGraphSolver extends BaseSolver {
++    let recoverySeed = originalSeed
++    let greedyFinalRouteAttemptCount = greedyFinalRouteIters
+@@ -1769 +1774 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-      greedyFinalRouteIter < greedyFinalRouteIters;
++      greedyFinalRouteIter < greedyFinalRouteAttemptCount;
+@@ -1771,0 +1777,2 @@ export class TinyHyperGraphSolver extends BaseSolver {
++      const isRecoveryAttempt = greedyFinalRouteIter === greedyFinalRouteIters
++      const seed = isRecoveryAttempt ? recoverySeed : originalSeed
+@@ -1773,6 +1780,3 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-        greedyFinalRouteIter <= 0
 -          ? remainingRouteIds
-+          ? seed.routeIds
-@@ -1776 +1782 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-          : shuffle(
 -              remainingRouteIds,
-+              seed.routeIds,
-@@ -1796 +1802 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-              this.state.ripCount + greedyFinalRouteIter,
+-            )
++        greedyFinalRouteIter <= 0 || isRecoveryAttempt
++          ? seed.routeIds
++          : shuffle(seed.routeIds, this.state.ripCount + greedyFinalRouteIter)
+@@ -1796 +1800 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -        startingSnapshot,
 +        seed.snapshot,
-@@ -1801,0 +1808,23 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1801,0 +1806,24 @@ export class TinyHyperGraphSolver extends BaseSolver {
 +        if (
 +          greedyFinalRouteIter === -1 &&
 +          !this.PARTIAL_RIP_ENABLED &&
@@ -42,9 +50,9 @@ index e1b07ea..8a98049 100644
 +          const pendingRouteIds =
 +            greedySolver.getRemainingRouteIdsForGreedyFinalRoute()
 +          if (pendingRouteIds.length < remainingRouteIds.length) {
-+            // Carry complete routes and any reripped owners together. Later
-+            // shuffled attempts still explore the original parent state.
-+            firstGreedySeed = {
++            // Retry useful progress only after the original attempts fail,
++            // preserving any routing result they would already complete.
++            recoverySeed = {
 +              routeIds: pendingRouteIds,
 +              snapshot: cloneSolvedStateSnapshot({
 +                portAssignment: greedySolver.state.portAssignment,
@@ -55,8 +63,12 @@ index e1b07ea..8a98049 100644
 +                ripCount: greedySolver.state.ripCount,
 +              }),
 +            }
++            greedyFinalRouteAttemptCount += 1
 +          }
 +        }
-@@ -1820 +1849 @@ export class TinyHyperGraphSolver extends BaseSolver {
+@@ -1820 +1848 @@ export class TinyHyperGraphSolver extends BaseSolver {
 -        greedyFinalRouteRemainingRouteCount: remainingRouteIds.length,
 +        greedyFinalRouteRemainingRouteCount: routeIds.length,
+@@ -1836 +1864 @@ export class TinyHyperGraphSolver extends BaseSolver {
+-      greedyFinalRouteAttemptCount: greedyFinalRouteIters,
++      greedyFinalRouteAttemptCount,

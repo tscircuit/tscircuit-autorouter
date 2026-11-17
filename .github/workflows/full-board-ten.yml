@@ -1,27 +1,33 @@
-name: Frozen3208 full-board handoff regression
+name: Frozen3208 refined handoff full-board regression
 
 on:
   push:
-    branches: [bench/full-board-handoff-regression-3208]
+    branches: [bench/full-board-refined-handoff-3208]
 
 permissions:
   contents: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.measurement }})
+    name: Full board (${{ matrix.board }}, ${{ matrix.cohorts }}, ${{ matrix.measurement }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 6
       matrix:
         include:
-          - { board: h616, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
-          - { board: glider, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
-          - { board: icepi, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original,spaced" }
-          - { board: imx6, experiment: handoff-only, measurement: handoff-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: imx6, experiment: handoff-only, measurement: refined-secondary-1800s, capture: 1800, hard: 1860, cohorts: "spaced" }
+          - { board: imx6, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
+          - { board: glider, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: butterstick, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
+          - { board: imx6, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: butterstick, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: icepi, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: icepi, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
+          - { board: glider, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
+          - { board: h616, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "original" }
+          - { board: h616, experiment: handoff-only, measurement: refined-canonical-900s, capture: 900, hard: 960, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -144,7 +150,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.measurement }}-summary-${{ github.run_attempt }}
+          name: full-board-${{ matrix.board }}-${{ matrix.measurement }}-${{ matrix.cohorts }}-summary-${{ github.run_attempt }}
           path: |
             .full-board-run/results/${{ matrix.board }}/summary.json
             .full-board-run/results/${{ matrix.board }}/*/result.json
