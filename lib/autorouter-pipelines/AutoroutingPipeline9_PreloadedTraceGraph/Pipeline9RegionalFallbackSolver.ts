@@ -35,6 +35,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   captureSearchDebug?: boolean
+  validateImmutableCopper?: (routes: HighDensityRoute[]) => boolean
 }
 
 const getPointToObstacleDistance = (
@@ -183,6 +184,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (this.params.validateImmutableCopper?.(routes) === false) return false
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
