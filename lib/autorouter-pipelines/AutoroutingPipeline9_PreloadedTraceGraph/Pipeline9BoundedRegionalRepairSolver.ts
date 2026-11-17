@@ -145,6 +145,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private repairCandidate?: HighDensityRoute[]
   private reservedChildMaximum = 0
+  readonly validationMetrics: Record<string,number> = {}
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -718,11 +719,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const before=getFixedObstacleViolations({srj:physicalSrj,routes:context.currentRoutes,traceClearance:0,viaClearance:0})
     const after=getFixedObstacleViolations({srj:physicalSrj,routes:candidateRoutes,traceClearance:0,viaClearance:0})
     const fixedBlocked=!candidateFixedViolations.every(({key,severity}):boolean=>context.fixedViolations.has(key)&&severity<=context.fixedViolations.get(key)!+1e-8)
-    const prefix=this.params.routes.length>0?'fixedGuard':'fixedGuard'
-    this.stats.fixedGuardCandidates=Number(this.stats.fixedGuardCandidates??0)+1
-    if(fixedBlocked)this.stats.fixedGuardRejections=Number(this.stats.fixedGuardRejections??0)+1
-    if(fixedBlocked&&after.filter(v=>v.kind==='wire').length<before.filter(v=>v.kind==='wire').length)this.stats.fixedGuardRejectedWireContactImprovements=Number(this.stats.fixedGuardRejectedWireContactImprovements??0)+1
-    if(fixedBlocked&&after.reduce((sum,v)=>sum+v.severity,0)<before.reduce((sum,v)=>sum+v.severity,0)-1e-8)this.stats.fixedGuardRejectedPhysicalImprovements=Number(this.stats.fixedGuardRejectedPhysicalImprovements??0)+1
+    this.validationMetrics.fixedGuardCandidates=Number(this.validationMetrics.fixedGuardCandidates??0)+1
+    if(fixedBlocked)this.validationMetrics.fixedGuardRejections=Number(this.validationMetrics.fixedGuardRejections??0)+1
+    if(fixedBlocked&&after.filter(v=>v.kind==='wire').length<before.filter(v=>v.kind==='wire').length)this.validationMetrics.fixedGuardRejectedWireContactImprovements=Number(this.validationMetrics.fixedGuardRejectedWireContactImprovements??0)+1
+    if(fixedBlocked&&after.reduce((sum,v)=>sum+v.severity,0)<before.reduce((sum,v)=>sum+v.severity,0)-1e-8)this.validationMetrics.fixedGuardRejectedPhysicalImprovements=Number(this.validationMetrics.fixedGuardRejectedPhysicalImprovements??0)+1
     if (
       !candidateFixedViolations.every(
         ({ key, severity }): boolean =>
