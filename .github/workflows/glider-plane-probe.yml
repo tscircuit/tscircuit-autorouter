@@ -1,0 +1,66 @@
+name: Inspect Glider physical clearance through routing stages
+on:
+  push:
+    branches: [codex/glider-plane-acceptance-probe]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: f0f60ff3f46ef86b121f7224d7f4c17bdaeec7ce
+          path: router
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44162030777
+          name: refresh2405-glider
+          path: evidence
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44164887997
+          name: external2405-glider
+          path: after-evidence
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          (cd router && bun install --ignore-scripts)
+          mkdir -p router/experiments/glider-plane-probe
+          cp experiments/glider-plane-probe/probe.ts router/experiments/glider-plane-probe/probe.ts
+      - name: Inspect each production stage on the frozen plane input
+        run: |
+          input=$(find evidence -name joint-start.capture.json.gz | head -1)
+          native=$(find evidence -name unrouted.circuit.json | head -1)
+          cd router
+          bun experiments/glider-plane-probe/probe.ts "$GITHUB_WORKSPACE/$input" "$GITHUB_WORKSPACE/$native" "$GITHUB_WORKSPACE/probe-results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: glider-plane-stage-probe
+          path: probe-results
+      - name: Export published copper for comparison
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for root,prefix in [(Path('after-evidence'),'after'),(Path('probe-results'),'probe')]:
+                  for path in root.rglob('*'):
+                      if path.is_file() and (path.name=='circuit.json' or path.name=='stages.json'):
+                          archive.writestr(prefix+'/'+path.name,path.read_bytes())
+          print('GLIDER_PHYSICAL_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('GLIDER_PHYSICAL_EVIDENCE_END')
+          PY
