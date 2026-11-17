@@ -41,7 +41,7 @@
     "@tscircuit/alphabet": "0.0.25",
     "@tscircuit/krt-wasm": "^0.1.1",
     "@tscircuit/miniflex": "^0.0.4",
-    "@tscircuit/runframe": "^0.0.3266",
+    "@tscircuit/runframe": "^0.0.3267",
     "circuit-json-to-bpc": "^0.0.13",
     "@tscircuit/matchpack": "^0.0.100",
     "@tscircuit/soup-util": "^0.0.41",
@@ -74,9 +74,9 @@
     "@jscad/modeling": "^2.13.0",
     "react-reconciler": "^0.32.0",
     "@tscircuit/mm": "0.0.9",
-    "tscircuit": "0.0.3207",
-    "@tscircuit/core": "0.0.2398",
+    "tscircuit": "0.0.3208",
+    "@tscircuit/core": "0.0.2399",
     "@tscircuit/eval": "0.0.1793",
-    "@tscircuit/capacity-autorouter": "0.0.1111"
+    "@tscircuit/capacity-autorouter": "0.0.1112"
   }
 }
