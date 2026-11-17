@@ -1,0 +1,69 @@
+name: Inspect changed dataset18 copper and OrangeCrab repair inputs
+on:
+  push:
+    branches: [codex/ddr2402-evidence-check]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for complete candidate evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 120); do
+            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/44095239926 --jq .status)
+            if [ "$status" = completed ]; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44093764087
+          name: refresh2402-orangecrab
+          path: before-orange
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44095239926
+          name: stitch2402-orangecrab
+          path: after-orange
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 44095239926
+          name: stitch2402-paired-dataset18
+          path: dataset18
+      - name: Compare repair inputs and export the changed native example
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,hashlib,io,json,re,zipfile
+          from pathlib import Path
+          before=json.loads(gzip.decompress(next(Path('before-orange').rglob('joint-start.capture.json.gz')).read_bytes()))['params']
+          after=json.loads(gzip.decompress(next(Path('after-orange').rglob('joint-start.capture.json.gz')).read_bytes()))['params']
+          fields=[]
+          for key in sorted(set(before)|set(after)):
+              a=json.dumps(before.get(key),sort_keys=True,separators=(',',':')).encode()
+              b=json.dumps(after.get(key),sort_keys=True,separators=(',',':')).encode()
+              fields.append({'field':key,'identical':a==b,'beforeSha256':hashlib.sha256(a).hexdigest(),'afterSha256':hashlib.sha256(b).hexdigest(),'beforeBytes':len(a),'afterBytes':len(b)})
+          result={'orangeCrabJointParamsIdentical':before==after,'fields':fields}
+          Path('orange-input-equivalence.json').write_text(json.dumps(result,indent=2))
+          print('STITCH2402_ORANGE_INPUT_RESULT',json.dumps(result,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              archive.writestr('orange-input-equivalence.json',json.dumps(result,indent=2))
+              for variant in ['before','after']:
+                  document=next((Path('dataset18')/variant).rglob('benchmark-snapshots.html')).read_text()
+                  for section in re.findall(r'<section class="snapshot">(.*?)</section>',document,re.S):
+                      sample=int(re.search(r'<dt>Sample</dt><dd>(\d+)</dd>',section).group(1))
+                      if sample==8:archive.writestr(f'dataset18-sample8-{variant}.svg',re.search(r'<svg\b.*?</svg>',section,re.S).group(0))
+          print('STITCH2402_NATIVE_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('STITCH2402_NATIVE_EVIDENCE_END')
+          PY
