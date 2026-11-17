@@ -1,0 +1,98 @@
+diff --git a/tests/assembly/assembly-explosion-async-cad.test.tsx b/tests/assembly/assembly-explosion-async-cad.test.tsx
+index f5b3f5c..c73f960 100644
+--- a/tests/assembly/assembly-explosion-async-cad.test.tsx
++++ b/tests/assembly/assembly-explosion-async-cad.test.tsx
+@@ -33,6 +33,7 @@ test("explosion phases wait for CAD effects anywhere in the assembly tree", asyn
+   expect(circuit.db.cad_component.list()).toHaveLength(0)
+   expect(circuit.db.cad_explosion_stage.list()).toHaveLength(0)
+   expect(circuit.db.cad_explosion_move.list()).toHaveLength(0)
++  await Promise.resolve()
+   part.release()
+   await circuit.renderUntilSettled()
+   const cad = circuit.db.cad_component.list()[0]
+diff --git a/tests/assembly/assembly-explosion-collision-async.test.tsx b/tests/assembly/assembly-explosion-collision-async.test.tsx
+index 82a654d..8c22e56 100644
+--- a/tests/assembly/assembly-explosion-collision-async.test.tsx
++++ b/tests/assembly/assembly-explosion-collision-async.test.tsx
+@@ -43,6 +43,7 @@ test("collision checks wait for async CAD and discard diagnostics for superseded
+       .initialized,
+   ).toBe(false)
+   expect(circuit.db.cad_explosion_collision_error.list()).toHaveLength(0)
++  await Promise.resolve()
+   obstacle.release()
+   await circuit.renderUntilSettled()
+   expect(circuit.db.cad_explosion_collision_error.list()).toHaveLength(1)
+diff --git a/tests/components/base-components/compact-phase-state-async.test.ts b/tests/components/base-components/compact-phase-state-async.test.ts
+index 5761474..9abe4eb 100644
+--- a/tests/components/base-components/compact-phase-state-async.test.ts
++++ b/tests/components/base-components/compact-phase-state-async.test.ts
+@@ -26,8 +26,9 @@ test("compact phases respect pending async effects before initialization", async
+   expect(component.renderPhaseStates.CheckRefDesConvention.initialized).toBe(
+     false,
+   )
+-  component.release()
+   await Promise.resolve()
++  component.release()
++  await Bun.sleep(0)
+   component.runRenderPhase("CheckRefDesConvention")
+   expect(component.calls).toEqual(["next"])
+   expect(component.renderPhaseStates.CheckRefDesConvention.initialized).toBe(
+diff --git a/tests/components/base-components/compact-phase-state-subtree-async.test.ts b/tests/components/base-components/compact-phase-state-subtree-async.test.ts
+index 1ffa745..0d3654f 100644
+--- a/tests/components/base-components/compact-phase-state-subtree-async.test.ts
++++ b/tests/components/base-components/compact-phase-state-subtree-async.test.ts
+@@ -28,8 +28,9 @@ test("unobserved compact phases wait for descendant async dependencies and propa
+   child.runRenderPhase("FetchPartFootprint")
+   parent.runRenderPhase("SchematicLayout")
+   expect(parent.calls).toBe(0)
+-  child.release()
+   await Promise.resolve()
++  child.release()
++  await Bun.sleep(0)
+   parent.runRenderPhase("SchematicLayout")
+   expect(parent.calls).toBe(1)
+   child._markDirty("SchematicLayout")
+diff --git a/tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts b/tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts
+index 41628e1..59ed6d7 100644
+--- a/tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts
++++ b/tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts
+@@ -35,7 +35,7 @@ test("superscript phase waits for descendant label work and supports dirty updat
+   ).toBe(false)
+   finishTraceRender()
+   await traceRenderFinished
+-  await Promise.resolve()
++  await Bun.sleep(0)
+   root.runRenderCycle()
+   expect(root.initialCalls).toBe(1)
+   root.runRenderCycle()
+diff --git a/tests/components/normal-components/component-availability-warning-update.test.tsx b/tests/components/normal-components/component-availability-warning-update.test.tsx
+index 7a17ecf..7983f94 100644
+--- a/tests/components/normal-components/component-availability-warning-update.test.tsx
++++ b/tests/components/normal-components/component-availability-warning-update.test.tsx
+@@ -34,7 +34,7 @@ test("supplier updates discard stale lookups and clear outdated availability war
+     </board>,
+   )
+   circuit.render()
+-  await Promise.resolve()
++  await Bun.sleep(0)
+   const resistor = circuit.selectOne(".R1") as NormalComponent
+   resistor.setProps({
+     ...resistor.props,
+@@ -44,7 +44,7 @@ test("supplier updates discard stale lookups and clear outdated availability war
+     supplier_part_numbers: { digikey: ["456-ND"] },
+   })
+   resistor.updateComponentAvailabilityWarning()
+-  await Promise.resolve()
++  await Bun.sleep(0)
+   expect(requests.map((request) => request.partNumber)).toEqual([
+     "123-ND",
+     "456-ND",
+@@ -57,7 +57,7 @@ test("supplier updates discard stale lookups and clear outdated availability war
+   )
+ 
+   resistor.updateComponentAvailabilityWarning()
+-  await Promise.resolve()
++  await Bun.sleep(0)
+   requests[2].resolve({ stock: 0, price: null, currency: null })
+   await circuit.renderUntilSettled()
+   expect(circuit.db.source_component_availability_warning.list()).toHaveLength(

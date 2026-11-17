@@ -42,6 +42,13 @@ def apply_candidate():
     subprocess.run(["git", "apply", str(controller / "core-reentrancy-production.patch")],
                    cwd=source, check=True)
     assert sha(source / plan["source"]["path"]) == plan["source"]["afterSha256"]
+    for relative, checksums in plan["timingTests"].items():
+        assert sha(source / relative) == checksums["beforeSha256"]
+    timing_patch = controller / "core-effect-timing-tests.patch"
+    assert sha(timing_patch) == plan["timingTestPatchSha256"]
+    subprocess.run(["git", "apply", str(timing_patch)], cwd=source, check=True)
+    for relative, checksums in plan["timingTests"].items():
+        assert sha(source / relative) == checksums["afterSha256"]
     test.write_text(final_test)
 
 
@@ -52,8 +59,8 @@ proof.mkdir(exist_ok=True)
 plan = json.loads((controller / "core-effect-source-plan.json").read_text())
 test = source / plan["source"]["testPath"]
 snapshot = test.parent / "__snapshots__" / f"{test.name.removesuffix('.test.tsx')}-pcb.snap.svg"
-final_test = (controller / "core-reentrancy-repro.test.tsx").read_text()
-assert sha(controller / "core-reentrancy-repro.test.tsx") == plan["source"]["testSha256"]
+final_test = (controller / "core-effect-source-repro.test.tsx").read_text()
+assert sha(controller / "core-effect-source-repro.test.tsx") == plan["source"]["testSha256"]
 assert sha(controller / "core-reentrancy-production.patch") == plan["source"]["patchSha256"]
 assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip() == plan["source"]["baseCommit"]
 assert subprocess.check_output(["bun", "--version"], text=True).strip() == plan["bunVersion"]
@@ -134,6 +141,7 @@ failed = [name for name, check in records.items() if check["exitCode"] != 0 and 
 (proof / "result.json").write_text(json.dumps({"passed": not failed, "failedChecks": failed,
     "sourceCommit": plan["source"]["baseCommit"], "patchSha256": plan["source"]["patchSha256"],
     "testSha256": plan["source"]["testSha256"], "sharedFrozenLockSha256": plan["lockSha256"],
+    "timingTestPatchSha256": plan["timingTestPatchSha256"],
     "actualCoreMatcherSnapshots": True, "baselineRegressionFailsAtOrderingAssertion": True,
     "snapshots": {lane: sha(proof / lane / "tests/repros/__snapshots__" / snapshot.name) for lane in ["base", "candidate"]},
     "checks": records}, indent=2) + "\n")

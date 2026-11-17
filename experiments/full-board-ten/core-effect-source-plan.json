@@ -7,7 +7,7 @@
     "afterSha256": "312c7cabf299881c18a41afb19661ff2de337058a6185142bd8db18c17a4869e",
     "patchSha256": "0f551dfc6f54ef043eb055b3676de307f84f54921ed1243250bfb78af4c881eb",
     "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
-    "testSha256": "0c49c4b7599fca4120cf37b18e4fefd115f9a33f75044b77e155744bcd432656"
+    "testSha256": "3e89310b2f8dd54c45cd831151a2cd065250979dbb3a06cbb93810680500dd9a"
   },
   "bunVersion": "1.4.3",
   "lockSha256": "d13dc403d1c8a4e90b8d342ef5b465ec62a3ff17c57f0843492d0d05a966f9d9",
@@ -53,7 +53,49 @@
     "tests/scripts/"
   ],
   "sourceChangesPermitted": [
-    "lib/components/base-components/Renderable.ts"
+    "lib/components/base-components/Renderable.ts",
+    "tests/assembly/assembly-explosion-async-cad.test.tsx",
+    "tests/assembly/assembly-explosion-collision-async.test.tsx",
+    "tests/components/base-components/compact-phase-state-async.test.ts",
+    "tests/components/base-components/compact-phase-state-subtree-async.test.ts",
+    "tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts",
+    "tests/components/normal-components/component-availability-warning-update.test.tsx"
   ],
-  "purpose": "Actual Core source validation and repo-matcher snapshots; no publish, no production PR mutation"
+  "purpose": "Actual Core source validation and repo-matcher snapshots; no publish, no production PR mutation",
+  "timingTestPatchSha256": "793f7a7d2af52e3f19f74f2d304ac0087b485f798a7ab5cc8851ffcc5b7e75ca",
+  "timingTests": {
+    "tests/assembly/assembly-explosion-async-cad.test.tsx": {
+      "beforeSha256": "20e131ba0bc0ac45bfe0c7fba1b4b4c19067bbd3108c2dc5ad61edda11d93b66",
+      "afterSha256": "a6b112115c0bc9c5900b26c84bf5d7f3e48edd760066304ea1c63766584de05f"
+    },
+    "tests/assembly/assembly-explosion-collision-async.test.tsx": {
+      "beforeSha256": "1ce3fdd76a6f884d49d7ab574555d5e511f90da92ed983accf4aa17c6fa1fe9a",
+      "afterSha256": "ca14880e5278fd7cc3623d9a6f159434dc67e1842febd64f988f1ae679470e1d"
+    },
+    "tests/components/base-components/compact-phase-state-async.test.ts": {
+      "beforeSha256": "dc5c02fc7c26f60e4d60d09e47aafecb837ae49922c6e6c02bd293302362d26b",
+      "afterSha256": "7ee9f63a8fd3a336ef76b90b22e15bc20a040a5c8fb312b81f1238c404de9a64"
+    },
+    "tests/components/base-components/compact-phase-state-subtree-async.test.ts": {
+      "beforeSha256": "970fde5f3dccf97f6c259dcb871320a30ff0aa54ee48bba72a66ca0f93920454",
+      "afterSha256": "34db5fead67383f71acd773e3f2460624e628cc742f73ca4f83c5cf62a2d26e1"
+    },
+    "tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts": {
+      "beforeSha256": "af8804efec8e3c818b616a5368efbed9e7576b12acbe1d88633d3326019d6709",
+      "afterSha256": "1c70f84450690644bd9b098e0cc5682b33b4f90d3e99811f1fe0a4453cae5c04"
+    },
+    "tests/components/normal-components/component-availability-warning-update.test.tsx": {
+      "beforeSha256": "c4be1ac4cf6a8c16903ecdc0940acac9ec10becb73b96b98e1967cfb255a4ccf",
+      "afterSha256": "6bd08aeaba12efcbe28bd3dd0ad5c6dda62b8745c874dbc52ad8cc91d44acbc6"
+    }
+  },
+  "timingChangeEvidence": {
+    "runId": 44202333043,
+    "headSha": "f7ee0ee70325c835607f17bc756a55007668aec4",
+    "baseExistingPass": 38,
+    "candidateExistingPass": 32,
+    "candidateExistingFail": 6,
+    "originalArtifactId": 14382122113,
+    "artifactSha256": "9da32485b07b1d2ca138bb48f60c5d752d8778a04559db0e24c4ed97ac811869"
+  }
 }

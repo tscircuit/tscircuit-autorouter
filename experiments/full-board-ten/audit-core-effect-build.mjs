@@ -47,6 +47,7 @@ const catalog = folder => {
   const roleByFile = new Map()
   for (const name of files) {
     let text = readFileSync(join(folder, name), "utf8")
+    const rawSha256 = hash(text)
     if (folder.endsWith("/candidate/dist")) {
       const changed = "promise: Promise.resolve().then(effect),"
       reversedBehaviorLines += text.split(changed).length - 1
@@ -55,11 +56,11 @@ const catalog = folder => {
     const labels = [...text.matchAll(/^\/\/ ((?:lib\/|node_modules\/|package\.json|index\.ts)[^\n]*)$/gm)].map(match => match[1])
     const role = name === "index.js" ? "index" : labels.length ? hash(JSON.stringify(labels)) : name.replace(/-[A-Z0-9]+\.js$/, ".js")
     assert(!byRole.has(role), `Ambiguous compiled chunk role: ${name}`)
-    byRole.set(role, { name, text, labels })
+    byRole.set(role, { name, text, labels, rawSha256 })
     roleByFile.set(name, role)
   }
   return new Map([...byRole].map(([role, file]) => [role, {
-    file: file.name, labels: file.labels, rawSha256: hash(file.text), tokenSha256: hash(tokens(file.text, roleByFile)),
+    file: file.name, labels: file.labels, rawSha256: file.rawSha256, tokenSha256: hash(tokens(file.text, roleByFile)),
   }]))
 }
 const base = catalog(join(proof, "base/dist"))
