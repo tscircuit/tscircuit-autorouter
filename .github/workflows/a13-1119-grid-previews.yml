@@ -1,0 +1,55 @@
+# Render only the requested native A13 solver snapshots and review PNGs.
+name: Native A13 1119 grid before and after
+on:
+  push:
+    branches: [artifacts/a13-1119-grid-previews]
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: review
+      - uses: actions/checkout@v4
+        with:
+          ref: d32fbec8493db791ba9427a1147b3dbc038b9fc8
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ac94247148be819611347510f124f8a9f986dcca
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Run the unchanged real A13 repro on both source revisions
+        run: |
+          mkdir -p review/.github/artifacts
+          for variant in base head; do
+            (
+              cd "$variant"
+              bun install > install.private.log 2>&1
+              BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-a13-regional-repair-shorts.test.ts --timeout 9999999 > snapshot.private.log 2>&1
+              VARIANT="$variant" bun -e '
+                import {readFileSync,writeFileSync} from "node:fs";
+                import {Resvg} from "@resvg/resvg-js";
+                const svg=readFileSync("tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts.snap.svg","utf8");
+                const prefix="../review/.github/artifacts/a13-1119-"+process.env.VARIANT;
+                writeFileSync(prefix+".svg",svg);
+                writeFileSync(prefix+".png",new Resvg(svg,{fitTo:{mode:"width",value:950}}).render().asPng());
+                console.log("REPRO_RENDERED="+process.env.VARIANT);
+              '
+            )
+          done
+      - name: Commit only requested SVG and PNG review images
+        working-directory: review
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .github/artifacts/a13-1119-*.svg .github/artifacts/a13-1119-*.png
+          git commit -m "Render latest-main native A13 before and after grid filtering"
+          git push
