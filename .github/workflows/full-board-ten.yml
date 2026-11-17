@@ -1,37 +1,25 @@
-name: Published3209 full-board ten-case benchmark
+name: Published3209 native ICE terminal-layer witness
 
 on:
   push:
-    branches: [bench/full-board-ten-3209-20261117]
+    branches: [bench/icepi-terminal-layer-witness-3209]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+  replay:
+    name: Published ICE plane_escape witness
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
+    timeout-minutes: 30
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
-      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_EXPERIMENT: published
 
     steps:
-      - name: Checkout benchmark controller
+      - name: Checkout diagnostic controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -40,7 +28,7 @@ jobs:
             .github/workflows/full-board-ten.yml
             AGENTS.md
 
-      - name: Checkout immutable original circuits
+      - name: Checkout immutable original sources for runtime provenance
         uses: actions/checkout@v4
         with:
           repository: tscircuit/tscircuit-autorouter
@@ -49,7 +37,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: experiments/full-board-priority-analysis
 
-      - name: Checkout immutable spaced circuits
+      - name: Checkout immutable spaced sources for runtime provenance
         uses: actions/checkout@v4
         with:
           repository: ShiboSoftwareDev/core-ddr-benchmark
@@ -68,82 +56,48 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Prepare verified package runtime
+      - name: Prepare unchanged frozen package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
-        id: prepare
-        run: >-
-          bun experiments/full-board-ten/prepare-cases.ts
-          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced"
-          "$FULL_BOARD_ROOT/cases"
-          "$BOARD"
+      - name: Download the authenticated native phase source artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 44049457297
+          artifact-ids: 14313970220
+          github-token: ${{ github.token }}
+          path: .full-board-run/native-artifact
+          merge-multiple: true
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
+      - name: Verify authenticated input and unchanged published entry
+        run: >-
+          python3 experiments/full-board-ten/prepare-terminal-layer-witness.py
+          "$FULL_BOARD_ROOT"
+
+      - name: Observe only the native plane_escape phase
+        id: replay
         continue-on-error: true
         run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+          timeout --signal=KILL 960s
+          bun experiments/full-board-ten/run-terminal-layer-witness.ts
+          "$FULL_BOARD_ROOT/terminal-witness-runtime.json"
+          "$FULL_BOARD_ROOT/phase-results"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+      - name: Preserve bounded observations and runtime proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: terminal-witness-icepi-published-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/phase-results
+            .full-board-run/terminal-witness-runtime.json
             .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
-            experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/terminal-witness-plan.json
           if-no-files-found: warn
+          compression-level: 0
           retention-days: 7
 
-      - name: Require selected full circuits to be complete and clean
+      - name: Require a valid diagnostic observation
         if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true
+        run: test "${{ steps.replay.outcome }}" = success

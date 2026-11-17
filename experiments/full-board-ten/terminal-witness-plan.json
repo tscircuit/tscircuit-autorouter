@@ -1,0 +1,74 @@
+{
+  "scope": "Published-baseline-only native ICE original plane_escape witness; no production routing change, no full-board performance/physical gain claim",
+  "parentCommit": "683ca8adbea91f4a589ddf5d13aac05ade0dad2d",
+  "branch": "bench/icepi-terminal-layer-witness-3209",
+  "release": {
+    "main": "0.0.3209",
+    "core": "0.0.2400",
+    "eval": "0.0.1794",
+    "autorouter": "0.0.1117"
+  },
+  "nativeSource": {
+    "run": 44049457297,
+    "artifact": 14313970220,
+    "artifactDigest": "493bf221ecbb428def8918a4fea29e27bafb8ea15b1040574e5623f88fc174f1",
+    "inputSha256": "34006ec9507ce50917214bb22fd3fb1e97f44f92bc9a347468d30a943fa855a6"
+  },
+  "expectedFailure": "Route stitching did not reach the PCB terminal layers for \"source_net_0_mst8\"",
+  "nativeCoarseContract": {
+    "routeCount": 559,
+    "portCount": 130265,
+    "regionCount": 66397,
+    "MAX_ITERATIONS": 2000000,
+    "solved": true,
+    "failed": false,
+    "pendingRouteCount": 0,
+    "acceptedGreedyFinalRouteOnTimeout": true,
+    "greedyFinalRouteIter": 4,
+    "greedyFinalRouteRemainingRouteCount": 60
+  },
+  "constructor": {
+    "capacityDepth": "undefined",
+    "targetMinCapacity": "undefined",
+    "cacheProvider": null,
+    "effort": "undefined",
+    "captureSearchDebug": "absent"
+  },
+  "observerContract": [
+    "Each existing HD-stage factory invoked once and original parameter identity returned",
+    "Capture native raw and materialized HD, existing force-output and repaired-output parameter arrays before Multiple constructor",
+    "Capture target/root copper only and matching terminal nodes; no new getOutput calls",
+    "Capture selected terminal XYZ and PCB IDs, initial/final fragments, first/last merged points, per-step state and actual clearance query decisions",
+    "Original clearance method invoked exactly once per actual request; methods restored at end",
+    "Solver flags, failure guards, caches, input, budgets and package bytes unchanged"
+  ],
+  "limits": {
+    "captureMs": 900000,
+    "hardKillMs": 960000,
+    "packetLimitBytes": 8388608,
+    "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+    "bun": "1.4.3"
+  },
+  "checks": {
+    "bunParserBundle": "passed, 3 modules, no dependencies installed",
+    "pythonSyntax": "passed",
+    "diffWhitespace": "passed",
+    "observerIntegrity": "passed: factories[1,1,1], exact parameter identity, copied snapshots, clearance called once/results preserved, restored methods",
+    "unchangedRuntimeFiles": [
+      "bootstrap.py",
+      "release.json",
+      "runtime/package.json",
+      "runtime/bun.lock",
+      "autorouter-dependencies/package.json",
+      "autorouter-dependencies/bun.lock",
+      "source-provenance.json",
+      "createCoarseRoutingDiagnostics.ts"
+    ]
+  },
+  "changedFileSha256": {
+    ".github/workflows/full-board-ten.yml": "c0b7c2956be3076e49f98db01febd5887eac63c044f0485eb39954b0f6b1f59b",
+    "experiments/full-board-ten/createTerminalLayerObserver.ts": "35fb5933889ae8e99dbcc8855190e4ee048f0958765ba2d27647b6541294bcd3",
+    "experiments/full-board-ten/run-terminal-layer-witness.ts": "a8a32614c88f57a221f03e5758b73af9610819e84164db8f08f0f55073dcbd8d",
+    "experiments/full-board-ten/prepare-terminal-layer-witness.py": "3480c0defa2d08dacecb6be7f1f75478c49d43f58843c9812b11fb47090f3ad4"
+  }
+}
