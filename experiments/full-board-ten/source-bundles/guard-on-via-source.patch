@@ -1,0 +1,20 @@
+--- a/lib/prepared/PreparedPortPointRoutingSolver.ts
++++ b/lib/prepared/PreparedPortPointRoutingSolver.ts
+@@ -27 +26,0 @@
+-    super.onOutOfCandidates()
+@@ -30,0 +30 @@
++      return
+@@ -31,0 +32 @@
++    super.onOutOfCandidates()
+--- a/lib/selective-rerip-tiny-hyper-graph-solver.ts
++++ b/lib/selective-rerip-tiny-hyper-graph-solver.ts
+@@ -972 +971,0 @@
+-    super.onOutOfCandidates()
+@@ -974 +973 @@
+-    // Repeated rearrangements indicate that more of the same search is unhelpful.
++    // Let it route after the last allowed rerip before refusing another one.
+@@ -978 +977,3 @@
+-    }
++      return
++    }
++    super.onOutOfCandidates()

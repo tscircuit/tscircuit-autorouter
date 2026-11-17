@@ -4,14 +4,15 @@ import { resolve, relative, dirname, extname, join } from "node:path"
 import { createHash } from "node:crypto"
 import { gzipSync } from "node:zlib"
 
-const plan = "/tmp/full-board-ten-20261116/via-reservation-plan-3207"
+const frozenPlan = "/tmp/full-board-ten-20261116/via-reservation-plan-3207"
+const plan = "/tmp/full-board-ten-20261116/final-rerip-quota-plan-3207"
 const variant = process.argv[2]
-if (!["source-baseline", "via-reservation"].includes(variant)) throw new Error("Expected source-baseline or via-reservation")
-const baseline = join(plan, "source-baseline")
+if (!["source-baseline", "guard-only", "via-plus-guard"].includes(variant)) throw new Error("Expected source-baseline, guard-only or via-plus-guard")
+const baseline = join(frozenPlan, "source-baseline")
 const arRoot = join(baseline, "autorouter")
 const tinyRoot = join(baseline, "tiny")
 const depsRoot = "/tmp/ddr-refresh-20261115-3191/source-dependencies"
-const sourceMap = JSON.parse(readFileSync(join(plan, "autorouter1111-source-map.json"), "utf8"))
+const sourceMap = JSON.parse(readFileSync(join(frozenPlan, "autorouter1111-source-map.json"), "utf8"))
 const publishedSources = new Map(sourceMap.sources.map((path, index) => [path, sourceMap.sourcesContent[index]]))
 const dependencyOverridePaths = [
   "node_modules/@tscircuit/repair04/lib/getFixedObstacleViolations.ts",
@@ -26,8 +27,8 @@ const overrides = new Map(dependencyOverridePaths.map(path => {
   return [realpathSync(join(depsRoot, path)), { contents, source: `npm1111/${path}`, role: "frozen dependency" }]
 }))
 const candidateSourcePaths = []
-if (variant === "via-reservation") {
-  const paths = JSON.parse(readFileSync(join(plan, "candidate-source-paths.json"), "utf8"))
+if (variant !== "source-baseline") {
+  const paths = JSON.parse(readFileSync(join(plan, `${variant}-source-paths.json`), "utf8"))
   for (const { repository, path, worktree, expectedSha256 } of paths) {
     const sourcePath = join(worktree, path)
     const baselinePath = join(repository === "autorouter" ? arRoot : tinyRoot, path)
@@ -90,7 +91,7 @@ const proof = {
   autorouterGitHead: "89977557a0082737afc275e69d74efb2d984de5b",
   tinyGitHead: "8e5807dd7e2fdcc82c528d5b59c995ba04d5c916",
   publishedEntrySha256: "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
-  publishedSourceMapSha256: sha(readFileSync(join(plan, "autorouter1111-source-map.json"))),
+  publishedSourceMapSha256: sha(readFileSync(join(frozenPlan, "autorouter1111-source-map.json"))),
   esbuildVersion: JSON.parse(readFileSync(join(depsRoot, "node_modules/esbuild/package.json"), "utf8")).version,
   entrySha256: sha(entryBytes), entryBytes: entryBytes.length,
   compressedSha256: sha(compressed), compressedBytes: compressed.length,

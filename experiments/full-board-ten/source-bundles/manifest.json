@@ -1,5 +1,5 @@
 {
-  "purpose": "Diagnostic-only exact source baseline and candidate entries; never production fixtures",
+  "purpose": "Diagnostic-only independent quota guard and combined causal probe; no production combination or full-board claim",
   "mainVersion": "0.0.3207",
   "originalAutorouterSHA256": "f5b61e425777bf4bceae861464583b8aa32db01439ce99c817b832adb39a5716",
   "autorouterGitHead": "89977557a0082737afc275e69d74efb2d984de5b",
@@ -18,7 +18,7 @@
       "object-hash"
     ],
     "qualification": "Source baseline must reproduce published native coarse roles, complete HD queue, accepted prefix, failure and private candidate geometry before candidate conclusions.",
-    "builderSha256": "b4b31d1fb11a142d2c5a88a8c62b96e6e4a29c455d0e114c484957cb0b4f4118"
+    "builderSha256": "7ecbc11528228c5b48113dec981c214f5ae43febdf6ad44e7c19c33b3d67f354"
   },
   "variants": {
     "source-baseline": {
@@ -101,6 +101,103 @@
           "sha256": "2ef33d771022da99a973a2e472510a95948c04c5947f9bd093ae86015e207118"
         }
       ]
+    },
+    "guard-only": {
+      "filename": "guard-only.js.gz",
+      "entrySha256": "f2e25a50c6bab9b6c44497bbca9a9672e162172e357537a34359d2842b9a8731",
+      "entryBytes": 5490958,
+      "compressedSha256": "af8dae4a99844a269f7df8f1a810a9334c0830c6f7fe0ef472729d6e273257a4",
+      "compressedBytes": 993731,
+      "sourceInputCount": 933,
+      "sourceInputHash": "e2dd3de0b71bb02cfb46501f8e6cf9d7e4013969496f2e4b0e4d3e548c38c27a",
+      "candidateSourceFiles": [
+        {
+          "repository": "tiny",
+          "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "sha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "sha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+        }
+      ]
+    },
+    "via-plus-guard": {
+      "filename": "via-plus-guard.js.gz",
+      "entrySha256": "d469997c916a46b051ef13974291bf5ae62ca41e52d47c6091a9f2ebd5a106f5",
+      "entryBytes": 5502040,
+      "compressedSha256": "ce889ce3806eb36b4c5a01008e725a66d77625f76bb76098d2e2a64334890456",
+      "compressedBytes": 995757,
+      "sourceInputCount": 934,
+      "sourceInputHash": "744fc58f48f73c1ba5098c8dd17f0a77679798ffd5005cc0003d867b8953ac51",
+      "candidateSourceFiles": [
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/getPreloadedTraceVias.ts",
+          "sha256": "c6797151653ccbd667e94363317d6c9a79a144dd5d9080c877062fa3ccae67d9"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts",
+          "sha256": "b1676a0255df716f196125b79f81029c74fb114d404187cc26b0a4de8fe4a4ed"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+          "sha256": "016e7223deb054bcc9564dfed19add999ab4833c39ea446fb572651433d741fa"
+        },
+        {
+          "repository": "autorouter",
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+          "sha256": "7098bfa79a23c4845bb91240edd82a191480ddd494e1fee5e0f4289ae9f4e637"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/compat/loadSerializedHyperGraph.ts",
+          "sha256": "1d858e68a927318e12c819bf4e5c85972ba0e458afc03e1c6b3e79bb2a6c0fff"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/core.ts",
+          "sha256": "a20d2dbbaa0a872aacc7b2a7e0e9b4a92ef360cd0c865bbabfe62756d3cdfc04"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/prepared/DenseRoutingWorkspace.ts",
+          "sha256": "ef96880a2905d42ecff8f5c0c902f5549948d776591a0d25b26d17ca605c9cd9"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
+          "sha256": "3e5f070d890ead983a6b810a998344707ab627d41fd8f882757396d9c42c7055"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/section-solver/index.ts",
+          "sha256": "c825819d84e96648f46ebf347c0d56d758212d0c48be0fe60f0f9be5f48ea7c1"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
+          "sha256": "19a9222a51252adbb901aca7171a8fc809703b24d3ac91383f2d84adc3abf4d3"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip/relaxedBlockerSearchTypes.ts",
+          "sha256": "2ef33d771022da99a973a2e472510a95948c04c5947f9bd093ae86015e207118"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "sha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "repository": "tiny",
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "sha256": "402cb960c44496d8dbdfa8ac08d447f44e022984e28e859f8ba4dcad1e2d5c6c"
+        }
+      ]
     }
   },
   "frozenDependencyOverrides": [
@@ -134,6 +231,22 @@
       "filename": "tiny-source.patch",
       "sha256": "930df6d811cd24e420e5bed8e466e330ffe5005aa262a78a654894f82463a40f",
       "bytes": 13872,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    },
+    "guard-only": {
+      "filename": "guard-only-source.patch",
+      "sha256": "3f4dbcb80f679737144f5fa898344ccc8fa8c9d5f784d5d036275a56bafd2197",
+      "bytes": 1475,
+      "applyOptions": [
+        "--unidiff-zero"
+      ]
+    },
+    "guard-on-via": {
+      "filename": "guard-on-via-source.patch",
+      "sha256": "e6477b99c639431ca478b6cf8f0f83aa156070736f49af2fc22b2c75381b77d7",
+      "bytes": 641,
       "applyOptions": [
         "--unidiff-zero"
       ]
@@ -195,5 +308,65 @@
       "beforeSha256": "ec052f55f7ae0502f0e9ee27b3e2d56b2e1da40cadb77bea97d1b1d3ec73c2d7",
       "afterSha256": "19a9222a51252adbb901aca7171a8fc809703b24d3ac91383f2d84adc3abf4d3"
     }
-  ]
+  ],
+  "reusedControls": {
+    "source-baseline": {
+      "runId": 43984332779,
+      "entrySha256": "7f5e807af3cbff822e3e0ba398879e5d16786540f345db67f25160d017649a59",
+      "qualification": "Whole HD queue, selected Tiny state, every ledger event, failure, target geometry and first private candidate exactly match frozen published replay"
+    },
+    "via-reservation": {
+      "runId": 43986985997,
+      "entrySha256": "048ca5a403f8cec8271b90576f8fd7b48688795ea7b9128c1dc37c7f953a28fc",
+      "qualification": "Unchanged 2107539-iteration coarse failure; authenticated all recovery states"
+    }
+  },
+  "variantPatchOrder": {
+    "source-baseline": [],
+    "via-reservation": [
+      "autorouter",
+      "tiny"
+    ],
+    "guard-only": [
+      "guard-only"
+    ],
+    "via-plus-guard": [
+      "autorouter",
+      "tiny",
+      "guard-on-via"
+    ]
+  },
+  "guardScope": "Same two onOutOfCandidates quota checks moved before super; same rerip quota, iteration caps, effort and constructors. guard-only contains no AR adapter or physical via reservation changes.",
+  "runtimeInputChangesByVariant": {
+    "guard-only": {
+      "relativeTo": "source-baseline",
+      "changes": [
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "beforeSha256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79",
+          "afterSha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "beforeSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
+          "afterSha256": "d0123eed8170d492424e4f2e02674d6b3d45fd4cffb655434f970bf7fbaa1cd9"
+        }
+      ]
+    },
+    "via-plus-guard": {
+      "relativeTo": "via-reservation",
+      "changes": [
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "beforeSha256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79",
+          "afterSha256": "60a3dc4859010ff44a384653e687a3c180e950424e307277eefc2b94faa456a2"
+        },
+        {
+          "path": "/tmp/full-board-ten-20261116/via-reservation-plan-3207/source-baseline/tiny/lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "beforeSha256": "2cb3e74090e62072788b49d9ae00b994f9ed6be1e3dd8bfbf89bd30fb6dbcbd1",
+          "afterSha256": "402cb960c44496d8dbdfa8ac08d447f44e022984e28e859f8ba4dcad1e2d5c6c"
+        }
+      ]
+    }
+  }
 }

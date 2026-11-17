@@ -1,8 +1,8 @@
-name: Frozen3207 unchanged-candidate coarse failure witness
+name: Frozen3207 final rerip quota diagnostic
 
 on:
   push:
-    branches: [bench/full-board-via-reservation-3207]
+    branches: [bench/full-board-final-rerip-quota-3207]
 
 permissions:
   contents: read
@@ -15,9 +15,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 2
       matrix:
-        variant: [via-reservation]
+        variant: [guard-only, via-plus-guard]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache

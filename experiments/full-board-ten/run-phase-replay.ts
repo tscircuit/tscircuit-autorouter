@@ -181,7 +181,8 @@ const result = {
   diagnosticObservationValid: observation.observationErrors.length === 0 && viaObserver.getReport().observationErrors.length === 0 &&
     coarseReport.observationErrors.length === 0 && Boolean(numericSnapshotProof) &&
     Boolean(viaObserver.getReport().originalSerialized) && Boolean(viaObserver.getReport().firstNumeric) &&
-    (runtime.variant === "via-reservation" ? nativeReservationActivated : (Boolean(observation.queue) && nativeTinyRolesReproduced)),
+    (["via-reservation", "via-plus-guard"].includes(runtime.variant) ? nativeReservationActivated :
+      (viaObservation.originalSerialized.rawViaCount === 0 && viaObservation.firstNumeric.reservationsPresent === false)),
   interpretation: "Phase diagnostic only. Compare baseline constructor, target Tiny state and failure with the full native run before using candidate node history. No full-board connectivity gain is measured here.",
 }
 atomicJson("result.json", result)

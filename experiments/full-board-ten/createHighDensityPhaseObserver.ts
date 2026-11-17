@@ -7,7 +7,7 @@ type AliasHash = string
 type Restore = () => void
 type ObserverOptions = { onSnapshot?: (report: RuntimeObject) => void }
 
-const TARGET_NODE_IDS = ["topology_merge_17108", "new-cmn_8-79__sub_3_0"]
+const TARGET_NODE_IDS = ["topology_merge_17108", "new-cmn_8-79__sub_3_0", "topology_merge_17103"]
 const MAX_REPORT_BYTES = 1024 * 1024
 
 function summarize(serializable: unknown): RuntimeObject {
@@ -84,7 +84,7 @@ function captureTinyContext(pipeline: RuntimeObject): RuntimeObject {
       width: topology.regionWidth?.[regionId], height: topology.regionHeight?.[regionId], availableZMask: topology.regionAvailableZMask?.[regionId] },
     regionMetadata: selectFields(topology.regionMetadata[regionId], ["capacityMeshNodeId", "serializedRegionId"]),
     segments: segments.map(([routeId, fromPortId, toPortId]: number[]) => ({
-      routeId, fromPortId, toPortId, numericNet: problem.routeNet[routeId], routeIsFixed: problem.routeIsFixed[routeId],
+      routeId, fromPortId, toPortId, numericNet: problem.routeNet[routeId], routeIsFixed: problem.routeIsFixed?.[routeId] ?? 0,
       fromZ: topology.portZ[fromPortId], toZ: topology.portZ[toPortId],
       metadata: selectFields(problem.routeMetadata[routeId], ["connectionId", "mutuallyConnectedNetworkId", "preloadedTraceSection"]),
       identity: canonicalIdentity(pipeline.connMap, { connectionName: problem.routeMetadata[routeId].connectionId,

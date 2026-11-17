@@ -7,8 +7,8 @@ import sys
 
 root = Path(sys.argv[1]).resolve()
 variant = sys.argv[2]
-if variant not in {"source-baseline", "via-reservation"}:
-    raise ValueError("Expected source-baseline or via-reservation")
+if variant not in {"source-baseline", "via-reservation", "guard-only", "via-plus-guard"}:
+    raise ValueError("Unknown frozen source variant")
 controller = Path(__file__).resolve().parent
 manifest = json.loads((root / "runtime-manifest.json").read_text())
 release = json.loads((controller / "release.json").read_text())
