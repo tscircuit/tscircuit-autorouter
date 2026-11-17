@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-1.45,0 -1,0" data-type="line" data-label="" points="201.7016317016317,321.2237762237762 238.41491841491842,321.2237762237762" fill="none" stroke="#db2777" stroke-linejoin="round" stroke-width="12.237762237762237" stroke-dasharray="4 3"/></g><g><polyline data-points="1,0 1.45,0" data-type="line" data-label="" points="401.5850815850816,321.2237762237762 438.2983682983683,321.2237762237762" fill="none" stroke="#db2777" stroke-linejoin="round" stroke-width="12.237762237762237" stroke-dasharray="4 3"/></g><g><rect data-type="rect" data-label="" data-x="0" data-y="0" x="75.24475524475523" y="158.05361305361305" width="489.51048951048955" height="326.3403263403263" fill="rgba(77,124,15,0.10)" stroke="#4d7c0f" stroke-width="0.012257142857142857"/></g><circle data-type="circle" data-label="" data-x="-1" data-y="0" cx="238.41491841491842" cy="321.2237762237762" r="12.237762237762237" fill="#2563eb" stroke="#1e40af" stroke-width="0.012257142857142857"/><circle data-type="circle" data-label="" data-x="1" data-y="0" cx="401.5850815850816" cy="321.2237762237762" r="12.237762237762237" fill="#2563eb" stroke="#1e40af" stroke-width="0.012257142857142857"/><circle data-type="circle" data-label="" data-x="-1.45" data-y="0" cx="201.7016317016317" cy="321.2237762237762" r="12.237762237762237" fill="#fed7aa" stroke="#c2410c" stroke-width="0.012257142857142857"/><circle data-type="circle" data-label="" data-x="1.45" data-y="0" cx="438.2983682983683" cy="321.2237762237762" r="12.237762237762237" fill="#fed7aa" stroke="#c2410c" stroke-width="0.012257142857142857"/><text data-type="text" data-label="Existing vias already reach the planned ground plane" data-x="0" data-y="3.15" x="320" y="64.23076923076923" fill="black" font-size="17.94871794871795" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Existing vias already reach the planned ground plane</text><text data-type="text" data-label="ACTUAL: 2 new via plans; 2 extra trace requests" data-x="0" data-y="2.72" x="320" y="99.3123543123543" fill="black" font-size="15.5011655011655" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">ACTUAL: 2 new via plans; 2 extra trace requests</text><text data-type="text" data-label="EXPECTED: reuse the two existing vias; no new routing" data-x="0" data-y="2.36" x="320" y="128.6829836829837" fill="black" font-size="13.86946386946387" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">EXPECTED: reuse the two existing vias; no new routing</text><text data-type="text" data-label="Green: planned inner1 GND plane (XY projection)" data-x="0" data-y="1.65" x="320" y="186.6083916083916" fill="black" font-size="13.053613053613054" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Green: planned inner1 GND plane (XY projection)</text><text data-type="text" data-label="A: existing via" data-x="-1" data-y="-0.55" x="238.41491841491842" y="366.0955710955711" fill="black" font-size="13.86946386946387" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">A: existing via</text><text data-type="text" data-label="B: existing via" data-x="1" data-y="-0.55" x="401.5850815850816" y="366.0955710955711" fill="black" font-size="13.86946386946387" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">B: existing via</text><text data-type="text" data-label="A and B are on inner3; both barrels span all six layers" data-x="0" data-y="-1.15" x="320" y="415.04662004662003" fill="black" font-size="12.237762237762237" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">A and B are on inner3; both barrels span all six layers</text><text data-type="text" data-label="Already possible: A -&gt; via -&gt; inner1 GND -&gt; via -&gt; B" data-x="0" data-y="-1.55" x="320" y="447.68065268065266" fill="black" font-size="12.237762237762237" font-family="sans-serif" text-anchor="middle" dominant-baseline="central"><![CDATA[Already possible: A -> via -> inner1 GND -> via -> B]]></text><text data-type="text" data-label="Blue = existing via   |   Orange = requested new via" data-x="0" data-y="-2.4" x="320" y="517.027972027972" fill="black" font-size="13.053613053613054" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Blue = existing via   |   Orange = requested new via</text><text data-type="text" data-label="Pink dashes = requested connections, not routed copper" data-x="0" data-y="-2.78" x="320" y="548.030303030303" fill="black" font-size="13.053613053613054" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Pink dashes = requested connections, not routed copper</text><text data-type="text" data-label="Native plane-access and point-pair stages only; no saved routing" data-x="0" data-y="-3.16" x="320" y="579.032634032634" fill="black" font-size="11.421911421911423" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Native plane-access and point-pair stages only; no saved routing</text><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":81.58508158508158,"c":0,"e":320,"b":0,"d":-81.58508158508158,"f":321.2237762237762};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
