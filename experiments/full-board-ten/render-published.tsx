@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createBusLifecycleDiagnostics } from "./createBusLifecycleDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -59,7 +60,7 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// The reviewed manifest selects the source-qualified Core copy; no solver injection.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
@@ -80,6 +81,8 @@ function readablePackage(folder: string, name: string): boolean {
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
 const { RootCircuit, SOLVERS } = await import("tscircuit")
+const { SOLVERS: CoreSolvers } = await import("@tscircuit/core")
+if (SOLVERS.BusLanesPipelineSolver !== CoreSolvers.BusLanesPipelineSolver) throw new Error("Main package does not use the selected Core Bus constructor")
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
 const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardModule)).href)
@@ -97,6 +100,14 @@ const atomic = (name: string, value: Uint8Array | string): void => {
   writeFileSync(join(output, `${name}.tmp`), value)
   renameSync(join(output, `${name}.tmp`), join(output, name))
 }
+let busObserver: ReturnType<typeof createBusLifecycleDiagnostics> | undefined
+let observedBusPhase: string | undefined
+const finishBusDiagnostics = (): void => {
+  if (!busObserver) return
+  atomic(`bus-${observedBusPhase}-lifecycle.json`, JSON.stringify(busObserver.finish(), null, 2))
+  busObserver = undefined
+  observedBusPhase = undefined
+}
 let lastCircuitSave = -Infinity
 const save = (withCircuit = false): void => {
   progress.elapsedMs = performance.now() - started
@@ -108,6 +119,7 @@ const save = (withCircuit = false): void => {
     lastCircuitSave = performance.now()
   }
   atomic("progress.json", JSON.stringify(progress, null, 2))
+  if (busObserver) atomic(`bus-${observedBusPhase}-lifecycle.json`, JSON.stringify(busObserver.snapshot(), null, 2))
 }
 const running = (): any => progress.phases.findLast((phase: any) => phase.status === "running")
 const diagnosticTargets: Record<string, string> = {
@@ -135,6 +147,13 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
         progress.initialCopperCounts = Object.fromEntries(["pcb_trace", "pcb_via", "pcb_copper_pour"].map(type => [type, json.filter(item => item.type === type).length]))
       }
       const inputBytes = JSON.stringify(event.simpleRouteJson)
+      if (task.id === "butterstick" && task.cohort === "spaced" && ["byte0", "byte1"].includes(name)) {
+        if (busObserver) throw Error("Previous Bus phase observer was not restored")
+        if (name === "byte0" && sha(inputBytes) !== "78871ac62e4fdc8f1e7ae7f7aed8cfd53e8a8336a7681371d7f9e9d3285380b6") throw Error("Authored first-byte input changed")
+        observedBusPhase = name
+        busObserver = createBusLifecycleDiagnostics({ pipelineClass: SOLVERS.BusLanesPipelineSolver, laneClass: SOLVERS.BusLanesSolver, inputSha256: sha(inputBytes), phase: name })
+        progress.busLifecycleInstrumentation = { enabled: true, phases: ["byte0", "byte1"], originalMethodsOnce: true, selectedCoreConstructorIdentity: true }
+      }
       const index = progress.phases.length + 1
       atomic(`phase-${index}-input.srj.json.gz`, gzipSync(inputBytes, { level: 1 }))
       progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason })
@@ -143,6 +162,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs }
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))
       if (eventName === "autorouting:error") progress.errors.push(event.error?.message ?? String(event.error))
+      if (name === observedBusPhase) finishBusDiagnostics()
     }
     save(true)
     console.log(JSON.stringify({ event: eventName, name, elapsedMs: progress.elapsedMs }))
@@ -181,6 +201,7 @@ const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
   finishCoarseDiagnostics()
+  finishBusDiagnostics()
   save(true)
   process.exit(124)
 }, 900000)
@@ -198,6 +219,7 @@ try {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
   finishCoarseDiagnostics()
+  finishBusDiagnostics()
   save(true)
   try {
     atomic("pcb.svg.gz", gzipSync(convertCircuitJsonToPcbSvg(circuit.getCircuitJson(), { width: 1600, height: 1100, backgroundColor: "white", shouldDrawRatsNest: false, shouldDrawErrors: false, showPcbGroups: false }), { level: 1 }))

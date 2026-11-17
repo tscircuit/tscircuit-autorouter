@@ -1,0 +1,129 @@
+{
+  "frozen": true,
+  "case": {
+    "board": "butterstick",
+    "cohort": "spaced"
+  },
+  "source": {
+    "baseCommit": "0f1c5ca41a1dccad289662e68228ef7e58afa071",
+    "productionPatchSha256": "2b57f139016332c11549c8ee62e1de8041ace45fd8db9b33b5d08714ac96a549",
+    "files": {
+      "lib/bus-lanes-pipeline-solver.ts": {
+        "beforeSha256": "91d56c9027864cb896d571ea519d2beb212b496882af455da513d3f6e1a82ad6",
+        "afterSha256": "8cd7190a0c3d943c82296344b91fd1f114dfb4356070f7d08ba64cb5c6c4ad46"
+      },
+      "lib/route-generated-signal-sites.ts": {
+        "beforeSha256": "438d7c85d7e5c8ae8df9f0a1ff58e54eef918fd3ccb6e9a8ec310eed4824b69e",
+        "afterSha256": "a287ac17ff5a95893a509b8c47cd41afc200ab91685819455758ef5a6cc0a8ff"
+      }
+    },
+    "testFile": "tests/generated-site-search-exhaustion.test.ts",
+    "testSha256": "71d374af1b9740ccfd0481d79d1766cc5197a1b1f970231889ee0a9b6292e813"
+  },
+  "baselineArtifact": {
+    "id": 14372554326,
+    "node_id": "MDg6QXJ0aWZhY3QxNDM3MjU1NDMyNg==",
+    "name": "full-board-butterstick-published-spaced-1",
+    "size_in_bytes": 6816996,
+    "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372554326",
+    "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372554326/zip",
+    "expired": false,
+    "digest": "sha256:8196f4ef8b5b7b0612855163d10e1e69126ca1b7f3be011389251964f960cb82",
+    "created_at": "2026-11-17T21:50:06Z",
+    "updated_at": "2026-11-17T21:50:06Z",
+    "expires_at": "2026-11-24T21:50:05Z",
+    "workflow_run": {
+      "id": 44179934754,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "bench/full-board-ten-3230-20261117",
+      "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
+    }
+  },
+  "baselineFiles": [
+    {
+      "name": "result.json",
+      "bytes": 3025,
+      "sha256": "ead944393de3a38f363cc4c7a2e4f5227de29a518b3775eac6b2b51b3e8c133c"
+    },
+    {
+      "name": "assessment.json",
+      "bytes": 7539,
+      "sha256": "1e99bd6f2177bbea659ac894a4fbecbd9b1e2eaffc82cd367cda35047e0c57c2"
+    },
+    {
+      "name": "progress.json",
+      "bytes": 7851,
+      "sha256": "0a7d502a99e7cb52ddfedbcd34527984779a986acd59c6ce196cb1ee1b545870"
+    },
+    {
+      "name": "process.json",
+      "bytes": 346,
+      "sha256": "eb5285742448098705253a7cd33a0a7d357d5bf5ff3f546662709fa6249ed6d7"
+    },
+    {
+      "name": "worker.log",
+      "bytes": 466,
+      "sha256": "9e1c236c61cb96e02e27738224319718abfa713da97106e1092c0e1b14a2331d"
+    },
+    {
+      "name": "audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "circuit.json.gz",
+      "bytes": 290456,
+      "sha256": "4e265d18f376a23889e538c52d7ea11513e89915ab4baffe5502532f99a3becd"
+    },
+    {
+      "name": "findings.json.gz",
+      "bytes": 35413,
+      "sha256": "0a8a1a48554e27a7e664230087c1625f93f1ad2fb04cda007c417edb806efee5"
+    },
+    {
+      "name": "phase-1-input.srj.json.gz",
+      "bytes": 2059085,
+      "sha256": "425229028203e91a7854a4e10a1e7e3040163e23592b6bf68c12c46efcc5737d"
+    },
+    {
+      "name": "phase-1-output.srj.json.gz",
+      "bytes": 2062333,
+      "sha256": "c9b8917a3edcc2b2417734555c530c53daf7d9e6ab4f8894f2e26308f5eb722e"
+    },
+    {
+      "name": "phase-2-input.srj.json.gz",
+      "bytes": 2062394,
+      "sha256": "f443b05bce41c591a18a9e98407bb372f254e98d22cb9824c6e0f438ac1af3c5"
+    },
+    {
+      "name": "unrouted.circuit.json.gz",
+      "bytes": 286560,
+      "sha256": "a73de596afb43108115c83d10d7aaccca0af4b69bb570d48f7381f71a5876096"
+    }
+  ],
+  "expectedSourceMappingSha256": "4954defabf2d926904e5c62bd1b0af81bcecf3c6c061bb70ff031fbb4c89f436",
+  "expectedCandidateCoreSha256": "1f9a849a0eb3a853906c10df3200598df0f94db5a3c62d12cee40b207f6aac76",
+  "unchangedAutorouterSha256": "4de1a991d2b0041948fd71d389d5480e6b4a918cae290bc4ee065368606352c7",
+  "limitsSeconds": [
+    900,
+    960,
+    180
+  ],
+  "tools": [
+    {
+      "name": "typescript",
+      "version": "5.9.3",
+      "tarball": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="
+    },
+    {
+      "name": "@biomejs/cli-linux-arm64",
+      "version": "2.5.15",
+      "tarball": "https://registry.npmjs.org/@biomejs/cli-linux-arm64/-/cli-linux-arm64-2.5.15.tgz",
+      "integrity": "sha512-XaG7P7eeSLYETD3K9grfB0mQmpLQZjygdbsxekWBJAg4am79fGAtRpfRyNnTvXB2fZFNnJZG3nXm7HBat0+VUw=="
+    }
+  ],
+  "acceptance": "All 16 native DDR names physically connected; byte1 completed; preserve candidate accepted copper through later phases and final materialization; no new shared physical findings or width warnings; exact authored source, unrouted circuit, phase1 input, and budgets; unchanged runtime outside three Bus declarations.",
+  "broaderChecksAfterGain": "All 10 DDR circuits; final revision pinned base/head ./benchmark.sh and 11 fresh AM3352 samples on Blacksmith with 3600 seconds per sample; no saved-output substitution."
+}

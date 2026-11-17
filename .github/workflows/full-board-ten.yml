@@ -1,34 +1,25 @@
-name: Published3230 full-board ten-case benchmark
+name: Bus repeat-exhaustion ButterStick completion screen
 
 on:
   push:
-    branches: [bench/full-board-ten-3230-20261117]
+    branches: [bench/bus-repeat-exhaustion-3230]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    name: ButterStick spaced completion screen
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        include:
-          - { board: h616, experiment: published, cohorts: "original,spaced" }
-          - { board: butterstick, experiment: published, cohorts: "original,spaced" }
-          - { board: glider, experiment: published, cohorts: "original,spaced" }
-          - { board: imx6, experiment: published, cohorts: "original,spaced" }
-          - { board: icepi, experiment: published, cohorts: "original,spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
-      BOARD: ${{ matrix.board }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
-      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      BOARD: butterstick
+      FULL_BOARD_COHORTS: spaced
+      FULL_BOARD_EXPERIMENT: published
 
     steps:
       - name: Checkout benchmark controller
@@ -63,16 +54,29 @@ jobs:
             licenses
             provenance
 
+      - name: Checkout exact published Bus source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: 0f1c5ca41a1dccad289662e68228ef7e58afa071
+          path: .full-board-run/bus-source
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /lib/bus-lanes-pipeline-solver.ts
+            /lib/route-generated-signal-sites.ts
+            /package.json
+            /biome.json
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
 
-      - name: Prepare verified package runtime
+      - name: Prepare verified published package runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare authentic paired cases
-        id: prepare
+      - name: Prepare authentic spaced case and neutral assessor
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
           "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
@@ -80,70 +84,65 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: matrix.experiment == 'published'
+      - name: Check exact formatter, source equivalence, and focused controls
+        run: >-
+          python3 experiments/full-board-ten/prepare-bus-repeat-source.py
+          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/bus-source"
+
+      - name: Install source-qualified Bus declarations in selected Core
+        id: install
+        run: >-
+          python3 experiments/full-board-ten/bus-repeat-runtime.py
+          install "$FULL_BOARD_ROOT" butterstick spaced
+
+      - name: Run complete native ButterStick circuit and neutral assessment
+        id: native
         continue-on-error: true
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+          "$FULL_BOARD_ROOT/cases/butterstick-spaced.json"
+          "$FULL_BOARD_ROOT/results/butterstick/spaced"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ always() && matrix.experiment == 'published' }}
+      - name: Verify original dependency graph and assessment restoration
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && steps.native.outcome != 'skipped' }}
+        run: python3 experiments/full-board-ten/bus-repeat-runtime.py verify "$FULL_BOARD_ROOT"
+
+      - name: Require native completion gain and physical validity
+        id: qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/verify-bus-repeat-candidate.py "$FULL_BOARD_ROOT"
+
+      - name: Preserve native circuit, accepted phases, and diagnostic evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
+          name: bus-repeat-butterstick-spaced-${{ github.run_attempt }}
+          path: .full-board-run/results/butterstick/spaced
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
-
-      - name: Preserve spaced geometry and diagnostics
+      - name: Preserve source, runtime, and qualification proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 7
-
-      - name: Publish compact result notices and summary
-        id: report
-        if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
-
-      - name: Preserve small reports and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: bus-repeat-qualification-${{ github.run_attempt }}
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/bus-repeat-*.json
+            .full-board-run/bus-repeat-source/*.json
+            .full-board-run/bus-repeat-source/*.log
+            .full-board-run/bus-repeat-source/*.test.ts
             .full-board-run/runtime-manifest.json
+            .full-board-run/cases/butterstick-spaced.json
             .full-board-run/cases/assessment-helper-proof.json
+            experiments/full-board-ten/bus-repeat-plan.json
+            experiments/full-board-ten/bus-repeat-production.patch
+            experiments/full-board-ten/bus-repeat-source-test.ts
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/harness-provenance.json
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

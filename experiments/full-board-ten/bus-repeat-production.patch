@@ -1,0 +1,86 @@
+diff --git a/lib/bus-lanes-pipeline-solver.ts b/lib/bus-lanes-pipeline-solver.ts
+index 2dedc9c..d2a0caa 100644
+--- a/lib/bus-lanes-pipeline-solver.ts
++++ b/lib/bus-lanes-pipeline-solver.ts
+@@ -423,6 +423,7 @@ export class BusLanesPipelineSolver extends BaseSolver {
+   private terminalLayers = new Map<string, string[]>()
+   private hasNativeCarrierAlternatives = false
+   private canNegotiateGeneratedSites = false
++  private hasExhaustedGeneratedSites = false
+   private carrierStrategy:
+     | { name: "preferred"; startedAtIteration: 0 }
+     | {
+@@ -1452,12 +1453,21 @@ export class BusLanesPipelineSolver extends BaseSolver {
+         )
+       }
+       this.child!.step()
+-      if (this.child!.failed && this.canNegotiateGeneratedSites) {
++      if (
++        this.child!.failed &&
++        this.canNegotiateGeneratedSites &&
++        !this.hasExhaustedGeneratedSites
++      ) {
+         this.canNegotiateGeneratedSites = false
+         this.surfaceFinishing = routeGeneratedSignalSites({
+           input: this.routingInput,
+           options: this.childOptions(),
+           maxSteps: Math.max(1, this.MAX_ITERATIONS - this.iterations),
++          // Site negotiation already considers every layer, independently of
++          // this attempt's provisional dogbone allocation.
++          onSiteSearchExhausted: () => {
++            this.hasExhaustedGeneratedSites = true
++          },
+         })
+         return
+       }
+diff --git a/lib/route-generated-signal-sites.ts b/lib/route-generated-signal-sites.ts
+index 607fbff..b6ecd1e 100644
+--- a/lib/route-generated-signal-sites.ts
++++ b/lib/route-generated-signal-sites.ts
+@@ -12,6 +12,7 @@ interface GeneratedSignalSitesRequest {
+   input: SimpleRouteJson
+   options: SolverOptions
+   maxSteps: number
++  onSiteSearchExhausted?: () => void
+ }
+ 
+ /** Keep new pad approaches and carrier layers negotiable when adjacent via
+@@ -32,11 +33,20 @@ export function* routeGeneratedSignalSites(
+ }
+ 
+ function* completeGeneratedSignalSites(
+-  { input, options, maxSteps }: GeneratedSignalSitesRequest,
++  {
++    input,
++    options,
++    maxSteps,
++    onSiteSearchExhausted,
++  }: GeneratedSignalSitesRequest,
+   { expandAllGridSites = false } = {},
+ ): Generator<void, CompletedGeneratedSurfaceCarriers | null> {
+   const routed = yield* runBoundedRouting(
+-    negotiateGeneratedSignalSites(input, expandAllGridSites),
++    negotiateGeneratedSignalSites(
++      input,
++      expandAllGridSites,
++      onSiteSearchExhausted,
++    ),
+     maxSteps,
+   )
+   if (!routed) return null
+@@ -52,6 +62,7 @@ function* completeGeneratedSignalSites(
+ function* negotiateGeneratedSignalSites(
+   input: SimpleRouteJson,
+   expandAllGridSites: boolean,
++  onSiteSearchExhausted?: () => void,
+ ): ReturnType<typeof negotiateSignalSites> {
+   // Preserve the ordinary fallback when the grid-only probe cannot complete.
+   for (const allowPadEdgeSites of [false, true]) {
+@@ -72,5 +83,7 @@ function* negotiateGeneratedSignalSites(
+     )
+     if (routed) return routed
+   }
++  // A bounded cancellation or failed finishing pass has not exhausted sites.
++  if (!expandAllGridSites) onSiteSearchExhausted?.()
+   return null
+ }
