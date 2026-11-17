@@ -1,4 +1,4 @@
-name: Frozen3207 native physical-via allocation replay
+name: Frozen3207 unchanged-candidate coarse failure witness
 
 on:
   push:
@@ -15,9 +15,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
-        variant: [source-baseline, via-reservation]
+        variant: [via-reservation]
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache

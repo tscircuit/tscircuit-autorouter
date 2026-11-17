@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createHighDensityPhaseObserver } from "./createHighDensityPhaseObserver"
 import { createViaReservationObserver } from "./createViaReservationObserver"
+import { createCoarseFailureObserver } from "./createCoarseFailureObserver"
 
 const [runtimePath, output] = process.argv.slice(2)
 assert(runtimePath && output, "Usage: run-phase-replay.ts RUNTIME.json OUTPUT")
@@ -68,6 +69,10 @@ const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
 assert.equal(typeof pipeline.stepAsync, "undefined", "Core stepping contract changed")
 const observer = createHighDensityPhaseObserver({})
 const viaObserver = createViaReservationObserver()
+const coarseObserver = createCoarseFailureObserver()
+let coarseReport: Record<string, any> = { observationErrors: [] }
+let numericSnapshotProof: Record<string, unknown> | null = null
+let routingElapsedMs: number | null = null
 const started = performance.now()
 let lastFlush = started
 let timedOut = false
@@ -85,12 +90,14 @@ const checkpoint = (): void => {
 try {
   observer.afterPipelineStep(pipeline)
   viaObserver.afterPipelineStep(pipeline)
+  coarseObserver.afterPipelineStep(pipeline)
   while (!pipeline.solved && !pipeline.failed) {
     const batchStarted = performance.now()
     do {
       pipeline.step()
       observer.afterPipelineStep(pipeline)
       viaObserver.afterPipelineStep(pipeline)
+      coarseObserver.afterPipelineStep(pipeline)
       if (performance.now() - started >= 900000) { timedOut = true; break }
     } while (!pipeline.solved && !pipeline.failed && performance.now() - batchStarted < 250)
     if (performance.now() - lastFlush >= 10000) {
@@ -110,7 +117,34 @@ try {
 } catch (error) {
   thrownError = error instanceof Error ? `${error.message}\n${error.stack ?? ""}`.slice(0, 8000) : String(error).slice(0, 8000)
 } finally {
+  routingElapsedMs = performance.now() - started
   observer.finish(pipeline)
+  try {
+    const coarse = coarseObserver.finish()
+    coarseReport = coarse.report
+    if (coarse.numericSnapshot) {
+      const nativeOriginalSection = coarse.numericSnapshot.originalPreloadedSegmentKeys.find(([connectionId]: [string, string[]]) =>
+        connectionId === '__tscircuit_preloaded_trace__:["source_net_20_0",2]')
+      assert(nativeOriginalSection?.[1].includes(JSON.stringify(["topology_merge_17108", "ce79066_pp0_z1::1", "ce79072_pp0_z0::0"])),
+        "Original native physical section provenance was not retained")
+      assert(new Uint8Array(new Uint16Array([1]).buffer)[0] === 1, "Numeric artifact requires little-endian arrays")
+      const serialized = JSON.stringify({ encoding: "typed-array-base64-little-endian-v1", ...coarse.numericSnapshot }, (_key, value) => {
+        if (ArrayBuffer.isView(value)) return { typedArray: value.constructor.name, length: (value as any).length,
+          base64: Buffer.from(value.buffer, value.byteOffset, value.byteLength).toString("base64") }
+        return typeof value === "number" && !Number.isFinite(value) ? String(value) : value
+      })
+      assert(Buffer.byteLength(serialized) <= 64 * 1024 * 1024, "Numeric diagnostic exceeded 64 MiB raw")
+      const compressed = gzipSync(serialized)
+      assert(compressed.byteLength <= 8 * 1024 * 1024, "Numeric diagnostic exceeded 8 MiB compressed")
+      writeFileSync(join(output, "coarse-state.json.gz"), compressed)
+      numericSnapshotProof = { filename: "coarse-state.json.gz", rawBytes: Buffer.byteLength(serialized),
+        gzipBytes: compressed.byteLength, sha256: sha(serialized), gzipSha256: sha(compressed) }
+    }
+  } catch (error) {
+    coarseReport.observationErrors.push({ event: "post-routing-capture", message: String(error).slice(0, 2048) })
+  } finally { coarseObserver.dispose() }
+  atomicJson("coarse-failure-observation.json", JSON.parse(JSON.stringify({ ...coarseReport, numericSnapshotProof },
+    (_key, value) => typeof value === "number" && !Number.isFinite(value) ? String(value) : value)))
   observer.dispose()
   globalThis.WebAssembly = nativeWasm
   checkpoint()
@@ -139,12 +173,13 @@ const nativeReservationActivated = viaObservation.originalSerialized?.rawViaCoun
   viaObservation.originalSerialized?.nativeVias?.length === 1 && originalVia?.routePosition === 55 &&
   viaObservation.originalSerialized?.targetReservations?.length === 1 && Boolean(activeNativeReservation)
 const result = {
-  ...runtime, elapsedMs: performance.now() - started,
+  ...runtime, elapsedMs: routingElapsedMs, diagnosticFinishMs: performance.now() - started - (routingElapsedMs ?? 0),
   solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
   iterations: pipeline.iterations, timedOut, thrownError, outputSummary, wasmUsage,
   nativeFailureReproduced: pipeline.failed && String(pipeline.error).includes("topology_merge_17108"),
-  nativeTinyRolesReproduced, nativeReservationActivated,
+  nativeTinyRolesReproduced, nativeReservationActivated, numericSnapshotProof,
   diagnosticObservationValid: observation.observationErrors.length === 0 && viaObserver.getReport().observationErrors.length === 0 &&
+    coarseReport.observationErrors.length === 0 && Boolean(numericSnapshotProof) &&
     Boolean(viaObserver.getReport().originalSerialized) && Boolean(viaObserver.getReport().firstNumeric) &&
     (runtime.variant === "via-reservation" ? nativeReservationActivated : (Boolean(observation.queue) && nativeTinyRolesReproduced)),
   interpretation: "Phase diagnostic only. Compare baseline constructor, target Tiny state and failure with the full native run before using candidate node history. No full-board connectivity gain is measured here.",
