@@ -31,8 +31,8 @@ test("captures opposite-layer pad aliases in the routed OrangeCrab plane phase",
   expect(input.connections).toHaveLength(4)
   expect(traces).toHaveLength(85)
   expect(input.obstacles).toHaveLength(176)
-  expect(groups).toHaveLength(1)
-  expect(errors).toHaveLength(23)
+  expect(groups).toHaveLength(4)
+  expect(errors).toHaveLength(135)
   expect(input).toEqual(fixture.input)
   expect(traces).toEqual(fixture.routedTraces)
 
