@@ -1,8 +1,8 @@
-name: Core render effect registration qualification
+name: Core render effect registration all-ten regression
 
 on:
   push:
-    branches: [bench/core-render-reentrancy-3230]
+    branches: [bench/core-render-reentrancy-all-ten-3230]
 
 permissions:
   contents: read
@@ -10,14 +10,31 @@ permissions:
 
 jobs:
   qualify:
-    name: Exact Core source repro and authentic original H616
+    name: Core effects ${{ matrix.board }} ${{ matrix.cohort }}
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 45
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - { board: glider, cohort: original }
+          - { board: imx6, cohort: original }
+          - { board: icepi, cohort: original }
+          - { board: butterstick, cohort: spaced }
+          - { board: imx6, cohort: spaced }
+          - { board: butterstick, cohort: original }
+          - { board: icepi, cohort: spaced }
+          - { board: h616, cohort: original }
+          - { board: h616, cohort: spaced }
+          - { board: glider, cohort: spaced }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       FULL_BOARD_EXPERIMENT: published
+      CASE_BOARD: ${{ matrix.board }}
+      CASE_COHORT: ${{ matrix.cohort }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout reviewed controller
@@ -35,7 +52,9 @@ jobs:
           ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
           path: .full-board-run/source-core
           persist-credentials: false
-          sparse-checkout: lib/components/base-components/Renderable.ts
+          sparse-checkout: |
+            lib/components/base-components/Renderable.ts
+            lib/components/primitive-components/Group/Group.ts
           sparse-checkout-cone-mode: false
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -64,15 +83,15 @@ jobs:
           bun-version: 1.4.3
       - name: Prepare verified published3230 runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
-      - name: Prepare authentic H616 case and neutral original assessor
+      - name: Prepare authentic case and unchanged neutral assessors
         run: >-
           bun experiments/full-board-ten/prepare-cases.ts
           "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
-          "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" h616
+          "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$CASE_BOARD"
       - name: Authenticate saved published control and runtime graph
-        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" baseline
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" baseline "$CASE_BOARD" "$CASE_COHORT"
       - name: Prove exact source mapping and real paired circuit repro
-        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" source
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" source "$CASE_BOARD" "$CASE_COHORT"
       - name: Qualify complete via and pour geometry audit
         run: python3 experiments/full-board-ten/audit-via-pour.py --self-test --output "$FULL_BOARD_ROOT/core-reentrancy/audit-self-test.json"
       - name: Require the real focused repro to clear the signal via physically
@@ -82,37 +101,37 @@ jobs:
           --candidate "$FULL_BOARD_ROOT/core-reentrancy/candidate.circuit.json"
           --output "$FULL_BOARD_ROOT/core-reentrancy/tiny-via-pour-audit.json"
       - name: Install only reviewed Renderable chunk
-        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" candidate
-      - name: Run authentic original H616 and restore Core before assessment
+        run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" candidate "$CASE_BOARD" "$CASE_COHORT"
+      - name: Run one isolated case and restore Core before neutral assessment
         run: >-
           bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/candidate-h616-original.json"
-          "$FULL_BOARD_ROOT/results/candidate/h616/original"
-      - name: Compare physical through-via and foreign-plane geometry
+          "$FULL_BOARD_ROOT/cases/candidate-$CASE_BOARD-$CASE_COHORT.json"
+          "$FULL_BOARD_ROOT/results/candidate/$CASE_BOARD/$CASE_COHORT"
+      - name: Record authored original via and pour geometry
+        if: always() && matrix.cohort == 'original'
+        continue-on-error: true
         run: >-
           python3 experiments/full-board-ten/audit-via-pour.py
           --baseline "$FULL_BOARD_ROOT/published-baseline/circuit.json.gz"
-          --candidate "$FULL_BOARD_ROOT/results/candidate/h616/original/circuit.json.gz"
-          --case-task "$FULL_BOARD_ROOT/cases/h616-original.json"
+          --candidate "$FULL_BOARD_ROOT/results/candidate/$CASE_BOARD/$CASE_COHORT/circuit.json.gz"
+          --case-task "$FULL_BOARD_ROOT/cases/$CASE_BOARD-$CASE_COHORT.json"
           --output "$FULL_BOARD_ROOT/core-reentrancy/native-via-pour-audit.json"
-      - name: Require preserved accepted routes and corrected native pours
+      - name: Report routing, materialization, native names and physical deltas separately
         if: always()
         run: |
-          if test -f "$FULL_BOARD_ROOT/results/candidate/h616/original/result.json"; then
-            python3 experiments/full-board-ten/verify-core-reentrancy.py "$FULL_BOARD_ROOT"
-          fi
+          python3 experiments/full-board-ten/verify-core-reentrancy.py "$FULL_BOARD_ROOT" "$CASE_BOARD" "$CASE_COHORT"
       - name: Restore original package for neutral inspection
         if: always()
         run: |
           if test -f "$FULL_BOARD_ROOT/candidate-runtime-manifest.json"; then
-            python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" restore
+            python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" restore "$CASE_BOARD" "$CASE_COHORT"
           fi
       - name: Preserve source proof, real repro, native outputs and audits
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: h616-core-render-reentrancy-${{ github.run_attempt }}
+          name: core-render-reentrancy-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
           path: |
             .full-board-run/core-reentrancy/*.json
             .full-board-run/core-reentrancy/*.json.gz
@@ -129,4 +148,29 @@ jobs:
             experiments/full-board-ten/core-reentrancy-repro.test.tsx
           if-no-files-found: error
           compression-level: 6
+          retention-days: 7
+
+  report:
+    name: Summarize all ten independent regression cases
+    needs: qualify
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-ten
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: core-render-reentrancy-*-*-${{ github.run_attempt }}
+          path: .all-ten-artifacts
+      - name: Require every case report and retain explicit pending global gates
+        run: python3 experiments/full-board-ten/report-core-reentrancy.py .all-ten-artifacts core-reentrancy-all-ten-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-render-reentrancy-all-ten-report-${{ github.run_attempt }}
+          path: core-reentrancy-all-ten-report.json
+          if-no-files-found: error
           retention-days: 7

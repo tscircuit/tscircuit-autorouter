@@ -144,7 +144,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       if (progress.phases.length === 0) {
         if (reviewedRenderable) {
           if ((circuit as any).firstChild?._queueAsyncEffect !== reviewedRenderable.prototype._queueAsyncEffect) throw new Error("Native board does not inherit the reviewed Renderable method")
-          if ((circuit as any).firstChild?._parsedProps.enableViaStitching !== false) throw new Error("Authentic H616 via-stitching policy changed")
+          if ((circuit as any).firstChild?._parsedProps.enableViaStitching !== false) throw new Error("Authentic full-board via-stitching policy changed")
           coreChunkBinding.nativeBoardMethodIdentical = true
           coreChunkBinding.viaStitchingEnabled = false
         }

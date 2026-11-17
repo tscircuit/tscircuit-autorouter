@@ -28,7 +28,7 @@ clearInterval(sample)
 clearTimeout(watchdog)
 closeSync(log)
 if (task.restorePublishedCoreBeforeAssessment) {
-  const restored = Bun.spawnSync(["python3", join(import.meta.dir, "prepare-core-reentrancy.py"), task.restorePublishedCoreBeforeAssessment, "restore"], { stdout: "inherit", stderr: "inherit" })
+  const restored = Bun.spawnSync(["python3", join(import.meta.dir, "prepare-core-reentrancy.py"), task.restorePublishedCoreBeforeAssessment, "restore", task.id, task.cohort], { stdout: "inherit", stderr: "inherit" })
   if (restored.exitCode !== 0) throw new Error("Published Core restoration failed before neutral assessment")
 }
 const diagnosticPath = join(output, "coarse-diagnostics.json")

@@ -65,10 +65,15 @@ def verify_graph(candidate=False):
 parser = argparse.ArgumentParser()
 parser.add_argument("root", type=Path)
 parser.add_argument("operation", choices=["baseline", "source", "candidate", "restore"])
+parser.add_argument("board")
+parser.add_argument("cohort", choices=["original", "spaced"])
 args = parser.parse_args()
 root = args.root.resolve()
 controller = Path(__file__).resolve().parent
 plan = json.loads((controller / "core-reentrancy-plan.json").read_text())
+case_key = f"{args.board}-{args.cohort}"
+case = next(row for row in plan["cases"] if row["key"] == case_key)
+case_path = root / "cases" / f"{case_key}.json"
 assert sha(controller / plan["audit"]["path"]) == plan["audit"]["sha256"]
 for name, digest in plan["frozenHarnessFiles"].items():
     assert sha(controller / name) == digest, f"Reviewed harness changed: {name}"
@@ -92,9 +97,12 @@ if args.operation == "baseline":
         assert row["prefixExact"] and sha(original) == row["originalSha256"]
         assert (helper / row["name"]).read_bytes() == original.read_bytes() + row["appendedTail"].encode()
         immutable.append({"path": str(helper / row["name"]), "sha256": row["outputSha256"]})
-    for relative in ["runtime/package.json", "runtime/bun.lock", "autorouter-dependencies/package.json", "autorouter-dependencies/bun.lock", "cases/h616-original.json", "cases/assessment-core/package.json", "cases/find-floating-copper-assessment.mjs", "cases/assessment-helper-proof.json"]:
+    for relative in ["runtime/package.json", "runtime/bun.lock", "autorouter-dependencies/package.json", "autorouter-dependencies/bun.lock", str(case_path.relative_to(root)), "cases/assessment-core/package.json", "cases/find-floating-copper-assessment.mjs", "cases/assessment-helper-proof.json"]:
         immutable.append({"path": str(root / relative), "sha256": sha(root / relative)})
-    task = json.loads((root / "cases/h616-original.json").read_text())
+    task = json.loads(case_path.read_text())
+    assert task["sourceSha256"] == case["sourceSha256"]
+    assert [task["expectedComponents"], task["expectedPads"], task["expectedNets"], task["expectedRoutableNets"]] == [case["components"], case["pads"], case["nets"], case["requestedNets"]]
+    assert [task["captureDeadlineMs"], task["hardDeadlineMs"], task["assessmentDeadlineMs"]] == [plan["limitsMs"][key] for key in ["capture", "hard", "assessment"]]
     immutable += task["assessmentSourceFiles"] + task["implementationFiles"]
     immutable.append({"path": task["sourcePath"], "sha256": task["sourceSha256"]})
     aliases = []
@@ -104,7 +112,7 @@ if args.operation == "baseline":
         aliases.append({"path": str(path), "target": os.readlink(path)})
     guard = {"dependencyGraph": dependency_graph(root), "resolutionAliases": aliases, "immutableFiles": immutable}
     (proof / "runtime-guard.json.gz").write_bytes(gzip.compress(json.dumps(guard, sort_keys=True).encode()))
-    artifact = plan["baselineArtifact"]
+    artifact = case["baselineArtifact"]
     api = f"repos/tscircuit/tscircuit-autorouter/actions/artifacts/{artifact['id']}"
     actual = json.loads(subprocess.check_output(["gh", "api", api]))
     for field in ["id", "name", "size_in_bytes", "digest", "workflow_run"]:
@@ -117,7 +125,9 @@ if args.operation == "baseline":
     with zipfile.ZipFile(io.BytesIO(archive)) as packet:
         names = packet.namelist()
         assert len(names) == len(set(names))
-        for row in plan["baselineFiles"]:
+        assert set(names) == {row["name"] for row in case["baselineFiles"]}, "Baseline archive member set changed"
+        for row in case["baselineFiles"]:
+            assert len(Path(row["name"]).parts) == 1 and row["name"] not in [".", ".."]
             assert names.count(row["name"]) == 1
             data = packet.read(row["name"])
             assert len(data) == row["bytes"] and hashlib.sha256(data).hexdigest() == row["sha256"]
@@ -138,6 +148,9 @@ if args.operation == "source":
     assert subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip() == plan["source"]["baseCommit"]
     source_file = source / plan["source"]["path"]
     assert sha(source_file) == plan["source"]["beforeSha256"]
+    publication_policy = source / plan["publicationPolicySource"]["path"]
+    assert sha(publication_policy) == plan["publicationPolicySource"]["sha256"]
+    shutil.copyfile(publication_policy, proof / "Group.source.ts")
     shutil.copyfile(source_file, proof / "Renderable.base.ts")
     patch = controller / "core-reentrancy-production.patch"
     assert sha(patch) == plan["source"]["patchSha256"]
@@ -270,9 +283,9 @@ manifest_path.write_text(json.dumps(candidate, indent=2) + "\n")
 shutil.copyfile(manifest_path, root / "candidate-runtime-manifest.json")
 verify_packages(candidate)
 verify_graph(True)
-task = json.loads((root / "cases/h616-original.json").read_text())
-assert task["sourceSha256"] == plan["case"]["sourceSha256"]
-assert [task["captureDeadlineMs"], task["hardDeadlineMs"], task["assessmentDeadlineMs"]] == list(plan["limitsMs"].values())
+task = json.loads(case_path.read_text())
+assert task["sourceSha256"] == case["sourceSha256"]
+assert [task["captureDeadlineMs"], task["hardDeadlineMs"], task["assessmentDeadlineMs"]] == [plan["limitsMs"][key] for key in ["capture", "hard", "assessment"]]
 task.update(experiment="core-render-reentrancy", dependencyOverrides=[override], restorePublishedCoreBeforeAssessment=str(root), runtimeChunkProof=change)
-(root / "cases/candidate-h616-original.json").write_text(json.dumps(task, indent=2) + "\n")
+(root / "cases" / f"candidate-{case_key}.json").write_text(json.dumps(task, indent=2) + "\n")
 (proof / "overlay-proof.json").write_text(json.dumps({"onlyRenderableChunkChanged": True, "candidateManifestSha256": sha(manifest_path), "sourceGateSha256": sha(proof / "source-gate.json"), "change": change, "allPackageFilesVerified": True}, indent=2) + "\n")
