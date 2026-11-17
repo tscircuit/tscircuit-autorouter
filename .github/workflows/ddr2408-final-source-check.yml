@@ -1,0 +1,35 @@
+name: Check native ButterStick repro and final node-expansion source
+on:
+  push:
+    branches: [codex/ddr2408-final-source-check]
+permissions:
+  contents: read
+jobs:
+  source:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - role: repro
+            revision: d1a2424340f37c33e76d062378fb7140ae8162e8
+          - role: fix
+            revision: 3b5c0bcb7fd45b1562640806ff6db72b5c914d14
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - name: Verify production equivalence with the frozen measurement
+        if: matrix.role == 'fix'
+        run: |
+          git fetch origin bcc2094a1d0911594a1aa08c1f0ee7a517ac3723
+          git diff --exit-code --ignore-all-space bcc2094a1d0911594a1aa08c1f0ee7a517ac3723 HEAD -- lib package.json bun.lock
+          git show bcc2094a1d0911594a1aa08c1f0ee7a517ac3723:lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts > /tmp/frozen-single-target.ts
+          bun -e 'const t=new Bun.Transpiler({loader:"ts",target:"bun"});const before=t.transformSync(await Bun.file("/tmp/frozen-single-target.ts").text());const after=t.transformSync(await Bun.file("lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts").text());if(before!==after)throw new Error("Production JavaScript differs from frozen benchmark");console.log("Frozen and final production JavaScript are byte-identical")'
+      - run: bun run format:check
+      - run: bunx tsc --noEmit
+      - run: bun run build
