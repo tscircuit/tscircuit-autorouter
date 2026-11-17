@@ -17,11 +17,11 @@
   "reproPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3893",
   "fixPr": "https://github.com/tscircuit/tscircuit-autorouter/pull/3894",
   "reproCommit": "93193735a959e0721fc7df083aaa7ab09eebf4d0",
-  "fixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "fixCommit": "f67a0f5e35a4953de182b07d8bef379989251eb9",
   "selectedFix": "Preserve locally accessible routed via bridges instead of taking unplanned cross-layer endpoint hops",
-  "fixCiRun": 44133966518,
-  "fixFormatCiRun": 44133966967,
-  "fixTypecheckCiRun": 44133966797,
+  "fixCiRun": 44139958516,
+  "fixFormatCiRun": 44139958415,
+  "fixTypecheckCiRun": 44139958441,
   "reproCiRun": 44133958500,
   "fixBase": "repro/icepi-planar-stitch",
   "focusedLocalTests": 27,
@@ -99,6 +99,10 @@
   "cleanupProof": "cleanup-equivalence.json",
   "additionalDataset18Run": 44131058940,
   "cleanupCompletedAtUtc": "2026-11-17T17:27:50.033094+00:00",
-  "pipeline9RuntimeByteIdentical": true,
-  "nativeSnapshotsByteIdentical": true
+  "nativeSnapshotsByteIdentical": true,
+  "previousFixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "layerCheckRefactorProof": "refactor-equivalence.json",
+  "routingBehaviorEquivalent": true,
+  "allCapturedRoutesAndMetadataIdentical": true,
+  "endpointRefactorCompletedAtUtc": "2026-11-17T17:58:51.908870+00:00"
 }

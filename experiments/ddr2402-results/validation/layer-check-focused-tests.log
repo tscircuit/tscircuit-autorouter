@@ -1,0 +1,84 @@
+bun test v1.4.3 (c6da4a4d3)
+
+tests/bugs/bugreport102-qfp16-pipeline9-extra-vias.test.ts:
+✓ SVG snapshot matches (0.590% difference, within 1% threshold)
+(pass) bugreport102 compares Pipeline 7 and Pipeline 9 QFP16 routing [4496.76ms]
+
+tests/features/pipeline9-terminal-layer-indices-by-pcb-port-id.test.ts:
+(pass) coincident single-layer pads do not impersonate a multilayer PCB terminal [0.20ms]
+
+tests/stitch-solver/multilayer-connection-stitch.test.ts:
+(pass) source_net_1 should have no vias when properly stitched on z:2 layer [2.43ms]
+(pass) multilayer connection stitch solver visualization [289.04ms]
+
+tests/stitch-solver/close-multilayer-terminal-shortcut.test.ts:
+(pass) does not replace nearby multilayer terminals with a reversed layer shortcut [5.62ms]
+
+tests/stitch-solver/through-obstacle-anchor.test.ts:
+(pass) stitching preserves exact through-obstacle anchors and reversed edge metadata [0.54ms]
+
+tests/stitch-solver/internal-via-preserves-layer-join.test.ts:
+(pass) an internal via does not expose a different-layer fragment endpoint [0.39ms]
+
+tests/stitch-solver/multilayer-endpoint-path-selection.test.ts:
+(pass) endpoint paths retain a farther same-layer branch before a buried via [0.27ms]
+
+tests/stitch-solver/terminal-snapping-preserves-layer.test.ts:
+(pass) does not assign a bottom-layer PCB terminal to a top-layer island [0.03ms]
+
+tests/stitch-solver/unreached-terminal-layer.test.ts:
+(pass) fails when the stitched copper cannot reach a tagged PCB terminal layer [0.25ms]
+
+tests/stitch-solver/declared-site-preserves-layer-join.test.ts:
+(pass) declared transition anchors retain their priority within stitch tolerance [0.18ms]
+
+tests/stitch-solver/known-net-terminal-transit.test.ts:
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+(pass) allows an intermediate terminal only when the source connections place it on the same net [1.12ms]
+
+tests/stitch-solver/disconnected-island-after-terminal-route.test.ts:
+(pass) drops a disconnected island after routing both PCB terminals [0.56ms]
+
+tests/stitch-solver/distant-via-preserves-layer-join.test.ts:
+(pass) a distant via does not divert a terminal path into a planar stub [0.19ms]
+
+tests/stitch-solver/single-high-density-route-stitch-gap-bridge.test.ts:
+(pass) single stitch bridges small same-layer gaps [0.23ms]
+(pass) single stitch does not bridge large same-layer gaps [0.13ms]
+(pass) single stitch can cap a modest terminal endpoint gap [0.11ms]
+(pass) single stitch accepts fan-out terminal tags [0.09ms]
+
+tests/stitch-solver/collision-aware-stitch-selection-visual.test.ts:
+(pass) visualizes choosing a clear stitch instead of the nearest colliding stitch [1690.39ms]
+
+tests/stitch-solver/alias-net-terminal-transit.test.ts:
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+MultipleHighDensityRouteStitchSolver3 error: Error: SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "b" on "a-to-c"
+(pass) accepts intermediate terminals on aliased nets [5.76ms]
+
+tests/stitch-solver/opposite-layer-terminal-snapping.test.ts:
+(pass) stitches nearly coincident pads on opposite layers to distinct PCB terminals [0.24ms]
+
+tests/solvers/trace-simplification-orangecrab-start-via.test.ts:
+(pass) OrangeCrab start via survives simplification and Pipeline 9 validation [1.53ms]
+
+tests/solvers/useless-via-removal-preserves-pcb-terminal-layer.test.ts:
+(pass) preserves authoritative single-layer PCB-port terminals across simplification passes [213.96ms]
+
+tests/repro/icepi-plane-stitch.test.ts:
+(pass) captures the full iCE/Pi plane phase before DRC repair [11905.00ms]
+
+tests/repro/lm5155evm-fly-terminal-layers.test.ts:
+(pass) LM5155EVM-FLY Pipeline 9 keeps routed terminal layers connected [6755.69ms]
+
+tests/repro/icepi-power-ground-cutout.test.ts:
+(pass) routes the iCE/Pi power and ground cutout through cramped-port pruning [5856.50ms]
+
+tests/repro/icepi-planar-stitch.test.ts:
+(pass) captures the iCE/Pi CPUX crop through stitching and simplification [1094.98ms]
+
+ 27 pass
+ 0 fail
+ 149 expect() calls
+Ran 27 tests across 23 files. [33.16s]

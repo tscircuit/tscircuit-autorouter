@@ -1,0 +1,6 @@
+{
+  "checked": 46464,
+  "mismatches": 0,
+  "precondition": "Cross-layer joins, as required at both getLayerTransitionPenalty call sites",
+  "coverage": "Both route directions, all ordered pairs of four routing layers, same-layer fragments, exact/near/over distance boundaries, infinite and NaN coordinates"
+}

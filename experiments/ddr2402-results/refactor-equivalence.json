@@ -1,0 +1,32 @@
+{
+  "fixCommit": "f67a0f5e35a4953de182b07d8bef379989251eb9",
+  "previousFixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "reproCommit": "93193735a959e0721fc7df083aaa7ab09eebf4d0",
+  "routingBehaviorEquivalent": true,
+  "predicateCheck": {
+    "checked": 46464,
+    "mismatches": 0,
+    "precondition": "Cross-layer joins, as required at both getLayerTransitionPenalty call sites",
+    "coverage": "Both route directions, all ordered pairs of four routing layers, same-layer fragments, exact/near/over distance boundaries, infinite and NaN coordinates"
+  },
+  "capturedRoutes": {
+    "identical": true,
+    "results": [
+      {
+        "name": "before",
+        "connections": 559,
+        "sha256": "8a0b19021498abf58435aa2f9f60f3d784cb930111336511adc6aeedcd03a3de"
+      },
+      {
+        "name": "after",
+        "connections": 559,
+        "sha256": "8a0b19021498abf58435aa2f9f60f3d784cb930111336511adc6aeedcd03a3de"
+      }
+    ]
+  },
+  "nativeSnapshotsByteIdentical": true,
+  "focusedTestsPassed": 27,
+  "fixCiRun": 44139958516,
+  "fixCiPassed": true,
+  "scope": "Orient route endpoints once for the requested layer transition, reject layer mismatches, and compare maximum join distance. No scoring constants or routing choices change."
+}

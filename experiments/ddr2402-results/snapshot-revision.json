@@ -1,9 +1,9 @@
 {
   "reproCommit": "93193735a959e0721fc7df083aaa7ab09eebf4d0",
-  "fixCommit": "cdf09f8de9a90f84952c9e0dabe70fa72e685b5d",
+  "fixCommit": "f67a0f5e35a4953de182b07d8bef379989251eb9",
   "originalBenchmarkedPrCommit": "d1e323efbb082408784e93957cbc854c08cf86ca",
   "productionAndDependenciesByteIdentical": false,
-  "libraryTreeOid": "762baa753a50fd4d4a3d59af814c863fb8ee636f",
+  "libraryTreeOid": "79d6cd4cd4138c49a1f0773e78709e58de1483fb",
   "cropPads": 32,
   "routeFragments": 24,
   "before": {
@@ -22,12 +22,12 @@
   },
   "wholeBoardJointDrcRepairIncluded": false,
   "focusedLocalTestsPassed": 27,
-  "fixCiRun": 44133966518,
+  "fixCiRun": 44139958516,
   "reproCiRun": 44133958500,
   "negativeControlRejectsOldSolver": true,
   "negativeControlExpectedFailure": "stitch solver.solved is false when the after-test requires true",
   "fixCiPassed": true,
   "reproCiPassed": true,
-  "routingLogicUnchanged": true,
-  "pipeline9RuntimeByteIdentical": true
+  "routingBehaviorEquivalent": true,
+  "allCapturedRoutesAndMetadataIdentical": true
 }
