@@ -1,0 +1,39 @@
+name: Read completed OrangeCrab DDR copper before and after
+on:
+  push:
+    branches: [codex/ddr2408-ddr-copper-export]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: refresh2408-orangecrab
+          run-id: 44190481894
+          github-token: ${{ github.token }}
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          name: expand2408-orangecrab
+          run-id: 44191895492
+          github-token: ${{ github.token }}
+          path: after
+      - name: Export native routed DDR circuits
+        run: |
+          python3 - <<'PY'
+          import base64,io,json,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for variant in ['before','after']:
+                  paths=[p for p in Path(variant).rglob('circuit.json') if 'ddr' in p.parts]
+                  print('ORANGE2408_DDR_CIRCUITS',variant,[str(p) for p in paths])
+                  for p in paths:archive.write(p,str(p))
+          print('ORANGE2408_DDR_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('ORANGE2408_DDR_EVIDENCE_END')
+          PY
