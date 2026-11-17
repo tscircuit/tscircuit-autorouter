@@ -1,10 +1,10 @@
-name: SRJ18 order-bias controls
+name: SRJ18 source and runtime diagnostics
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  same-code:
+  checkout-control:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 40
     steps:
@@ -14,25 +14,31 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Prepare one baseline checkout
+      - name: Prepare two identical checkouts as in ordinary PR workflow
         run: |
-          git worktree add --detach ../control-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
-          cd ../control-base
-          bun install
-      - name: Run identical code twice in normal benchmark order
+          python3 scripts/srj18-investigation/prepare-variants.py
+          git worktree add --detach ../same-machine-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
+          git worktree add --detach ../same-machine-pr 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
+          (cd ../same-machine-base && bun install)
+          (cd ../same-machine-pr && bun install)
+          cmp ../same-machine-base/bun.lock ../same-machine-pr/bun.lock
+      - name: Separate-path same-code and same-path code comparisons
         run: |
-          mkdir -p aa-results
-          for pass in first second; do
-            (cd ../control-base && bash benchmark.sh --dataset 18 --concurrency 3 --sample-timeout 240s)
-            cp ../control-base/benchmark-result.json "aa-results/$pass.json"
-            bun -e 'const p=await Bun.file(process.argv[1]).json(); console.log("AA_RESULT "+JSON.stringify({pass:process.argv[2],runtime:p.runtime,summary:p.summary,tests:p.tests.map(({benchmarkSnapshot,...t})=>t)}))' "aa-results/$pass.json" "$pass"
+          mkdir -p checkout-results
+          for spec in 0:base:base 1:base:pr 2:head:pr 3:head:pr 4:base:pr 5:base:base; do
+            IFS=: read -r pass variant location <<< "$spec"
+            root="$(realpath ../same-machine-$location)"
+            python3 scripts/srj18-investigation/apply-variant.py "$root" "$variant"
+            (cd "$root" && bash benchmark.sh --dataset 18 --sample-numbers 1,3,7,10,11,12,16 --concurrency 3 --sample-timeout 240s)
+            cp "$root/benchmark-result.json" "checkout-results/$pass-$variant-$location.json"
+            bun -e 'const p=await Bun.file(process.argv[1]).json(); console.log("CHECKOUT_RESULT "+JSON.stringify({pass:process.argv[2],variant:process.argv[3],location:process.argv[4],runtime:p.runtime,tests:p.tests.map(({benchmarkSnapshot,...t})=>t)}))' "checkout-results/$pass-$variant-$location.json" "$pass" "$variant" "$location"
           done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: same-code-controls
-          path: aa-results
-  interleaved:
+          name: checkout-controls
+          path: checkout-results
+  source-ablation:
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 40
     steps:
@@ -42,17 +48,42 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Prepare exact PR revisions with shared dependencies
+      - name: Prepare source variants in three fixed directories
         run: |
-          git worktree add --detach ../pair-base 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
-          git worktree add --detach ../pair-head 0702b0aa5c9bf3304aae6dca14462787e174587d
-          cd ../pair-base
-          bun install
-          ln -s "$(pwd)/node_modules" ../pair-head/node_modules
-      - name: Interleave matched samples on fixed CPU lanes
-        run: bun scripts/srj18-investigation/interleaved.ts
+          python3 scripts/srj18-investigation/prepare-variants.py
+          for lane in 0 1 2; do git worktree add --detach "../lane-$lane" 73f2a0c8a05a06d85e0ddf126cb903e3949523d6; done
+          (cd ../lane-0 && bun install)
+          ln -s "$(realpath ../lane-0/node_modules)" ../lane-1/node_modules
+          ln -s "$(realpath ../lane-0/node_modules)" ../lane-2/node_modules
+      - name: Interleave individual source changes with ordinary CPU scheduling
+        run: bun scripts/srj18-investigation/ablation.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: interleaved-controls
-          path: interleaved-results
+          name: source-ablation
+          path: ablation-results
+  runtime-profiles:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Prepare source and sampling capabilities
+        run: |
+          python3 scripts/srj18-investigation/prepare-variants.py
+          git worktree add --detach ../profile-source 73f2a0c8a05a06d85e0ddf126cb903e3949523d6
+          (cd ../profile-source && bun install)
+          mkdir -p ../profile-source/scripts/srj18-investigation
+          cp scripts/srj18-investigation/diagnostic.child.ts ../profile-source/scripts/srj18-investigation/
+          BUN_JSC_reportTotalCompileTimes=1 bun -e 'import * as jsc from "bun:jsc"; console.log("JSC_CAPABILITIES",{profile:typeof jsc.profile,compile:typeof jsc.totalCompileTime,heap:typeof jsc.heapSize}); if(typeof jsc.profile!=="function") throw new Error("Sampling API unavailable")'
+      - name: Profile CPU, compilation, allocation, and async timer waits
+        run: bun scripts/srj18-investigation/profile-variants.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-profiles
+          path: profile-results
