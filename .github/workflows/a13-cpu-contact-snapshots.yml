@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3e0409768859dc9c3d461ed53d3f48b864c18913
+          ref: b34d0e13a1fe41b5f165216ea93200d23bf21213
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -36,7 +36,7 @@ jobs:
         with:
           script: |
             const fs = require("fs")
-            const branch = "repro/a13-cpu-pad-contact"
+            const branch = "fix/a13-direct-route-inset"
             for (const name of [
               "pipeline9-a13-regional-repair-shorts.snap.svg",
               "pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg"
