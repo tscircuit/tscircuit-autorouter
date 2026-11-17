@@ -1,0 +1,169 @@
+{
+  "baselineRun": 44096144980,
+  "baselineController": "8ea7c957afe84651fbe3682590d1632247e7d702",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineMs": 960000,
+  "assessmentDeadlineMs": 180000,
+  "cases": {
+    "h616": {
+      "connectedNets": 53,
+      "requestedRoutableNets": 121,
+      "emittedCounts": {
+        "source_component": 125,
+        "source_net": 121,
+        "pcb_smtpad": 726,
+        "pcb_plated_hole": 30,
+        "pcb_hole": 4,
+        "pcb_trace": 57,
+        "pcb_via": 96,
+        "pcb_copper_pour": 0
+      },
+      "lastError": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_116; regional fallback failed: Failed to solve 1 nodes, topology_merge_7204. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, MultiHeadPolyLineIntraNodeSolver3 ran out of iterations (MAX_ITERATIONS=1000), Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore. (capacity-autorouter@0.0.1117)",
+      "phaseFiles": {
+        "phase-1-input.srj.json.gz": "2cdedbb685087f57be9c499e6631a809e49487ac3613656a4f604c07c08b39d0",
+        "phase-1-output.srj.json.gz": "9b2e485944785469b9b5daebe093e22f1404b732ca18e31b4d7445f86403ade9",
+        "phase-2-input.srj.json.gz": "9757b197b59e91cbe265d3d6cd55cda6a817d7fc01f56c618113bd347a081e4d",
+        "phase-2-output.srj.json.gz": "f00bce3c33eae990e5a4e9a974a486ccd04c7c44b04b396d5d5b5ff994d23e6c",
+        "phase-3-input.srj.json.gz": "23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49",
+        "phase-3-output.srj.json.gz": "e36e7971e141df1f458f645da51fe2886055cb248aaa836ff766400c57af5986",
+        "phase-4-error.srj.json.gz": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102",
+        "phase-4-input.srj.json.gz": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102"
+      },
+      "circuitSha256": "a4ff17c1ecfd362009dfcab4041d4a8544e959375c517cec2c9d658d1f889e42",
+      "copperSha256": "b15d4f75d6feab99e735b07b0894d4569c418bc0792a50e5d11bc7c56fb115a0",
+      "phaseStatus": [
+        {
+          "name": "byte0",
+          "index": 1,
+          "status": "completed",
+          "inputSha256": "2cdedbb685087f57be9c499e6631a809e49487ac3613656a4f604c07c08b39d0"
+        },
+        {
+          "name": "byte1",
+          "index": 2,
+          "status": "completed",
+          "inputSha256": "9757b197b59e91cbe265d3d6cd55cda6a817d7fc01f56c618113bd347a081e4d"
+        },
+        {
+          "name": "remaining",
+          "index": 3,
+          "status": "completed",
+          "inputSha256": "23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49"
+        },
+        {
+          "name": "other_signals",
+          "index": 4,
+          "status": "failed",
+          "inputSha256": "8a39876747c24acaf2ac833918a1236d64677f6f9a69c0356b991d170a1f3102"
+        }
+      ]
+    },
+    "icepi": {
+      "connectedNets": 50,
+      "requestedRoutableNets": 230,
+      "emittedCounts": {
+        "source_component": 280,
+        "source_net": 230,
+        "pcb_smtpad": 1329,
+        "pcb_plated_hole": 85,
+        "pcb_hole": 12,
+        "pcb_trace": 52,
+        "pcb_via": 122,
+        "pcb_copper_pour": 0
+      },
+      "lastError": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst6; regional fallback failed: Failed to solve 1 nodes, topology_merge_17108. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore. (capacity-autorouter@0.0.1117)",
+      "phaseFiles": {
+        "phase-1-input.srj.json.gz": "eb2851a2195beb8335bd0437e420e0c1889ab52d885c2f2fb9ea28506b87e101",
+        "phase-1-output.srj.json.gz": "77055fea762c1cef86298587b12f95eeab45feb9fa998695b7a14f9cfccaf369",
+        "phase-2-input.srj.json.gz": "d09050c4d3eaba2aa0b9e2c3815d49fb4a7ad37d304d61947224595121f814f5",
+        "phase-2-output.srj.json.gz": "72768387c4e6de140630049c875b6cefb060f1d8eb9b9937f15ea6b53be5e99f",
+        "phase-3-input.srj.json.gz": "baf786d1bebd05abf53f0c71791367fc1f90c3e2f8d079767af98a03d4d1d02a",
+        "phase-3-output.srj.json.gz": "691bf40348c014a1a71736353bf2173b4288eceb28cad708d13d2b89a46d68be",
+        "phase-4-error.srj.json.gz": "469694b90af95e44a1ef964c454370fdf361705400d152519391f9624896da6d",
+        "phase-4-input.srj.json.gz": "469694b90af95e44a1ef964c454370fdf361705400d152519391f9624896da6d"
+      },
+      "circuitSha256": "34f1b4ad5cd1ced9bb6801251234b79be80443016a8b947789c9ae34bff94597",
+      "copperSha256": "4c42f17202f5bfe448d08a80cab0243f516b7d151be7c975f3e2b7f3cd9052d9",
+      "phaseStatus": [
+        {
+          "name": "byte0",
+          "index": 1,
+          "status": "completed",
+          "inputSha256": "eb2851a2195beb8335bd0437e420e0c1889ab52d885c2f2fb9ea28506b87e101"
+        },
+        {
+          "name": "byte1",
+          "index": 2,
+          "status": "completed",
+          "inputSha256": "d09050c4d3eaba2aa0b9e2c3815d49fb4a7ad37d304d61947224595121f814f5"
+        },
+        {
+          "name": "remaining",
+          "index": 3,
+          "status": "completed",
+          "inputSha256": "baf786d1bebd05abf53f0c71791367fc1f90c3e2f8d079767af98a03d4d1d02a"
+        },
+        {
+          "name": "other_signals",
+          "index": 4,
+          "status": "failed",
+          "inputSha256": "469694b90af95e44a1ef964c454370fdf361705400d152519391f9624896da6d"
+        }
+      ]
+    },
+    "glider": {
+      "connectedNets": 49,
+      "requestedRoutableNets": 356,
+      "emittedCounts": {
+        "source_component": 379,
+        "source_net": 356,
+        "pcb_smtpad": 1679,
+        "pcb_plated_hole": 11,
+        "pcb_hole": 10,
+        "pcb_trace": 53,
+        "pcb_via": 111,
+        "pcb_copper_pour": 0
+      },
+      "lastError": "vQ ran out of iterations (capacity-autorouter@0.0.1117)",
+      "phaseFiles": {
+        "phase-1-input.srj.json.gz": "2907ab02cf0cd498395c689c30965242fc8e24a538ea4ea0a27da247de5b9449",
+        "phase-1-output.srj.json.gz": "4b1604b5e3fcdb8eaba52385d1fbbc2568b0afa7271e336349769071add2f713",
+        "phase-2-input.srj.json.gz": "11f9e9d26f1be91b2ded86d6879f130aabb42038ff80521cbf65b87b9b50e93a",
+        "phase-2-output.srj.json.gz": "c4fd49637ee24905c62ac11fd3c7dcb30b2be9e90c7ce8c3f8b915ddb3f1d80f",
+        "phase-3-input.srj.json.gz": "71ab018217c0d68443a1a153f019f1d746f356b601e044eebb03d81cfa3e48c5",
+        "phase-3-output.srj.json.gz": "adc7f362ff9e1fe2572c72bb304dd5d5d0e287b96fc22df283150e3f849cff2a",
+        "phase-4-error.srj.json.gz": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4",
+        "phase-4-input.srj.json.gz": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4"
+      },
+      "circuitSha256": "afbc719a11fe1e207a8b5c2e43e345641cbece1cdd438aa6f3451a58afc85893",
+      "copperSha256": "1f6380a79aa720dc3c34745f5b86755ca7fbf8e9abe2bcc72c14bc5215d856c0",
+      "phaseStatus": [
+        {
+          "name": "byte0",
+          "index": 1,
+          "status": "completed",
+          "inputSha256": "2907ab02cf0cd498395c689c30965242fc8e24a538ea4ea0a27da247de5b9449"
+        },
+        {
+          "name": "byte1",
+          "index": 2,
+          "status": "completed",
+          "inputSha256": "11f9e9d26f1be91b2ded86d6879f130aabb42038ff80521cbf65b87b9b50e93a"
+        },
+        {
+          "name": "remaining",
+          "index": 3,
+          "status": "completed",
+          "inputSha256": "71ab018217c0d68443a1a153f019f1d746f356b601e044eebb03d81cfa3e48c5"
+        },
+        {
+          "name": "other_signals",
+          "index": 4,
+          "status": "failed",
+          "inputSha256": "97945a2e95e88d1a62773f67b96036e58d4fdf7cda8bf9160085e09f6b2108a4"
+        }
+      ],
+      "coarseDiagnosticsSha256": "8ee2c55ef5f7d302ca348444960c618da0dd73ae0c1ebfe56a38bc4bc44816e2"
+    }
+  }
+}

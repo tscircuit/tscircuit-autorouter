@@ -4,6 +4,8 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createCoarseFailureDiagnostics } from "./createCoarseFailureDiagnostics"
+import { createHighDensityFailureDiagnostics } from "./createHighDensityFailureDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -116,9 +118,25 @@ const diagnosticTargets: Record<string, string> = {
 }
 const targetPhase = executionMode === "full" ? diagnosticTargets[`${task.id}-${task.cohort}`] : undefined
 progress.coarseRoutingInstrumentation = { enabled: Boolean(targetPhase), targetPhase: targetPhase ?? null, mode: "observational published-instance lifecycle hooks" }
+const witnessTargets: Record<string, { targetNode: string; targetConnection: string; rootConnection: string }> = {
+  "h616-spaced": { targetNode: "topology_merge_7204", targetConnection: "source_net_116", rootConnection: "source_net_116" },
+  "icepi-spaced": { targetNode: "topology_merge_17108", targetConnection: "source_net_34_mst6", rootConnection: "source_net_34" },
+}
+const witnessEnabled = executionMode === "full" && process.env.FULL_BOARD_FAILURE_WITNESS === "1"
+const witnessTarget = witnessEnabled ? witnessTargets[`${task.id}-${task.cohort}`] : undefined
+let failureObserver: ReturnType<typeof createHighDensityFailureDiagnostics> | ReturnType<typeof createCoarseFailureDiagnostics> | undefined
+const saveFailureReport = (report: Record<string, any>): void => {
+  atomic("failure-witness.json.gz", gzipSync(JSON.stringify(report), { level: 1 }))
+}
+const finishFailureDiagnostics = (): void => {
+  const report = failureObserver?.finish()
+  failureObserver = undefined
+  if (report) saveFailureReport(report)
+}
 const coarseReports: Record<string, any>[] = []
 let coarseObserver: ReturnType<typeof createCoarseRoutingDiagnostics> | undefined
 const finishCoarseDiagnostics = (): void => {
+  finishFailureDiagnostics()
   const report = coarseObserver?.finish()
   coarseObserver = undefined
   if (report) coarseReports.push(report)
@@ -168,6 +186,13 @@ circuit.on("solver:started", (event: any): void => {
       onSnapshot: report => atomic("coarse-diagnostics.json", JSON.stringify({ reports: [...coarseReports, report] }, null, 2)),
     })
     coarseObserver.onSolverStarted(event, phaseName)
+  }
+  if (witnessEnabled && event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && phaseName === "other_signals") {
+    finishFailureDiagnostics()
+    const common = { pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph, targetPhase: phaseName, onSnapshot: saveFailureReport }
+    if (witnessTarget) failureObserver = createHighDensityFailureDiagnostics({ ...common, ...witnessTarget })
+    else if (task.id === "glider" && task.cohort === "spaced") failureObserver = createCoarseFailureDiagnostics(common)
+    failureObserver?.onSolverStarted(event, phaseName)
   }
   progress.solvers.push({ name: event.solverName, component: event.componentName, status: "running", startedMs: performance.now() - started, cacheProvider: options?.cacheProvider ? "present" : null })
 })

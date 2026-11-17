@@ -1,0 +1,135 @@
+name: Published3216 native failure witnesses
+
+on:
+  push:
+    branches: [diagnostic/full-board-failures-3216]
+
+permissions:
+  contents: read
+
+jobs:
+  route:
+    name: Native failure witness (${{ matrix.board }})
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { board: h616, experiment: published, cohorts: "spaced" }
+          - { board: icepi, experiment: published, cohorts: "spaced" }
+          - { board: glider, experiment: published, cohorts: "spaced" }
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      BOARD: ${{ matrix.board }}
+      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
+      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+      FULL_BOARD_FAILURE_WITNESS: "1"
+
+    steps:
+      - name: Checkout benchmark controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-failure-witness-3216.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuits
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuits
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare verified package runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Prepare authentic paired cases
+        id: prepare
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/cases"
+          "$BOARD"
+
+      - name: Run spaced full circuit
+        id: spaced
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+
+      - name: Verify native failure capture against the fresh baseline
+        id: witness
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/verify-failure-witness.py "$FULL_BOARD_ROOT" "$BOARD"
+
+      - name: Preserve spaced geometry and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: failure-witness-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/spaced
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Publish compact result notices and summary
+        id: report
+        if: always()
+        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
+
+      - name: Preserve small reports and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: failure-witness-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          path: |
+            .full-board-run/results/${{ matrix.board }}/summary.json
+            .full-board-run/results/${{ matrix.board }}/*/result.json
+            .full-board-run/results/${{ matrix.board }}/*/assessment.json
+            .full-board-run/results/${{ matrix.board }}/*/process.json
+            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/cases/assessment-helper-proof.json
+            experiments/full-board-ten/release.json
+            experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/failure-witness-baseline.json
+            .full-board-run/results/${{ matrix.board }}/spaced/failure-witness-validation.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Require a valid unchanged-output witness
+        if: always()
+        run: test "${{ steps.witness.outcome }}" = success
