@@ -50,4 +50,4 @@ source_net_158" data-x="-11.5" data-y="15.519999999999987" x="244.29362880886436
               document.currentScript.parentElement.addEventListener('mouseleave', () => {
                 document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
               });
-            ]]></script><g><rect x="12" y="12" width="976" height="78" rx="6" fill="white" stroke="#b91c1c"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#334155">H616: five escapes into one declared inner2 plane</text><text x="24" y="72" font-family="Arial, sans-serif" font-size="20" fill="#b91c1c">Continuity errors: 4; clearance errors: 0</text></g></svg>
+            ]]></script><g><rect x="12" y="12" width="976" height="78" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#334155">H616: five escapes into one declared inner2 plane</text><text x="24" y="72" font-family="Arial, sans-serif" font-size="20" fill="#166534">Continuity errors: 0; clearance errors: 0</text></g></svg>

@@ -281,6 +281,9 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
+  {
+    externalCopperConnections = [],
+  }: { externalCopperConnections?: string[][] } = {},
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -496,7 +499,7 @@ export const checkTraceContinuity = (
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
     const map = new ConnectivityMap({})
-    const connections: string[][] = []
+    const connections: string[][] = [...externalCopperConnections]
     const indexedSegments = segments.map((segment, order) => ({
       ...segment,
       order,
