@@ -20,6 +20,7 @@ type PreloadedTracePrimitive = {
   traceId: string
   fixedNetId: string
   isFixed?: boolean
+  copperRadius: number
   connectionName: string
   routePositionStart: number
   routePositionEnd: number
@@ -84,6 +85,7 @@ const getPreloadedTracePrimitives = (
           traceId: trace.pcb_trace_id,
           fixedNetId,
           isFixed: trace.isFixed,
+          copperRadius: (routePoint.via_diameter ?? srj.minViaDiameter ?? 0.6) / 2,
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition,
@@ -117,6 +119,7 @@ const getPreloadedTracePrimitives = (
             traceId: trace.pcb_trace_id,
             fixedNetId,
             isFixed: trace.isFixed,
+            copperRadius: srj.minTraceWidth / 2,
             connectionName: trace.connection_name,
             routePositionStart: routePosition + padIndex,
             routePositionEnd: routePosition + padIndex,
@@ -146,6 +149,7 @@ const getPreloadedTracePrimitives = (
         traceId: trace.pcb_trace_id,
         fixedNetId,
         isFixed: trace.isFixed,
+        copperRadius: Math.max(start.width, end.width) / 2,
         connectionName: trace.connection_name,
         routePositionStart: pointIndex,
         routePositionEnd: pointIndex + 1,
@@ -295,14 +299,21 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     let boundaryDistanceCheckCount: number = 0
     for (const primitive of this.primitives) {
       if (this.boundaryIndex === null) break
+      const clearance =
+        this.srj.minTraceToPadEdgeClearance ??
+        this.srj.defaultObstacleMargin ??
+        0.1
+      const searchMargin = primitive.isFixed
+        ? primitive.copperRadius + this.srj.minTraceWidth / 2 + clearance
+        : GEOMETRIC_TOLERANCE
       // Include near misses accepted by the exact geometric predicate. Keep
       // boundary order stable: competing fixed-net assignments are ordered.
       const candidates: number[] = this.boundaryIndex
         .search(
-          Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
-          Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
-          Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
-          Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
+          Math.min(primitive.start.x, primitive.end.x) - searchMargin,
+          Math.min(primitive.start.y, primitive.end.y) - searchMargin,
+          Math.max(primitive.start.x, primitive.end.x) + searchMargin,
+          Math.max(primitive.start.y, primitive.end.y) + searchMargin,
         )
         .sort((left, right) => left - right)
       for (const index of candidates) {
@@ -314,7 +325,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
             primitive.end,
             segment.start,
             segment.end,
-          ) > GEOMETRIC_TOLERANCE
+          ) > searchMargin
         ) {
           continue
         }
@@ -323,6 +334,20 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           if (!segment.availableZ.includes(z)) continue
           const portPoint = getClosestPortPoint(segment, primitive, z)
           if (portPoint) preloadPort(portPoint, primitive, z)
+          if (!primitive.isFixed) continue
+          for (const nearbyPort of segment.portPoints) {
+            if (
+              nearbyPort !== portPoint &&
+              nearbyPort.availableZ.includes(z) &&
+              pointToSegmentDistance(
+                nearbyPort,
+                primitive.start,
+                primitive.end,
+              ) < searchMargin
+            ) {
+              preloadPort(nearbyPort, primitive, z)
+            }
+          }
         }
       }
     }
