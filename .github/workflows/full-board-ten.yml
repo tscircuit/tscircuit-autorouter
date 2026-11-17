@@ -1,24 +1,41 @@
-name: Published3209 iMX6 board grid cache same-VM pair
+name: Published3209 board grid cache remaining nine cases
 
 on:
   push:
-    branches: [bench/board-grid-cache-pair-3209]
+    branches: [bench/board-grid-cache-nine-3209]
 
 permissions:
   contents: read
 
 jobs:
   route:
-    name: iMX6 spaced, published then board grid cache
+    name: Board grid cache (${{ matrix.board }}, ${{ matrix.cohort }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 48
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - { board: h616, cohort: original }
+          - { board: h616, cohort: spaced }
+          - { board: butterstick, cohort: original }
+          - { board: butterstick, cohort: spaced }
+          - { board: glider, cohort: original }
+          - { board: glider, cohort: spaced }
+          - { board: imx6, cohort: original }
+          - { board: icepi, cohort: original }
+          - { board: icepi, cohort: spaced }
     env:
-      PAIR_ROOT: ${{ github.workspace }}/.full-board-pair
-      BOARD: imx6
-      FULL_BOARD_COHORTS: spaced
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      BOARD: ${{ matrix.board }}
+      FULL_BOARD_COHORTS: ${{ matrix.cohort }}
+      FULL_BOARD_EXPERIMENT: board-grid-cache-candidate
 
     steps:
-      - name: Checkout unchanged benchmark controller
+      - name: Checkout benchmark controller
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -32,7 +49,7 @@ jobs:
         with:
           repository: tscircuit/tscircuit-autorouter
           ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
-          path: .full-board-pair/base/sources/original
+          path: .full-board-run/sources/original
           persist-credentials: false
           sparse-checkout: experiments/full-board-priority-analysis
 
@@ -41,7 +58,7 @@ jobs:
         with:
           repository: ShiboSoftwareDev/core-ddr-benchmark
           ref: a3679559d6027aea2c441c1078853d58925d3a12
-          path: .full-board-pair/base/sources/spaced
+          path: .full-board-run/sources/spaced
           persist-credentials: false
           sparse-checkout: |
             full-boards
@@ -55,166 +72,73 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Isolate both controllers and source copies before installing either runtime
-        run: |
-          mkdir -p "$PAIR_ROOT/base/controller" "$PAIR_ROOT/candidate/controller" "$PAIR_ROOT/candidate/sources"
-          cp -a experiments/full-board-ten/. "$PAIR_ROOT/base/controller/"
-          cp -a experiments/full-board-ten/. "$PAIR_ROOT/candidate/controller/"
-          cp -a "$PAIR_ROOT/base/sources/." "$PAIR_ROOT/candidate/sources/"
+      - name: Prepare verified package runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
-      - name: Prepare published runtime and neutral assessment
-        id: prepare_base
-        env:
-          FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-pair/base
-          FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-pair/base/runtime-manifest.json
-          BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-pair/base/bun-cache
-          FULL_BOARD_EXPERIMENT: published
-        run: |
-          python3 "$FULL_BOARD_ROOT/controller/bootstrap.py" --root "$FULL_BOARD_ROOT"
-          bun "$FULL_BOARD_ROOT/controller/prepare-cases.ts" "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$BOARD"
+      - name: Prepare authentic paired cases
+        id: prepare
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/cases"
+          "$BOARD"
 
-      - name: Prepare candidate runtime and neutral assessment
-        id: prepare_candidate
-        env:
-          FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-pair/candidate
-          FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-pair/candidate/runtime-manifest.json
-          BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-pair/candidate/bun-cache
-          FULL_BOARD_EXPERIMENT: board-grid-cache-candidate
-        run: |
-          python3 "$FULL_BOARD_ROOT/controller/bootstrap.py" --root "$FULL_BOARD_ROOT"
-          bun "$FULL_BOARD_ROOT/controller/prepare-cases.ts" "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$BOARD"
-
-      - name: Verify identical paired cases, dependencies and controller bytes before override
-        run: |
-          python3 - <<'PY'
-          import hashlib, json, os
-          from pathlib import Path
-          root = Path(os.environ["PAIR_ROOT"])
-          base, candidate = root / "base", root / "candidate"
-          normalize = lambda content, run: content.replace(str(run), "<RUN_ROOT>")
-          cases = []
-          for run in [base, candidate]:
-              case = json.loads(normalize((run / "cases/imx6-spaced.json").read_text(), run))
-              case.pop("experiment")
-              cases.append(case)
-          if cases[0] != cases[1]:
-              raise RuntimeError("Paired native circuit policy or source differs")
-          if [cases[0][key] for key in ["captureDeadlineMs", "hardDeadlineMs", "assessmentDeadlineMs"]] != [900000, 960000, 180000]:
-              raise RuntimeError("Native deadlines changed")
-          for relative in ["runtime/package.json", "runtime/bun.lock", "autorouter-dependencies/package.json", "autorouter-dependencies/bun.lock"]:
-              if (base / relative).read_bytes() != (candidate / relative).read_bytes():
-                  raise RuntimeError(f"Paired dependency files differ: {relative}")
-          manifests = [json.loads(normalize((run / "runtime-manifest.json").read_text(), run)) for run in [base, candidate]]
-          for key in ["mainVersion", "packages", "runtimeDependencyFiles", "autorouterDependencyFiles", "additionalChangedPackages", "sourceCommits", "runner"]:
-              if manifests[0][key] != manifests[1][key]:
-                  raise RuntimeError(f"Paired runtime identity differs: {key}")
-          controller = Path("experiments/full-board-ten")
-          files = []
-          for original in sorted(controller.rglob("*")):
-              if not original.is_file():
-                  continue
-              relative = original.relative_to(controller)
-              contents = original.read_bytes()
-              if any((run / "controller" / relative).read_bytes() != contents for run in [base, candidate]):
-                  raise RuntimeError(f"Paired controller differs: {relative}")
-              files.append({"path": str(relative), "sha256": hashlib.sha256(contents).hexdigest()})
-          proof = {"head": os.environ["GITHUB_SHA"], "order": ["published", "board-grid-cache-candidate"],
-                   "runner": manifests[0]["runner"], "sameVm": True, "freshProcesses": True,
-                   "bothRuntimesPreparedBeforeTiming": True, "separateRuntimeCaseAndResultRoots": True,
-                   "limitsMs": [900000, 960000, 180000], "normalizedCasesEqual": True,
-                   "controllerFiles": files, "baseCoreSha256": "8377980807ef6bc753a60ac789f67a0d65631feeee47c394f6f0e72eb1ed7851",
-                   "candidateCoreSha256": "ff81769971e58063a648cc03feaf68d7f11c9399c6c8897694fd6f764fc0d015",
-                   "sourceCommit": "0f1c5ca41a1dccad289662e68228ef7e58afa071",
-                   "scope": "One base-first pair on one VM. No profiling, solver options or native deadlines changed. Order effects and single-pair timing variance remain possible."}
-          (root / "pair-proof.json").write_text(json.dumps(proof, indent=2) + "\n")
-          print("NATIVE_PAIR_PROOF " + json.dumps(proof, separators=(",", ":")))
-          PY
-
-      - name: Install exact candidate after both neutral assessors are prepared
+      - name: Install exact candidate after the original neutral assessor is prepared
         id: candidate
-        run: python3 "$PAIR_ROOT/candidate/controller/board-grid-cache-runtime.py" install "$PAIR_ROOT/candidate" "$BOARD" "$FULL_BOARD_COHORTS"
+        run: python3 experiments/full-board-ten/board-grid-cache-runtime.py install "$FULL_BOARD_ROOT" "$BOARD" "$FULL_BOARD_COHORTS"
 
-      - name: Run published full circuit first
-        id: base
+      - name: Run selected full circuit with unchanged deadlines
+        id: render
         continue-on-error: true
-        run: bun "$PAIR_ROOT/base/controller/run-one.ts" "$PAIR_ROOT/base/cases/$BOARD-spaced.json" "$PAIR_ROOT/base/results/$BOARD/spaced"
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/$BOARD-$FULL_BOARD_COHORTS.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/$FULL_BOARD_COHORTS"
 
-      - name: Report published result
-        id: report_base
-        if: ${{ always() && steps.prepare_base.outcome == 'success' }}
-        env:
-          FULL_BOARD_EXPERIMENT: published
-        run: python3 "$PAIR_ROOT/base/controller/report.py" "$PAIR_ROOT/base" "$BOARD"
-
-      - name: Run candidate full circuit second
-        id: head
-        if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
-        continue-on-error: true
-        run: bun "$PAIR_ROOT/candidate/controller/run-one.ts" "$PAIR_ROOT/candidate/cases/$BOARD-spaced.json" "$PAIR_ROOT/candidate/results/$BOARD/spaced"
-
-      - name: Verify candidate originals and restored neutral assessment
+      - name: Verify original package bytes and restored neutral assessment
         if: ${{ always() && steps.candidate.outcome == 'success' }}
-        run: |
-          python3 "$PAIR_ROOT/candidate/controller/board-grid-cache-runtime.py" verify "$PAIR_ROOT/candidate"
-          python3 - <<'PY'
-          import hashlib, json, os
-          from pathlib import Path
-          root = Path(os.environ["PAIR_ROOT"]) / "base"
-          manifest = json.loads((root / "runtime-manifest.json").read_text())
-          for package in manifest["packages"]:
-              folder = root / "npm" / package["label"]
-              if (root / "runtime/node_modules" / package["name"]).resolve() != folder:
-                  raise RuntimeError("Published base package alias changed")
-              for item in package["publishedFiles"]:
-                  if hashlib.sha256((folder / item["path"]).read_bytes()).hexdigest() != item["sha256"]:
-                      raise RuntimeError("Published base package bytes changed")
-          helper = json.loads((root / "cases/assessment-helper-proof.json").read_text())
-          for item in helper["files"]:
-              if hashlib.sha256((root / "cases/assessment-core" / item["name"]).read_bytes()).hexdigest() != item["outputSha256"]:
-                  raise RuntimeError("Published base neutral assessment changed")
-          (root / "published-post-proof.json").write_text(json.dumps({"publishedFilesVerified": True, "aliasesVerified": True, "neutralHelperVerified": True}) + "\n")
-          print("PUBLISHED_BASE_POST_PROOF all original package bytes, aliases and neutral helper verified")
-          PY
+        run: python3 experiments/full-board-ten/board-grid-cache-runtime.py verify "$FULL_BOARD_ROOT"
 
-      - name: Report candidate result
-        id: report_candidate
-        if: ${{ always() && steps.prepare_candidate.outcome == 'success' }}
-        env:
-          FULL_BOARD_EXPERIMENT: board-grid-cache-candidate
-        run: python3 "$PAIR_ROOT/candidate/controller/report.py" "$PAIR_ROOT/candidate" "$BOARD"
-
-      - name: Preserve both full native outputs
+      - name: Preserve actual full circuit and native diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: imx6-board-grid-cache-pair-outputs-${{ github.run_attempt }}
-          path: |
-            .full-board-pair/base/results
-            .full-board-pair/candidate/results
+          name: full-board-${{ matrix.board }}-board-grid-cache-${{ matrix.cohort }}-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/${{ matrix.cohort }}
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Preserve paired runtime and source provenance
+      - name: Publish compact result notices and summary
+        id: report
+        if: always()
+        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
+
+      - name: Preserve small reports and provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: imx6-board-grid-cache-pair-provenance-${{ github.run_attempt }}
+          name: full-board-${{ matrix.board }}-board-grid-cache-${{ matrix.cohort }}-summary-${{ github.run_attempt }}
           path: |
-            .full-board-pair/pair-proof.json
-            .full-board-pair/base/published-post-proof.json
-            .full-board-pair/*/runtime-manifest.json
-            .full-board-pair/*/cases/assessment-helper-proof.json
-            .full-board-pair/candidate/board-grid-cache-*.json
+            .full-board-run/results/${{ matrix.board }}/summary.json
+            .full-board-run/results/${{ matrix.board }}/*/result.json
+            .full-board-run/results/${{ matrix.board }}/*/assessment.json
+            .full-board-run/results/${{ matrix.board }}/*/process.json
+            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/cases/${{ matrix.board }}-${{ matrix.cohort }}.json
+            .full-board-run/board-grid-cache-*.json
             experiments/full-board-ten/board-grid-cache-anchor.json
+            experiments/full-board-ten/harness-provenance.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
-            experiments/full-board-ten/harness-provenance.json
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Require both full circuits to be complete and clean
+      - name: Require selected full circuits to be complete and clean
         if: always()
-        run: test "${{ steps.report_base.outputs.all_clean }}" = true && test "${{ steps.report_candidate.outputs.all_clean }}" = true
+        run: test "${{ steps.report.outputs.all_clean }}" = true

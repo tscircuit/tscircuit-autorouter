@@ -41,7 +41,7 @@ def verify(root: Path, candidate_alias: bool) -> dict:
 
 
 def install(root: Path, board: str, cohort: str) -> dict:
-    if (board, cohort) not in {("butterstick", "spaced"), ("glider", "original"), ("imx6", "spaced")}:
+    if board not in {"h616", "butterstick", "glider", "imx6", "icepi"} or cohort not in {"original", "spaced"}:
         raise RuntimeError("Unexpected qualification case")
     controller = Path(__file__).resolve().parent
     anchor = json.loads((controller / "board-grid-cache-anchor.json").read_text())

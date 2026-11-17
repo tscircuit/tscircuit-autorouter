@@ -43,15 +43,20 @@
     },
     {
       "name": "board-grid-cache-runtime.py",
-      "bytes": 9687,
-      "sha256": "a6f3d7925529ff40147808bd34ad63c525c3590ba24ccff280826b9f438088f7"
+      "bytes": 9696,
+      "sha256": "bab5c102decebe27118fb072aeaeb2b9a95b2f4396acdbc4c14135ed93949db5"
     },
     {
       "name": "board-grid-cache-anchor.json",
       "bytes": 4515,
       "sha256": "07ae852b266dbb6cde79fd742b06cb8ed199c688fd32254e915d6934babeb927"
+    },
+    {
+      "name": "report.py",
+      "bytes": 4088,
+      "sha256": "a72ac22c16c7472cfeb87917f6be80f5a4e47d43b0e7d695fc65bf71ac2043e9"
     }
   ],
   "diagnosticInstrumentation": "Published-instance lifecycle observer on four recurrent-failure phases and all spaced ButterStick P9 phases; no routing input/options/limits changed. Timings include observation overhead.",
-  "candidatePreparation": "Only the candidate Core board-grid cache block changes; both lanes use identical diagnostic controllers, authentic input/options/deadlines, and original-Core assessment after restoring the candidate alias."
+  "candidatePreparation": "Remaining nine authentic full-board cases after the separately qualified same-VM iMX6 spaced pair. Each fresh isolated runtime changes only the exact same candidate Core board-grid cache block; source, routing policies and900/960/180deadlines stay frozen. Every neutral assessor is prepared from original published Core and alias restoration precedes assessment."
 }
