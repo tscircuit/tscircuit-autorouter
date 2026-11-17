@@ -1,8 +1,8 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { GraphicsObject } from "graphics-debug"
+import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import {
@@ -71,6 +71,31 @@ const getDistanceToTerminal = ({
   return distance(terminal, point)
 }
 
+function canJoinLayerTransition({
+  hdRoute,
+  start,
+  end,
+}: {
+  hdRoute: HighDensityIntraNodeRoute
+  start: Point3
+  end: Point3
+}): boolean {
+  const firstPoint = hdRoute.route[0]!
+  const lastPoint = hdRoute.route.at(-1)!
+  const startsOnCurrentLayer = firstPoint.z === start.z
+  const entryPoint = startsOnCurrentLayer ? firstPoint : lastPoint
+  const exitPoint = startsOnCurrentLayer ? lastPoint : firstPoint
+
+  if (entryPoint.z !== start.z) return false
+  if (exitPoint.z !== end.z) return false
+
+  const maxJoinDistance = Math.max(
+    distance(start, entryPoint),
+    distance(end, exitPoint),
+  )
+  return maxJoinDistance <= MAX_STITCH_GAP_DISTANCE_3
+}
+
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "SingleHighDensityRouteStitchSolver3"
@@ -84,6 +109,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+
+  private getLayerTransitionPenalty(start: Point3, end: Point3): number {
+    const isPlannedTransition =
+      this.allowedLayerTransitionPointKeys?.has(getXyPointKey(end)) ||
+      this.remainingHdRoutes.some((route) =>
+        route.vias.some((via) => distance(via, start) < GEOMETRIC_TOLERANCE),
+      )
+    if (isPlannedTransition) return VIA_PENALTY
+
+    // Prefer an existing layer transition whose endpoints can be joined locally.
+    // An internal via with same-layer endpoints is not an accessible bridge.
+    const hasRoutedTransition = this.remainingHdRoutes.some((hdRoute) =>
+      canJoinLayerTransition({ hdRoute, start, end }),
+    )
+    return hasRoutedTransition ? GAP_PENALTY + VIA_PENALTY : VIA_PENALTY
+  }
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -455,7 +496,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(firstPointInCandidate),
           ))
       ) {
-        scoreFirst = VIA_PENALTY + distToFirst
+        scoreFirst =
+          this.getLayerTransitionPenalty(
+            lastMergedPoint,
+            firstPointInCandidate,
+          ) + distToFirst
       }
 
       if (scoreFirst < bestScore) {
@@ -487,7 +532,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             getXyPointKey(lastPointInCandidate),
           ))
       ) {
-        scoreLast = VIA_PENALTY + distToLast
+        scoreLast =
+          this.getLayerTransitionPenalty(
+            lastMergedPoint,
+            lastPointInCandidate,
+          ) + distToLast
       }
 
       if (scoreLast < bestScore) {
