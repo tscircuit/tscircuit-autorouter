@@ -438,6 +438,34 @@ try {
   if (lastRegional && !lastRegional.retained) retain(lastRegional)
 } catch (error) { captureError = String(error) }
 
+let completedOutput: Buffer | undefined
+try {
+  if (topologyViaProof?.constructorCalls === 1) {
+    const originalSrjSha256 = sha(JSON.stringify(pipeline.originalSrj))
+    const nativeSrjSha256 = sha(JSON.stringify(pipeline.srj))
+    const nativeCopperSha256 = sha(JSON.stringify(pipeline.srj.traces))
+    assert.equal(originalSrjSha256, topologyViaProof.originalSrjSha256)
+    assert.equal(nativeSrjSha256, topologyViaProof.nativeSrjSha256)
+    assert.equal(nativeCopperSha256, topologyViaProof.nativeCopperSha256)
+    const hd = pipeline.highDensityRouteSolver
+    if (hd) assert(!hd.obstacles.some((obstacle: RuntimeObject) => obstacle.obstacleId?.startsWith("preloaded_via_")))
+    Object.assign(topologyViaProof, {
+      finalOriginalSrjSha256: originalSrjSha256,
+      finalNativeSrjSha256: nativeSrjSha256,
+      finalOriginalCopperSha256: nativeCopperSha256,
+      finalHighDensityContainsDerivedObstacles: false,
+    })
+  }
+  if (pipeline.solved && !executionError && !captureError) {
+    const outputJson = JSON.stringify(pipeline.getOutputSimpleRouteJson())
+    if (topologyViaProof) {
+      assert(!outputJson.includes("preloaded_via_"), "Derived topology obstacles leaked to final output")
+      topologyViaProof.finalOutputContainsDerivedObstacleIds = false
+    }
+    completedOutput = Buffer.from(outputJson)
+  }
+} catch (error) { captureError = String(error) }
+
 const summary = {
   schemaVersion: 1,
   diagnostic: "published Pipeline9 standalone phase replay; read-only before/after observations",
@@ -451,7 +479,7 @@ const summary = {
   highDensity: pipeline.highDensityRouteSolver ? state(pipeline.highDensityRouteSolver) : null,
   targetNodesEncountered: targetNodeIds.size, targetNodeIds: [...targetNodeIds], observedAttempts, failedB01Count,
   retainedAttempts: retainedAttempts.map((attempt) => ({ id: attempt.id, kind: attempt.kind })),
-  outcome: executionError ? "execution_error" : pipeline.solved ? "pipeline_solved" : pipeline.failed ? "pipeline_failed" : "diagnostic_deadline",
+  outcome: executionError || captureError ? "execution_error" : pipeline.solved ? "pipeline_solved" : pipeline.failed ? "pipeline_failed" : "diagnostic_deadline",
   targetEncountered: targetNodeIds.size > 0,
   executionError, captureError, wasmAttempts, coldImportWasmCalls, phaseTransitions, serializedBytes,
   topologyViaProof,
@@ -461,10 +489,7 @@ const summary = {
 const diagnostic = { summary, attempts: retainedAttempts, blobs }
 const diagnosticBytes = Buffer.from(JSON.stringify(diagnostic))
 const compressedDiagnostic = gzipSync(diagnosticBytes, { level: 9 })
-if (pipeline.solved && !executionError && !captureError) {
-  const output = Buffer.from(JSON.stringify(pipeline.getOutputSimpleRouteJson()))
-  writeFileSync(resolve(outputDirectory, "phase-output.srj.json.gz"), gzipSync(output, { level: 9 }))
-}
+if (completedOutput) writeFileSync(resolve(outputDirectory, "phase-output.srj.json.gz"), gzipSync(completedOutput, { level: 9 }))
 writeFileSync(resolve(outputDirectory, "hd-capture.json.gz"), compressedDiagnostic)
 writeFileSync(resolve(outputDirectory, "summary.json"), JSON.stringify({ ...summary, captureSha256: sha(diagnosticBytes), captureGzipSha256: sha(compressedDiagnostic), captureGzipBytes: compressedDiagnostic.length }, null, 2) + "\n")
 if (topologyViaProof) writeFileSync(resolve(outputDirectory, "topology-via-proof.json"), JSON.stringify(topologyViaProof, null, 2) + "\n")
