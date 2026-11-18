@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import input from "../../fixtures/bug-reports/beagleplay-am6254-ddr4/input.srj.json"
 import type { SimpleRouteJson } from "lib/types"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 
 test("BeaglePlay DDR4 retains only the controller and RAM", () => {
   const srj = input as SimpleRouteJson
@@ -18,9 +19,15 @@ test("BeaglePlay DDR4 retains only the controller and RAM", () => {
   const ddr4Pads = srj.obstacles.filter((pad) => pad.componentId === "U2")
   expect(am6254Pads).toHaveLength(425)
   expect(ddr4Pads).toHaveLength(96)
+  const ballIds = new Set<string>()
   for (const pad of [...am6254Pads, ...ddr4Pads]) {
     expect(pad.layers).toEqual(["bottom"])
+    const metadata = pad.circuitJsonMetadata
+    expect(metadata?.source_component_name).toBe(pad.componentId)
+    expect(metadata?.source_port_name).toBeTruthy()
+    ballIds.add(`${metadata?.source_component_name}.${metadata?.source_port_name}`)
   }
+  expect(ballIds.size).toBe(521)
 
   const nets = new Map(srj.connections.map((net) => [net.name, net]))
   expect(nets.size).toBe(51)
@@ -44,11 +51,13 @@ test("BeaglePlay DDR4 retains only the controller and RAM", () => {
     expect(controller?.pointId?.startsWith("U1.")).toBe(true)
     expect(ram?.pointId?.startsWith("U2.")).toBe(true)
     for (const point of pointsToConnect) {
+      expect(point.pcb_port_id).toBe(point.pointId)
       const layers = point.layers ?? [point.layer]
       expect(
         srj.obstacles.some(
           (pad) =>
             pad.connectedTo.includes(name) &&
+            pad.circuitJsonMetadata?.pcb_port_id === point.pcb_port_id &&
             pad.center.x === point.x &&
             pad.center.y === point.y &&
             layers.every((layer) => pad.layers.includes(layer)),
@@ -56,4 +65,13 @@ test("BeaglePlay DDR4 retains only the controller and RAM", () => {
       ).toBe(true)
     }
   }
+
+  const elements = convertToCircuitJson(srj, [])
+  const pads = elements.filter((element) => element.type === "pcb_smtpad")
+  const ports = elements.filter((element) => element.type === "pcb_port")
+  expect(pads).toHaveLength(521)
+  expect(ports).toHaveLength(102)
+  expect(
+    pads.flatMap((pad) => (pad.pcb_port_id ? [pad.pcb_port_id] : [])).sort(),
+  ).toEqual(ports.map((port) => port.pcb_port_id).sort())
 })

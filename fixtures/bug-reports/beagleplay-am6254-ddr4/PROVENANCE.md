@@ -8,7 +8,7 @@ the bottom and have 425 and 96 pads respectively.
 Source board SHA-256:
 `f326c4494161ef9d68fa36bc8196f3e3cc47fcc679c3fa0179b6197947dbfb3d`.
 Derived routing input SHA-256:
-`ebe2cbbe50722cf0802bf974882f75245828ddee7bfa9234c636c6b4d46b74f8`.
+`13a215e571f90e31da4fbf2a7712064d0141a6a1bf6253206c42b30f3d0b9942`.
 The layout is © 2023 Seeed Technology Co., Ltd and BeagleBoard.org Foundation,
 under [CC BY 4.0][license]. See `LICENSE.hardware.txt`.
 
@@ -16,7 +16,9 @@ under [CC BY 4.0][license]. See `LICENSE.hardware.txt`.
 
 - **51 signal nets, 102 terminals.** Each net connects one AM6254 ball to one
   DDR4 ball. The two-footprint repro omits resistor branches, supply and
-  reference rails, and signals without a terminal on both BGAs.
+  reference rails, and signals without a terminal on both BGAs. The fixture
+  preserves the CAD ball names on all 521 pads and ties each DDR terminal to
+  its pad by port ID for continuity checks.
 - **Native pad placement and eight-layer copper order.** KiCad 10.0's Allegro
   importer reads the board. The export translates the board outline to the
   origin and flips the CAD Y axis. The input contains all 521 pads on U1 and
@@ -45,14 +47,16 @@ bun scripts/run-sample.ts --pipeline 9 --effort 1 \
   --srj-path fixtures/bug-reports/beagleplay-am6254-ddr4/input.srj.json
 ```
 
-## Snapshots
+## Baseline snapshots
 
 Pipeline 9 on autorouter `0.0.1117` (`dd3383c`), Bun `1.3.14`, effort 1,
-and no cache reached joint clearance repair at about 279 seconds. The
-300-second run ended during joint repair. A replay with a longer budget
-finished in 333 seconds and exported all 51 traces. Each reaches both pads
-on its net. The exported result still has 103 trace errors under the relaxed
-DRC check. Trace colors identify nets across all eight overlaid layers.
+and no cache reached joint clearance repair at about 279 seconds. A longer
+run exported all 51 traces in 333 seconds. Rechecking that output with the
+native pad identities gives one bottom-layer clearance violation between
+`DDR_PARITY` and `DDR_A6` at U1 (0.037 mm spacing against a 0.081 mm
+requirement). The original count included 102 false endpoint warnings from
+the earlier fixture's missing pad records. Trace colors identify nets across
+all eight overlaid layers.
 
 ![AM6254 and Samsung DDR4 before routing](images/unrouted.png)
 

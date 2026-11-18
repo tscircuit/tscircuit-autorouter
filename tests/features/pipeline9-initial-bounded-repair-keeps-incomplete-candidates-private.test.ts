@@ -37,10 +37,13 @@ test("an incomplete initial bounded result seeds exact repair without publishing
     expect(solver.solved).toBeFalse()
     expect(solver.stats.initialBoundedRegionalRepairAccepted).toBeFalse()
     expect(getResult().routes).not.toEqual(original)
-    const before = fixture.drcEvaluator({ traces: [], routes: original })
-    const after = fixture.drcEvaluator({
+    const exact = solver.exactRepairSolver!
+    const referenceDrc = exact.params.referenceDrcEvaluator
+    expect(referenceDrc).toBeDefined()
+    const before = referenceDrc!({ traces: [], routes: original })
+    const after = referenceDrc!({
       traces: [],
-      routes: solver.exactRepairSolver!.params.hdRoutes,
+      routes: exact.params.hdRoutes,
     })
     expect(Array.isArray(after) ? after : after.errors).toHaveLength(0)
     expect(Array.isArray(before) ? before : before.errors).not.toHaveLength(0)

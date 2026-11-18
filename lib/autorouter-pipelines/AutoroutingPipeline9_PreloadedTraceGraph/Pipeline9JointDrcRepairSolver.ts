@@ -1714,6 +1714,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       originalSrj: params.originalSrj,
       connections: params.srjWithPointPairs.connections,
       hasNativePreloadedTraces,
+      referenceCircuitJson: baselineDrc.circuitJson,
     })
       ? createPipeline9ReferenceDrcGuard(cachedReferenceDrcEvaluator)
       : undefined
