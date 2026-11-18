@@ -2,6 +2,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
+import { RegionalForceImproveSolver } from "lib/solvers/HighDensityRepairSolver/RegionalForceImproveSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -13,7 +14,6 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
-import { Pipeline9RegionalForceImproveSolver } from "./Pipeline9RegionalForceImproveSolver"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -144,7 +144,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly params: Pipeline9RegionalFallbackSolverParams
   readonly highDensitySolver: HighDensitySolver
-  forceImproveSolver?: Pipeline9RegionalForceImproveSolver
+  forceImproveSolver?: RegionalForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private validatedRoutes?: HighDensityRoute[]
 
@@ -217,7 +217,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
     // Cleanup is part of a candidate: a legal raw route can move into a pad.
     // Reject that candidate before the portfolio commits to its winner.
-    const forceImproveSolver = new Pipeline9RegionalForceImproveSolver({
+    const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
       colorMap: this.params.colorMap,

@@ -7,7 +7,7 @@ type RegionalForceImproveParams = ConstructorParameters<
   isViaClearanceValid: (routes: HighDensityRoute[]) => boolean
 }
 
-export class Pipeline9RegionalForceImproveSolver extends HighDensityForceImproveSolver {
+export class RegionalForceImproveSolver extends HighDensityForceImproveSolver {
   private readonly isViaClearanceValid: (routes: HighDensityRoute[]) => boolean
   private rejectedNodeCount: number
 

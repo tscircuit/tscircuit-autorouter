@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Pipeline9RegionalForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalForceImproveSolver"
+import { RegionalForceImproveSolver } from "lib/solvers/HighDensityRepairSolver/RegionalForceImproveSolver"
 import { applyH616RegionalRoutes } from "tests/fixtures/applyH616RegionalRoutes"
 import { getH616PhysicalDrcErrors } from "tests/fixtures/getH616PhysicalDrcErrors"
 import { getH616PowerRoutingPcbSvg } from "tests/fixtures/getH616PowerRoutingPcbSvg"
@@ -18,7 +18,7 @@ test("preserves H616 signal copper when force improvement violates pad clearance
   expect(
     getH616PhysicalDrcErrors({ circuitJson: inputCircuit, minClearance }),
   ).toEqual([])
-  const solver = new Pipeline9RegionalForceImproveSolver({
+  const solver = new RegionalForceImproveSolver({
     nodeWithPortPoints: [params.nodeWithPortPoints],
     hdRoutes: fixture.regionalRoutes,
     colorMap: params.colorMap,
