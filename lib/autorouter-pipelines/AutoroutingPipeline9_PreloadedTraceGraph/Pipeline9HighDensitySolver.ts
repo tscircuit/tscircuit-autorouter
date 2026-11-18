@@ -774,8 +774,23 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackPromotedFixedRouteConnectionNames = new Set(
       promotedFixedRouteConnectionNames,
     )
+    // Regional repairs can leave the original mesh cell. Neighboring nodes'
+    // completed ordinary traces must remain copper constraints during repair.
+    const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
+    const routedObstacleRoutes = this.routes.filter((route) =>
+      routeOverlapsNode(
+        route,
+        regionalNode,
+        regionalBounds,
+        Math.max(this.traceWidth, this.viaDiameter) / 2,
+        this,
+      ),
+    )
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-      fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
+      fixedObstacleRoutes: [
+        ...this.activeFallbackFixedObstacleRoutes,
+        ...routedObstacleRoutes,
+      ],
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
