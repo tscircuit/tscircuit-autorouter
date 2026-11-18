@@ -4,12 +4,7 @@ import {
   segmentToCircleMinDistance,
 } from "@tscircuit/math-utils"
 import type { Obstacle } from "lib/types"
-import {
-  applyToPoint,
-  compose,
-  rotateDEG,
-  translate,
-} from "transformation-matrix"
+import { applyToPoint, rotateDEG, translate } from "transformation-matrix"
 
 type ObstacleGeometry = Pick<
   Obstacle,
@@ -31,17 +26,13 @@ export const getSegmentToObstacleDistance = ({
       radius: obstacle.width / 2,
     })
   }
-  const boardToObstacleTransform = compose(
-    rotateDEG(-(obstacle.ccwRotationDegrees ?? 0)),
-    translate(-obstacle.center.x, -obstacle.center.y),
-  )
-  return segmentToBoxMinDistance(
-    applyToPoint(boardToObstacleTransform, start),
-    applyToPoint(boardToObstacleTransform, end),
-    {
-      center: { x: 0, y: 0 },
-      width: obstacle.width,
-      height: obstacle.height,
-    },
-  )
+  const translation = translate(-obstacle.center.x, -obstacle.center.y)
+  const rotation = rotateDEG(-(obstacle.ccwRotationDegrees ?? 0))
+  const localStart = applyToPoint(rotation, applyToPoint(translation, start))
+  const localEnd = applyToPoint(rotation, applyToPoint(translation, end))
+  return segmentToBoxMinDistance(localStart, localEnd, {
+    center: { x: 0, y: 0 },
+    width: obstacle.width,
+    height: obstacle.height,
+  })
 }

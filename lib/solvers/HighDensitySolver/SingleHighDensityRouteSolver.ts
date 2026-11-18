@@ -149,20 +149,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
-    const rootConnectionName = this.rootConnectionName ?? this.connectionName
-    this.padObstacles = (opts.padObstacles ?? []).filter(
-      (obstacle): boolean => {
-        if (isObstacleConnectedToRoute(obstacle, this, this.connMap))
-          return false
-        if (
-          obstacle.obstacleId &&
-          this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-        ) {
-          return false
-        }
-        return true
-      },
-    )
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -184,6 +170,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.debug_nodesTooCloseToObstacle = new Set()
     this.debug_nodePathToParentIntersectsObstacle = new Set()
     this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length
+    const rootConnectionName = this.rootConnectionName ?? this.connectionName
+    let padObstacles = opts.padObstacles ?? []
+    // Multi-route regions apply pad checks in their candidate cleanup.
+    // This context constrains the shortcut and the search replacing it.
+    if (this.numRoutes > 0) padObstacles = []
+    this.padObstacles = padObstacles.filter((obstacle): boolean => {
+      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      ) {
+        return false
+      }
+      return true
+    })
     this.buildObstacleIndexes()
     const bestRowOrColumnCount = Math.ceil(5 * (this.numRoutes + 1))
     let numXCells = this.boundsSize.width / this.cellStep
