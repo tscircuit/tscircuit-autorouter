@@ -2,7 +2,7 @@ name: Generate native ButterStick repro snapshots
 on:
   push:
     branches: [analysis/butterstick-after-snapshots]
-    paths: [.github/workflows/butterstick-before-snapshots.yml]
+    paths: [.github/workflows/butterstick-after-snapshots.yml]
 permissions:
   contents: write
 jobs:
