@@ -1,10 +1,15 @@
 import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import {
+  HighDensityForceImproveSolver,
+  type FixedViaObstacle,
+} from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { getObstacleRouteConnectivity } from "lib/solvers/HyperHighDensitySolver/getObstacleRouteConnectivity"
 import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
@@ -29,8 +34,6 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   >
 
   constructor(params: ForceImproveParams) {
-    super(params)
-    this.inputSrj = params.inputSrj
     const representedPadObstacleIndexes = new Set<number>()
     convertToCircuitJson(params.inputSrj, [], {
       originalSrj: params.inputSrj,
@@ -40,12 +43,49 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       inputSrj: params.inputSrj,
       representedPadObstacleIndexes,
     })
-    this.fixedViaObstacleIndexes = new Set(
+    const fixedViaObstacleIndexes = new Set(
       [...fixedCopperObstacleIndexes].filter((obstacleIndex) => {
         const obstacle = params.inputSrj.obstacles[obstacleIndex]!
         return obstacle.shape === "circle" && obstacle.layers.length > 1
       }),
     )
+    const fixedViaObstacles = [...fixedViaObstacleIndexes].map(
+      (index) => params.inputSrj.obstacles[index]!,
+    )
+    let routesForConnectivity = params.hdRoutes
+    if (fixedViaObstacles.length === 0) routesForConnectivity = []
+    const connectivity = getObstacleRouteConnectivity({
+      obstacles: fixedViaObstacles,
+      routes: routesForConnectivity,
+    })
+    const viaClearance =
+      getViaToPadClearance(params.inputSrj) ??
+      RELAXED_DRC_OPTIONS.traceClearance
+    const forceObstacles = fixedViaObstacles.map(
+      (obstacle, index): FixedViaObstacle => {
+        const zLayers = getUniqueValidZLayersFromLayerNames(
+          obstacle.layers,
+          params.inputSrj.layerCount,
+        )
+        if (zLayers.length === 0) {
+          throw new Error("A fixed via must occupy a valid copper layer")
+        }
+        return {
+          x: obstacle.center.x,
+          y: obstacle.center.y,
+          radius: obstacle.width / 2,
+          clearance: viaClearance,
+          minZ: Math.min(...zLayers),
+          maxZ: Math.max(...zLayers),
+          connectionNames: [
+            ...new Set(connectivity.connectedRouteNamesByObstacle[index]),
+          ],
+        }
+      },
+    )
+    super({ ...params, fixedViaObstacles: forceObstacles })
+    this.inputSrj = params.inputSrj
+    this.fixedViaObstacleIndexes = fixedViaObstacleIndexes
     this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
       srj: {
         ...params.inputSrj,
@@ -151,6 +191,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
               totalStepsPerNode: this.totalStepsPerNode,
               nodeAssignmentMargin: this.nodeAssignmentMargin,
               preserveTopologyPortAnchors: this.preserveTopologyPortAnchors,
+              fixedViaObstacles: this.fixedViaObstacles,
               colorMap: Object.fromEntries(
                 entry.routeIndexes.map((routeIndex) => {
                   const name = this.originalHdRoutes[routeIndex].connectionName
