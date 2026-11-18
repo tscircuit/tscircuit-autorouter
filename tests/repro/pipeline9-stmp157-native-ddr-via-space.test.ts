@@ -39,22 +39,19 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
   })
   solver.solve()
 
-  // On failure, only the previously completed data copper is publishable.
-  let output = reference
-  let status = "Remaining DDR routing failed"
-  if (solver.solved) {
-    output = {
-      ...reference,
-      traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
-    }
-    status = "Remaining DDR copper generated (DRC unqualified)"
+  expect(solver.solved, solver.error ?? "").toBe(true)
+  const output = {
+    ...reference,
+    traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
   }
   const graphics = convertSrjToGraphicsObject(output)
   graphics.points = []
   await expect(
     getSvgFromGraphicsObject(
       stackGraphicsHorizontally([graphics], {
-        titles: [`STMP157 native DDR | ${status}`],
+        titles: [
+          "STMP157 native DDR | Remaining DDR copper generated (DRC unqualified)",
+        ],
       }),
       { backgroundColor: "white" },
     ),
