@@ -1,0 +1,73 @@
+name: "Check iMX6 fanout performance with matched workers"
+on:
+  push:
+    branches: [codex/ddr2417-imx6-paired]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired-native:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 5f568062b3f3ba6c2c16e43271eab6c1f7373d7d
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 63f735cb2d5b3b93c5ec1f0d39ab607c3212594e
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2417-imx6
+          run-id: 44359066016
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the exact before and after source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-native-plane-drop.ts "$revision/replay-native-plane-drop.ts"
+          done
+      - name: Replay three matched pairs serially, alternating order
+        run: |
+          for trial in 1 2 3; do
+            if [[ "$trial" == 2 ]]; then order="after before"; else order="before after"; fi
+            for revision in $order; do
+              mkdir -p "$GITHUB_WORKSPACE/paired/trial-$trial/$revision"
+              (cd "$revision" && bun replay-native-plane-drop.ts "$GITHUB_WORKSPACE/captured/imx6/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/paired/trial-$trial/$revision")
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry2417-paired-imx6
+          path: paired
+      - name: Export matched timing and copper results
+        if: always()
+        run: |
+          python3 - <<'PYPAIRS'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path('paired').rglob('report.json')):
+              report=json.loads(path.read_text());traces=path.parent/'best-traces.json'
+              rows.append({'trial':path.parent.parent.name,'revision':path.parent.name,'elapsedMs':report['elapsedMs'],'inputSha256':report['inputSha256'],'copperSha256':hashlib.sha256(traces.read_bytes()).hexdigest(),'bestPartial':report['bestPartial'],'copperDrc':report['copperDrc'],'failed':report['failed'],'solved':report['solved'],'error':report['error'],'iterations':report['iterations']})
+          Path('paired/comparison.json').write_text(json.dumps(rows,indent=2))
+          print('PAIRED_NATIVE2417_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('paired').rglob('*'):
+                  if path.is_file(): archive.writestr(str(path.relative_to('paired')),path.read_bytes())
+          print('PAIRED_NATIVE2417_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('PAIRED_NATIVE2417_EVIDENCE_END')
+          PYPAIRS
