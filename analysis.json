@@ -1,0 +1,485 @@
+{
+  "provenance": {
+    "tscircuit": "0.0.3235",
+    "core": "0.0.2417",
+    "coreCommit": "1a16da2f74fc2c80712d52abb17254dd2a80e2c5",
+    "router": "0.0.1128",
+    "routerCommit": "83180d0881807ce08dc38b0cc226b9eb8fcca59d",
+    "fanout": "0.0.86",
+    "fanoutCommit": "5f568062b3f3ba6c2c16e43271eab6c1f7373d7d",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3",
+    "nativeFanoutPinnedCapacityDependency": "0.0.718",
+    "measuredFix": "63f735cb2d5b3b93c5ec1f0d39ab607c3212594e",
+    "finalFix": "83f48db80349beecc505a72a6e1f3e36705c829f",
+    "repro": "5878835c6992da607a6df912bf97437830eb1275",
+    "runs": {
+      "baseline": 44359066016,
+      "candidate": 44361796571,
+      "pairedImx6": 44364735570,
+      "sourceCheck": 44362902700,
+      "svgAudit": 44366001013
+    },
+    "routingBudgetMs": 600000,
+    "hardProcessBudgetMs": 660000,
+    "fanout31Concurrency": 16,
+    "fanout31TimeoutSeconds": 120,
+    "workflow": "fanout -> DDR buses -> remaining DDR -> board",
+    "allSixSourceAndInputHashesIdentical": true,
+    "evidenceRebuiltFromImmutableActionsArtifacts": true
+  },
+  "pairedNative": {
+    "icepi": {
+      "before": {
+        "elapsedMs": [
+          173443.26893299998,
+          176501.06967199998,
+          184034.75146700002
+        ],
+        "medianMs": 176501.06967199998,
+        "p95Ms": 183281.38328750004,
+        "meanMs": 177993.030024,
+        "routed": 7,
+        "vias": 7,
+        "drcIssues": 0
+      },
+      "after": {
+        "elapsedMs": [
+          115819.10895400001,
+          115568.7539,
+          122726.68514799999
+        ],
+        "medianMs": 115819.10895400001,
+        "p95Ms": 122035.92752859999,
+        "meanMs": 118038.18266733333,
+        "routed": 7,
+        "vias": 7,
+        "drcIssues": 0
+      },
+      "medianReductionPercent": 34.38050592597997,
+      "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+      "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+      "scope": "Three serial matched native fanout search pairs on one Blacksmith8vcpuARM worker, alternating B/A,A/B,B/A. These searches finish with partial fanout failure. P95 is descriptive for three samples."
+    },
+    "imx6": {
+      "before": {
+        "elapsedMs": [
+          187016.64931900002,
+          204713.282422,
+          197119.80698599998
+        ],
+        "medianMs": 197119.80698599998,
+        "p95Ms": 203953.9348784,
+        "meanMs": 196283.24624233332,
+        "routed": 8,
+        "vias": 7,
+        "drcIssues": 0
+      },
+      "after": {
+        "elapsedMs": [
+          124772.713492,
+          120898.16619999999,
+          126462.99520599999
+        ],
+        "medianMs": 124772.713492,
+        "p95Ms": 126293.96703459999,
+        "meanMs": 124044.62496599999,
+        "routed": 8,
+        "vias": 7,
+        "drcIssues": 0
+      },
+      "medianReductionPercent": 36.70209229615281,
+      "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+      "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+      "scope": "Three serial matched native fanout search pairs on one Blacksmith8vcpuARM worker, alternating B/A,A/B,B/A. These searches finish with partial fanout failure. P95 is descriptive for three samples."
+    }
+  },
+  "boards": [
+    {
+      "board": "orangecrab",
+      "title": "OrangeCrab rev 0.2.1 ECP5 DDR3",
+      "before": {
+        "requested": 273,
+        "bestRouted": 116,
+        "assignment": 8,
+        "searchExhausted": false,
+        "solved": false,
+        "error": null,
+        "elapsedMs": 609381.128596,
+        "fanoutMs": 582985.63003,
+        "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "sourceSha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9",
+        "nonErrorCircuitSha256": "c265ba3587c0c0ac489063666725ce418cc748483a513c4b545c3137822e93e0",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 3,
+        "routableNets": 152,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.089,
+          "minViaPadDiameter": 0.28,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.089,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 273,
+        "bestRouted": 118,
+        "assignment": 19,
+        "searchExhausted": false,
+        "solved": false,
+        "error": null,
+        "elapsedMs": 609366.932245,
+        "fanoutMs": 583574.8955300001,
+        "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "sourceSha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9",
+        "nonErrorCircuitSha256": "c265ba3587c0c0ac489063666725ce418cc748483a513c4b545c3137822e93e0",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 3,
+        "routableNets": 152,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.089,
+          "minViaPadDiameter": 0.28,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.089,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "h616",
+      "title": "Allwinner H616 Devboard DDR3",
+      "before": {
+        "requested": 174,
+        "bestRouted": 88,
+        "assignment": 204,
+        "searchExhausted": false,
+        "solved": false,
+        "error": null,
+        "elapsedMs": 604365.0039359999,
+        "fanoutMs": 584764.783651,
+        "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+        "nonErrorCircuitSha256": "b49259585f23dbfdb63f310f7d838314e23f2923281c9549e603aa5e71a24ee5",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 0,
+        "routableNets": 121,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.08,
+          "minViaPadDiameter": 0.35,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 174,
+        "bestRouted": 88,
+        "assignment": 225,
+        "searchExhausted": false,
+        "solved": false,
+        "error": null,
+        "elapsedMs": 604342.683806,
+        "fanoutMs": 585831.593628,
+        "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+        "nonErrorCircuitSha256": "b49259585f23dbfdb63f310f7d838314e23f2923281c9549e603aa5e71a24ee5",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 0,
+        "routableNets": 121,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.08,
+          "minViaPadDiameter": 0.35,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "butterstick",
+      "title": "ButterStick r1.0",
+      "before": {
+        "requested": 91,
+        "bestRouted": 62,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 62/91 connections",
+        "elapsedMs": 606527.8056780001,
+        "fanoutMs": 460461.22503600013,
+        "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+        "nonErrorCircuitSha256": "f57723bf25e6abf3554918f0f1642338115c492e5f6046237df18e64dc6110dd",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 9,
+        "routableNets": 317,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.0889,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.0889,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 91,
+        "bestRouted": 62,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 62/91 connections",
+        "elapsedMs": 482382.265721,
+        "fanoutMs": 335270.729446,
+        "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+        "nonErrorCircuitSha256": "f57723bf25e6abf3554918f0f1642338115c492e5f6046237df18e64dc6110dd",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 9,
+        "routableNets": 317,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.0889,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.0889,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "glider",
+      "title": "Glider mainboard",
+      "before": {
+        "requested": 95,
+        "bestRouted": 60,
+        "assignment": 69,
+        "searchExhausted": false,
+        "solved": false,
+        "error": null,
+        "elapsedMs": 622251.798963,
+        "fanoutMs": 362585.08791999996,
+        "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+        "nonErrorCircuitSha256": "f1319b39e5d78d2071b85d3def38c211e8a85e4ae6da7d00625137cd6664dd4d",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 0,
+        "routableNets": 356,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.11,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.3,
+          "minViaEdgeToPadEdgeClearance": 0.11,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 95,
+        "bestRouted": 60,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 60/95 connections",
+        "elapsedMs": 359802.49377500004,
+        "fanoutMs": 271168.032733,
+        "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+        "nonErrorCircuitSha256": "f1319b39e5d78d2071b85d3def38c211e8a85e4ae6da7d00625137cd6664dd4d",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 0,
+        "routableNets": 356,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.11,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.3,
+          "minViaEdgeToPadEdgeClearance": 0.11,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "imx6",
+      "title": "i.MX6 Demo Board",
+      "before": {
+        "requested": 32,
+        "bestRouted": 8,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+        "elapsedMs": 418155.23166700004,
+        "fanoutMs": 173015.17664800005,
+        "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+        "nonErrorCircuitSha256": "2d858d51627c9d0a91c2c7edc8feb7ad5a3f136f86bb2b6d607d88c237160c84",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 3,
+        "routableNets": 404,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.119,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.119,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 32,
+        "bestRouted": 8,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+        "elapsedMs": 498118.47763599997,
+        "fanoutMs": 191663.66969499993,
+        "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+        "nonErrorCircuitSha256": "2d858d51627c9d0a91c2c7edc8feb7ad5a3f136f86bb2b6d607d88c237160c84",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 3,
+        "routableNets": 404,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.119,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.119,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "icepi",
+      "title": "iCE/Pi CM0 SBC",
+      "before": {
+        "requested": 32,
+        "bestRouted": 7,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+        "elapsedMs": 280049.170325,
+        "fanoutMs": 154983.905559,
+        "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+        "nonErrorCircuitSha256": "306884534e570e982df93063b0ded910df426528b8774bfd1ec6d9d5db982f37",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 7,
+        "routableNets": 230,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.1,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "requested": 32,
+        "bestRouted": 7,
+        "assignment": 256,
+        "searchExhausted": true,
+        "solved": false,
+        "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+        "elapsedMs": 259813.60700100003,
+        "fanoutMs": 133656.94531800004,
+        "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+        "nonErrorCircuitSha256": "306884534e570e982df93063b0ded910df426528b8774bfd1ec6d9d5db982f37",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "connectedNets": 7,
+        "routableNets": 230,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "rules": {
+          "minTraceWidth": 0.1,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    }
+  ],
+  "fanout31": {
+    "baseline": {
+      "outcomes": {
+        "solved": 30,
+        "timeout": 42
+      },
+      "medianCompletedMs": 46256.5,
+      "meanCompletedMs": 50267.5
+    },
+    "candidate": {
+      "outcomes": {
+        "solved": 30,
+        "timeout": 42
+      },
+      "medianCompletedMs": 46344.5,
+      "meanCompletedMs": 50355.5
+    }
+  },
+  "all30SolvedFanout31SvgsIdentical": true,
+  "completeBoards": {
+    "before": 0,
+    "after": 0
+  },
+  "ddrBusPhasesStarted": {
+    "before": 0,
+    "after": 0
+  },
+  "bestFirstFanoutTotal": {
+    "before": 341,
+    "after": 343
+  },
+  "firstFanoutRequests": 697,
+  "aliasProbe": {
+    "before": 33498,
+    "after": 132,
+    "reductionPercent": 99.60594662367902
+  },
+  "fullBoardTimingLimitations": "One run per version on separate workers includes initialization and budget stops. The slower iMX6 whole-board observation is retained; matched native repeats isolate the changed component. Whole-board completion remains0/6."
+}

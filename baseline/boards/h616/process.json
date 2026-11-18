@@ -1,0 +1,10 @@
+{
+  "id": "h616",
+  "mode": "fanout-bus-first",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 606051.1953830001,
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000,
+  "concurrency": 1
+}

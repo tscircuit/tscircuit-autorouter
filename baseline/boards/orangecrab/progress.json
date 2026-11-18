@@ -1,0 +1,37 @@
+{
+  "id": "orangecrab",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 609381.128596,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 273,
+      "startedMs": 17051.99036,
+      "elapsedMs": 582985.63003
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3235",
+    "core": "0.0.2417",
+    "fanout": "0.0.86",
+    "busLanes": "0.0.62",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "83180d0881807ce08dc38b0cc226b9eb8fcca59d"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 35,
+    "importedSavedCopper": false
+  }
+}

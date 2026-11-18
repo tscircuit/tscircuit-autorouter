@@ -1,0 +1,29 @@
+{
+  "tscircuit": "0.0.3235",
+  "core": "0.0.2417",
+  "coreCommit": "1a16da2f74fc2c80712d52abb17254dd2a80e2c5",
+  "router": "0.0.1128",
+  "routerCommit": "83180d0881807ce08dc38b0cc226b9eb8fcca59d",
+  "fanout": "0.0.86",
+  "fanoutCommit": "5f568062b3f3ba6c2c16e43271eab6c1f7373d7d",
+  "busLanes": "0.0.62",
+  "bun": "1.4.3",
+  "nativeFanoutPinnedCapacityDependency": "0.0.718",
+  "measuredFix": "63f735cb2d5b3b93c5ec1f0d39ab607c3212594e",
+  "finalFix": "83f48db80349beecc505a72a6e1f3e36705c829f",
+  "repro": "5878835c6992da607a6df912bf97437830eb1275",
+  "runs": {
+    "baseline": 44359066016,
+    "candidate": 44361796571,
+    "pairedImx6": 44364735570,
+    "sourceCheck": 44362902700,
+    "svgAudit": 44366001013
+  },
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000,
+  "fanout31Concurrency": 16,
+  "fanout31TimeoutSeconds": 120,
+  "workflow": "fanout -> DDR buses -> remaining DDR -> board",
+  "allSixSourceAndInputHashesIdentical": true,
+  "evidenceRebuiltFromImmutableActionsArtifacts": true
+}

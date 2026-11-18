@@ -1,0 +1,37 @@
+name: Compare routed fanout31 artifacts before and after
+on:
+  push:
+    branches: [codex/ddr2417-svg-audit]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2417-fanout31
+          run-id: 44359066016
+          github-token: ${{ github.token }}
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          name: geometry2417-fanout31
+          run-id: 44361796571
+          github-token: ${{ github.token }}
+          path: after
+      - name: Compare actual routed SVGs and captured inputs
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          def hashes(folder,pattern):return {str(path.relative_to(folder)):hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob(pattern)}
+          before=hashes(Path('before'),'*.svg');after=hashes(Path('after'),'*.svg')
+          before_inputs=hashes(Path('before'),'inputs/*.json');after_inputs=hashes(Path('after'),'inputs/*.json')
+          report={'beforeSvgCount':len(before),'afterSvgCount':len(after),'allRoutedSvgsIdentical':before==after,'allInputsIdentical':before_inputs==after_inputs,'before':before,'after':after,'different':[name for name in sorted(before.keys()|after.keys()) if before.get(name)!=after.get(name)]}
+          print('FANOUT31_SVG_AUDIT',json.dumps(report,separators=(',',':')))
+          assert len(before)==len(after)==30
+          assert before_inputs==after_inputs
+          assert before==after
+          PY

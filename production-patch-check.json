@@ -1,0 +1,7 @@
+{
+  "byteIdenticalProductionPatch": true,
+  "sha256": "c3bc1f80705db2ca61924aaa372cb0e93331c9e1f487eef8b60ab3849372a3da",
+  "baseline": "5f568062b3f3ba6c2c16e43271eab6c1f7373d7d",
+  "measuredFix": "63f735cb2d5b3b93c5ec1f0d39ab607c3212594e",
+  "finalFix": "83f48db80349beecc505a72a6e1f3e36705c829f"
+}
