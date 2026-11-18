@@ -61,8 +61,7 @@ export const precomputeIntraNodeRouteParams = ({
   const copperReach = Math.max(traceWidth, viaDiameter) / 2
   const padObstacles = obstacles
     .filter((obstacle) => {
-      if (!obstacle.componentId || obstacle.isFanoutSourceKeepout)
-        return false
+      if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
       let halfWidth = obstacle.width / 2
       let halfHeight = obstacle.height / 2
       if (obstacle.ccwRotationDegrees) {

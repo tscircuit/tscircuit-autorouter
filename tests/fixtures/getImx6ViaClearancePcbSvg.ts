@@ -7,6 +7,7 @@ type Imx6ViaClearancePcbView = {
   errorCount: number
   focusCenter: { x: number; y: number }
   focused?: boolean
+  showAllLayers?: boolean
 }
 
 export function getImx6ViaClearancePcbSvg({
@@ -15,6 +16,7 @@ export function getImx6ViaClearancePcbSvg({
   errorCount,
   focusCenter,
   focused = false,
+  showAllLayers = false,
 }: Imx6ViaClearancePcbView): string {
   const focusedViewSizeMm = 4
   const view = circuitJson.map((element): AnyCircuitElement => {
@@ -33,7 +35,7 @@ export function getImx6ViaClearancePcbSvg({
     height: focused ? 1000 : 800,
     backgroundColor: "white",
     renderSolderMask: false,
-    layer: focused ? "top" : undefined,
+    layer: focused && !showAllLayers ? "top" : undefined,
     drawPaddingOutsideBoard: !focused,
     shouldDrawErrors: false,
     shouldDrawRatsNest: false,
