@@ -24,8 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 7 checks component pads before accepting diagonal shortcuts.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
+// Version 8 validates shortcut candidates and grid paths against fixed pads.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 8
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -168,6 +168,7 @@ export class CachedIntraNodeRouteSolver
         portPoints: normalizedPortPoints,
       },
       padObstacles: this.padObstacles.map((obstacle) => ({
+        obstacleId: obstacle.obstacleId,
         center: obstacle.center,
         width: obstacle.width,
         height: obstacle.height,

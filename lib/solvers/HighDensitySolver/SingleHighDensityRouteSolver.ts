@@ -1,9 +1,4 @@
-import {
-  distance,
-  doSegmentsIntersect,
-  segmentToBoxMinDistance,
-  segmentToCircleMinDistance,
-} from "@tscircuit/math-utils"
+import { distance, doSegmentsIntersect, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
@@ -13,12 +8,7 @@ import {
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import {
-  applyToPoint,
-  compose,
-  rotateDEG,
-  translate,
-} from "transformation-matrix"
+import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
 import { BaseSolver } from "../BaseSolver"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
@@ -155,7 +145,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
-    this.padObstacles = opts.padObstacles ?? []
+    const rootConnectionName = this.rootConnectionName ?? this.connectionName
+    this.padObstacles = (opts.padObstacles ?? []).filter((obstacle): boolean => {
+      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      ) {
+        return false
+      }
+      return true
+    })
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -262,91 +262,88 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  private doesShortcutOverlapPad(): boolean {
-    const { A, B } = this
+  private doesSegmentIntersectPad(
+    segment: { start: Point3; end: Point3 },
+    isVia = false,
+  ): boolean {
+    let copperRadius = this.traceThickness / 2
+    if (isVia) copperRadius = this.viaDiameter / 2
     for (const obstacle of this.padObstacles) {
-      if (!obstacle.__zLayers.includes(A.z)) continue
-      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) continue
-      let distanceToObstacle: number
-      if (obstacle.shape === "circle") {
-        distanceToObstacle = segmentToCircleMinDistance(A, B, {
-          ...obstacle.center,
-          radius: obstacle.width / 2,
-        })
-      } else {
-        const boardToObstacleTransform = compose(
-          rotateDEG(-(obstacle.ccwRotationDegrees ?? 0)),
-          translate(-obstacle.center.x, -obstacle.center.y),
-        )
-        const localA = applyToPoint(boardToObstacleTransform, A)
-        const localB = applyToPoint(boardToObstacleTransform, B)
-        distanceToObstacle = segmentToBoxMinDistance(localA, localB, {
-          center: { x: 0, y: 0 },
-          width: obstacle.width,
-          height: obstacle.height,
-        })
-      }
-      if (distanceToObstacle < this.traceThickness / 2 - 1e-6) return true
+      if (!isVia && !obstacle.__zLayers.includes(segment.start.z)) continue
+      const distanceToObstacle = getSegmentToObstacleDistance({
+        ...segment,
+        obstacle,
+      })
+      if (distanceToObstacle < copperRadius - 1e-6) return true
     }
     return false
   }
 
+  private isRouteClear(route: Point3[]): boolean {
+    let parent: Node | null = null
+    for (const point of route) {
+      const node: Node = { ...point, g: 0, h: 0, f: 0, parent }
+      const isVia = parent !== null && parent.z !== point.z
+      if (isVia && parent && (point.x !== parent.x || point.y !== parent.y)) {
+        return false
+      }
+      let margin: number | undefined
+      if (isVia) margin = this.viaDiameter / 2 + this.obstacleMargin / 2
+      if (
+        this.isNodeTooCloseToObstacle(node, margin, isVia) ||
+        this.doesPathToParentIntersectObstacle(node)
+      ) {
+        return false
+      }
+      parent = node
+    }
+    return true
+  }
+
   handleSimpleCases(): void {
-    this.solved = true
     const { A, B } = this
-    const route =
-      A.z === B.z
-        ? [A, B]
-        : [
-            A,
-            { ...this.boundsCenter, z: this.A.z },
-            {
-              ...this.boundsCenter,
-              z: B.z,
-            },
-            B,
-          ]
-    // A diagonal between boundary ports can clip the neighboring corner.
-    const isDiagonalShortcut = A.x !== B.x && A.y !== B.y
-    // Endpoint exceptions in the grid check must not hide boundary ports.
-    const aBoundaryDistance = Math.min(
-      A.x - this.bounds.minX,
-      this.bounds.maxX - A.x,
-      A.y - this.bounds.minY,
-      this.bounds.maxY - A.y,
-    )
-    const bBoundaryDistance = Math.min(
-      B.x - this.bounds.minX,
-      this.bounds.maxX - B.x,
-      B.y - this.bounds.minY,
-      this.bounds.maxY - B.y,
-    )
-    if (
-      A.z === B.z &&
-      isDiagonalShortcut &&
-      this.boundsSize.width > this.obstacleMargin &&
-      this.boundsSize.height > this.obstacleMargin &&
-      aBoundaryDistance < 1e-6 &&
-      bBoundaryDistance < 1e-6 &&
-      this.isNodeTooCloseToEdge({
-        x: (A.x + B.x) / 2,
-        y: (A.y + B.y) / 2,
-      }) &&
-      this.doesShortcutOverlapPad()
-    ) {
-      // Preserve the edge ports and use the same inset as the grid search.
-      const inset = this.obstacleMargin / 2
+    let route = [A, B]
+    const vias: { x: number; y: number }[] = []
+    if (A.z !== B.z) {
+      route = [
+        A,
+        { ...this.boundsCenter, z: A.z },
+        { ...this.boundsCenter, z: B.z },
+        B,
+      ]
+      vias.push(this.boundsCenter)
+    }
+
+    if (!this.isRouteClear(route)) {
+      const inset = Math.min(
+        this.obstacleMargin / 2,
+        this.boundsSize.width / 2,
+        this.boundsSize.height / 2,
+      )
       const minX = this.bounds.minX + inset
       const maxX = this.bounds.maxX - inset
       const minY = this.bounds.minY + inset
       const maxY = this.bounds.maxY - inset
-      route.splice(
-        1,
-        0,
-        { x: clamp(A.x, minX, maxX), y: clamp(A.y, minY, maxY), z: A.z },
-        { x: clamp(B.x, minX, maxX), y: clamp(B.y, minY, maxY), z: B.z },
-      )
+      route = [
+        A,
+        ...route.map((point) => ({
+          x: clamp(point.x, minX, maxX),
+          y: clamp(point.y, minY, maxY),
+          z: point.z,
+        })),
+        B,
+      ].filter((point, index, points): boolean => {
+        const previous = points[index - 1]
+        return (
+          !previous ||
+          point.x !== previous.x ||
+          point.y !== previous.y ||
+          point.z !== previous.z
+        )
+      })
+      if (!this.isRouteClear(route)) return
     }
+
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -354,8 +351,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
-      vias: this.A.z === this.B.z ? [] : [this.boundsCenter],
+      vias,
     }
+    this.solved = true
   }
 
   get viaPenaltyDistance() {
@@ -367,7 +365,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     margin?: number,
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
     margin ??= this.obstacleMargin
 
     if (isVia && node.parent) {
@@ -485,6 +483,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
+    if (this.doesSegmentIntersectPad({ start: node, end: node }, isVia)) {
+      return true
+    }
+
     if (pointKey !== undefined) {
       this.freePlanarObstaclePoints.set(pointKey, {
         x: node.x,
@@ -519,8 +521,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
     const parent = node.parent
+    if (
+      this.doesSegmentIntersectPad(
+        { start: parent ?? node, end: node },
+        parent !== null && parent.z !== node.z,
+      )
+    ) {
+      return true
+    }
     if (!parent) return false
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)

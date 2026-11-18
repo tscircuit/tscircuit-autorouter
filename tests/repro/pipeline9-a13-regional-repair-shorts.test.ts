@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
@@ -43,6 +44,9 @@ test("route the native A13 remaining signals after the four data phases", async 
 
   // Render the physical round pad at RAM BALL_C3, not its SRJ bounding box.
   const { circuitJson } = evaluateRelaxedDrc(snapshotInput)
+  expect(
+    checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0 }),
+  ).toEqual([])
   const svg = convertCircuitJsonToPcbSvg(
     [
       ...circuitJson,
