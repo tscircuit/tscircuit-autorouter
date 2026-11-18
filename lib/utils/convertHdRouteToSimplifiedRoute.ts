@@ -266,9 +266,7 @@ const attachExistingTerminalViaTransitions = ({
     if (endpoint?.route_type !== "wire") continue
     const terminal = connectionPoints.find(
       (point) =>
-        point.pcb_port_id &&
-        point.x === endpoint.x &&
-        point.y === endpoint.y,
+        point.pcb_port_id && point.x === endpoint.x && point.y === endpoint.y,
     )
     if (!terminal?.pcb_port_id) continue
     const terminalLayer = getConnectionPointLayers(terminal)[0]!

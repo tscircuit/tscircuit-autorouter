@@ -769,8 +769,7 @@ export function createPcbPadElements(
       !connectedTo.some((pcbPortId) => {
         const terminal = portPositionMap.get(pcbPortId)
         return (
-          terminal?.x === obstacle.center.x &&
-          terminal.y === obstacle.center.y
+          terminal?.x === obstacle.center.x && terminal.y === obstacle.center.y
         )
       })
     ) {
