@@ -6,8 +6,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
  * Returns the physical copper-layer indices on which each PCB-port terminal
  * can directly accept a route endpoint without a via. Connection-point layer
  * metadata is the primary source; an exactly centered multilayer obstacle
- * connected to that specific PCB port may add layers for a plated hole. An
- * identified via can retain just one layer after separation from its SMT pad.
+ * connected to that specific PCB port may add layers for a plated hole.
  */
 export const getTerminalLayerIndicesByPcbPortId = (
   connections: ReadonlyArray<SimpleRouteConnection>,
@@ -35,12 +34,10 @@ export const getTerminalLayerIndicesByPcbPortId = (
       }
       // A plated-hole connection point may name only its preferred layer. A
       // single exactly centered multilayer obstacle proves every physical layer
-      // the terminal spans; identified vias may have their pad layer removed.
-      // Coincident same-net single-layer pads do not prove a layer bridge.
+      // the terminal spans. Coincident same-net single-layer pads do not.
       for (const obstacle of obstaclesByCenter.get(getCenterKey(point)) ?? []) {
         if (
-          (obstacle.layers.length <= 1 &&
-            !obstacle.circuitJsonMetadata?.pcb_via_id) ||
+          obstacle.layers.length <= 1 ||
           !obstacle.connectedTo.includes(point.pcb_port_id)
         ) {
           continue
