@@ -1,0 +1,384 @@
+[
+  {
+    "busId": "ESC_U10_pin115",
+    "connectionNames": [
+      "source_trace_0"
+    ],
+    "inputSha256": "ff488e00300bdafb175090fd9e26a60db7d2436171a6caaf0d9397fda1cc4496",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 646.375399,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "67733eebc46b88fa7fe4b6812ee16ea10ebd6da14f76cb161df0a3fc1d81681b"
+  },
+  {
+    "busId": "ESC_U10_pin129",
+    "connectionNames": [
+      "source_trace_1"
+    ],
+    "inputSha256": "d22c8ea0c6c7d7367185749060e379510addb4e2624fef481172a7c85ba625b6",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 529.37671,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "ef5c7c2163f5d452ddc3ddac98d96c07c939df2bf050d4e4e057a594dc351698"
+  },
+  {
+    "busId": "ESC_U10_pin142",
+    "connectionNames": [
+      "source_trace_2"
+    ],
+    "inputSha256": "1cb57c79a8f194658d565126b6519749689111b546cf488462cadc6e76977352",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 275.7534490000003,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "fcb60ba1b3a0a6a2bf4d6d01ff598094dc03e065124b36f53ef84b71dd92198a"
+  },
+  {
+    "busId": "ESC_U10_pin144",
+    "connectionNames": [
+      "source_trace_3"
+    ],
+    "inputSha256": "94e1f07779137079b7bca512d52523ffc9c0872ebe0b3f85fd8ac90fee4032ba",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 352.4665869999999,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "50a42ae214aca5da5f0f7bc7b25398cbb5299d9169822cfb23db3de1fd6ed706"
+  },
+  {
+    "busId": "ESC_U10_pin34",
+    "connectionNames": [
+      "source_trace_4"
+    ],
+    "inputSha256": "c0b2217adf1afdaab54fdd44d9c320ba6eaa9bb8baae6a52b98ce15b4482558c",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 458.1712970000003,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin101",
+    "connectionNames": [
+      "source_trace_5"
+    ],
+    "inputSha256": "87eeaea32eae8bd006a4176a31d472f0184ede5817fcc10f0cca08780051327d",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 407.8931999999995,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "3129f94e7ddf15d806be3643b032c612f23be28b9cd5b6be3f3bc40bb8c7f661"
+  },
+  {
+    "busId": "ESC_U10_pin54",
+    "connectionNames": [
+      "source_trace_6"
+    ],
+    "inputSha256": "e41ae6faf5bb190ba9aad028170ff24cf3b3d64d025c2dd173b33d7763f03f96",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 297.67467100000067,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "cb46b6423aeec2cb8e9d84bd14863008167f448d52a0501499c2f8ef7a514702"
+  },
+  {
+    "busId": "ESC_U10_pin65",
+    "connectionNames": [
+      "source_trace_7"
+    ],
+    "inputSha256": "d508add94ea711897d315cdce74b50ac70fa4fadca9eddfbb2fc2c02bc0c6fd7",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 329.46917699999995,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "23069f13cbaa0356f394eb086fc9a8bb0167accd6f258e2ac6983f3e4b84e4ec"
+  },
+  {
+    "busId": "ESC_U10_pin90",
+    "connectionNames": [
+      "source_trace_8"
+    ],
+    "inputSha256": "47b575ffff91da461f19bac4da13c5e3b50f5a531460cfe06e8d8dc346f511c4",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 429.54563700000017,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "d7cdf7c24ecc57b5fd94b258bd90ba2587906cc3b71748559028a9298cab86c5"
+  },
+  {
+    "busId": "ESC_U10_pin100",
+    "connectionNames": [
+      "source_trace_9"
+    ],
+    "inputSha256": "f74ec87435d570a526442e491d69daeabf044d7b92f9716c39f6837a9d5d40d0",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 619.238499,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "c8c62a4d1136ee5d34e9afbe245a8044ff7881fa9c7b22bb2b67d4ccb05cafcd"
+  },
+  {
+    "busId": "ESC_U10_pin127",
+    "connectionNames": [
+      "source_trace_10"
+    ],
+    "inputSha256": "0b9389277e857598f1b3c0cf6cc0f04e41b0fcd426eb078d662a8a57eaf7483f",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 275.04025,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin130",
+    "connectionNames": [
+      "source_trace_11"
+    ],
+    "inputSha256": "2e3bc7dc677f4c246b3666115f8883a28cec7b6382e579a523b1ddd2b4c89b3c",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 678.9227850000007,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "53c4f3b3c273ad7af039da4477fca3f4c316b572126f688fb09ef40aeef1f630"
+  },
+  {
+    "busId": "ESC_U10_pin143",
+    "connectionNames": [
+      "source_trace_12"
+    ],
+    "inputSha256": "0d9cb09ce96ef4b6ea810e4e8e5cd1f72344155a50e3d2385f714c899b889e0f",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 478.31097299999965,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "fb1eb8bd07dfce7e0e0e369fd6d7ba5eb55ec70d52061a10288f8e295f32d9d9"
+  },
+  {
+    "busId": "ESC_U10_pin145",
+    "connectionNames": [
+      "source_trace_13"
+    ],
+    "inputSha256": "65bc23e0afca439730bc563cfabd2291e6fb81041098cb4f1348f0b23b8bcca2",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 470.7000500000013,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "287eb3f2d9c0e4991983365d17778ca5beb4b56b281383576480ec4704591c83"
+  },
+  {
+    "busId": "ESC_U10_pin32",
+    "connectionNames": [
+      "source_trace_14"
+    ],
+    "inputSha256": "7d35070ba3d73345448b2744399b4b3fc8a42ce314e799686e0973fcda37e084",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 322.8151199999993,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin55",
+    "connectionNames": [
+      "source_trace_15"
+    ],
+    "inputSha256": "ef2bed620043afa18c67c134fcade32ea7778b3cb8dfc7b9ba66093ef85fa298",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 614.1488630000003,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "8da954c25721e50c9b590c665815aa5156eead1e5ae55bd0f3f14bd5362f61a8"
+  },
+  {
+    "busId": "ESC_U10_pin6",
+    "connectionNames": [
+      "source_trace_16"
+    ],
+    "inputSha256": "6072282400e7b6447926c22efb30d63fc51b71a9215dfa8ec55e08773c602b12",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 422.20268099999885,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "b832debc83c0bc5aedb1cc2152a2db78c1b3a842dd310a27a85e2e2d0113e013"
+  },
+  {
+    "busId": "ESC_U10_pin73",
+    "connectionNames": [
+      "source_trace_17"
+    ],
+    "inputSha256": "8a98150d2223ea0b77f9c7203a37fec22eea500128556c9451eaa612fa2da565",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 711.0103770000005,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "89477a525e2de45cc2796bc8f7acbbf09148e156e1f05d1e21a2f4a033a3da3e"
+  },
+  {
+    "busId": "ESC_U10_pin82",
+    "connectionNames": [
+      "source_trace_18"
+    ],
+    "inputSha256": "85d77dc3271645587080af3830398184daff93c16b0b53f6c66613af40435a38",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 448.48085999999967,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "f7fbfbdf66841c55e5b27a5dfacabb586497688ef33c4f39927e5b13fab7a540"
+  },
+  {
+    "busId": "ESC_U10_pin89",
+    "connectionNames": [
+      "source_trace_19"
+    ],
+    "inputSha256": "90c15fdb7a99512e53f33d7fe40af50942e68dc8c20ec410beeaf6c98cc77f84",
+    "obstacleCount": 3212,
+    "status": "solved",
+    "elapsedMs": 552.5530849999996,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "92db3cd6b39cdfe70c213332c36ec8d3bd5542337d0cca20a491fe0fadf329c7"
+  }
+]

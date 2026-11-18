@@ -1,0 +1,138 @@
+[
+  {
+    "board": "imx6",
+    "nativeCaptureSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "before": {
+      "cases": 20,
+      "outcomes": {
+        "solved": 17,
+        "failed": 3
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 20,
+      "outcomes": {
+        "solved": 17,
+        "failed": 3
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  },
+  {
+    "board": "glider",
+    "nativeCaptureSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+    "before": {
+      "cases": 43,
+      "outcomes": {
+        "solved": 43
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 43,
+      "outcomes": {
+        "solved": 43
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  },
+  {
+    "board": "h616",
+    "nativeCaptureSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+    "before": {
+      "cases": 62,
+      "outcomes": {
+        "solved": 61,
+        "failed": 1
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 62,
+      "outcomes": {
+        "solved": 61,
+        "failed": 1
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  },
+  {
+    "board": "icepi",
+    "nativeCaptureSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "before": {
+      "cases": 20,
+      "outcomes": {
+        "solved": 17,
+        "failed": 3
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 20,
+      "outcomes": {
+        "solved": 17,
+        "failed": 3
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  },
+  {
+    "board": "butterstick",
+    "nativeCaptureSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+    "before": {
+      "cases": 38,
+      "outcomes": {
+        "solved": 20,
+        "failed": 18
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 38,
+      "outcomes": {
+        "solved": 20,
+        "failed": 18
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  },
+  {
+    "board": "orangecrab",
+    "nativeCaptureSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+    "before": {
+      "cases": 166,
+      "outcomes": {
+        "failed": 32,
+        "solved": 134
+      },
+      "invalid": 0
+    },
+    "after": {
+      "cases": 166,
+      "outcomes": {
+        "failed": 32,
+        "solved": 134
+      },
+      "invalid": 0
+    },
+    "inputsMatch": true,
+    "regressions": 0,
+    "changedCopper": 0
+  }
+]

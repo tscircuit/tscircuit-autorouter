@@ -1,0 +1,307 @@
+{
+  "sampledMs": 166578.25,
+  "self": [
+    {
+      "functionName": "buildPlan",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 1134,
+      "ms": 31314.6,
+      "percent": 18.8
+    },
+    {
+      "functionName": "planIsClear",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 2148,
+      "ms": 17392.37,
+      "percent": 10.44
+    },
+    {
+      "functionName": "hypot",
+      "url": "",
+      "line": -1,
+      "ms": 15509.68,
+      "percent": 9.31
+    },
+    {
+      "functionName": "copyDataProperties",
+      "url": "",
+      "line": -1,
+      "ms": 13187.43,
+      "percent": 7.92
+    },
+    {
+      "functionName": "routePlaneTerminatedBus",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 2408,
+      "ms": 10758.0,
+      "percent": 6.46
+    },
+    {
+      "functionName": "",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 2829,
+      "ms": 10727.84,
+      "percent": 6.44
+    },
+    {
+      "functionName": "at",
+      "url": "",
+      "line": 0,
+      "ms": 9477.55,
+      "percent": 5.69
+    },
+    {
+      "functionName": "getConnectionRank",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 735,
+      "ms": 8666.48,
+      "percent": 5.2
+    },
+    {
+      "functionName": "map",
+      "url": "",
+      "line": 0,
+      "ms": 4560.55,
+      "percent": 2.74
+    },
+    {
+      "functionName": "getPlaneEndpointViaCandidates",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 1572,
+      "ms": 3873.7,
+      "percent": 2.33
+    },
+    {
+      "functionName": "sort",
+      "url": "",
+      "line": -1,
+      "ms": 3819.57,
+      "percent": 2.29
+    },
+    {
+      "functionName": "selectClearPlanePlan",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 2435,
+      "ms": 3706.65,
+      "percent": 2.23
+    },
+    {
+      "functionName": "appendLayerPath",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 1408,
+      "ms": 3125.14,
+      "percent": 1.88
+    },
+    {
+      "functionName": "chamferOrthogonalCorners",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 622,
+      "ms": 3059.77,
+      "percent": 1.84
+    },
+    {
+      "functionName": "appendSegment",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 1024,
+      "ms": 2462.29,
+      "percent": 1.48
+    },
+    {
+      "functionName": "createFanoutOutputIds",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-output-ids.ts",
+      "line": 10,
+      "ms": 2434.26,
+      "percent": 1.46
+    },
+    {
+      "functionName": "getPlanVias",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus.ts",
+      "line": 1823,
+      "ms": 2035.38,
+      "percent": 1.22
+    },
+    {
+      "functionName": "reduce",
+      "url": "",
+      "line": 0,
+      "ms": 2001.28,
+      "percent": 1.2
+    },
+    {
+      "functionName": "distanceSegmentToObstacle",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 134,
+      "ms": 1653.17,
+      "percent": 0.99
+    },
+    {
+      "functionName": "distanceSegmentToSegment",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 68,
+      "ms": 1576.66,
+      "percent": 0.95
+    }
+  ],
+  "inclusive": [
+    {
+      "name": "(root)",
+      "ms": 166578.25,
+      "percent": 100.0
+    },
+    {
+      "name": "(module)",
+      "ms": 166536.0,
+      "percent": 99.97
+    },
+    {
+      "name": "step",
+      "ms": 165568.28,
+      "percent": 99.39
+    },
+    {
+      "name": "_step",
+      "ms": 165531.35,
+      "percent": 99.37
+    },
+    {
+      "name": "stepActiveOperation",
+      "ms": 165508.62,
+      "percent": 99.36
+    },
+    {
+      "name": "generatorResume",
+      "ms": 165412.93,
+      "percent": 99.3
+    },
+    {
+      "name": "evaluateAssignmentSteps",
+      "ms": 164536.64,
+      "percent": 98.77
+    },
+    {
+      "name": "evaluateAssignmentWithStrategySteps",
+      "ms": 164500.06,
+      "percent": 98.75
+    },
+    {
+      "name": "routeBus",
+      "ms": 162736.39,
+      "percent": 97.69
+    },
+    {
+      "name": "routeBusAlternatives",
+      "ms": 162712.87,
+      "percent": 97.68
+    },
+    {
+      "name": "routeBusAlternativesSteps",
+      "ms": 162703.62,
+      "percent": 97.67
+    },
+    {
+      "name": "routePlaneTerminatedBus",
+      "ms": 158760.57,
+      "percent": 95.31
+    },
+    {
+      "name": "next",
+      "ms": 110620.22,
+      "percent": 66.41
+    },
+    {
+      "name": "buildPlan",
+      "ms": 86860.23,
+      "percent": 52.14
+    },
+    {
+      "name": "",
+      "ms": 44916.43,
+      "percent": 26.96
+    },
+    {
+      "name": "selectClearPlanePlan",
+      "ms": 44874.61,
+      "percent": 26.94
+    },
+    {
+      "name": "planIsClear",
+      "ms": 27246.02,
+      "percent": 16.36
+    },
+    {
+      "name": "hypot",
+      "ms": 15516.35,
+      "percent": 9.31
+    },
+    {
+      "name": "copyDataProperties",
+      "ms": 13187.43,
+      "percent": 7.92
+    },
+    {
+      "name": "getConnectionRank",
+      "ms": 12420.83,
+      "percent": 7.46
+    },
+    {
+      "name": "planIsStaticallyClear",
+      "ms": 9853.65,
+      "percent": 5.92
+    },
+    {
+      "name": "segmentIsClearOfObstacles",
+      "ms": 9681.97,
+      "percent": 5.81
+    },
+    {
+      "name": "at",
+      "ms": 9477.55,
+      "percent": 5.69
+    },
+    {
+      "name": "distanceSegmentToObstacle",
+      "ms": 8541.11,
+      "percent": 5.13
+    },
+    {
+      "name": "map",
+      "ms": 6881.81,
+      "percent": 4.13
+    },
+    {
+      "name": "chamferOrthogonalCorners",
+      "ms": 6849.44,
+      "percent": 4.11
+    },
+    {
+      "name": "distanceSegmentToSegment",
+      "ms": 6718.65,
+      "percent": 4.03
+    },
+    {
+      "name": "reduce",
+      "ms": 5195.37,
+      "percent": 3.12
+    },
+    {
+      "name": "appendSegment",
+      "ms": 4739.52,
+      "percent": 2.85
+    },
+    {
+      "name": "getPlaneEndpointViaCandidates",
+      "ms": 4459.19,
+      "percent": 2.68
+    },
+    {
+      "name": "planIsClearOfPlans",
+      "ms": 4275.69,
+      "percent": 2.57
+    },
+    {
+      "name": "filter",
+      "ms": 4123.99,
+      "percent": 2.48
+    }
+  ]
+}

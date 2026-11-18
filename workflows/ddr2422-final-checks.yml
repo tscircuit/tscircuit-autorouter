@@ -1,0 +1,136 @@
+name: "Finish plane layout source checks and native timing"
+on:
+  push:
+    branches: [codex/ddr2422-final-checks]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired-native:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: e22a028893c2ad121c5b0e0ba2e9e998e680feb8
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 578e4cae538943e3d4814b58f6dd81062c918555
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2422-icepi
+          run-id: 44401411469
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the exact before and after source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-native-plane-drop.ts "$revision/replay-native-plane-drop.ts"
+          done
+      - name: Replay three matched pairs serially, alternating order
+        run: |
+          for trial in 1 2 3; do
+            if [[ "$trial" == 2 ]]; then order="after before"; else order="before after"; fi
+            for revision in $order; do
+              mkdir -p "$GITHUB_WORKSPACE/paired/trial-$trial/$revision"
+              (cd "$revision" && bun replay-native-plane-drop.ts "$GITHUB_WORKSPACE/captured/icepi/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/paired/trial-$trial/$revision")
+            done
+          done
+      - name: Export matched timing and copper results
+        if: always()
+        run: |
+          python3 - <<'PYPAIRS'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          Path('paired').mkdir(exist_ok=True)
+          rows=[]
+          for path in sorted(Path('paired').rglob('report.json')):
+              report=json.loads(path.read_text());traces=path.parent/'best-traces.json'
+              rows.append({'trial':path.parent.parent.name,'revision':path.parent.name,'elapsedMs':report['elapsedMs'],'inputSha256':report['inputSha256'],'copperSha256':hashlib.sha256(traces.read_bytes()).hexdigest(),'bestPartial':report['bestPartial'],'copperDrc':report['copperDrc'],'failed':report['failed'],'solved':report['solved'],'error':report['error'],'iterations':report['iterations']})
+          Path('paired/comparison.json').write_text(json.dumps(rows,indent=2))
+          print('PAIRED_NATIVE2422_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('paired').rglob('*'):
+                  if path.is_file(): archive.writestr(str(path.relative_to('paired')),path.read_bytes())
+          print('PAIRED_NATIVE2422_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('PAIRED_NATIVE2422_EVIDENCE_END')
+          PYPAIRS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: layout2422-paired-icepi
+          path: paired
+
+  final-source-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 578e4cae538943e3d4814b58f6dd81062c918555
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+  routed-svg-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Wait for the measured routing artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            for (let attempt = 0; attempt < 100; attempt++) {
+              const {data: artifacts} = await github.rest.actions.listWorkflowRunArtifacts({owner: context.repo.owner, repo: context.repo.repo, run_id: 44404331914, per_page: 100})
+              if (artifacts.artifacts.some(artifact => artifact.name === 'layout2422-fanout31' && !artifact.expired)) return
+              await new Promise(resolve => setTimeout(resolve, 15000))
+            }
+            throw new Error('Measured Fanout31 artifacts were not published')
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2422-fanout31
+          run-id: 44401411469
+          github-token: ${{ github.token }}
+          path: before
+      - uses: actions/download-artifact@v4
+        with:
+          name: layout2422-fanout31
+          run-id: 44404331914
+          github-token: ${{ github.token }}
+          path: after
+      - name: Compare routed SVGs and captured inputs
+        run: |
+          python3 - <<'PYSVG'
+          import hashlib,json
+          from pathlib import Path
+          def hashes(folder,pattern):return {str(path.relative_to(folder)):hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob(pattern)}
+          before=hashes(Path('before'),'*.svg');after=hashes(Path('after'),'*.svg')
+          before_inputs=hashes(Path('before'),'inputs/*.json');after_inputs=hashes(Path('after'),'inputs/*.json')
+          previous_preserved=set(before)<=set(after) and all(before[name]==after[name] for name in before)
+          report={'beforeSvgCount':len(before),'afterSvgCount':len(after),'allRoutedSvgsIdentical':before==after,'previousRoutedSvgsPreserved':previous_preserved,'allInputsIdentical':before_inputs==after_inputs,'before':before,'after':after,'different':[name for name in sorted(before.keys()|after.keys()) if before.get(name)!=after.get(name)]}
+          Path('fanout31-svg-audit.json').write_text(json.dumps(report,indent=2))
+          print('FANOUT31_SVG_AUDIT',json.dumps(report,separators=(',',':')))
+          assert len(before)>0
+          assert len(before_inputs)==len(after_inputs)==72
+          assert before_inputs==after_inputs
+          assert previous_preserved
+          PYSVG
+      - uses: actions/upload-artifact@v4
+        with:
+          name: layout2422-svg-audit
+          path: fanout31-svg-audit.json

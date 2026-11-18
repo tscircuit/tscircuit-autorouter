@@ -1,0 +1,479 @@
+diff --git a/lib/route-bus.ts b/lib/route-bus.ts
+index d1db087..68c7356 100644
+--- a/lib/route-bus.ts
++++ b/lib/route-bus.ts
+@@ -1180,19 +1180,7 @@ function buildPlan(params: {
+     cornerBandTargetTrackOffset,
+     fixedBoundaryTracksByConnectionIndex,
+   } = params
+-  const fixedBoundaryTrack = fixedBoundaryTracksByConnectionIndex?.get(
+-    preparedConnection.connectionIndex,
+-  )
+   const cornerSide = getCornerSide(bus)
+-  const boundaryDirection = bus.exitEdge
+-    ? getDirectionForExitEdge(bus.exitEdge)
+-    : bus.direction
+-  const track =
+-    fixedBoundaryTrack !== undefined &&
+-    !cornerSide &&
+-    bus.direction === boundaryDirection
+-      ? fixedBoundaryTrack
+-      : requestedTrack
+   const sourcePoint = {
+     x: preparedConnection.sourcePoint.x,
+     y: preparedConnection.sourcePoint.y,
+@@ -1205,8 +1193,6 @@ function buildPlan(params: {
+       })
+     : undefined
+   const usesLayeredWindingChannel = Boolean(windingCrossoverLayer)
+-  const sign = directionSign(bus.direction)
+-  const directionalPitch = getDirectionalPitch(bus)
+   const requestedViaPoint = sourceEscapePath?.at(-1)
+   const viaPoint =
+     requestedViaPoint !== undefined
+@@ -1234,108 +1220,7 @@ function buildPlan(params: {
+       `FanoutSolver: source escape path for "${preparedConnection.connection.name}" must run from its source point to its via`,
+     )
+   }
+-  const viaAxis = getAxis(viaPoint, bus.direction)
+-  const viaPerpendicularAxis = getPerpendicularAxis(viaPoint, bus.direction)
+-  const spreadLaneDistance =
+-    viaDiameter / 2 +
+-    traceWidth / 2 +
+-    clearance +
+-    1e-3 +
+-    spreadLaneIndex * (traceWidth + clearance)
+-  const useNestedSpread =
+-    interstitialEscape &&
+-    directionalPitch >= spreadLaneDistance + viaDiameter / 2 + clearance
+-  const spreadPoint = useNestedSpread
+-    ? makePoint(
+-        viaAxis + sign * spreadLaneDistance,
+-        viaPerpendicularAxis,
+-        bus.direction,
+-      )
+-    : viaPoint
+-  const targetLayerDoglegAxis = useNestedSpread
+-    ? getAxis(spreadPoint, bus.direction)
+-    : viaAxis + sign * Math.abs(track - viaPerpendicularAxis)
+-  const doglegPoint = makePoint(targetLayerDoglegAxis, track, bus.direction)
+-  const boundarySign = directionSign(boundaryDirection)
+-  const boundaryExitAxis = getExitAxis(bus, boundaryDirection)
+-  const boundaryTargetTrack =
+-    fixedBoundaryTrack ??
+-    (cornerSide && bus.exitEdge
+-      ? getCornerTargetTrack({
+-          bus,
+-          connection: preparedConnection,
+-          cornerExitLaneOffset,
+-          traceWidth,
+-          viaDiameter,
+-          clearance,
+-          layerNames,
+-          targetLayer,
+-          cornerBandTargetTrackOffset,
+-        })
+-      : usesLayeredWindingChannel
+-        ? getBoundaryTargetTrack({
+-            bus,
+-            connection: preparedConnection,
+-            boundaryDirection,
+-            traceWidth,
+-            clearance,
+-            layerNames,
+-            targetLayer,
+-          })
+-        : track)
+-  const connectionRank = getConnectionRank(bus, preparedConnection)
+-  const localCornerSide = getLocalCornerSide(bus)
+-  const localChannelLaneIndex =
+-    localCornerSide === "maximum"
+-      ? cornerLocalChannelLaneOffset + connectionRank
+-      : cornerLocalChannelLaneOffset +
+-        bus.connections.length -
+-        1 -
+-        connectionRank
+-  const globalBoundarySlot = cornerBoundaryChannelLaneOffset + connectionRank
+-  const boundaryBandConnectionCount = Math.max(
+-    bus.connections.length,
+-    bus.cornerBandConnectionCount ?? bus.connections.length,
+-  )
+-  const boundaryChannelLaneIndex =
+-    boundarySign > 0
+-      ? globalBoundarySlot
+-      : boundaryBandConnectionCount - 1 - globalBoundarySlot
+-  const channelPitch = usesLayeredWindingChannel
+-    ? viaDiameter / 2 + traceWidth / 2 + clearance
+-    : traceWidth + clearance
+-  const channelInset = (laneIndex: number) =>
+-    viaDiameter / 2 + traceWidth / 2 + clearance + laneIndex * channelPitch
+-  const localChannelAxis =
+-    getExitAxis(bus, bus.direction) - sign * channelInset(localChannelLaneIndex)
+-  const boundaryChannelAxis =
+-    boundaryExitAxis - boundarySign * channelInset(boundaryChannelLaneIndex)
+-  const localChannelSourcePoint = makePoint(
+-    localChannelAxis,
+-    track,
+-    bus.direction,
+-  )
+-  const localChannelTargetPoint = makePoint(
+-    boundaryChannelAxis,
+-    localChannelAxis,
+-    boundaryDirection,
+-  )
+-  const boundaryChannelTargetPoint = makePoint(
+-    boundaryChannelAxis,
+-    boundaryTargetTrack,
+-    boundaryDirection,
+-  )
+-  const windingInputTransitionPoint =
+-    isHorizontal(bus.direction) !== isHorizontal(boundaryDirection)
+-      ? localChannelTargetPoint
+-      : makePoint(boundaryChannelAxis, track, boundaryDirection)
+-  const exitPoint = terminateAtVia
+-    ? viaPoint
+-    : cornerSide ||
+-        usesLayeredWindingChannel ||
+-        fixedBoundaryTrack !== undefined
+-      ? makePoint(boundaryExitAxis, boundaryTargetTrack, boundaryDirection)
+-      : makePoint(exitAxis, track, bus.direction)
++  let exitPoint = viaPoint
+   const segments: RoutedSegment[] = []
+   const route: SimplifiedPcbTrace["route"] = []
+ 
+@@ -1406,115 +1291,235 @@ function buildPlan(params: {
+     })
+   }
+ 
+-  const appendLayerPath = (points: Point2D[], layer: string): void => {
+-    for (let index = 1; index < points.length; index++) {
+-      const previousPoint = points[index - 1]!
+-      const nextPoint = points[index]!
+-      appendSegment(segments, previousPoint, nextPoint, traceWidth, layer)
+-      route.push({
+-        route_type: "wire",
+-        x: nextPoint.x,
+-        y: nextPoint.y,
+-        width: traceWidth,
+-        layer,
+-      })
+-    }
+-  }
+-
+   const additionalVias: NonNullable<FanoutRoutePlan["additionalVias"]> = []
+-  if (usesLayeredWindingChannel && windingCrossoverLayer) {
+-    const escapePoints = chamferOrthogonalPolyline(
+-      [
+-        viaPoint,
+-        ...(useNestedSpread ? [spreadPoint] : []),
+-        doglegPoint,
+-        ...(isHorizontal(bus.direction) !== isHorizontal(boundaryDirection)
+-          ? [localChannelSourcePoint]
+-          : []),
+-        windingInputTransitionPoint,
+-      ],
+-      Math.max(traceWidth + clearance, traceWidth * 2),
++  // Plane drops finish at the via; winding channels still need their path.
++  if (!terminateAtVia || usesLayeredWindingChannel) {
++    const fixedBoundaryTrack = fixedBoundaryTracksByConnectionIndex?.get(
++      preparedConnection.connectionIndex,
+     )
+-    appendLayerPath(escapePoints, escapeLayer)
++    const boundaryDirection = bus.exitEdge
++      ? getDirectionForExitEdge(bus.exitEdge)
++      : bus.direction
++    const track =
++      fixedBoundaryTrack !== undefined &&
++      !cornerSide &&
++      bus.direction === boundaryDirection
++        ? fixedBoundaryTrack
++        : requestedTrack
++    const sign = directionSign(bus.direction)
++    const directionalPitch = getDirectionalPitch(bus)
++    const viaAxis = getAxis(viaPoint, bus.direction)
++    const viaPerpendicularAxis = getPerpendicularAxis(viaPoint, bus.direction)
++    const spreadLaneDistance =
++      viaDiameter / 2 +
++      traceWidth / 2 +
++      clearance +
++      1e-3 +
++      spreadLaneIndex * (traceWidth + clearance)
++    const useNestedSpread =
++      interstitialEscape &&
++      directionalPitch >= spreadLaneDistance + viaDiameter / 2 + clearance
++    const spreadPoint = useNestedSpread
++      ? makePoint(
++          viaAxis + sign * spreadLaneDistance,
++          viaPerpendicularAxis,
++          bus.direction,
++        )
++      : viaPoint
++    const targetLayerDoglegAxis = useNestedSpread
++      ? getAxis(spreadPoint, bus.direction)
++      : viaAxis + sign * Math.abs(track - viaPerpendicularAxis)
++    const doglegPoint = makePoint(targetLayerDoglegAxis, track, bus.direction)
++    const boundarySign = directionSign(boundaryDirection)
++    const boundaryExitAxis = getExitAxis(bus, boundaryDirection)
++    const boundaryTargetTrack =
++      fixedBoundaryTrack ??
++      (cornerSide && bus.exitEdge
++        ? getCornerTargetTrack({
++            bus,
++            connection: preparedConnection,
++            cornerExitLaneOffset,
++            traceWidth,
++            viaDiameter,
++            clearance,
++            layerNames,
++            targetLayer,
++            cornerBandTargetTrackOffset,
++          })
++        : usesLayeredWindingChannel
++          ? getBoundaryTargetTrack({
++              bus,
++              connection: preparedConnection,
++              boundaryDirection,
++              traceWidth,
++              clearance,
++              layerNames,
++              targetLayer,
++            })
++          : track)
++    const connectionRank = getConnectionRank(bus, preparedConnection)
++    const localCornerSide = getLocalCornerSide(bus)
++    const localChannelLaneIndex =
++      localCornerSide === "maximum"
++        ? cornerLocalChannelLaneOffset + connectionRank
++        : cornerLocalChannelLaneOffset +
++          bus.connections.length -
++          1 -
++          connectionRank
++    const globalBoundarySlot = cornerBoundaryChannelLaneOffset + connectionRank
++    const boundaryBandConnectionCount = Math.max(
++      bus.connections.length,
++      bus.cornerBandConnectionCount ?? bus.connections.length,
++    )
++    const boundaryChannelLaneIndex =
++      boundarySign > 0
++        ? globalBoundarySlot
++        : boundaryBandConnectionCount - 1 - globalBoundarySlot
++    const channelPitch = usesLayeredWindingChannel
++      ? viaDiameter / 2 + traceWidth / 2 + clearance
++      : traceWidth + clearance
++    const channelInset = (laneIndex: number) =>
++      viaDiameter / 2 + traceWidth / 2 + clearance + laneIndex * channelPitch
++    const localChannelAxis =
++      getExitAxis(bus, bus.direction) -
++      sign * channelInset(localChannelLaneIndex)
++    const boundaryChannelAxis =
++      boundaryExitAxis - boundarySign * channelInset(boundaryChannelLaneIndex)
++    const localChannelSourcePoint = makePoint(
++      localChannelAxis,
++      track,
++      bus.direction,
++    )
++    const localChannelTargetPoint = makePoint(
++      boundaryChannelAxis,
++      localChannelAxis,
++      boundaryDirection,
++    )
++    const boundaryChannelTargetPoint = makePoint(
++      boundaryChannelAxis,
++      boundaryTargetTrack,
++      boundaryDirection,
++    )
++    const windingInputTransitionPoint =
++      isHorizontal(bus.direction) !== isHorizontal(boundaryDirection)
++        ? localChannelTargetPoint
++        : makePoint(boundaryChannelAxis, track, boundaryDirection)
++    exitPoint = terminateAtVia
++      ? viaPoint
++      : cornerSide ||
++          usesLayeredWindingChannel ||
++          fixedBoundaryTrack !== undefined
++        ? makePoint(boundaryExitAxis, boundaryTargetTrack, boundaryDirection)
++        : makePoint(exitAxis, track, bus.direction)
++    const appendLayerPath = (points: Point2D[], layer: string): void => {
++      for (let index = 1; index < points.length; index++) {
++        const previousPoint = points[index - 1]!
++        const nextPoint = points[index]!
++        appendSegment(segments, previousPoint, nextPoint, traceWidth, layer)
++        route.push({
++          route_type: "wire",
++          x: nextPoint.x,
++          y: nextPoint.y,
++          width: traceWidth,
++          layer,
++        })
++      }
++    }
+ 
+-    const appendTransitionVia = (
+-      center: Point2D,
+-      fromLayer: string,
+-      toLayer: string,
+-    ): void => {
+-      if (fromLayer === toLayer) return
+-      additionalVias.push({
+-        center,
+-        diameter: viaDiameter,
+-        holeDiameter: viaHoleDiameter,
+-        fromLayer,
+-        toLayer,
+-        spanLayers: getViaSpanLayers({
++    if (usesLayeredWindingChannel && windingCrossoverLayer) {
++      const escapePoints = chamferOrthogonalPolyline(
++        [
++          viaPoint,
++          ...(useNestedSpread ? [spreadPoint] : []),
++          doglegPoint,
++          ...(isHorizontal(bus.direction) !== isHorizontal(boundaryDirection)
++            ? [localChannelSourcePoint]
++            : []),
++          windingInputTransitionPoint,
++        ],
++        Math.max(traceWidth + clearance, traceWidth * 2),
++      )
++      appendLayerPath(escapePoints, escapeLayer)
++
++      const appendTransitionVia = (
++        center: Point2D,
++        fromLayer: string,
++        toLayer: string,
++      ): void => {
++        if (fromLayer === toLayer) return
++        additionalVias.push({
++          center,
++          diameter: viaDiameter,
++          holeDiameter: viaHoleDiameter,
+           fromLayer,
+           toLayer,
+-          layerNames,
+-          allowBlindAndBuriedVias,
+-        }),
+-      })
+-      route.push({
+-        route_type: "via",
+-        x: center.x,
+-        y: center.y,
+-        from_layer: fromLayer,
+-        to_layer: toLayer,
+-        via_diameter: viaDiameter,
+-        via_hole_diameter: viaHoleDiameter,
+-      })
+-      route.push({
+-        route_type: "wire",
+-        x: center.x,
+-        y: center.y,
+-        width: traceWidth,
+-        layer: toLayer,
+-      })
+-    }
++          spanLayers: getViaSpanLayers({
++            fromLayer,
++            toLayer,
++            layerNames,
++            allowBlindAndBuriedVias,
++          }),
++        })
++        route.push({
++          route_type: "via",
++          x: center.x,
++          y: center.y,
++          from_layer: fromLayer,
++          to_layer: toLayer,
++          via_diameter: viaDiameter,
++          via_hole_diameter: viaHoleDiameter,
++        })
++        route.push({
++          route_type: "wire",
++          x: center.x,
++          y: center.y,
++          width: traceWidth,
++          layer: toLayer,
++        })
++      }
+ 
+-    appendTransitionVia(
+-      windingInputTransitionPoint,
+-      escapeLayer,
+-      windingCrossoverLayer,
+-    )
+-    appendLayerPath(
+-      [windingInputTransitionPoint, boundaryChannelTargetPoint],
+-      windingCrossoverLayer,
+-    )
+-    appendTransitionVia(
+-      boundaryChannelTargetPoint,
+-      windingCrossoverLayer,
+-      escapeLayer,
+-    )
+-    appendLayerPath([boundaryChannelTargetPoint, exitPoint], escapeLayer)
+-  } else {
+-    const targetLayerPoints = terminateAtVia
+-      ? [viaPoint]
+-      : cornerSide
+-        ? chamferOrthogonalPolyline(
+-            [
+-              viaPoint,
+-              ...(useNestedSpread ? [spreadPoint] : []),
+-              doglegPoint,
+-              localChannelSourcePoint,
+-              ...(isHorizontal(bus.direction) !==
+-              isHorizontal(boundaryDirection)
+-                ? [localChannelTargetPoint]
+-                : []),
+-              boundaryChannelTargetPoint,
+-              exitPoint,
+-            ],
+-            Math.max(traceWidth + clearance, traceWidth * 2),
+-          )
+-        : useNestedSpread
++      appendTransitionVia(
++        windingInputTransitionPoint,
++        escapeLayer,
++        windingCrossoverLayer,
++      )
++      appendLayerPath(
++        [windingInputTransitionPoint, boundaryChannelTargetPoint],
++        windingCrossoverLayer,
++      )
++      appendTransitionVia(
++        boundaryChannelTargetPoint,
++        windingCrossoverLayer,
++        escapeLayer,
++      )
++      appendLayerPath([boundaryChannelTargetPoint, exitPoint], escapeLayer)
++    } else {
++      const targetLayerPoints = terminateAtVia
++        ? [viaPoint]
++        : cornerSide
+           ? chamferOrthogonalPolyline(
+-              [viaPoint, spreadPoint, doglegPoint, exitPoint],
++              [
++                viaPoint,
++                ...(useNestedSpread ? [spreadPoint] : []),
++                doglegPoint,
++                localChannelSourcePoint,
++                ...(isHorizontal(bus.direction) !==
++                isHorizontal(boundaryDirection)
++                  ? [localChannelTargetPoint]
++                  : []),
++                boundaryChannelTargetPoint,
++                exitPoint,
++              ],
+               Math.max(traceWidth + clearance, traceWidth * 2),
+             )
+-          : [viaPoint, doglegPoint, exitPoint]
+-    appendLayerPath(targetLayerPoints, escapeLayer)
++          : useNestedSpread
++            ? chamferOrthogonalPolyline(
++                [viaPoint, spreadPoint, doglegPoint, exitPoint],
++                Math.max(traceWidth + clearance, traceWidth * 2),
++              )
++            : [viaPoint, doglegPoint, exitPoint]
++      appendLayerPath(targetLayerPoints, escapeLayer)
++    }
+   }
+ 
+   const outputIds = createFanoutOutputIds({
