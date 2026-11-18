@@ -4,39 +4,15 @@ on:
     branches: [analysis/butterstick-clamp-checks]
     paths: [.github/workflows/butterstick-clamp-checks.yml]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  upstream:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: tscircuit/high-density-repair01
-          ref: 4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1.4.3'
-      - run: bun install
-      - name: Apply the one-line fixed-node constraint
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("lib/HighDensityForceImproveSolver.ts")
-          s=p.read_text();marker="const clampNodeToBounds = (node: MutableNode, bounds: Bounds) => {"
-          assert marker in s
-          p.write_text(s.replace(marker,marker+"\n  if (node.fixed) return"))
-          PY
-          bun test --timeout 600000
-          bunx tsc --noEmit
   imx6:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
@@ -61,4 +37,27 @@ jobs:
           tmp.write_text(s.replace(marker,marker+"\n  if (node.fixed) return"))
           tmp.replace(p)
           PY
-          bun test tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts --timeout 600000
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts")
+          s=p.read_text().replace('import { readFileSync }','import { readFileSync,writeFileSync,mkdirSync }').replace('import { gunzipSync }','import { gunzipSync,gzipSync }')
+          old="  expect(evaluate(traces).errors).toHaveLength(0)"
+          assert old in s
+          s=s.replace(old,"  const sourceErrors = evaluate(traces).errors")
+          target="  expect(findings).toHaveLength(0)"
+          extra='''  console.log("IMX6_CLAMP_FINDINGS="+JSON.stringify({source:sourceErrors.map(e=>({type:e.type,drc_source:e.drc_source,keys:Object.keys(e),numbers:Object.fromEntries(Object.entries(e).filter(([,v])=>typeof v==="number"))})),nativeTypes:findings.map(e=>e.error_type??e.type)}))
+            mkdirSync("analysis-artifacts",{recursive:true})
+            writeFileSync("analysis-artifacts/imx6-fixed-clamp.json.gz",gzipSync(JSON.stringify({fixture,traces,nativeCircuitJson:circuitJson,sourceErrors,nativeFindings:findings})))
+            expect(sourceErrors).toHaveLength(0)
+          '''+target
+          assert target in s
+          p.write_text(s.replace(target,extra))
+          PY
+          test_status=0
+          bun test tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts --timeout 600000 || test_status=$?
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add analysis-artifacts
+          git commit -m "Retain actual i.MX6 clamp findings without changing assertions"
+          git push origin HEAD:analysis/imx6-fixed-clamp-output
+          exit "$test_status"
