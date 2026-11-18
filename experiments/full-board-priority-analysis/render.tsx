@@ -1,4 +1,6 @@
 import { EventEmitter } from "node:events"
+import type { FanoutSolver, FanoutAttemptSummary } from "@tscircuit/fanout-solver"
+import type { SimpleRouteJson } from "@tscircuit/capacity-autorouter"
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import type { GenericLocalAutorouter } from "@tscircuit/core"
@@ -23,7 +25,7 @@ const progress = {
   id, mode, status: "running", renderCompleted: false, elapsedMs: 0,
   phases: [] as { name: string; solver: string; status: string; connections: number; startedMs: number; elapsedMs?: number }[],
   errors: [] as string[], stage: "initializing", initialCopperElements: null as number | null,
-  runtime: { tscircuit: "0.0.3231", core: "0.0.2410", fanout: "0.0.84", busLanes: "0.0.62", autorouter: "workspace Pipeline 9", routerCommit: process.env.FULL_BOARD_ROUTER_COMMIT ?? "workspace checkout; see runtime.mjs" },
+  runtime: { tscircuit: "0.0.3235", core: "0.0.2417", fanout: "0.0.86", busLanes: "0.0.62", autorouter: "workspace Pipeline 9", routerCommit: process.env.FULL_BOARD_ROUTER_COMMIT ?? "workspace checkout; see runtime.mjs" },
   planeIntent: { enabled: mode !== "legacy", zones: source.planeIntent.zones.length, importedSavedCopper: source.planeIntent.savedCopperImported },
 }
 const diagnostics = {
@@ -32,6 +34,7 @@ const diagnostics = {
   busLastState: null as unknown,
   pipelineLastState: null as unknown,
   fanoutLastState: null as unknown,
+  fanoutBestSummary: null as FanoutAttemptSummary | null,
   phaseInputs: [] as unknown[],
 }
 let lastDiagnosticWrite = 0
@@ -62,8 +65,10 @@ busPrototype.step = function (...args: unknown[]): unknown {
   finally { diagnostics.busStageMs[`${phase}/${stage}`]=(diagnostics.busStageMs[`${phase}/${stage}`]??0)+performance.now()-begin }
 }
 const fanoutPrototype = SOLVERS.FanoutSolver.prototype
+let activeFanout: FanoutSolver | null = null
 const originalFanoutStep = fanoutPrototype.step
 fanoutPrototype.step = function (...args: Parameters<typeof originalFanoutStep>): ReturnType<typeof originalFanoutStep> {
+  activeFanout = this
   checkRoutingBudget()
   const result = originalFanoutStep.apply(this,args)
   if (this.failed || this.solved || performance.now()-lastDiagnosticWrite > 1000) {
@@ -254,6 +259,11 @@ try {
   progress.status = "failed"
 } finally {
   clearInterval(heartbeat)
+  if (activeFanout) {
+    const bestAttempt: { summary: FanoutAttemptSummary; outputSrj: SimpleRouteJson } | null = Reflect.get(activeFanout, "bestAttempt")
+    diagnostics.fanoutBestSummary = bestAttempt?.summary ?? null
+    if (bestAttempt) writeFileSync(join(output, "fanout-best-output.srj.json.gz"), Bun.gzipSync(JSON.stringify(bestAttempt.outputSrj)))
+  }
   save(true)
   saveDiagnostics()
   console.log(JSON.stringify(progress))
