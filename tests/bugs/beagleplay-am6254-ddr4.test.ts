@@ -42,5 +42,6 @@ test("BeaglePlay DDR4 routes without clearance or port errors", async (): Promis
   ).toEqual([])
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
+    { svgName: process.platform === "linux" ? "linux" : undefined },
   )
 })
