@@ -1,0 +1,86 @@
+name: Inspect real ButterStick fixed-via force rejection
+on:
+  push:
+    branches: [analysis/butterstick-force-probe]
+    paths: [.github/workflows/butterstick-force-probe.yml]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install exact solver source dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json");m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Measure rejected via movements before expensive repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+          s=p.read_text()
+          old="    const worsensViaClearance = this.evaluateFixedObstacles("
+          new="""    const debugOriginal = this.evaluateFixedObstacles(originalRoutes)
+              const debugVias = this.evaluateFixedObstacles(candidateRoutes)
+                .filter((v) => v.kind === "via" && this.fixedViaObstacleIndexes.has(v.obstacleIndex))
+                .map((v) => {
+                  const o = debugOriginal.find((b) => b.key === v.key)
+                  return {before: o?.severity ?? 0, after: v.severity,
+                    delta: v.severity - (o?.severity ?? 0),
+                    movement: o ? Math.hypot(v.center.x - o.center.x, v.center.y - o.center.y) : null}
+                }).filter((v) => v.delta > 0)
+              if (debugVias.length) console.log("FORCE_REJECTIONS=" + JSON.stringify({routes: routeIndexes.length,positive: debugVias.length,roundoff: debugVias.filter(v => v.delta <= 1e-8).length,violations:debugVias}))
+              const worsensViaClearance = this.evaluateFixedObstacles("""
+          assert old in s
+          p.write_text(s.replace(old,new))
+          PY
+          cat > force-probe.private.ts <<'TS'
+          import {readFileSync} from "node:fs"
+          import {gunzipSync} from "node:zlib"
+          import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "./lib"
+          const input=JSON.parse(gunzipSync(readFileSync("tests/fixtures/assets/butterstick-fixed-via-force.srj.json.gz")).toString())
+          const solver=new AutoroutingPipelineSolver9_PreloadedTraceGraph(input,{cacheProvider:null})
+          const start=performance.now()
+          while(!solver.highDensityForceImproveSolver?.solved) {
+            solver.step()
+            if(solver.failed)throw Error(solver.error??"Probe failed")
+            if(solver.solved)throw Error("Force stage was not observed")
+          }
+          console.log("FORCE_PROBE_COMPLETE="+JSON.stringify({seconds:(performance.now()-start)/1000,stats:solver.highDensityForceImproveSolver.stats}))
+          TS
+          bun force-probe.private.ts
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Generate the real board baseline SVG
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json");m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-butterstick-fixed-via-force.test.ts --timeout 1800000
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force.snap.svg
+          git commit -m "Render native ButterStick baseline routing"
+          git push origin HEAD:analysis/butterstick-baseline-svg
