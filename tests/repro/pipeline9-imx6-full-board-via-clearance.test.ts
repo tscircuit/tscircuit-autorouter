@@ -24,7 +24,7 @@ function readCompressedFixture<T>(filename: string): T {
   const contents = readFileSync(
     new URL(`../fixtures/assets/${filename}`, import.meta.url),
   )
-  return JSON.parse(gunzipSync(contents).toString("utf8")) as T
+  return JSON.parse(gunzipSync(new Uint8Array(contents)).toString("utf8")) as T
 }
 
 function getFixedPcbGeometry(
@@ -152,7 +152,7 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
     circuitJson,
     connectedNetCount: routedNetIds.size,
     errorCount: findings.length,
-    focusCenter,
+    focusCenter: { x: focusCenter.x, y: focusCenter.y },
   }
   await expect(getImx6ViaClearancePcbSvg(view)).toMatchSvgSnapshot(
     import.meta.path,
