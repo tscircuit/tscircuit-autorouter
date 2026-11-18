@@ -36,6 +36,7 @@ jobs:
       - name: Diagnose the existing clearance projection
         run: |
           cat > probe.private.js <<'JS'
+          import { getFixedObstacleViolations } from "@tscircuit/repair04"
           import { Pipeline9JointDrcRepairSolver } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
           import { Pipeline9ClearanceProjectionSolver } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
           function summarize(result) {
@@ -60,6 +61,11 @@ jobs:
             if(state.phase===phase)continue
             phase=state.phase
           if(phase==="select")projection.params.allowPartialRepair=false
+          if(phase==="physical-validation") {
+           const old=new Map(getFixedObstacleViolations({srj:state.context.srj,routes:state.context.canonicalRoutes}).map(v=>[v.key,v.severity]))
+           const worsening=getFixedObstacleViolations({srj:state.context.srj,routes:state.candidate}).filter(v=>!old.has(v.key)||v.severity>old.get(v.key)+1e-8)
+           console.log("GAP_PROBE_FIXED_WORSENING="+JSON.stringify(worsening.map(v=>({kind:v.kind,prior:old.get(v.key)??null,after:v.severity,pad:!!state.context.srj.obstacles[v.obstacleIndex].componentId}))))
+          }
             if(state.candidate)console.log("GAP_PROBE_CANDIDATE="+JSON.stringify({phase,counts:summarize(evaluator({traces:[],routes:state.candidate,hdRoutes:state.candidate}))}))
            }
            const output=projection.getOutput()
