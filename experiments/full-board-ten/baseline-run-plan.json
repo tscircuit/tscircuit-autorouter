@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Latest frozen published full native ten-board baseline for comparison with published3234",
+  "mainVersion": "0.0.3236",
+  "priorBaseline": {
+    "mainVersion": "0.0.3234",
+    "controllerCommit": "13889f2abbe8201e23fe90d9a04ee26d0445d06e",
+    "runId": 44332031639
+  },
+  "workflow": ".github/workflows/full-board-ten.yml",
+  "branch": "bench/full-board-ten-3236-20261118",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "jobs": 5,
+  "maxParallel": 5,
+  "cohortOrder": [
+    "original",
+    "spaced"
+  ],
+  "freshRenderAndAssessmentProcesses": true,
+  "captureDeadlineMs": 900000,
+  "hardDeadlineMs": 960000,
+  "assessmentDeadlineMs": 180000,
+  "jobTimeoutMinutes": 45,
+  "cases": [
+    {
+      "id": "h616",
+      "cohort": "original",
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "butterstick",
+      "cohort": "original",
+      "expectedRoutableNets": 317
+    },
+    {
+      "id": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    },
+    {
+      "id": "glider",
+      "cohort": "original",
+      "expectedRoutableNets": 356
+    },
+    {
+      "id": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "id": "imx6",
+      "cohort": "original",
+      "expectedRoutableNets": 404
+    },
+    {
+      "id": "imx6",
+      "cohort": "spaced",
+      "expectedRoutableNets": 404
+    },
+    {
+      "id": "icepi",
+      "cohort": "original",
+      "expectedRoutableNets": 230
+    },
+    {
+      "id": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
+    }
+  ],
+  "expectedRoutableNetsTotal": 2856,
+  "sourceOverrides": false,
+  "routingSourceOverrides": false,
+  "dependencyOverrides": [],
+  "originalGeometryPolicy": "phased native, fanout false, planes true",
+  "spacedGeometryPolicy": "phased native, fanout false, planes false",
+  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve the published3236 runtime, including Checks280 and the published Core2418 copper helper.",
+  "unchangedNativeFiles": [
+    "bootstrap.py",
+    "prepare-cases.ts",
+    "render-published.tsx",
+    "run-one.ts",
+    "report.py",
+    "calibrate-assessment.tsx",
+    "createCoarseRoutingDiagnostics.ts",
+    "source-provenance.json",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "frozenFiles": {
+    ".github/workflows/full-board-ten.yml": {
+      "sha256": "c35844c26ffce4a27b544b127a3cea572a93124ebbdc3a0f231f61c72c8442c7",
+      "bytes": 5858
+    },
+    "experiments/full-board-ten/bootstrap.py": {
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+      "bytes": 8903
+    },
+    "experiments/full-board-ten/prepare-cases.ts": {
+      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+      "bytes": 6254
+    },
+    "experiments/full-board-ten/render-published.tsx": {
+      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+      "bytes": 14522
+    },
+    "experiments/full-board-ten/run-one.ts": {
+      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+      "bytes": 10746
+    },
+    "experiments/full-board-ten/report.py": {
+      "sha256": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+      "bytes": 4074
+    },
+    "experiments/full-board-ten/calibrate-assessment.tsx": {
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+      "bytes": 2714
+    },
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": {
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+      "bytes": 18242
+    },
+    "experiments/full-board-ten/source-provenance.json": {
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+      "bytes": 23139
+    },
+    "experiments/full-board-ten/package.json": {
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+      "bytes": 87
+    },
+    "experiments/full-board-ten/tsconfig.json": {
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+      "bytes": 208
+    },
+    "experiments/full-board-ten/release.json": {
+      "sha256": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+      "bytes": 5142
+    },
+    "experiments/full-board-ten/harness-provenance.json": {
+      "sha256": "c7657a744106922d6e0dae9cc9594f13c5ba246208fe331b5d3c50040c0caa56",
+      "bytes": 1479
+    },
+    "experiments/full-board-ten/published-release-provenance.json": {
+      "sha256": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+      "bytes": 14497
+    },
+    "experiments/full-board-ten/runtime/package.json": {
+      "sha256": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+      "bytes": 2804
+    },
+    "experiments/full-board-ten/runtime/bun.lock": {
+      "sha256": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+      "bytes": 72090
+    },
+    "experiments/full-board-ten/autorouter-dependencies/package.json": {
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+      "bytes": 261
+    },
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+      "bytes": 13144
+    }
+  }
+}

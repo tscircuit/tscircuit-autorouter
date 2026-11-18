@@ -1,8 +1,8 @@
-name: Published3234 full-board ten-case benchmark
+name: Published3236 full-board ten-case benchmark
 
 on:
   push:
-    branches: [bench/full-board-ten-3234-20261118]
+    branches: [bench/full-board-ten-3236-20261118]
 
 permissions:
   contents: read
@@ -141,6 +141,9 @@ jobs:
             .full-board-run/cases/assessment-helper-proof.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/harness-provenance.json
+            experiments/full-board-ten/published-release-provenance.json
+            experiments/full-board-ten/baseline-run-plan.json
           if-no-files-found: warn
           retention-days: 7
 
