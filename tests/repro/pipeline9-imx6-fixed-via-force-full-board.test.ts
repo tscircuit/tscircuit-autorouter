@@ -57,7 +57,7 @@ test("routes i.MX6 DDR controls beside fixed data-byte vias", async (): Promise<
       viaToPadClearance: fixture.inputSrj.minViaEdgeToPadEdgeClearance,
     },
   })
-  expect(evaluate(traces).errors).toHaveLength(1)
+  expect(evaluate(traces).errors).toHaveLength(0)
   const circuitJson = replaceNativePcbTraces({
     circuitJson: fixture.circuitJson,
     srj: fixture.inputSrj,
@@ -98,7 +98,7 @@ test("routes i.MX6 DDR controls beside fixed data-byte vias", async (): Promise<
     ...checkViasOffBoard(circuitJson),
     ...checkViasInPads(circuitJson),
   ]
-  expect(findings).toHaveLength(1)
+  expect(findings).toHaveLength(0)
   const originalViaError = checkDifferentNetViaSpacing(fixture.circuitJson)[0]
   const originalCenter = originalViaError?.pcb_center
   if (
