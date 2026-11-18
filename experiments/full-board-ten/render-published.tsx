@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
+import { createRenderObservations } from "./createRenderObservations"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
 if (!["full", "geometry"].includes(executionMode)) throw new Error("Execution mode must be full or geometry")
@@ -101,7 +102,8 @@ if (task.runtimeChunkProof) {
   const reviewedCore = await import(pathToFileURL(actualEntry).href)
   reviewedGroup = reviewedCore.Group
   reviewedCopperPour = reviewedCore.CopperPour
-  if (typeof reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender !== "function") throw new Error("Reviewed CopperPour preview phase is absent")
+  const previewPhasePresent = typeof reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender === "function"
+  if (previewPhasePresent !== (task.runtimeChunkProof.expectPreviewPhase ?? true)) throw new Error("Core preview phase does not match this paired lane")
   coreChunkBinding = { actualEntry, actualChunk, reviewedFiles, sha256: sha(readFileSync(actualChunk)), mainAndCoreClassIdentical: true }
 }
 importingPublishedMain = false
@@ -110,6 +112,7 @@ const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardMo
 const { convertCircuitJsonToPcbSvg } = await import("circuit-to-svg")
 const circuit = new RootCircuit({ platform: { localCacheEngine: undefined, routingDisabled: executionMode === "geometry" } })
 const started = performance.now()
+const observations = task.observeRenderCosts ? createRenderObservations(circuit, started) : undefined
 const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
@@ -125,6 +128,11 @@ let lastCircuitSave = -Infinity
 const save = (withCircuit = false): void => {
   progress.elapsedMs = performance.now() - started
   progress.wasmUsage = wasmUsage
+  if (observations) {
+    const observation = observations.capture(withCircuit ? "circuit_snapshot" : "heartbeat", withCircuit)
+    progress.resources = observation.resource
+    if (observation.persist) atomic("render-observations.json", JSON.stringify(observations.snapshot(), null, 2))
+  }
   if (withCircuit || performance.now() - lastCircuitSave >= 15000) {
     const json = circuit.getCircuitJson()
     atomic("circuit.json.gz", gzipSync(JSON.stringify(json), { level: 1 }))
@@ -152,6 +160,7 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
   circuit.on(eventName, (event: any): void => {
     if (event.cacheStatus && event.cacheStatus !== "disabled") throw new Error(`Unexpected routing cache status ${event.cacheStatus}`)
     const name = event.phaseName ?? event.componentDisplayName ?? "unnamed"
+    const resourcesAtEvent = observations?.capture(`${eventName}:${name}`, true).resource
     if (eventName === "autorouting:start") {
       if (progress.phases.length === 0) {
         if (reviewedRenderable) {
@@ -173,10 +182,10 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       const inputBytes = JSON.stringify(event.simpleRouteJson)
       const index = progress.phases.length + 1
       atomic(`phase-${index}-input.srj.json.gz`, gzipSync(inputBytes, { level: 1 }))
-      progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason })
+      progress.phases.push({ name, index, solver: event.solverName, status: "running", startedMs: performance.now() - started, inputSha256: sha(inputBytes), connections: event.simpleRouteJson.connections.length, terminals: event.simpleRouteJson.connections.reduce((sum: number, connection: any) => sum + connection.pointsToConnect.length, 0), cacheStatus: event.cacheStatus, cacheDisabledReason: event.cacheDisabledReason, resourcesAtStart: resourcesAtEvent })
     } else {
       const phase = running()
-      if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs }
+      if (phase) { phase.status = eventName === "autorouting:end" ? "completed" : "failed"; phase.elapsedMs = performance.now() - started - phase.startedMs; phase.resourcesAtEnd = resourcesAtEvent }
       if (event.simpleRouteJson) atomic(`phase-${phase?.index ?? progress.phases.length}-${eventName === "autorouting:end" ? "output" : "error"}.srj.json.gz`, gzipSync(JSON.stringify(event.simpleRouteJson), { level: 1 }))
       if (eventName === "autorouting:error") progress.errors.push(event.error?.message ?? String(event.error))
     }

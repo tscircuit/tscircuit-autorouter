@@ -58,7 +58,7 @@
   "frozenHarnessFiles": {
     "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
-    "render-published.tsx": "a80eedceb4056c5f04a5285086d646eac7461dd62acd937c6c62b9626c701be6",
+    "render-published.tsx": "af109749e3679cf449649e91f075789f2624e0c60c951d7cbe5cffb794f5f334",
     "run-one.ts": "762bcd7e24eb1b00ac2a28a1cc2d15aa7be89dc856b50279e9c6fe173926f0ac",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
     "release.json": "96e08807976db44ebaa50d577434017e65f26f377f19cd24c6fd0be37a21a257",
@@ -67,7 +67,7 @@
     "runtime/bun.lock": "48d6176171adaa6a6f2a0704b562d6e80d773a43a5ac511fc124411cd50e79ba",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "prepare-core-reentrancy.py": "54cccba6ed0e0f8a6ab66456b02eb78aadf78347320284687ec205b3712e3ba0",
+    "prepare-core-reentrancy.py": "3eb58665057e068da7ff973aff171240964713b0fd6a3fde887ce2015742e43c",
     "qualifyCoreReentrancy.mjs": "4e3f03784ba3f13f98c3001c55604320c3109e9590edd9937fd589f35edd542b",
     "core-reentrancy-wasm-preload.ts": "434f872bea27da61c46e255a3723734fb97880e96f3cd3b5e6502a5b211489fd",
     "verify-core-reentrancy.py": "631588abc637b4a3f0ce725ef410ca4604b664abe09b4dae294900c488887e4f",
@@ -75,9 +75,10 @@
     "core-reentrancy-production.patch": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
     "audit-via-pour.py": "39e01ab31ab7a3c56aa603634f64c52480f5b11f68d6b284b44ad7026f47374e",
     "core-reentrancy-materialization.py": "9d899d2354c9be139d7f58c7d9ef719457b90b3c6cdc8ac93b01ce6f02068d78",
-    "report-core-reentrancy.py": "fcf03ba8a59f4187d18d70e424f5b9be659d67728f306ec039a5fc073fdfeb4e"
+    "report-core-reentrancy.py": "fcf03ba8a59f4187d18d70e424f5b9be659d67728f306ec039a5fc073fdfeb4e",
+    "createRenderObservations.ts": "a90cfd9bc843343b79921d618a09e7ec5612db0c1e4c66b49143b0dd4364a8de"
   },
-  "status": "Frozen after passed actual source pair, exact compiled-to-published mapping and independent controller review; each native worker must still pass the real focused published-runtime pair and physical audit before routing.",
+  "status": "Qualified source and runtime mapping reused unchanged for one fixed-budget same-worker iMX6 spaced diagnostic pair; benchmark-only observation helper added identically to both lanes.",
   "cases": [
     {
       "key": "glider-original",

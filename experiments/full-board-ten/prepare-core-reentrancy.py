@@ -64,7 +64,7 @@ def verify_graph(candidate=False):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("root", type=Path)
-parser.add_argument("operation", choices=["baseline", "source", "candidate", "restore"])
+parser.add_argument("operation", choices=["baseline", "source", "candidate", "restore", "verify"])
 parser.add_argument("board")
 parser.add_argument("cohort", choices=["original", "spaced"])
 args = parser.parse_args()
@@ -140,6 +140,12 @@ original = root / "npm/core"
 alias = root / "runtime/node_modules/@tscircuit/core"
 changes = {row["path"]: row for row in plan["runtimeChanges"]}
 core = next(row for row in published["packages"] if row["name"] == "@tscircuit/core")
+
+if args.operation == "verify":
+    active = json.loads(manifest_path.read_text())
+    verify_packages(active)
+    verify_graph(active["sourceOverrides"])
+    raise SystemExit(0)
 
 if args.operation == "source":
     verify_packages(published)
@@ -300,7 +306,8 @@ if args.operation == "restore":
     shutil.copyfile(published_path, manifest_path)
     verify_packages(published)
     verify_graph()
-    (proof / "assessment-runtime-restored.json").write_text(json.dumps({"publishedAliasesRestored": True, "allPublishedFilesVerified": True, "publishedManifestSha256": sha(published_path), "activeCandidateManifestSha256": sha(root / "candidate-runtime-manifest.json")}, indent=2) + "\n")
+    candidate_manifest = root / "candidate-runtime-manifest.json"
+    (proof / "assessment-runtime-restored.json").write_text(json.dumps({"publishedAliasesRestored": True, "allPublishedFilesVerified": True, "publishedManifestSha256": sha(published_path), "activeRuntimeWasCandidate": active["sourceOverrides"], "activeCandidateManifestSha256": sha(candidate_manifest) if candidate_manifest.is_file() else None}, indent=2) + "\n")
     raise SystemExit(0)
 
 assert plan["frozen"], "Root must freeze the reviewed qualification plan"
