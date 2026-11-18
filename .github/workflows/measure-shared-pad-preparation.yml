@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: 5654874b46b3dd194da1c6e04566c3448f0cb1bb
+          ref: b308dd58277154e896dd4923b223cf8c9484f99b
           path: head
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -122,7 +122,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: 5654874b46b3dd194da1c6e04566c3448f0cb1bb
+          ref: b308dd58277154e896dd4923b223cf8c9484f99b
           path: head
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -211,7 +211,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 5654874b46b3dd194da1c6e04566c3448f0cb1bb
+          ref: b308dd58277154e896dd4923b223cf8c9484f99b
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
