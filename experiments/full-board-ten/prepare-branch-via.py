@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authenticate a paired native run and the single-declaration expanded-site bound overlay."""
+"""Authenticate a paired native run and the reviewed branch-via attachment overlay."""
 import argparse
 import copy
 import gzip
@@ -80,26 +80,26 @@ parser.add_argument("cohort", choices=["original", "spaced"])
 args = parser.parse_args()
 root = args.root.resolve()
 controller = Path(__file__).resolve().parent
-plan = json.loads((controller / "expanded-sites-plan.json").read_text())
+plan = json.loads((controller / "branch-via-plan.json").read_text())
 if plan["qualificationReady"] is not True:
-    raise RuntimeError("Expanded-site source and one-span Core mapping are pending; controller held")
+    raise RuntimeError("Branch-via source and exact Core mapping are pending; controller held")
 assert len(plan["source"]["candidateCommit"]) == 40
 selected_cases = [case for case in plan["cases"] if case["board"] == args.board and case["cohort"] == args.cohort]
-assert len(selected_cases) == 1, "Case is outside the reviewed four-case screen"
+assert len(selected_cases) == 1, "Case is outside the reviewed single-case screen"
 required_harness_files = {
     'autorouter-dependencies/bun.lock',
     'autorouter-dependencies/package.json',
     'bootstrap.py',
     'calibrate-assessment.tsx',
-    'compare-expanded-sites.py',
+    'compare-branch-via.py',
     'createCoarseRoutingDiagnostics.ts',
-    'createExpandedSitesOverlay.ts',
-    'expanded-sites-production.patch',
-    'expanded-sites-source-mapping.json',
+    'createBranchViaOverlay.ts',
+    'branch-via-production.patch',
+    'branch-via-source-mapping.json',
     'harness-provenance.json',
     'package.json',
     'prepare-cases.ts',
-    'prepare-expanded-sites.py',
+    'prepare-branch-via.py',
     'published-release-provenance.json',
     'release.json',
     'render-published.tsx',
@@ -115,15 +115,15 @@ for name, digest in plan["frozenFiles"].items():
     assert sha(controller.parents[1] / name) == digest, f"Reviewed controller changed: {name}"
 for name, digest in plan["frozenHarnessFiles"].items():
     assert sha(controller / name) == digest, f"Reviewed harness changed: {name}"
-assert sha(controller / "createExpandedSitesOverlay.ts") == plan["sourceMappingToolSha256"]
-assert sha(controller / "expanded-sites-source-mapping.json") == plan["sourceMappingSha256"]
-proof = root / "expanded-sites"
+assert sha(controller / "createBranchViaOverlay.ts") == plan["sourceMappingToolSha256"]
+assert sha(controller / "branch-via-source-mapping.json") == plan["sourceMappingSha256"]
+proof = root / "branch-via"
 proof.mkdir(exist_ok=True)
 manifest_path = root / "runtime-manifest.json"
 published_path = root / "published-runtime-manifest.json"
 candidate_path = root / "candidate-runtime-manifest.json"
 original = root / "npm/core"
-overlay = root / "npm/core-expanded-sites"
+overlay = root / "npm/core-branch-via"
 alias = root / "runtime/node_modules/@tscircuit/core"
 
 if args.operation == "baseline":
@@ -182,19 +182,25 @@ if args.operation == "source":
     assert not subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"], text=True).strip()
     base = proof / "source-base"
     for relative, row in plan["source"]["files"].items():
-        assert sha(source / relative) == row["beforeSha256"]
-        target = base / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source / relative, target)
-    patch = controller / "expanded-sites-production.patch"
+        if row["beforeSha256"] is None:
+            assert not (source / relative).exists(), f"New source path already exists: {relative}"
+        else:
+            assert sha(source / relative) == row["beforeSha256"]
+            target = base / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source / relative, target)
+    patch = controller / "branch-via-production.patch"
     assert sha(patch) == plan["source"]["patchSha256"]
-    subprocess.run(["git", "apply", "--check", str(patch)], cwd=source, check=True)
-    subprocess.run(["git", "apply", str(patch)], cwd=source, check=True)
-    assert set(subprocess.check_output(["git", "diff", "--name-only"], cwd=source, text=True).splitlines()) == set(plan["source"]["files"])
+    subprocess.run(["git", "apply", "--index", "--check", str(patch)], cwd=source, check=True)
+    subprocess.run(["git", "apply", "--index", str(patch)], cwd=source, check=True)
+    assert set(subprocess.check_output(["git", "diff", "--cached", "--name-only"], cwd=source, text=True).splitlines()) == set(plan["source"]["files"])
+    assert not subprocess.check_output(["git", "diff", "--name-only"], cwd=source, text=True).strip()
+    assert not subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=source, text=True).strip()
+    assert subprocess.check_output(["git", "write-tree", "--prefix=lib/"], cwd=source, text=True).strip() == plan["source"]["candidateLibTree"]
     for relative, row in plan["source"]["files"].items():
         assert sha(source / relative) == row["afterSha256"]
     compiler = root / "runtime/node_modules/typescript/lib/typescript.js"
-    subprocess.run(["bun", str(controller / "createExpandedSitesOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof), plan["source"]["candidateCommit"]], check=True)
+    subprocess.run(["bun", str(controller / "createBranchViaOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof), plan["source"]["candidateCommit"]], check=True)
     assert sha(proof / "source-mapping.json") == plan["sourceMappingSha256"], "Runner qualification differs from reviewed source proof"
     verify_packages(published)
     verify_graph()
@@ -221,13 +227,13 @@ mapping = json.loads((proof / "overlay-spans.json").read_text())
 assert mapping["passed"] and mapping["schemaVersion"] == plan["overlay"]["schemaVersion"] == 2
 assert mapping["sourceCandidateCommit"] == plan["source"]["candidateCommit"]
 assert mapping["sourceFiles"] == plan["source"]["files"]
-assert mapping["externalAliases"] == {"getCopperLayerNames": "getCopperLayerNames3", "distance": "distance16"}
-assert plan["overlay"] == {"schemaVersion": 2, "replace": ["expandedSignalSites"], "insert": [], "unchanged": ["routingBounds"]}
-assert [row["name"] for row in mapping["replacedDeclarations"]] == ["expandedSignalSites"]
-assert mapping["insertedDeclarations"] == []
-assert [row["name"] for row in mapping["unchangedDeclarations"]] == ["routingBounds"]
-assert len(mapping["spans"]) == 1
-assert mapping["spans"][0]["kind"] == "replace" and mapping["spans"][0]["name"] == "expandedSignalSites"
+assert mapping["externalAliases"] == plan["externalAliases"]
+assert [row["name"] for row in mapping["replacedDeclarations"]] == plan["overlay"]["replace"]
+assert [row["name"] for row in mapping["insertedDeclarations"]] == plan["overlay"]["insert"]
+assert [row["name"] for row in mapping["unchangedDeclarations"]] == plan["overlay"]["unchanged"]
+expected_spans = [("replace", name) for name in plan["overlay"]["replace"]] + [("insert", name) for name in plan["overlay"]["insert"]]
+assert sorted((row["kind"], row["name"]) for row in mapping["spans"]) == sorted(expected_spans)
+assert len(expected_spans) > 0
 before = Path(core["entry"]).read_bytes()
 assert hashlib.sha256(before).hexdigest() == mapping["originalCoreSha256"] == plan["runtime"]["publishedCoreSha256"]
 utf16 = before.decode().encode("utf-16-le")
@@ -247,15 +253,17 @@ for row in ordered:
     assert start == len(utf16[:2 * row["characterOffset"]].decode("utf-16-le").encode())
     assert hashlib.sha256(old).hexdigest() == row["oldBlockSha256"]
     assert hashlib.sha256(new).hexdigest() == row["newBlockSha256"]
-    assert row["kind"] == "replace"
-    assert old and before[start:start + len(old)] == old and before.count(old) == 1
+    if row["kind"] == "replace":
+        assert old and before[start:start + len(old)] == old and before.count(old) == 1
+    else:
+        assert not old and new and row["name"] in plan["overlay"]["insert"]
     segment = utf16[2 * previous_character_end:2 * row["characterOffset"]].decode("utf-16-le").encode()
     expected_segments.append({"start": previous_character_end, "end": row["characterOffset"], "sha256": hashlib.sha256(segment).hexdigest()})
     previous_end = start + len(old)
     previous_character_end = row["characterOffset"] + len(row["oldBlock"].encode("utf-16-le")) // 2
 expected_segments.append({"start": previous_character_end, "end": len(utf16) // 2, "sha256": hashlib.sha256(utf16[2 * previous_character_end:].decode("utf-16-le").encode()).hexdigest()})
 assert mapping["unchangedSegments"] == expected_segments
-# Reconstruct the one reviewed replacement and preserve every outside byte.
+# Reconstruct only the reviewed spans and preserve every outside byte.
 after = before
 for row in sorted(mapping["spans"], key=lambda row: (row["byteOffset"], 1 if row["kind"] == "replace" else 0), reverse=True):
     start = row["byteOffset"]

@@ -1,8 +1,8 @@
-name: Expanded-site bounds published3236 native paired screen
+name: Branch-via attachment published3236 native paired screen
 
 on:
   push:
-    branches: [bench/expanded-sites-3236-20261118]
+    branches: [bench/branch-via-3236-20261118]
   workflow_dispatch:
 
 permissions:
@@ -10,18 +10,15 @@ permissions:
 
 jobs:
   paired:
-    if: github.ref == 'refs/heads/bench/expanded-sites-3236-20261118'
-    name: Full native (${{ matrix.board }}, ${{ matrix.cohort }}, published then expanded-site bounds)
+    if: github.ref == 'refs/heads/bench/branch-via-3236-20261118'
+    name: Full native (${{ matrix.board }}, ${{ matrix.cohort }}, published then branch-via attachment)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 1
       matrix:
         include:
-          - { board: glider, cohort: original }
-          - { board: imx6, cohort: original }
-          - { board: icepi, cohort: original }
           - { board: butterstick, cohort: spaced }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
@@ -39,14 +36,14 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             experiments/full-board-ten
-            .github/workflows/expanded-sites-screen.yml
+            .github/workflows/branch-via-screen.yml
             AGENTS.md
 
       - name: Require source and controller qualification before setup
         run: >-
           python3 -c 'import json; from pathlib import Path;
-          plan=json.loads(Path("experiments/full-board-ten/expanded-sites-plan.json").read_text());
-          assert plan["qualificationReady"] is True, "Source commit and one-span Core mapping are pending; controller held"'
+          plan=json.loads(Path("experiments/full-board-ten/branch-via-plan.json").read_text());
+          assert plan["qualificationReady"] is True, "Source commit and exact Core mapping are pending; controller held"'
 
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -100,8 +97,8 @@ jobs:
       - name: Freeze published control and qualify exact candidate source
         id: qualify
         run: |
-          python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
-          python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-branch-via.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-branch-via.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
 
       - name: Render fresh published full board and assess physical nets
         id: base
@@ -117,16 +114,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-base-${{ github.run_attempt }}
+          name: branch-via-${{ matrix.board }}-${{ matrix.cohort }}-base-${{ github.run_attempt }}
           path: .full-board-run/lanes/base
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
 
-      - name: Activate only qualified expandedSignalSites declaration
+      - name: Activate only qualified branch-via source declarations
         id: activate
         if: ${{ !cancelled() && steps.qualify.outcome == 'success' && steps.base.outcome != 'skipped' }}
-        run: python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
+        run: python3 experiments/full-board-ten/prepare-branch-via.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
 
       - name: Render fresh candidate full board and assess with restored published runtime
         id: candidate
@@ -140,14 +137,14 @@ jobs:
       - name: Compare physical completion and preserved native geometry
         id: compare
         if: ${{ !cancelled() && steps.candidate.outcome != 'skipped' && steps.activate.outcome == 'success' }}
-        run: python3 experiments/full-board-ten/compare-expanded-sites.py "$FULL_BOARD_ROOT" "$BOARD" "$COHORT"
+        run: python3 experiments/full-board-ten/compare-branch-via.py "$FULL_BOARD_ROOT" "$BOARD" "$COHORT"
 
       - name: Preserve candidate native result
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-candidate-${{ github.run_attempt }}
+          name: branch-via-${{ matrix.board }}-${{ matrix.cohort }}-candidate-${{ github.run_attempt }}
           path: .full-board-run/lanes/candidate
           if-no-files-found: warn
           compression-level: 0
@@ -158,17 +155,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-proof-${{ github.run_attempt }}
+          name: branch-via-${{ matrix.board }}-${{ matrix.cohort }}-proof-${{ github.run_attempt }}
           path: |
-            .full-board-run/expanded-sites
+            .full-board-run/branch-via
             .full-board-run/*runtime-manifest.json
             .full-board-run/comparison
             .full-board-run/cases/*.json
-            experiments/full-board-ten/expanded-sites-*
+            experiments/full-board-ten/branch-via-*
             experiments/full-board-ten/harness-provenance.json
             experiments/full-board-ten/release.json
             experiments/full-board-ten/source-provenance.json
             experiments/full-board-ten/published-release-provenance.json
-            .github/workflows/expanded-sites-screen.yml
+            .github/workflows/branch-via-screen.yml
           if-no-files-found: warn
           retention-days: 7

@@ -14,25 +14,24 @@ parser.add_argument("board", choices=["glider", "imx6", "icepi", "butterstick"])
 parser.add_argument("cohort", choices=["original", "spaced"])
 arguments = parser.parse_args()
 root, board, cohort = arguments.root.resolve(), arguments.board, arguments.cohort
-plan = json.loads(Path(__file__).with_name("expanded-sites-plan.json").read_text())
+plan = json.loads(Path(__file__).with_name("branch-via-plan.json").read_text())
 if plan["qualificationReady"] is not True:
-    raise RuntimeError("Expanded-site source and one-span Core mapping are pending; controller held")
+    raise RuntimeError("Branch-via source and exact Core mapping are pending; controller held")
 selected_cases = [case for case in plan["cases"] if case["board"] == board and case["cohort"] == cohort]
 assert len(selected_cases) == 1
 expected_nets = selected_cases[0]["expectedRoutableNets"]
 changed_declarations = plan["overlay"]["replace"] + plan["overlay"]["insert"]
-source_mapping_path = root / "expanded-sites/source-mapping.json"
-overlay_proof_path = root / "expanded-sites/overlay-proof.json"
+source_mapping_path = root / "branch-via/source-mapping.json"
+overlay_proof_path = root / "branch-via/overlay-proof.json"
 assert hashlib.sha256(source_mapping_path.read_bytes()).hexdigest() == plan["sourceMappingSha256"]
 source_mapping = json.loads(source_mapping_path.read_text())
 overlay_proof = json.loads(overlay_proof_path.read_text())
 assert source_mapping["passed"] is True and source_mapping["schemaVersion"] == 2
 assert source_mapping["sourceCandidateCommit"] == plan["source"]["candidateCommit"]
-assert source_mapping["externalAliases"] == {"getCopperLayerNames": "getCopperLayerNames3", "distance": "distance16"}
-assert plan["overlay"] == {"schemaVersion": 2, "replace": ["expandedSignalSites"], "insert": [], "unchanged": ["routingBounds"]}
-assert [row["name"] for row in source_mapping["replacedDeclarations"]] == ["expandedSignalSites"]
-assert source_mapping["insertedDeclarations"] == []
-assert [row["name"] for row in source_mapping["unchangedDeclarations"]] == ["routingBounds"]
+assert source_mapping["externalAliases"] == plan["externalAliases"]
+assert [row["name"] for row in source_mapping["replacedDeclarations"]] == plan["overlay"]["replace"]
+assert [row["name"] for row in source_mapping["insertedDeclarations"]] == plan["overlay"]["insert"]
+assert [row["name"] for row in source_mapping["unchangedDeclarations"]] == plan["overlay"]["unchanged"]
 assert source_mapping["sourceFiles"] == plan["source"]["files"]
 frozen_packages = {
     "tscircuit": ("0.0.3236", "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"),
@@ -178,7 +177,7 @@ assert overlay_proof["changedDeclarations"] == changed_declarations
 assert overlay_proof["replacedDeclarations"] == plan["overlay"]["replace"]
 assert overlay_proof["insertedDeclarations"] == plan["overlay"]["insert"]
 assert overlay_proof["publishedManifestSha256"] == base["runtimeManifestSha256"] and overlay_proof["candidateManifestSha256"] == candidate["runtimeManifestSha256"]
-restored_path = root / "expanded-sites/assessment-runtime-restored.json"
+restored_path = root / "branch-via/assessment-runtime-restored.json"
 restored = json.loads(restored_path.read_text())
 assert restored["publishedAliasesRestored"] is True and restored["allPublishedFilesVerified"] is True
 assert restored["publishedManifestSha256"] == base["runtimeManifestSha256"] and restored["candidateManifestSha256"] == candidate["runtimeManifestSha256"]
@@ -189,7 +188,7 @@ assert base["phasePayloads"][0]["inputSha256"] == candidate["phasePayloads"][0][
 gained = sorted(set(base["unconnectedNets"]) - set(candidate["unconnectedNets"]))
 lost = sorted(set(candidate["unconnectedNets"]) - set(base["unconnectedNets"]))
 comparison = {
-    "scope": "Fresh selected full native circuit, published base then standalone expanded-site bound candidate on the same ARM worker in separate Bun processes. Frozen Main3236/Core2418/Eval1811/AR1129; candidate changes only the AST-qualified Bus62 expandedSignalSites declaration. Native900/960-second render and180-second assessment limits are unchanged. This initial four-case screen is not all-ten coverage.",
+    "scope": "Fresh selected full native circuit, published base then owned-trunk branch via candidate on the same ARM worker in separate Bun processes. Frozen Main3236/Core2418/Eval1811/AR1129; candidate changes only the reviewed AST-qualified Bus62 branch-via declarations. Native900/960-second render and180-second assessment limits are unchanged. This initial ButterStick spaced screen is not all-ten coverage.",
     "board": board,
     "cohort": cohort,
     "runId": os.environ.get("GITHUB_RUN_ID"),
