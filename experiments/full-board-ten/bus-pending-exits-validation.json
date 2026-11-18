@@ -1,0 +1,35 @@
+{
+  "status": "PASS for native screen preparation; no full-board gain established",
+  "sourceCandidateCommit": "a928e5c2c0d7a13b4038430fb4fa3b9008b8bdb6",
+  "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
+  "sourceMappingSha256": "76dfde9e3a6e5562bfc1e0b53bdd381ceda94b784b0324c44e7423064be6c317",
+  "independentReview": {
+    "reviewer": "/root/final_native_controller/pair_controller_review",
+    "mapperSha256": "54f0076bcccebbb68aec809bf0018e1851fce805a9ecd6672d6d208c2bb504ea",
+    "sourceAndAliasesAndCallCoverage": "PASS",
+    "replacementInsertionBoundariesAndReconstructedCore": "PASS",
+    "controllerInstallerAndComparator": "PASS"
+  },
+  "contractChecks": {
+    "installer": {
+      "sha256": "9e4decd1bfab4ef7f6aeb5af577edabd95bd5e39933d98601438345d1442bee4",
+      "passed": true,
+      "freshBaseGitCheckoutAndProductionPatchVerified": true,
+      "unrelatedAutorouterMutationRejected": true,
+      "unrelatedRuntimeDriftRejectedBeforeRestore": true,
+      "originalCorePreservedAndPublishedAliasesRestored": true
+    },
+    "comparator": {
+      "sha256": "2c1a54f52675617d72748247bdb74719213decd360cce2851fc7e3b8daf355e7",
+      "passed": true,
+      "cohorts": [
+        "original",
+        "spaced"
+      ],
+      "incompleteCallCoverageRejected": true,
+      "missingBoundedDeclarationRejected": true
+    }
+  },
+  "contractLimitations": "Synthetic contract fixtures use authentic Core bytes but synthetic other package contents/ARM label and fabricated comparator geometry. No native routing was executed. These checks do not establish performance or completion gains.",
+  "nativeHarnessUnchangedFrom": "453724baedbc384b0034443f74f9b86f81dd3b2a"
+}

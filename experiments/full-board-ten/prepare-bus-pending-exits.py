@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authenticate a paired native run; overlay only two qualified embedded Bus declarations."""
+"""Authenticate a paired native run and the complete bounded-guide Bus overlay."""
 import argparse
 import copy
 import gzip
@@ -79,6 +79,9 @@ args = parser.parse_args()
 root = args.root.resolve()
 controller = Path(__file__).resolve().parent
 plan = json.loads((controller / "bus-pending-exits-plan.json").read_text())
+if plan["qualificationReady"] is not True:
+    raise RuntimeError("Bounded source commit and complete Core mapping are pending; controller held")
+assert len(plan["source"]["candidateCommit"]) == 40
 for name, digest in plan["frozenHarnessFiles"].items():
     assert sha(controller / name) == digest, f"Reviewed harness changed: {name}"
 assert sha(controller / "createPendingExitsOverlay.ts") == plan["sourceMappingToolSha256"]
@@ -156,7 +159,7 @@ if args.operation == "source":
     for relative, row in plan["source"]["files"].items():
         assert sha(source / relative) == row["afterSha256"]
     compiler = root / "runtime/node_modules/typescript/lib/typescript.js"
-    subprocess.run(["bun", str(controller / "createPendingExitsOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof)], check=True)
+    subprocess.run(["bun", str(controller / "createPendingExitsOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof), plan["source"]["candidateCommit"]], check=True)
     assert sha(proof / "source-mapping.json") == plan["sourceMappingSha256"], "Runner qualification differs from reviewed source proof"
     verify_packages(published)
     verify_graph()
@@ -180,26 +183,64 @@ verify_packages(published)
 verify_graph()
 assert sha(proof / "source-mapping.json") == plan["sourceMappingSha256"]
 mapping = json.loads((proof / "overlay-spans.json").read_text())
-assert mapping["passed"] and mapping["externalAliases"] == {"BaseSolver": "BaseSolver9", "getCopperLayerNames": "getCopperLayerNames3", "getRouteViaSpanLayers": "getRouteViaSpanLayers3", "distance": "distance16", "applyToPoint": "applyToPoint36"}
-assert sorted(row["name"] for row in mapping["spans"]) == ["BusLanesSolver", "negotiateLanes"]
-assert sorted(row["name"] for row in mapping["unchangedDeclarations"]) == ["pendingLaneCertificates", "pendingPackageExits"]
+assert mapping["passed"] and mapping["schemaVersion"] == plan["overlay"]["schemaVersion"] == 2
+assert mapping["sourceCandidateCommit"] == plan["source"]["candidateCommit"]
+assert mapping["sourceFiles"] == plan["source"]["files"]
+assert mapping["publishedCallCoverage"] == {"publishedCallCount": 7, "candidateCallCount": 7, "allCandidateCallsUseObjectArgument": True}
+assert mapping["externalAliases"] == {"BaseSolver": "BaseSolver9", "getCopperLayerNames": "getCopperLayerNames3", "getRouteViaSpanLayers": "getRouteViaSpanLayers3", "distance": "distance16", "applyToPoint": "applyToPoint36"}
+for kind, collection in [("replace", "replacedDeclarations"), ("insert", "insertedDeclarations")]:
+    expected = plan["overlay"][kind]
+    selected = [row for row in mapping["spans"] if row["kind"] == kind]
+    assert len(selected) == len(expected) and sorted(row["name"] for row in selected) == sorted(expected)
+    assert sorted(row["name"] for row in mapping[collection]) == sorted(expected)
+assert len(mapping["spans"]) == len(plan["overlay"]["replace"]) + len(plan["overlay"]["insert"])
+assert sorted(row["name"] for row in mapping["unchangedDeclarations"]) == sorted(plan["overlay"]["unchanged"])
+assert len(mapping["callsiteQualification"]) == plan["overlay"]["negotiateLanesCallsites"] == 7
+assert len({(row["relative"], row["index"]) for row in mapping["callsiteQualification"]}) == 7
+for row in mapping["callsiteQualification"]:
+    assert row["existingArgumentsAndDefaultsPreserved"] and row["lazyCallbacksPreserved"] and row["evaluationOrderPreserved"]
+    assert row["pendingExits"] == ("this.pendingExits" if row["relative"] == "lib/bus-lanes-solver.ts" else "[]")
 before = Path(core["entry"]).read_bytes()
 assert hashlib.sha256(before).hexdigest() == mapping["originalCoreSha256"] == plan["runtime"]["publishedCoreSha256"]
-# String offsets come from JavaScript UTF-16; spans lie in the ASCII prefix. Byte offsets drive replacement.
-after = before
-for row in sorted(mapping["spans"], key=lambda row: row["byteOffset"], reverse=True):
+utf16 = before.decode().encode("utf-16-le")
+marker = b"// node_modules/@tscircuit/bus-lanes-solver/dist/index.js"
+module_start = before.index(marker)
+module_end = before.index(b"\n// ", module_start + 3) + 1
+assert before.count(marker) == 1 and hashlib.sha256(before[module_start:module_end]).hexdigest() == mapping["originalBusModuleSha256"]
+ordered = sorted(mapping["spans"], key=lambda row: (row["byteOffset"], 0 if row["kind"] == "insert" else 1))
+previous_end = module_start
+expected_segments = []
+previous_character_end = 0
+for row in ordered:
     start = row["byteOffset"]
     old, new = row["oldBlock"].encode(), row["newBlock"].encode()
+    assert row["kind"] in ["replace", "insert"] and module_start <= start <= module_end
+    assert start >= previous_end and start + len(old) <= module_end
+    assert start == len(utf16[:2 * row["characterOffset"]].decode("utf-16-le").encode())
     assert hashlib.sha256(old).hexdigest() == row["oldBlockSha256"]
     assert hashlib.sha256(new).hexdigest() == row["newBlockSha256"]
-    assert after[start:start + len(old)] == old and before.count(old) == 1
+    if row["kind"] == "replace":
+        assert old and before[start:start + len(old)] == old and before.count(old) == 1
+    else:
+        assert old == b"" and row["name"] == "getPendingExitPathCost" and row["insertionAnchor"] == "pendingPackageExits"
+        assert b"getPendingExitPathCost" not in before
+        anchor = next(item for item in mapping["spans"] if item["kind"] == "replace" and item["name"] == row["insertionAnchor"])
+        assert anchor["byteOffset"] == start and anchor["oldBlockSha256"] == row["insertionAnchorSha256"]
+        assert hashlib.sha256(before[start:start + len(anchor["oldBlock"].encode())]).hexdigest() == row["insertionAnchorSha256"]
+    segment = utf16[2 * previous_character_end:2 * row["characterOffset"]].decode("utf-16-le").encode()
+    expected_segments.append({"start": previous_character_end, "end": row["characterOffset"], "sha256": hashlib.sha256(segment).hexdigest()})
+    previous_end = start + len(old)
+    previous_character_end = row["characterOffset"] + len(row["oldBlock"].encode("utf-16-le")) // 2
+expected_segments.append({"start": previous_character_end, "end": len(utf16) // 2, "sha256": hashlib.sha256(utf16[2 * previous_character_end:].decode("utf-16-le").encode()).hexdigest()})
+assert mapping["unchangedSegments"] == expected_segments
+# At a shared offset, replace the original generator before inserting its new helper.
+after = before
+for row in sorted(mapping["spans"], key=lambda row: (row["byteOffset"], 1 if row["kind"] == "replace" else 0), reverse=True):
+    start = row["byteOffset"]
+    old, new = row["oldBlock"].encode(), row["newBlock"].encode()
+    assert after[start:start + len(old)] == old
     after = after[:start] + new + after[start + len(old):]
 assert hashlib.sha256(after).hexdigest() == mapping["candidateCoreSha256"] == plan["runtime"]["candidateCoreSha256"]
-# Verify every untouched text segment without mistaking character offsets for byte offsets.
-utf16 = before.decode().encode("utf-16-le")
-for row in mapping["unchangedSegments"]:
-    segment = utf16[2 * row["start"]:2 * row["end"]].decode("utf-16-le").encode()
-    assert hashlib.sha256(segment).hexdigest() == row["sha256"]
 overlay.mkdir()
 files = []
 for row in core["publishedFiles"]:
@@ -214,7 +255,8 @@ for row in core["publishedFiles"]:
 assert alias.is_symlink() and alias.resolve() == original
 alias.unlink()
 alias.symlink_to(overlay)
-override = {"kind": "qualified-embedded-source-overlay", "package": "@tscircuit/core", "embeddedPackage": "@tscircuit/bus-lanes-solver", "embeddedBaseVersion": "0.0.62", "sourceBaseCommit": plan["source"]["baseCommit"], "sourcePatchSha256": plan["source"]["patchSha256"], "publishedCoreSha256": mapping["originalCoreSha256"], "candidateCoreSha256": mapping["candidateCoreSha256"], "changedDeclarations": ["BusLanesSolver", "negotiateLanes"], "sourceMappingSha256": plan["sourceMappingSha256"], "autorouterSourceOverride": False, "unchangedRuntimeDependencies": True}
+changed_declarations = plan["overlay"]["replace"] + plan["overlay"]["insert"]
+override = {"kind": "qualified-embedded-source-overlay", "package": "@tscircuit/core", "embeddedPackage": "@tscircuit/bus-lanes-solver", "embeddedBaseVersion": "0.0.62", "sourceBaseCommit": plan["source"]["baseCommit"], "sourceCandidateCommit": plan["source"]["candidateCommit"], "sourcePatchSha256": plan["source"]["patchSha256"], "publishedCoreSha256": mapping["originalCoreSha256"], "candidateCoreSha256": mapping["candidateCoreSha256"], "changedDeclarations": changed_declarations, "sourceMappingSha256": plan["sourceMappingSha256"], "autorouterSourceOverride": False, "unchangedRuntimeDependencies": True}
 candidate = copy.deepcopy(published)
 candidate.update(sourceOverrides=True, experiment=plan["experiment"], dependencyOverrides=[override], routingSourceOverride=override)
 for row in candidate["packages"]:
@@ -232,4 +274,4 @@ for cohort in plan["cohorts"]:
     task = json.loads((root / f"lanes/base/cases/butterstick-{cohort}.json").read_text())
     task.update(experiment=plan["experiment"], dependencyOverrides=[override], routingSourceOverride=override, runtimeManifestPath=str(candidate_path), restorePublishedCoreBeforeAssessment=str(root))
     dump(root / f"lanes/candidate/cases/butterstick-{cohort}.json", task)
-dump(proof / "overlay-proof.json", {"onlyTwoEmbeddedDeclarationsChanged": True, "sourceMappingSha256": sha(proof / "source-mapping.json"), "routingSourceOverride": override, "publishedCoreSha256": mapping["originalCoreSha256"], "candidateCoreSha256": mapping["candidateCoreSha256"], "candidateManifestSha256": sha(candidate_path), "publishedManifestSha256": sha(published_path), "allPackageFilesVerified": True, "unchangedDependencyGraphExceptCoreAlias": True, "mainAndEvalResolveSelectedCore": True, "publishedAssessmentHelperPreserved": True, "changedDeclarations": ["BusLanesSolver", "negotiateLanes"]})
+dump(proof / "overlay-proof.json", {"schemaVersion": 2, "onlyReviewedEmbeddedDeclarationsChanged": True, "sourceMappingSha256": sha(proof / "source-mapping.json"), "routingSourceOverride": override, "publishedCoreSha256": mapping["originalCoreSha256"], "candidateCoreSha256": mapping["candidateCoreSha256"], "candidateManifestSha256": sha(candidate_path), "publishedManifestSha256": sha(published_path), "allPackageFilesVerified": True, "unchangedDependencyGraphExceptCoreAlias": True, "mainAndEvalResolveSelectedCore": True, "publishedAssessmentHelperPreserved": True, "replacedDeclarations": plan["overlay"]["replace"], "insertedDeclarations": plan["overlay"]["insert"], "changedDeclarations": changed_declarations})

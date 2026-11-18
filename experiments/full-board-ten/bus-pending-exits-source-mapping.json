@@ -1,24 +1,114 @@
 {
   "passed": true,
+  "schemaVersion": 2,
+  "sourceCandidateCommit": "a928e5c2c0d7a13b4038430fb4fa3b9008b8bdb6",
+  "sourceCommitProvenance": "Revision supplied by the controller; exact source patch and before/after file hashes are authenticated by its installer.",
   "bun": "1.4.3",
   "typescript": "5.9.3",
   "sourceFiles": {
     "lib/bus-lanes-solver.ts": {
       "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
-      "afterSha256": "e298e2a0c9242da0bbfde784fa24092fc656840f80050a5fd4c980d7b68f7964"
+      "afterSha256": "746a06de86e0bc172512bb60074ae0e13a16db9a7feeaf2b909c15f85cad2a78"
     },
     "lib/negotiate-lanes.ts": {
       "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
-      "afterSha256": "e1ef9dc92e2cffe0daa6280c9ac736436b52471355d32fd5186bc224fc21d62f"
+      "afterSha256": "af201f7d8c5a1226785e90cf818880ef24e5cd7c3d4d273f6aef11799f83eba4"
     },
     "lib/pending-lane-certificates.ts": {
       "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
-      "afterSha256": "716ff5f336a6b4977fd094abb797ac1d0d00bcdbb02028d91813ce03df4e7728"
+      "afterSha256": "6c9aa539761b113e32230bf01278682ba28f09321aa0a2719027ead2276caaa7"
+    },
+    "lib/repair-bus-dogbones.ts": {
+      "beforeSha256": "702700d47fa5e30f03fa1331fff3cb557536f65d99dd3361c41ccdcd17c5d391",
+      "afterSha256": "a53d4e65fe8c4c8de0aac7fbb31b4b7245c88bc89288dc475d302a7fbe4b7444"
+    },
+    "lib/route-backward-package-buses.ts": {
+      "beforeSha256": "147e55b75bd9e4497236dffb7741c80fd0802dbc20441e35463a39a025a5776b",
+      "afterSha256": "80e1045f694110ffcce60a80248717f66ab4ffe0178a67ab49ba492dbc002725"
+    },
+    "lib/route-fresh-shared-buses.ts": {
+      "beforeSha256": "d82a1ffa6ca999565e4ef8a996ef8eeacc3fb5cd1b854ede4bf7365982d61eba",
+      "afterSha256": "762ce8a2e6107bca9e93359412cf62bafff057f925369dded088e3ff6f1ccda0"
+    },
+    "lib/route-independent-buses.ts": {
+      "beforeSha256": "ed31bf665e4674773ecb80d94523cb1981577c9036ad3f297abbe3af0afb1f6e",
+      "afterSha256": "42af973d618d71509a494fb92817aef94a3b4a2181bca29e5d06451b27664893"
+    },
+    "lib/route-paired-network.ts": {
+      "beforeSha256": "7ecf50d6da7dcbf71ebd07fc221a278c3c1500ec45711efbc7f61296c02525c8",
+      "afterSha256": "9d7faf77352ee4fdfe1fb7e946b077e9a4920c8bdd943e4fcf11f78ee70391b3"
+    },
+    "lib/route-shared-layer-buses.ts": {
+      "beforeSha256": "3f8d4a49e9fbfcb0a56992d4bf41efece200d511e911f105fdd1ab192477baa7",
+      "afterSha256": "6f5f632e2a26366b3fb894a0694e747f2202e5ebe83d2ad3e769894298719fe2"
     }
+  },
+  "callsiteQualification": [
+    {
+      "relative": "lib/bus-lanes-solver.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "this.pendingExits"
+    },
+    {
+      "relative": "lib/repair-bus-dogbones.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    },
+    {
+      "relative": "lib/route-backward-package-buses.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    },
+    {
+      "relative": "lib/route-fresh-shared-buses.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    },
+    {
+      "relative": "lib/route-independent-buses.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    },
+    {
+      "relative": "lib/route-paired-network.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    },
+    {
+      "relative": "lib/route-shared-layer-buses.ts",
+      "index": 0,
+      "existingArgumentsAndDefaultsPreserved": true,
+      "lazyCallbacksPreserved": true,
+      "evaluationOrderPreserved": true,
+      "pendingExits": "[]"
+    }
+  ],
+  "publishedCallCoverage": {
+    "publishedCallCount": 7,
+    "candidateCallCount": 7,
+    "allCandidateCallsUseObjectArgument": true
   },
   "originalCoreSha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
   "originalBusModuleSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
-  "candidateCoreSha256": "4bc30a21e83b48e5397764a10fc073bb4f423fd87d2952dcfe21382984b132ef",
+  "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
   "bundledAliases": {
     "BaseSolver9": "BaseSolver",
     "i2": "i",
@@ -69,27 +159,61 @@
   "unchangedSegments": [
     {
       "start": 0,
+      "end": 2499479,
+      "sha256": "eb69cd16780f3685f4148a1d5dfd311f3236ab3d90ab4cc068961fbec4cc43bf"
+    },
+    {
+      "start": 2499479,
+      "end": 2499479,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "start": 2502903,
       "end": 2537217,
-      "sha256": "ae51d01bf7da2342dd21f55d4bbc3bfa64f8afefd65236c6e85239eafa4ab403"
+      "sha256": "ee4fa523374ab95611520f923e8cad913ba34365738ea35eb4f8d9fc97455284"
     },
     {
       "start": 2557837,
+      "end": 2559243,
+      "sha256": "71fb9a6e5223cc5d7505bd9d9da875adc6c035919f0a26290aba0e477dc9e2ec"
+    },
+    {
+      "start": 2561781,
+      "end": 2590795,
+      "sha256": "9030378908354dad79b2234db05e229655954b0ba90a8a77dd67983397d53436"
+    },
+    {
+      "start": 2591928,
       "end": 2678172,
-      "sha256": "06d3949fd61b0ac2dafec0679e6e008ad4dff502182aaeb444a4437e9f7521da"
+      "sha256": "3a7e9044c640c4877d19cccac9fdb2ae186ab8221c6443fa0648a04f51b670a2"
     },
     {
       "start": 2707330,
+      "end": 4744021,
+      "sha256": "594a3e7aa090f6e40dbc240832adce854cf34fed739d834d3f10b0f7d3602742"
+    },
+    {
+      "start": 4748990,
+      "end": 4988016,
+      "sha256": "a48f2ca2ede4ba83bbc29195d18b3299badf659fe485d114e5a8f87b9b8e6515"
+    },
+    {
+      "start": 4995378,
+      "end": 5005182,
+      "sha256": "dc26a1e7b7b286305ea1163c90cef33b3686d528d80b47fb6e4e20e66ffa70c6"
+    },
+    {
+      "start": 5012984,
+      "end": 5014325,
+      "sha256": "541817ea7bb147c14f4e74155c6459bab20e79de3945a453d6396ac146270009"
+    },
+    {
+      "start": 5021857,
       "end": 7225261,
-      "sha256": "77826a01f516ef760af49569307f44331dae509b24a11bc8616e8d103294d3ae"
+      "sha256": "cb76ec36526eedcd09891e922c4336b55c1512e2fda84875f533e1eb282b398e"
     }
   ],
   "unchangedDeclarations": [
-    {
-      "name": "pendingPackageExits",
-      "relative": "lib/pending-lane-certificates.ts",
-      "publishedFragmentSha256": "37f27f454395d7db8ebd19de7a54e29f54002263fe1e427bfb059c3a585c0414",
-      "tokenSha256": "fb93859cadd591ae39749427204e10318a6fb991cfdeccc29e0c83e9f18ad242"
-    },
     {
       "name": "pendingLaneCertificates",
       "relative": "lib/pending-lane-certificates.ts",
@@ -99,27 +223,140 @@
   ],
   "replacedDeclarations": [
     {
+      "kind": "replace",
       "name": "BusLanesSolver",
       "relative": "lib/bus-lanes-solver.ts",
+      "localAliases": {},
       "characterOffset": 2678172,
       "byteOffset": 2678172,
       "oldBlockSha256": "742b3eb454c68e41499d6fece4579cc4e69c034d442631eb8ed1834a266e45cc",
-      "newBlockSha256": "d5d7b02ca3d4b27e1c3709b2791f8a2e92fd0f695883a7f3363251fb65be19db",
+      "newBlockSha256": "f4aeb6fdd20e8bee0a615c6c63b0850c0e6eb516a064f45e8cbad993e3808e89",
       "beforeTokenSha256": "0a631f5d3e3980cf88739b241a23dba5207e7487b8cf54b53b2f785ddc99c37a",
-      "afterTokenSha256": "7cc5d19e22c6d93a4a19ad72e6b30262958a82b55c04f57d6c796b8e2b679c81"
+      "afterTokenSha256": "9c75f88c0577f7d552d8ac14bc7949b48388f2ed650262fc5d6b1795b4ef27c7"
     },
     {
+      "kind": "replace",
       "name": "negotiateLanes",
       "relative": "lib/negotiate-lanes.ts",
+      "localAliases": {},
       "characterOffset": 2537217,
       "byteOffset": 2537217,
       "oldBlockSha256": "efb5b186061d4c788879dd432d22d39011ecf0aa51828028b080f78c9f3b2b3a",
-      "newBlockSha256": "1cfb9d2e9af01344487df6c593021bbe7a61f176107e7e2081b79c1d1694ccde",
+      "newBlockSha256": "c6b54feb4718b3ed5bc3f1ba18d93383b50863400e16deaaf64764e3baca2b7c",
       "beforeTokenSha256": "d9312cbb52489b6150286127aabc7eee01162c9069be0b7283efdf0a109a275a",
-      "afterTokenSha256": "688c6903697a897b6084f92afda1f5bb86d5dddd7d4d319efcc8ebef68c71615"
+      "afterTokenSha256": "7cdcc699d9568abfca858b62396c47db83fe933c12fdd44ebf6a9bcb8b40821c"
+    },
+    {
+      "kind": "replace",
+      "name": "pendingPackageExits",
+      "relative": "lib/pending-lane-certificates.ts",
+      "localAliases": {},
+      "characterOffset": 2499479,
+      "byteOffset": 2499479,
+      "oldBlockSha256": "37f27f454395d7db8ebd19de7a54e29f54002263fe1e427bfb059c3a585c0414",
+      "newBlockSha256": "aa959128c682112a87f9c49f45ffaf78fe8b39e59cb8d57bc826fc0aa949c4f7",
+      "beforeTokenSha256": "fb93859cadd591ae39749427204e10318a6fb991cfdeccc29e0c83e9f18ad242",
+      "afterTokenSha256": "221fef8d7d623d88d4bf14ccd59be90a0b657a8b8169b161480b5e85df21889a"
+    },
+    {
+      "kind": "replace",
+      "name": "repairBusDogbones",
+      "relative": "lib/repair-bus-dogbones.ts",
+      "localAliases": {},
+      "characterOffset": 4744021,
+      "byteOffset": 4744023,
+      "oldBlockSha256": "99816539e96651fe4826455fddb5d39fe0e2dcd0508284de3f121f2741eafab1",
+      "newBlockSha256": "05422b2692c9c1f7fd9081056f0749e49fa8b3193a6e5d05ff8f2338d6dbdde7",
+      "beforeTokenSha256": "25a9db45b82e7f08b2d64fd7c843c274022cf793513ffd51bf7ee902269cc6c3",
+      "afterTokenSha256": "e7622b60d854c9daa58bebfa404bda4534a1136add291e236f964b24165b005f"
+    },
+    {
+      "kind": "replace",
+      "name": "routeBackwardPackageBuses",
+      "relative": "lib/route-backward-package-buses.ts",
+      "localAliases": {
+        "length32": "length"
+      },
+      "characterOffset": 5014325,
+      "byteOffset": 5014327,
+      "oldBlockSha256": "88fccbc05af80c26f016b9b8a1bbe58f3088b0b5e956fcc2a5771471ee957d2e",
+      "newBlockSha256": "64c7861c137d392f79c51f2f4e13312582d39a5db92a1f035427608fc3897ef1",
+      "beforeTokenSha256": "21bad5c07d734d1547b1377b2cc484bab02edc1bc2130657a7df3f67f20ec616",
+      "afterTokenSha256": "ee83d9605b30f14d72044a72f20ad6116da736b230b9b2b41b86525e77d606ec"
+    },
+    {
+      "kind": "replace",
+      "name": "routeFreshSharedBuses",
+      "relative": "lib/route-fresh-shared-buses.ts",
+      "localAliases": {},
+      "characterOffset": 4988016,
+      "byteOffset": 4988018,
+      "oldBlockSha256": "9353031174b3b414e5e1938cbb36720b21d2b314cea76075d4e6f112b483d631",
+      "newBlockSha256": "6a7f9279f2e173cc1f8dfc8ad08fb5f58371738219245ef97bd87d2f838c4e07",
+      "beforeTokenSha256": "bb9e7605e56b86df9485f51ba510658c7cff035cbe9da31cd6c3188ba9486151",
+      "afterTokenSha256": "7afd579abf163b08d977ab41d1767dbea33f63267f80aaa084a230edea00ee47"
+    },
+    {
+      "kind": "replace",
+      "name": "routeIndependentBuses",
+      "relative": "lib/route-independent-buses.ts",
+      "localAliases": {
+        "search2": "search",
+        "state2": "state",
+        "steps2": "steps"
+      },
+      "characterOffset": 2559243,
+      "byteOffset": 2559243,
+      "oldBlockSha256": "0c2d0d906dd1191591fcbe1b58dea22d9b5e27cdcb4315245ef9b3fa1ed1204c",
+      "newBlockSha256": "32d116c6a1a4fe3c8718b7d87c97b9c01b010f6a0a6e58f2f959e8f0bdb20112",
+      "beforeTokenSha256": "8470e8f3543f8fe78fabbea1681ebf3eeebc39f86f9c00cc2ef727b89f499dfe",
+      "afterTokenSha256": "1c35c5363b6ca50e6b6aaefd4b264d1c45bbc8bb2f66f6e9e6a2f74ba2bfeb13"
+    },
+    {
+      "kind": "replace",
+      "name": "routePairedNetwork",
+      "relative": "lib/route-paired-network.ts",
+      "localAliases": {},
+      "characterOffset": 2590795,
+      "byteOffset": 2590795,
+      "oldBlockSha256": "9dc0db2901b755dd9bb75df44bdf62b2b26e17a0236999978980f66779c821ed",
+      "newBlockSha256": "edd9175e415ec60d6eaa0c26d0ac9b650b640e84bdaca8e83aeb491633267d88",
+      "beforeTokenSha256": "deb2c61fc19459a42ef5cd11c6f1d0f949d12c7df6a24f5f86fcad719e9cfb1e",
+      "afterTokenSha256": "b450eb251b1a0fa1cdd9bf0d306f52cbb21062ae5cb07c9d54871889868cf6ba"
+    },
+    {
+      "kind": "replace",
+      "name": "routeSharedLayerBuses",
+      "relative": "lib/route-shared-layer-buses.ts",
+      "localAliases": {
+        "bounded2": "bounded",
+        "reachable2": "reachable",
+        "steps2": "steps",
+        "reachableLayers2": "reachableLayers"
+      },
+      "characterOffset": 5005182,
+      "byteOffset": 5005184,
+      "oldBlockSha256": "2a334cb56a1f836cc01eb835eb648dede9af6c1c4a277d673415cfe3d87f4e6d",
+      "newBlockSha256": "707d2b86783a02485c5b1a9f2101dd1f4700f16461d9f11998ffcbf85fe463ca",
+      "beforeTokenSha256": "7a6c7200ee460dde465e3bbd705a8325d517b1ec4e2dc93cd8cf32b750ed78d6",
+      "afterTokenSha256": "04d6c70bec1112b7d6c39d2123fd7d1821f303ee407798148078e028de517a56"
+    }
+  ],
+  "insertedDeclarations": [
+    {
+      "kind": "insert",
+      "name": "getPendingExitPathCost",
+      "relative": "lib/pending-lane-certificates.ts",
+      "characterOffset": 2499479,
+      "byteOffset": 2499479,
+      "oldBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "newBlockSha256": "a99e9f0d1364efbb628512b79705e4b098b584bfbbaca64b1e3cad2470aa4d24",
+      "afterTokenSha256": "c2903eb6d91ba199f3c4c275d3f19c48755601ac683e8a53a3485244c24884d7",
+      "insertionAnchor": "pendingPackageExits",
+      "insertionAnchorSha256": "37f27f454395d7db8ebd19de7a54e29f54002263fe1e427bfb059c3a585c0414"
     }
   ],
   "nativeRoutingExecuted": false,
   "moduleImported": false,
-  "normalization": "Same Bun syntax transformation and parser-aware leaf-token comparison; class constructors move to the front without changing field order, named class bindings are retained, and shorthand properties normalize to explicit equivalent keys. Explicit bundled aliases are checked against lexical bindings. Candidate source keeps local names and maps only the verified imported bindings."
+  "normalization": "Same Bun syntax transformation and parser-aware leaf-token comparison; class constructors move to the front without changing field order, named class bindings are retained, and shorthand properties and binding patterns normalize to explicit equivalent keys while retaining default initializers. Explicit bundled aliases are checked against lexical bindings. Candidate source keeps local names and maps only the five verified imported aliases. Nine existing declarations are replaced; the one new helper is inserted before the authenticated pendingPackageExits declaration after a full-Core name-collision check. All seven production call sites preserve existing argument values/defaults and add guides only in BusLanesSolver. pendingPackageExits changes only the guide grid domain; package-field bounds can omit detours outside that domain, so route equivalence is not claimed."
 }

@@ -1,8 +1,8 @@
-name: ButterStick pending-exits native paired screen
+name: ButterStick bounded pending-exits native paired screen
 
 on:
   push:
-    branches: [bench/bus-pending-exits-3234-20261118]
+    branches: [bench/bus-pending-exits-bounded-3234-20261118]
   workflow_dispatch:
 
 permissions:
@@ -10,8 +10,8 @@ permissions:
 
 jobs:
   paired:
-    if: github.ref == 'refs/heads/bench/bus-pending-exits-3234-20261118'
-    name: ButterStick (${{ matrix.cohort }}, published then pending exits)
+    if: github.ref == 'refs/heads/bench/bus-pending-exits-bounded-3234-20261118'
+    name: ButterStick (${{ matrix.cohort }}, published then bounded pending exits)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 60
     strategy:
@@ -34,8 +34,14 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             experiments/full-board-ten
-            .github/workflows/bus-pending-exits-screen.yml
+            .github/workflows/bus-pending-exits-bounded-screen.yml
             AGENTS.md
+
+      - name: Require bounded source qualification before setup
+        run: >-
+          python3 -c 'import json; from pathlib import Path;
+          plan=json.loads(Path("experiments/full-board-ten/bus-pending-exits-plan.json").read_text());
+          assert plan["qualificationReady"] is True, "Bounded source commit and complete Core mapping are pending; controller held"'
 
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -106,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-pending-exits-${{ matrix.cohort }}-base-${{ github.run_attempt }}
+          name: butterstick-bounded-pending-exits-${{ matrix.cohort }}-base-${{ github.run_attempt }}
           path: .full-board-run/lanes/base
           if-no-files-found: warn
           compression-level: 0
@@ -136,7 +142,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-pending-exits-${{ matrix.cohort }}-candidate-${{ github.run_attempt }}
+          name: butterstick-bounded-pending-exits-${{ matrix.cohort }}-candidate-${{ github.run_attempt }}
           path: .full-board-run/lanes/candidate
           if-no-files-found: warn
           compression-level: 0
@@ -147,7 +153,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: butterstick-pending-exits-${{ matrix.cohort }}-proof-${{ github.run_attempt }}
+          name: butterstick-bounded-pending-exits-${{ matrix.cohort }}-proof-${{ github.run_attempt }}
           path: |
             .full-board-run/bus-pending-exits
             .full-board-run/*runtime-manifest.json

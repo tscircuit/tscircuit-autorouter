@@ -81,5 +81,12 @@
       "bytes": 18242,
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
     }
-  ]
+  ],
+  "boundedGuideScreen": {
+    "scope": "Nine authenticated embedded Bus62 declarations plus one helper insertion; published Main3234/Core2414/Eval1807/AR1127 and native900/960/180 limits remain unchanged",
+    "sourceCandidateCommit": "a928e5c2c0d7a13b4038430fb4fa3b9008b8bdb6",
+    "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
+    "priorControllerUnchanged": "453724baedbc384b0034443f74f9b86f81dd3b2a",
+    "nativeCompletionGainNotYetEstablished": true
+  }
 }

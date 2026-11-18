@@ -14,16 +14,29 @@ parser.add_argument("board", choices=["butterstick"])
 parser.add_argument("cohort", choices=["original", "spaced"])
 arguments = parser.parse_args()
 root, board, cohort = arguments.root.resolve(), arguments.board, arguments.cohort
+plan = json.loads(Path(__file__).with_name("bus-pending-exits-plan.json").read_text())
+if plan["qualificationReady"] is not True:
+    raise RuntimeError("Bounded source commit and complete Core mapping are pending; controller held")
+changed_declarations = plan["overlay"]["replace"] + plan["overlay"]["insert"]
 source_mapping_path = root / "bus-pending-exits/source-mapping.json"
 overlay_proof_path = root / "bus-pending-exits/overlay-proof.json"
 source_mapping = json.loads(source_mapping_path.read_text())
 overlay_proof = json.loads(overlay_proof_path.read_text())
-assert source_mapping["passed"] is True
+assert source_mapping["passed"] is True and source_mapping["schemaVersion"] == 2
+assert source_mapping["sourceCandidateCommit"] == plan["source"]["candidateCommit"]
+assert source_mapping["publishedCallCoverage"] == {"publishedCallCount": 7, "candidateCallCount": 7, "allCandidateCallsUseObjectArgument": True}
 assert set(source_mapping["externalAliases"]) == {
     "BaseSolver", "getCopperLayerNames", "getRouteViaSpanLayers", "distance", "applyToPoint",
 }
-assert {row["name"] for row in source_mapping["replacedDeclarations"]} == {"BusLanesSolver", "negotiateLanes"}
-assert {row["name"] for row in source_mapping["unchangedDeclarations"]} == {"pendingPackageExits", "pendingLaneCertificates"}
+assert sorted(row["name"] for row in source_mapping["replacedDeclarations"]) == sorted(plan["overlay"]["replace"])
+assert sorted(row["name"] for row in source_mapping["insertedDeclarations"]) == sorted(plan["overlay"]["insert"])
+assert sorted(row["name"] for row in source_mapping["unchangedDeclarations"]) == sorted(plan["overlay"]["unchanged"])
+assert source_mapping["sourceFiles"] == plan["source"]["files"]
+assert len(source_mapping["callsiteQualification"]) == plan["overlay"]["negotiateLanesCallsites"] == 7
+assert len({(row["relative"], row["index"]) for row in source_mapping["callsiteQualification"]}) == 7
+for row in source_mapping["callsiteQualification"]:
+    assert row["existingArgumentsAndDefaultsPreserved"] and row["lazyCallbacksPreserved"] and row["evaluationOrderPreserved"]
+    assert row["pendingExits"] == ("this.pendingExits" if row["relative"] == "lib/bus-lanes-solver.ts" else "[]")
 frozen_packages = {
     "tscircuit": ("0.0.3234", "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"),
     "@tscircuit/core": ("0.0.2414", "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d"),
@@ -60,10 +73,12 @@ for variant in ["base", "candidate"]:
         assert override["embeddedPackage"] == "@tscircuit/bus-lanes-solver" and override["embeddedBaseVersion"] == "0.0.62"
         assert override["autorouterSourceOverride"] is False and override["unchangedRuntimeDependencies"] is True
         assert override["sourceBaseCommit"] == "202b034659fb96bad44d11b8190f4044b675116f"
+        assert override["sourceCandidateCommit"] == plan["source"]["candidateCommit"]
+        assert override["sourcePatchSha256"] == plan["source"]["patchSha256"]
         assert override["publishedCoreSha256"] == source_mapping["originalCoreSha256"]
         assert override["candidateCoreSha256"] == source_mapping["candidateCoreSha256"]
         assert override["sourceMappingSha256"] == hashlib.sha256(source_mapping_path.read_bytes()).hexdigest()
-        assert override["changedDeclarations"] == ["BusLanesSolver", "negotiateLanes"]
+        assert override["changedDeclarations"] == changed_declarations
     assert case["routingSourceOverride"] == result["routingSourceOverride"] == progress["runtime"]["routingSourceOverride"] == override
     assert result["assessmentReady"] and result["routingPolicyObserved"]
     assert result["completeSourceCounts"] and not assessment["geometryErrors"]
@@ -143,13 +158,16 @@ for path, file in base_core_files.items():
 base_aliases = {alias["alias"]: alias for alias in base_manifest["packageAliases"] if not alias["alias"].endswith("/@tscircuit/core")}
 candidate_aliases = {alias["alias"]: alias for alias in candidate_manifest["packageAliases"] if not alias["alias"].endswith("/@tscircuit/core")}
 assert base_aliases == candidate_aliases, "An unrelated runtime package alias changed"
-for field in ["onlyTwoEmbeddedDeclarationsChanged", "allPackageFilesVerified", "unchangedDependencyGraphExceptCoreAlias", "mainAndEvalResolveSelectedCore", "publishedAssessmentHelperPreserved"]:
+assert overlay_proof["schemaVersion"] == 2
+for field in ["onlyReviewedEmbeddedDeclarationsChanged", "allPackageFilesVerified", "unchangedDependencyGraphExceptCoreAlias", "mainAndEvalResolveSelectedCore", "publishedAssessmentHelperPreserved"]:
     assert overlay_proof[field] is True, f"Overlay proof is not qualified: {field}"
 assert overlay_proof["sourceMappingSha256"] == hashlib.sha256(source_mapping_path.read_bytes()).hexdigest()
 assert overlay_proof["routingSourceOverride"] == candidate["routingSourceOverride"]
 assert overlay_proof["publishedCoreSha256"] == source_mapping["originalCoreSha256"]
 assert overlay_proof["candidateCoreSha256"] == source_mapping["candidateCoreSha256"]
-assert overlay_proof["changedDeclarations"] == ["BusLanesSolver", "negotiateLanes"]
+assert overlay_proof["changedDeclarations"] == changed_declarations
+assert overlay_proof["replacedDeclarations"] == plan["overlay"]["replace"]
+assert overlay_proof["insertedDeclarations"] == plan["overlay"]["insert"]
 assert overlay_proof["publishedManifestSha256"] == base["runtimeManifestSha256"] and overlay_proof["candidateManifestSha256"] == candidate["runtimeManifestSha256"]
 restored_path = root / "bus-pending-exits/assessment-runtime-restored.json"
 restored = json.loads(restored_path.read_text())
@@ -162,12 +180,14 @@ assert base["phasePayloads"][0]["inputSha256"] == candidate["phasePayloads"][0][
 gained = sorted(set(base["unconnectedNets"]) - set(candidate["unconnectedNets"]))
 lost = sorted(set(candidate["unconnectedNets"]) - set(base["unconnectedNets"]))
 comparison = {
-    "scope": "Fresh full native ButterStick, published base then embedded-Bus candidate on the same ARM worker in separate Bun processes. Frozen Main3234/Core2414/Eval1807/AR1127; candidate replaces only two AST-qualified embedded Bus62 declarations in Core. Native900/960-second render and180-second assessment limits are unchanged.",
+    "scope": "Fresh full native ButterStick, published base then bounded pending-exit candidate on the same ARM worker in separate Bun processes. Frozen Main3234/Core2414/Eval1807/AR1127; candidate changes the complete AST-qualified Bus62 declaration set, including all seven callers and its shared helper. Native900/960-second render and180-second assessment limits are unchanged.",
     "board": board,
     "cohort": cohort,
     "runId": os.environ.get("GITHUB_RUN_ID"),
     "controllerCommit": os.environ.get("GITHUB_SHA"),
     "sourceMappingSha256": hashlib.sha256(source_mapping_path.read_bytes()).hexdigest(),
+    "sourceCandidateCommit": plan["source"]["candidateCommit"],
+    "declarationCoverage": plan["overlay"],
     "overlayProofSha256": hashlib.sha256(overlay_proof_path.read_bytes()).hexdigest(),
     "assessmentRestoreProofSha256": hashlib.sha256(restored_path.read_bytes()).hexdigest(),
     "variants": rows,

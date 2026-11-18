@@ -1,28 +1,53 @@
 {
-  "schemaVersion": 1,
-  "experiment": "bus-pending-exits",
-  "status": "held for review; no native benefit established",
+  "schemaVersion": 2,
+  "experiment": "bus-pending-exits-bounded",
+  "status": "Source proof and controller checks qualified; ready for root review of native screen launch, with no full-board gain claimed",
   "source": {
     "repository": "tscircuit/bus-lanes-solver",
     "baseCommit": "202b034659fb96bad44d11b8190f4044b675116f",
     "baseVersion": "0.0.62",
-    "candidateCommit": null,
-    "candidateIdentity": "exact frozen source patch, not a published version",
-    "patchSha256": "98a69f112357549b6a9835b4ed9c1cd89097385f2cb3ad6808ff56d8ac0f99a0",
+    "candidateCommit": "a928e5c2c0d7a13b4038430fb4fa3b9008b8bdb6",
+    "candidateIdentity": "Exact final source commit; nine-file production-only patch authenticated separately from local/test fixtures",
+    "patchSha256": "0861f64ae6cb37b23de1582a4ac41ae58c58b7f93bbce804ba440952d4eba2c5",
     "files": {
       "lib/bus-lanes-solver.ts": {
         "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
-        "afterSha256": "e298e2a0c9242da0bbfde784fa24092fc656840f80050a5fd4c980d7b68f7964"
+        "afterSha256": "746a06de86e0bc172512bb60074ae0e13a16db9a7feeaf2b909c15f85cad2a78"
       },
       "lib/negotiate-lanes.ts": {
         "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
-        "afterSha256": "e1ef9dc92e2cffe0daa6280c9ac736436b52471355d32fd5186bc224fc21d62f"
+        "afterSha256": "af201f7d8c5a1226785e90cf818880ef24e5cd7c3d4d273f6aef11799f83eba4"
       },
       "lib/pending-lane-certificates.ts": {
         "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
-        "afterSha256": "716ff5f336a6b4977fd094abb797ac1d0d00bcdbb02028d91813ce03df4e7728"
+        "afterSha256": "6c9aa539761b113e32230bf01278682ba28f09321aa0a2719027ead2276caaa7"
+      },
+      "lib/repair-bus-dogbones.ts": {
+        "beforeSha256": "702700d47fa5e30f03fa1331fff3cb557536f65d99dd3361c41ccdcd17c5d391",
+        "afterSha256": "a53d4e65fe8c4c8de0aac7fbb31b4b7245c88bc89288dc475d302a7fbe4b7444"
+      },
+      "lib/route-backward-package-buses.ts": {
+        "beforeSha256": "147e55b75bd9e4497236dffb7741c80fd0802dbc20441e35463a39a025a5776b",
+        "afterSha256": "80e1045f694110ffcce60a80248717f66ab4ffe0178a67ab49ba492dbc002725"
+      },
+      "lib/route-fresh-shared-buses.ts": {
+        "beforeSha256": "d82a1ffa6ca999565e4ef8a996ef8eeacc3fb5cd1b854ede4bf7365982d61eba",
+        "afterSha256": "762ce8a2e6107bca9e93359412cf62bafff057f925369dded088e3ff6f1ccda0"
+      },
+      "lib/route-independent-buses.ts": {
+        "beforeSha256": "ed31bf665e4674773ecb80d94523cb1981577c9036ad3f297abbe3af0afb1f6e",
+        "afterSha256": "42af973d618d71509a494fb92817aef94a3b4a2181bca29e5d06451b27664893"
+      },
+      "lib/route-paired-network.ts": {
+        "beforeSha256": "7ecf50d6da7dcbf71ebd07fc221a278c3c1500ec45711efbc7f61296c02525c8",
+        "afterSha256": "9d7faf77352ee4fdfe1fb7e946b077e9a4920c8bdd943e4fcf11f78ee70391b3"
+      },
+      "lib/route-shared-layer-buses.ts": {
+        "beforeSha256": "3f8d4a49e9fbfcb0a56992d4bf41efece200d511e911f105fdd1ab192477baa7",
+        "afterSha256": "6f5f632e2a26366b3fb894a0694e747f2202e5ebe83d2ad3e769894298719fe2"
       }
-    }
+    },
+    "candidateTree": "5e577ab9add9e47d15a9646ab232828d7bd4565e"
   },
   "runtime": {
     "main": "0.0.3234",
@@ -31,11 +56,11 @@
     "autorouter": "0.0.1127",
     "bus": "0.0.62",
     "publishedCoreSha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
-    "candidateCoreSha256": "4bc30a21e83b48e5397764a10fc073bb4f423fd87d2952dcfe21382984b132ef",
+    "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
     "noAutorouterOverride": true
   },
-  "sourceMappingSha256": "be4f07562c82752584e780ec598311995a8dae6ce068ed9f88e43533293622c2",
-  "sourceMappingToolSha256": "fbb443286f55db316df79ba20b5e17f544383c068c05faaa1b159d9cbb09c614",
+  "sourceMappingSha256": "76dfde9e3a6e5562bfc1e0b53bdd381ceda94b784b0324c44e7423064be6c317",
+  "sourceMappingToolSha256": "54f0076bcccebbb68aec809bf0018e1851fce805a9ecd6672d6d208c2bb504ea",
   "limitsMs": {
     "capture": 900000,
     "hardKill": 960000,
@@ -61,19 +86,52 @@
     "render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
     "run-one.ts": "64eaa0440df0ac81c91d401ec8ae41e9e6f4478c7af1b3cb09680b9cf13807a9",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
-    "prepare-bus-pending-exits.py": "940f3539f003df66cb13c9d42ac2e980f2e21358486a73d1baac5adbb0cb0d2b",
-    "compare-bus-pair.py": "1f2b3b36c5d916bdd5af665fb761cd0982f56955c56ae8457ed0ad44967f2e84",
-    "createPendingExitsOverlay.ts": "fbb443286f55db316df79ba20b5e17f544383c068c05faaa1b159d9cbb09c614",
-    "bus-pending-exits-production.patch": "98a69f112357549b6a9835b4ed9c1cd89097385f2cb3ad6808ff56d8ac0f99a0",
-    "bus-pending-exits-source-mapping.json": "be4f07562c82752584e780ec598311995a8dae6ce068ed9f88e43533293622c2",
-    "harness-provenance.json": "61bef6297e0a6e775c1a12a41585e68d17cf591afb5d75b1921fd5a914fef13c",
+    "prepare-bus-pending-exits.py": "4744e1a081ce2c4805cc13db5231f72230f90c74a88d095573109f5adbd5b46c",
+    "compare-bus-pair.py": "2d5b83d45243bc3ac8c2b8e52eb91f3c949472bdb32937448d24a53ed9812e2e",
+    "createPendingExitsOverlay.ts": "54f0076bcccebbb68aec809bf0018e1851fce805a9ecd6672d6d208c2bb504ea",
+    "bus-pending-exits-production.patch": "0861f64ae6cb37b23de1582a4ac41ae58c58b7f93bbce804ba440952d4eba2c5",
+    "bus-pending-exits-source-mapping.json": "76dfde9e3a6e5562bfc1e0b53bdd381ceda94b784b0324c44e7423064be6c317",
+    "harness-provenance.json": "1e05b7db9e8a3f24ee8e17ea0daf2829e018ac92e68291be2a128fbd55ae54ba",
     "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
     "release.json": "c0eff975aace810785244e5ec7a5b4e2e3a244997082961b314d6aa87aa78843",
     "runtime/package.json": "dffb5537110196fdbe5b3d0c7273e9ffceadc3adf7ca512f3ec45471b930ee75",
     "runtime/bun.lock": "5cdf30af093b08897eac49539333d42fc4a2058a3998fb1e1ce6027be3ad813b",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "../../.github/workflows/bus-pending-exits-screen.yml": "1f4216e9fa459f6daf8caac6fb722657b2038311acae60252371835d322f5b98"
+    "../../.github/workflows/bus-pending-exits-bounded-screen.yml": "61362128eca59735e7eb981d85398a6ead5f27bbe1a533e5d39504eaaf97c5e0",
+    "bus-pending-exits-validation.json": "8166cdedd4564f8145d44dde7349f98eb7c47eb6b605d6893c36835034482dcc"
   },
-  "frozen": true
+  "frozen": true,
+  "qualificationReady": true,
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "BusLanesSolver",
+      "negotiateLanes",
+      "pendingPackageExits",
+      "repairBusDogbones",
+      "routeBackwardPackageBuses",
+      "routeFreshSharedBuses",
+      "routeIndependentBuses",
+      "routePairedNetwork",
+      "routeSharedLayerBuses"
+    ],
+    "insert": [
+      "getPendingExitPathCost"
+    ],
+    "unchanged": [
+      "pendingLaneCertificates"
+    ],
+    "negotiateLanesCallsites": 7
+  },
+  "boundedGuideScope": "Existing pendingPackageExits GridVisibilitySearch receives per-search bounds only; no nearest-goal selection, fallback, routing policy or budget change.",
+  "controllerBaseCommit": "453724baedbc384b0034443f74f9b86f81dd3b2a",
+  "controllerBranch": "bench/bus-pending-exits-bounded-3234-20261118",
+  "workflow": ".github/workflows/bus-pending-exits-bounded-screen.yml",
+  "historicalScreen": {
+    "run": 44366467559,
+    "spacedConnectedBefore": 8,
+    "spacedConnectedAfter": 8,
+    "qualification": "No full-board net completion gain; bounded candidate requires a new fresh native pair"
+  }
 }
