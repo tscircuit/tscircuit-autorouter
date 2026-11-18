@@ -1,4 +1,4 @@
-name: Latest published six-board baseline: fanout then buses then rest
+name: "Latest published six-board baseline: fanout then buses then rest"
 on:
   push:
     branches: [codex/ddr2417-published-baseline]
