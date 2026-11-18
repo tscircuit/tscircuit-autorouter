@@ -1,0 +1,35 @@
+name: Generate the known changed snapshots for the minimal clamp fix
+on:
+  push:
+    branches: [analysis/butterstick-minimal-snapshots]
+    paths: [.github/workflows/butterstick-minimal-snapshots.yml]
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: butterstick, test: pipeline9-butterstick-fixed-via-force, pattern: "pipeline9-butterstick-fixed-via-force-*.snap.svg"}
+          - {label: imx6, test: pipeline9-imx6-fixed-via-force-full-board, pattern: "pipeline9-imx6-fixed-via-force-full-board*.snap.svg"}
+          - {label: icepi, test: pipeline9-icepi-retained-vias, pattern: "pipeline9-icepi-retained-vias.snap.svg"}
+          - {label: h616, test: pipeline9-h616-full-board-ddr-clearance, pattern: "pipeline9-h616-full-board-ddr-clearance.snap.svg"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Render only the known affected repros, preserving their assertions
+        run: |
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/${{ matrix.test }}.test.ts --timeout 1200000
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add tests/repro/__snapshots__/${{ matrix.pattern }}
+          if ! git diff --cached --quiet; then
+            git commit -m "Render the ${{ matrix.label }} repro with the minimal clamp fix"
+          fi
+          git push origin HEAD:analysis/butterstick-minimal-rendered-${{ matrix.label }}
