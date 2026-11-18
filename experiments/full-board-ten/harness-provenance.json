@@ -1,9 +1,9 @@
 {
   "runtimePackages": [
-    "tscircuit@0.0.3236",
-    "@tscircuit/core@0.0.2418",
-    "@tscircuit/eval@0.0.1811",
-    "@tscircuit/capacity-autorouter@0.0.1129"
+    "tscircuit@0.0.3242",
+    "@tscircuit/core@0.0.2424",
+    "@tscircuit/eval@0.0.1818",
+    "@tscircuit/capacity-autorouter@0.0.1132"
   ],
   "files": [
     {

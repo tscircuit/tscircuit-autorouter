@@ -1,48 +1,60 @@
 {
   "schemaVersion": 1,
-  "registryFrozenAt": "2026-11-18T19:17:25.967804+00:00",
-  "mainVersion": "0.0.3236",
+  "registryFrozenAt": "2026-11-18T23:36:45.966593+00:00",
+  "mainVersion": "0.0.3242",
   "selectedPackages": {
     "tscircuit": {
       "name": "tscircuit",
-      "version": "0.0.3236",
-      "gitHead": "8f68b8bc4e75315a71071ed52558f1913ddcc148"
+      "version": "0.0.3242",
+      "gitHead": "31200e03323e6e4573b560eb152d3c625a86edf9"
     },
     "core": {
       "name": "@tscircuit/core",
-      "version": "0.0.2418",
-      "gitHead": "71ed638207600d0b41e5a42ea0e8db8b6fc69c68",
-      "declaredByMain": "^0.0.2418"
+      "version": "0.0.2424",
+      "gitHead": "fb7f456de0a867c7074a9f196597992e0d1253b9",
+      "declaredByMain": "^0.0.2424"
     },
     "eval": {
       "name": "@tscircuit/eval",
-      "version": "0.0.1811",
-      "gitHead": "3f0eb1d8605a1d520ecf4787a3c4500f3d5ba5a7",
-      "declaredByMain": "^0.0.1811"
-    },
-    "runframe": {
-      "name": "@tscircuit/runframe",
-      "version": "0.0.3288",
-      "gitHead": "6237751328112286ca42056a157cd8349e416d87",
-      "declaredByMain": "^0.0.3288"
+      "version": "0.0.1818",
+      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+      "declaredByMain": "^0.0.1818"
     },
     "autorouter": {
       "name": "@tscircuit/capacity-autorouter",
-      "version": "0.0.1129",
-      "gitHead": "9910d3a595fdc3f19c7147ac37e0262a2338d92c",
-      "declaredByMain": "^0.0.1129"
+      "version": "0.0.1132",
+      "gitHead": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+      "declaredByMain": "^0.0.1132"
     },
-    "circuit-json": {
-      "name": "circuit-json",
-      "version": "0.0.552",
-      "gitHead": "1738f520d987f30cd148f079292c32ff0fce42d5",
-      "declaredByMain": "0.0.552"
+    "runframe": {
+      "name": "@tscircuit/runframe",
+      "version": "0.0.3295",
+      "gitHead": "53e8c5023027b0b50944c2d36b6d9b9ce7e9f8a2",
+      "declaredByMain": "^0.0.3295"
+    },
+    "checks": {
+      "name": "@tscircuit/checks",
+      "version": "0.0.282",
+      "gitHead": "8515c1204b476762d6c8ea18b71197a24a08985e",
+      "declaredByMain": "^0.0.282"
+    },
+    "fanout": {
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.88",
+      "gitHead": "e22a028893c2ad121c5b0e0ba2e9e998e680feb8",
+      "declaredByMain": "0.0.88"
     },
     "props": {
       "name": "@tscircuit/props",
       "version": "0.0.735",
       "gitHead": "4b7b7b826d61e03ac70dce69e2160178671a0d3d",
       "declaredByMain": "^0.0.735"
+    },
+    "circuit-json": {
+      "name": "circuit-json",
+      "version": "0.0.552",
+      "gitHead": "1738f520d987f30cd148f079292c32ff0fce42d5",
+      "declaredByMain": "0.0.552"
     },
     "cli": {
       "name": "@tscircuit/cli",
@@ -52,24 +64,24 @@
     },
     "runframe-eval": {
       "name": "@tscircuit/eval",
-      "version": "0.0.1810",
-      "gitHead": "f580109369b1822751badd75afb3da55835b98ce",
-      "declaredByRunframe": "0.0.1810"
+      "version": "0.0.1816",
+      "gitHead": "f196669a484df1b94a81478342c9c26bb373d50c",
+      "declaredByRunframe": "0.0.1816"
     },
-    "checks": {
-      "name": "@tscircuit/checks",
-      "version": "0.0.280",
-      "gitHead": "c95b3a0383369f9bb73f5619710896a184a59054",
-      "declaredByMain": "^0.0.280"
+    "spice": {
+      "name": "circuit-json-to-spice",
+      "version": "0.0.48",
+      "gitHead": "1d01e90f3f170cf88f1a48b9d204541a25d16b63",
+      "declaredByMain": "^0.0.48"
     },
-    "fanout": {
-      "name": "@tscircuit/fanout-solver",
-      "version": "0.0.86",
-      "gitHead": "5f568062b3f3ba6c2c16e43271eab6c1f7373d7d",
-      "declaredByMain": "0.0.86"
+    "ngspice": {
+      "name": "@tscircuit/ngspice-spice-engine",
+      "version": "0.0.23",
+      "gitHead": "44d1bf8904128f791612fa78ae2f40ab7c5a0341",
+      "declaredByMain": "^0.0.23"
     }
   },
-  "graphPolicy": "Preserve all still-compatible frozen transitive records from3234; update only exact newly selected published packages and nested Runframe Eval. No independent latest transitive refresh.",
+  "graphPolicy": "Preserve all still-compatible frozen transitive records from3236; update only exact newly selected published packages and nested Runframe Eval. No independent latest transitive refresh.",
   "runtimeRecords": 279,
   "updatedRecords": [
     "tscircuit",
@@ -79,106 +91,134 @@
     "@tscircuit/runframe",
     "@tscircuit/checks",
     "@tscircuit/fanout-solver",
-    "@tscircuit/runframe/@tscircuit/eval"
+    "@tscircuit/runframe/@tscircuit/eval",
+    "circuit-json-to-spice",
+    "@tscircuit/ngspice-spice-engine"
   ],
   "verifiedDependencyEdges": 419,
   "publishedEntryProofs": [
     {
-      "label": "tscircuit",
-      "name": "tscircuit",
-      "version": "0.0.3236",
-      "gitHead": "8f68b8bc4e75315a71071ed52558f1913ddcc148",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1132",
+      "gitHead": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
       "entryRelative": "dist/index.js",
-      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
-      "unchangedEntryFrom3234": true,
+      "entrySha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
       "integrityVerified": true,
-      "tarballFiles": 10,
-      "compressedBytes": 24224520
+      "label": "autorouter",
+      "tarballFiles": 14,
+      "compressedBytes": 5149700,
+      "unchangedEntryFrom3236": false
     },
     {
-      "label": "core",
+      "name": "@tscircuit/checks",
+      "version": "0.0.282",
+      "gitHead": "8515c1204b476762d6c8ea18b71197a24a08985e",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "8586d47befd95cce0aeb33eb7e1defc315e2cdc62168673ea80019aaacc4b880",
+      "integrityVerified": true,
+      "label": "checks",
+      "tarballFiles": 6,
+      "compressedBytes": 573389,
+      "unchangedEntryFrom3236": false
+    },
+    {
       "name": "@tscircuit/core",
-      "version": "0.0.2418",
-      "gitHead": "71ed638207600d0b41e5a42ea0e8db8b6fc69c68",
+      "version": "0.0.2424",
+      "gitHead": "fb7f456de0a867c7074a9f196597992e0d1253b9",
       "entryRelative": "dist/index.js",
-      "entrySha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
-      "unchangedEntryFrom3234": false,
+      "entrySha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
       "integrityVerified": true,
+      "label": "core",
       "tarballFiles": 10,
-      "compressedBytes": 1911616
+      "compressedBytes": 1911670,
+      "unchangedEntryFrom3236": false
     },
     {
-      "label": "eval",
       "name": "@tscircuit/eval",
-      "version": "0.0.1811",
-      "gitHead": "3f0eb1d8605a1d520ecf4787a3c4500f3d5ba5a7",
+      "version": "0.0.1818",
+      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
       "entryRelative": "dist/lib/index.js",
       "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
-      "unchangedEntryFrom3234": true,
       "integrityVerified": true,
+      "label": "eval",
       "tarballFiles": 15,
-      "compressedBytes": 17252821
+      "compressedBytes": 17253753,
+      "unchangedEntryFrom3236": true
     },
     {
-      "label": "autorouter",
-      "name": "@tscircuit/capacity-autorouter",
-      "version": "0.0.1129",
-      "gitHead": "9910d3a595fdc3f19c7147ac37e0262a2338d92c",
-      "entryRelative": "dist/index.js",
-      "entrySha256": "76fa23f4776f98870e3d48e0d824fb5737ad3735914d18defe886f318ad172d3",
-      "unchangedEntryFrom3234": false,
-      "integrityVerified": true,
-      "tarballFiles": 14,
-      "compressedBytes": 5148440
-    },
-    {
-      "label": "runframe",
-      "name": "@tscircuit/runframe",
-      "version": "0.0.3288",
-      "gitHead": "6237751328112286ca42056a157cd8349e416d87",
-      "entryRelative": "dist/preview.js",
-      "entrySha256": "566bff8ce47e54dd4ac12e78c71240694039005f55d9015a5f20104495f2b801",
-      "unchangedEntryFrom3234": false,
-      "integrityVerified": true,
-      "tarballFiles": 23,
-      "compressedBytes": 22903972
-    },
-    {
-      "label": "checks",
-      "name": "@tscircuit/checks",
-      "version": "0.0.280",
-      "gitHead": "c95b3a0383369f9bb73f5619710896a184a59054",
-      "entryRelative": "dist/index.js",
-      "entrySha256": "5365e6e1e4e4db296ef6f44990ec8b588d613849d042aaa4ccde60a9e82af0c8",
-      "unchangedEntryFrom3234": false,
-      "integrityVerified": true,
-      "tarballFiles": 6,
-      "compressedBytes": 573984
-    },
-    {
-      "label": "fanout",
       "name": "@tscircuit/fanout-solver",
-      "version": "0.0.86",
-      "gitHead": "5f568062b3f3ba6c2c16e43271eab6c1f7373d7d",
+      "version": "0.0.88",
+      "gitHead": "e22a028893c2ad121c5b0e0ba2e9e998e680feb8",
       "entryRelative": "lib/index.ts",
       "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9",
-      "unchangedEntryFrom3234": false,
       "integrityVerified": true,
+      "label": "fanout",
       "tarballFiles": 98,
-      "compressedBytes": 330151
+      "compressedBytes": 330268,
+      "unchangedEntryFrom3236": true
+    },
+    {
+      "name": "@tscircuit/ngspice-spice-engine",
+      "version": "0.0.23",
+      "gitHead": "44d1bf8904128f791612fa78ae2f40ab7c5a0341",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "535fb57be2c12c5bca92bf2613eab0da30033f766b6976b569bc134417e9b383",
+      "integrityVerified": true,
+      "label": "ngspice",
+      "tarballFiles": 5,
+      "compressedBytes": 9299,
+      "unchangedEntryFrom3236": null
+    },
+    {
+      "name": "@tscircuit/runframe",
+      "version": "0.0.3295",
+      "gitHead": "53e8c5023027b0b50944c2d36b6d9b9ce7e9f8a2",
+      "entryRelative": "dist/preview.js",
+      "entrySha256": "188dde21bc0d7e688ab5cefb099b979e56d1b1944224c2af71b2b939f5bc6d9b",
+      "integrityVerified": true,
+      "label": "runframe",
+      "tarballFiles": 23,
+      "compressedBytes": 22908538,
+      "unchangedEntryFrom3236": false
+    },
+    {
+      "name": "circuit-json-to-spice",
+      "version": "0.0.48",
+      "gitHead": "1d01e90f3f170cf88f1a48b9d204541a25d16b63",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "07b16bfa040561c82b05d41488694e0c6154159e1370b6641276411b182bee5d",
+      "integrityVerified": true,
+      "label": "spice",
+      "tarballFiles": 103,
+      "compressedBytes": 134239,
+      "unchangedEntryFrom3236": null
+    },
+    {
+      "name": "tscircuit",
+      "version": "0.0.3242",
+      "gitHead": "31200e03323e6e4573b560eb152d3c625a86edf9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+      "integrityVerified": true,
+      "label": "tscircuit",
+      "tarballFiles": 10,
+      "compressedBytes": 24228016,
+      "unchangedEntryFrom3236": true
     }
   ],
   "publishedEmbeddedBus": {
     "declaredVersion": "https://jscdn.tscircuit.com/@tscircuit/bus-lanes-solver/0.0.62.tgz",
     "before": {
+      "textSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
       "bytes": 2868620,
-      "sha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
-      "markerCount": 1
+      "characterStart": 2204250,
+      "characterEnd": 5072868
     },
     "after": {
+      "textSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
       "bytes": 2868620,
-      "sha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
-      "markerCount": 1
+      "characterStart": 2204453,
+      "characterEnd": 5073071
     },
     "byteIdentical": true
   },
@@ -223,20 +263,253 @@
         "lockUnchanged": true,
         "nodeModulesCreated": false
       }
-    ]
+    ],
+    "preExistingPeerWarnings": [
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "@resvg/resvg-wasm",
+        "range": "2",
+        "kind": "peerDependencies",
+        "key": null,
+        "version": null,
+        "satisfied": false
+      },
+      {
+        "owner": "debug",
+        "name": "supports-color",
+        "range": "*",
+        "kind": "peerDependencies",
+        "key": null,
+        "version": null,
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "@tscircuit/alphabet",
+        "range": "^0.0.24",
+        "kind": "peerDependencies",
+        "key": "@tscircuit/alphabet",
+        "version": "0.0.25",
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "circuit-json",
+        "range": "^0.0.426",
+        "kind": "peerDependencies",
+        "key": "circuit-json",
+        "version": "0.0.552",
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "react",
+        "range": "19.1.0",
+        "kind": "peerDependencies",
+        "key": "react",
+        "version": "19.3.1",
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "react-dom",
+        "range": "19.1.0",
+        "kind": "peerDependencies",
+        "key": "react-dom",
+        "version": "19.3.1",
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-fiber",
+        "name": "react",
+        "range": "19.1.0",
+        "kind": "peerDependencies",
+        "key": "react",
+        "version": "19.3.1",
+        "satisfied": false
+      },
+      {
+        "owner": "jscad-fiber",
+        "name": "react-dom",
+        "range": "19.1.0",
+        "kind": "peerDependencies",
+        "key": "react-dom",
+        "version": "19.3.1",
+        "satisfied": false
+      },
+      {
+        "owner": "rollup-plugin-dts",
+        "name": "@typescript/typescript6",
+        "range": "^6",
+        "kind": "peerDependencies",
+        "key": null,
+        "version": null,
+        "satisfied": false
+      },
+      {
+        "owner": "use-mouse-matrix-transform",
+        "name": "react",
+        "range": "^18.2.0",
+        "kind": "peerDependencies",
+        "key": "react",
+        "version": "19.3.1",
+        "satisfied": false
+      }
+    ],
+    "peerWarningSetUnchangedFrom3236": true
   },
   "sourceOverrides": false,
   "routingSourceOverrides": false,
-  "candidateOverlay": false,
+  "candidateOverlay": null,
   "nativeRoutingExecutedDuringPreparation": false,
   "fullLocalDependenciesInstalled": false,
-  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve the published3236 runtime, including Checks280 and the published Core2418 copper helper.",
+  "assessmentPolicy": "Authentic assessor code unchanged; published runtime dependencies advance with Main3242, including Checks282. Routing geometry and assessment changes must be distinguished in result comparison.",
   "upstreamEvidence": {
-    "handoffSha256": "3b0918747c6df76584f5757444b376c45d5a23e5de50820615e898851ce9a680",
+    "handoffSha256": "0b4fec0bc33ea7dcad970b063ad9ae6e2776186e362e0c9f088c73ab154b53d6",
     "files": {
-      "baseline-plan/autorouter-dependencies/bun.lock": {
-        "bytes": 13144,
-        "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
+      "release/autorouter-metadata.json": {
+        "bytes": 10274,
+        "sha256": "d6ba5cfa125157272ad7697455c78d1f268fc580d85f3ed7776ec0af37921bdc"
+      },
+      "release/autorouter-package.json": {
+        "bytes": 8245,
+        "sha256": "58c0a25c4affacd90980e2bb6e911a132980f7051563eda9c955efacfd1a7c36"
+      },
+      "release/autorouter-tarball-proof.json": {
+        "bytes": 2946,
+        "sha256": "eb89a4b5457e0d5a9238acfc7d8ea6d609f1600bb7c389944b597e45337d0e2e"
+      },
+      "release/checks-metadata.json": {
+        "bytes": 3815,
+        "sha256": "d86c5cbe2bc9b0dfdd43b6f365f0ed2f60fe924d2e96683120db21173b1729d2"
+      },
+      "release/checks-package.json": {
+        "bytes": 1848,
+        "sha256": "0afa6e26387470df4c1c47deb2f6271c2901014e19f4204932a01a5e82cb7126"
+      },
+      "release/checks-tarball-proof.json": {
+        "bytes": 1630,
+        "sha256": "d23f32f92b0c37b25bfb4d28d775f3c667b833df7f5b8ed6f46cec08ff180472"
+      },
+      "release/circuit-json-metadata.json": {
+        "bytes": 3063,
+        "sha256": "0948f5f2c01379191760aaa31437dc1d8aeab5e1818199b9ec6c71308d480de7"
+      },
+      "release/cli-metadata.json": {
+        "bytes": 6347,
+        "sha256": "4fa08c99ca57e761bd7e36ac95ed6a8edb5a82a3d6073504a38fd86456a3b0a2"
+      },
+      "release/core-adapter-static-identity-review.json": {
+        "bytes": 7224,
+        "sha256": "e23060619ef74b5dbd22b5fb1bd1edfb61e420ad08d1f5199748f1fe9fc8f456"
+      },
+      "release/core-bus62-static-applicability-review.json": {
+        "bytes": 4088,
+        "sha256": "7958a6c07b00cc3e32d5ea0cb08d7f6323253995afe4a8bfdd8c74067894c0d3"
+      },
+      "release/core-metadata.json": {
+        "bytes": 10047,
+        "sha256": "724d7a95235b5a696bfb0448aef6f17bf197a04c430a1e51efad57414d639796"
+      },
+      "release/core-package.json": {
+        "bytes": 8216,
+        "sha256": "fe21bc0735c337c719745257238cd85b02c7f6a087a2ea18780e20bb537bda05"
+      },
+      "release/core-tarball-proof.json": {
+        "bytes": 2323,
+        "sha256": "7f12a7cfc0b349219d2c598ae0f342bf199936a2b1f865d42ba6fc697327a845"
+      },
+      "release/eval-metadata.json": {
+        "bytes": 10161,
+        "sha256": "d9de65be122402abcab10d85e865a653f02bdba2074989229a3bf9d2d3b620a2"
+      },
+      "release/eval-package.json": {
+        "bytes": 8166,
+        "sha256": "f1d04e83817088189a87fbb525b874202ca3479395179dadeaeeb78966319b0d"
+      },
+      "release/eval-tarball-proof.json": {
+        "bytes": 3092,
+        "sha256": "ed5f191d98b18644f2f8506fe8d183c50d59557a6ace3befa71473833f30c262"
+      },
+      "release/fanout-metadata.json": {
+        "bytes": 4341,
+        "sha256": "e3bc42986c8a30c0d9aa13cb8af9a0015a2ae6b7f071620e3461f96a610da118"
+      },
+      "release/fanout-package.json": {
+        "bytes": 2554,
+        "sha256": "ec9509283119ee7eef081fdaa94a536909ab358e6feb8a902fc270993f747ba8"
+      },
+      "release/fanout-tarball-proof.json": {
+        "bytes": 17144,
+        "sha256": "5f0befec3f80269f5d54584af617622751445fd8e017612d01044e02863354f9"
+      },
+      "release/ngspice-metadata.json": {
+        "bytes": 2972,
+        "sha256": "0a6483aad754d654568a7192c08414f65f9c7698841cbd404e1ef0150cf06688"
+      },
+      "release/ngspice-package.json": {
+        "bytes": 1106,
+        "sha256": "a01c99d45cfdff49d94f8de027bf2d91bb3df0ac66872745c0ef91c360397417"
+      },
+      "release/ngspice-tarball-proof.json": {
+        "bytes": 1511,
+        "sha256": "9a6b6e9d81655a0c304c55f9e70d7ae11cc83a508e7438fc49f49335414b4388"
+      },
+      "release/props-metadata.json": {
+        "bytes": 3282,
+        "sha256": "49b3fcea29f7379adea27b91c8786cc950260d9a0e10473f38fc4aff56491e81"
+      },
+      "release/published-release-proof.json": {
+        "bytes": 6544,
+        "sha256": "e7193cceaac968a87f4249c0db6d915212b1ada2879a910c53cf654805427df9"
+      },
+      "release/release-selection.json": {
+        "bytes": 3398,
+        "sha256": "fb57cc26894b6cf396981c4f2302529edd2a673c0e36bec5f928029cd2fc227b"
+      },
+      "release/runframe-eval-metadata.json": {
+        "bytes": 10163,
+        "sha256": "79dc29278b42a12d5f3016c8c30f60c7062a9321e87c845db7db4c77645d4f77"
+      },
+      "release/runframe-metadata.json": {
+        "bytes": 7410,
+        "sha256": "a0b7ce69dff0407867cddd158c89e3d87a39e2b48518a1f28c82481b0efbf70c"
+      },
+      "release/runframe-package.json": {
+        "bytes": 5490,
+        "sha256": "1340f333fb83852f7ea82cf6adac95f30f41bb15dc4a963d75e31944b774022f"
+      },
+      "release/runframe-tarball-proof.json": {
+        "bytes": 4763,
+        "sha256": "7a8e651c432a7c53b85918454820748a6688027f109024ae363f7df7fcdb7649"
+      },
+      "release/spice-metadata.json": {
+        "bytes": 3125,
+        "sha256": "33652029232575c55a957f0e62f793ee6108578fec8bb7b2440ac35d17f107d8"
+      },
+      "release/spice-package.json": {
+        "bytes": 1179,
+        "sha256": "ea57090d6491adeb916b4bb1673497daaa17731c9e71b57b7a606d36de960c50"
+      },
+      "release/spice-tarball-proof.json": {
+        "bytes": 18477,
+        "sha256": "fc993b73770a2468116ac6ae83757c6b2247108179db3ffdcb5c738584f2882f"
+      },
+      "release/tscircuit-metadata.json": {
+        "bytes": 6182,
+        "sha256": "1fae2f7c53d6f2cc964dbc52401b5dd062b1d59b426d112cd57455919cb255cf"
+      },
+      "release/tscircuit-package.json": {
+        "bytes": 4408,
+        "sha256": "3f1a7a05f8e94b9422cd0f034c72fb5294a46906356c145ade4fca72460c9222"
+      },
+      "release/tscircuit-tarball-proof.json": {
+        "bytes": 2231,
+        "sha256": "0678d35f242cfbb49c7d633f94f8abb0d690269b4936fdf3ac2e0c1e7d120b0d"
+      },
+      "baseline-plan/all-dependency-edges-preflight.json": {
+        "bytes": 131210,
+        "sha256": "642646f14a5c7d074a5bcfffdc0829f1a4b02652195b2d6179ecbd68cce9ae9f"
       },
       "baseline-plan/autorouter-dependencies/package.json": {
         "bytes": 261,
@@ -248,155 +521,41 @@
       },
       "baseline-plan/direct-graph-preflight.json": {
         "bytes": 80059,
-        "sha256": "b4faa4cba5cb2ab27ef84311d2154295f14e68cd9d73251ac27801edb304bab7"
+        "sha256": "53185f459ca80dec290368ad3af1fc48d0c27be244b21a292bd2be4ac8946aab"
       },
       "baseline-plan/portable-release.json": {
-        "bytes": 5142,
-        "sha256": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738"
-      },
-      "baseline-plan/runtime/bun.lock": {
-        "bytes": 72090,
-        "sha256": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0"
+        "bytes": 5677,
+        "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4"
       },
       "baseline-plan/runtime/package.json": {
         "bytes": 2804,
-        "sha256": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d"
+        "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda"
       },
       "baseline-plan/runtime-lock-refresh.json": {
-        "bytes": 18807,
-        "sha256": "6ee3200e04d380bcf4fb0b5c00ce2246fe3a7bb09ea5a56c949f82426b64495c"
+        "bytes": 20807,
+        "sha256": "be3876f54cfd2eae1a15c05d3486465504b6928d9f218498106cbec27b95a854"
       },
-      "release/autorouter-metadata.json": {
-        "bytes": 10275,
-        "sha256": "f630c672315cc8b4c3eae8fdb06985db29ea749c0d574a43c246673432af4419"
+      "baseline-plan/runtime/bun.lock": {
+        "bytes": 72080,
+        "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57"
       },
-      "release/autorouter-package.json": {
-        "bytes": 8245,
-        "sha256": "a029ddccfc374eb3c5880c10a0727c9d2744a8b4c97dcd1914cfb38d1c536c15"
-      },
-      "release/autorouter-tarball-proof.json": {
-        "bytes": 2946,
-        "sha256": "acb2e9d88efb21d9a65bd8fe98ad048d48eeeb8b13f31c37dfb17adc339ed87f"
-      },
-      "release/checks-metadata.json": {
-        "bytes": 3815,
-        "sha256": "031e6f634acc2b63e91c22f1e1bd5d643e9db6f33b1d1e7b394687857550328c"
-      },
-      "release/checks-package.json": {
-        "bytes": 1848,
-        "sha256": "0b1f80c2b7e05386b7e194f9ff12d67115cd0f87ffddcaee9170ad9679756865"
-      },
-      "release/checks-tarball-proof.json": {
-        "bytes": 1631,
-        "sha256": "b54690e7585b749d4be141b92885798b08bf5b330d9830ba615f398af2dbb4a3"
-      },
-      "release/circuit-json-metadata.json": {
-        "bytes": 3063,
-        "sha256": "0948f5f2c01379191760aaa31437dc1d8aeab5e1818199b9ec6c71308d480de7"
-      },
-      "release/cli-metadata.json": {
-        "bytes": 6347,
-        "sha256": "4fa08c99ca57e761bd7e36ac95ed6a8edb5a82a3d6073504a38fd86456a3b0a2"
-      },
-      "release/core-metadata.json": {
-        "bytes": 10047,
-        "sha256": "f7b4a43f51f4e1d8471e88ca096ae8a9c0f07c03b461d7b0454d953ac77d9e43"
-      },
-      "release/core-package.json": {
-        "bytes": 8216,
-        "sha256": "5ac1eab4aa7b21f6c108b4bc3a268177e3f3f6b63d227d0b9c7493701908125d"
-      },
-      "release/core-tarball-proof.json": {
-        "bytes": 2323,
-        "sha256": "0c46bf928c663ca69995925091b9d1362bfb2faf5693d35c296d198c11b0279b"
-      },
-      "release/eval-metadata.json": {
-        "bytes": 10163,
-        "sha256": "b0d7e798c48d418cc932b098f482f9a9b741913363798aef621b5a74d578538d"
-      },
-      "release/eval-package.json": {
-        "bytes": 8166,
-        "sha256": "28c9b735fcd5801df2a680b0bb9e8a7d9394a0bc2932224c43ca541c67060d6c"
-      },
-      "release/eval-tarball-proof.json": {
-        "bytes": 3092,
-        "sha256": "b7b69e262dd32627ff4885c79546a9af054382e8d8ae6616ad7fbff69d591a1b"
-      },
-      "release/fanout-metadata.json": {
-        "bytes": 4339,
-        "sha256": "bef4a433d99cf0df955ca217268992dd7e55660eb95f1c2a09b96c672c3ec23d"
-      },
-      "release/fanout-package.json": {
-        "bytes": 2554,
-        "sha256": "518610f5be82d382d505b657924e58552c1501827a61fdd3de1fbb14ebae18f6"
-      },
-      "release/fanout-tarball-proof.json": {
-        "bytes": 17144,
-        "sha256": "998e848f16fca96351ac8cbb3bd985049d09d54469b6d7d763b194f89317a9f7"
-      },
-      "release/props-metadata.json": {
-        "bytes": 3282,
-        "sha256": "49b3fcea29f7379adea27b91c8786cc950260d9a0e10473f38fc4aff56491e81"
-      },
-      "release/published-release-proof.json": {
-        "bytes": 5878,
-        "sha256": "5308892f2fbac5ebea38454f7f9de32a4afe3d8436a5091050fb18ef5bfdcb8b"
-      },
-      "release/release-selection.json": {
-        "bytes": 2885,
-        "sha256": "8163e48bc26fea80531aafd80b62ffd46d33a57cd9d4f649b7bb79f6f3c91c20"
-      },
-      "release/runframe-eval-metadata.json": {
-        "bytes": 10163,
-        "sha256": "0f903651a54c663b1b5f392a6f3c1e771ee2196031a5e364eb8db342e3e75650"
-      },
-      "release/runframe-metadata.json": {
-        "bytes": 7411,
-        "sha256": "81bedac60432da924ee79a90eeb8f9fa28e93e4db00590ce95f6d596f0381888"
-      },
-      "release/runframe-package.json": {
-        "bytes": 5490,
-        "sha256": "fe838967bbb6e20d093f92617d5d001eed111227037f4bc653a79f2c471ff56c"
-      },
-      "release/runframe-tarball-proof.json": {
-        "bytes": 4763,
-        "sha256": "9129be108b33e8ae4c2e5d98024fea963a6e7cb7c75654aede8dbda2f3782adf"
-      },
-      "release/tscircuit-metadata.json": {
-        "bytes": 6182,
-        "sha256": "36b02e1ebd2a7f38f5840e2f794adec7b1e3d91d81be122a8011c06277afa4cb"
-      },
-      "release/tscircuit-package.json": {
-        "bytes": 4408,
-        "sha256": "de140c077935ad28ae8fddb588e3236605d818b8e50815c8f5a1c46cf07f81b5"
-      },
-      "release/tscircuit-tarball-proof.json": {
-        "bytes": 2231,
-        "sha256": "6a1ed31eee318fc534d356cb9a7241a6f2b5da28059dfb2312b6d7a18ff67c82"
+      "baseline-plan/autorouter-dependencies/bun.lock": {
+        "bytes": 13144,
+        "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
       }
     }
   },
   "assessmentHelperCompatibility": {
-    "method": "Static published-bundle helper declaration comparison, including its unchanged Flatbush3 binding name",
-    "entries": [
-      {
-        "mainVersion": "3234",
-        "coreEntrySha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
-        "helperDeclarationCount": 1,
-        "helperBytes": 9150,
-        "helperSha256": "aa1ddc4c85a8ce07f6ca52e7439b5ccb3a6d72b13723b6a35f5e4bbf9475efc3"
-      },
-      {
-        "mainVersion": "3236",
-        "coreEntrySha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
-        "helperDeclarationCount": 1,
-        "helperBytes": 9150,
-        "helperSha256": "aa1ddc4c85a8ce07f6ca52e7439b5ccb3a6d72b13723b6a35f5e4bbf9475efc3"
-      }
-    ],
-    "helperDeclarationByteIdentical": true,
+    "method": "Static Core2418/Core2424 published-bundle text and AST comparison",
+    "findFloatingCopperStatementByteIdentical": true,
+    "findFloatingCopperStatementBytes": 9150,
+    "findFloatingCopperStatementSha256": "aa1ddc4c85a8ce07f6ca52e7439b5ccb3a6d72b13723b6a35f5e4bbf9475efc3",
+    "Flatbush3ImportBindingUnchanged": true,
+    "getBusLanesInputFromSrjByteIdentical": true,
+    "report": "release/core-adapter-static-identity-review.json",
+    "reportSha256": "e23060619ef74b5dbd22b5fb1bd1edfb61e420ad08d1f5199748f1fe9fc8f456",
     "moduleImported": false,
     "routingExecuted": false,
-    "limitation": "This proves the findFloatingCopper declaration body, not equivalence of all imported checker implementations; Checks279 changes to published Checks280."
+    "limitation": "External checker implementations are not equivalent by this helper comparison; published Checks280 advances to Checks282."
   }
 }
