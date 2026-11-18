@@ -43,7 +43,7 @@ jobs:
           import {replaceNativePcbTraces} from "./tests/fixtures/replaceNativePcbTraces"
           const fixture=JSON.parse(gunzipSync(readFileSync("native-fixture.json.gz")).toString())
           const input=fixture.input
-          if(process.env.MODE===\"rounded\")for(const o of input.obstacles){o.width=Math.round(o.width*1e9)/1e9;o.height=Math.round(o.height*1e9)/1e9}
+          if(process.env.MODE==="rounded")for(const o of input.obstacles){o.width=Math.round(o.width*1e9)/1e9;o.height=Math.round(o.height*1e9)/1e9}
           const solver=new AutoroutingPipelineSolver9_PreloadedTraceGraph(input,fixture.options)
           solver.solve()
           if(!solver.solved)throw Error(solver.error??"Replay incomplete")
