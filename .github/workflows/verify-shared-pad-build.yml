@@ -1,0 +1,31 @@
+name: Verify shared pad build
+on:
+  push:
+    branches: [experiments/ddr-3939-pad-preparation]
+    paths: [.github/workflows/verify-shared-pad-build.yml]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2656bd06c344f21627f95cb568d81642027d2a1c
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json")
+          m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Build solver workers and package
+        run: bun run build
