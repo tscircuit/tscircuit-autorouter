@@ -76,7 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
-  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
+  obstacles: SingleHighDensityRouteSolver["obstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -127,17 +127,22 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
-    this.padObstacles = (params.obstacles ?? [])
+    const copperReach = Math.max(this.traceWidth, this.viaDiameter) / 2
+    this.obstacles = (params.obstacles ?? [])
       .filter((obstacle) => {
-        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
-        // The diagonal radius also covers rotated rectangles.
-        const radius =
-          Math.hypot(obstacle.width, obstacle.height) / 2 + this.traceWidth / 2
+        let halfWidth = obstacle.width / 2
+        let halfHeight = obstacle.height / 2
+        if (obstacle.ccwRotationDegrees) {
+          // A diagonal bound conservatively covers every rotation.
+          const diagonalRadius = Math.hypot(obstacle.width, obstacle.height) / 2
+          halfWidth = diagonalRadius
+          halfHeight = diagonalRadius
+        }
         return (
-          obstacle.center.x + radius >= bounds.minX &&
-          obstacle.center.x - radius <= bounds.maxX &&
-          obstacle.center.y + radius >= bounds.minY &&
-          obstacle.center.y - radius <= bounds.maxY
+          obstacle.center.x + halfWidth + copperReach >= bounds.minX &&
+          obstacle.center.x - halfWidth - copperReach <= bounds.maxX &&
+          obstacle.center.y + halfHeight + copperReach >= bounds.minY &&
+          obstacle.center.y - halfHeight - copperReach <= bounds.maxY
         )
       })
       .map((obstacle) => ({
@@ -269,7 +274,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
         : this.solvedRoutes,
-      padObstacles: this.padObstacles,
+      obstacles: this.obstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),

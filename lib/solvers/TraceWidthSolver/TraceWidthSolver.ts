@@ -3,7 +3,6 @@ import {
   distance,
   getUnitVectorFromPointAToB,
   pointToBoxDistance,
-  segmentToBoxMinDistance,
   segmentToCircleMinDistance,
   segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
@@ -16,6 +15,7 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
 
 const CURSOR_STEP_DISTANCE = 0.1
 const MIN_TERMINAL_TAPER_DISTANCE = 0.75
@@ -469,35 +469,14 @@ export class TraceWidthSolver extends BaseSolver {
       )
         continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
-      const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-      const cos = Math.cos(angle)
-      const sin = Math.sin(angle)
-      const localStart = {
-        x:
-          (start.x - obstacle.center.x) * cos -
-          (start.y - obstacle.center.y) * sin,
-        y:
-          (start.x - obstacle.center.x) * sin +
-          (start.y - obstacle.center.y) * cos,
-      }
-      const localEnd = {
-        x:
-          (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
-        y:
-          (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
-      }
-      const physicalClearance =
-        obstacle.shape === "circle" &&
-        (obstacle.isNonPlatedHole || this.refiningWidths)
-          ? segmentToCircleMinDistance(start, end, {
-              ...obstacle.center,
-              radius: obstacle.width / 2,
-            })
-          : segmentToBoxMinDistance(localStart, localEnd, {
-              center: { x: 0, y: 0 },
-              width: obstacle.width,
-              height: obstacle.height,
-            })
+      // Preserve the width solver's existing conservative bounds for pads.
+      const obstacleGeometry = { ...obstacle }
+      if (!obstacle.isNonPlatedHole) obstacleGeometry.shape = undefined
+      const physicalClearance = getSegmentToObstacleDistance({
+        start,
+        end,
+        obstacle: obstacleGeometry,
+      })
       const margin = obstacle.isNonPlatedHole
         ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
         : this.obstacleMargin
