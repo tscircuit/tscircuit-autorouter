@@ -1,0 +1,60 @@
+name: Locate ButterStick sensitivity to trace-obstacle roundoff
+on:
+  push:
+    branches: [analysis/butterstick-obstacle-roundoff]
+    paths: [.github/workflows/butterstick-obstacle-roundoff.yml]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install unchanged source and exact platform captures
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json");m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/core/c9d16246d7aa025026320d585578a551e3c32778/repros/butterstick-fixed-via/butterstick-native-repro.json.gz -o x86.json.gz
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/core/c9d16246d7aa025026320d585578a551e3c32778/repros/butterstick-fixed-via/butterstick-native-arm-repro.json.gz -o arm.json.gz
+      - name: Compare topology and routing input before force improvement
+        run: |
+          cat > roundoff-stages.private.ts <<'TS'
+          import {readFileSync} from "node:fs"
+          import {gunzipSync} from "node:zlib"
+          import {createHash} from "node:crypto"
+          import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "./lib"
+          const digest=(value)=>createHash("sha256").update(JSON.stringify(value,(k,v)=>typeof v==="number"?Math.round(v*1e8)/1e8:typeof v==="bigint"?String(v):v)).digest("hex")
+          for(const label of ["x86","arm","rounded"]) {
+            const f=JSON.parse(gunzipSync(readFileSync(label==="x86"?"x86.json.gz":"arm.json.gz")).toString())
+            if(label==="rounded")for(const o of f.input.obstacles){o.width=Math.round(o.width*1e9)/1e9;o.height=Math.round(o.height*1e9)/1e9}
+            const s=new AutoroutingPipelineSolver9_PreloadedTraceGraph(f.input,f.options)
+            let index=s.currentPipelineStepIndex
+            const start=performance.now()
+            while(!s.highDensityForceImproveSolver) {
+              s.step()
+              if(s.failed||s.solved)throw Error(s.error??"Unexpected early completion")
+              if(s.currentPipelineStepIndex!==index) {
+                const phase=s.pipelineDef[index].solverName
+                const sub=s[phase]
+                if(typeof sub?.getOutput==="function"){
+                  const out=sub.getOutput()
+                  console.log("ROUNDOFF_STAGE="+JSON.stringify({label,phase,digest:digest(out),length:Array.isArray(out)?out.length:undefined,keys:Array.isArray(out)?undefined:Object.keys(out),seconds:(performance.now()-start)/1000}))
+                }
+                index=s.currentPipelineStepIndex
+              }
+            }
+            console.log("ROUNDOFF_HD="+JSON.stringify({label,digest:digest(s.highDensityForceImproveSolver.originalHdRoutes),routes:s.highDensityForceImproveSolver.originalHdRoutes.length,nodes:s.highDensityForceImproveSolver.originalNodeWithPortPoints.length}))
+          }
+          TS
+          bun roundoff-stages.private.ts
