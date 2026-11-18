@@ -7,27 +7,136 @@ permissions:
   actions: read
 jobs:
   source:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [519393298edc2c68f082f3575877d333a648e4d5, ce72347]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: refactor/route-bus-modules
+          ref: ${{ matrix.revision }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile --ignore-scripts
-      - name: Format extracted modules with the repository formatter
-        run: bunx biome format --write lib/route-bus.ts lib/route-bus
-      - name: Export the formatting patch
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+  guard:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [519393298edc2c68f082f3575877d333a648e4d5, ce72347]
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: ./benchmark.sh --dataset dataset31 --concurrency 16 --sample-timeout-seconds 120 --output-directory benchmark-results
+      - name: Export results and hashes
+        if: always()
         run: |
-          git diff > /tmp/route-bus-format.patch
           python3 - <<'PY'
-          import base64,gzip
+          import hashlib,json
           from pathlib import Path
-          encoded=base64.b64encode(gzip.compress(Path('/tmp/route-bus-format.patch').read_bytes(),mtime=0)).decode()
-          print('ROUTE_BUS_FORMAT_BEGIN')
-          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
-          print('ROUTE_BUS_FORMAT_END')
+          report=Path('benchmark-results/benchmark.json')
+          if report.exists():print('FANOUT31_REPORT',report.read_text().replace('\n',''))
+          for pattern,label in [('inputs/*.json','INPUT'),('*.svg','SVG')]:
+              hashes={str(path.relative_to('benchmark-results')):hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('benchmark-results').glob(pattern)}
+              print('FANOUT31_'+label+'_HASHES',json.dumps(hashes,separators=(',',':')))
           PY
-      - run: bun run typecheck
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: final-guard-${{ strategy.job-index }}
+          path: benchmark-results
+  paired-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [icepi, imx6]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 519393298edc2c68f082f3575877d333a648e4d5
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ce72347
+          path: after
+      - name: Wait for the frozen baseline captures
+        uses: actions/github-script@v7
+        with:
+          script: |
+            for (;;) {
+              const {data: run} = await github.rest.actions.getWorkflowRun({owner: context.repo.owner, repo: context.repo.repo, run_id: 44401411469})
+              if (run.status === 'completed') {
+                if (run.conclusion !== 'success') throw new Error('Frozen baseline capture run failed')
+                break
+              }
+              await new Promise(resolve => setTimeout(resolve, 15000))
+            }
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2422-${{ matrix.board }}
+          run-id: 44401411469
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the exact before and after source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-native-plane-drop.ts "$revision/replay-native-plane-drop.ts"
+          done
+      - name: Replay three matched pairs serially, alternating order
+        run: |
+          for trial in 1 2 3; do
+            if [[ "$trial" == 2 ]]; then order="after before"; else order="before after"; fi
+            for revision in $order; do
+              mkdir -p "$GITHUB_WORKSPACE/paired/trial-$trial/$revision"
+              (cd "$revision" && bun replay-native-plane-drop.ts "$GITHUB_WORKSPACE/captured/${{ matrix.board }}/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/paired/trial-$trial/$revision")
+            done
+          done
+      - name: Export matched timing and copper results
+        if: always()
+        run: |
+          python3 - <<'PYPAIRS'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path('paired').rglob('report.json')):
+              report=json.loads(path.read_text());traces=path.parent/'best-traces.json'
+              rows.append({'trial':path.parent.parent.name,'revision':path.parent.name,'elapsedMs':report['elapsedMs'],'inputSha256':report['inputSha256'],'copperSha256':hashlib.sha256(traces.read_bytes()).hexdigest(),'bestPartial':report['bestPartial'],'copperDrc':report['copperDrc'],'failed':report['failed'],'solved':report['solved'],'error':report['error'],'iterations':report['iterations']})
+          Path('paired/comparison.json').write_text(json.dumps(rows,indent=2))
+          print('PAIRED_NATIVE2422_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('paired').rglob('*'):
+                  if path.is_file(): archive.writestr(str(path.relative_to('paired')),path.read_bytes())
+          print('PAIRED_NATIVE2422_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('PAIRED_NATIVE2422_EVIDENCE_END')
+          PYPAIRS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restacked-native-paired-${{ matrix.board }}
+          path: paired
+
