@@ -1,0 +1,2167 @@
+{
+  "sha256": "2218aecaac16863102f6cfdd819cba05eee1302768b727ed6a42f5f7d2bc233e",
+  "entries": 11167,
+  "regularFileBytes": 646618148,
+  "packageMetadata": [
+    {
+      "path": "@babel/runtime/package.json",
+      "name": "@babel/runtime",
+      "version": "7.29.14",
+      "sha256": "81aeaa5b00df4d0b2f74c69600a8a6de42e987ccf586c34a6435b21b557a5917"
+    },
+    {
+      "path": "@biomejs/biome/package.json",
+      "name": "@biomejs/biome",
+      "version": "2.5.15",
+      "sha256": "72bb1900df96d9e24331c9f3d7cf5b4d44aac0aae3ff231e266df0c2cf9d5543"
+    },
+    {
+      "path": "@biomejs/cli-linux-x64/package.json",
+      "name": "@biomejs/cli-linux-x64",
+      "version": "2.5.15",
+      "sha256": "5455d8a48e599c8dbda0926098ce82fa59c3879e34d0cf321cc28eb80b0fc4e9"
+    },
+    {
+      "path": "@biomejs/cli-linux-x64-musl/package.json",
+      "name": "@biomejs/cli-linux-x64-musl",
+      "version": "2.5.15",
+      "sha256": "40191c8bd68485f14f8f092257ed1014f4ec975da6a4466575601e497c5fef3f"
+    },
+    {
+      "path": "@esbuild/linux-x64/package.json",
+      "name": "@esbuild/linux-x64",
+      "version": "0.27.7",
+      "sha256": "6b9abce611e097bff4eabc91090ecd5943af7ca00cdc56686453efe987d23585"
+    },
+    {
+      "path": "@flatten-js/core/package.json",
+      "name": "@flatten-js/core",
+      "version": "1.6.2",
+      "sha256": "63da846c7ce6c6110ce43512e45be5940c5bc5144c974d4b159f039f96327c3c"
+    },
+    {
+      "path": "@flatten-js/interval-tree/package.json",
+      "name": "@flatten-js/interval-tree",
+      "version": "1.1.4",
+      "sha256": "08f800b24940323a1815ae9a3acdc28e33fdc541c5620c9264fb2103c56aec80"
+    },
+    {
+      "path": "@jridgewell/gen-mapping/package.json",
+      "name": "@jridgewell/gen-mapping",
+      "version": "0.3.13",
+      "sha256": "6264fca78382a9782f8e8d5e653e7bf43dc8aa6d469f3322a82e531093896a01"
+    },
+    {
+      "path": "@jridgewell/resolve-uri/package.json",
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.3",
+      "sha256": "3fa3e48e58f6b7d236fa98ca363a2cabf7132882fe2b3d8a2839f8dccecb8950"
+    },
+    {
+      "path": "@jridgewell/sourcemap-codec/package.json",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "sha256": "ac7afd57294dbee1f891ca797e19e405340f2cd6031808e6d3845fec60a5b43f"
+    },
+    {
+      "path": "@jridgewell/trace-mapping/package.json",
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "sha256": "7f5eacc669d36013f9b792ab15721a97d48b26b093100122aa6c8691ebe656be"
+    },
+    {
+      "path": "@react-hook/latest/package.json",
+      "name": "@react-hook/latest",
+      "version": "1.0.3",
+      "sha256": "4f1ef9aba97d1fa10581a5737c2c15de8a88c3e1d79a9891e6e7ba7df15e3739"
+    },
+    {
+      "path": "@react-hook/passive-layout-effect/package.json",
+      "name": "@react-hook/passive-layout-effect",
+      "version": "1.2.1",
+      "sha256": "f71575f4a4724cc60f2abf9b208e80fc8a7bb4561efb1afb10015a235b3f6c22"
+    },
+    {
+      "path": "@react-hook/resize-observer/package.json",
+      "name": "@react-hook/resize-observer",
+      "version": "2.0.2",
+      "sha256": "1d4a415924dc0ab461f922d670c58712f484f21e4367e9baf03713c6057768d3"
+    },
+    {
+      "path": "@remix-run/router/package.json",
+      "name": "@remix-run/router",
+      "version": "1.23.4",
+      "sha256": "6c3f0c8169df5475e874dd481e696ca778c6536ddca0279a62ccaab83ad23a8f"
+    },
+    {
+      "path": "@resvg/resvg-js/package.json",
+      "name": "@resvg/resvg-js",
+      "version": "2.6.2",
+      "sha256": "2669617af27d91b0dfc0828cc2190ba87b8d8ea6e4cf08619a23784a2f1d8c95"
+    },
+    {
+      "path": "@resvg/resvg-js-linux-x64-gnu/package.json",
+      "name": "@resvg/resvg-js-linux-x64-gnu",
+      "version": "2.6.2",
+      "sha256": "061ed749ead730a1f2c70c633a8107b0c9066a3d7a7bf284aa08984a1bdfd0a8"
+    },
+    {
+      "path": "@resvg/resvg-js-linux-x64-musl/package.json",
+      "name": "@resvg/resvg-js-linux-x64-musl",
+      "version": "2.6.2",
+      "sha256": "440b96f98f4e7b2e79683d3b97c6933fc997c7f63b0172688d79df76949875ae"
+    },
+    {
+      "path": "@rollup/rollup-linux-x64-gnu/package.json",
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.68.7",
+      "sha256": "8690fff55df2f40d7248651dd6e1033c4907ff4e90f90cf8d119025a55392fdb"
+    },
+    {
+      "path": "@rollup/rollup-linux-x64-musl/package.json",
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.68.7",
+      "sha256": "120fde0aaa01fbe0e73f46b95e3a00d5c2fde7d4d7c00ccc1dde5620aca6f41f"
+    },
+    {
+      "path": "@skidding/launch-editor/package.json",
+      "name": "@skidding/launch-editor",
+      "version": "2.13.2",
+      "sha256": "d4bc13f384ace478236307d4fb27ce1879b630cb3e412ac4761dd46e37b8d646"
+    },
+    {
+      "path": "@thednp/dommatrix/package.json",
+      "name": "@thednp/dommatrix",
+      "version": "3.1.4",
+      "sha256": "78179ac98faa3b0de57e4bd3f34f91ed97ba03b7c78adc4aa14f56ca75abc844"
+    },
+    {
+      "path": "@tscircuit/alphabet/package.json",
+      "name": "@tscircuit/alphabet",
+      "version": "0.0.25",
+      "sha256": "02692d0bac4a637ed3165f5d24c9b1bb220e36d053dff7604f1e421b0efe527a"
+    },
+    {
+      "path": "@tscircuit/am3352-fanout-generator/package.json",
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.76",
+      "sha256": "fd58fddbed687cb8967ab32c596520ccd21c26c9da28788aa0081a58bf12bf9d"
+    },
+    {
+      "path": "@tscircuit/am3352-fanout-generator/node_modules/@tscircuit/solver-utils/package.json",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.19",
+      "sha256": "8606c45cac613f59ccaa0564a58a826a08ecf3b3bc45865e0b680d5c1a6c4e68"
+    },
+    {
+      "path": "@tscircuit/am3352-fanout-generator/node_modules/graphics-debug/package.json",
+      "name": "graphics-debug",
+      "version": "0.0.99",
+      "sha256": "b12d049aea7a67b80651c0a83015e89d9b5854b64ed906ef2f699508276740e5"
+    },
+    {
+      "path": "@tscircuit/capacity-autorouter/package.json",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.718",
+      "sha256": "d426144246c2e0c8ab0ad1ee2a9c4826390f488ff16ef68110e7e22a0b3005a5"
+    },
+    {
+      "path": "@tscircuit/checks/package.json",
+      "name": "@tscircuit/checks",
+      "version": "0.0.264",
+      "sha256": "f11037eba5e2704a820355be8d155ad845ffd5d65f95cae06a6b61583dc0ee79"
+    },
+    {
+      "path": "@tscircuit/circuit-json-util/package.json",
+      "name": "@tscircuit/circuit-json-util",
+      "version": "0.0.119",
+      "sha256": "05d5376b6c76b48b04671f137b3cf5aeb2685e6658112ba5fb9a42d0ff991ec2"
+    },
+    {
+      "path": "@tscircuit/circuit-json-util/node_modules/@flatten-js/core/package.json",
+      "name": "@flatten-js/core",
+      "version": "1.6.15",
+      "sha256": "b9fe4ef709911a7e3453b8b8ca6dc282f3114798608f20dd877510f615f26126"
+    },
+    {
+      "path": "@tscircuit/circuit-json-util/node_modules/@flatten-js/core/node_modules/@flatten-js/interval-tree/package.json",
+      "name": "@flatten-js/interval-tree",
+      "version": "2.0.3",
+      "sha256": "4a30f5df558099ec654958fbb6d9074ebe152d0b213a9dade3d97c4333d6d232"
+    },
+    {
+      "path": "@tscircuit/fanout-solver/package.json",
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.82",
+      "sha256": "93d2e27978f62c9242d0adb31bc6992ea76b6b47bed1c21b6690474674bb8905"
+    },
+    {
+      "path": "@tscircuit/fanout-solver/node_modules/@tscircuit/solver-utils/package.json",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.19",
+      "sha256": "8606c45cac613f59ccaa0564a58a826a08ecf3b3bc45865e0b680d5c1a6c4e68"
+    },
+    {
+      "path": "@tscircuit/fanout-solver/node_modules/graphics-debug/package.json",
+      "name": "graphics-debug",
+      "version": "0.0.99",
+      "sha256": "b12d049aea7a67b80651c0a83015e89d9b5854b64ed906ef2f699508276740e5"
+    },
+    {
+      "path": "@tscircuit/image-utils/package.json",
+      "name": "@tscircuit/image-utils",
+      "version": "0.0.8",
+      "sha256": "fdda43a32aa269fb42d0f81db72720a83690624b17e5e5430a0c4eeb1158bf4e"
+    },
+    {
+      "path": "@tscircuit/image-utils/node_modules/@flatten-js/core/package.json",
+      "name": "@flatten-js/core",
+      "version": "1.6.15",
+      "sha256": "b9fe4ef709911a7e3453b8b8ca6dc282f3114798608f20dd877510f615f26126"
+    },
+    {
+      "path": "@tscircuit/image-utils/node_modules/@flatten-js/core/node_modules/@flatten-js/interval-tree/package.json",
+      "name": "@flatten-js/interval-tree",
+      "version": "2.0.3",
+      "sha256": "4a30f5df558099ec654958fbb6d9074ebe152d0b213a9dade3d97c4333d6d232"
+    },
+    {
+      "path": "@tscircuit/image-utils/node_modules/transformation-matrix/package.json",
+      "name": "transformation-matrix",
+      "version": "2.16.1",
+      "sha256": "ffd4a5944189b22d92ea5087cda76da3b98ba59e224b4107f3678d96237e3fd6"
+    },
+    {
+      "path": "@tscircuit/math-utils/package.json",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.38",
+      "sha256": "d5f7081373a428e53b0acfa26ef5e952edb0f8f565dff836ef14db08905f1d9c"
+    },
+    {
+      "path": "@tscircuit/solver-utils/package.json",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.21",
+      "sha256": "7a345035db462a84c39801a60ac057bd004e1009627f92c5224c29aba5a608e9"
+    },
+    {
+      "path": "@types/bun/package.json",
+      "name": "@types/bun",
+      "version": "1.4.4",
+      "sha256": "edb33154598d9add2941aa6a27d32e961fbcbff88ffc593ea66b0418289b38d5"
+    },
+    {
+      "path": "@types/estree/package.json",
+      "name": "@types/estree",
+      "version": "1.0.10",
+      "sha256": "6888fbb2cbca6c6302ac6db055afcce9346698a6caa9af5aac2a75a576a2b2d0"
+    },
+    {
+      "path": "@types/history/package.json",
+      "name": "@types/history",
+      "version": "4.7.11",
+      "sha256": "546755353dd232e2c4140217bf72c04f59a9e6445730e7d7cafb6802ca5d7b9a"
+    },
+    {
+      "path": "@types/http-proxy/package.json",
+      "name": "@types/http-proxy",
+      "version": "1.17.17",
+      "sha256": "58e234fe51c3c5232cd51a5778b56f02585ee7b346ab8d768eeacad895a2977d"
+    },
+    {
+      "path": "@types/node/package.json",
+      "name": "@types/node",
+      "version": "22.20.5",
+      "sha256": "234e64edc31580d6052f8abc89b96f156de29d3b4c7121214b960dec09bd2a25"
+    },
+    {
+      "path": "@types/node/node_modules/undici-types/package.json",
+      "name": "undici-types",
+      "version": "6.21.0",
+      "sha256": "11f873b423b96a5ad444a099685ca6b9de1379dcd83fd8d368e757ddb53658e4"
+    },
+    {
+      "path": "@types/react/package.json",
+      "name": "@types/react",
+      "version": "19.3.0",
+      "sha256": "505c0df4cd73d6a02c946bd9b81451584bd9c83ea72d75cff9b826efceaa19c2"
+    },
+    {
+      "path": "@types/react-dom/package.json",
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "sha256": "4a2052bb362c34f1d39cfe0818b6fe01a9f988b609e8b7e4832aff7dbf2f7180"
+    },
+    {
+      "path": "@types/react-router/package.json",
+      "name": "@types/react-router",
+      "version": "5.1.20",
+      "sha256": "e385ece1c4a24c8fe4564f2758f7e8ac3f43731797ef187d4bcae9727b74e0ee"
+    },
+    {
+      "path": "@types/react-router-dom/package.json",
+      "name": "@types/react-router-dom",
+      "version": "5.3.3",
+      "sha256": "c8586688955b7ce9f2dbae2ebd81c8666dfb6001d933e238c8e662e65b5949b3"
+    },
+    {
+      "path": "accepts/package.json",
+      "name": "accepts",
+      "version": "2.0.0",
+      "sha256": "c579f3f992d488ac2f4ae751df8fd4169f034f4b6f6716f9a3ddfaf130993d63"
+    },
+    {
+      "path": "acorn/package.json",
+      "name": "acorn",
+      "version": "8.19.0",
+      "sha256": "04d6fecaafb5e3d20a38fc3b64fed84bb3830a7759a8c00400ebcb87331fec00"
+    },
+    {
+      "path": "ansi-regex/package.json",
+      "name": "ansi-regex",
+      "version": "5.0.1",
+      "sha256": "8b2dc166f2b74d5098bad38bdd3dd2f4d4775c626199872f5e36dbb48c40931d"
+    },
+    {
+      "path": "ansi-styles/package.json",
+      "name": "ansi-styles",
+      "version": "4.3.0",
+      "sha256": "d405f010681d53f77691015e98461f8484b2afe6a9edfdd2ddb27b1e8a8e883d"
+    },
+    {
+      "path": "ansi-styles/node_modules/color-convert/package.json",
+      "name": "color-convert",
+      "version": "2.0.1",
+      "sha256": "9471d21744ca3137410448da6b3bd7b30ee91d42edce3b82ebcbf84faef74fb4"
+    },
+    {
+      "path": "ansi-styles/node_modules/color-convert/node_modules/color-name/package.json",
+      "name": "color-name",
+      "version": "1.1.4",
+      "sha256": "4a557ea373907e4643badb89ff21b3f4b969d20631086d78eab2e03d05c2efa4"
+    },
+    {
+      "path": "any-promise/package.json",
+      "name": "any-promise",
+      "version": "1.3.0",
+      "sha256": "5c4970ee5a2c8d98648a03c96ce8753134567f976e50bf039964c2165c246078"
+    },
+    {
+      "path": "b4a/package.json",
+      "name": "b4a",
+      "version": "1.9.0",
+      "sha256": "903e19a6a4461f16d919789bb31e7e18f2dfc24dd5f1abe83405b36adcea09c0"
+    },
+    {
+      "path": "balanced-match/package.json",
+      "name": "balanced-match",
+      "version": "4.0.4",
+      "sha256": "c984e6ae5c41fac085a07a732b665b22e0a26f28b61c692ba18ff458a8ecc95a"
+    },
+    {
+      "path": "bare-buffer/package.json",
+      "name": "bare-buffer",
+      "version": "3.7.3",
+      "sha256": "3c19bd8151498bfc2726f88b62c1bd3be0ca9c20783345d0cf105b1fc244921d"
+    },
+    {
+      "path": "bare-events/package.json",
+      "name": "bare-events",
+      "version": "2.9.2",
+      "sha256": "90c61548ae5e1ea229a0b8199b82b80e2b99dadf50b07ffc66d96e75949e6ecb"
+    },
+    {
+      "path": "bare-fs/package.json",
+      "name": "bare-fs",
+      "version": "4.8.4",
+      "sha256": "1df1cabb243a3355acb519c9fb15889240c678fcb76da8736981ce9be033f1cf"
+    },
+    {
+      "path": "bare-path/package.json",
+      "name": "bare-path",
+      "version": "3.1.3",
+      "sha256": "fc94278b0f9aab4f31aebb3804ad9efc6e8865dc276a2dfbae5da3d7d2d7ea4e"
+    },
+    {
+      "path": "bare-stream/package.json",
+      "name": "bare-stream",
+      "version": "2.13.4",
+      "sha256": "be6d9ae85669929bedb1f5fb52d6948519452e226041b39f8eb832ee1935fa14"
+    },
+    {
+      "path": "bare-url/package.json",
+      "name": "bare-url",
+      "version": "2.5.8",
+      "sha256": "ec0986e948a771d0dff40e2b60b31b2b80a22b915a6e21e30d968e1dfaf66dd5"
+    },
+    {
+      "path": "base64-js/package.json",
+      "name": "base64-js",
+      "version": "1.5.1",
+      "sha256": "9758f3ab8c45e07bb9a368e32f9a8b3729623bbf47cbbb205b32d674ab2a91f0"
+    },
+    {
+      "path": "bl/package.json",
+      "name": "bl",
+      "version": "4.1.0",
+      "sha256": "fea66d3b8671e46f77e83db040837cf72da180b8d390d53c43d882fd553659df"
+    },
+    {
+      "path": "body-parser/package.json",
+      "name": "body-parser",
+      "version": "2.4.0",
+      "sha256": "9410a56eb52cfe53ec48f013c872d4d336bb1cad66ea166bf3d97d2807bf542a"
+    },
+    {
+      "path": "body-parser/node_modules/content-type/package.json",
+      "name": "content-type",
+      "version": "2.1.0",
+      "sha256": "33102772db7c8375395bdcc11e7004c597b4cdbe457d8dd0ae2e56f5a2d28637"
+    },
+    {
+      "path": "brace-expansion/package.json",
+      "name": "brace-expansion",
+      "version": "5.0.13",
+      "sha256": "f3003567866767f2685b97136c99c47886a09be0b2d82ad9818b5b390cc38988"
+    },
+    {
+      "path": "braces/package.json",
+      "name": "braces",
+      "version": "3.0.3",
+      "sha256": "56f08b888a4f30dc7cf8a7dbb36ffe92b737912ba36abe9d069d32167c957ac7"
+    },
+    {
+      "path": "buffer/package.json",
+      "name": "buffer",
+      "version": "5.7.1",
+      "sha256": "5af7b62dbf5575a301cd13e8616f1d7d9cff3c90f9fab7bc3d6a1f4fbfee94eb"
+    },
+    {
+      "path": "bun-match-svg/package.json",
+      "name": "bun-match-svg",
+      "version": "0.0.17",
+      "sha256": "4bb333546acadb5cd70920ae0812c8bfbf95fad356c710a87f5806dc6fc5bb2f"
+    },
+    {
+      "path": "bun-types/package.json",
+      "name": "bun-types",
+      "version": "1.4.4",
+      "sha256": "f8e1ba23b5fc8cd1ffcf5c3f159a5d03b3341da33945e4edee0ef02dc8eddf3d"
+    },
+    {
+      "path": "bundle-name/package.json",
+      "name": "bundle-name",
+      "version": "4.1.1",
+      "sha256": "5255a5a5a08777b6b77c7c630c7dba93049380bc65c58c3640cfbc611ae2365d"
+    },
+    {
+      "path": "bundle-require/package.json",
+      "name": "bundle-require",
+      "version": "5.1.0",
+      "sha256": "312730d729daa04ed25a8b5427c0b75a14584c040b18439aa4641f6f4760f5b6"
+    },
+    {
+      "path": "bytes/package.json",
+      "name": "bytes",
+      "version": "3.1.2",
+      "sha256": "99b21c09ce812dc76a06cd87c4753247cb9615c6a8501c5a5a9d9caa22ea2d12"
+    },
+    {
+      "path": "cac/package.json",
+      "name": "cac",
+      "version": "6.7.14",
+      "sha256": "8677bbbe7404ce455200b5f088a45f841bd8a40e7d63475ac711b631516ddcdf"
+    },
+    {
+      "path": "calculate-elbow/package.json",
+      "name": "calculate-elbow",
+      "version": "0.0.12",
+      "sha256": "6936cc2888c5e84dc9f85211f2760caef13421a40248942d69bd09408c0a3c8d"
+    },
+    {
+      "path": "call-bind-apply-helpers/package.json",
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "sha256": "59639b628c6846f674857c6a613fd47e2e4d2a24036cdf0f7a62ac634f4c8a5f"
+    },
+    {
+      "path": "call-bound/package.json",
+      "name": "call-bound",
+      "version": "1.0.4",
+      "sha256": "dcc8abb3c4ad3774234272149020cb36d7b1a3d377a419454d1e7adb368dd9c3"
+    },
+    {
+      "path": "charenc/package.json",
+      "name": "charenc",
+      "version": "0.0.2",
+      "sha256": "c7d1cdd93aabca9fd7ac1c27445a633435fd18ff6666e94645358f08ed22363c"
+    },
+    {
+      "path": "chokidar/package.json",
+      "name": "chokidar",
+      "version": "5.0.0",
+      "sha256": "cb75ae8c3a8ac02e09efc5886a75a87256474ac8349ceea731ec389c03a70d96"
+    },
+    {
+      "path": "chownr/package.json",
+      "name": "chownr",
+      "version": "1.1.4",
+      "sha256": "7c18e85ac9eff99dc6cb6c5626e11ebea658e69119e0bc8cb4bd799c2b48125a"
+    },
+    {
+      "path": "circuit-json/package.json",
+      "name": "circuit-json",
+      "version": "0.0.538",
+      "sha256": "75322dff804c6899c1617f5054125361fe1a0a9d27026292a55df0b9418130e6"
+    },
+    {
+      "path": "circuit-json-to-connectivity-map/package.json",
+      "name": "circuit-json-to-connectivity-map",
+      "version": "0.0.30",
+      "sha256": "0d4919fba65498626b37c34039fc04f62f1e5c06058c5fe72b015146d812eae7"
+    },
+    {
+      "path": "circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils/package.json",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.9",
+      "sha256": "3df6cbfae4c6844477a8cebcb761eb058897f57cd1355893d059925fdfeadbae"
+    },
+    {
+      "path": "circuit-to-svg/package.json",
+      "name": "circuit-to-svg",
+      "version": "0.0.453",
+      "sha256": "5bfbd21e9b25e0c5aacc29f831ce943c3ce7a95d1dede12410f98ada244d1735"
+    },
+    {
+      "path": "circuit-to-svg/node_modules/transformation-matrix/package.json",
+      "name": "transformation-matrix",
+      "version": "2.16.1",
+      "sha256": "ffd4a5944189b22d92ea5087cda76da3b98ba59e224b4107f3678d96237e3fd6"
+    },
+    {
+      "path": "cliui/package.json",
+      "name": "cliui",
+      "version": "8.0.1",
+      "sha256": "95964483c512a6bf35aa1211dc2c185d72be1b58b1271ddd4a7c2e48836472a9"
+    },
+    {
+      "path": "color/package.json",
+      "name": "color",
+      "version": "5.0.3",
+      "sha256": "e056a5ef1ac8bd65d4a19eb544b2b3dfb69e21da39543e3f58456d6f1793019e"
+    },
+    {
+      "path": "color-convert/package.json",
+      "name": "color-convert",
+      "version": "3.1.3",
+      "sha256": "2ca1a776fdacc56b2c1463045e8b2edcc7ff31490c362ee84e258cc905b90e73"
+    },
+    {
+      "path": "color-diff/package.json",
+      "name": "color-diff",
+      "version": "1.4.0",
+      "sha256": "322bd9b1d4df9c7f52b026bfb5212fcd974e6a04b9dde21c6971ddb74ebc5b5d"
+    },
+    {
+      "path": "color-name/package.json",
+      "name": "color-name",
+      "version": "2.1.1",
+      "sha256": "efbf349af1ba4890af24b0b382366a191cd038c6a79357e7711be515053c2d89"
+    },
+    {
+      "path": "color-string/package.json",
+      "name": "color-string",
+      "version": "2.1.4",
+      "sha256": "c07e159e468107920cf59dc92a06185593c180c2bbf12cd6baf9494da68c8d35"
+    },
+    {
+      "path": "commander/package.json",
+      "name": "commander",
+      "version": "4.1.1",
+      "sha256": "b6562534f106b47ea0bfdebb1ae093461bdfd274e1a4ae5aef9057a141dbe0b9"
+    },
+    {
+      "path": "confbox/package.json",
+      "name": "confbox",
+      "version": "0.1.8",
+      "sha256": "fbdcc70692db4c079d3f53672aa237226884ae9ccb9271d3de235c533fed30a2"
+    },
+    {
+      "path": "consola/package.json",
+      "name": "consola",
+      "version": "3.4.2",
+      "sha256": "53e4b4053b58f62c0af88dc35efbe8711910f99d50a3df8de05b2e94bce4abce"
+    },
+    {
+      "path": "content-disposition/package.json",
+      "name": "content-disposition",
+      "version": "1.1.0",
+      "sha256": "20ca1508f7b48509f2e5079ef94a84d56bc5d147d31f0310bf515a8c52ecf5f7"
+    },
+    {
+      "path": "content-type/package.json",
+      "name": "content-type",
+      "version": "1.0.5",
+      "sha256": "bd78a5427ffca1966621301edc6cac2146c8c1e137f122161ba90dca7ec89f77"
+    },
+    {
+      "path": "cookie/package.json",
+      "name": "cookie",
+      "version": "0.7.2",
+      "sha256": "7fa781bd142e7f38b66bff64b4e3a8be9e53e340e7ddaf27caebd00322602208"
+    },
+    {
+      "path": "cookie-signature/package.json",
+      "name": "cookie-signature",
+      "version": "1.2.2",
+      "sha256": "c07dac3271d2ab772ac105f714c3f44bea5180a9a40bf95c2db8d6cb29bb28be"
+    },
+    {
+      "path": "crypt/package.json",
+      "name": "crypt",
+      "version": "0.0.2",
+      "sha256": "c9f1d099aac008e1fa481ce494b28333e1dfbc90c76a77e75b75b2c25fc8f605"
+    },
+    {
+      "path": "csstype/package.json",
+      "name": "csstype",
+      "version": "3.2.4",
+      "sha256": "37cc471a78ee0c3605071d308b7f124632afd134bf053d01f6151a51f2b63eb6"
+    },
+    {
+      "path": "debug/package.json",
+      "name": "debug",
+      "version": "4.4.3",
+      "sha256": "ea8e33d63fe5f3a4c36609b6c3df8e2ef1f8b8ba2fc3a2e1e53cb27291f384af"
+    },
+    {
+      "path": "decompress-response/package.json",
+      "name": "decompress-response",
+      "version": "6.0.0",
+      "sha256": "8fb6b0b19d09cc1c5b2caad128ae39b2fd693a35bb3d440c4e1143bfb9d10080"
+    },
+    {
+      "path": "deep-extend/package.json",
+      "name": "deep-extend",
+      "version": "0.6.0",
+      "sha256": "21b307891704eb34e9be621d7563d13734f75f41d8f97825862b05ca5bc2d217"
+    },
+    {
+      "path": "deep-rename-keys/package.json",
+      "name": "deep-rename-keys",
+      "version": "0.2.1",
+      "sha256": "c57116ea3ec5e64d556032536764c67ca6e8bfb8454c8a0fafad38dc5b8b3bf9"
+    },
+    {
+      "path": "default-browser/package.json",
+      "name": "default-browser",
+      "version": "5.5.1",
+      "sha256": "13a8cc1c9348cbc58c1b1093ce68ab89fa04e025454cf55b055a0ccc0a08cdbf"
+    },
+    {
+      "path": "default-browser-id/package.json",
+      "name": "default-browser-id",
+      "version": "5.0.1",
+      "sha256": "33d93cd9f507c701ecf0551213ddd0f22fba3ee958be14c4ef7045be79520f3c"
+    },
+    {
+      "path": "define-lazy-prop/package.json",
+      "name": "define-lazy-prop",
+      "version": "3.0.0",
+      "sha256": "178f70857bc4e5186ba8efb7a1e7d93d1c821fbf3bd3651f885dad08505fa795"
+    },
+    {
+      "path": "depd/package.json",
+      "name": "depd",
+      "version": "2.0.0",
+      "sha256": "5a3659bcc2e47b25ebf9f23f38eb9452a58920bfe4b59410bfa6fe84639a3b99"
+    },
+    {
+      "path": "detect-libc/package.json",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "sha256": "ee88e5b954fdf3a8480b1d01ef767d68d8ca2c6da269f58c5cf1c5550e9aa2a7"
+    },
+    {
+      "path": "dts-bundle-generator/package.json",
+      "name": "dts-bundle-generator",
+      "version": "9.5.1",
+      "sha256": "a2e5bd3d1414a1812d0f793de2cce646f72862df3bca76d49eb27d39313d0775"
+    },
+    {
+      "path": "dunder-proto/package.json",
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "sha256": "24df71008e4225c858f389dd2728b76cf66b752256d42a38ed7930aacae7fe2b"
+    },
+    {
+      "path": "ee-first/package.json",
+      "name": "ee-first",
+      "version": "1.1.1",
+      "sha256": "a4eece6ff6b38bf7ac107323f381cc60500097a9cbdd473f5d5b45e68822cb89"
+    },
+    {
+      "path": "emoji-regex/package.json",
+      "name": "emoji-regex",
+      "version": "8.0.0",
+      "sha256": "7bec29b9ca68f2c4becc60e866c2f9342ecdc89fab39841a818ccd9eda15c148"
+    },
+    {
+      "path": "encodeurl/package.json",
+      "name": "encodeurl",
+      "version": "2.0.3",
+      "sha256": "531cd32b12f405a0628681755fbd06b818d9caee3101d5201da96969882bcd4d"
+    },
+    {
+      "path": "end-of-stream/package.json",
+      "name": "end-of-stream",
+      "version": "1.4.5",
+      "sha256": "da504d0bef5a5974590b62f58df0003b448eccde6b5fbeb044506b7e43368eb5"
+    },
+    {
+      "path": "entities/package.json",
+      "name": "entities",
+      "version": "8.1.0",
+      "sha256": "b6ff1175be0fa103f032d52e42af95d95c674e3cba08d93670cc8944697bcc42"
+    },
+    {
+      "path": "es-define-property/package.json",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "sha256": "3a2cb30dae30a96705dcd9aa2d5fb190cf8200f27badccfa5a81a4374e5708b4"
+    },
+    {
+      "path": "es-errors/package.json",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "sha256": "1a0a0bcccc76b915cb64073317312840cf6363e9144b96f406d0059774dd5278"
+    },
+    {
+      "path": "es-object-atoms/package.json",
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "sha256": "e4b7882975d10c68457945c883e1060d0b058af5b1216215c872263f42e12fc9"
+    },
+    {
+      "path": "es6-promisify/package.json",
+      "name": "es6-promisify",
+      "version": "7.0.0",
+      "sha256": "e4925553e86bdc8e6ebc6ed28c63953ecf1b42ee6eced13879ed2e6599bc805e"
+    },
+    {
+      "path": "esbuild/package.json",
+      "name": "esbuild",
+      "version": "0.27.7",
+      "sha256": "9ce21c976ffbbb95001f460e9e8af7c6d719f748eb70441e617a14dd0b68a5b8"
+    },
+    {
+      "path": "escalade/package.json",
+      "name": "escalade",
+      "version": "3.2.0",
+      "sha256": "acd22b264ecbea162e320a360dab0ad0f3e5438fa4382288df844fa08b484e73"
+    },
+    {
+      "path": "escape-html/package.json",
+      "name": "escape-html",
+      "version": "1.0.3",
+      "sha256": "bd320a3e9d23249f5f7d3ce72f2fa426e28a6b2704bd2b281d0c92806a1f5223"
+    },
+    {
+      "path": "etag/package.json",
+      "name": "etag",
+      "version": "1.8.1",
+      "sha256": "836b9a5dd1c6af638f4602e83e2568277f9ab1f457db0b95d949c2a4ddb0462a"
+    },
+    {
+      "path": "eventemitter3/package.json",
+      "name": "eventemitter3",
+      "version": "2.0.3",
+      "sha256": "c654fda4f9091bb19e10d955ed367c63cefb380320cf0fcbdc98931a3733397b"
+    },
+    {
+      "path": "events-universal/package.json",
+      "name": "events-universal",
+      "version": "1.0.1",
+      "sha256": "8f495538444b4876e5d075b0b7c4156832bf55042ec620dd12bfdc402b7ba11c"
+    },
+    {
+      "path": "expand-template/package.json",
+      "name": "expand-template",
+      "version": "2.0.3",
+      "sha256": "90f652967155275d9fab2887a845454ee797340b28cc0c1b00f1889aaa65f771"
+    },
+    {
+      "path": "express/package.json",
+      "name": "express",
+      "version": "5.2.1",
+      "sha256": "2980b885bad92f757a2d44674e905cf875867d5685111d8ab8f285635b11367d"
+    },
+    {
+      "path": "fast-fifo/package.json",
+      "name": "fast-fifo",
+      "version": "1.3.2",
+      "sha256": "06832be0af1f0e41e83328da56c26db94b95eddc4aee5c4789cfd6ab99296a7e"
+    },
+    {
+      "path": "fast-json-stable-stringify/package.json",
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "sha256": "c4907a6cf1a242f65589b9bb762b9330088aa4a940d382b470d3c47b5309ef44"
+    },
+    {
+      "path": "fast-png/package.json",
+      "name": "fast-png",
+      "version": "8.0.0",
+      "sha256": "b38b7a3cf78fb023cb4f5dba24124a53aeaf4f233c65caa5458f19411fc8d588"
+    },
+    {
+      "path": "fdir/package.json",
+      "name": "fdir",
+      "version": "6.5.0",
+      "sha256": "aca49395d61ef383a09f74555c66ed45817ca2b5724e710a4dc9e0471b83d8f5"
+    },
+    {
+      "path": "fflate/package.json",
+      "name": "fflate",
+      "version": "0.8.3",
+      "sha256": "5922d8150b307bc0e4e441491c779c45379e9913d348848fca8d5cf02db4d134"
+    },
+    {
+      "path": "fill-range/package.json",
+      "name": "fill-range",
+      "version": "7.1.1",
+      "sha256": "87f5c78f9b47d21f9ca62b60cff1d250a3b468eab320dd13c3f3ab2464a02735"
+    },
+    {
+      "path": "finalhandler/package.json",
+      "name": "finalhandler",
+      "version": "2.1.1",
+      "sha256": "42f5503e57f067caf49dda0353d766f8eb4616429d3c43234ba673ee8acd1196"
+    },
+    {
+      "path": "fix-dts-default-cjs-exports/package.json",
+      "name": "fix-dts-default-cjs-exports",
+      "version": "1.0.1",
+      "sha256": "57fbe6f8c919d5a331d09d53768fe2064c25c6f4e372cbaa0d0727e79d70904c"
+    },
+    {
+      "path": "flatbush/package.json",
+      "name": "flatbush",
+      "version": "4.7.0",
+      "sha256": "f67d27f3319fdf8b212e8a88df7a3307ae44e20e21a810810d259894f9bc6050"
+    },
+    {
+      "path": "flatqueue/package.json",
+      "name": "flatqueue",
+      "version": "3.1.0",
+      "sha256": "1b9a1af82b63e6bd903b4340a0d001deb98dc8fcb585ce39571974e719381588"
+    },
+    {
+      "path": "follow-redirects/package.json",
+      "name": "follow-redirects",
+      "version": "1.16.3",
+      "sha256": "6d8de10cff3afbe74c7933a5424a22699ebb9528a792ae0212f8bdf83ed2866e"
+    },
+    {
+      "path": "format-si-unit/package.json",
+      "name": "format-si-unit",
+      "version": "0.0.14",
+      "sha256": "357115dddc1aa1bf448ecff2ba60c79f6e9f498999da8c08704b8f12e43de9df"
+    },
+    {
+      "path": "forwarded/package.json",
+      "name": "forwarded",
+      "version": "0.2.0",
+      "sha256": "550a78f64b6a76bc353d6a10152af5750613d0d910f8478943176c1a6196158a"
+    },
+    {
+      "path": "fresh/package.json",
+      "name": "fresh",
+      "version": "2.0.0",
+      "sha256": "3895d6c15a9e65c1cca20c675db7637423ec2d087bb221ef79e09ed2e7d34ec0"
+    },
+    {
+      "path": "fs-constants/package.json",
+      "name": "fs-constants",
+      "version": "1.0.0",
+      "sha256": "9cefec768b4f8c52591b840367d077a46a5a2b72ea2778dcf037afd96b234671"
+    },
+    {
+      "path": "fs-extra/package.json",
+      "name": "fs-extra",
+      "version": "8.1.0",
+      "sha256": "3679b74c0b422a1fb5f710ab375b488ccbac0d38f32f5b1474021cf1827d287a"
+    },
+    {
+      "path": "function-bind/package.json",
+      "name": "function-bind",
+      "version": "1.1.2",
+      "sha256": "edb1c4faf4148e6e3d74ed8dbac1a1dc359a647ff4207aad4851396dc7a3559a"
+    },
+    {
+      "path": "get-caller-file/package.json",
+      "name": "get-caller-file",
+      "version": "2.0.5",
+      "sha256": "680a080d2885c05bc51dde429c80784bfb248ca3ef3685438079c5015721e2ae"
+    },
+    {
+      "path": "get-east-asian-width/package.json",
+      "name": "get-east-asian-width",
+      "version": "1.7.0",
+      "sha256": "25b97bb720e84cdb3b0c3d1c1e804ce6b216d2573ff79cbe531e01bfa05ee9e9"
+    },
+    {
+      "path": "get-intrinsic/package.json",
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "sha256": "45b14763baacc59b0fd7b39e3ad983d5d2aaf7f5ed682f2fce9edb469826c999"
+    },
+    {
+      "path": "get-proto/package.json",
+      "name": "get-proto",
+      "version": "1.0.1",
+      "sha256": "73839e012ac7134a632c9d9fc6bdb700ac9ab5553cce39eb789ba2b65663e734"
+    },
+    {
+      "path": "github-from-package/package.json",
+      "name": "github-from-package",
+      "version": "0.0.0",
+      "sha256": "67742aa2b856e3523c2f89132e41cc5026c49ffe7df58bd3ea906caaa217bd79"
+    },
+    {
+      "path": "github-from-package/example/package.json",
+      "name": "beep-boop",
+      "version": "1.2.3",
+      "sha256": "1b0a33ff4aad344b3d09605b854a4b5bcf1b79bef1dc821fc32d206ba7cc0cf8"
+    },
+    {
+      "path": "glob/package.json",
+      "name": "glob",
+      "version": "13.0.6",
+      "sha256": "5a28ef9a1f5252feb47ffe288a6350fe99b18311462e6a9cdacbdd0bb4be6be9"
+    },
+    {
+      "path": "gopd/package.json",
+      "name": "gopd",
+      "version": "1.2.0",
+      "sha256": "33ace32dc861f6da9d1fd9d0a44c66e8c6ff3b13358d070683c1c2978ff5f19f"
+    },
+    {
+      "path": "graceful-fs/package.json",
+      "name": "graceful-fs",
+      "version": "4.2.12",
+      "sha256": "7cc365c012febc9c44ef6d998b49d749840c852d91db3302b19eb6eca07ead3d"
+    },
+    {
+      "path": "graphics-debug/package.json",
+      "name": "graphics-debug",
+      "version": "0.0.95",
+      "sha256": "6b329af03ec6c8b16c2b8757c40a324a40a0ed75a86e5d0a22c1646985a60ce7"
+    },
+    {
+      "path": "has-symbols/package.json",
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "sha256": "5190268c0e3308d7446d1f7c036238f329f786938453e6017cb90980b3612e7a"
+    },
+    {
+      "path": "hasown/package.json",
+      "name": "hasown",
+      "version": "2.0.4",
+      "sha256": "40b750c55a8bacf2c5ac316f5299dd44d48acc101c189a00cd59d39376b5eb89"
+    },
+    {
+      "path": "heap/package.json",
+      "name": "heap",
+      "version": "0.2.7",
+      "sha256": "3dc357d6c978adbabf22c9ddebefe394815ba558123e4f9b824caa05269fdd92"
+    },
+    {
+      "path": "http-errors/package.json",
+      "name": "http-errors",
+      "version": "2.0.1",
+      "sha256": "d540721372bf8bf77b5fad31f6567a916e24d0aeeb78c81ba92b69feea9f1eef"
+    },
+    {
+      "path": "http-proxy/package.json",
+      "name": "http-proxy",
+      "version": "1.18.1",
+      "sha256": "1acdbcb8393b76ae43e8d35ae4b6ba74d0ea7040a6ba93fa03485f89fc7473a8"
+    },
+    {
+      "path": "http-proxy/node_modules/eventemitter3/package.json",
+      "name": "eventemitter3",
+      "version": "4.0.7",
+      "sha256": "2e9612fd0b3b723d4e27dbd741752f84ad840f3151973250820be782650cb7e1"
+    },
+    {
+      "path": "http-proxy-middleware/package.json",
+      "name": "http-proxy-middleware",
+      "version": "3.0.7",
+      "sha256": "bbed872464dcb4b52d4303fc0d3c0a276c08f6e8340d77697ae2456311c928ef"
+    },
+    {
+      "path": "iconv-lite/package.json",
+      "name": "iconv-lite",
+      "version": "0.7.3",
+      "sha256": "f24ad03476d51470a5b069e65b03ef6383d615897ffe2239edf22584ea0e3d03"
+    },
+    {
+      "path": "ieee754/package.json",
+      "name": "ieee754",
+      "version": "1.2.1",
+      "sha256": "a8004b9c8dffe2e1b01a058ecf968a5d50beabcabc43cc98c655184ba6afc050"
+    },
+    {
+      "path": "inherits/package.json",
+      "name": "inherits",
+      "version": "2.0.4",
+      "sha256": "be645800bc94fd8de29c8ae91690549b316cc437100108aeea7b2f347693cc80"
+    },
+    {
+      "path": "ini/package.json",
+      "name": "ini",
+      "version": "1.3.8",
+      "sha256": "8cfafc3521292bd7434d2f40762984f36eb12f03bde92b42a9df2ea17552f4a4"
+    },
+    {
+      "path": "iobuffer/package.json",
+      "name": "iobuffer",
+      "version": "6.0.1",
+      "sha256": "5e843d4c99a28e2a528297b8ab0e86fa38ede17f80fe03fd009a6f9633451b11"
+    },
+    {
+      "path": "ipaddr.js/package.json",
+      "name": "ipaddr.js",
+      "version": "1.9.1",
+      "sha256": "fc1071893728a0e78fa40ce0dbe04c5a1021179fdcb5b229f274e3556d6a87cd"
+    },
+    {
+      "path": "is-arrayish/package.json",
+      "name": "is-arrayish",
+      "version": "0.3.4",
+      "sha256": "65c3c2e30da5d14342a79f1c19323ad336ab2d66f126990973c514aac7193dc2"
+    },
+    {
+      "path": "is-buffer/package.json",
+      "name": "is-buffer",
+      "version": "1.1.6",
+      "sha256": "c3f4ad9709465baf192e2ee4ae1a113addc1843e044eee520c71eb5fd3c9ec85"
+    },
+    {
+      "path": "is-docker/package.json",
+      "name": "is-docker",
+      "version": "3.0.0",
+      "sha256": "927cc3f8e5e49d545679ebe9be754137f805a0f7f82de14a80492c3b627ca688"
+    },
+    {
+      "path": "is-extglob/package.json",
+      "name": "is-extglob",
+      "version": "2.1.1",
+      "sha256": "8031afcd87f448d75ba8a5dd2cde9c68f982a94f406ebae8e5fb7cf6dfdeede2"
+    },
+    {
+      "path": "is-fullwidth-code-point/package.json",
+      "name": "is-fullwidth-code-point",
+      "version": "3.0.0",
+      "sha256": "5b48496ca129073ed44a677b777ea3b91366c8bc228bc75fe858749a78ac1a32"
+    },
+    {
+      "path": "is-glob/package.json",
+      "name": "is-glob",
+      "version": "4.0.3",
+      "sha256": "1cce62b80db12fc033d85250b5881b1a288476229abda8e1abd983724befd56f"
+    },
+    {
+      "path": "is-in-ssh/package.json",
+      "name": "is-in-ssh",
+      "version": "1.0.0",
+      "sha256": "5e5c2126dc1741ba763d522a76c5aa81ac3a6df7611cac6e449e1d18c7b5fd6a"
+    },
+    {
+      "path": "is-inside-container/package.json",
+      "name": "is-inside-container",
+      "version": "1.0.0",
+      "sha256": "b030fc11899d813c3fab0dbb09639eab25f8a5d4af24d3854f1329bc0255bc2f"
+    },
+    {
+      "path": "is-number/package.json",
+      "name": "is-number",
+      "version": "7.0.0",
+      "sha256": "51c133f4e41df982aef69027249ff9d7262645029f437d079adc7c83328fb620"
+    },
+    {
+      "path": "is-plain-object/package.json",
+      "name": "is-plain-object",
+      "version": "5.1.0",
+      "sha256": "0fe1587ff3b255249a880f58ab02fa29ecb384438adac241724ae28c1434a9ff"
+    },
+    {
+      "path": "is-promise/package.json",
+      "name": "is-promise",
+      "version": "4.0.0",
+      "sha256": "ae7a1bff928cb99f0b828f8a8236f623828f5f48ce930268ac5726554e083b50"
+    },
+    {
+      "path": "is-wsl/package.json",
+      "name": "is-wsl",
+      "version": "3.1.1",
+      "sha256": "d4b5a0df9783c78951de0dbd94832822d0660e553b0b5e2ffc0e19e5721a5af5"
+    },
+    {
+      "path": "isexe/package.json",
+      "name": "isexe",
+      "version": "2.0.0",
+      "sha256": "395c2af9abeeaafe7391974c1eacfb2a2bdeef187f21c3f5582c49e0368e59bf"
+    },
+    {
+      "path": "joycon/package.json",
+      "name": "joycon",
+      "version": "3.1.1",
+      "sha256": "0857174391d535c89696c60ae396f2e9426224c1f1d6d9225be8e81f8463fd5f"
+    },
+    {
+      "path": "js-base64/package.json",
+      "name": "js-base64",
+      "version": "3.9.2",
+      "sha256": "19ae4b781d62208ff911776ab590adac8d984bfb7ba4f688859fd9edd88453bc"
+    },
+    {
+      "path": "js-graph-algorithms/package.json",
+      "name": "js-graph-algorithms",
+      "version": "1.0.18",
+      "sha256": "c188af6a9f61f04f26f7e57166117af6e5241f2bea10a2d1800977dfe1e1a17c"
+    },
+    {
+      "path": "jsonfile/package.json",
+      "name": "jsonfile",
+      "version": "4.0.0",
+      "sha256": "aac2f2acd4b615bb62d186a62457d06b76740cd0ed3a1cbf0fc711bd03efd403"
+    },
+    {
+      "path": "kind-of/package.json",
+      "name": "kind-of",
+      "version": "3.2.2",
+      "sha256": "4fbd705c00cde2b9b29cf368f9accf1a057065ab8a349f1a5d27e5f10eee36ff"
+    },
+    {
+      "path": "lilconfig/package.json",
+      "name": "lilconfig",
+      "version": "3.1.5",
+      "sha256": "6c8e75edb40f54eeed605b71452bc1da96b53d17bd88448cb6f260ebeaa6119d"
+    },
+    {
+      "path": "lines-and-columns/package.json",
+      "name": "lines-and-columns",
+      "version": "1.2.4",
+      "sha256": "34920a73cb6486742115f5fb9385cb50a1e6fbb771b8e56e8b8b143f9a94d1d7"
+    },
+    {
+      "path": "load-tsconfig/package.json",
+      "name": "load-tsconfig",
+      "version": "0.2.5",
+      "sha256": "967b74e48dac16b94163e41ea2bf3ea11d58c8edcf4e05713596d52b5bf7f894"
+    },
+    {
+      "path": "lodash/package.json",
+      "name": "lodash",
+      "version": "4.18.1",
+      "sha256": "5ef0a453b679125b155af19e1477f93b577ea826a57e1545f77608d326966e6a"
+    },
+    {
+      "path": "looks-same/package.json",
+      "name": "looks-same",
+      "version": "9.0.1",
+      "sha256": "a7bd9e22ccaa9208b931cf2e26aaae929ec49d78a99d76ddb5c06da3b7f5ec40"
+    },
+    {
+      "path": "lru-cache/package.json",
+      "name": "lru-cache",
+      "version": "11.5.3",
+      "sha256": "c085d38560434a8915fd1817cd17cee316118078b07f40302b32ef4d8bc760f4"
+    },
+    {
+      "path": "magic-string/package.json",
+      "name": "magic-string",
+      "version": "0.30.21",
+      "sha256": "86814aaf7dacba9d31fbf361c3285981f1cbbda0a87108caa4131d297bd9eba2"
+    },
+    {
+      "path": "math-intrinsics/package.json",
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "sha256": "39d74aa5a354153130706286dd60a2d8409ce0c8f66546eff2edcac0afff17e1"
+    },
+    {
+      "path": "md5/package.json",
+      "name": "md5",
+      "version": "2.3.0",
+      "sha256": "1fd91c70d3582f84e674b625eb6fec1eec72055f3498fc8b19802d921a54dab2"
+    },
+    {
+      "path": "media-typer/package.json",
+      "name": "media-typer",
+      "version": "1.1.1",
+      "sha256": "532b2af00ae4de1bb2853f233a1ee6d3c19703d18d2c4e173cdc59f7a01e1bba"
+    },
+    {
+      "path": "merge-descriptors/package.json",
+      "name": "merge-descriptors",
+      "version": "2.0.0",
+      "sha256": "36d6d2cd304c06d5b690625af7ecc07995d5e220eba014ee3818af8c51421fed"
+    },
+    {
+      "path": "micromatch/package.json",
+      "name": "micromatch",
+      "version": "4.0.8",
+      "sha256": "94dbc881c0329813f2481f35fcfa725a2285d45926d33e9b9b8b80b28487752b"
+    },
+    {
+      "path": "micromatch/node_modules/picomatch/package.json",
+      "name": "picomatch",
+      "version": "2.3.2",
+      "sha256": "63264d817e856a4bff57d4304f2b38d2964a4f6df520eb169e7bcdb619f13e9a"
+    },
+    {
+      "path": "mime-db/package.json",
+      "name": "mime-db",
+      "version": "1.54.0",
+      "sha256": "33bdbb99915697ac01df12490b9d479a55529123842e67975e6d76d0010aa142"
+    },
+    {
+      "path": "mime-types/package.json",
+      "name": "mime-types",
+      "version": "3.0.2",
+      "sha256": "644fc05ded7d8a20c069a07c7c61373593d4859c91b1386f544cbf247e39820c"
+    },
+    {
+      "path": "mimic-response/package.json",
+      "name": "mimic-response",
+      "version": "3.1.0",
+      "sha256": "ff358428a418a46fb2431a2c48b396fb01c8291fec9e1f14434ade01196c8e9c"
+    },
+    {
+      "path": "minimatch/package.json",
+      "name": "minimatch",
+      "version": "10.2.6",
+      "sha256": "bb847ba240909c9a36d4eaeb4e0efdc3e31182aeef208c1611259a48f282ea75"
+    },
+    {
+      "path": "minimist/package.json",
+      "name": "minimist",
+      "version": "1.2.8",
+      "sha256": "252881f6a068a3e70386706d88a694b5e8e9e053b6d9f309fd9a329e651bbf81"
+    },
+    {
+      "path": "minipass/package.json",
+      "name": "minipass",
+      "version": "7.1.3",
+      "sha256": "b8ab116187d5e9375d494f17437eb862cbee4b329c21f15412c6a5170ec2f55c"
+    },
+    {
+      "path": "mkdirp-classic/package.json",
+      "name": "mkdirp-classic",
+      "version": "0.5.3",
+      "sha256": "dd81e4703dc7005247e7c2dc056c67c936923a40b4dc9b266cf8acf3442ba89c"
+    },
+    {
+      "path": "mlly/package.json",
+      "name": "mlly",
+      "version": "1.8.2",
+      "sha256": "e521ab6b33ac365a19e0ec4463a7fb831c39218dcb0a34625c55cb4233b84f5e"
+    },
+    {
+      "path": "ms/package.json",
+      "name": "ms",
+      "version": "2.1.3",
+      "sha256": "1a6b4d9739790c0b94ab96c8cc0507e281c164c311ff4fbf5e57fb8d26290b40"
+    },
+    {
+      "path": "mz/package.json",
+      "name": "mz",
+      "version": "2.7.0",
+      "sha256": "c56342bdf1a99c348834f053cc4b1c716323b6411208c0a76296ef9706954d8f"
+    },
+    {
+      "path": "nanoid/package.json",
+      "name": "nanoid",
+      "version": "3.3.20",
+      "sha256": "e2a77185ded1c006171e4e2f8b316d0e3b4c51a135a190851cfc888ea428f6bf"
+    },
+    {
+      "path": "napi-build-utils/package.json",
+      "name": "napi-build-utils",
+      "version": "2.0.0",
+      "sha256": "001ba5640df99785e76b7d407ae35a24c490f145737cf3f194408fb17dfec411"
+    },
+    {
+      "path": "negotiator/package.json",
+      "name": "negotiator",
+      "version": "1.1.0",
+      "sha256": "2bc164db19aca1e7af967b7211f7d728940f48ff22d56aa75be587f3bb13ee56"
+    },
+    {
+      "path": "negotiator/node_modules/content-type/package.json",
+      "name": "content-type",
+      "version": "2.1.0",
+      "sha256": "33102772db7c8375395bdcc11e7004c597b4cdbe457d8dd0ae2e56f5a2d28637"
+    },
+    {
+      "path": "nested-error-stacks/package.json",
+      "name": "nested-error-stacks",
+      "version": "2.1.1",
+      "sha256": "2380673d21c8b2525af73328b8994ad0661548a146b837dada6101518f027e3c"
+    },
+    {
+      "path": "node-abi/package.json",
+      "name": "node-abi",
+      "version": "3.101.0",
+      "sha256": "38421fa97f287b2e22dac600a78a14ce0fcd2a7201318a39f0df896cff495142"
+    },
+    {
+      "path": "node-addon-api/package.json",
+      "name": "node-addon-api",
+      "version": "6.1.0",
+      "sha256": "adb8e56121c7a4d909736df914d670c36adbf38bf4e9bd3354ee6c8ffe6d48a3"
+    },
+    {
+      "path": "object-assign/package.json",
+      "name": "object-assign",
+      "version": "4.1.1",
+      "sha256": "5990bbffa235fc675debd925d50f6c3f48a2b4526d8c9f7555cadec9029d0d7f"
+    },
+    {
+      "path": "object-hash/package.json",
+      "name": "object-hash",
+      "version": "3.0.0",
+      "sha256": "f86b3a8a18078fbbf71ea1cf4468129e609566f860b9d93f99f63dc2543962eb"
+    },
+    {
+      "path": "object-inspect/package.json",
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "sha256": "21c5c63f653705f44a60f5fe93752b231caf6ff07b01805740bd89b71b2d6d8a"
+    },
+    {
+      "path": "on-finished/package.json",
+      "name": "on-finished",
+      "version": "2.4.2",
+      "sha256": "72a8f458b98a063fe2205933df3c2aef16fbe4d08a79010a23eeca1e9428b876"
+    },
+    {
+      "path": "once/package.json",
+      "name": "once",
+      "version": "1.4.0",
+      "sha256": "33840d74c14c94bfb75c76374765b635531b1eacb88d7f1f2f380c94d0ea1328"
+    },
+    {
+      "path": "open/package.json",
+      "name": "open",
+      "version": "11.0.0",
+      "sha256": "a64810b55da08eaaa28a71e6e6b5479a347073192edda0effb290b2835146982"
+    },
+    {
+      "path": "os-tmpdir/package.json",
+      "name": "os-tmpdir",
+      "version": "1.0.2",
+      "sha256": "708404ce657fbad57a4804f3ccfcda877e038b981fb9675aebcc57de91e95694"
+    },
+    {
+      "path": "parse-color/package.json",
+      "name": "parse-color",
+      "version": "1.0.0",
+      "sha256": "b506bb029435cd0b46fe642374e5436884c410be4fdb57126320cccb29100b09"
+    },
+    {
+      "path": "parse-color/node_modules/color-convert/package.json",
+      "name": "color-convert",
+      "version": "0.5.3",
+      "sha256": "5e0dbcbad3c0cfb6538302ba28452e369174495ca29b5960d9d20c83cf17f2a0"
+    },
+    {
+      "path": "parse5/package.json",
+      "name": "parse5",
+      "version": "8.0.1",
+      "sha256": "159187fd5c0c0c17456282f4cf7beab91eb46dfc717928522938c947007282b7"
+    },
+    {
+      "path": "parsel-js/package.json",
+      "name": "parsel-js",
+      "version": "1.2.3",
+      "sha256": "c0217cfdf2d51202ba93c7200d1d7505c0773e3484bfbed4ca47c2f18c43662b"
+    },
+    {
+      "path": "parseurl/package.json",
+      "name": "parseurl",
+      "version": "1.3.3",
+      "sha256": "98c7b953c844cac7c0be2d5abc6559c6fd3a6075fd159b04c0f1bf46145bfed2"
+    },
+    {
+      "path": "path-scurry/package.json",
+      "name": "path-scurry",
+      "version": "2.0.2",
+      "sha256": "fb54fe908dbe5f288bd1c5d7429f033c4f527f435c3d3a583ee0ce9e78992087"
+    },
+    {
+      "path": "path-to-regexp/package.json",
+      "name": "path-to-regexp",
+      "version": "8.4.2",
+      "sha256": "3c37dce1e0587231f7c9f63e137dd0ed4d6f25552c89b5b5939c6a3d36113634"
+    },
+    {
+      "path": "pathe/package.json",
+      "name": "pathe",
+      "version": "2.0.3",
+      "sha256": "6cccffe6bb2a39e2e4f257aefc3f5d553d98199a0c79558bdb5ea2880fa030a3"
+    },
+    {
+      "path": "pem/package.json",
+      "name": "pem",
+      "version": "1.14.8",
+      "sha256": "35340cf34dc55302125c8e6030331ff20003f22e5ba1305cd11c562a38e6fcee"
+    },
+    {
+      "path": "picocolors/package.json",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "sha256": "ef2ac226c4811d312e12c64214c453878653e834482125ae475f27cea60de737"
+    },
+    {
+      "path": "picomatch/package.json",
+      "name": "picomatch",
+      "version": "4.0.7",
+      "sha256": "479b70b87aa7b44344d62c8a459ae7e53dd2bca6c61f1396bd55e63e9de73fc6"
+    },
+    {
+      "path": "pirates/package.json",
+      "name": "pirates",
+      "version": "4.0.7",
+      "sha256": "1ec1274d170c2e50b842dbc2bac41bd01af38ccc1867fcf31934048e499e91e8"
+    },
+    {
+      "path": "pkg-types/package.json",
+      "name": "pkg-types",
+      "version": "1.3.1",
+      "sha256": "c65eb02faccca4a5177dac56d489eca331bd4ba826e5f3237a959c0762b65990"
+    },
+    {
+      "path": "polished/package.json",
+      "name": "polished",
+      "version": "4.3.1",
+      "sha256": "c6e8692ad785a5155f25c1094a112d44e6d06eef747de3a0adca1854f175d95b"
+    },
+    {
+      "path": "postcss/package.json",
+      "name": "postcss",
+      "version": "8.5.33",
+      "sha256": "8c54659dbae525ebc655d3d329a5c329967471ebc85efcac2066b3f1e9ffab6a"
+    },
+    {
+      "path": "postcss-load-config/package.json",
+      "name": "postcss-load-config",
+      "version": "6.0.1",
+      "sha256": "e74a15b2263dbd513428a99f6e1b4880902ad45e1742d875de2c15dbbcb53a99"
+    },
+    {
+      "path": "powershell-utils/package.json",
+      "name": "powershell-utils",
+      "version": "0.1.0",
+      "sha256": "eea7302311823326920f49388b54e394ea09285263cd0a273bcd86495907e963"
+    },
+    {
+      "path": "prebuild-install/package.json",
+      "name": "prebuild-install",
+      "version": "7.1.3",
+      "sha256": "d8502f5ce977ea10cc7e91e95b595ce845e838cf412801230e9a2f211ad68039"
+    },
+    {
+      "path": "prebuild-install/node_modules/tar-fs/package.json",
+      "name": "tar-fs",
+      "version": "2.1.5",
+      "sha256": "e67abc8620e8c93860c69d522ffba271a045f6271bc689fdfe400d8d1f14b749"
+    },
+    {
+      "path": "prebuild-install/node_modules/tar-fs/node_modules/tar-stream/package.json",
+      "name": "tar-stream",
+      "version": "2.2.0",
+      "sha256": "bf26c92d0b2d3b865681bac5cf3bca4cd405e33fcb47f45216899aaed4f81010"
+    },
+    {
+      "path": "proxy-addr/package.json",
+      "name": "proxy-addr",
+      "version": "2.0.8",
+      "sha256": "b2e305ca817ae4e8b088e07f38c5df1d7ad77aa3473809e4c37a9a1c83600225"
+    },
+    {
+      "path": "pump/package.json",
+      "name": "pump",
+      "version": "3.0.4",
+      "sha256": "d369a9c97d4aaca4a637af77b6ead9169146809ff3c27268e62151b613cae016"
+    },
+    {
+      "path": "qs/package.json",
+      "name": "qs",
+      "version": "6.17.1",
+      "sha256": "863f2d7bdf692921c2d743280760cb486db0fad3984f41ea195486f152ffaa84"
+    },
+    {
+      "path": "range-parser/package.json",
+      "name": "range-parser",
+      "version": "1.3.0",
+      "sha256": "3461c9c15204b32f459c97920bb678e42341e9e9675e4b748907ce4de740f26d"
+    },
+    {
+      "path": "raw-body/package.json",
+      "name": "raw-body",
+      "version": "3.0.2",
+      "sha256": "3072f77ab429d8b89e78c85e0cdefb6e3ef554a9fb19443d006a892a74361e78"
+    },
+    {
+      "path": "rc/package.json",
+      "name": "rc",
+      "version": "1.2.8",
+      "sha256": "96f035349a8e6034d380348ec3d454ed8ea3a602c7a5700eb36ff48310bdbe9f"
+    },
+    {
+      "path": "react/package.json",
+      "name": "react",
+      "version": "19.3.1",
+      "sha256": "9cc9c3de5441a2eea7f41f52f3f2a15a4fc51f90c0b72741f0d7638643a85e67"
+    },
+    {
+      "path": "react-cosmos/package.json",
+      "name": "react-cosmos",
+      "version": "7.4.1",
+      "sha256": "c8c556672afd149f4483e1a0478d4468362848cff1b2e08f78e20a0f48fd07e2"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/package.json",
+      "name": "yargs",
+      "version": "18.1.0",
+      "sha256": "123eccb80757aea2792116a4d167b4751e96a8b3899b7989baecbb0bf7a5e45a"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/package.json",
+      "name": "cliui",
+      "version": "9.0.1",
+      "sha256": "305c7580ded81b1a9bfc3417e8c257692b4c2e54a66e67deb1b8f61f197aee9e"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/string-width/package.json",
+      "name": "string-width",
+      "version": "7.2.0",
+      "sha256": "c136bc8e7e23b6de2ad6f083cf99c1c3769fe200224d7575351f29c9f6bed27e"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/string-width/node_modules/emoji-regex/package.json",
+      "name": "emoji-regex",
+      "version": "10.6.0",
+      "sha256": "ad8b9ae5582e5b85ae571a30a733fd8f3fd7951530122efd4f93342fe0995b11"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/strip-ansi/package.json",
+      "name": "strip-ansi",
+      "version": "7.2.0",
+      "sha256": "228b214dd06ca80ab3c36e2b890a8696a39cea65585f6d61498c922c615e18a0"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/strip-ansi/node_modules/ansi-regex/package.json",
+      "name": "ansi-regex",
+      "version": "6.6.0",
+      "sha256": "4bd0d3504c2a2392b948335daf9f0c714eba7ddb114de5d2b86df2010d670cbe"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/wrap-ansi/package.json",
+      "name": "wrap-ansi",
+      "version": "9.0.2",
+      "sha256": "aa6924e02b510b48b0ad87f09212b2532a3e86043ea51ff0413f70d5964a7e31"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/cliui/node_modules/wrap-ansi/node_modules/ansi-styles/package.json",
+      "name": "ansi-styles",
+      "version": "6.2.3",
+      "sha256": "0cf1f46ceee4b380298db6e6a54f14d345abe09abd5f650cbc20c8ac2ab27744"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/string-width/package.json",
+      "name": "string-width",
+      "version": "8.3.0",
+      "sha256": "91dd282553b13e201d56de724f61c6755996f3120c3ff4d024a8a7171e0aa2cb"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/string-width/node_modules/strip-ansi/package.json",
+      "name": "strip-ansi",
+      "version": "7.2.0",
+      "sha256": "228b214dd06ca80ab3c36e2b890a8696a39cea65585f6d61498c922c615e18a0"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/string-width/node_modules/strip-ansi/node_modules/ansi-regex/package.json",
+      "name": "ansi-regex",
+      "version": "6.6.0",
+      "sha256": "4bd0d3504c2a2392b948335daf9f0c714eba7ddb114de5d2b86df2010d670cbe"
+    },
+    {
+      "path": "react-cosmos/node_modules/yargs/node_modules/yargs-parser/package.json",
+      "name": "yargs-parser",
+      "version": "22.0.0",
+      "sha256": "9c78a4d2d78a3d1b9f5cbd9f99b8d695b02e2d8f06cc22667cf798c8c11c8204"
+    },
+    {
+      "path": "react-cosmos-core/package.json",
+      "name": "react-cosmos-core",
+      "version": "7.4.0",
+      "sha256": "664ebfdc528fada7554fa0adc8b4b0425144a79d4c8f2444483aa11d47e81fdd"
+    },
+    {
+      "path": "react-cosmos-dom/package.json",
+      "name": "react-cosmos-dom",
+      "version": "7.4.0",
+      "sha256": "cc66f3ff859e514c59818569f6d9f74defcd01a57dfe3783e02682f28d8db447"
+    },
+    {
+      "path": "react-cosmos-plugin-vite/package.json",
+      "name": "react-cosmos-plugin-vite",
+      "version": "7.4.0",
+      "sha256": "abc7764cfe4335e919120ab9754fd92c5c1b3691a4050d9832649f2b58b1c327"
+    },
+    {
+      "path": "react-cosmos-renderer/package.json",
+      "name": "react-cosmos-renderer",
+      "version": "7.4.0",
+      "sha256": "15f7c7a56059141673c53d993977e3bb8386f8059a97ad0c8e4e69422f800938"
+    },
+    {
+      "path": "react-cosmos-ui/package.json",
+      "name": "react-cosmos-ui",
+      "version": "7.4.0",
+      "sha256": "adf5afda689f0a35f6c6e9ff443076e4de5c4c67f91cea17b019903308d08916"
+    },
+    {
+      "path": "react-dom/package.json",
+      "name": "react-dom",
+      "version": "19.3.1",
+      "sha256": "89d54f11575c9b0f7819962d9d72a31970dfb4d103f07e8b1d1b37e6d1fc3258"
+    },
+    {
+      "path": "react-router/package.json",
+      "name": "react-router",
+      "version": "6.30.6",
+      "sha256": "393437d196e182fdd0f2cf9b12079ba9d4a2ad6e98bb5eec1782ac781e0c9293"
+    },
+    {
+      "path": "react-router-dom/package.json",
+      "name": "react-router-dom",
+      "version": "6.30.6",
+      "sha256": "ba5ba28ce64a1d51001cb3eb0fc842d35f9950ee550d8c587a6b6ce9ee6057a2"
+    },
+    {
+      "path": "react-supergrid/package.json",
+      "name": "react-supergrid",
+      "version": "1.0.10",
+      "sha256": "5dbfb3696b9f2d92875da314b4d73a17e5ca2a3ba52a66724cbe5c28d80d172f"
+    },
+    {
+      "path": "readable-stream/package.json",
+      "name": "readable-stream",
+      "version": "3.6.2",
+      "sha256": "469ea81f64037d1f179bcd46412217903a2924dd2e7d7d9b728659b6f12c3e69"
+    },
+    {
+      "path": "readdirp/package.json",
+      "name": "readdirp",
+      "version": "5.1.1",
+      "sha256": "e4243493fb09c5a7b68b2128892b6e2fa3bbc1422030a2a777975fba3a1784f6"
+    },
+    {
+      "path": "rename-keys/package.json",
+      "name": "rename-keys",
+      "version": "1.2.0",
+      "sha256": "9752af2d022e31d3664a5fd056dc85630b1445bd0c50f1d58c875841c9bcce87"
+    },
+    {
+      "path": "require-directory/package.json",
+      "name": "require-directory",
+      "version": "2.1.1",
+      "sha256": "5690bdddd6eb4abd795fa5319df7552279508df9d562d571e3132ddff3045a71"
+    },
+    {
+      "path": "requires-port/package.json",
+      "name": "requires-port",
+      "version": "1.0.0",
+      "sha256": "537ddc6900b1f1996989cc61a3e170d918bed0ab5cc77a49245bcc59361e8f47"
+    },
+    {
+      "path": "resolve-from/package.json",
+      "name": "resolve-from",
+      "version": "5.0.0",
+      "sha256": "ac3644d363967676dba47bbf65d61b6145463632fcf60617926d484102ff5805"
+    },
+    {
+      "path": "rollup/package.json",
+      "name": "rollup",
+      "version": "4.68.7",
+      "sha256": "81aaad3b5b1ea9d0193642d54b8524ccdb22e2286bc70095c273707175054a70"
+    },
+    {
+      "path": "router/package.json",
+      "name": "router",
+      "version": "2.3.0",
+      "sha256": "9ae4391f679387555d0f6b95fec1572d48a847d70b338081720ecc43353ac4ed"
+    },
+    {
+      "path": "run-applescript/package.json",
+      "name": "run-applescript",
+      "version": "7.1.0",
+      "sha256": "6b82907e9fcc0cdb36c40abdc2a9ca0dcd51a8799a668ecff05a0bcd37e0d8be"
+    },
+    {
+      "path": "safe-buffer/package.json",
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "sha256": "e4018fdbfe625433371f48274fee26f520bbe865e0d8c85bf3aa07424134b90c"
+    },
+    {
+      "path": "safer-buffer/package.json",
+      "name": "safer-buffer",
+      "version": "2.1.2",
+      "sha256": "4247a3a63c45a6a7ced1557fe4dd9d2a163af4915d594b95e5867b69a53edb52"
+    },
+    {
+      "path": "scheduler/package.json",
+      "name": "scheduler",
+      "version": "0.28.0",
+      "sha256": "06290718f22bcd93f29eaa1ac8d2ec9a7592ba4fec12bf1230e7cdd9a871b324"
+    },
+    {
+      "path": "schematic-symbols/package.json",
+      "name": "schematic-symbols",
+      "version": "0.0.248",
+      "sha256": "831659868dc06d72d537dcd4a2891496cf7112b0741bb9436a4c35db0cb52ed2"
+    },
+    {
+      "path": "semver/package.json",
+      "name": "semver",
+      "version": "7.8.6",
+      "sha256": "0a3f93689bb0be4e2fcdabc585da62ae24695f1abefc6974d68968c8918af381"
+    },
+    {
+      "path": "send/package.json",
+      "name": "send",
+      "version": "1.2.1",
+      "sha256": "303cfb195f13651e5174c23310e6a71e319b4bf85f9afe9e16b16567cbab02f8"
+    },
+    {
+      "path": "serve-static/package.json",
+      "name": "serve-static",
+      "version": "2.2.1",
+      "sha256": "4f2884fa761dee155f31cb960d792c2900dbaa6aecbe6ebcc3bcfd7e754706b8"
+    },
+    {
+      "path": "setprototypeof/package.json",
+      "name": "setprototypeof",
+      "version": "1.2.0",
+      "sha256": "5b39ddf23d2c12a751cb4af2ce12dd5c87314350be7526fff69b4a3ff2a2d538"
+    },
+    {
+      "path": "sharp/package.json",
+      "name": "sharp",
+      "version": "0.32.6",
+      "sha256": "610d9cf008aa9d52925965ec2bf3fcf6870953062becea022212dbf3824eb59b"
+    },
+    {
+      "path": "sharp/node_modules/color/package.json",
+      "name": "color",
+      "version": "4.2.3",
+      "sha256": "d53949e5e17ef2fb51ba0a6221c5e71c9feae36854d6c81e8a35863f7407fd02"
+    },
+    {
+      "path": "sharp/node_modules/color/node_modules/color-convert/package.json",
+      "name": "color-convert",
+      "version": "2.0.1",
+      "sha256": "9471d21744ca3137410448da6b3bd7b30ee91d42edce3b82ebcbf84faef74fb4"
+    },
+    {
+      "path": "sharp/node_modules/color/node_modules/color-convert/node_modules/color-name/package.json",
+      "name": "color-name",
+      "version": "1.1.4",
+      "sha256": "4a557ea373907e4643badb89ff21b3f4b969d20631086d78eab2e03d05c2efa4"
+    },
+    {
+      "path": "sharp/node_modules/color/node_modules/color-string/package.json",
+      "name": "color-string",
+      "version": "1.9.1",
+      "sha256": "30fb162f7493291dd29ced85001979f2e99fd68fbcf59ad55300a657d8352bd0"
+    },
+    {
+      "path": "sharp/node_modules/color/node_modules/color-string/node_modules/color-name/package.json",
+      "name": "color-name",
+      "version": "1.1.4",
+      "sha256": "4a557ea373907e4643badb89ff21b3f4b969d20631086d78eab2e03d05c2efa4"
+    },
+    {
+      "path": "shell-quote/package.json",
+      "name": "shell-quote",
+      "version": "1.12.0",
+      "sha256": "fef9e75a4b1b4e3ee6e7b500c30b626d629e27d21c4c3c4ab270b500f64ce993"
+    },
+    {
+      "path": "side-channel/package.json",
+      "name": "side-channel",
+      "version": "1.1.1",
+      "sha256": "14da3b013c3762da85cfd8b173290285394dfa41870bc4a1e8243aaa38316f2a"
+    },
+    {
+      "path": "side-channel-list/package.json",
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "sha256": "90f0c08c6c17f4a3fa3dd61873223957b89da4201f01dc0c8b95b0b9e6a2a59a"
+    },
+    {
+      "path": "side-channel-map/package.json",
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "sha256": "914a8bd732b82523d95bb697eec3e6d95badc5eb13b196fb0772e59354a3ab25"
+    },
+    {
+      "path": "side-channel-weakmap/package.json",
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "sha256": "8c11f0a1c6cfa549588d991a5cb1b04d62953277ed29f47463d415d5946388a8"
+    },
+    {
+      "path": "simple-concat/package.json",
+      "name": "simple-concat",
+      "version": "1.0.1",
+      "sha256": "d6ae2e35a0c64b4469f1e531a3244efd50be7c115ef42d1422e54d14d9359e99"
+    },
+    {
+      "path": "simple-get/package.json",
+      "name": "simple-get",
+      "version": "4.0.1",
+      "sha256": "8337ba9774d6d8199a5861c6dfa57058f162bfb6210362c01db38f0a593f96d6"
+    },
+    {
+      "path": "simple-swizzle/package.json",
+      "name": "simple-swizzle",
+      "version": "0.2.4",
+      "sha256": "87babf04f1bf696590824ef618468bada3631b38dacd032c82fdcf0cd72b6203"
+    },
+    {
+      "path": "source-map/package.json",
+      "name": "source-map",
+      "version": "0.7.6",
+      "sha256": "9be309364953f1d7cdd525bc3c24381717930ee7480aead3ddc972d81c6b7c42"
+    },
+    {
+      "path": "source-map-js/package.json",
+      "name": "source-map-js",
+      "version": "1.2.3",
+      "sha256": "b66b7104d8c5350cc1c8ffe08b8a45adb29cd81c7ef284bd32f96d6051afbcbf"
+    },
+    {
+      "path": "stack-svgs/package.json",
+      "name": "stack-svgs",
+      "version": "0.0.1",
+      "sha256": "62fd2526aac3d92318abea3e1af4c0a6505d2ad2aba9d7fc025a10ef7f91a76d"
+    },
+    {
+      "path": "statuses/package.json",
+      "name": "statuses",
+      "version": "2.0.2",
+      "sha256": "dc2508da5568ba768d94b73126cd20a5df934bc0c651ad681022236484ca156c"
+    },
+    {
+      "path": "streamx/package.json",
+      "name": "streamx",
+      "version": "2.28.1",
+      "sha256": "59851cb46943a4eb8ac8bce1c30bff55aad5a178ab5619be1ad625c97c4e0172"
+    },
+    {
+      "path": "string-width/package.json",
+      "name": "string-width",
+      "version": "4.2.3",
+      "sha256": "6457a02418f004fe5d3fbbb19c7cbcc1450a8b887ff9a471dc6985ac83a48d36"
+    },
+    {
+      "path": "string_decoder/package.json",
+      "name": "string_decoder",
+      "version": "1.3.0",
+      "sha256": "31984c85cd4f3df0aa75075acdec98c25961496897d1f46d04ed4a701f129c54"
+    },
+    {
+      "path": "strip-ansi/package.json",
+      "name": "strip-ansi",
+      "version": "6.0.1",
+      "sha256": "0130850b9da0584f54cc20d3dab6365c807e9436ac78e016d5009efa99bd0530"
+    },
+    {
+      "path": "strip-json-comments/package.json",
+      "name": "strip-json-comments",
+      "version": "2.0.1",
+      "sha256": "52fba89a1d2724dfeafa21ec58f8c4a8a210103cc6b65b4468ab3fb973ad1753"
+    },
+    {
+      "path": "sucrase/package.json",
+      "name": "sucrase",
+      "version": "3.35.1",
+      "sha256": "fcd6ddc34b3ea43a430640676707fa49be9d4864805c8362f83c9a3b1700c986"
+    },
+    {
+      "path": "svg-path-commander/package.json",
+      "name": "svg-path-commander",
+      "version": "2.3.5",
+      "sha256": "aea9f70d1425d96f17e3b5cee84c0413ecb1ae6a5142b2920bb686a6de26904f"
+    },
+    {
+      "path": "svgson/package.json",
+      "name": "svgson",
+      "version": "5.3.1",
+      "sha256": "61b8ef101b387b6ea815435cb0ca6ac7aef07a8b0b55c2a1e352e819e98b4202"
+    },
+    {
+      "path": "tar-fs/package.json",
+      "name": "tar-fs",
+      "version": "3.1.3",
+      "sha256": "29745b5c0605d659405c2d4f2efcde4fb8845139464a4d6a489c3ebb36271443"
+    },
+    {
+      "path": "tar-stream/package.json",
+      "name": "tar-stream",
+      "version": "3.2.2",
+      "sha256": "3a3449df0cb466c4b45481691ed385d07c7c1d616bafaa7c8cf71f8bd9203045"
+    },
+    {
+      "path": "teex/package.json",
+      "name": "teex",
+      "version": "1.0.1",
+      "sha256": "b37a78b9a1e3339c1267a738131066b71125866823df6cc704fdb5fbaa923337"
+    },
+    {
+      "path": "text-decoder/package.json",
+      "name": "text-decoder",
+      "version": "1.2.7",
+      "sha256": "a5ceb9918cdaad08ce57e7dcd9424525b6923b785b4167ecf04a62b9fa308155"
+    },
+    {
+      "path": "thenify/package.json",
+      "name": "thenify",
+      "version": "3.3.1",
+      "sha256": "3097b540621a555dd76ca0416492a4b98f465d3519228e3de2ecfa42a37da4dd"
+    },
+    {
+      "path": "thenify-all/package.json",
+      "name": "thenify-all",
+      "version": "1.6.0",
+      "sha256": "42f8e4698f4d61a17b9e10dd592b30654a53925a3f46eebced27f4e58e29cac9"
+    },
+    {
+      "path": "tinyexec/package.json",
+      "name": "tinyexec",
+      "version": "0.3.2",
+      "sha256": "37b9e1a7b215d99d4696da75b08818204c8b382387db8591fb7ae8d5d7b1be78"
+    },
+    {
+      "path": "tinyglobby/package.json",
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "sha256": "bd2b2af3c9ba0580f1acfb22c55d0b6d29abf683af5cac8a2efe82fa7c943f23"
+    },
+    {
+      "path": "to-regex-range/package.json",
+      "name": "to-regex-range",
+      "version": "5.0.1",
+      "sha256": "766fc1bb34fffcd503c89f4194188ce059795c52fd0dc6753cd4b7dcfc3fe1ec"
+    },
+    {
+      "path": "toidentifier/package.json",
+      "name": "toidentifier",
+      "version": "1.0.1",
+      "sha256": "f34c59f784d43da6e633390d85d14ca60539b4676159444f313c62fcfc3b68dc"
+    },
+    {
+      "path": "transformation-matrix/package.json",
+      "name": "transformation-matrix",
+      "version": "3.1.0",
+      "sha256": "7548565a728472f003a0ce2d0ba681e07eb038d7cbeb4da40e715c8c80ef263a"
+    },
+    {
+      "path": "tree-kill/package.json",
+      "name": "tree-kill",
+      "version": "1.2.2",
+      "sha256": "085e475aa81fe90a8e42d92c7348f259e370e0fc74b5d1982c6e80fc21c1f12d"
+    },
+    {
+      "path": "ts-interface-checker/package.json",
+      "name": "ts-interface-checker",
+      "version": "0.1.13",
+      "sha256": "08d9b9d3f3b7f0f252df45dbef7017d854eae637cb87be2c6855099b2b0d8190"
+    },
+    {
+      "path": "tslib/package.json",
+      "name": "tslib",
+      "version": "2.9.1",
+      "sha256": "7e9ccc6977540dd94f86f98d0ab9ac405cd3507ac5a2c34752498b250718366b"
+    },
+    {
+      "path": "tsup/package.json",
+      "name": "tsup",
+      "version": "8.5.1",
+      "sha256": "420725303bff2abcaa95fa33d68b8f11cb974b640c8c0bae8c15863ed5125ec4"
+    },
+    {
+      "path": "tsup/node_modules/chokidar/package.json",
+      "name": "chokidar",
+      "version": "4.0.3",
+      "sha256": "4764fed21a281c69d98e06b4c3e7c22a8936069ed2d320330d9831d8a8bddd5a"
+    },
+    {
+      "path": "tsup/node_modules/chokidar/node_modules/readdirp/package.json",
+      "name": "readdirp",
+      "version": "4.1.2",
+      "sha256": "9869f6d7ed7a299100bf6f87263f442092bba77c2ef55d8d8f418fd634cf9aac"
+    },
+    {
+      "path": "tunnel-agent/package.json",
+      "name": "tunnel-agent",
+      "version": "0.6.0",
+      "sha256": "08a8560b650b49370af44148a8645c11675ba97d21ee7f347d8d434b13c51074"
+    },
+    {
+      "path": "type-is/package.json",
+      "name": "type-is",
+      "version": "2.1.0",
+      "sha256": "87b5f716ec743cdf6d610487698c8558a608b6e0adac522e1a4315b94b081694"
+    },
+    {
+      "path": "type-is/node_modules/content-type/package.json",
+      "name": "content-type",
+      "version": "2.1.0",
+      "sha256": "33102772db7c8375395bdcc11e7004c597b4cdbe457d8dd0ae2e56f5a2d28637"
+    },
+    {
+      "path": "typescript/package.json",
+      "name": "typescript",
+      "version": "5.9.3",
+      "sha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6"
+    },
+    {
+      "path": "ufo/package.json",
+      "name": "ufo",
+      "version": "1.6.4",
+      "sha256": "4ef029b2bde70c3007f3520d3d4ba14b754e4e8c4defa8d58a8e53434ebdf028"
+    },
+    {
+      "path": "undici-types/package.json",
+      "name": "undici-types",
+      "version": "8.12.4",
+      "sha256": "a67f3f5c29f285cb17631409878fb994bc2d712ed65427303bb4112d9baf7495"
+    },
+    {
+      "path": "universalify/package.json",
+      "name": "universalify",
+      "version": "0.1.2",
+      "sha256": "337f8f6023a515e5736486d37a7e29f955fea1c69bcafdc565a2bdd08f6a869e"
+    },
+    {
+      "path": "unpipe/package.json",
+      "name": "unpipe",
+      "version": "1.0.0",
+      "sha256": "28b717f978d2a4fc72cd08236931443b63fe6586102df3d1967e2b21ea8c5e11"
+    },
+    {
+      "path": "use-mouse-matrix-transform/package.json",
+      "name": "use-mouse-matrix-transform",
+      "version": "1.3.5",
+      "sha256": "a98b5bf52ffe66e306c8efd27158d03d17516a9dc93ca2ee8dd6ade8487937d8"
+    },
+    {
+      "path": "util-deprecate/package.json",
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "sha256": "7bba467f049074957e693fc06672848b040c38fa071b6eed8690f5fbe090a8b2"
+    },
+    {
+      "path": "vary/package.json",
+      "name": "vary",
+      "version": "1.1.2",
+      "sha256": "73edaee964d527117a9f69d6360fbe6cec534abd9127794be01a6af58a139daa"
+    },
+    {
+      "path": "vite/package.json",
+      "name": "vite",
+      "version": "7.3.8",
+      "sha256": "4e87f89a19661c197033a55e54dc94790b5a3e28bcc9d2c9ee374ee54eec8dc2"
+    },
+    {
+      "path": "which/package.json",
+      "name": "which",
+      "version": "2.0.2",
+      "sha256": "43010039ed5e89f7186960be682b3cb5cda5ab6cdfb06cbfd4f081cf0e7b4260"
+    },
+    {
+      "path": "wrap-ansi/package.json",
+      "name": "wrap-ansi",
+      "version": "7.0.0",
+      "sha256": "0b0cf0bf62bd0cc71da2128e3269e63edd566feffdd501aa3692acd6db93c3c9"
+    },
+    {
+      "path": "wrappy/package.json",
+      "name": "wrappy",
+      "version": "1.0.2",
+      "sha256": "712ac9c4c3cef8bc79f42cf6075ff18551f4cb768f35158214fd643853ad7abc"
+    },
+    {
+      "path": "ws/package.json",
+      "name": "ws",
+      "version": "8.21.3",
+      "sha256": "a56a3fd55945a3ce177e3ca165dafae6f7eb03b7aefd58c092ac723d5741a6fb"
+    },
+    {
+      "path": "wsl-utils/package.json",
+      "name": "wsl-utils",
+      "version": "0.3.1",
+      "sha256": "b57b9c7f5000a9a9dfbb68ee4447e0f8145355747e490468143e42e0a18c961e"
+    },
+    {
+      "path": "xml-lexer/package.json",
+      "name": "xml-lexer",
+      "version": "0.2.2",
+      "sha256": "5324d7b64720e6307f6f4ecc4139d9e19f77778b037593ee4adc65808d052b34"
+    },
+    {
+      "path": "xml-reader/package.json",
+      "name": "xml-reader",
+      "version": "2.4.3",
+      "sha256": "7d72a2f836f5d8878f577788ba4eb909568a9b984ab028fa873334ab0525ffd5"
+    },
+    {
+      "path": "y18n/package.json",
+      "name": "y18n",
+      "version": "5.0.8",
+      "sha256": "f65855d14daaf57947e398e132caa246f93bbf045ff3f8f9627114714729ad29"
+    },
+    {
+      "path": "yalps/package.json",
+      "name": "yalps",
+      "version": "0.6.4",
+      "sha256": "908e43065c989cc5e1a18da5b1117465aab58772d2d2da65b6db4266e3fcb8f8"
+    },
+    {
+      "path": "yargs/package.json",
+      "name": "yargs",
+      "version": "17.7.3",
+      "sha256": "357c9c2e7725d86a137de13fa68441f88a750b5083313cc1482a7969bcb81584"
+    },
+    {
+      "path": "yargs-parser/package.json",
+      "name": "yargs-parser",
+      "version": "21.1.1",
+      "sha256": "b6ee1fa4e1881d6f5388a3a52e34c2499a4c01d81615b69f08f12ca35289880b"
+    },
+    {
+      "path": "zod/package.json",
+      "name": "zod",
+      "version": "3.25.76",
+      "sha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e"
+    }
+  ]
+}

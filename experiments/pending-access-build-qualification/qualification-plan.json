@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 2,
+  "repository": "tscircuit/bus-lanes-solver",
+  "upstreamCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+  "bunVersion": "1.3.2",
+  "nodeMajor": 22,
+  "runner": "ubuntu-latest",
+  "stages": [
+    {
+      "name": "format",
+      "command": [
+        "node_modules/.bin/biome",
+        "format"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "timeoutSeconds": 900
+    },
+    {
+      "name": "package",
+      "command": [
+        "bun",
+        "run",
+        "test:package"
+      ],
+      "timeoutSeconds": 1200
+    }
+  ],
+  "source": {
+    "base": {
+      "commit": "202b034659fb96bad44d11b8190f4044b675116f",
+      "tree": "8a3bffe5ae40bf4af45bed8f591d18bf34c2d712",
+      "libTree": "1f4182a7661dc7740756705301ca7d54bc5b6ca2",
+      "patch": "base.patch.gz",
+      "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressedPatchSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "patchBytes": 0,
+      "compressedPatchBytes": 20
+    },
+    "head": {
+      "commit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9",
+      "tree": "c0618fbb1b4f74f4c29b7f9d39a3e38afe5a7d7a",
+      "libTree": "9d184f5ab67c296fb7f429f06576c3d8c6474c31",
+      "patch": "head.patch.gz",
+      "patchSha256": "1d9966946ee41f2690a47b23bf173a1ac941bf43a3581038d4b6915f853c495c",
+      "compressedPatchSha256": "2f5cc1cf77ef6e0631601208141d24702fb5b5a8b1f4a29ccf90896d34a449d9",
+      "patchBytes": 35116,
+      "compressedPatchBytes": 8895
+    }
+  },
+  "routingBenchmarksEnabled": false,
+  "dependencyPolicy": "Reuse the authenticated frozen lock and declared package from successful run44400989150 (lock originally resolved in44383532139). Fresh cache, frozen install only, no dependency re-resolution. Require prior installed package metadata, report historical full-file fingerprint equality separately, and share one unchanged node_modules tree between clean202b and pending-access head520dd0fb. No inherited local dependencies or source overrides.",
+  "packageSha256": "20445e0a1416e641b6e7bcddf7d13eb198756bb19e1b6e1df1d9110382fd7d35",
+  "declaredPackage": {
+    "name": "@tscircuit/bus-lanes-solver",
+    "version": "0.0.62",
+    "type": "module",
+    "module": "dist/index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+      "dist"
+    ],
+    "scripts": {
+      "test": "bun test",
+      "typecheck": "tsc --noEmit",
+      "format": "biome format --write .",
+      "format:check": "biome format .",
+      "start": "cosmos",
+      "build:site": "cosmos-export",
+      "build": "tsup && dts-bundle-generator --config dts-bundle.config.json",
+      "test:package": "bun run build && bun scripts/check-package.ts",
+      "benchmark:shared-pairs": "bun scripts/benchmark-am3352-shared-pairs.ts"
+    },
+    "devDependencies": {
+      "@biomejs/biome": "2.5.15",
+      "@flatten-js/core": "1.6.2",
+      "@tscircuit/alphabet": "0.0.25",
+      "@tscircuit/am3352-fanout-generator": "github:tscircuit/fanout-solver#e202cef0a97f59bb9a72357e8eeb5e9f1349529e",
+      "@tscircuit/checks": "0.0.264",
+      "@tscircuit/circuit-json-util": "0.0.119",
+      "@tscircuit/fanout-solver": "github:tscircuit/fanout-solver#1c726cc7cfdd2ce0c93b928a133b918d301dcdf4",
+      "@tscircuit/math-utils": "^0.0.38",
+      "@tscircuit/solver-utils": "^0.0.21",
+      "@types/bun": "latest",
+      "@types/react": "^19",
+      "@types/react-dom": "^19",
+      "bun-match-svg": "0.0.17",
+      "circuit-json": "0.0.538",
+      "circuit-json-to-connectivity-map": "^0.0.30",
+      "circuit-to-svg": "0.0.453",
+      "dts-bundle-generator": "^9.5.1",
+      "format-si-unit": "^0.0.14",
+      "graphics-debug": "^0.0.95",
+      "react": "^19",
+      "react-cosmos": "^7.0.0",
+      "react-cosmos-plugin-vite": "^7.0.0",
+      "react-dom": "^19",
+      "schematic-symbols": "0.0.248",
+      "transformation-matrix": "^3.1.0",
+      "tsup": "^8.5.0",
+      "typescript": "5.9.3",
+      "vite": "^7.3.0",
+      "yalps": "0.6.4"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/tscircuit/bus-lanes-solver.git"
+    },
+    "publishConfig": {
+      "registry": "https://npm.pkg.github.com"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "overrides": {
+      "typescript": "5.9.3"
+    }
+  },
+  "unchangedBuildContracts": {
+    "package.json": "20445e0a1416e641b6e7bcddf7d13eb198756bb19e1b6e1df1d9110382fd7d35",
+    "bunfig.toml": "64a8ce5ffa24407b70511ad48e0beea97b671074a2cdf908e049dfa981c07462",
+    "tsconfig.json": "dffe0485e0cc6dc125a60b2df0411733c28258cdf062caa7ee46e768603b57fb",
+    "tsconfig.build.json": "21f36897fa31d6f917e6e43c1c265deb4c2542529effad7c7d1d3aa77e82782f",
+    "tsup.config.ts": "887dd446923c20423c77bc98bbf65de2165698990cd2d8da5b8b4ea6a59a3a1a",
+    "dts-bundle.config.json": "2a0ccc282950be8626d7f1f463bf5123233f4afee36572ea61eff37b4f4117dc",
+    "scripts/check-package.ts": "c3ada33321078d69746a245bb38cf35abdf35b7006af544efc438deabea1ba3f",
+    "biome.json": "3bd4cf2a1f416a63701a1776aa77c1e8c64aa54161a80e41db3c866e5d6f05f1"
+  },
+  "experiment": "pending-access-clean-source-build",
+  "nodeVersion": "22.23.4",
+  "branch": "bench/pending-access-build-3236-20261118",
+  "workflow": ".github/workflows/pending-access-build-qualification.yml",
+  "changedSourceFiles": {
+    "lib/bus-lanes-solver.ts": {
+      "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
+      "afterSha256": "746a06de86e0bc172512bb60074ae0e13a16db9a7feeaf2b909c15f85cad2a78"
+    },
+    "lib/negotiate-lanes.ts": {
+      "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
+      "afterSha256": "e88031fea901892c5f444cdccf044724fef69edc383109f13f874f30389194d5"
+    },
+    "lib/negotiate-signal-sites.ts": {
+      "beforeSha256": "20af04956eb4f9b9c7d46c8c33ef83cc42bc09957044a92b1d204794009e321e",
+      "afterSha256": "fd25c665e3cae28a3e811ac45b056de1cd1adeb20a01c153e6ade4cc7641319b"
+    },
+    "lib/pending-lane-certificates.ts": {
+      "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
+      "afterSha256": "31eae1f1d682decf97b49b4f305943ac917eb80cd1e5ec42a2a3324ec6f51ef3"
+    },
+    "lib/repair-bus-dogbones.ts": {
+      "beforeSha256": "702700d47fa5e30f03fa1331fff3cb557536f65d99dd3361c41ccdcd17c5d391",
+      "afterSha256": "a53d4e65fe8c4c8de0aac7fbb31b4b7245c88bc89288dc475d302a7fbe4b7444"
+    },
+    "lib/route-backward-package-buses.ts": {
+      "beforeSha256": "147e55b75bd9e4497236dffb7741c80fd0802dbc20441e35463a39a025a5776b",
+      "afterSha256": "80e1045f694110ffcce60a80248717f66ab4ffe0178a67ab49ba492dbc002725"
+    },
+    "lib/route-fresh-shared-buses.ts": {
+      "beforeSha256": "d82a1ffa6ca999565e4ef8a996ef8eeacc3fb5cd1b854ede4bf7365982d61eba",
+      "afterSha256": "762ce8a2e6107bca9e93359412cf62bafff057f925369dded088e3ff6f1ccda0"
+    },
+    "lib/route-generated-signal-sites.ts": {
+      "beforeSha256": "438d7c85d7e5c8ae8df9f0a1ff58e54eef918fd3ccb6e9a8ec310eed4824b69e",
+      "afterSha256": "6a01fe239bea290d68eef56117b39ccf4f8601209e7d0b1e5fd46d218db98810"
+    },
+    "lib/route-independent-buses.ts": {
+      "beforeSha256": "ed31bf665e4674773ecb80d94523cb1981577c9036ad3f297abbe3af0afb1f6e",
+      "afterSha256": "42af973d618d71509a494fb92817aef94a3b4a2181bca29e5d06451b27664893"
+    },
+    "lib/route-paired-network.ts": {
+      "beforeSha256": "7ecf50d6da7dcbf71ebd07fc221a278c3c1500ec45711efbc7f61296c02525c8",
+      "afterSha256": "9d7faf77352ee4fdfe1fb7e946b077e9a4920c8bdd943e4fcf11f78ee70391b3"
+    },
+    "lib/route-shared-layer-buses.ts": {
+      "beforeSha256": "3f8d4a49e9fbfcb0a56992d4bf41efece200d511e911f105fdd1ab192477baa7",
+      "afterSha256": "6f5f632e2a26366b3fb894a0694e747f2202e5ebe83d2ad3e769894298719fe2"
+    },
+    "tests/search-abandonment.test.ts": {
+      "beforeSha256": "72481362c942665e6d4db92982761c274fb6c6587555de323164e45299d39af4",
+      "afterSha256": "d71ed0820b3a5ccf1e5f9ed42a4187caed4c9a062bc5f9dd5d200cbf1f5f4c68"
+    }
+  },
+  "frozenDependencies": {
+    "sourceRunId": 44400989150,
+    "sourceControllerCommit": "7210659a6551a5148fd31d9b61287ec2c80aafe2",
+    "sourceArtifactId": 14472481240,
+    "sourceArtifactSha256": "5e2c26857106e5f4ac67746b4d5c3bebb2c2561293f501f529515abd612aac00",
+    "lockResolutionRunId": 44383532139,
+    "lockFile": "frozen.bun.lock",
+    "lockSha256": "dd20183f1c5d9752a89a57abf585e4d38c9eb57ad15d2a5fb0880d42a3d0d0bc",
+    "referenceFile": "dependency-files-reference.json",
+    "referenceFileSha256": "42c235d8ef211cf542ef616b1bc2ecca57ac044f496177d4ef2f613c8d96f947",
+    "expectedInstalledFingerprint": {
+      "sha256": "2218aecaac16863102f6cfdd819cba05eee1302768b727ed6a42f5f7d2bc233e",
+      "entries": 11167,
+      "regularFileBytes": 646618148
+    }
+  },
+  "scope": "Read-only formatting of explicit changed files, complete-tree TypeScript (lib/pages/tests/vite config), ESM and DTS build/validation, and isolated public Node/browser/TypeScript consumers. No routing, no new tests, no source edits, and no branch-via or expanded-site-bounds production changes. Native benefit remains unqualified.",
+  "frozenControllerFiles": {
+    ".github/workflows/pending-access-build-qualification.yml": "5fc2eeb490ea2cb35525b713229c4ebf86d4b01f3d6abeef38eb9ff607869b09",
+    "experiments/pending-access-build-qualification/base.patch.gz": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+    "experiments/pending-access-build-qualification/dependency-files-reference.json": "42c235d8ef211cf542ef616b1bc2ecca57ac044f496177d4ef2f613c8d96f947",
+    "experiments/pending-access-build-qualification/frozen.bun.lock": "dd20183f1c5d9752a89a57abf585e4d38c9eb57ad15d2a5fb0880d42a3d0d0bc",
+    "experiments/pending-access-build-qualification/head.patch.gz": "2f5cc1cf77ef6e0631601208141d24702fb5b5a8b1f4a29ccf90896d34a449d9",
+    "experiments/pending-access-build-qualification/run-qualification.py": "717f0d912ee7dfe99e93c770405e8ce4e4c7fb7e8dd50a0cf82364dd3eff8597"
+  },
+  "formatFilesByLane": {
+    "base": [
+      "lib/bus-lanes-solver.ts",
+      "lib/negotiate-lanes.ts",
+      "lib/negotiate-signal-sites.ts",
+      "lib/pending-lane-certificates.ts",
+      "lib/repair-bus-dogbones.ts",
+      "lib/route-backward-package-buses.ts",
+      "lib/route-fresh-shared-buses.ts",
+      "lib/route-generated-signal-sites.ts",
+      "lib/route-independent-buses.ts",
+      "lib/route-paired-network.ts",
+      "lib/route-shared-layer-buses.ts",
+      "tests/search-abandonment.test.ts"
+    ],
+    "head": [
+      "lib/bus-lanes-solver.ts",
+      "lib/negotiate-lanes.ts",
+      "lib/negotiate-signal-sites.ts",
+      "lib/pending-lane-certificates.ts",
+      "lib/repair-bus-dogbones.ts",
+      "lib/route-backward-package-buses.ts",
+      "lib/route-fresh-shared-buses.ts",
+      "lib/route-generated-signal-sites.ts",
+      "lib/route-independent-buses.ts",
+      "lib/route-paired-network.ts",
+      "lib/route-shared-layer-buses.ts",
+      "tests/search-abandonment.test.ts"
+    ]
+  },
+  "productionRevision": {
+    "commit": "c21b01539c5ff83cf9b0831bdc195f47bb9de2a5",
+    "libTree": "9d184f5ab67c296fb7f429f06576c3d8c6474c31",
+    "patchSha256": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
+    "changedFiles": [
+      "lib/bus-lanes-solver.ts",
+      "lib/negotiate-lanes.ts",
+      "lib/negotiate-signal-sites.ts",
+      "lib/pending-lane-certificates.ts",
+      "lib/repair-bus-dogbones.ts",
+      "lib/route-backward-package-buses.ts",
+      "lib/route-fresh-shared-buses.ts",
+      "lib/route-generated-signal-sites.ts",
+      "lib/route-independent-buses.ts",
+      "lib/route-paired-network.ts",
+      "lib/route-shared-layer-buses.ts"
+    ],
+    "testCompatibilityCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9",
+    "testCompatibilityPatchSha256": "6aa6b1651521f556a53042b3e19822a8e110f28d0eb95f313ed30498667361bc",
+    "testCompatibilityFiles": [
+      "tests/search-abandonment.test.ts"
+    ],
+    "runtimeTreeUnchangedByTestMigration": true
+  }
+}
