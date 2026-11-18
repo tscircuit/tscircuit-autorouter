@@ -172,9 +172,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length
     const rootConnectionName = this.rootConnectionName ?? this.connectionName
     let padObstacles = opts.padObstacles ?? []
-    // Multi-route regions apply pad checks in their candidate cleanup.
-    // This context constrains the shortcut and the search replacing it.
-    if (this.numRoutes > 0) padObstacles = []
     this.padObstacles = padObstacles.filter((obstacle): boolean => {
       if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
       if (
@@ -276,13 +273,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ): boolean {
     let copperRadius = this.traceThickness / 2
     if (isVia) copperRadius = this.viaDiameter / 2
+    const requiredDistance = copperRadius + this.obstacleMargin
     for (const obstacle of this.padObstacles) {
       if (!isVia && !obstacle.__zLayers.includes(segment.start.z)) continue
       const distanceToObstacle = getSegmentToObstacleDistance({
         ...segment,
         obstacle,
       })
-      if (distanceToObstacle < copperRadius - 1e-6) return true
+      if (distanceToObstacle < requiredDistance - 1e-6) return true
     }
     return false
   }
@@ -492,7 +490,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (
-      this.numRoutes === 0 &&
       this.doesSegmentIntersectPad({ start: node, end: node }, isVia)
     ) {
       return true
@@ -535,7 +532,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ): boolean {
     const parent = node.parent
     if (
-      this.numRoutes === 0 &&
       this.doesSegmentIntersectPad(
         { start: parent ?? node, end: node },
         parent !== null && parent.z !== node.z,
