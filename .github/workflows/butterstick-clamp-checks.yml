@@ -1,0 +1,64 @@
+name: Check fixed-node clamping against existing routing controls
+on:
+  push:
+    branches: [analysis/butterstick-clamp-checks]
+    paths: [.github/workflows/butterstick-clamp-checks.yml]
+permissions:
+  contents: read
+jobs:
+  upstream:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-repair01
+          ref: 4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Apply the one-line fixed-node constraint
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/HighDensityForceImproveSolver.ts")
+          s=p.read_text();marker="const clampNodeToBounds = (node: MutableNode, bounds: Bounds) => {"
+          assert marker in s
+          p.write_text(s.replace(marker,marker+"\n  if (node.fixed) return"))
+          PY
+          bun test --timeout 600000
+          bunx tsc --noEmit
+  imx6:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install the unchanged integration dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json");m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Check the real i.MX6 board with fixed-node clamping
+        run: |
+          bun -e 'console.log(Bun.resolveSync("high-density-repair01/lib/HighDensityForceImproveSolver",process.cwd()))' > force-path.private.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path(Path("force-path.private.txt").read_text().strip())
+          s=p.read_text();marker="const clampNodeToBounds = (node: MutableNode, bounds: Bounds) => {"
+          assert marker in s
+          tmp=p.with_name(p.name+".private")
+          tmp.write_text(s.replace(marker,marker+"\n  if (node.fixed) return"))
+          tmp.replace(p)
+          PY
+          bun test tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts --timeout 600000
