@@ -1,0 +1,45 @@
+name: Verify focused repair source and collect original DDR output
+on:
+  push:
+    branches: [codex/ddr2410-source-check]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/repair04
+          ref: 1b33fe703438890adc52abbb7a8f18eb6f88ec70
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --ignore-scripts
+      - run: bun run format:check
+      - run: bun run typecheck
+  original-ddr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: refresh2410-*
+          run-id: 44260589530
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Export original DDR circuits
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          circuits=[p for p in Path('captured').rglob('circuit.json') if '/ddr/' in str(p)]
+          assert len(circuits)==6,len(circuits)
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in circuits: archive.writestr(path.parent.name+'/circuit.json',path.read_bytes())
+          print('CONNECTIVITY2410_DDR_CIRCUITS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('CONNECTIVITY2410_DDR_CIRCUITS_END')
+          PY
