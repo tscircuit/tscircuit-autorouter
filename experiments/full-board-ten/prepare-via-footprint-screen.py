@@ -8,7 +8,9 @@ import math
 from pathlib import Path
 import sys
 
-input_path, output_name = sys.argv[1:]
+input_path, output_name, *options = sys.argv[1:]
+assert options in [[], ["--proof-only"]]
+proof_only = options == ["--proof-only"]
 output = Path(output_name)
 output.mkdir(parents=True, exist_ok=True)
 raw = gzip.decompress(Path(input_path).read_bytes())
@@ -51,11 +53,13 @@ unchanged = copy.deepcopy(candidate)
 unchanged["obstacles"] = unchanged["obstacles"][:len(original["obstacles"])]
 assert unchanged == original, "Only appending via footprints is permitted"
 candidate_bytes = json.dumps(candidate, separators=(",", ":")).encode()
-(output / "phase-4-input.srj.json.gz").write_bytes(gzip.compress(candidate_bytes, compresslevel=9, mtime=0))
+if not proof_only:
+    (output / "phase-4-input.srj.json.gz").write_bytes(gzip.compress(candidate_bytes, compresslevel=9, mtime=0))
 proof = {
     "scope": "Input-only retained-via topology screen under frozen published1127. Not production code, not a fresh full-board run, and not a completion claim.",
     "originalInputSha256": hashlib.sha256(raw).hexdigest(),
-    "candidateInputSha256": hashlib.sha256(candidate_bytes).hexdigest(),
+    "candidateInputSha256": None if proof_only else hashlib.sha256(candidate_bytes).hexdigest(),
+    "footprintExtractionOnly": proof_only,
     "originalObstacleCount": len(original["obstacles"]),
     "candidateObstacleCount": len(candidate["obstacles"]),
     "addedViaFootprints": footprints,

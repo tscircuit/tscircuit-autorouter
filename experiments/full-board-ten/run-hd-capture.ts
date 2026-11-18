@@ -29,6 +29,8 @@ const inputPath = resolve(flags["--input"]!)
 const outputDirectory = resolve(flags["--output"]!)
 const targetRoot = flags["--root"]!
 const deadlineMs = Number(flags["--deadline-seconds"] ?? "900") * 1000
+assert(flags["--summary-only"] === undefined || flags["--summary-only"] === "true")
+const summaryOnly = flags["--summary-only"] === "true"
 assert(Number.isFinite(deadlineMs) && deadlineMs > 0)
 mkdirSync(outputDirectory, { recursive: true })
 
@@ -96,6 +98,69 @@ const options = {
 const pipeline = new Pipeline(input, options)
 assert.equal(typeof pipeline.step, "function")
 assert.equal(typeof pipeline.stepAsync, "undefined", "Native async stepping needs explicit review")
+
+// Explicit diagnostic candidate: only the topology constructor sees these vias.
+// All native preprocessing, component detection, HD copper and SRJs stay intact.
+let topologyViaProof: RuntimeObject | null = null
+if (flags["--topology-via-footprints"]) {
+  const footprintProof = JSON.parse(readFileSync(resolve(flags["--topology-via-footprints"]!), "utf8"))
+  assert.equal(footprintProof.originalInputSha256, sha(inputBytes))
+  assert.equal(input.layerCount, 4)
+  assert.equal(input.allowBlindAndBuriedVias, false)
+  const footprints = footprintProof.addedViaFootprints.map((obstacle: RuntimeObject) => ({
+    ...obstacle,
+    zLayers: [0, 1, 2, 3],
+    __zLayers: [0, 1, 2, 3],
+  }))
+  const matchingSteps = pipeline.pipelineDef.filter((step: RuntimeObject) => step.solverName === "topologyPlanningSolver")
+  assert.equal(matchingSteps.length, 1)
+  const originalStep = matchingSteps[0]
+  topologyViaProof = {
+    scope: "Topology-constructor-only diagnostic override. Published solver entry unchanged; this invocation is not an unmodified published run.",
+    originalInputSha256: sha(inputBytes),
+    footprintCount: footprints.length,
+    footprintsSha256: sha(JSON.stringify(footprints)),
+    constructorCalls: 0,
+    highDensityInputChecked: false,
+  }
+  pipeline.pipelineDef = pipeline.pipelineDef.map((step: RuntimeObject) => step !== originalStep ? step : {
+    ...step,
+    getConstructorParams: (cms: RuntimeObject): RuntimeObject[] => {
+      assert.equal(topologyViaProof!.constructorCalls, 0, "Topology constructor must run once")
+      const params = originalStep.getConstructorParams(cms)
+      assert.equal(params.length, 1)
+      assert.equal(params[0].inputSrj, cms.srjWithPointPairs)
+      const originalSrj = cms.originalSrj
+      const nativeSrj = cms.srj
+      const originalSrjSha256 = sha(JSON.stringify(originalSrj))
+      const nativeSrjSha256 = sha(JSON.stringify(nativeSrj))
+      const nativeCopperSha256 = sha(JSON.stringify(nativeSrj.traces))
+      const stageInput = params[0].inputSrj
+      const stageInputSha256 = sha(JSON.stringify(stageInput))
+      const candidateInput = { ...stageInput, obstacles: [...stageInput.obstacles, ...structuredClone(footprints)] }
+      const candidateParams = [{ ...params[0], inputSrj: candidateInput }]
+      assert.equal(candidateParams[0].componentDetectionOutput, params[0].componentDetectionOutput)
+      assert.equal(cms.originalSrj, originalSrj)
+      assert.equal(cms.srj, nativeSrj)
+      assert.equal(sha(JSON.stringify(cms.originalSrj)), originalSrjSha256)
+      assert.equal(sha(JSON.stringify(cms.srj)), nativeSrjSha256)
+      assert.equal(sha(JSON.stringify(stageInput)), stageInputSha256)
+      Object.assign(topologyViaProof!, {
+        constructorCalls: 1,
+        stageInputSha256,
+        candidateStageInputSha256: sha(JSON.stringify(candidateInput)),
+        stageOriginalObstacleCount: stageInput.obstacles.length,
+        stageCandidateObstacleCount: candidateInput.obstacles.length,
+        originalSrjSha256,
+        nativeSrjSha256,
+        nativeCopperSha256,
+        componentDetectionOutputSha256: sha(JSON.stringify(params[0].componentDetectionOutput)),
+        originalInputsUnchangedAfterWrapper: true,
+      })
+      return candidateParams
+    },
+  })
+}
 
 const blobs: Record<string, unknown> = {}
 let serializedBytes = 0
@@ -216,6 +281,24 @@ function captureParent(hd: RuntimeObject): RuntimeObject {
 }
 
 function observeBefore(): void {
+  if (topologyViaProof && pipeline.highDensityRouteSolver && !topologyViaProof.highDensityInputChecked) {
+    assert.equal(sha(JSON.stringify(pipeline.originalSrj)), topologyViaProof.originalSrjSha256)
+    assert.equal(sha(JSON.stringify(pipeline.srj)), topologyViaProof.nativeSrjSha256)
+    assert.equal(sha(JSON.stringify(pipeline.srj.traces)), topologyViaProof.nativeCopperSha256)
+    assert(!pipeline.highDensityRouteSolver.obstacles.some((obstacle: RuntimeObject) => obstacle.obstacleId?.startsWith("preloaded_via_")))
+    Object.assign(topologyViaProof, {
+      highDensityInputChecked: true,
+      highDensitySrjSha256: sha(JSON.stringify(pipeline.srj)),
+      highDensityOriginalCopperSha256: sha(JSON.stringify(pipeline.srj.traces)),
+      highDensityObstaclesSha256: sha(JSON.stringify(pipeline.highDensityRouteSolver.obstacles)),
+      derivedViaFootprintsInHighDensityObstacles: 0,
+    })
+  }
+  if (summaryOnly) {
+    const hd = pipeline.highDensityRouteSolver
+    if (hd?.activeNode && containsTarget(hd.activeNode, hd)) targetNodeIds.add(hd.activeNode.capacityMeshNodeId)
+    return
+  }
   const uniform = pipeline.uniformPortDistributionSolver
   if (uniform && !uniformCaptured) {
     assert.equal(uniform.solved, false, "Uniform input must be observed before completion")
@@ -371,6 +454,9 @@ const summary = {
   outcome: executionError ? "execution_error" : pipeline.solved ? "pipeline_solved" : pipeline.failed ? "pipeline_failed" : "diagnostic_deadline",
   targetEncountered: targetNodeIds.size > 0,
   executionError, captureError, wasmAttempts, coldImportWasmCalls, phaseTransitions, serializedBytes,
+  topologyViaProof,
+  summaryOnly,
+  failedNode: pipeline.highDensityRouteSolver?.failed ? copyData(pipeline.highDensityRouteSolver.activeNode) : null,
 }
 const diagnostic = { summary, attempts: retainedAttempts, blobs }
 const diagnosticBytes = Buffer.from(JSON.stringify(diagnostic))
@@ -381,5 +467,6 @@ if (pipeline.solved && !executionError && !captureError) {
 }
 writeFileSync(resolve(outputDirectory, "hd-capture.json.gz"), compressedDiagnostic)
 writeFileSync(resolve(outputDirectory, "summary.json"), JSON.stringify({ ...summary, captureSha256: sha(diagnosticBytes), captureGzipSha256: sha(compressedDiagnostic), captureGzipBytes: compressedDiagnostic.length }, null, 2) + "\n")
+if (topologyViaProof) writeFileSync(resolve(outputDirectory, "topology-via-proof.json"), JSON.stringify(topologyViaProof, null, 2) + "\n")
 console.log(JSON.stringify({ ...summary, phaseTransitions: undefined }, null, 2))
 if (executionError || captureError || wasmAttempts.length > 0) process.exitCode = 1

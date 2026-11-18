@@ -1,0 +1,117 @@
+name: Published1127 coarse-only retained-via screen
+
+on:
+  push:
+    branches: [bench/preloaded-via-topology-1127-20261118]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  screen:
+    name: Coarse-only retained-via screen (${{ matrix.board }})
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { board: h616, target: source_net_115 }
+          - { board: icepi, target: source_net_15 }
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+
+    steps:
+      - name: Checkout frozen benchmark controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/preloaded-via-topology-screen.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged verified published3234 runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Authenticate unchanged native phase control
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 experiments/full-board-ten/prepare-hd-capture.py
+          "${{ matrix.board }}" "$FULL_BOARD_ROOT/via-screen/control"
+
+      - name: Derive retained physical via footprints without modifying the input
+        run: >-
+          python3 experiments/full-board-ten/prepare-via-footprint-screen.py
+          "$FULL_BOARD_ROOT/via-screen/control/phase-4-input.srj.json.gz"
+          "$FULL_BOARD_ROOT/via-screen/candidate"
+          --proof-only
+
+      - name: Run unmodified native control
+        run: >-
+          timeout --signal=TERM --kill-after=10s 960s
+          bun experiments/full-board-ten/run-hd-capture.ts
+          --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js"
+          --input "$FULL_BOARD_ROOT/via-screen/control/phase-4-input.srj.json.gz"
+          --output "$FULL_BOARD_ROOT/via-screen/control"
+          --root "${{ matrix.target }}"
+          --manifest "$FULL_BOARD_ROOT/runtime-manifest.json"
+          --summary-only true
+
+      - name: Run topology-only via candidate with original HD copper
+        run: >-
+          timeout --signal=TERM --kill-after=10s 960s
+          bun experiments/full-board-ten/run-hd-capture.ts
+          --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js"
+          --input "$FULL_BOARD_ROOT/via-screen/control/phase-4-input.srj.json.gz"
+          --output "$FULL_BOARD_ROOT/via-screen/candidate"
+          --root "${{ matrix.target }}"
+          --manifest "$FULL_BOARD_ROOT/runtime-manifest.json"
+          --summary-only true
+          --topology-via-footprints "$FULL_BOARD_ROOT/via-screen/candidate/via-footprint-proof.json"
+
+      - name: Preserve control, candidate and explicit input transformation proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: coarse-via1127-${{ matrix.board }}-${{ github.run_attempt }}
+          path: |
+            .full-board-run/via-screen
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/hd-capture-plan.json
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
