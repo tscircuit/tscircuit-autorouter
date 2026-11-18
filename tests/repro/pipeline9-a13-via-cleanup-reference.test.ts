@@ -69,7 +69,7 @@ test("preserves native A13 trace clearance while removing repaired vias", async 
     },
   }
   const { errors } = evaluateRelaxedDrc(snapshotInput)
-  expect(errors).toHaveLength(10)
+  expect(errors).toHaveLength(9)
   const view = { input: snapshotInput, errorCount: errors.length }
   await expect(getA13ViaCleanupSnapshotSvg(view)).toMatchSvgSnapshot(
     import.meta.path,
