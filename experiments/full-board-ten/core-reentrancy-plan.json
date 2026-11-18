@@ -1284,7 +1284,16 @@
       "proofSha256": "c20388415a4202b30ff10351636ace5ac636b394245d893e97e8eea95fa5c432"
     },
     "prPreview": "pending",
-    "requiredBeforePrOrGlobalClaim": true
+    "requiredBeforePrOrGlobalClaim": true,
+    "actualPr": {
+      "url": "https://github.com/tscircuit/core/pull/5659",
+      "head": "f0b8ab80374f7ff3f4ade551c18e400c79b74e94",
+      "differenceFromQualifiedSource": [
+        "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg"
+      ],
+      "verifiedSnapshotSha256": "31c82543b953b740c271e8fd90d358ac229491dbd76026cef6cefe7534852b65",
+      "productionTestAndPackageTreeIdentical": true
+    }
   },
   "initialGeometryComparison": "Initial Circuit JSON is an unordered flat record collection: compare complete canonical record multisets including multiplicity; retain array-order equality as a separate diagnostic. Phase SRJ array payloads remain byte-exact.",
   "traceGeometryComparison": "Compare every physical/unknown route field, through-pad coordinates and layers, thickness mode and curvedSegments. Normalize only endpoint port annotations verified against authored port coordinates/layers and derived pour flags/IDs referencing an existing same-layer pour. Preserve annotation counts, records and digests separately; do not claim annotation identity or independently prove polygon membership.",
