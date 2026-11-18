@@ -65,7 +65,10 @@ beforeAll(async (): Promise<void> => {
     const pathing = panelSolver.portPointPathingSolver!.visualize()
     const graphics: GraphicsObject = {
       ...pathing,
-      rects: [...(pathing.rects ?? []), ...convertSrjToGraphicsObject(board).rects],
+      rects: [
+        ...(pathing.rects ?? []),
+        ...convertSrjToGraphicsObject(board).rects,
+      ],
       lines: [
         ...(pathing.lines ?? []),
         {
@@ -97,9 +100,10 @@ beforeAll(async (): Promise<void> => {
         {
           x: 0,
           y: -8,
-          text: index === 0
-            ? `Caller receives solver error (first / repeated): ${waits.map((wait) => wait.error instanceof Error && wait.error.message === terminalState.error).join(" / ")}`
-            : "Caller returns successfully",
+          text:
+            index === 0
+              ? `Caller receives solver error (first / repeated): ${waits.map((wait) => wait.error instanceof Error && wait.error.message === terminalState.error).join(" / ")}`
+              : "Caller returns successfully",
           fontSize: 0.35,
         },
       ],
@@ -111,30 +115,36 @@ beforeAll(async (): Promise<void> => {
     })
   })
   // Snapshot failures must not be swallowed by test.failing.
-  const svg = stackSvgsHorizontally(panels, { gap: 16 }).replace(/[ \t]+$/gm, "")
+  const svg = stackSvgsHorizontally(panels, { gap: 16 }).replace(
+    /[ \t]+$/gm,
+    "",
+  )
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing("blocked-board phase waits preserve the real failure without terminal steps", (): void => {
-  expect(
-    waits.map((wait) => ({
-      error: wait.error,
-      stepCalls: wait.stepCalls,
-      terminalStepCalls: wait.terminalStepCalls,
-      state: wait.after,
-    })),
-  ).toEqual([
-    {
-      error: new Error(terminalState.error!),
-      stepCalls: terminalState.iterations,
-      terminalStepCalls: 0,
-      state: terminalState,
-    },
-    {
-      error: new Error(terminalState.error!),
-      stepCalls: 0,
-      terminalStepCalls: 0,
-      state: terminalState,
-    },
-  ])
-})
+test.failing(
+  "blocked-board phase waits preserve the real failure without terminal steps",
+  (): void => {
+    expect(
+      waits.map((wait) => ({
+        error: wait.error,
+        stepCalls: wait.stepCalls,
+        terminalStepCalls: wait.terminalStepCalls,
+        state: wait.after,
+      })),
+    ).toEqual([
+      {
+        error: new Error(terminalState.error!),
+        stepCalls: terminalState.iterations,
+        terminalStepCalls: 0,
+        state: terminalState,
+      },
+      {
+        error: new Error(terminalState.error!),
+        stepCalls: 0,
+        terminalStepCalls: 0,
+        state: terminalState,
+      },
+    ])
+  },
+)
