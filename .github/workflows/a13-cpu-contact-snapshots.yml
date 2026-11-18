@@ -1,4 +1,4 @@
-name: Verify general shortcut obstacle validation
+name: Verify changed shortcut routing snapshots
 on:
   push:
     branches: [artifacts/a13-cpu-pad-contact-snapshots]
@@ -8,7 +8,15 @@ permissions:
 jobs:
   snapshots:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: 2
+            tests: ./tests/bugs/bugreport82-0e99ec.test.ts ./tests/bugs/usb-shield-phase-detour.test.ts ./tests/features/pipeline9-srj18-sample3-repair.test.ts ./tests/features/same-net-via-clearance-repair-visual.test.ts ./tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts
+          - group: 7
+            tests: ./tests/autorouting-dataset18-sample10-exact-drc-residue-visual.test.ts ./tests/bugs/bugreport68-41562e.test.ts ./tests/repro/pipeline9-orangecrab-through-via-layer-span.test.ts ./tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,31 +36,46 @@ jobs:
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
-      - name: Regenerate only CI-failing board snapshots without changing assertions
+      - name: Regenerate only CI-failing tests with unchanged electrical assertions
         env:
           BUN_UPDATE_SNAPSHOTS: 1
-        run: bun test ./tests/bugs/bugreport84-726193.test.ts ./tests/bugs/bugreport71-dd7d15.test.ts ./tests/bugs/usb-dp-phase-detour.test.ts ./tests/repro/pipeline9-srj18-sample9-layer-tie-break.test.ts ./tests/repro/pipeline9-a64-real-byte0-foreign-pad.test.ts --timeout 9999999
-      - name: Record only generated SVGs on the experiment branch
-        uses: actions/github-script@v7
+        run: bun test ${{ matrix.tests }} --timeout 9999999
+      - name: Stage only generated SVG snapshots
+        run: |
+          python3 - <<'PY'
+          import subprocess,pathlib,shutil
+          for name in subprocess.check_output(['git','diff','--name-only','--','tests/**/*.snap.svg'],text=True).splitlines():
+            p=pathlib.Path(name)
+            if not name.startswith('tests/') or not name.endswith('.snap.svg'): raise RuntimeError(name)
+            out=pathlib.Path('verified-svgs')/p
+            out.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copyfile(p,out)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-shortcut-svgs-${{ matrix.group }}
+          path: verified-svgs/
+          if-no-files-found: error
+  record:
+    needs: snapshots
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: verified-shortcut-svgs-*
+          path: verified-svgs
+          merge-multiple: true
+      - uses: actions/github-script@v7
         with:
           script: |
-            const fs = require("fs")
-            const branch = "experiments/shortcut-obstacle-validation"
-            for(const path of [
-              "tests/bugs/__snapshots__/bugreport84-726193.snap.svg",
-              "tests/bugs/__snapshots__/bugreport71-dd7d15-linux.snap.svg",
-              "tests/bugs/__snapshots__/usb-dp-phase-detour-linux.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-srj18-sample9-layer-tie-break.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a64-real-byte0-foreign-pad-full-board.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a64-real-byte0-foreign-pad-ram-escape.snap.svg",
-            ]) {
-              const svg=fs.readFileSync(path,"utf8")
-              const content=Buffer.from(svg).toString("base64")
+            const fs=require("fs")
+            const root="verified-svgs/"
+            const branch="experiments/shortcut-obstacle-validation"
+            for(const path of fs.readdirSync(root,{recursive:true}).filter(path=>path.endsWith(".snap.svg")).sort()) {
+              if(!path.startsWith("tests/")) throw new Error(path)
+              const content=fs.readFileSync(root+path).toString("base64")
               const {data}=await github.rest.repos.getContent({...context.repo,path,ref:branch})
               if(data.content.replace(/\s/g,"")===content) continue
-              await github.rest.repos.createOrUpdateFileContents({
-                ...context.repo,branch,path,content,sha:data.sha,
-                message:"Record verified boundary-port snapshot "+path
-              })
+              await github.rest.repos.createOrUpdateFileContents({...context.repo,branch,path,content,sha:data.sha,message:"Record verified shortcut routing snapshot "+path})
               console.log("RECORDED_SVG="+path)
             }
