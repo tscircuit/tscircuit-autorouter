@@ -1,0 +1,59 @@
+name: Capture a real ButterStick force-clamp regression
+on:
+  push:
+    branches: [analysis/butterstick-capture-force-case]
+    paths: [.github/workflows/butterstick-capture-force-case.yml]
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Use the exact existing-solver candidate and native input
+        run: |
+          force_source_path=$(bun -e 'console.log(Bun.resolveSync("high-density-repair01/lib/HighDensityForceImproveSolver",process.cwd()))')
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/high-density-repair01/c729e682f12603118bbe0a11c3703c6059efb032/lib/HighDensityForceImproveSolver.ts -o "$force_source_path.private"
+          mv "$force_source_path.private" "$force_source_path"
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/core/c9d16246d7aa025026320d585578a551e3c32778/repros/butterstick-fixed-via/butterstick-native-arm-repro.json.gz -o native-fixture.json.gz
+      - name: Capture an unchanged node from the real routing request
+        run: |
+          cat > capture-force.private.ts <<'TS'
+          import {readFileSync,writeFileSync,mkdirSync} from "node:fs"
+          import {gunzipSync,gzipSync} from "node:zlib"
+          import {HighDensityForceImproveSolver} from "high-density-repair01/lib/HighDensityForceImproveSolver"
+          import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "./lib"
+          const fixture=JSON.parse(gunzipSync(readFileSync("native-fixture.json.gz")).toString())
+          const pipeline=new AutoroutingPipelineSolver9_PreloadedTraceGraph(fixture.input,fixture.options)
+          while(!pipeline.highDensityForceImproveSolver){
+            pipeline.step()
+            if(pipeline.failed||pipeline.solved)throw Error(pipeline.error??"Missing force stage")
+          }
+          const host=pipeline.highDensityForceImproveSolver
+          const all=host.getConstructorParams()[0]
+          let found=false
+          for(const entry of host.sampleEntries){
+            const params={nodeWithPortPoints:[entry.node],hdRoutes:entry.routeIndexes.map(i=>all.hdRoutes[i]),totalStepsPerNode:all.totalStepsPerNode,nodeAssignmentMargin:all.nodeAssignmentMargin,preserveTopologyPortAnchors:all.preserveTopologyPortAnchors,colorMap:all.colorMap,fixedViaObstacles:all.fixedViaObstacles}
+            const before=new HighDensityForceImproveSolver({...params,fixedViaObstacles:[]})
+            const after=new HighDensityForceImproveSolver(params)
+            before.solve();after.solve()
+            if(JSON.stringify(before.getOutput())===JSON.stringify(after.getOutput()))continue
+            mkdirSync("analysis-artifacts",{recursive:true})
+            writeFileSync("analysis-artifacts/butterstick-force-sample.json.gz",gzipSync(JSON.stringify({params,fixedVias:params.fixedViaObstacles,source:"tscircuit/core@c9d16246d7aa025026320d585578a551e3c32778/repros/butterstick-fixed-via/butterstick-native-arm-repro.json.gz"})))
+            console.log("CAPTURED_FORCE_SAMPLE="+JSON.stringify({routes:params.hdRoutes.length,vertices:params.hdRoutes.reduce((n,r)=>n+r.route.length,0),fixedVias:params.fixedViaObstacles.length,nodeWidth:entry.node.width,nodeHeight:entry.node.height}))
+            found=true
+            break
+          }
+          if(!found)throw Error("No affected native force sample found")
+          TS
+          bun capture-force.private.ts
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add analysis-artifacts/butterstick-force-sample.json.gz
+          git commit -m "Capture a real ButterStick force-clamp input without changing its geometry"
+          git push origin HEAD:analysis/butterstick-captured-force-case
