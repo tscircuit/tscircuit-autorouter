@@ -1,0 +1,33 @@
+name: Check the smaller inverted-bounds fix on the unchanged iMX6 board
+on:
+  push:
+    branches: [analysis/butterstick-inverted-bounds-imx6]
+    paths: [.github/workflows/butterstick-inverted-bounds-imx6.yml]
+permissions:
+  contents: read
+jobs:
+  imx6:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Check the smaller existing-solver guard
+        run: |
+          force_source_path=$(bun -e 'console.log(Bun.resolveSync("high-density-repair01/lib/HighDensityForceImproveSolver",process.cwd()))')
+          python3 - "$force_source_path" <<'PY'
+          import sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);s=p.read_text()
+          needle="  node.x = clampValue(node.x, minX, maxX)"
+          assert s.count(needle)==1
+          s=s.replace(needle,"  if (node.fixed && (minX > maxX || minY > maxY)) return\n\n"+needle)
+          p.write_text(s)
+          PY
+          bunx tsc --noEmit
+          bun test tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts --timeout 600000
