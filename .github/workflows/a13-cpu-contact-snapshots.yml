@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 0c0bab91aebdeb0f5fa62eb2bae9170e4226e64b
+          ref: e816e9245b0d45c9e87a1a1d4eb70863d6a83cce
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -28,15 +28,39 @@ jobs:
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
-      - run: bunx tsc --noEmit
-      - run: bun run build
-      - run: bun scripts/check-solver-runtime-packaging.ts
-      - name: Check focused shortcut regressions and unchanged width selection
-        run: bun test ./tests/solvers/single-route-horizontal-fixed-obstacle.test.ts ./tests/solvers/single-route-diagonal-fixed-obstacle.test.ts ./tests/solvers/single-route-rejects-blocked-inset.test.ts ./tests/solvers/single-route-layer-change-fixed-obstacle.test.ts ./tests/repro/glider-ddr-round-pad-width.test.ts --timeout 9999999
-      - name: Verify the real A13 regressions and generate their snapshots
+      - name: Inspect the affected board before and after the review revision
+        run: |
+          cat > review-shortcut-snapshot.private.ts <<'TS'
+          import { runAllChecks } from "@tscircuit/checks"
+          import type { PcbBoard } from "circuit-json"
+          import { AutoroutingPipelineSolver7_MultiGraph } from "./lib"
+          import { convertToCircuitJson } from "./lib/testing/utils/convertToCircuitJson"
+          import bugReport from "./fixtures/bug-reports/bugreport84-726193/bugreport84-726193.json"
+          import type { SimpleRouteJson } from "./lib/types"
+          const srj=bugReport.simple_route_json as SimpleRouteJson
+          const solver=new AutoroutingPipelineSolver7_MultiGraph(structuredClone(srj))
+          solver.solve()
+          if(!solver.solved) throw new Error(solver.error ?? "routing failed")
+          const circuitJson=convertToCircuitJson(solver.srjWithPointPairs!,solver.getOutputSimplifiedPcbTraces(),{minTraceWidth:srj.minTraceWidth,originalSrj:srj})
+          const board={type:"pcb_board",pcb_board_id:"pcb_board_0",thickness:1.6,num_layers:srj.layerCount,center:{x:(srj.bounds.minX+srj.bounds.maxX)/2,y:(srj.bounds.minY+srj.bounds.maxY)/2},outline:srj.outline,shape:"polygon",material:"fr4",min_board_edge_clearance:bugReport.simple_route_json.minBoardEdgeClearance} satisfies PcbBoard
+          const errors=await runAllChecks([...circuitJson,board])
+          const counts:Record<string,number>={}
+          for(const error of errors) counts[error.type]=(counts[error.type]??0)+1
+          const sourceTrace26Touching=errors.filter(error=>"pcb_trace_id" in error&&error.pcb_trace_id.includes("source_trace_26")&&error.message.includes("0.000mm")).length
+          console.log("SNAPSHOT_REVIEW_METRICS="+JSON.stringify({variant:process.argv[2],traceCount:solver.getOutputSimplifiedPcbTraces().length,counts,sourceTrace26Touching}))
+          TS
+          bun review-shortcut-snapshot.private.ts head
+          mkdir -p /tmp/shortcut-source
+          for file in lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts lib/solvers/HighDensitySolver/IntraNodeSolver.ts lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts lib/solvers/TraceWidthSolver/TraceWidthSolver.ts; do
+            cp --parents "$file" /tmp/shortcut-source
+            git show 8c542342138f0db34a39126687d8015a5eb9920b:"$file" > "$file"
+          done
+          bun review-shortcut-snapshot.private.ts base
+          cp -r /tmp/shortcut-source/lib/. lib/
+      - name: Regenerate only the changed board snapshot, preserving its routing assertions
         env:
           BUN_UPDATE_SNAPSHOTS: 1
-        run: bun test ./tests/repro/pipeline9-a13-regional-repair-shorts.test.ts ./tests/repro/pipeline9-a13-declared-trace-clearance.test.ts ./tests/repro/pipeline9-a13-fixed-copper-checks.test.ts --timeout 9999999
+        run: bun test ./tests/bugs/bugreport84-726193.test.ts --timeout 9999999
       - name: Record only generated SVGs on the experiment branch
         uses: actions/github-script@v7
         with:
@@ -44,11 +68,7 @@ jobs:
             const fs = require("fs")
             const branch = "experiments/shortcut-obstacle-validation"
             for(const path of [
-              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a13-declared-trace-clearance.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a13-declared-trace-clearance-close-trace-pairs.snap.svg",
-              "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg",
+              "tests/bugs/__snapshots__/bugreport84-726193.snap.svg",
             ]) {
               const svg=fs.readFileSync(path,"utf8")
               const content=Buffer.from(svg).toString("base64")
