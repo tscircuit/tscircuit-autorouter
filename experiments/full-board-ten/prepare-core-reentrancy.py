@@ -268,10 +268,20 @@ if args.operation == "source":
         log.write_text(tested.stdout)
         tests[lane] = {"command": command, "exitCode": tested.returncode, "testSha256": sha(test), "logSha256": sha(log), "exportTail": export_tail, "adaptation": "Only internal router/fixture imports and snapshot persistence adapted; real held routing, preview assertions and final clearance assertions unchanged. Identical export-only tail is confined to both focused test packages."}
         assert json.loads((proof / f"{lane}.wasm.json").read_text())["routingOrUnknownAttempts"] == 0
+        focused_circuit = json.loads((proof / f"{lane}.circuit.json").read_text())
+        assert sum(row["type"] == "pcb_trace" for row in focused_circuit) == 1
+        assert sum(row["type"] == "pcb_via" for row in focused_circuit) == 2
+        focused_events = json.loads((proof / f"{lane}.events.json").read_text())
+        pour_events = [row for row in focused_events if row["type"] == "solver:started" and row["solverName"] == "CopperPourPipelineSolver"]
+        assert pour_events
+        assert "7 expect() calls" in tested.stdout, "All held-preview and final routing assertions must run"
         if lane == "base":
             assert tested.returncode == 1 and 'expect(viasSeenByPour).toBe(circuit.db.pcb_via.list().length)' in tested.stdout and "timed out" not in tested.stdout.lower(), "Baseline must reach and fail the final stale-pour assertion"
+            assert "Expected: 2" in tested.stdout and "Received: 1" in tested.stdout
+            assert pour_events[-1]["vias"] == 1
         else:
             assert tested.returncode == 0, "Candidate public repro failed"
+            assert pour_events[-1]["vias"] == 2
     gate_path = proof / "source-gate.json"
     gate = json.loads(gate_path.read_text())
     gate["reproPair"] = {"passed": True, "sourceTestSha256": sha(test_source), "tests": tests}
