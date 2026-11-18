@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {label: head, ref: 727d1ea907c9dfa24ac800e25068118757ecff16}
+          - {label: head, ref: 6390b7fe36b2d3d962bc09b119b8d3649e8e097a}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           PY
           bun install
       - name: Real A13 board and existing routing assertions
-        run: BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-a13-fixed-copper-checks.test.ts tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
       - name: Collect real SVG comparison
         if: always()
         env:
