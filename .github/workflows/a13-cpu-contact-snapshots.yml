@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - group: 5
-            tests: ./tests/bugs/bugreport71-dd7d15.test.ts ./tests/repro/pipeline9-srj18-sample9-layer-tie-break.test.ts
+          - group: 7
+            tests: ./tests/autorouting-dataset18-sample10-exact-drc-residue-visual.test.ts
     steps:
       - uses: actions/checkout@v4
         with:
