@@ -53,7 +53,7 @@ jobs:
           proto.finishWithTraceContactCheck=function() {
            const evaluator=this.cachedReferenceDrcEvaluator
            console.log("GAP_PROBE_REFERENCE="+JSON.stringify(summarize(evaluator({traces:[],routes:this.combinedOutput,hdRoutes:this.combinedOutput}))))
-           const projection=new Pipeline9ClearanceProjectionSolver({originalSrj:this.params.originalSrj,routes:this.combinedOutput,drcEvaluator:evaluator,allowPartialRepair:true,subdivideSegments:true})
+           const projection=new Pipeline9ClearanceProjectionSolver({originalSrj:{...this.params.originalSrj,connections:[...this.params.originalSrj.connections,...this.params.newConnections]},routes:this.combinedOutput,drcEvaluator:evaluator,allowPartialRepair:true,subdivideSegments:true})
            let phase=""
            while(!projection.solved&&!projection.failed) {
             projection.step()
