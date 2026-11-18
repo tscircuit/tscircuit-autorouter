@@ -17,13 +17,13 @@ type ForceImproveParams = ConstructorParameters<
 type ForceImproveConstructorParams = ReturnType<
   HighDensityForceImproveSolver["getConstructorParams"]
 >[0] & { inputSrj: SimpleRouteJson }
-type ViaClearanceViolationKey = string
+type FixedCopperViolationKey = string
 
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
   private readonly inputSrj: SimpleRouteJson
-  private readonly fixedViaObstacleIndexes: ReadonlySet<number>
+  private readonly fixedCopperObstacleIndexes: ReadonlySet<number>
   private readonly evaluateFixedObstacles: ReturnType<
     typeof createFixedObstacleViolationEvaluator
   >
@@ -40,12 +40,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       inputSrj: params.inputSrj,
       representedPadObstacleIndexes,
     })
-    this.fixedViaObstacleIndexes = new Set(
-      [...fixedCopperObstacleIndexes].filter((obstacleIndex) => {
-        const obstacle = params.inputSrj.obstacles[obstacleIndex]!
-        return obstacle.shape === "circle" && obstacle.layers.length > 1
-      }),
-    )
+    this.fixedCopperObstacleIndexes = fixedCopperObstacleIndexes
     this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
       srj: {
         ...params.inputSrj,
@@ -78,7 +73,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   }
 
   private validateImprovedSample(routeIndexes: number[]): void {
-    if (this.fixedViaObstacleIndexes.size === 0) return
+    if (this.fixedCopperObstacleIndexes.size === 0) return
     const originalRoutes = routeIndexes.map(
       (routeIndex) => this.originalHdRoutes[routeIndex],
     )
@@ -87,25 +82,22 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       if (!route) throw new Error("Force improvement lost a node's candidate")
       return route
     })
-    // Existing via conflicts belong to repair; preserve previously clear pairs.
-    const originalViolationKeys = new Set<ViaClearanceViolationKey>(
+    // Existing conflicts belong to repair; preserve previously clear pairs.
+    const originalViolationKeys = new Set<FixedCopperViolationKey>(
       this.evaluateFixedObstacles(originalRoutes)
-        .filter(
-          (violation) =>
-            violation.kind === "via" &&
-            this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
+        .filter((violation) =>
+          this.fixedCopperObstacleIndexes.has(violation.obstacleIndex),
         )
         .map((violation) => violation.key),
     )
-    const introducesViaClearanceViolation = this.evaluateFixedObstacles(
+    const introducesFixedCopperViolation = this.evaluateFixedObstacles(
       candidateRoutes,
     ).some(
       (violation) =>
-        violation.kind === "via" &&
-        this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
+        this.fixedCopperObstacleIndexes.has(violation.obstacleIndex) &&
         !originalViolationKeys.has(violation.key),
     )
-    if (!introducesViaClearanceViolation) return
+    if (!introducesFixedCopperViolation) return
     // A node's routes move together; accepting only some can introduce peer shorts.
     for (const routeIndex of routeIndexes) {
       this.improvedRoutesByIndex.delete(routeIndex)
