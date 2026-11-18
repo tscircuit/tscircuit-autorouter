@@ -106,6 +106,8 @@ const attempts = new WeakMap<object, ObservedAttempt>()
 const activeAttempts = new Set<ObservedAttempt>()
 const phaseTransitions: RuntimeObject[] = []
 const targetNodeIds = new Set<string>()
+const uniformFamiliesBefore = new Map<string, RuntimeObject>()
+let uniformCaptured = false
 let failedB01Count = 0
 let lastRegional: ObservedAttempt | undefined
 let captureError: string | null = null
@@ -214,6 +216,18 @@ function captureParent(hd: RuntimeObject): RuntimeObject {
 }
 
 function observeBefore(): void {
+  const uniform = pipeline.uniformPortDistributionSolver
+  if (uniform && !uniformCaptured) {
+    assert.equal(uniform.solved, false, "Uniform input must be observed before completion")
+    assert.equal(uniform.currentOwnerPairBeingProcessed, null, "Uniform input must precede redistribution")
+    for (const [key, points] of uniform.mapOfOwnerPairToPortPoints) {
+      uniformFamiliesBefore.set(key, {
+        points: copyData(points),
+        sharedEdge: copyData(uniform.mapOfOwnerPairToSharedEdge.get(key)),
+      })
+    }
+    uniformCaptured = true
+  }
   const hd = pipeline.highDensityRouteSolver
   if (!hd?.activeNode || !containsTarget(hd.activeNode, hd)) return
   targetNodeIds.add(hd.activeNode.capacityMeshNodeId)
@@ -232,6 +246,25 @@ function observeBefore(): void {
       parent: captureParent(hd),
       regionalReason: hd.activeFallbackReason,
     }
+    const nodePortIds = new Set(hd.activeNode.portPoints.map((point: RuntimeObject) => point.portPointId))
+    record.portPlacement = [...uniformFamiliesBefore].flatMap(([ownerPairKey, before]) => {
+      if (!before.points.some((point: RuntimeObject) => nodePortIds.has(point.portPointId))) return []
+      const familyIds = new Set(before.points.map((point: RuntimeObject) => point.portPointId))
+      return [{
+        ownerPairKey,
+        before,
+        after: copyData(uniform.mapOfOwnerPairToPortPoints.get(ownerPairKey)),
+        finalNodes: copyData(uniform.redistributedNodes.flatMap((node: RuntimeObject) => {
+          const portPoints = node.portPoints.filter((point: RuntimeObject) => familyIds.has(point.portPointId))
+          return portPoints.length === 0 ? [] : [{ capacityMeshNodeId: node.capacityMeshNodeId, portPoints }]
+        })),
+        availableSegmentPorts: copyData(pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints.flatMap((segment: RuntimeObject) => {
+          const portPoints = segment.portPoints.filter((point: RuntimeObject) => point.availableZ.some((z: number) => familyIds.has(`${point.segmentPortPointId}::${z}`)))
+          return portPoints.length === 0 ? [] : [{ edgeId: segment.edgeId, nodeIds: segment.nodeIds, start: segment.start, end: segment.end, portPoints }]
+        })),
+      }]
+    })
+    assert(record.portPlacement.length > 0, "Target node has no retained original port family")
     if (kind === "b01") {
       record.nativeObstacleMapping = params.obstacles.flatMap((obstacle: RuntimeObject, convertedIndex: number) => {
         if (obstacle.type !== "rect") return []
