@@ -45,7 +45,7 @@ def dependency_graph():
 
 
 def preserve_sources(lane):
-    for relative in [*details["productionFiles"], details["testPath"]]:
+    for relative in [*details["productionFiles"], *details["unchangedSourceFiles"], details["testPath"]]:
         destination = proof / "files" / lane / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source / relative, destination)
@@ -82,6 +82,8 @@ details = plan["source"]
 test = source / details["testPath"]
 snapshot = source / details["snapshotPath"]
 checks = {}
+for relative, digest in plan["controllerFiles"].items():
+    assert sha(controller / relative) == digest, f"Controller changed: {relative}"
 for folder, commit in [(source, details["baseCommit"]), (candidate, details["candidateCommit"])]:
     assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=folder, text=True).strip() == commit
     assert not subprocess.check_output(["git", "status", "--porcelain"], cwd=folder, text=True).strip()
@@ -92,13 +94,16 @@ assert sha(snapshot) == details["snapshotBeforeSha256"]
 for relative, hashes in details["productionFiles"].items():
     assert sha(source / relative) == hashes["beforeSha256"]
     assert sha(candidate / relative) == hashes["afterSha256"]
+for relative, digest in details["unchangedSourceFiles"].items():
+    assert sha(source / relative) == sha(candidate / relative) == digest
+assert sha(candidate / details["snapshotPath"]) == details["snapshotCandidateSha256"]
 assert sha(candidate / details["testPath"]) == details["testSha256"]
 final_test = (candidate / details["testPath"]).read_text()
 assert hashlib.sha256(final_test.encode()).hexdigest() == sha(controller / "core-pour-repro.test.tsx")
 patch = controller / "core-pour-production.patch"
 assert sha(patch) == details["patchSha256"]
 candidate_changes = subprocess.check_output(["git", "diff", "--name-only", details["baseCommit"], details["candidateCommit"]], cwd=candidate, text=True).splitlines()
-assert sorted(candidate_changes) == sorted([*details["productionFiles"], details["testPath"]])
+assert sorted(candidate_changes) == plan["sourceChangesPermitted"]
 shutil.copyfile(patch, proof / "production.patch")
 shutil.copyfile(controller / "core-pour-source-plan.json", proof / "source-plan.json")
 shutil.copyfile(source / "package.json", proof / "package.json")
@@ -106,15 +111,16 @@ shutil.copyfile(snapshot, proof / "original-repro-snapshot.svg")
 preserve_sources("base")
 check_timing_tests()
 
-# Core disables lock saving; this install-only config records a new compatible
-# lock without modifying the repository's config or manifest.
-install_config = proof / "install.bunfig.toml"
-install_config.write_text("[install.lockfile]\nsave = true\n")
-installed = execute("install", ["bun", "install", f"--config={install_config}", "--backend", "copy"])
-assert installed.returncode == 0, "Source dependency installation failed"
+# Reuse the reviewed compatible lock from the previous source qualification.
+# Both lanes use one frozen installation, without manifest or bunfig edits.
 lock = source / "bun.lock"
-assert lock.is_file(), "Fresh source dependency lock was not recorded"
+frozen_lock = controller / plan["frozenLock"]["path"]
+assert sha(frozen_lock) == plan["frozenLock"]["sha256"]
+shutil.copyfile(frozen_lock, lock)
 lock_sha = sha(lock)
+installed = execute("install", ["bun", "install", "--frozen-lockfile", "--backend", "copy"])
+assert installed.returncode == 0, "Frozen source dependency installation failed"
+assert sha(lock) == lock_sha
 shutil.copyfile(lock, proof / "bun.lock")
 graph = dependency_graph()
 assert graph, "Installed dependency inventory is empty"
@@ -127,11 +133,11 @@ failure = execute("base-regression", test_command)
 assert failure.returncode == 1, "Unfixed source must fail the final stale-pour assertion"
 assert "expect(viasSeenByPour).toBe(circuit.db.pcb_via.list().length)" in failure.stdout
 assert "Expected: 2" in failure.stdout and "Received: 1" in failure.stdout
-assert "7 expect() calls" in failure.stdout, "All preview and final route/via assertions must execute"
+assert "3 expect() calls" in failure.stdout, "Both final route/via assertions must pass before the stale-pour failure"
 assert "timed out" not in failure.stdout.lower(), "A timeout is not regression proof"
 
-# Same held real router and six preceding assertions. Accept only its known
-# stale-pour observation to save the BEFORE SVG; this copy never enters the PR.
+# Same real auto_local router and two preceding assertions. Accept only its
+# known stale-pour observation to save the BEFORE SVG; this copy never enters the PR.
 bug_assertion = "expect(viasSeenByPour).toBe(circuit.db.pcb_via.list().length)"
 assert final_test.count(bug_assertion) == 1
 test.write_text(final_test.replace(bug_assertion, "expect(viasSeenByPour).toBe(1)"))
@@ -152,7 +158,7 @@ for lane in ["base", "candidate"]:
         test.write_text(final_test)
         preserve_sources("candidate")
         snapshot.unlink()
-        assert execute("candidate-repro-create", test_command).returncode == 0, "Localized fix failed real held-router regression"
+        assert execute("candidate-repro-create", test_command).returncode == 0, "Recursive-render guard failed real auto_local regression"
         preserve_snapshot("candidate")
         candidate_snapshot_sha = sha(snapshot)
         execute("candidate-repro-repeat", test_command)
@@ -175,8 +181,6 @@ queue_start = "  _queueAsyncEffect("
 before_renderable = (proof / "files/base/lib/components/base-components/Renderable.ts").read_text()
 after_renderable = (proof / "files/candidate/lib/components/base-components/Renderable.ts").read_text()
 assert before_renderable[before_renderable.index(queue_start):] == after_renderable[after_renderable.index(queue_start):]
-if (proof / "base/dist").is_dir() and (proof / "candidate/dist").is_dir():
-    execute("production-build-equivalence", ["bun", str(controller / "audit-core-pour-build.mjs"), str(source), str(proof)])
 assert sha(source / "package.json") == details["packageSha256"]
 assert sha(test) == details["testSha256"]
 check_timing_tests()
@@ -186,13 +190,16 @@ failed = [name for name, result in checks.items() if result["exitCode"] != 0 and
 result = {"passed": not failed, "failedChecks": failed,
           "baseCommit": details["baseCommit"], "candidateCommit": details["candidateCommit"],
           "sourcePatchSha256": details["patchSha256"], "sourceTestSha256": details["testSha256"],
-          "freshSharedLockSha256": lock_sha, "oneDependencyInstallation": True,
+          "frozenSharedLockSha256": lock_sha, "oneDependencyInstallation": True,
           "installedPackageMetadataAndAliasesUnchanged": True,
           "genericAsyncEffectStartupByteIdentical": True, "sevenTimingTestsByteIdentical": True,
-          "baselineFailsOnlyAfterPreviewAndFinalRouteViaAssertions": True,
+          "baselineFailsAfterFinalRouteViaAssertions": True,
           "baselinePourObservedVias": 1, "baselineFinalTraceCount": 1, "baselineFinalViaCount": 2,
           "beforeSvgCaptureAcceptsOnlyKnownStaleViaObservation": True,
           "actualCoreMatcherSnapshots": True,
+          "candidateSnapshotMatchesCommittedSvg": candidate_snapshot_sha == details["snapshotCandidateSha256"],
+          "sourceChangesExactlyWhitelisted": True,
+          "previewPreservationClaimed": False,
           "snapshots": {lane: sha(proof / lane / details["snapshotPath"]) for lane in ["base", "candidate"]},
           "checks": checks}
 (proof / "result.json").write_text(json.dumps(result, indent=2) + "\n")

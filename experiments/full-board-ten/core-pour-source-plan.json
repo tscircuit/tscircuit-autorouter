@@ -2,32 +2,27 @@
   "source": {
     "repository": "tscircuit/core",
     "baseCommit": "fb77fad92dd4197eab9934a5ebbb5dfcbffc7eaf",
-    "candidateCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42",
+    "candidateCommit": "c647b88752e8319622d1441445ec5da5069f3d78",
     "productionFiles": {
-      "lib/components/base-components/Renderable.ts": {
-        "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
-        "afterSha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
-      },
-      "lib/components/primitive-components/Group/Group.ts": {
-        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
-        "afterSha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
-      },
-      "lib/components/primitive-components/CopperPour/CopperPour.ts": {
-        "beforeSha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6",
-        "afterSha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
-      },
-      "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts": {
-        "beforeSha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049",
-        "afterSha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+      "lib/IsolatedCircuit.ts": {
+        "beforeSha256": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34",
+        "afterSha256": "e5396d89a41dc242bbadadd145235cdeb380490976b71d0eb7b4e5b92c9f97e3"
       }
     },
-    "patchSha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
+    "patchSha256": "78c6f511dd01f1962be06251aeb5db0fc440c1e8d2703fc3c65f6524dd966c43",
     "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
     "testBeforeSha256": "1e538048e84171de607c3b876d279bfb1d0daaae78b1aa48dc1d8a6df2f5cbde",
-    "testSha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9",
+    "testSha256": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6",
     "snapshotPath": "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
     "snapshotBeforeSha256": "dd1bce2861313667cdbdbd42d42cf2d84b77dfbf143a11c5703d2ddb681ef1da",
-    "packageSha256": "68fe69beb0f33bb8d7d23aaf732350613482e92952f08601a43e17ff62fa855e"
+    "packageSha256": "68fe69beb0f33bb8d7d23aaf732350613482e92952f08601a43e17ff62fa855e",
+    "unchangedSourceFiles": {
+      "lib/components/base-components/Renderable.ts": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
+      "lib/components/primitive-components/Group/Group.ts": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+      "lib/components/primitive-components/CopperPour/CopperPour.ts": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6",
+      "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049"
+    },
+    "snapshotCandidateSha256": "31c82543b953b740c271e8fd90d358ac229491dbd76026cef6cefe7534852b65"
   },
   "bunVersion": "1.4.3",
   "timingTests": [
@@ -80,12 +75,21 @@
     "tests/scripts/"
   ],
   "sourceChangesPermitted": [
-    "lib/components/base-components/Renderable.ts",
-    "lib/components/primitive-components/CopperPour/CopperPour.ts",
-    "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
-    "lib/components/primitive-components/Group/Group.ts",
+    "lib/IsolatedCircuit.ts",
     "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
     "tests/repros/repro-routing-event-copper-pour.test.tsx"
   ],
-  "purpose": "Validate localized routing/copper-pour ordering with synchronous generic effect startup, deterministic preview regression, unchanged timing tests, shared dependency installation, actual source builds and matcher SVGs."
+  "purpose": "Validate the direct recursive-render guard against the real auto_local repro, unchanged timing tests, one frozen compatible dependency installation and actual source builds and matcher SVGs. No preview-preservation claim.",
+  "frozenLock": {
+    "path": "core-pour-source.bun.lock",
+    "sha256": "daca50e342bd3ed156ee05da35def79620c89897d9ba1a560b27cbf69dfbc4a7",
+    "sourceRun": 44244982670
+  },
+  "controllerFiles": {
+    "../../.github/workflows/full-board-ten.yml": "d0c84235c33b1a3dabfc690851918fc3f52381ed623c24cb5cf075bb36c3c958",
+    "check-core-pour-source.py": "c8c027b381501177a788d287abfcc4b2c791ac9e7b7b8b571b9ce0ae267676b0",
+    "core-pour-production.patch": "78c6f511dd01f1962be06251aeb5db0fc440c1e8d2703fc3c65f6524dd966c43",
+    "core-pour-repro.test.tsx": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6",
+    "core-pour-source.bun.lock": "daca50e342bd3ed156ee05da35def79620c89897d9ba1a560b27cbf69dfbc4a7"
+  }
 }

@@ -1,4 +1,4 @@
-name: Core routing copper pour dependency source validation
+name: Core recursive render guard source validation
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   source:
-    name: Actual Core source before and localized fix
+    name: Actual Core source before and recursive render guard
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -21,7 +21,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          sparse-checkout: experiments/full-board-ten
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
@@ -31,22 +33,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: bef5b1308ea2a670026cba1f64ffc26551014d42
+          ref: c647b88752e8319622d1441445ec5da5069f3d78
           path: .core-candidate
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 4
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /package.json
+            /lib/IsolatedCircuit.ts
             /lib/components/base-components/Renderable.ts
             /lib/components/primitive-components/Group/Group.ts
             /lib/components/primitive-components/CopperPour/CopperPour.ts
             /lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts
             /tests/repros/repro-routing-event-copper-pour.test.tsx
+            /tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Validate real source pair with one compatible dependency graph
+      - name: Validate real source pair with one frozen compatible dependency graph
         run: python3 experiments/full-board-ten/check-core-pour-source.py
       - name: Preserve actual source, snapshots, dependency graph, logs and builds
         if: always()
