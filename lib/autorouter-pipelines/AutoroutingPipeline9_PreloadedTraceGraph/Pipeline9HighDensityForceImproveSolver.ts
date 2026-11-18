@@ -9,6 +9,10 @@ import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
+import {
+  getFixedCopperConflictKey,
+  getFixedCopperConflictSeverities,
+} from "./fixedCopperConflictSeverities"
 import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
 
 type ForceImproveParams = ConstructorParameters<
@@ -82,21 +86,42 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       if (!route) throw new Error("Force improvement lost a node's candidate")
       return route
     })
-    // Existing conflicts belong to repair; preserve previously clear fixed-copper pairs.
-    const originalViolationKeys = new Set<FixedCopperViolationKey>(
-      this.evaluateFixedObstacles(originalRoutes)
-        .filter(
-          (violation) =>
-            this.fixedCopperObstacleIndexes.has(violation.obstacleIndex),
-        )
-        .map((violation) => violation.key),
+    const originalViolations = this.evaluateFixedObstacles(
+      originalRoutes,
+    ).filter((violation) =>
+      this.fixedCopperObstacleIndexes.has(violation.obstacleIndex),
     )
-    const introducesFixedCopperViolation = this.evaluateFixedObstacles(
+    const candidateViolations = this.evaluateFixedObstacles(
       candidateRoutes,
-    ).some(
-      (violation) =>
-        this.fixedCopperObstacleIndexes.has(violation.obstacleIndex) &&
-        !originalViolationKeys.has(violation.key),
+    ).filter((violation) =>
+      this.fixedCopperObstacleIndexes.has(violation.obstacleIndex),
+    )
+    const originalViolationKeys = new Set<FixedCopperViolationKey>(
+      originalViolations.map((violation) => violation.key),
+    )
+    // One completed trace can occupy many obstacle tiles. Score its worst gap
+    // once per route and owner so tile boundaries do not freeze useful repairs.
+    const originalSeverities = getFixedCopperConflictSeverities(
+      originalViolations,
+      this.inputSrj,
+    )
+    const candidateSeverities = getFixedCopperConflictSeverities(
+      candidateViolations,
+      this.inputSrj,
+    )
+    const introducesFixedCopperViolation = candidateViolations.some(
+      (violation) => {
+        if (originalViolationKeys.has(violation.key)) return false
+        const obstacle = this.inputSrj.obstacles[violation.obstacleIndex]!
+        const isFixedVia =
+          obstacle.shape === "circle" && obstacle.layers.length > 1
+        const key = getFixedCopperConflictKey(violation, this.inputSrj)
+        const worsensFixedCopper =
+          candidateSeverities.size >= originalSeverities.size &&
+          candidateSeverities.get(key)! > (originalSeverities.get(key) ?? 0)
+        // Retain the existing protection for newly introduced via-to-via pairs.
+        return (violation.kind === "via" && isFixedVia) || worsensFixedCopper
+      },
     )
     if (!introducesFixedCopperViolation) return
     // A node's routes move together; accepting only some can introduce peer shorts.
