@@ -4,13 +4,36 @@ on:
     branches: [codex/ddr2417-publish-evidence]
 permissions:
   contents: write
-  actions: read
+  actions: write
   pull-requests: read
+  checks: read
+  statuses: read
+concurrency:
+  group: ddr2417-evidence-publication
+  cancel-in-progress: true
 jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Cancel superseded evidence-only publisher runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          repository='tscircuit/tscircuit-autorouter'
+          endpoint='repos/'+repository+'/actions/runs?branch=codex%2Fddr2417-publish-evidence&per_page=30'
+          runs=json.loads(subprocess.check_output(['gh','api',endpoint],text=True))['workflow_runs']
+          current=int(os.environ['GITHUB_RUN_ID'])
+          for run in runs:
+              if run['id']>=current or run['status']=='completed':continue
+              assert run['head_branch']=='codex/ddr2417-publish-evidence'
+              response=subprocess.run(['gh','api','--method','POST','repos/'+repository+'/actions/runs/'+str(run['id'])+'/cancel'],capture_output=True,text=True)
+              if response.returncode:
+                  fresh=json.loads(subprocess.check_output(['gh','api','repos/'+repository+'/actions/runs/'+str(run['id'])],text=True))
+                  assert fresh['status']=='completed',response.stderr
+          PY
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
@@ -52,16 +75,16 @@ jobs:
           {"name":"ddr2417-evidence-renderers","private":true,"type":"module","dependencies":{"circuit-to-svg":"0.0.460","graphics-debug":"0.0.99"}}
           JSON
           (cd /tmp/ddr2417-visuals && bun install --ignore-scripts)
-      - name: Render real native PCB and fanout SVGs without rerouting
-        run: |
-          bun experiments/full-board-priority-analysis/render-published-evidence.ts /tmp/ddr2417-visuals/node_modules /tmp/ddr2417-visuals/node_modules
-          python3 experiments/full-board-priority-analysis/publish-evidence.py build
       - name: Preserve final source and CI status
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr view 293 --repo tscircuit/fanout-solver --json headRefOid,mergeable,state,statusCheckRollup > report/repro-ci.json
           gh pr view 294 --repo tscircuit/fanout-solver --json headRefOid,mergeable,state,statusCheckRollup > report/fix-ci.json
+      - name: Render real native PCB and fanout SVGs without rerouting
+        run: |
+          bun experiments/full-board-priority-analysis/render-published-evidence.ts /tmp/ddr2417-visuals/node_modules /tmp/ddr2417-visuals/node_modules
+          python3 experiments/full-board-priority-analysis/publish-evidence.py build
       - name: Publish immutable evidence on a separate branch
         env:
           GH_TOKEN: ${{ github.token }}
@@ -71,7 +94,20 @@ jobs:
           git -C report config user.name "github-actions[bot]"
           git -C report config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C report remote add origin https://github.com/tscircuit/tscircuit-autorouter.git
-          git -C report add -- . ':(exclude)circuits-and-results.zip'
+          existing=$(git -C report ls-remote origin refs/heads/analysis/ddr2417-geometry-first)
+          if [[ -n "$existing" ]]; then
+            git -C report fetch origin refs/heads/analysis/ddr2417-geometry-first --depth 1
+            python3 - <<'PY'
+          import json,subprocess
+          previous=json.loads(subprocess.check_output(['git','show','FETCH_HEAD:provenance.json'],cwd='report',text=True))
+          assert previous['finalFix']=='83f48db80349beecc505a72a6e1f3e36705c829f'
+          assert previous['runs']['baseline']==44359066016
+          author=subprocess.check_output(['git','log','-1','--format=%ae','FETCH_HEAD'],cwd='report',text=True).strip()
+          assert author=='41898282+github-actions[bot]@users.noreply.github.com'
+          PY
+            git -C report reset --mixed FETCH_HEAD
+          fi
+          git -C report add -- .
           git -C report commit -m "Record DDR2417 matched fanout timings and full PCB results"
           git -C report push origin HEAD:refs/heads/analysis/ddr2417-geometry-first
           python3 - <<'PY'
