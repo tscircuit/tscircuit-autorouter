@@ -1,0 +1,41 @@
+name: Check the minimal inverted-bounds guard on real ButterStick
+on:
+  push:
+    branches: [analysis/butterstick-inverted-bounds-native]
+    paths: [.github/workflows/butterstick-inverted-bounds-native.yml]
+permissions:
+  contents: write
+jobs:
+  board:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Check the smaller existing-solver alternative
+        run: |
+          force_source_path=$(bun -e 'console.log(Bun.resolveSync("high-density-repair01/lib/HighDensityForceImproveSolver",process.cwd()))')
+          python3 - "$force_source_path" <<'PY'
+          import sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);s=p.read_text()
+          needle="  node.x = clampValue(node.x, minX, maxX)"
+          assert s.count(needle)==1
+          s=s.replace(needle,"  if (node.fixed && (minX > maxX || minY > maxY)) return\n\n"+needle)
+          p.write_text(s)
+          PY
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-butterstick-fixed-via-force.test.ts --timeout 1500000
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          p=Path("tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force-arm64-drc.snap.svg")
+          print("MINIMAL_GUARD_DRC="+str(re.findall(r"Relaxed DRC errors: [0-9]+",p.read_text())))
+          PY
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force*
+          git commit -m "Capture the minimal clamp guard experiment"
+          git push origin HEAD:analysis/butterstick-inverted-bounds-rendered-arm64
