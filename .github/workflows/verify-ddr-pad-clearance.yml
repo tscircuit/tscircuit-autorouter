@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {label: head, ref: f5ac90b69a74f6e3ed1681c147ea94f6d6729a3d}
+          - {label: head, ref: 4530d5a03f145737847e74ed134725b1f52ef3f9}
     steps:
       - uses: actions/checkout@v4
         with:
