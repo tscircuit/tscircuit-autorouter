@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1118",
+  "version": "0.0.1123",
   "type": "module",
   "repository": {
     "type": "git",
@@ -67,7 +67,7 @@
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#83eb1bf80e7cd8a3bc91571ee0de8ade0f680448",
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/51dcb6ebad33c0310cf5179c56969d60f98a4548",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/be356e322f544def026fcd87b5be2b070dac1c40",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#8193d693020c4d2c6e89cc919151c39923d4d713",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -115,7 +115,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
-    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/adf46bb08b7197335163f20530486e408ab733ee",
+    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/cfb171460a39ecdf4748a6333370e4ac412fda19",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
