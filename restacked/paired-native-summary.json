@@ -1,0 +1,76 @@
+{
+  "beforeCommit": "519393298edc2c68f082f3575877d333a648e4d5",
+  "afterCommit": "ce72347ac145d932370fab6346765b0422f54cfc",
+  "bun": "1.4.3",
+  "pairsPerScene": 3,
+  "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44417208232",
+  "scenes": {
+    "icepi": {
+      "beforeMedianMs": 130450.782689,
+      "afterMedianMs": 125706.554411,
+      "medianReductionPercent": 3.636795563971762,
+      "allCopperIdentical": true,
+      "throughVias": 7,
+      "copperDrcIssues": 0,
+      "iterations": 26131,
+      "bestPartial": {
+        "routed": 7,
+        "planes": 6,
+        "boundary": 1,
+        "vias": 7,
+        "connectionNames": [
+          "breakout:pcb_breakout_point_6",
+          "source_trace_16",
+          "source_trace_3",
+          "source_trace_7",
+          "source_trace_15",
+          "source_trace_17",
+          "source_trace_18"
+        ],
+        "planeBuses": [
+          "ESC_U22_pin6",
+          "ESC_U22_pin142",
+          "ESC_U22_pin65",
+          "ESC_U22_pin55",
+          "ESC_U22_pin73",
+          "ESC_U22_pin82"
+        ]
+      },
+      "fullSolve": false
+    },
+    "imx6": {
+      "beforeMedianMs": 121184.882584,
+      "afterMedianMs": 111605.791274,
+      "medianReductionPercent": 7.90452662555513,
+      "allCopperIdentical": true,
+      "throughVias": 7,
+      "copperDrcIssues": 0,
+      "iterations": 26131,
+      "bestPartial": {
+        "routed": 8,
+        "planes": 6,
+        "boundary": 2,
+        "vias": 7,
+        "connectionNames": [
+          "breakout:pcb_breakout_point_4",
+          "breakout:pcb_breakout_point_8",
+          "source_trace_12",
+          "source_trace_11",
+          "source_trace_17",
+          "source_trace_16",
+          "source_trace_15",
+          "source_trace_3"
+        ],
+        "planeBuses": [
+          "ESC_U10_pin143",
+          "ESC_U10_pin130",
+          "ESC_U10_pin73",
+          "ESC_U10_pin6",
+          "ESC_U10_pin55",
+          "ESC_U10_pin144"
+        ]
+      },
+      "fullSolve": false
+    }
+  }
+}

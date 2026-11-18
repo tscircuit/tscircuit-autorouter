@@ -1,0 +1,27 @@
+[
+  {
+    "name": "native-default-plane-plan",
+    "completePlanObjectsEqual": true,
+    "sha256": "a8624aac98d70c7b276634bc96c3b84844e7d2dcc3b4017473b3e4f8b30a3003"
+  },
+  {
+    "name": "native-fixed-plane-plan",
+    "completePlanObjectsEqual": true,
+    "sha256": "f6e465d60fdb602a684675a481f6bb8bbeda5a0e5cc00c9382246c8c08a02501"
+  },
+  {
+    "name": "native-complete-plane-output",
+    "completeOutputObjectsEqual": true,
+    "sha256": "e20fd4bb5359e6eeca9befbca961013ad1a9d07ecf682b975daaebbc0edfa872"
+  },
+  {
+    "name": "ordinary-corner-boundary-output",
+    "completeOutputObjectsEqual": true,
+    "sha256": "65eddd86b50ee70fa33e4b1a526b5e493979721b7cad1d6399a040e6cf1934dc"
+  },
+  {
+    "name": "layered-corner-boundary-output",
+    "completeOutputObjectsEqual": true,
+    "sha256": "0e5c6f1a6f3631ec657dc57bb46d41d09479808e1efef5037614e8f70b6638f9"
+  }
+]

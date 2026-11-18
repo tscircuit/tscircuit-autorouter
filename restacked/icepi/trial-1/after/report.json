@@ -1,0 +1,309 @@
+{
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "elapsedMs": 125706.554411,
+  "copperDrc": {
+    "valid": true,
+    "checkedTraceCount": 7,
+    "checkedSegmentCount": 11,
+    "checkedViaCount": 7,
+    "issues": []
+  },
+  "bestPartial": {
+    "routed": 7,
+    "planes": 6,
+    "boundary": 1,
+    "vias": 7,
+    "connectionNames": [
+      "breakout:pcb_breakout_point_6",
+      "source_trace_16",
+      "source_trace_3",
+      "source_trace_7",
+      "source_trace_15",
+      "source_trace_17",
+      "source_trace_18"
+    ],
+    "planeBuses": [
+      "ESC_U22_pin6",
+      "ESC_U22_pin142",
+      "ESC_U22_pin65",
+      "ESC_U22_pin55",
+      "ESC_U22_pin73",
+      "ESC_U22_pin82"
+    ]
+  },
+  "solved": false,
+  "failed": true,
+  "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+  "iterations": 26131,
+  "stats": {
+    "phase": "complete-assignment",
+    "assignment": 256,
+    "assignmentCount": 256,
+    "routedBuses": "7/32",
+    "routedConnections": "7/32",
+    "failedBuses": "connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_8, connection:breakout:pcb_breakout_point_1, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_0, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_4, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_10, ESC_U22_pin32, ESC_U22_pin129, ESC_U22_pin115, ESC_U22_pin144, ESC_U22_pin34, ESC_U22_pin54, ESC_U22_pin101, ESC_U22_pin89, ESC_U22_pin90, ESC_U22_pin100, ESC_U22_pin127, ESC_U22_pin130, ESC_U22_pin143, ESC_U22_pin145",
+    "bestScore": 27500012.959747467
+  },
+  "options": {
+    "buses": [
+      {
+        "busId": "ESC_U22_pin101",
+        "name": "ESC_U22_pin101",
+        "connectionNames": [
+          "source_trace_0"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin115",
+        "name": "ESC_U22_pin115",
+        "connectionNames": [
+          "source_trace_1"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin129",
+        "name": "ESC_U22_pin129",
+        "connectionNames": [
+          "source_trace_2"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin142",
+        "name": "ESC_U22_pin142",
+        "connectionNames": [
+          "source_trace_3"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin144",
+        "name": "ESC_U22_pin144",
+        "connectionNames": [
+          "source_trace_4"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin34",
+        "name": "ESC_U22_pin34",
+        "connectionNames": [
+          "source_trace_5"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin54",
+        "name": "ESC_U22_pin54",
+        "connectionNames": [
+          "source_trace_6"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin65",
+        "name": "ESC_U22_pin65",
+        "connectionNames": [
+          "source_trace_7"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin90",
+        "name": "ESC_U22_pin90",
+        "connectionNames": [
+          "source_trace_8"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner2"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin100",
+        "name": "ESC_U22_pin100",
+        "connectionNames": [
+          "source_trace_9"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin127",
+        "name": "ESC_U22_pin127",
+        "connectionNames": [
+          "source_trace_10"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin130",
+        "name": "ESC_U22_pin130",
+        "connectionNames": [
+          "source_trace_11"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin143",
+        "name": "ESC_U22_pin143",
+        "connectionNames": [
+          "source_trace_12"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin145",
+        "name": "ESC_U22_pin145",
+        "connectionNames": [
+          "source_trace_13"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin32",
+        "name": "ESC_U22_pin32",
+        "connectionNames": [
+          "source_trace_14"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin55",
+        "name": "ESC_U22_pin55",
+        "connectionNames": [
+          "source_trace_15"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin6",
+        "name": "ESC_U22_pin6",
+        "connectionNames": [
+          "source_trace_16"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin73",
+        "name": "ESC_U22_pin73",
+        "connectionNames": [
+          "source_trace_17"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin82",
+        "name": "ESC_U22_pin82",
+        "connectionNames": [
+          "source_trace_18"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      },
+      {
+        "busId": "ESC_U22_pin89",
+        "name": "ESC_U22_pin89",
+        "connectionNames": [
+          "source_trace_19"
+        ],
+        "termination": {
+          "type": "plane",
+          "layer": "inner1"
+        }
+      }
+    ],
+    "borderDistribution": "even",
+    "compactBusTracks": true,
+    "busDirections": {
+      "ESC_U22_pin101": "left",
+      "ESC_U22_pin115": "left",
+      "ESC_U22_pin129": "left",
+      "ESC_U22_pin142": "left",
+      "ESC_U22_pin144": "left",
+      "ESC_U22_pin34": "left",
+      "ESC_U22_pin54": "left",
+      "ESC_U22_pin65": "left",
+      "ESC_U22_pin90": "left",
+      "ESC_U22_pin100": "up",
+      "ESC_U22_pin127": "up",
+      "ESC_U22_pin130": "up",
+      "ESC_U22_pin143": "up",
+      "ESC_U22_pin145": "up",
+      "ESC_U22_pin32": "up",
+      "ESC_U22_pin55": "up",
+      "ESC_U22_pin6": "up",
+      "ESC_U22_pin73": "up",
+      "ESC_U22_pin82": "up",
+      "ESC_U22_pin89": "up"
+    },
+    "escapeLayers": [
+      "top",
+      "inner1",
+      "inner2",
+      "bottom"
+    ],
+    "allowBlindAndBuriedVias": false,
+    "sharedBoundary": {
+      "minX": -2.8300000000012426,
+      "maxX": 5.339999999998759,
+      "minY": 10.479999999999983,
+      "maxY": 18.649999999999984
+    }
+  },
+  "inputConnections": 32
+}
