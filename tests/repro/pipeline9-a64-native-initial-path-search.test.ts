@@ -58,7 +58,9 @@ test("A64 native DDR initial path search", async (): Promise<void> => {
   await expect(
     getSvgFromGraphicsObject(
       stackGraphicsHorizontally([graphics], {
-        titles: [`A64 native DDR | ${plannedRoutes.size}/${initialSearch.problem.routeCount} point-to-point paths planned`],
+        titles: [
+          `A64 native DDR | ${plannedRoutes.size}/${initialSearch.problem.routeCount} point-to-point paths planned`,
+        ],
       }),
       { backgroundColor: "white" },
     ),
