@@ -30,7 +30,9 @@ jobs:
           import json,pathlib
           b=json.loads(pathlib.Path("base/package.json").read_text())
           h=json.loads(pathlib.Path("head/package.json").read_text())
-          assert b==h,"Dependency manifests differ"
+          assert h["devDependencies"]["high-density-repair01"]=="git+https://github.com/tscircuit/high-density-repair01.git#3a560ce3b4bbe3597c77288f39cdc355b3ad624a"
+          h["devDependencies"]["high-density-repair01"]=b["devDependencies"]["high-density-repair01"]
+          assert b==h,"Unexpected dependency differences outside the candidate pin"
           h["overrides"]={**h.get("overrides",{}),"csstype":"3.1.3"}
           pathlib.Path("head/package.json").write_text(json.dumps(h,indent=2)+"\n")
           pathlib.Path("base/package.json").write_text(json.dumps(h,indent=2)+"\n")
@@ -48,7 +50,8 @@ jobs:
           base=pathlib.Path("base/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
           head=pathlib.Path("head/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
           assert base!=head,"The baseline must not use the candidate dependency"
-          assert b"fixedViaObstacles" not in base and b"fixedViaObstacles" in head
+          marker=b"if (node.fixed && (minX > maxX || minY > maxY)) return"
+          assert marker not in base and marker in head
           print("FORCE_DEPENDENCY_HASHES="+str({"base":hashlib.sha256(base).hexdigest(),"head":hashlib.sha256(head).hexdigest()}))
           PY
           cat > /tmp/collect-pad-preparation.py <<'PY'
@@ -141,7 +144,9 @@ jobs:
           import json,pathlib
           b=json.loads(pathlib.Path("base/package.json").read_text())
           h=json.loads(pathlib.Path("head/package.json").read_text())
-          assert b==h,"Dependency manifests differ"
+          assert h["devDependencies"]["high-density-repair01"]=="git+https://github.com/tscircuit/high-density-repair01.git#3a560ce3b4bbe3597c77288f39cdc355b3ad624a"
+          h["devDependencies"]["high-density-repair01"]=b["devDependencies"]["high-density-repair01"]
+          assert b==h,"Unexpected dependency differences outside the candidate pin"
           h["overrides"]={**h.get("overrides",{}),"csstype":"3.1.3"}
           pathlib.Path("head/package.json").write_text(json.dumps(h,indent=2)+"\n")
           pathlib.Path("base/package.json").write_text(json.dumps(h,indent=2)+"\n")
@@ -159,7 +164,8 @@ jobs:
           base=pathlib.Path("base/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
           head=pathlib.Path("head/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
           assert base!=head,"The baseline must not use the candidate dependency"
-          assert b"fixedViaObstacles" not in base and b"fixedViaObstacles" in head
+          marker=b"if (node.fixed && (minX > maxX || minY > maxY)) return"
+          assert marker not in base and marker in head
           print("FORCE_DEPENDENCY_HASHES="+str({"base":hashlib.sha256(base).hexdigest(),"head":hashlib.sha256(head).hexdigest()}))
           PY
           cat > /tmp/collect-pad-preparation.py <<'PY'
