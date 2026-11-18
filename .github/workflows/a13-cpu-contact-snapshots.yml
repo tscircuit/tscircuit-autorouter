@@ -28,40 +28,10 @@ jobs:
           p.write_text(json.dumps(data,indent=2)+'\n')
           PY
           bun install
-      - name: Inspect the affected board before and after the review revision
-        run: |
-          cat > review-shortcut-snapshot.private.ts <<'TS'
-          import { runAllChecks } from "@tscircuit/checks"
-          import type { PcbBoard } from "circuit-json"
-          import { AutoroutingPipelineSolver7_MultiGraph } from "./lib"
-          import { convertToCircuitJson } from "./lib/testing/utils/convertToCircuitJson"
-          import bugReport from "./fixtures/bug-reports/bugreport84-726193/bugreport84-726193.json"
-          import type { SimpleRouteJson } from "./lib/types"
-          const srj=bugReport.simple_route_json as SimpleRouteJson
-          const solver=new AutoroutingPipelineSolver7_MultiGraph(structuredClone(srj))
-          solver.solve()
-          if(!solver.solved) throw new Error(solver.error ?? "routing failed")
-          const circuitJson=convertToCircuitJson(solver.srjWithPointPairs!,solver.getOutputSimplifiedPcbTraces(),{minTraceWidth:srj.minTraceWidth,originalSrj:srj})
-          const board={type:"pcb_board",pcb_board_id:"pcb_board_0",thickness:1.6,num_layers:srj.layerCount,center:{x:(srj.bounds.minX+srj.bounds.maxX)/2,y:(srj.bounds.minY+srj.bounds.maxY)/2},outline:srj.outline,shape:"polygon",material:"fr4",min_board_edge_clearance:bugReport.simple_route_json.minBoardEdgeClearance} satisfies PcbBoard
-          const errors=await runAllChecks([...circuitJson,board])
-          const counts:Record<string,number>={}
-          for(const error of errors) counts[error.type]=(counts[error.type]??0)+1
-          const sourceTrace26Touching=errors.filter(error=>"pcb_trace_id" in error&&error.pcb_trace_id.includes("source_trace_26")&&error.message.includes("0.000mm")).length
-          console.log("SNAPSHOT_REVIEW_METRICS="+JSON.stringify({variant:process.argv[2],traceCount:solver.getOutputSimplifiedPcbTraces().length,counts,sourceTrace26Touching}))
-          TS
-          bun review-shortcut-snapshot.private.ts head
-          git fetch --depth=1 origin 8c542342138f0db34a39126687d8015a5eb9920b
-          mkdir -p /tmp/shortcut-source
-          for file in lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts lib/solvers/HighDensitySolver/IntraNodeSolver.ts lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts lib/solvers/TraceWidthSolver/TraceWidthSolver.ts; do
-            cp --parents "$file" /tmp/shortcut-source
-            git show 8c542342138f0db34a39126687d8015a5eb9920b:"$file" > "$file"
-          done
-          bun review-shortcut-snapshot.private.ts base
-          cp -r /tmp/shortcut-source/lib/. lib/
-      - name: Regenerate only the changed board snapshot, preserving its routing assertions
+      - name: Regenerate only CI-failing board snapshots without changing assertions
         env:
           BUN_UPDATE_SNAPSHOTS: 1
-        run: bun test ./tests/bugs/bugreport84-726193.test.ts --timeout 9999999
+        run: bun test ./tests/bugs/bugreport84-726193.test.ts ./tests/bugs/bugreport71-dd7d15.test.ts ./tests/bugs/usb-dp-phase-detour.test.ts ./tests/repro/pipeline9-srj18-sample9-layer-tie-break.test.ts ./tests/repro/pipeline9-a64-real-byte0-foreign-pad.test.ts --timeout 9999999
       - name: Record only generated SVGs on the experiment branch
         uses: actions/github-script@v7
         with:
@@ -70,6 +40,11 @@ jobs:
             const branch = "experiments/shortcut-obstacle-validation"
             for(const path of [
               "tests/bugs/__snapshots__/bugreport84-726193.snap.svg",
+              "tests/bugs/__snapshots__/bugreport71-dd7d15-linux.snap.svg",
+              "tests/bugs/__snapshots__/usb-dp-phase-detour-linux.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-srj18-sample9-layer-tie-break.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-a64-real-byte0-foreign-pad-full-board.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-a64-real-byte0-foreign-pad-ram-escape.snap.svg",
             ]) {
               const svg=fs.readFileSync(path,"utf8")
               const content=Buffer.from(svg).toString("base64")
