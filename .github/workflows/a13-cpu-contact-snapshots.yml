@@ -50,6 +50,7 @@ jobs:
           console.log("SNAPSHOT_REVIEW_METRICS="+JSON.stringify({variant:process.argv[2],traceCount:solver.getOutputSimplifiedPcbTraces().length,counts,sourceTrace26Touching}))
           TS
           bun review-shortcut-snapshot.private.ts head
+          git fetch --depth=1 origin 8c542342138f0db34a39126687d8015a5eb9920b
           mkdir -p /tmp/shortcut-source
           for file in lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts lib/solvers/HighDensitySolver/IntraNodeSolver.ts lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts lib/solvers/TraceWidthSolver/TraceWidthSolver.ts; do
             cp --parents "$file" /tmp/shortcut-source
