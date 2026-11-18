@@ -1,0 +1,41 @@
+{
+  "purpose": "Diagnostic of first ButterStick byte1 generated-sites fallback using exact historical full-board SRJ and latest published Core2414/Bus62. Not a new whole-board baseline or routing improvement.",
+  "runtimeController": "13889f2abbe8201e23fe90d9a04ee26d0445d06e",
+  "softCaptureMs": 900000,
+  "hardCaptureSeconds": 960,
+  "productionChanges": false,
+  "artifact": {
+    "id": 14376120671,
+    "name": "full-board-butterstick-bus-lifecycle-spaced-1",
+    "size_in_bytes": 6855127,
+    "digest": "sha256:ca80421bf1d25b4e17dd8ce78eab0767158585ff19d34c5014a278451e174648",
+    "workflow_run": {
+      "id": 44185587283,
+      "repository_id": 924883209,
+      "head_repository_id": 924883209,
+      "head_branch": "diagnostic/butterstick-bus-lifecycle-3230",
+      "head_sha": "a8add047564399e06ec77033834fb80e182ba299"
+    }
+  },
+  "files": {
+    "phase-2-input.srj.json.gz": {
+      "bytes": 2062394,
+      "sha256": "f443b05bce41c591a18a9e98407bb372f254e98d22cb9824c6e0f438ac1af3c5",
+      "payloadSha256": "76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e"
+    },
+    "bus-byte1-lifecycle.json": {
+      "bytes": 36387,
+      "sha256": "017c12115ea80d6da53080e6112184b0f38cc9f2bd1cc519470906717dc51e88"
+    },
+    "progress.json": {
+      "bytes": 8000,
+      "sha256": "74967e07d51c5a174b6832c0e6f221293a962e606c7c15183e059938aae3f2cf"
+    }
+  },
+  "phase": 2,
+  "expectedRawInputSha256": "76cf820b7c60096fc5b71779a232f5b297567ed62a56cf2b22f3d675d863b92e",
+  "expectedFirstFallbackYieldCount": 11223,
+  "nativeOptions": {},
+  "routingBudgetOverrides": false,
+  "fresh3234InputEqualityRequiredForNativeRelevance": true
+}

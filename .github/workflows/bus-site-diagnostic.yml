@@ -1,0 +1,100 @@
+name: Published3234 ButterStick generated-site diagnosis
+
+on:
+  push:
+    branches: [bench/bus-site-diagnostic-3234-20261118]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  capture:
+    name: First generated-site fallback (control and observation)
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - name: Checkout frozen benchmark controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/bus-site-diagnostic.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged verified published3234 runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Authenticate native input and prepare separate observation copies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 experiments/full-board-ten/prepare-bus-site-input.py "$FULL_BOARD_ROOT/bus-site"
+          python3 experiments/full-board-ten/instrument-core.py "$FULL_BOARD_ROOT/npm/core/dist/index.js" "$FULL_BOARD_ROOT/npm/core/dist/bus-site-control.js" --control
+          python3 experiments/full-board-ten/instrument-core.py "$FULL_BOARD_ROOT/npm/core/dist/index.js" "$FULL_BOARD_ROOT/npm/core/dist/bus-site-observed.js"
+
+      - name: Replay published first fallback
+        run: >-
+          timeout --signal=TERM --kill-after=10s 960s
+          bun experiments/full-board-ten/run-bus-site-diagnostic.ts
+          "$FULL_BOARD_ROOT/npm/core/dist/bus-site-control.js"
+          "$FULL_BOARD_ROOT/bus-site" control
+          "$FULL_BOARD_ROOT/runtime-manifest.json"
+
+      - name: Capture first fallback rejection causes
+        run: >-
+          timeout --signal=TERM --kill-after=10s 960s
+          bun experiments/full-board-ten/run-bus-site-diagnostic.ts
+          "$FULL_BOARD_ROOT/npm/core/dist/bus-site-observed.js"
+          "$FULL_BOARD_ROOT/bus-site" observed
+          "$FULL_BOARD_ROOT/runtime-manifest.json"
+
+      - name: Check observation preserves input and outcome
+        run: python3 experiments/full-board-ten/verify-bus-site-diagnostic.py "$FULL_BOARD_ROOT/bus-site"
+
+      - name: Preserve diagnosis and unchanged runtime provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: native-bus-sites3234-${{ github.run_attempt }}
+          path: |
+            .full-board-run/bus-site
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/bus-site-plan.json
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
