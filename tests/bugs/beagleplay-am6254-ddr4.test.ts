@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import input from "../../fixtures/bug-reports/beagleplay-am6254-ddr4/input.srj.json"
 import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
@@ -76,4 +77,15 @@ test("BeaglePlay DDR4 retains only the controller and RAM", () => {
   expect(
     pads.flatMap((pad) => (pad.pcb_port_id ? [pad.pcb_port_id] : [])).sort(),
   ).toEqual(ports.map((port) => port.pcb_port_id).sort())
+
+  for (const name of ["unrouted", "routed"]) {
+    const png = readFileSync(
+      new URL(
+        `../../fixtures/bug-reports/beagleplay-am6254-ddr4/images/${name}.png`,
+        import.meta.url,
+      ),
+    )
+    // The PNG IHDR stores the canvas width and height at bytes 16 and 20.
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1536, 853])
+  }
 })

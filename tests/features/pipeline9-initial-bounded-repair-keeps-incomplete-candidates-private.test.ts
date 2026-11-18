@@ -74,6 +74,14 @@ test("an incomplete initial bounded result seeds exact repair and can win the fi
         expect(solver.solved).toBeTrue()
         expect(solver.getOutput()).toEqual(regionalCandidate)
         expect(solver.stats.finalDrcIssueCount).toBe(0)
+        const publishedDrc = fixture.drcEvaluator({
+          traces: [],
+          routes: solver.getOutput(),
+        })
+        const publishedErrors = Array.isArray(publishedDrc)
+          ? publishedDrc
+          : publishedDrc.errors
+        expect(publishedErrors).toEqual([])
       } finally {
         finalResult.mockRestore()
       }

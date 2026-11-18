@@ -60,10 +60,18 @@ U1. The routed snapshot measures 0.954 mm for that pair. The original
 `0.0.1117` repro left 0.037 mm between `DDR_PARITY` and `DDR_A6` at U1.
 Its report included 102 false endpoint warnings caused by missing pad
 records. Trace colors identify nets across all eight overlaid layers.
+Both snapshots use the original 1536 × 853 canvas and board framing.
 
 ![AM6254 and Samsung DDR4 before routing](images/unrouted.png)
 
 ![AM6254 and Samsung DDR4 with 51 routed nets and zero DRC findings](images/routed.png)
+
+## Clearance regression test
+
+The clearance test checks the captured `DDR_PARITY` / `DDR_A6` and
+`DDR_PARITY` / `DDR_A7` violations against the modeled pads. It replays
+Pipeline 9 joint repair from the saved 51-net intermediate routes and
+checks both trace gaps, all 102 port connections, and zero DRC findings.
 
 [layout]: https://github.com/beagleboard/beagleplay/blob/7a59a98ae27dc4fd9e2bd8975ff90cdb44a366ea/Design/20230215_beagleplayv022_10.brd
 [bom]: https://github.com/beagleboard/beagleplay/blob/7a59a98ae27dc4fd9e2bd8975ff90cdb44a366ea/BeaglePlay_bom.csv
