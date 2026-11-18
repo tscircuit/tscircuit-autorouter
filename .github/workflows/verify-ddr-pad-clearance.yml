@@ -14,7 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {label: head, ref: 4530d5a03f145737847e74ed134725b1f52ef3f9}
+          - {label: base, ref: 19c6065ae34a4368f3c91be9cee7bf9355604bda}
+          - {label: head, ref: 6ebead548e25ce62477345d4314acbf3e0a7f66e}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,8 +34,89 @@ jobs:
           p.write_text(json.dumps(m,indent=2)+"\n")
           PY
           bun install
+      - name: Use the RAM-corridor repro view
+        run: |
+          cat > tests/repro/pipeline9-a13-regional-repair-shorts.test.ts <<'TS'
+          import { expect, test } from "bun:test"
+          import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
+          import { readFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+          import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+          import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+          import type { SimpleRouteJson } from "lib/types"
+          import { createPcbBoardElement } from "lib/utils/convertToCircuitJson"
+          
+          test("route the native A13 remaining signals after the four data phases", async (): Promise<void> => {
+            const input: SimpleRouteJson = JSON.parse(
+              gunzipSync(
+                new Uint8Array(
+                  readFileSync(
+                    new URL(
+                      "../fixtures/assets/a13-fixed-copper/remaining64-bus060.srj.json.gz",
+                      import.meta.url,
+                    ),
+                  ),
+                ),
+              ).toString("utf8"),
+            )
+            const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+              cacheProvider: null,
+            })
+            solver.solve()
+            expect(solver.solved).toBe(true)
+            const snapshotInput = {
+              inputSrj: input,
+              srjWithPointPairs: solver.srjWithPointPairs!,
+              routedTraces: solver.getOutputSimplifiedPcbTraces(),
+            }
+            await expect(
+              getBugReportSnapshotSvg({
+                ...snapshotInput,
+                drcOptions: {
+                  traceClearance: input.minTraceToPadEdgeClearance,
+                  viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
+                },
+              }),
+            ).toMatchSvgSnapshot(import.meta.path)
+          
+            // Show the physical RAM pad column and its routing gaps.
+            const { circuitJson } = evaluateRelaxedDrc(snapshotInput)
+            expect(
+              checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0 }),
+            ).toEqual([])
+            const svg = convertCircuitJsonToPcbSvg(
+              [
+                ...circuitJson,
+                {
+                  ...createPcbBoardElement(input),
+                  center: { x: -5.6, y: 0.264194 },
+                  width: 2.4,
+                  height: 8,
+                  outline: undefined,
+                },
+              ],
+              {
+                width: 1000,
+                height: 1000,
+                backgroundColor: "white",
+                renderSolderMask: false,
+                layer: "top",
+                drawPaddingOutsideBoard: false,
+                shouldDrawErrors: false,
+                shouldDrawRatsNest: false,
+                includeVersion: false,
+              },
+            )
+            await expect(svg).toMatchSvgSnapshot(import.meta.path, {
+              svgName: "copper-contacts",
+              scale: 1,
+            })
+          })
+          TS
       - name: Real A13 board and existing routing assertions
-        run: BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-a13-fixed-copper-checks.test.ts tests/repro/pipeline9-a13-regional-repair-shorts.test.ts tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
       - name: Collect real SVG comparison
         if: always()
         env:
@@ -55,6 +137,18 @@ jobs:
       - name: Build
         if: matrix.label == 'head'
         run: bun run build
+      - name: Export the generated SVG proof
+        if: always()
+        env:
+          LABEL: ${{ matrix.label }}
+        run: |
+          python3 - <<'PY'
+          import pathlib,json,os,gzip,base64
+          names=["pipeline9-a13-regional-repair-shorts.snap.svg","pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg","pipeline9-a13-fixed-copper-checks.snap.svg","pipeline9-a13-declared-trace-clearance.snap.svg","pipeline9-a13-declared-trace-clearance-close-trace-pairs.snap.svg"]
+          for name in names:
+           p=pathlib.Path("tests/repro/__snapshots__")/name
+           print("DDR_SVG_PROOF="+json.dumps({"release":os.environ["LABEL"],"name":name,"gzipBase64":base64.b64encode(gzip.compress(p.read_bytes())).decode()}))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
