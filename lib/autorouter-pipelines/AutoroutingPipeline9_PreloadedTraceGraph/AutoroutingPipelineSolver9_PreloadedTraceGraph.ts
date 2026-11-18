@@ -76,6 +76,7 @@ import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matchin
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import { getSrjWithPreloadedViaObstacles } from "./getSrjWithPreloadedViaObstacles"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -380,7 +381,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       MultiGraphTopologyPlannerSolver,
       (cms) => [
         {
-          inputSrj: cms.srjWithPointPairs!,
+          // Vias constrain topology; detailed routing uses the live preloaded copper.
+          inputSrj: getSrjWithPreloadedViaObstacles(cms.srjWithPointPairs!),
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
