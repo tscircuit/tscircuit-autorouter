@@ -15,6 +15,9 @@ type CachedSolvedIntraNodeRouteSolver =
   | { success: false; error?: string }
 
 type CacheToIntraNodeSolverTransform = Record<string, never>
+type PadObstacles = IntraNodeRouteSolver["padObstacles"]
+
+const padObstacleCacheKeys = new WeakMap<PadObstacles, string>()
 
 const roundCoord = (n: number) => Math.round(n * 200) / 200
 
@@ -154,20 +157,24 @@ export class CachedIntraNodeRouteSolver
         }))
       : undefined
 
-    this.precomputedParams.padObstaclesCacheKey ??= objectHash(
-      serializeIntraNodeCacheKey(
-        this.padObstacles.map((obstacle) => ({
-          obstacleId: obstacle.obstacleId,
-          center: obstacle.center,
-          width: obstacle.width,
-          height: obstacle.height,
-          shape: obstacle.shape,
-          ccwRotationDegrees: obstacle.ccwRotationDegrees,
-          zLayers: obstacle.__zLayers,
-          connectedTo: obstacle.connectedTo,
-        })),
-      ),
-    )
+    let padObstaclesCacheKey = padObstacleCacheKeys.get(this.padObstacles)
+    if (padObstaclesCacheKey === undefined) {
+      padObstaclesCacheKey = objectHash(
+        serializeIntraNodeCacheKey(
+          this.padObstacles.map((obstacle) => ({
+            obstacleId: obstacle.obstacleId,
+            center: obstacle.center,
+            width: obstacle.width,
+            height: obstacle.height,
+            shape: obstacle.shape,
+            ccwRotationDegrees: obstacle.ccwRotationDegrees,
+            zLayers: obstacle.__zLayers,
+            connectedTo: obstacle.connectedTo,
+          })),
+        ),
+      )
+      padObstacleCacheKeys.set(this.padObstacles, padObstaclesCacheKey)
+    }
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
       node: {
@@ -182,7 +189,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
-      padObstacles: this.precomputedParams.padObstaclesCacheKey,
+      padObstacles: padObstaclesCacheKey,
       normalizedConnections,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(

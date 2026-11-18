@@ -14,7 +14,6 @@ export type PrecomputedIntraNodeRouteParams = {
   rootConnectionNameByConnectionName: ReadonlyMap<string, string>
   minDistBetweenEnteringPoints: number
   padObstacles: (Obstacle & { __zLayers: number[] })[]
-  padObstaclesCacheKey?: string
 }
 
 /** Fixed topology and pads are shared within one portfolio attempt. */

@@ -76,7 +76,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   padObstacles: SingleHighDensityRouteSolver["padObstacles"]
-  protected readonly precomputedParams: PrecomputedIntraNodeRouteParams
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -130,7 +129,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(params)
-    this.precomputedParams = precomputedParams
     this.padObstacles = precomputedParams.padObstacles
     this.rootConnectionNameByConnectionName = new Map(
       precomputedParams.rootConnectionNameByConnectionName,
