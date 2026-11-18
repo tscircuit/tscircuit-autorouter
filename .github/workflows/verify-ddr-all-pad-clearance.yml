@@ -1,0 +1,62 @@
+name: Verify native A13 pad clearance
+on:
+  push:
+    branches: [analysis/ddr-3235-all-pad-clearance]
+    paths: [.github/workflows/verify-ddr-all-pad-clearance.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: A13 source ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: head, ref: 1027a79793f805c752587a838ffc012f988ff650}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install declared dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json")
+          m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Real A13 board and existing routing assertions
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
+      - name: Collect real SVG comparison
+        if: always()
+        env:
+          LABEL: ${{ matrix.label }}
+        run: |
+          python3 - <<'PY'
+          import pathlib,re,json,os
+          for p in pathlib.Path("tests/repro/__snapshots__").glob("pipeline9-a13-*.snap.svg"):
+           if not any(n in p.name for n in ["fixed-copper-checks","regional-repair-shorts","declared-trace-clearance"]):continue
+           count=re.search(r"Relaxed DRC errors: ([0-9]+)",p.read_text())
+           print("SOURCE_A13_SVG="+json.dumps({"release":os.environ["LABEL"],"snapshot":p.name,"findings":int(count[1]) if count else None}))
+          PY
+      - name: Focused shortcut checks
+        run: bun test --timeout 9999999 tests/solvers/single-route-diagonal-fixed-obstacle.test.ts tests/solvers/single-route-horizontal-fixed-obstacle.test.ts tests/solvers/single-route-layer-change-fixed-obstacle.test.ts tests/solvers/single-route-rejects-blocked-inset.test.ts tests/solvers/portfolio-shared-node-topology.test.ts
+      - name: Typecheck
+        if: matrix.label == 'head'
+        run: bunx tsc --noEmit
+      - name: Build
+        if: matrix.label == 'head'
+        run: bun run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-a13-pad-${{ matrix.label }}
+          path: tests/repro/__snapshots__/pipeline9-a13-*.snap.svg
