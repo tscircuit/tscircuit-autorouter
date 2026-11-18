@@ -1,0 +1,566 @@
+{
+  "self": [
+    {
+      "ms": 24439.17,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 19131.54,
+      "functionName": "buildPlan",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1134,
+      "columnNumber": 18
+    },
+    {
+      "ms": 11361.15,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 10395.48,
+      "functionName": "planIsClear",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2142,
+      "columnNumber": 20
+    },
+    {
+      "ms": 8499.0,
+      "functionName": "buildPlan",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1134,
+      "columnNumber": 18
+    },
+    {
+      "ms": 7646.7,
+      "functionName": "copyDataProperties",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 7482.93,
+      "functionName": "",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2823,
+      "columnNumber": 14
+    },
+    {
+      "ms": 6668.99,
+      "functionName": "obstacleSharesElectricalNet",
+      "scriptId": "37",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+      "lineNumber": 156,
+      "columnNumber": 43
+    },
+    {
+      "ms": 5777.91,
+      "functionName": "routePlaneTerminatedBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2402,
+      "columnNumber": 32
+    },
+    {
+      "ms": 5512.87,
+      "functionName": "at",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 5336.73,
+      "functionName": "getConnectionRank",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 735,
+      "columnNumber": 26
+    },
+    {
+      "ms": 4654.94,
+      "functionName": "planIsClear",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2142,
+      "columnNumber": 20
+    },
+    {
+      "ms": 3990.96,
+      "functionName": "map",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 3695.92,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 3334.43,
+      "functionName": "",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2823,
+      "columnNumber": 14
+    },
+    {
+      "ms": 3253.27,
+      "functionName": "copyDataProperties",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 3157.46,
+      "functionName": "obstacleSharesElectricalNet",
+      "scriptId": "37",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+      "lineNumber": 156,
+      "columnNumber": 43
+    },
+    {
+      "ms": 3008.2,
+      "functionName": "routePlaneTerminatedBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2402,
+      "columnNumber": 32
+    },
+    {
+      "ms": 2894.35,
+      "functionName": "createFanoutOutputIds",
+      "scriptId": "35",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-output-ids.ts",
+      "lineNumber": 10,
+      "columnNumber": 37
+    },
+    {
+      "ms": 2849.51,
+      "functionName": "hypot",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 2647.98,
+      "functionName": "hypot",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 2497.38,
+      "functionName": "at",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 2417.41,
+      "functionName": "getConnectionRank",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 735,
+      "columnNumber": 26
+    },
+    {
+      "ms": 2136.46,
+      "functionName": "hypot",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1901.2,
+      "functionName": "hypot",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1809.85,
+      "functionName": "map",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1742.36,
+      "functionName": "appendLayerPath",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1408,
+      "columnNumber": 26
+    },
+    {
+      "ms": 1704.35,
+      "functionName": "",
+      "scriptId": "40",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/build-output.ts",
+      "lineNumber": 168,
+      "columnNumber": 32
+    },
+    {
+      "ms": 1650.0,
+      "functionName": "chamferOrthogonalCorners",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 622,
+      "columnNumber": 33
+    },
+    {
+      "ms": 1528.09,
+      "functionName": "hypot",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1482.63,
+      "functionName": "appendSegment",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1024,
+      "columnNumber": 22
+    },
+    {
+      "ms": 1410.86,
+      "functionName": "distanceSegmentToObstacle",
+      "scriptId": "32",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/geometry.ts",
+      "lineNumber": 134,
+      "columnNumber": 41
+    },
+    {
+      "ms": 1397.15,
+      "functionName": "getStraightOr45ConnectorVariants",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 672,
+      "columnNumber": 41
+    },
+    {
+      "ms": 1385.59,
+      "functionName": "segmentIsClearOfObstacles",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1762,
+      "columnNumber": 34
+    },
+    {
+      "ms": 1287.06,
+      "functionName": "distanceSegmentToSegment",
+      "scriptId": "32",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/geometry.ts",
+      "lineNumber": 68,
+      "columnNumber": 40
+    }
+  ],
+  "inclusive": [
+    {
+      "ms": 202617.52,
+      "functionName": "(root)",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 202288.16,
+      "functionName": "(module)",
+      "scriptId": "29",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/profile-native-fanout.ts",
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    {
+      "ms": 202028.74,
+      "functionName": "step",
+      "scriptId": "33",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 202003.58,
+      "functionName": "_step",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 6658,
+      "columnNumber": 16
+    },
+    {
+      "ms": 201993.73,
+      "functionName": "stepActiveOperation",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 1645,
+      "columnNumber": 29
+    },
+    {
+      "ms": 201944.19,
+      "functionName": "step",
+      "scriptId": "33",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 201908.01,
+      "functionName": "_step",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 148,
+      "columnNumber": 16
+    },
+    {
+      "ms": 108251.52,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 102081.46,
+      "functionName": "evaluateAssignmentSteps",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 6002,
+      "columnNumber": 62
+    },
+    {
+      "ms": 102067.44,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 102066.21,
+      "functionName": "evaluateAssignmentWithStrategySteps",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 5643,
+      "columnNumber": 62
+    },
+    {
+      "ms": 100946.2,
+      "functionName": "routeBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 4324,
+      "columnNumber": 24
+    },
+    {
+      "ms": 100939.55,
+      "functionName": "routeBusAlternatives",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 4314,
+      "columnNumber": 36
+    },
+    {
+      "ms": 100890.47,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 100889.3,
+      "functionName": "routeBusAlternativesSteps",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2857,
+      "columnNumber": 70
+    },
+    {
+      "ms": 100172.84,
+      "functionName": "routePlaneTerminatedBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2402,
+      "columnNumber": 32
+    },
+    {
+      "ms": 93603.49,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 93603.49,
+      "functionName": "next",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 93594.36,
+      "functionName": "evaluateAssignmentSteps",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 6002,
+      "columnNumber": 62
+    },
+    {
+      "ms": 93580.16,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 93574.51,
+      "functionName": "evaluateAssignmentWithStrategySteps",
+      "scriptId": "30",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+      "lineNumber": 5643,
+      "columnNumber": 62
+    },
+    {
+      "ms": 91274.85,
+      "functionName": "routeBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 4324,
+      "columnNumber": 24
+    },
+    {
+      "ms": 91266.68,
+      "functionName": "routeBusAlternatives",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 4314,
+      "columnNumber": 36
+    },
+    {
+      "ms": 91257.91,
+      "functionName": "generatorResume",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 91257.91,
+      "functionName": "next",
+      "scriptId": "21",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 91256.78,
+      "functionName": "routeBusAlternativesSteps",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2857,
+      "columnNumber": 70
+    },
+    {
+      "ms": 89488.14,
+      "functionName": "routePlaneTerminatedBus",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2402,
+      "columnNumber": 32
+    },
+    {
+      "ms": 68324.96,
+      "functionName": "selectClearPlanePlan",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2429,
+      "columnNumber": 31
+    },
+    {
+      "ms": 53094.33,
+      "functionName": "buildPlan",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1134,
+      "columnNumber": 18
+    },
+    {
+      "ms": 48260.16,
+      "functionName": "",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2823,
+      "columnNumber": 14
+    },
+    {
+      "ms": 44925.73,
+      "functionName": "planIsClear",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 2142,
+      "columnNumber": 20
+    },
+    {
+      "ms": 40270.8,
+      "functionName": "planIsStaticallyClear",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1857,
+      "columnNumber": 30
+    },
+    {
+      "ms": 40106.56,
+      "functionName": "segmentIsClearOfObstacles",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1762,
+      "columnNumber": 34
+    },
+    {
+      "ms": 24439.17,
+      "functionName": "includes",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 23602.82,
+      "functionName": "buildPlan",
+      "scriptId": "34",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus.ts",
+      "lineNumber": 1134,
+      "columnNumber": 18
+    }
+  ]
+}

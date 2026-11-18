@@ -1,0 +1,63 @@
+name: Profile actual iCEPi fanout failure after correcting workflow
+on:
+  push:
+    branches: [codex/ddr2410-fanout-profile]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  profile:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 5d9e4a0630bebe77003ee31e0dfa5993ee22e394
+          path: core
+      - uses: actions/download-artifact@v4
+        with:
+          name: fanout-bus-first-icepi
+          run-id: 44296522072
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the unchanged published fanout solver
+        run: |
+          (cd core && bun install --ignore-scripts)
+          cp experiments/full-board-priority-analysis/profile-native-fanout.ts core/profile-native-fanout.ts
+          mkdir -p profile
+      - name: Profile the exact captured native fanout input
+        working-directory: core
+        run: bun --cpu-prof --cpu-prof-dir "$GITHUB_WORKSPACE/profile" --cpu-prof-name fanout.cpuprofile profile-native-fanout.ts "$GITHUB_WORKSPACE/captured/icepi/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/profile"
+      - name: Export compact CPU evidence and native fanout debug SVG
+        run: |
+          python3 - <<'PY'
+          import base64,collections,io,json,zipfile
+          from pathlib import Path
+          root=Path('profile');p=json.loads((root/'fanout.cpuprofile').read_text());nodes={n['id']:n for n in p['nodes']};parents={c:n['id'] for n in p['nodes'] for c in n.get('children',[])};own=collections.Counter();inclusive=collections.Counter()
+          for sample,delta in zip(p['samples'],p['timeDeltas']):
+              own[sample]+=delta;current=sample
+              while current is not None:
+                  inclusive[current]+=delta;current=parents.get(current)
+          def rows(counter): return [{'ms':round(t/1000,2),**nodes[n]['callFrame']} for n,t in counter.most_common(35)]
+          report={'self':rows(own),'inclusive':rows(inclusive)}
+          (root/'cpu-summary.json').write_text(json.dumps(report,indent=2))
+          print('NATIVE_FANOUT_CPU_SUMMARY',json.dumps(report,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for name in ['report.json','cpu-summary.json','fanout.svg','fanout.graphics.json']: archive.writestr(name,(root/name).read_bytes())
+          print('NATIVE_FANOUT_PROFILE_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('NATIVE_FANOUT_PROFILE_EVIDENCE_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fanout-bus-first-native-icepi-profile
+          path: profile
+          retention-days: 14

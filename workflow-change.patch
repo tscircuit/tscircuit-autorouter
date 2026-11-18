@@ -1,0 +1,49 @@
+diff --git a/experiments/full-board-priority-analysis/native-full-board.tsx b/experiments/full-board-priority-analysis/native-full-board.tsx
+index 662218ca..66126923 100644
+--- a/experiments/full-board-priority-analysis/native-full-board.tsx
++++ b/experiments/full-board-priority-analysis/native-full-board.tsx
+@@ -51,13 +51,13 @@ function getNearestExternalMember(source: FullBoardSource, member: string, membe
+ }
+ 
+ /** Full native net membership, not an ordered daisy chain. The source contains
+- * no routed copper. Authored zones become fresh pours. Plane escapes precede
++ * no routed copper. Authored zones become fresh pours. Local BGA fanouts precede
+  * byte buses, remaining DDR signals and the rest of the board.
+  */
+ export function NativeFullBoard({
+   source,
+   geometryOnly = false,
+-  fanout = false,
++  fanout = true,
+   planes = true,
+   algorithmFn,
+ }: {
+@@ -70,9 +70,7 @@ export function NativeFullBoard({
+   const bytes = [...new Set(source.nets.map((net) => net.group))].filter((group) => group.startsWith("byte")).sort()
+   const zones = planes ? source.planeIntent.zones : []
+   const planeNets = new Set(zones.filter((zone) => zone.unbroken && zone.outlines.length > 0).map((zone) => zone.netName))
+-  const phases = [...(planeNets.size ? ["plane_escape"] : []), ...bytes, "ddr_remaining", "board"]
+-  const phaseForNet = (net: FullBoardSource["nets"][number]): string =>
+-    net.group === "board" && planeNets.has(net.name) ? "plane_escape" : net.group
++  const phases = [...bytes, "ddr_remaining", "board"]
+   const planeLayers = new Map<string, { layer: keyof FanoutPourNetMap; area: number }>()
+   for (const zone of zones.filter((zone) => zone.unbroken)) {
+     const area = zone.outlines.reduce((total, outline) => total + Math.abs(outline.reduce((sum, p, i) => {
+@@ -148,7 +146,7 @@ export function NativeFullBoard({
+               from={member}
+               to={getNearestExternalMember(source, member, net.members)}
+               thickness={net.escapeWidth}
+-              routingPhaseIndex={phases.indexOf(phaseForNet(net))}
++              routingPhaseIndex={phases.indexOf(net.group)}
+             />
+           )),
+         )
+@@ -169,7 +167,7 @@ export function NativeFullBoard({
+           connectsTo={net.members}
+           nominalTraceWidth={net.width}
+           isGroundNet={net.isGround}
+-          routingPhaseIndex={net.routable ? phases.indexOf(phaseForNet(net)) : undefined}
++          routingPhaseIndex={net.routable ? phases.indexOf(net.group) : undefined}
+         />
+       ))}
+       {zones.flatMap((zone) => zone.outlines.map((outline, index) => (

@@ -1,0 +1,13 @@
+{
+  "sampledMs": 202617.522,
+  "unionInclusiveMs": {
+    "routePlaneTerminatedBus": 189707.689,
+    "buildPlan": 77936.076,
+    "planIsClear": 81267.937,
+    "planIsStaticallyClear": 65835.149,
+    "segmentIsClearOfObstacles": 65551.493,
+    "obstacleSharesElectricalNet": 10841.557
+  },
+  "selfIncludesMs": 39496.242,
+  "note": "Each sample counts once per function name across the entire call stack. Inclusive rows overlap and must not be summed."
+}

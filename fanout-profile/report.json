@@ -1,0 +1,17 @@
+{
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "elapsedMs": 202230.418342,
+  "solved": false,
+  "failed": true,
+  "error": "FanoutSolver: best layer assignment routed 1/32 connections",
+  "iterations": 26131,
+  "stats": {
+    "phase": "complete-assignment",
+    "assignment": 256,
+    "assignmentCount": 256,
+    "routedBuses": "1/32",
+    "routedConnections": "1/32",
+    "failedBuses": "connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_4, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_0, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_1, connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_8, ESC_U22_pin143, ESC_U22_pin145, ESC_U22_pin127, ESC_U22_pin130, ESC_U22_pin100, ESC_U22_pin90, ESC_U22_pin89, ESC_U22_pin101, ESC_U22_pin82, ESC_U22_pin73, ESC_U22_pin34, ESC_U22_pin54, ESC_U22_pin55, ESC_U22_pin65, ESC_U22_pin144, ESC_U22_pin115, ESC_U22_pin129, ESC_U22_pin32, ESC_U22_pin142, ESC_U22_pin6",
+    "bestScore": 34100004.07710678
+  }
+}
