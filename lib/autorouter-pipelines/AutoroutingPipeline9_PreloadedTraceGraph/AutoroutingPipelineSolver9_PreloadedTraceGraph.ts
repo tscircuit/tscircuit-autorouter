@@ -52,6 +52,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getExistingViaInPadByPcbPortId } from "lib/utils/getExistingViaInPadByPcbPortId"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -539,6 +540,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          existingViaInPadByPcbPortId: getExistingViaInPadByPcbPortId(
+            cms.srjWithPointPairs!,
+          ),
         })
 
         return [
