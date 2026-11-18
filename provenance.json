@@ -1,0 +1,36 @@
+{
+  "tscircuit": "0.0.3237",
+  "core": {
+    "version": "0.0.2419",
+    "sha": "192976770dca61204aa82ec99e75c49d59e05c16"
+  },
+  "capacityAutorouter": {
+    "version": "0.0.1129",
+    "sha": "9910d3a595fdc3f19c7147ac37e0262a2338d92c"
+  },
+  "fanout": {
+    "version": "0.0.87",
+    "sha": "9298af270a66d2ebc4c34d5d9217b7e99acaef2e"
+  },
+  "busLanes": "0.0.62",
+  "bun": "1.4.3",
+  "workflow": "fanout \u2192 DDR buses \u2192 remaining DDR \u2192 board",
+  "nativeFanoutCapacityDependency": "0.0.718",
+  "routingBudgetSeconds": 600,
+  "concurrencyPerBoard": 1,
+  "runs": {
+    "initialPublishedBaselineAndProfile": 44380848726,
+    "isolatedPlanePairsAndCandidateFanout31": 44383294591,
+    "fullBoardBeforeAfterAndFinalSourceChecks": 44384069105
+  },
+  "fullBoardController": "77daddfd996ecdbb8cdfd36bd7ca684831a059ea",
+  "measuredFix": "fcfbbc12189903eaba321c581ed9012266abf4b6",
+  "finalFix": "44ed0c8393e5395f7c00ca1fe31c09e021cc1ce2",
+  "repro": "e020d97841163bd15cf0c5ad4a4fdfa48608d20b",
+  "notes": "Final source differs from measured fix only by fixture formatting; lib is identical. Isolated native plane buses are separate cases, not whole-board solves.",
+  "validation": {
+    "sourceFormatAndFullTypecheckJob": 135083736908,
+    "sourceFormatAndFullTypecheckPassed": true,
+    "fixTestRun": 44384114378
+  }
+}

@@ -1,0 +1,1038 @@
+[
+  {
+    "busId": "ESC_U1_pin1",
+    "connectionNames": [
+      "source_trace_0"
+    ],
+    "inputSha256": "5edf5dc18062918a053e904183411d40c802b4fb4905b9a8fcb0061b030ee7e5",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 177.13428400000004,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "3357c81e26bcd0435130497095c528276ea965eef65e8d264d334091e2bed2a4"
+  },
+  {
+    "busId": "ESC_U1_pin10",
+    "connectionNames": [
+      "source_trace_1"
+    ],
+    "inputSha256": "2a3c09acc7ab42c08027633d11935ca1aa536f6e3d14a09271b880571e80f5d2",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 132.47242300000005,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "8dadb63862a92a04861e48ec0a61fb1bed96f43a7f89d61fb875a5b0c0a068ba"
+  },
+  {
+    "busId": "ESC_U1_pin107",
+    "connectionNames": [
+      "source_trace_2"
+    ],
+    "inputSha256": "622f0b13eb0659df328e6421fa7f0e580c76b6d2156fa21b4fdfdbff57ed7168",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 145.34454900000014,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "9bba88143d39e5a92bd46339db12c8122fd37a58412a06ce95e232373b0ca1b9"
+  },
+  {
+    "busId": "ESC_U1_pin108",
+    "connectionNames": [
+      "source_trace_3"
+    ],
+    "inputSha256": "606cc05d414e247957c9e04a3108add651bdaabd43704f31fe8f93a989f9017c",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 134.41099599999984,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "081fdc20e0195116265f51f32f857b9e8acd0f54d94614f256a70eb6f23ecfbc"
+  },
+  {
+    "busId": "ESC_U1_pin109",
+    "connectionNames": [
+      "source_trace_4"
+    ],
+    "inputSha256": "e4577dd1df3b13c1d249c206f6ff0ed5842bb47493cf0c4d6aceff3123e4ec0c",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 120.0543090000001,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "d8f71741d31859bdd6df26c05d9fed325175f30ec5672d4e7cd7520431ba0192"
+  },
+  {
+    "busId": "ESC_U1_pin123",
+    "connectionNames": [
+      "source_trace_5"
+    ],
+    "inputSha256": "07f2d8e92e8eee820c6b4de35b5616aa879258203ca4e947b9b17676e98706e3",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 149.99403499999994,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "79641549c3bf579fd7ba8ce9681cf9f14112a160f0316b3a771d23590f965152"
+  },
+  {
+    "busId": "ESC_U1_pin124",
+    "connectionNames": [
+      "source_trace_6"
+    ],
+    "inputSha256": "aff8c706a4c197b20da4618f2d99749eef1a71d95464d39fba078dc6464f90a4",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 127.58135199999992,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "3685bdd6b6a5a2f8369ccf25d118793eaf0033d7a743d20e5a4cb118438d2a94"
+  },
+  {
+    "busId": "ESC_U1_pin125",
+    "connectionNames": [
+      "source_trace_7"
+    ],
+    "inputSha256": "7ad3ea3317e18d0f28ba7c4a3b2a3e6246ca6c4c399875e85a9ed625aac2a3f6",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 119.82278399999996,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "ae711a3fcacbbae4c44e526c2aa33fd3b4a9b7446a39f129da8dd60ce1aa0a00"
+  },
+  {
+    "busId": "ESC_U1_pin126",
+    "connectionNames": [
+      "source_trace_8"
+    ],
+    "inputSha256": "4c326e25c38f928165f8e23ef5347dcaed40ce17e77505d4badd996934542ddf",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 119.89122499999985,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "836df5a3c114a9bfead436e0b0bbcd16f2889a1cfc148125cfed65dab3fa7886"
+  },
+  {
+    "busId": "ESC_U1_pin127",
+    "connectionNames": [
+      "source_trace_9"
+    ],
+    "inputSha256": "5c2cd5e20a34632fe73b0519884e6b48b20d583c477869c5241f048c07302390",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 127.43118800000002,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "8bf6792af236f1fe730841c247eb50ead01a5636a023cda0612249a14d136cbb"
+  },
+  {
+    "busId": "ESC_U1_pin128",
+    "connectionNames": [
+      "source_trace_10"
+    ],
+    "inputSha256": "2c927e8a4bd3b1bb3f67b8cacf8a7f0ccd389315567f263d26de24df932d8946",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 121.95026000000007,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "c707d4931609c963f9cf08736067fd180a8c49caf4830e17f0dcffe4a661b856"
+  },
+  {
+    "busId": "ESC_U1_pin13",
+    "connectionNames": [
+      "source_trace_11"
+    ],
+    "inputSha256": "e68245aae1461f7906074cd96ae863363604eb6b783735f1b9874ce82bbce6e5",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 142.5761950000001,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "07ec0aa7d2114bbb69ce0d5b5adbfee3bfa7074093afc4358ca664b443ff7da0"
+  },
+  {
+    "busId": "ESC_U1_pin130",
+    "connectionNames": [
+      "source_trace_12"
+    ],
+    "inputSha256": "e3d9d73d7b263719f683e4256d4c244a5d66881a86a2d7e4aa142c7ca21067ab",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 120.8104900000003,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "ce4e2e90447b9895d7432b70ec1180906f6fba6a547ac58a98dc662f7a62f5fe"
+  },
+  {
+    "busId": "ESC_U1_pin131",
+    "connectionNames": [
+      "source_trace_13"
+    ],
+    "inputSha256": "8560822537321cf0d3f6ab51a2184fdea9e2de40a2f70ace81f889bfeed718e1",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 119.83364299999994,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "d347f4542e213ef1f403910db538b3f9c215565cc1af2879a877d7ed3694f0aa"
+  },
+  {
+    "busId": "ESC_U1_pin140",
+    "connectionNames": [
+      "source_trace_14"
+    ],
+    "inputSha256": "92605125f9c27fb5f4f29f5efc226381dc69d3be276bba08e39ec10bac1a7875",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 123.73106899999993,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "da599a875711f06101418e48cfeab09fed5a545c3fd653072e15f548735b8ffe"
+  },
+  {
+    "busId": "ESC_U1_pin141",
+    "connectionNames": [
+      "source_trace_15"
+    ],
+    "inputSha256": "c3b24eb460e7033c8bfc25ce5bdc12104fc903a7da41f404baedc3cf62337c23",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 116.06554200000028,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "68314961f988056df5719c1cb4ff4399910fb222b12abe0400b4f9fd8c38b359"
+  },
+  {
+    "busId": "ESC_U1_pin142",
+    "connectionNames": [
+      "source_trace_16"
+    ],
+    "inputSha256": "1243b89fa900f5b35ee9b5cbc17ca6a1f6adad4d23471a630c82e940aa898913",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 120.88839099999996,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "bd4bc4a09fd8eb483bf787b152531464153a3af96524cbac573560298836a641"
+  },
+  {
+    "busId": "ESC_U1_pin143",
+    "connectionNames": [
+      "source_trace_17"
+    ],
+    "inputSha256": "689a244f0f5e7481238eedf99f15dddce6398fe7f02f0baae7454a28c08e38b2",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 113.19068400000015,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "f33b0c0c859453915e15b3dc955f9c5c2a34fa0210213cdec93dabfdc0aec69a"
+  },
+  {
+    "busId": "ESC_U1_pin155",
+    "connectionNames": [
+      "source_trace_18"
+    ],
+    "inputSha256": "47c1fac8ac7ceba3e3b52437a0be719cfd06cd9749ef1cdf01829757df726e02",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 157.39045399999986,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_18 is 0.2250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin156",
+    "connectionNames": [
+      "source_trace_19"
+    ],
+    "inputSha256": "151ab0b576961c4eee53e814d1ab1705b13c2c70e4e9df87ab258e009c9b77db",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 155.79187100000036,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_19 is 0.0750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin157",
+    "connectionNames": [
+      "source_trace_20"
+    ],
+    "inputSha256": "3c9aa77eb6a95ea6fc722324122b5c362846b696642899aa67c622c31fde5fe9",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 148.03226200000063,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_20 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin158",
+    "connectionNames": [
+      "source_trace_21"
+    ],
+    "inputSha256": "743dddef2818f1ca3b58bd9028f2b3a80a0aa49bbaa5abc97f8484de851f8ae3",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 166.78980599999977,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_21 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin159",
+    "connectionNames": [
+      "source_trace_22"
+    ],
+    "inputSha256": "449ffc75dc334f77148e0c7a6a15284171cddca69bec201201fdcf5fdbcd9f84",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 113.3271879999993,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "9e02d6b66ebf0194662059bb9653392604aea0ed9f103d2c5254dae4910ff315"
+  },
+  {
+    "busId": "ESC_U1_pin160",
+    "connectionNames": [
+      "source_trace_23"
+    ],
+    "inputSha256": "c3bd41f08c35e14c1b80095e677d37ece875b724aa038332631c426a428dfb6c",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 121.77557500000057,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "c7203173c9d674c8df0440507fef0b7616086be0b5a8b82afebc9b322d030776"
+  },
+  {
+    "busId": "ESC_U1_pin161",
+    "connectionNames": [
+      "source_trace_24"
+    ],
+    "inputSha256": "17fd7117b1731a662c6a107262bfc85a0d8036b84c790d4c86c57c1595ce7cc7",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 128.09218500000043,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "165f4b80553e190535038a4e95f5bbbb166ddb7859401b9259cf398db07bcf11"
+  },
+  {
+    "busId": "ESC_U1_pin162",
+    "connectionNames": [
+      "source_trace_25"
+    ],
+    "inputSha256": "0afa7cc20a616d962b7e1a11b61aa1acaa498d5e5c0dd4e2ae1f19a3b3bf2e39",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 135.3926419999998,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "a7f810fb067898940032425ea2c6d92eef0310ec353678f9812c7e80621a3d69"
+  },
+  {
+    "busId": "ESC_U1_pin182",
+    "connectionNames": [
+      "source_trace_26"
+    ],
+    "inputSha256": "84d2dfb9f34a53b5aa876f818a448ac3d6fa6270f41dd7b4d13649d9f5f2874c",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 146.85357000000022,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_26 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin183",
+    "connectionNames": [
+      "source_trace_27"
+    ],
+    "inputSha256": "4538eb48fdbd51e65c7c14d1c9c2502c67e85ddc8154c7e930c7af95d829b18c",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 147.5549689999998,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_27 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin184",
+    "connectionNames": [
+      "source_trace_28"
+    ],
+    "inputSha256": "73a885e84831ea4ebf1cc36e78a39e00307c3f9c16914714a4f93ac828fbd5f7",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 148.642879,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_28 is 0.1250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin185",
+    "connectionNames": [
+      "source_trace_29"
+    ],
+    "inputSha256": "a385792fa99615207cd5f33da9553d71eb24510432c8aa86172ca1c85a2847da",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 149.58124299999963,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_29 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin19",
+    "connectionNames": [
+      "source_trace_30"
+    ],
+    "inputSha256": "d94a3ebd39ff8ac9c0c39db613f042ff02fe2809a28402cc3761ca3c578bdd69",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 154.71686200000022,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "68490c1a992b77b4f7baa74d7f5ae710360673d929deef4f2789d707350ad70d"
+  },
+  {
+    "busId": "ESC_U1_pin193",
+    "connectionNames": [
+      "source_trace_31"
+    ],
+    "inputSha256": "ef5cd672d8a54c2f138a9ffd42d32e855008056a9793d68cb70838ac0cf2de24",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 146.4582390000005,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_31 is 0.0250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin195",
+    "connectionNames": [
+      "source_trace_32"
+    ],
+    "inputSha256": "1de4867fabc9b450de0704ae304bd729d297e034ab6cb7d36c6f8bdee9050253",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 157.40101400000003,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_32 is 0.2250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin197",
+    "connectionNames": [
+      "source_trace_33"
+    ],
+    "inputSha256": "f2ae88a46b7dc5abf3cd8b5f455f2f591aeba6230ab31315e463bcc670e2401c",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 138.8225940000002,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_33 is 0.1250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin199",
+    "connectionNames": [
+      "source_trace_34"
+    ],
+    "inputSha256": "1b00c37a5dfc7d4e248ab01e3f542842b52a92f7f06f2877c133568b40fcaaf7",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 143.17165099999966,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_34 is 0.1750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin201",
+    "connectionNames": [
+      "source_trace_35"
+    ],
+    "inputSha256": "17216b5ccc32d11b35fa2f26c6a73fa0b43c6b1e0f46e8c8eee1cd95c82d8d79",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 139.22826500000065,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_35 is 0.2250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin207",
+    "connectionNames": [
+      "source_trace_36"
+    ],
+    "inputSha256": "f981370d19841a95c45dfbfcf8687f009d9cb1541231b98d8bf105efdce48f79",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 148.9701070000001,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_36 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin225",
+    "connectionNames": [
+      "source_trace_37"
+    ],
+    "inputSha256": "9783152dbd555030400b98bf097fa9dcd90c5eed45d8fa67c0d3001a60d252ff",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 140.71160599999985,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_37 is 0.1750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin233",
+    "connectionNames": [
+      "source_trace_38"
+    ],
+    "inputSha256": "09cca78c3d8177b89f1b7f805154d6330c2be5c9d0c5a8ed309f6f78064ad999",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 137.15466899999956,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_38 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin234",
+    "connectionNames": [
+      "source_trace_39"
+    ],
+    "inputSha256": "e8ea488d16f32e0a091057082a007f03a7da2e48e3b5bdbe4aaab530d87a6c39",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 138.5744279999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_39 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin236",
+    "connectionNames": [
+      "source_trace_40"
+    ],
+    "inputSha256": "f692358fcf7a5912945f775836c46b4ccbbcf1b3bfdfebcdfb1e085b01cf0390",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 141.35078199999953,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_40 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin241",
+    "connectionNames": [
+      "source_trace_41"
+    ],
+    "inputSha256": "489c26e6c19b72281aa23110eec9c3e213c27bbee1fe437edc3d4c1e5a013d17",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 142.7079589999994,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_41 is 0.2250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin243",
+    "connectionNames": [
+      "source_trace_42"
+    ],
+    "inputSha256": "4ccbc45501bd82d01c09a48143ece75f711eeab5252ebfa7bd5c917bcb506587",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 151.07888400000047,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_42 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin247",
+    "connectionNames": [
+      "source_trace_43"
+    ],
+    "inputSha256": "6e24cf4feb79e1a8813379e09638a0a07dcdbf979d2d32036ad4844aaea443ad",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 155.6532669999997,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_43 is 0.1750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin249",
+    "connectionNames": [
+      "source_trace_44"
+    ],
+    "inputSha256": "f092b268e7693a22c5f83c06dc4dc9b20557c3a41399a3bdfbc69a832166f3a1",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 144.34368200000063,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_44 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin258",
+    "connectionNames": [
+      "source_trace_45"
+    ],
+    "inputSha256": "3bc42bd63c3f585f7ad0ff3cfc23fe9a2c13e6bcb7ec56c8e9b72e3bbdfe78d5",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 141.63402999999926,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_45 is 0.0250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin264",
+    "connectionNames": [
+      "source_trace_46"
+    ],
+    "inputSha256": "c6455d13587c09f0839f2c9432b6ce7642ed923a75ca8395627cb22d7e27cc91",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 142.43361200000072,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_46 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin273",
+    "connectionNames": [
+      "source_trace_47"
+    ],
+    "inputSha256": "1c0b6ddc49f63ba3538fbe51f2cce5dad8796a74d4eb2727490ff124a2560512",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 168.84176099999968,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_47 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin276",
+    "connectionNames": [
+      "source_trace_48"
+    ],
+    "inputSha256": "f3d5c65f4d3aa83f965fc599bcba230404a2680e77d8330b2116eecca997c022",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 164.97115699999995,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_48 is 0.1750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin279",
+    "connectionNames": [
+      "source_trace_49"
+    ],
+    "inputSha256": "fb82322b678ec52b02da0b1d66aee91bc4557f735601da6019030640d71a78f3",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 152.05779099999927,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_49 is 0.1250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin282",
+    "connectionNames": [
+      "source_trace_50"
+    ],
+    "inputSha256": "ac586388c18b82a30ac07692efdebcf859eed9b186a7e7b0c0737ffcffac29c7",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 176.8961990000007,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_50 is 0.0750mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin284",
+    "connectionNames": [
+      "source_trace_51"
+    ],
+    "inputSha256": "c490178c2d3ea908babf5c112485659d6e6a69a5ea36cf75f2d2ed94e3a0686a",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 170.6471300000012,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_51 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin29",
+    "connectionNames": [
+      "source_trace_52"
+    ],
+    "inputSha256": "17dd4ee1229ecf4b2caf13644b3b0bb3006edc81f5b47536ed409e57f4ac1288",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 114.63348399999995,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "f0a20069c436fe41b13a581a727bcf8cb034f99cd5b7caf4f47dc4ce5bf3a333"
+  },
+  {
+    "busId": "ESC_U1_pin6",
+    "connectionNames": [
+      "source_trace_53"
+    ],
+    "inputSha256": "a9322f745830f2ffed4f4e2b99d5ea1572320399c7f2c897b01cfd588a05bd38",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 147.07211599999937,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "349f13541a43c7f2d0ccd7e4f4537997cca59be80c274eb1c6320bf9569ae377"
+  },
+  {
+    "busId": "ESC_U1_pin69",
+    "connectionNames": [
+      "source_trace_54"
+    ],
+    "inputSha256": "c8394fe3f9eef24f316592a0f8f133d4bbe55506a12cda935114d495bfab0395",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 106.27885900000001,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "5714d9869436c46a83f79fc8251b377d3d09ba6d333682aaee6564477c74ed6c"
+  },
+  {
+    "busId": "ESC_U1_pin91",
+    "connectionNames": [
+      "source_trace_55"
+    ],
+    "inputSha256": "f5e2ba90e06a8eda2049f0e5309c709e364b2dd87a65cb0e3d6a86eddd3fdb27",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 124.49954900000012,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 1,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "8c78767ea638b43d299ed9c2ab225013d0fd6a8065e79258559c8f78839d1166"
+  },
+  {
+    "busId": "ESC_U1_pin92",
+    "connectionNames": [
+      "source_trace_56"
+    ],
+    "inputSha256": "197ecc46d750a41e12257d1cb6dd4d4ae51c68fbcc897cf26c875f13d5bcaafc",
+    "obstacleCount": 1094,
+    "status": "solved",
+    "elapsedMs": 122.62761900000078,
+    "iterations": 12,
+    "error": null,
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 2,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "copperSha256": "25c7ed935d499a066caf9ed8fed37bf3b6b193414ae5561d9b45d201e90dd449"
+  },
+  {
+    "busId": "ESC_U1_pin172",
+    "connectionNames": [
+      "source_trace_57"
+    ],
+    "inputSha256": "4d39abc8487a20f5f803e12dc7dd814b75ed1ebcab6c6428bb055d0ead9ab3f6",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 215.75374300000112,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_57 is 0.2250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin173",
+    "connectionNames": [
+      "source_trace_58"
+    ],
+    "inputSha256": "9c2313792b7a80f59a60b9b142bd8a6a3ab2a3fbad283ba88cba8a9f0b65f832",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 177.6946799999987,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_58 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin174",
+    "connectionNames": [
+      "source_trace_59"
+    ],
+    "inputSha256": "6f3c3cf9624f0f1f969622251cfac41ed7a9b169352314abbebedbd431f04d28",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 155.12475300000006,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_59 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin175",
+    "connectionNames": [
+      "source_trace_60"
+    ],
+    "inputSha256": "9f458bd4541ff89b2c7c7164b89c64261c284dcec6e82a061b72b0c83f958da1",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 139.6130749999993,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_60 is 0.1250mm from different-net obstacle undefined on its layer span; 0.2750mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U1_pin176",
+    "connectionNames": [
+      "source_trace_61"
+    ],
+    "inputSha256": "86808ed7a565878a6a87a992bfe6b9c28faabd7f5251e7848f0ec229442749cd",
+    "obstacleCount": 1094,
+    "status": "failed",
+    "elapsedMs": 89.6324910000003,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  }
+]

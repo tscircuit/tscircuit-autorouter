@@ -1,0 +1,534 @@
+[
+  {
+    "busId": "ESC_U11_pin12",
+    "connectionNames": [
+      "source_trace_0"
+    ],
+    "inputSha256": "944d9531173f73bbd622a98f65db72c8a030a30a8e083e3697182bde871fd69e",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 786.961516,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_0 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin19",
+    "connectionNames": [
+      "source_trace_1"
+    ],
+    "inputSha256": "760e3cb39ca6ea5aef6b68cbe818ac52d3cc0d6b9262d73e3f9227beab9b2abe",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 723.121339,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_1 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin23",
+    "connectionNames": [
+      "source_trace_2"
+    ],
+    "inputSha256": "1854c58b0a686dfa4849057e62957c28f459a8be39ff324c67bb7f8d377ebbfa",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 677.9738590000002,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_2 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin25",
+    "connectionNames": [
+      "source_trace_3"
+    ],
+    "inputSha256": "f16ebb4f23e05cdb6ece28cd0b29e12f80111e042f0b0ba7ae69e3b47b0ecee7",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 742.8729839999996,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_3 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin26",
+    "connectionNames": [
+      "source_trace_4"
+    ],
+    "inputSha256": "896d74ad91cc8e58f92987534b3d841b4553274b8ccb60d0386730ad29a34a14",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 649.7631499999998,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_4 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin29",
+    "connectionNames": [
+      "source_trace_5"
+    ],
+    "inputSha256": "ff070941ee67cdc7c6424da850d916119a7ab8513421838ffb81e5be166463dc",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 663.2587489999996,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_5 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin36",
+    "connectionNames": [
+      "source_trace_6"
+    ],
+    "inputSha256": "eda85e3bdddca8b66c5d9b8f526bccc1b09d521b8218cafaba901f188d345e9e",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 660.304709,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_6 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin37",
+    "connectionNames": [
+      "source_trace_7"
+    ],
+    "inputSha256": "953a90dccc69d6407fa4004829e8afd89d03cb37679e4b869dc1c7b85501f8a4",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 648.452115,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_7 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin42",
+    "connectionNames": [
+      "source_trace_8"
+    ],
+    "inputSha256": "d99271ee84ffaaa41b2d2905aee529873d3e4a225af15b39a62f5d62d1895af8",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 677.4610060000005,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_8 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin50",
+    "connectionNames": [
+      "source_trace_9"
+    ],
+    "inputSha256": "f8461f07a287d4b7bcf20bfdc48f354b9753db021b45132cd755446f6478583b",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 647.221762000001,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_9 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin53",
+    "connectionNames": [
+      "source_trace_10"
+    ],
+    "inputSha256": "d9516719504f70b42f5111aa44c626915d8abacb0081fa4b8b102a33e956da88",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 686.0847950000007,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_10 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin6",
+    "connectionNames": [
+      "source_trace_11"
+    ],
+    "inputSha256": "7b47bbc68223e86c7ab9c30ce30b7a656d682b9c479fdab8d3dc18e77ce7d40e",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 726.0334160000002,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_11 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin67",
+    "connectionNames": [
+      "source_trace_12"
+    ],
+    "inputSha256": "f90aa83f1653851b8b6c1f82e9ff6e6437cfcd97f73eb11edee8270c384233b1",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 661.816710000001,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_12 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin7",
+    "connectionNames": [
+      "source_trace_13"
+    ],
+    "inputSha256": "7daf73bc4d801ce781eff4844caaddb7dd7922e08567e232ad8e546f230ba02b",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 658.606025000001,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_13 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin72",
+    "connectionNames": [
+      "source_trace_14"
+    ],
+    "inputSha256": "0dda3c09ad43985e85fd6437746ee7e1773b805f803670364804c902f71bbaa5",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 658.7013869999992,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_14 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin79",
+    "connectionNames": [
+      "source_trace_15"
+    ],
+    "inputSha256": "00864b128a70720395249bb9409303e2222d494585bfa034c5d8aa4fc8fe9f3f",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 651.8746059999994,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_15 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin84",
+    "connectionNames": [
+      "source_trace_16"
+    ],
+    "inputSha256": "f2d1ed8dad7e67ad645fe9faa387d0bfb877a4ae9d306d07f146872268b164d8",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 660.33907,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_16 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin9",
+    "connectionNames": [
+      "source_trace_17"
+    ],
+    "inputSha256": "38880b931e1d9b602e2cbe6981183b815f1f201210596ae4ff64ef19dd6b1ad3",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 640.0013699999981,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_17 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin91",
+    "connectionNames": [
+      "source_trace_18"
+    ],
+    "inputSha256": "77cf9a4932fdcefa654a7b68d35ca680d361edc2feda79e927888d8b09c62683",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 686.8994569999995,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_18 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin96",
+    "connectionNames": [
+      "source_trace_19"
+    ],
+    "inputSha256": "7f334de40bf74253b64143fd81b84444c20b1f520da5002a4ba6880820eaf356",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 680.8024949999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_19 is 0.0000mm from different-net obstacle undefined on its layer span; 0.2889mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin1",
+    "connectionNames": [
+      "source_trace_20"
+    ],
+    "inputSha256": "d9cffb863c5b9f11fe630fb07be8ad272c52d4d6b6abf632556b0703868e087d",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 304.6725770000012,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin13",
+    "connectionNames": [
+      "source_trace_21"
+    ],
+    "inputSha256": "ac36119dcbe312d8c94905974e88a355470d420a6ab297de6a1a75869f5ab9ba",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 301.46493199999895,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin18",
+    "connectionNames": [
+      "source_trace_22"
+    ],
+    "inputSha256": "d8aef48a681a32cf980ea7a60c55a323b4ca59795764904f14bcf6a47557bc37",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 339.4246209999983,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin20",
+    "connectionNames": [
+      "source_trace_23"
+    ],
+    "inputSha256": "4aa87d4e53dfbd51c874b032042be187b6deac7c7b56eff1e954532fd35ecd21",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 283.404172999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin24",
+    "connectionNames": [
+      "source_trace_24"
+    ],
+    "inputSha256": "18b15a18ffce9e9f20b57b317732f18186ded71bb833d13a2d6100cf12ae9d85",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 335.95628999999826,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin30",
+    "connectionNames": [
+      "source_trace_25"
+    ],
+    "inputSha256": "e00452087ca3969dd7c9cc8079c698d280e36dae1e6d47f769a1e8e885371b1a",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 338.2048689999974,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin31",
+    "connectionNames": [
+      "source_trace_26"
+    ],
+    "inputSha256": "bc8d5fd3b8fc001b399e68c2da4ddd358aaf0ed28d3c3014cc28ffdddaad6f37",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 292.4150520000003,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin40",
+    "connectionNames": [
+      "source_trace_27"
+    ],
+    "inputSha256": "e24cc107a34a3c8c8470f57b9ef03277ed742e57ae5582ca09b407293d4dbeaa",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 331.4524500000007,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin44",
+    "connectionNames": [
+      "source_trace_28"
+    ],
+    "inputSha256": "4b2a01ff4ac20e907bffc6f813a1cfebc9b4f6d4f9808b1e2be55c79a0af0ba7",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 293.7122469999995,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin48",
+    "connectionNames": [
+      "source_trace_29"
+    ],
+    "inputSha256": "52153020a3e5b6ddc22c0bb3a899de602bab5945bfaaf630ffedfc2067875474",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 344.4356740000003,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin5",
+    "connectionNames": [
+      "source_trace_30"
+    ],
+    "inputSha256": "1ff7f4ae86c10dc9e084539ba92e45da75490efe4478b360ceb3b0d86b021934",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 287.7876490000017,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin56",
+    "connectionNames": [
+      "source_trace_31"
+    ],
+    "inputSha256": "8f7719c50c7fdfa7650315f084cce2d0284f10023d4ff2c86d079553592f0278",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 280.43705399999817,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin59",
+    "connectionNames": [
+      "source_trace_32"
+    ],
+    "inputSha256": "94aec2a2c00c93f98f17dfc6d1f7cd2a835df28e7f0784bf4e647cb001810880",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 284.80660999999964,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin73",
+    "connectionNames": [
+      "source_trace_33"
+    ],
+    "inputSha256": "feb62430c3a6eb9572d60abad4229c33821e18dd3eaa54163ba4246c73932f11",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 286.8018630000006,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin78",
+    "connectionNames": [
+      "source_trace_34"
+    ],
+    "inputSha256": "7af1608c8059668762f5a1e80bde46dbc5221fc9c165cbf25198aa5b16414026",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 335.2393110000012,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin8",
+    "connectionNames": [
+      "source_trace_35"
+    ],
+    "inputSha256": "e332366b725ba18f0f797b18a44641e2e1b17aaca25713db9ef36bb0ad910e88",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 301.6365769999975,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin85",
+    "connectionNames": [
+      "source_trace_36"
+    ],
+    "inputSha256": "ffea754fd806a96005a3e4cb33cd5b2a6034740c09209d24d69330b10513b420",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 297.1525380000021,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U11_pin90",
+    "connectionNames": [
+      "source_trace_37"
+    ],
+    "inputSha256": "91e8060be86a42aa1f897d8b6df92bba62430cbda764abf4cf7cbc635e135589",
+    "obstacleCount": 2733,
+    "status": "failed",
+    "elapsedMs": 320.2062310000001,
+    "iterations": 20,
+    "error": "FanoutSolver: Completed fanout could not normalize every corner while preserving its original clearance and length constraints",
+    "copperDrc": null,
+    "copperSha256": null
+  }
+]

@@ -1,0 +1,1038 @@
+{
+  "all-boards.png": {
+    "bytes": 854808,
+    "sha256": "88f5f01be7cac95c160035e9a4174f8ac17cddeea907658e260b1f1a312e1ce2"
+  },
+  "all-boards.svg": {
+    "bytes": 16705018,
+    "sha256": "94036db11bf14b1fe959065979f4c2aecdf20fc227af12d09f210e80319d3959"
+  },
+  "analysis.json": {
+    "bytes": 20370,
+    "sha256": "ae6a13ae20e6c5f1c63faa2f13b8b04ca7559a0dd4a8bf9617179ef519fa60a1"
+  },
+  "baseline/boards/butterstick/assessment.json": {
+    "bytes": 20791,
+    "sha256": "e8251ff6ebf3a17f5b3008c7115fc1cf021e6c32918028d0fbd6ab230b45f573"
+  },
+  "baseline/boards/butterstick/circuit.json.gz": {
+    "bytes": 300629,
+    "sha256": "63958d9ac1dc6a16ac4bc4df5f4e046b81b6f549f2b113fe2dc1b62b88924ed0"
+  },
+  "baseline/boards/butterstick/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/butterstick/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/butterstick/diagnostics.json": {
+    "bytes": 7365,
+    "sha256": "fb33b9843190a9891e8c3d9676e2d16e1b5cd1db970e97e6af966881b739e690"
+  },
+  "baseline/boards/butterstick/fanout-1-input.json.gz": {
+    "bytes": 1973030,
+    "sha256": "60d0cb9ac32301bd98b115489f9b10302c175f1637d75fb389dbc4be6a19a32c"
+  },
+  "baseline/boards/butterstick/fanout-best-output.srj.json.gz": {
+    "bytes": 1976913,
+    "sha256": "d64ef00b5653e82a789ce31d001e99eac940e1de42682932b2ff40272ea665db"
+  },
+  "baseline/boards/butterstick/pcb.svg": {
+    "bytes": 981224,
+    "sha256": "3319ae6b1a55770d1d22fcf9d008257808eaa59430e68a3ff7ad2d2abed1ce9d"
+  },
+  "baseline/boards/butterstick/plan.json": {
+    "bytes": 7260,
+    "sha256": "e17f2eb037b1157072b51d248628baae4bf70230a9d0e57d2f836d7098e18bbd"
+  },
+  "baseline/boards/butterstick/process.json": {
+    "bytes": 207,
+    "sha256": "3a7fe7544d4ae959db5aab320fb0d66a9f0aaa61fa81efd4e773aa09142dfc43"
+  },
+  "baseline/boards/butterstick/progress.json": {
+    "bytes": 2043,
+    "sha256": "95fce694fe1cdd46122e2bb412e18f1e4da3345ec598c7781b22315b5d8c7abf"
+  },
+  "baseline/boards/butterstick/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/butterstick/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/butterstick/worker.log": {
+    "bytes": 3139,
+    "sha256": "39fdc988ce361866bc5cd970e8032fcad8994de555e243f021df28021fef5a9b"
+  },
+  "baseline/boards/glider/assessment.json": {
+    "bytes": 22667,
+    "sha256": "e62fca2653f4fb037f31612a4d2865398e0401e6913964cdc141e03fe498659d"
+  },
+  "baseline/boards/glider/circuit.json.gz": {
+    "bytes": 258637,
+    "sha256": "deffe6f678b90f82d9768eeb216e9c59b401a19eea26dbff6b57a41978fe01ad"
+  },
+  "baseline/boards/glider/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/glider/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/glider/diagnostics.json": {
+    "bytes": 9739,
+    "sha256": "430bee1bd588cbb8a11d81ec12c2fee02fffef269e90988c0bf82d0d145afb8e"
+  },
+  "baseline/boards/glider/fanout-1-input.json.gz": {
+    "bytes": 1421720,
+    "sha256": "e5dd973a0b9486dd9f55ed720017b8adbb3d305973a28fddd65aa21c95697442"
+  },
+  "baseline/boards/glider/fanout-best-output.srj.json.gz": {
+    "bytes": 1424587,
+    "sha256": "2dabe5ab4d52a30eef23240597a77dbf5452ff028194a5032551e48a72a1cf15"
+  },
+  "baseline/boards/glider/pcb.svg": {
+    "bytes": 1047668,
+    "sha256": "19ac3ec89e24d3bc0127442e391bf6e50768c8ca8b54169cfcb732462fc4d695"
+  },
+  "baseline/boards/glider/plan.json": {
+    "bytes": 7546,
+    "sha256": "e9ce3e12eac2e0279953d1abddc8e1ef108e2ce60088fa731d91141db6b345f7"
+  },
+  "baseline/boards/glider/process.json": {
+    "bytes": 197,
+    "sha256": "d3f79252f08b02380692284264209154f5b3f63777b50ec2878e93f4409dcea7"
+  },
+  "baseline/boards/glider/progress.json": {
+    "bytes": 2026,
+    "sha256": "1ba88eb04821dfd62c55f6cfee4cc96207bfbebbcea4d2ee304571b3824ce3e2"
+  },
+  "baseline/boards/glider/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/glider/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/glider/worker.log": {
+    "bytes": 3112,
+    "sha256": "0ab1898b4a20cc33d456af7f524d3f5ffd329b555cd861397d494b8f578358ff"
+  },
+  "baseline/boards/h616/assessment.json": {
+    "bytes": 8132,
+    "sha256": "7a0419cb89ed7d4ca0125f2a5e1df50621ab07f10f8e9a92caa7736da0f9256b"
+  },
+  "baseline/boards/h616/circuit.json.gz": {
+    "bytes": 198136,
+    "sha256": "4f2ae86e75434d11f22bb47e65781e3f345f20f69dcb7d49a9004886209e2798"
+  },
+  "baseline/boards/h616/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/h616/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/h616/diagnostics.json": {
+    "bytes": 16151,
+    "sha256": "b57e807d94ac9a63c31819e1408bc617e9d82c3b39844398098d21ee811ba65d"
+  },
+  "baseline/boards/h616/fanout-1-input.json.gz": {
+    "bytes": 406481,
+    "sha256": "824220b6d76f43f3f2d7a2282c15b6750fc0e0590d5720256f703790a1513e27"
+  },
+  "baseline/boards/h616/fanout-best-output.srj.json.gz": {
+    "bytes": 411117,
+    "sha256": "6bd36c4eb23bc0853a10f3c77f8cb2d8d1682fb29ccf6016460320ee87c0f8c2"
+  },
+  "baseline/boards/h616/pcb.svg": {
+    "bytes": 999493,
+    "sha256": "1b4b655418f5b616bb86404a10f3d01d63c16d8474a3651cbef51e970ecf4001"
+  },
+  "baseline/boards/h616/plan.json": {
+    "bytes": 3556,
+    "sha256": "b8cfaeeb6b1584a25173202bbb5b32b0f9545e3fe20006e4cde1709057e3e99f"
+  },
+  "baseline/boards/h616/process.json": {
+    "bytes": 195,
+    "sha256": "59822491600cb3c23542a1557bbaaa04f7d26ba4d50f9498122bb19737295e34"
+  },
+  "baseline/boards/h616/progress.json": {
+    "bytes": 867,
+    "sha256": "38446b1be690209d5a43872575e600d23ff49ca06e5aff355d5850ba1008ee54"
+  },
+  "baseline/boards/h616/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/h616/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/h616/worker.log": {
+    "bytes": 1998,
+    "sha256": "6c66a990b1a95292de2b45e14b1701a9703e27c89178843cb1e7d51438e94ab1"
+  },
+  "baseline/boards/icepi/assessment.json": {
+    "bytes": 14468,
+    "sha256": "f3cba69c9f49403d887b792fc995a52da88e2cefbfcdfce87d536fb91c95bed6"
+  },
+  "baseline/boards/icepi/circuit.json.gz": {
+    "bytes": 374714,
+    "sha256": "32d64088280c97c1b25e046871a3db6d10351599176543a49013ea1366da7e12"
+  },
+  "baseline/boards/icepi/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/icepi/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/icepi/diagnostics.json": {
+    "bytes": 4882,
+    "sha256": "6ee5595d5cb8594ae35452905a01c47c4d7c813462cb422b509f8ba11885d52d"
+  },
+  "baseline/boards/icepi/fanout-1-input.json.gz": {
+    "bytes": 909275,
+    "sha256": "7a939dbb28ea0cb9a10d682170d4f2c62ebf4f84025ce522c57286dbb357f3c7"
+  },
+  "baseline/boards/icepi/fanout-best-output.srj.json.gz": {
+    "bytes": 909572,
+    "sha256": "944d337905a09ad525776f741b01546775359bd433793f6a2cadecfa292fc2e2"
+  },
+  "baseline/boards/icepi/pcb.svg": {
+    "bytes": 1865940,
+    "sha256": "d4799df9314c36bef7167583ab6baf4472fdd28ef3b1295ba95546f045dac9c8"
+  },
+  "baseline/boards/icepi/plan.json": {
+    "bytes": 5770,
+    "sha256": "3260a4836b760674a430f68e181c26777aef685511d8793edcaaa0ef734da972"
+  },
+  "baseline/boards/icepi/process.json": {
+    "bytes": 196,
+    "sha256": "9726208c38afdf47ff54a88ffbdbb176ff1379ee931fbf4eed822e7288fd561d"
+  },
+  "baseline/boards/icepi/progress.json": {
+    "bytes": 2028,
+    "sha256": "1f40ea6073bbd05c7cd1348956f57e997c4157304332e079902d628ca5040b1d"
+  },
+  "baseline/boards/icepi/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/icepi/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/icepi/worker.log": {
+    "bytes": 3111,
+    "sha256": "9bee0b71e316a214c04febfb166741a54a016777f5f0d4e032de5afe1a758fa0"
+  },
+  "baseline/boards/imx6/assessment.json": {
+    "bytes": 30187,
+    "sha256": "83bec28220d6686867f96c52a49e5578b01c462738a251330bdec4e1d039f471"
+  },
+  "baseline/boards/imx6/circuit.json.gz": {
+    "bytes": 498324,
+    "sha256": "b07bb7ec99a34e797e33194da99b90513f033719820ec51c9f379b908dc4e767"
+  },
+  "baseline/boards/imx6/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/imx6/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/imx6/diagnostics.json": {
+    "bytes": 4795,
+    "sha256": "c5842a9d66381b20a7d0e7c1fc979a347704569634504b72f132f14f9d6e145a"
+  },
+  "baseline/boards/imx6/fanout-1-input.json.gz": {
+    "bytes": 2298521,
+    "sha256": "ed6475b356932f873b7ff4dd129316e44be4a8aa56922cd762bb6eeb1a826f0d"
+  },
+  "baseline/boards/imx6/fanout-best-output.srj.json.gz": {
+    "bytes": 2298860,
+    "sha256": "fd44c7bd0b2204cbe5190fbcb9a3356e0bb61b049154a043e2f44848fb5cedac"
+  },
+  "baseline/boards/imx6/pcb.svg": {
+    "bytes": 2805575,
+    "sha256": "c153257ead45c8b94d5b4610ecb3fafe5c7fbe8b09c20f19ba5b4c08825d9ac4"
+  },
+  "baseline/boards/imx6/plan.json": {
+    "bytes": 8733,
+    "sha256": "50fcbd2f496439621902c6e5d82c905ac1ff3d94a07c795f802e3cb04f446015"
+  },
+  "baseline/boards/imx6/process.json": {
+    "bytes": 195,
+    "sha256": "914d6828e444e8f0f8f2ded25302f15258b5e2ceebc8637dc87dea66ca66ed59"
+  },
+  "baseline/boards/imx6/progress.json": {
+    "bytes": 2373,
+    "sha256": "8670412036aa4717f844e14f9d14e236833d1653d81f4e834e588fe23030db45"
+  },
+  "baseline/boards/imx6/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/imx6/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/imx6/worker.log": {
+    "bytes": 3449,
+    "sha256": "63045a2ff520025ed3e610e857bac366460959a82740863ac88458a3b7dc3a10"
+  },
+  "baseline/boards/orangecrab/assessment.json": {
+    "bytes": 9411,
+    "sha256": "ef71378b9c4d8cf238aaf64d0ef4bf44fda9a20460a5ccefa969ea731034e98a"
+  },
+  "baseline/boards/orangecrab/circuit.json.gz": {
+    "bytes": 217352,
+    "sha256": "817960fbdcf3f6a425141b2655cb6dcea53b7c3a18f6e68aaf7e399575546f2e"
+  },
+  "baseline/boards/orangecrab/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "baseline/boards/orangecrab/core-package.json": {
+    "bytes": 8216,
+    "sha256": "3d147e6ed0a05d3e742139ed89c210d6fa641b79d73a00fda4c722a9df269a42"
+  },
+  "baseline/boards/orangecrab/diagnostics.json": {
+    "bytes": 21539,
+    "sha256": "0ae607b19ab344a0a7aff79af2f6d730587c9f48cd980a7ca7fbffadef2f6dd9"
+  },
+  "baseline/boards/orangecrab/fanout-1-input.json.gz": {
+    "bytes": 628918,
+    "sha256": "cf9cf04f112f9305df3e4861ee17809d0ef8b326095f6bde3a5ae5cab5077259"
+  },
+  "baseline/boards/orangecrab/fanout-best-output.srj.json.gz": {
+    "bytes": 632920,
+    "sha256": "be9af35617652f33dae181297dd7441641d185781139e4081931733e8a0881e9"
+  },
+  "baseline/boards/orangecrab/pcb.svg": {
+    "bytes": 804323,
+    "sha256": "5fc1a2931015d8d5efebe1d1cab789bfb2b49d3a15d66ba52a1466d5b9874df1"
+  },
+  "baseline/boards/orangecrab/plan.json": {
+    "bytes": 4074,
+    "sha256": "cd358202e88ef31d8cedee0710a91c38fdd8f174360215034aa0a1ca0d3c2c77"
+  },
+  "baseline/boards/orangecrab/process.json": {
+    "bytes": 205,
+    "sha256": "e7d964286eaa6ff3cb9f8bab478b81a4a414c45d599ecc9830c5569b7cebb1d9"
+  },
+  "baseline/boards/orangecrab/progress.json": {
+    "bytes": 877,
+    "sha256": "73e06e0b9bcd15a69371c5333dad4e6623a07734b4ae3ead0b69f8d5fe74fe9b"
+  },
+  "baseline/boards/orangecrab/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "baseline/boards/orangecrab/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "baseline/boards/orangecrab/worker.log": {
+    "bytes": 2020,
+    "sha256": "8ba6d1a4c7ab4c5858cfcbd16335309d0a9147ce1a7fee9ebfeaa92397885b2a"
+  },
+  "baseline/fanout31/input-checksums.json": {
+    "bytes": 7407,
+    "sha256": "c01a8d73b19fc5c9dda8d62cee97e2e36e0efb6babef8283d9846f0588ba552c"
+  },
+  "baseline/fanout31/report.json": {
+    "bytes": 23175,
+    "sha256": "de4c1b0934f92cd500873308628af63fb7e6432007be9ddcca61d45d19e0cb14"
+  },
+  "baseline/native-profile/best-traces.json": {
+    "bytes": 7985,
+    "sha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38"
+  },
+  "baseline/native-profile/cpu-summary.json": {
+    "bytes": 11481,
+    "sha256": "16cb6129994753757d34aaef710ad549002c5fdeed91fb0c6eb3cfb116f95bdf"
+  },
+  "baseline/native-profile/fanout.cpuprofile": {
+    "bytes": 1203613,
+    "sha256": "5994a5601a600764e9d6b13abba825ea8ec94b7a9189cd51f5fbe0ea601bb52a"
+  },
+  "baseline/native-profile/fanout.graphics.json": {
+    "bytes": 257151,
+    "sha256": "4ac64ee0efed37f206101418e2c1172fb264a0bf880d957d12c15f71f2f16502"
+  },
+  "baseline/native-profile/fanout.svg": {
+    "bytes": 436147,
+    "sha256": "39f8aeaa515a32aa1ba0c349ae7496fb30172c269522c32dc323441e36c5b314"
+  },
+  "baseline/native-profile/report.json": {
+    "bytes": 7679,
+    "sha256": "1a30ca2fb2a5f02b0c34d0a153a1ee4705a72f39ef041fee3195ba7928fa63d0"
+  },
+  "build-report.py": {
+    "bytes": 15987,
+    "sha256": "df0babfdaa1d43c7eee05027ff88d3f431021407d589761e310eccfc03f395ed"
+  },
+  "candidate/boards/butterstick/assessment.json": {
+    "bytes": 20791,
+    "sha256": "e8251ff6ebf3a17f5b3008c7115fc1cf021e6c32918028d0fbd6ab230b45f573"
+  },
+  "candidate/boards/butterstick/circuit.json.gz": {
+    "bytes": 300629,
+    "sha256": "63958d9ac1dc6a16ac4bc4df5f4e046b81b6f549f2b113fe2dc1b62b88924ed0"
+  },
+  "candidate/boards/butterstick/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/butterstick/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/butterstick/diagnostics.json": {
+    "bytes": 7365,
+    "sha256": "fb33b9843190a9891e8c3d9676e2d16e1b5cd1db970e97e6af966881b739e690"
+  },
+  "candidate/boards/butterstick/fanout-1-input.json.gz": {
+    "bytes": 1973030,
+    "sha256": "60d0cb9ac32301bd98b115489f9b10302c175f1637d75fb389dbc4be6a19a32c"
+  },
+  "candidate/boards/butterstick/fanout-best-output.srj.json.gz": {
+    "bytes": 1976913,
+    "sha256": "d64ef00b5653e82a789ce31d001e99eac940e1de42682932b2ff40272ea665db"
+  },
+  "candidate/boards/butterstick/pcb.svg": {
+    "bytes": 981224,
+    "sha256": "3319ae6b1a55770d1d22fcf9d008257808eaa59430e68a3ff7ad2d2abed1ce9d"
+  },
+  "candidate/boards/butterstick/plan.json": {
+    "bytes": 7260,
+    "sha256": "e17f2eb037b1157072b51d248628baae4bf70230a9d0e57d2f836d7098e18bbd"
+  },
+  "candidate/boards/butterstick/process.json": {
+    "bytes": 202,
+    "sha256": "d7253d0bbdb993278a7c4ba51806580368da5ded16912f25f5c7b63b6d793ed7"
+  },
+  "candidate/boards/butterstick/progress.json": {
+    "bytes": 2046,
+    "sha256": "e4f4003c627b4e15b9872e3f602b9ddf6d083b95ee02afe41b30f64f6a2bfc11"
+  },
+  "candidate/boards/butterstick/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/butterstick/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/butterstick/worker.log": {
+    "bytes": 3142,
+    "sha256": "7af19d923f1e779c6c8519592eb6cbfe93fe52ffbf1b9b92c2bd1a89fabf4a5b"
+  },
+  "candidate/boards/glider/assessment.json": {
+    "bytes": 22667,
+    "sha256": "e62fca2653f4fb037f31612a4d2865398e0401e6913964cdc141e03fe498659d"
+  },
+  "candidate/boards/glider/circuit.json.gz": {
+    "bytes": 258637,
+    "sha256": "deffe6f678b90f82d9768eeb216e9c59b401a19eea26dbff6b57a41978fe01ad"
+  },
+  "candidate/boards/glider/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/glider/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/glider/diagnostics.json": {
+    "bytes": 9739,
+    "sha256": "430bee1bd588cbb8a11d81ec12c2fee02fffef269e90988c0bf82d0d145afb8e"
+  },
+  "candidate/boards/glider/fanout-1-input.json.gz": {
+    "bytes": 1421720,
+    "sha256": "e5dd973a0b9486dd9f55ed720017b8adbb3d305973a28fddd65aa21c95697442"
+  },
+  "candidate/boards/glider/fanout-best-output.srj.json.gz": {
+    "bytes": 1424587,
+    "sha256": "2dabe5ab4d52a30eef23240597a77dbf5452ff028194a5032551e48a72a1cf15"
+  },
+  "candidate/boards/glider/pcb.svg": {
+    "bytes": 1047668,
+    "sha256": "19ac3ec89e24d3bc0127442e391bf6e50768c8ca8b54169cfcb732462fc4d695"
+  },
+  "candidate/boards/glider/plan.json": {
+    "bytes": 7546,
+    "sha256": "e9ce3e12eac2e0279953d1abddc8e1ef108e2ce60088fa731d91141db6b345f7"
+  },
+  "candidate/boards/glider/process.json": {
+    "bytes": 202,
+    "sha256": "a1644cd7c9e6b9ecddabcb88f08a87b5ae91ebe187b8c0d9d61458ab9484e593"
+  },
+  "candidate/boards/glider/progress.json": {
+    "bytes": 2034,
+    "sha256": "5b93beed4fec88cdd922344597fe520d632941eae6a31ed7ba614e4010a25638"
+  },
+  "candidate/boards/glider/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/glider/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/glider/worker.log": {
+    "bytes": 3120,
+    "sha256": "b74910a01e5a0b191e514b14c52324fc21d41686e2c39e10ea4e0780a2ad3f1d"
+  },
+  "candidate/boards/h616/assessment.json": {
+    "bytes": 8132,
+    "sha256": "7a0419cb89ed7d4ca0125f2a5e1df50621ab07f10f8e9a92caa7736da0f9256b"
+  },
+  "candidate/boards/h616/circuit.json.gz": {
+    "bytes": 198136,
+    "sha256": "4f2ae86e75434d11f22bb47e65781e3f345f20f69dcb7d49a9004886209e2798"
+  },
+  "candidate/boards/h616/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/h616/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/h616/diagnostics.json": {
+    "bytes": 16151,
+    "sha256": "1f8eaae2cd36373bea69a843716f7881b1498707a4ffa1ec451e2f6ccd44d9d4"
+  },
+  "candidate/boards/h616/fanout-1-input.json.gz": {
+    "bytes": 406481,
+    "sha256": "824220b6d76f43f3f2d7a2282c15b6750fc0e0590d5720256f703790a1513e27"
+  },
+  "candidate/boards/h616/fanout-best-output.srj.json.gz": {
+    "bytes": 411117,
+    "sha256": "6bd36c4eb23bc0853a10f3c77f8cb2d8d1682fb29ccf6016460320ee87c0f8c2"
+  },
+  "candidate/boards/h616/pcb.svg": {
+    "bytes": 999493,
+    "sha256": "1b4b655418f5b616bb86404a10f3d01d63c16d8474a3651cbef51e970ecf4001"
+  },
+  "candidate/boards/h616/plan.json": {
+    "bytes": 3556,
+    "sha256": "b8cfaeeb6b1584a25173202bbb5b32b0f9545e3fe20006e4cde1709057e3e99f"
+  },
+  "candidate/boards/h616/process.json": {
+    "bytes": 199,
+    "sha256": "656b9fe06649c94b06561962550462092efaeba7240b80a4fda0ed689c8a1a08"
+  },
+  "candidate/boards/h616/progress.json": {
+    "bytes": 879,
+    "sha256": "f8cde832e5667cf1363b71a4df0ace5cb12a25d41a23a1c1c411c6f8971bf28b"
+  },
+  "candidate/boards/h616/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/h616/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/h616/worker.log": {
+    "bytes": 2010,
+    "sha256": "6470c41c22062ee58cc87b5976213ee6316bcf75ab1c196c99f10bb8b3257b55"
+  },
+  "candidate/boards/icepi/assessment.json": {
+    "bytes": 14468,
+    "sha256": "f3cba69c9f49403d887b792fc995a52da88e2cefbfcdfce87d536fb91c95bed6"
+  },
+  "candidate/boards/icepi/circuit.json.gz": {
+    "bytes": 374714,
+    "sha256": "32d64088280c97c1b25e046871a3db6d10351599176543a49013ea1366da7e12"
+  },
+  "candidate/boards/icepi/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/icepi/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/icepi/diagnostics.json": {
+    "bytes": 4882,
+    "sha256": "6ee5595d5cb8594ae35452905a01c47c4d7c813462cb422b509f8ba11885d52d"
+  },
+  "candidate/boards/icepi/fanout-1-input.json.gz": {
+    "bytes": 909275,
+    "sha256": "7a939dbb28ea0cb9a10d682170d4f2c62ebf4f84025ce522c57286dbb357f3c7"
+  },
+  "candidate/boards/icepi/fanout-best-output.srj.json.gz": {
+    "bytes": 909572,
+    "sha256": "944d337905a09ad525776f741b01546775359bd433793f6a2cadecfa292fc2e2"
+  },
+  "candidate/boards/icepi/pcb.svg": {
+    "bytes": 1865940,
+    "sha256": "d4799df9314c36bef7167583ab6baf4472fdd28ef3b1295ba95546f045dac9c8"
+  },
+  "candidate/boards/icepi/plan.json": {
+    "bytes": 5770,
+    "sha256": "3260a4836b760674a430f68e181c26777aef685511d8793edcaaa0ef734da972"
+  },
+  "candidate/boards/icepi/process.json": {
+    "bytes": 201,
+    "sha256": "f05c3a14916a2860c24581ea5f82b854a3c81593612f2aa4f84b373c5869e6bd"
+  },
+  "candidate/boards/icepi/progress.json": {
+    "bytes": 2031,
+    "sha256": "10893efa21658d3dacec5d68e5dd55ac536a1acd632cc3cb91f4e9ec06c7575b"
+  },
+  "candidate/boards/icepi/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/icepi/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/icepi/worker.log": {
+    "bytes": 3114,
+    "sha256": "9c41192d80813d728003d44c1ff36bfd65ddc08fdb9c551fcb2989afe1f64204"
+  },
+  "candidate/boards/imx6/assessment.json": {
+    "bytes": 30187,
+    "sha256": "83bec28220d6686867f96c52a49e5578b01c462738a251330bdec4e1d039f471"
+  },
+  "candidate/boards/imx6/circuit.json.gz": {
+    "bytes": 498324,
+    "sha256": "b07bb7ec99a34e797e33194da99b90513f033719820ec51c9f379b908dc4e767"
+  },
+  "candidate/boards/imx6/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/imx6/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/imx6/diagnostics.json": {
+    "bytes": 4795,
+    "sha256": "c5842a9d66381b20a7d0e7c1fc979a347704569634504b72f132f14f9d6e145a"
+  },
+  "candidate/boards/imx6/fanout-1-input.json.gz": {
+    "bytes": 2298521,
+    "sha256": "ed6475b356932f873b7ff4dd129316e44be4a8aa56922cd762bb6eeb1a826f0d"
+  },
+  "candidate/boards/imx6/fanout-best-output.srj.json.gz": {
+    "bytes": 2298860,
+    "sha256": "fd44c7bd0b2204cbe5190fbcb9a3356e0bb61b049154a043e2f44848fb5cedac"
+  },
+  "candidate/boards/imx6/pcb.svg": {
+    "bytes": 2805575,
+    "sha256": "c153257ead45c8b94d5b4610ecb3fafe5c7fbe8b09c20f19ba5b4c08825d9ac4"
+  },
+  "candidate/boards/imx6/plan.json": {
+    "bytes": 8733,
+    "sha256": "50fcbd2f496439621902c6e5d82c905ac1ff3d94a07c795f802e3cb04f446015"
+  },
+  "candidate/boards/imx6/process.json": {
+    "bytes": 195,
+    "sha256": "6a58e63a7ac668baa1b14dd6e32178f0b8c2f4502d89a80619b1eb264e7caa22"
+  },
+  "candidate/boards/imx6/progress.json": {
+    "bytes": 2391,
+    "sha256": "639f7b3c3a7bc43521e9ee94fed8250b931d3e1c315504fb8f3cf60de33c8c65"
+  },
+  "candidate/boards/imx6/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/imx6/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/imx6/worker.log": {
+    "bytes": 3467,
+    "sha256": "50fc4b4a29c8b158fec813f389e40c2e5c987b6b6ee782344fa96d6d4a450ac2"
+  },
+  "candidate/boards/orangecrab/assessment.json": {
+    "bytes": 9411,
+    "sha256": "ef71378b9c4d8cf238aaf64d0ef4bf44fda9a20460a5ccefa969ea731034e98a"
+  },
+  "candidate/boards/orangecrab/circuit.json.gz": {
+    "bytes": 217352,
+    "sha256": "817960fbdcf3f6a425141b2655cb6dcea53b7c3a18f6e68aaf7e399575546f2e"
+  },
+  "candidate/boards/orangecrab/core-build.json": {
+    "bytes": 91,
+    "sha256": "f885bc0906632306b224d86712749ab5945f3b150aca60aa50aef4370c98cc67"
+  },
+  "candidate/boards/orangecrab/core-package.json": {
+    "bytes": 8309,
+    "sha256": "1099e4397ea0c469adc856ce6c7332f52bc4a15419cfb49abdc182d3ee5d0e81"
+  },
+  "candidate/boards/orangecrab/diagnostics.json": {
+    "bytes": 21452,
+    "sha256": "fe641e73e38544aaf9515342a3ccceefe19af5320150b03eb0d15c39c56da918"
+  },
+  "candidate/boards/orangecrab/fanout-1-input.json.gz": {
+    "bytes": 628918,
+    "sha256": "cf9cf04f112f9305df3e4861ee17809d0ef8b326095f6bde3a5ae5cab5077259"
+  },
+  "candidate/boards/orangecrab/fanout-best-output.srj.json.gz": {
+    "bytes": 632920,
+    "sha256": "be9af35617652f33dae181297dd7441641d185781139e4081931733e8a0881e9"
+  },
+  "candidate/boards/orangecrab/pcb.svg": {
+    "bytes": 804323,
+    "sha256": "5fc1a2931015d8d5efebe1d1cab789bfb2b49d3a15d66ba52a1466d5b9874df1"
+  },
+  "candidate/boards/orangecrab/plan.json": {
+    "bytes": 4074,
+    "sha256": "cd358202e88ef31d8cedee0710a91c38fdd8f174360215034aa0a1ca0d3c2c77"
+  },
+  "candidate/boards/orangecrab/process.json": {
+    "bytes": 200,
+    "sha256": "3ab9f6a565e3439d451afd6eeba6cc14f50e572db605f8e4b22856dc34143d66"
+  },
+  "candidate/boards/orangecrab/progress.json": {
+    "bytes": 888,
+    "sha256": "236978699729f308ee2122d94ea5816e97e62dfca4a5a29def08280d06dbdfbb"
+  },
+  "candidate/boards/orangecrab/runtime-bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "candidate/boards/orangecrab/runtime-package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "candidate/boards/orangecrab/worker.log": {
+    "bytes": 2031,
+    "sha256": "624f49217a3471c79bfa3540ca397128b78f5a8b139a7f07370ef4d87684443a"
+  },
+  "candidate/fanout31/input-checksums.json": {
+    "bytes": 7407,
+    "sha256": "8854d96a89f413b415c010f57ac586605a1d37322f3265969f4707ca410f4f8b"
+  },
+  "candidate/fanout31/report.json": {
+    "bytes": 23177,
+    "sha256": "807c81989771ead2376778a947288ad9e487c5c146fb2e44a2ad2cb65124068a"
+  },
+  "focused/after.svg": {
+    "bytes": 49101,
+    "sha256": "ebc56c7b26c7ad6fdac32376ce5458992c4133451c909e7ab2e360e98886bc83"
+  },
+  "focused/before.svg": {
+    "bytes": 49101,
+    "sha256": "855cc309a3f71d75b04bd84fa344dc6a10ac965473b55e724785c7c584ef90ce"
+  },
+  "focused/geometry-check.json": {
+    "bytes": 162,
+    "sha256": "451f3d47e735be3480c70a62861127327b459dafabbffe3d76f2d238a5ec242d"
+  },
+  "index.html": {
+    "bytes": 8505,
+    "sha256": "4f1d5b4fbc7929d9e2edc73d63b1af16d3561ef2510c2056cd764ddde2026b3d"
+  },
+  "isolated/butterstick/after.json": {
+    "bytes": 19721,
+    "sha256": "50d9e4afec09a4e65c878bf5afbfd8c9af102ef598c64e2a6c5d38ce02fe040e"
+  },
+  "isolated/butterstick/before.json": {
+    "bytes": 18197,
+    "sha256": "46537b201129fb87821bc5b439c4e01743f1b3577de21b8750440b3e3f2909e1"
+  },
+  "isolated/glider/after.json": {
+    "bytes": 23793,
+    "sha256": "3e6dea81cae3305571bc052ca2743e701841e10e9d8fb534f8aed1e580090268"
+  },
+  "isolated/glider/before.json": {
+    "bytes": 20565,
+    "sha256": "966421affad24af1dc228e7222c2f0738e9b5701f174c24ed6300c1194bcfbf8"
+  },
+  "isolated/h616/after.json": {
+    "bytes": 34238,
+    "sha256": "e59f963e99cfe2616df9da6a54eec45f03a162b1d5a07023c079c87db3e48a12"
+  },
+  "isolated/h616/before.json": {
+    "bytes": 31791,
+    "sha256": "e687ab3b1bbc16696844ad6361147933b1a4b0c645ddb96272313e1f1b6ee10e"
+  },
+  "isolated/icepi/after.json": {
+    "bytes": 10636,
+    "sha256": "b216daf5dd6ed4c3508bd9d5e541fa1fe137a899cf16322f535db375e96fd52c"
+  },
+  "isolated/icepi/before.json": {
+    "bytes": 9366,
+    "sha256": "66207c57729505e9a7802834ea5706feb3272d5e818db8af370dd2a6ef7ea71a"
+  },
+  "isolated/imx6/after.json": {
+    "bytes": 10626,
+    "sha256": "d5586ae2d73ab1c12fd06a9476182c58c68d4c7add5f25ef8befe6c9681219d5"
+  },
+  "isolated/imx6/before.json": {
+    "bytes": 9358,
+    "sha256": "dd852a40f963ed902623e89b26252c80b69984512004d977de883e63fcd469d9"
+  },
+  "isolated/orangecrab/after.json": {
+    "bytes": 89652,
+    "sha256": "519813f3b2e4460ec418a11b7f78f5cf4ebb1e9278466690b2da8f7767ba999c"
+  },
+  "isolated/orangecrab/before.json": {
+    "bytes": 79748,
+    "sha256": "7c4fd238ec3bd163ef101500161c0dcfb603978c8769307c5e4cfb75f1e1c0c7"
+  },
+  "isolated/summary.json": {
+    "bytes": 2648,
+    "sha256": "226fb82aaaab0daf8646ed54c76450cf2ad623a31db4563363fa684c11a060d0"
+  },
+  "pcb/baseline/butterstick.svg": {
+    "bytes": 979941,
+    "sha256": "fc14089e96150f621a0e7855150ef158db9a2e3b976b91fba2b198796de6010a"
+  },
+  "pcb/baseline/glider.svg": {
+    "bytes": 1045169,
+    "sha256": "484a7f032c533f6a6e6f694900c5102b19ba1293b8dfaba0e67c3d6413cfd879"
+  },
+  "pcb/baseline/h616.svg": {
+    "bytes": 999340,
+    "sha256": "0c72d456c854ae56337cd722d3ce79eedb9585817cc85c11b3cc5b504907296c"
+  },
+  "pcb/baseline/icepi.svg": {
+    "bytes": 1863828,
+    "sha256": "c5992cf7897214910d336cc7ffa9fa79019be00bbba450caeb0488294dad7e35"
+  },
+  "pcb/baseline/imx6.svg": {
+    "bytes": 2799581,
+    "sha256": "281af542bae62aa81888f12499412a57fde48c45747e4e89014ad27cd5a8b2c3"
+  },
+  "pcb/baseline/orangecrab.svg": {
+    "bytes": 805983,
+    "sha256": "309c81c76c70c97a248b57bbbd712907db04573fb538ec3990c1aaa180d807f3"
+  },
+  "pcb/candidate/butterstick.svg": {
+    "bytes": 979941,
+    "sha256": "fc14089e96150f621a0e7855150ef158db9a2e3b976b91fba2b198796de6010a"
+  },
+  "pcb/candidate/glider.svg": {
+    "bytes": 1045169,
+    "sha256": "484a7f032c533f6a6e6f694900c5102b19ba1293b8dfaba0e67c3d6413cfd879"
+  },
+  "pcb/candidate/h616.svg": {
+    "bytes": 999340,
+    "sha256": "0c72d456c854ae56337cd722d3ce79eedb9585817cc85c11b3cc5b504907296c"
+  },
+  "pcb/candidate/icepi.svg": {
+    "bytes": 1863828,
+    "sha256": "c5992cf7897214910d336cc7ffa9fa79019be00bbba450caeb0488294dad7e35"
+  },
+  "pcb/candidate/imx6.svg": {
+    "bytes": 2799581,
+    "sha256": "281af542bae62aa81888f12499412a57fde48c45747e4e89014ad27cd5a8b2c3"
+  },
+  "pcb/candidate/orangecrab.svg": {
+    "bytes": 805983,
+    "sha256": "309c81c76c70c97a248b57bbbd712907db04573fb538ec3990c1aaa180d807f3"
+  },
+  "production-patch-check.json": {
+    "bytes": 279,
+    "sha256": "229160037d840762744514aa5a622c15f52a3aea3ab1041dac298fc992c71729"
+  },
+  "production.patch": {
+    "bytes": 865,
+    "sha256": "1c23db3c096c8dfe58a02c3ebca13d600aebc18b89ec994d2f099d2b1b049590"
+  },
+  "provenance.json": {
+    "bytes": 1320,
+    "sha256": "846bdfd880ca09666c976e8e439960c9ebeaf69642e1f503bc567edfc74d4023"
+  },
+  "render-evidence.ts": {
+    "bytes": 1290,
+    "sha256": "de6fa4998249ff7318842a718b8f4d210cc32fd09f7a6254ea8901431508a279"
+  },
+  "sources/assess.ts": {
+    "bytes": 6646,
+    "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
+  },
+  "sources/build-core.ts": {
+    "bytes": 1366,
+    "sha256": "08c5bbd5b3a413236048ae113d3f54d63963fc4d5712604ee7f74cc8aaff649e"
+  },
+  "sources/bun.lock": {
+    "bytes": 68889,
+    "sha256": "53da7a3691b5ccd7344d64ac8010b7cbfe792f214b81151e2b579fb1469e3b96"
+  },
+  "sources/butterstick/board.tsx": {
+    "bytes": 309,
+    "sha256": "b9a3357323a0ac2fa987aae7640ed955943579de4a2948ea3408f4e6ffa89a41"
+  },
+  "sources/butterstick/source.json": {
+    "bytes": 630853,
+    "sha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844"
+  },
+  "sources/compactAliases.ts": {
+    "bytes": 3305,
+    "sha256": "2c266c9863c2baf010dfc6fa5972b7e1b0bf368c4930721ae45f4fcbeee53dd1"
+  },
+  "sources/connectivity.ts": {
+    "bytes": 4446,
+    "sha256": "83334edccc053c51a30cdf684be1acb8068af23f48347d9f133751bdbf19247d"
+  },
+  "sources/core-runtime.d.mts": {
+    "bytes": 90,
+    "sha256": "e19f2bdeb07c54a64f261a83d8e859b3e5dd36daf62842c8c8cee4fe69805b5b"
+  },
+  "sources/core-runtime.mjs": {
+    "bytes": 419,
+    "sha256": "f22bb539f5f5506c5a665855b6e5b0ce6e52a9ce1f0e1581e6732f48d2d121ed"
+  },
+  "sources/glider/board.tsx": {
+    "bytes": 309,
+    "sha256": "e66945b0ad64f60f0bcbbf2245ea38bf4b4a0d776d5d50acac1b993c755c7a56"
+  },
+  "sources/glider/source.json": {
+    "bytes": 633596,
+    "sha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935"
+  },
+  "sources/h616/board.tsx": {
+    "bytes": 321,
+    "sha256": "8e27fcf9bc39d35c97a584a6a4aa6b624ebe14f589b12c5a45e3287e8fb36ace"
+  },
+  "sources/h616/source.json": {
+    "bytes": 265300,
+    "sha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c"
+  },
+  "sources/icepi/board.tsx": {
+    "bytes": 307,
+    "sha256": "5a80aa72c0cb6fa08f246b9496af9cfaa27e7e7b83b183bdd5f562f8e68a1136"
+  },
+  "sources/icepi/source.json": {
+    "bytes": 598253,
+    "sha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b"
+  },
+  "sources/imx6/board.tsx": {
+    "bytes": 309,
+    "sha256": "81d9421ad723af44979ebdc15e08cdcb4f250b42925c2862bad0daeeb85cab5c"
+  },
+  "sources/imx6/source.json": {
+    "bytes": 871981,
+    "sha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090"
+  },
+  "sources/inspect-routing-workflow.tsx": {
+    "bytes": 2550,
+    "sha256": "dff7de09eb097720ecc561ead5753ae6cfc95e3e85190b8919ee4e0257e696c2"
+  },
+  "sources/isolated-plane-suite.ts": {
+    "bytes": 3612,
+    "sha256": "be1b922819abf8d674bb8a5a3fc518abe4c3c075d5c0ef3f009e5e05e90dc4f4"
+  },
+  "sources/jsx.d.ts": {
+    "bytes": 895,
+    "sha256": "1063ea31a49a07796b533bef974d280af4402d19de5ed95824e61252b3a62920"
+  },
+  "sources/licenses/A13-README.md": {
+    "bytes": 1903,
+    "sha256": "094ae8f06478cc10e337a614e48b7148035b8f3718cfc07de588c21a606067ad"
+  },
+  "sources/licenses/CERN-OHL-1.2.txt": {
+    "bytes": 9153,
+    "sha256": "60142a73e57a208d178a74fd43ad37badaa95d552108c13c614d8c1e26c4c366"
+  },
+  "sources/licenses/H3-README.md": {
+    "bytes": 149,
+    "sha256": "341e5521ce0467eecab1831b66bc9e3ff0fb9b697dfdc9313522b8d6cc8eda20"
+  },
+  "sources/licenses/OrangeCrab-MIT.txt": {
+    "bytes": 1079,
+    "sha256": "626a030692d14bb53f7a40f22ebcbb314347626189892401f2b51801f622a118"
+  },
+  "sources/licenses/OrangeCrab-README.md": {
+    "bytes": 2666,
+    "sha256": "491dac7f5b210531ed5237a03a1c3280214a4c5625bc6982fa6e6a87e40c4f3d"
+  },
+  "sources/manifest.json": {
+    "bytes": 1411,
+    "sha256": "d6f87d573168fad5068745eefef49f80f0fd42e00c85ee5df58ca29545c28165"
+  },
+  "sources/native-full-board.tsx": {
+    "bytes": 8765,
+    "sha256": "b57de137df461cc6859862b7462f2ad99eba15abdb50d317b771c17b1e4a376a"
+  },
+  "sources/native-part.tsx": {
+    "bytes": 4771,
+    "sha256": "a1dbf28c45de31ef0158305cc550edcb6036d592c18268e0cda5401899b7aa4c"
+  },
+  "sources/orangecrab/board.tsx": {
+    "bytes": 323,
+    "sha256": "d3bc43b615d1be58effb969775b478d8e7e4066d8aaaa19d5689388ddf55a307"
+  },
+  "sources/orangecrab/source.json": {
+    "bytes": 437319,
+    "sha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9"
+  },
+  "sources/package.json": {
+    "bytes": 371,
+    "sha256": "61e526e0036b6b61053bec318e2beb1f8c32cd641cbff11bdefd3f43cba43dc7"
+  },
+  "sources/plane-demands.tsx": {
+    "bytes": 3851,
+    "sha256": "79198e542c1901bf7812d9ef8f1e95502fd28650d2c5de03ce86dac6cf313488"
+  },
+  "sources/render.tsx": {
+    "bytes": 15571,
+    "sha256": "f488803d273f8853a8c7f1f196cc8b0fc78c30de4bbca6d6e29a6f51d39ba145"
+  },
+  "sources/replay-native-plane-drop.ts": {
+    "bytes": 3066,
+    "sha256": "e4fd1ac35e70de8a0c5423948beef1480f356efaaa368b39a583500f8f97a50a"
+  },
+  "sources/reproduce-comparison.sh": {
+    "bytes": 1673,
+    "sha256": "4a3a636e281162546be0e46cd39465f0224ff18f7ac0a45a08d2feb1a381cb3b"
+  },
+  "sources/reproduce.sh": {
+    "bytes": 1539,
+    "sha256": "c9ed2db3a6f975995f318b9f2be8c7fe22c5eaae1c5e13a30cdb49ae49488d2b"
+  },
+  "sources/run-fanout-bus-first.ts": {
+    "bytes": 1405,
+    "sha256": "bd04c96839cf6dff1f2b03c715fa9051bcb80c70b76df7c0334e6d76c06f5d1d"
+  },
+  "sources/runtime.mjs": {
+    "bytes": 340,
+    "sha256": "457fa6c1ecbd6eb9dcb6bca1c4c3734759a5a1b3deb832fdc38fb37d6608ce6e"
+  },
+  "sources/select-ddr-router.mjs": {
+    "bytes": 517,
+    "sha256": "b948636077ce49d34966b046a95aebb4f232d02011e3e51c551dacbf4f7c5e08"
+  },
+  "sources/source-audit.json": {
+    "bytes": 913,
+    "sha256": "f18f2605a9d3211d3181eef10536c20a7950c8fef2c62512c63d25ed32a8d765"
+  },
+  "sources/tsconfig.json": {
+    "bytes": 366,
+    "sha256": "47c530144db1fbef84e1742f649bdbb4477666a0e118e69f3cf347a98cd2ab3e"
+  },
+  "workflows/ddr2419-board-comparison.yml": {
+    "bytes": 5341,
+    "sha256": "673ca9a0b945ecadbf8d5f061598707a7a2223b787a0687513897e2e0a2cf733"
+  },
+  "workflows/ddr2419-final-validation-candidate.yml": {
+    "bytes": 8792,
+    "sha256": "6a3b6655cbd7cf00c72496e6780e6913d255fa3c0d16f01bea199ebe38891111"
+  },
+  "workflows/ddr2419-initial-published-baseline.yml": {
+    "bytes": 7217,
+    "sha256": "c9eed046e741852f78a1cab03131844ab0cc4a181c69bd5a9053aedb24580abf"
+  }
+}

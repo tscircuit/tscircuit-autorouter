@@ -1,0 +1,282 @@
+[
+  {
+    "busId": "ESC_U10_pin115",
+    "connectionNames": [
+      "source_trace_0"
+    ],
+    "inputSha256": "ff488e00300bdafb175090fd9e26a60db7d2436171a6caaf0d9397fda1cc4496",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 1118.336326,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_0 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin129",
+    "connectionNames": [
+      "source_trace_1"
+    ],
+    "inputSha256": "d22c8ea0c6c7d7367185749060e379510addb4e2624fef481172a7c85ba625b6",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 935.549047,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_1 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin142",
+    "connectionNames": [
+      "source_trace_2"
+    ],
+    "inputSha256": "1cb57c79a8f194658d565126b6519749689111b546cf488462cadc6e76977352",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 816.087892,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_2 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin144",
+    "connectionNames": [
+      "source_trace_3"
+    ],
+    "inputSha256": "94e1f07779137079b7bca512d52523ffc9c0872ebe0b3f85fd8ac90fee4032ba",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 722.6592689999998,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_3 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin34",
+    "connectionNames": [
+      "source_trace_4"
+    ],
+    "inputSha256": "c0b2217adf1afdaab54fdd44d9c320ba6eaa9bb8baae6a52b98ce15b4482558c",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 449.28050299999995,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin101",
+    "connectionNames": [
+      "source_trace_5"
+    ],
+    "inputSha256": "87eeaea32eae8bd006a4176a31d472f0184ede5817fcc10f0cca08780051327d",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 768.8966979999996,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_5 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin54",
+    "connectionNames": [
+      "source_trace_6"
+    ],
+    "inputSha256": "e41ae6faf5bb190ba9aad028170ff24cf3b3d64d025c2dd173b33d7763f03f96",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 691.6990459999997,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_6 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin65",
+    "connectionNames": [
+      "source_trace_7"
+    ],
+    "inputSha256": "d508add94ea711897d315cdce74b50ac70fa4fadca9eddfbb2fc2c02bc0c6fd7",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 842.4129529999991,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_7 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin90",
+    "connectionNames": [
+      "source_trace_8"
+    ],
+    "inputSha256": "47b575ffff91da461f19bac4da13c5e3b50f5a531460cfe06e8d8dc346f511c4",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 968.8440129999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_8 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin100",
+    "connectionNames": [
+      "source_trace_9"
+    ],
+    "inputSha256": "f74ec87435d570a526442e491d69daeabf044d7b92f9716c39f6837a9d5d40d0",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 839.1196049999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_9 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin127",
+    "connectionNames": [
+      "source_trace_10"
+    ],
+    "inputSha256": "0b9389277e857598f1b3c0cf6cc0f04e41b0fcd426eb078d662a8a57eaf7483f",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 259.8670080000011,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin130",
+    "connectionNames": [
+      "source_trace_11"
+    ],
+    "inputSha256": "2e3bc7dc677f4c246b3666115f8883a28cec7b6382e579a523b1ddd2b4c89b3c",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 775.3074890000007,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_11 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin143",
+    "connectionNames": [
+      "source_trace_12"
+    ],
+    "inputSha256": "0d9cb09ce96ef4b6ea810e4e8e5cd1f72344155a50e3d2385f714c899b889e0f",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 559.6970569999994,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_12 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin145",
+    "connectionNames": [
+      "source_trace_13"
+    ],
+    "inputSha256": "65bc23e0afca439730bc563cfabd2291e6fb81041098cb4f1348f0b23b8bcca2",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 591.2455960000007,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_13 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin32",
+    "connectionNames": [
+      "source_trace_14"
+    ],
+    "inputSha256": "7d35070ba3d73345448b2744399b4b3fc8a42ce314e799686e0973fcda37e084",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 322.2511860000013,
+    "iterations": 14,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin55",
+    "connectionNames": [
+      "source_trace_15"
+    ],
+    "inputSha256": "ef2bed620043afa18c67c134fcade32ea7778b3cb8dfc7b9ba66093ef85fa298",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 786.6248700000015,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_15 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin6",
+    "connectionNames": [
+      "source_trace_16"
+    ],
+    "inputSha256": "6072282400e7b6447926c22efb30d63fc51b71a9215dfa8ec55e08773c602b12",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 583.7088749999984,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_16 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin73",
+    "connectionNames": [
+      "source_trace_17"
+    ],
+    "inputSha256": "8a98150d2223ea0b77f9c7203a37fec22eea500128556c9451eaa612fa2da565",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 905.744494999999,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_17 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin82",
+    "connectionNames": [
+      "source_trace_18"
+    ],
+    "inputSha256": "85d77dc3271645587080af3830398184daff93c16b0b53f6c66613af40435a38",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 607.6504710000008,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_18 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  },
+  {
+    "busId": "ESC_U10_pin89",
+    "connectionNames": [
+      "source_trace_19"
+    ],
+    "inputSha256": "90c15fdb7a99512e53f33d7fe40af50942e68dc8c20ec410beeaf6c98cc77f84",
+    "obstacleCount": 3212,
+    "status": "failed",
+    "elapsedMs": 691.0862099999977,
+    "iterations": 20,
+    "error": "FanoutSolver: Via source_trace_19 is 0.0000mm from different-net obstacle undefined on its layer span; 0.3190mm is required",
+    "copperDrc": null,
+    "copperSha256": null
+  }
+]

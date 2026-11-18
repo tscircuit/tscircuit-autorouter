@@ -1,0 +1,20 @@
+diff --git a/lib/validate-fanout-solution.ts b/lib/validate-fanout-solution.ts
+index 6d9ac71..2db8a78 100644
+--- a/lib/validate-fanout-solution.ts
++++ b/lib/validate-fanout-solution.ts
+@@ -744,6 +744,15 @@ function validateClearances(params: {
+     }
+     for (const via of getPlanVias(plan)) {
+       for (const obstacle of inputSrj.obstacles) {
++        // Crossed pour reservations form antipads. Keep both terminal layers
++        // protected, as in independent routed-copper validation.
++        if (
++          obstacle.isCopperPour &&
++          !obstacle.layers.includes(via.fromLayer) &&
++          !obstacle.layers.includes(via.toLayer)
++        ) {
++          continue
++        }
+         if (
+           !obstacle.layers.some((layer) => via.spanLayers.includes(layer)) ||
+           obstacleSharesElectricalNet(inputSrj, obstacle, plan.connectionName)

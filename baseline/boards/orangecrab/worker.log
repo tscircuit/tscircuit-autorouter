@@ -1,0 +1,12 @@
+trace: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)
+orangecrab autorouting:start fanout preparation
+orangecrab autorouting:error fanout preparation
+Async effect error in PcbTraceRender "autorouting":
+Error: Full-board routing budget exhausted
+    at checkRoutingBudget (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/render.tsx:22:62)
+    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/render.tsx:72:3)
+    at solve (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:223891:16)
+    at solveFanout (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:240498:23)
+    at startFanout (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:240522:90)
+    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:240552:23)
+{"id":"orangecrab","mode":"fanout","status":"failed","renderCompleted":true,"elapsedMs":610708.55398,"phases":[{"name":"fanout preparation","solver":"FanoutSolver","status":"failed","connections":273,"startedMs":21268.039651,"elapsedMs":578841.8398249999}],"errors":["Full-board routing budget exhausted","Error: Full-board routing budget exhausted","Full-board routing budget exhausted"],"stage":"initializing","initialCopperElements":0,"runtime":{"tscircuit":"0.0.3237","core":"0.0.2419","fanout":"0.0.87","busLanes":"0.0.62","autorouter":"workspace Pipeline 9","routerCommit":"9910d3a595fdc3f19c7147ac37e0262a2338d92c"},"planeIntent":{"enabled":true,"zones":35,"importedSavedCopper":false}}
