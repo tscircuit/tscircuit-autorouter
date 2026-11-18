@@ -43,6 +43,7 @@ jobs:
           import {gunzipSync} from "node:zlib"
           import {AutoroutingPipelineSolver9_PreloadedTraceGraph} from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
           import {evaluateRelaxedDrc} from "./lib/testing/evaluate-relaxed-drc"
+          import {convertPipeline7HdRoutesToSimplifiedPcbTraces} from "./lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
           const input=JSON.parse(gunzipSync(readFileSync("tests/fixtures/assets/a13-fixed-copper/remaining64.srj.json.gz")).toString())
           const solver=new AutoroutingPipelineSolver9_PreloadedTraceGraph(input,{cacheProvider:null})
           let phase=solver.getCurrentPhase()
@@ -51,7 +52,17 @@ jobs:
            const next=solver.getCurrentPhase()
            if(next===phase)continue
            if(solver.highDensityStitchSolver?.solved) {
-            const traces=solver.getOutputSimplifiedPcbTraces()
+            let routes=solver.highDensityStitchSolver.mergedHdRoutes
+            if(solver.traceSimplificationSolver?.solved)routes=solver.traceSimplificationSolver.simplifiedHdRoutes
+            if(solver.traceWidthSolver?.solved)routes=solver.traceWidthSolver.getHdRoutesWithWidths()
+            if(solver.globalDrcForceImproveSolver?.solved)routes=solver.globalDrcForceImproveSolver.getOutput()
+            if(solver.pipeline9JointDrcRepairSolver?.solved)routes=solver.pipeline9JointDrcRepairSolver.getOutput()
+            if(solver.effortCleanupSolver?.solved)routes=solver.effortCleanupSolver.getOutput()
+            const traces=convertPipeline7HdRoutesToSimplifiedPcbTraces({
+             connections:solver.netToPointPairsSolver!.newConnections,
+             originalConnections:input.connections,hdRoutes:routes,layerCount:input.layerCount,
+             obstacles:input.obstacles,defaultViaHoleDiameter:solver.viaHoleDiameter,connMap:solver.connMap,
+            })
             const result=evaluateRelaxedDrc({inputSrj:input,srjWithPointPairs:solver.srjWithPointPairs!,routedTraces:traces,drcOptions:{traceClearance:input.minTraceToPadEdgeClearance}})
             const counts={}
             for(const error of result.errorsWithCenters) {
