@@ -1,0 +1,91 @@
+name: Publish DDR2417 routing evidence from preserved artifacts
+on:
+  push:
+    branches: [codex/ddr2417-publish-evidence]
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: 45b76fcc2ebca95704b5206e2da34c76965a07aa
+          path: legacy
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 83f48db80349beecc505a72a6e1f3e36705c829f
+          path: source-fanout
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: published2417-*
+          run-id: 44359066016
+          github-token: ${{ github.token }}
+          path: captures/baseline
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: geometry2417-*
+          run-id: 44361796571
+          github-token: ${{ github.token }}
+          path: captures/candidate
+      - uses: actions/download-artifact@v4
+        with:
+          name: geometry2417-paired-imx6
+          run-id: 44364735570
+          github-token: ${{ github.token }}
+          path: captures/imx6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Rebuild the report inputs from completed benchmark artifacts
+        run: |
+          python3 -m py_compile experiments/full-board-priority-analysis/publish-evidence.py
+          python3 experiments/full-board-priority-analysis/publish-evidence.py prepare
+          mkdir -p /tmp/ddr2417-visuals
+          cat > /tmp/ddr2417-visuals/package.json <<'JSON'
+          {"name":"ddr2417-evidence-renderers","private":true,"type":"module","dependencies":{"circuit-to-svg":"0.0.460","graphics-debug":"0.0.99"}}
+          JSON
+          (cd /tmp/ddr2417-visuals && bun install --ignore-scripts)
+      - name: Render real native PCB and fanout SVGs without rerouting
+        run: |
+          bun experiments/full-board-priority-analysis/render-published-evidence.ts /tmp/ddr2417-visuals/node_modules /tmp/ddr2417-visuals/node_modules
+          python3 experiments/full-board-priority-analysis/publish-evidence.py build
+      - name: Preserve final source and CI status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr view 293 --repo tscircuit/fanout-solver --json headRefOid,mergeable,state,statusCheckRollup > report/repro-ci.json
+          gh pr view 294 --repo tscircuit/fanout-solver --json headRefOid,mergeable,state,statusCheckRollup > report/fix-ci.json
+      - name: Publish immutable evidence on a separate branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh auth setup-git
+          git -C report init --initial-branch=analysis/ddr2417-geometry-first
+          git -C report config user.name "github-actions[bot]"
+          git -C report config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C report remote add origin https://github.com/tscircuit/tscircuit-autorouter.git
+          git -C report add -- . ':(exclude)circuits-and-results.zip'
+          git -C report commit -m "Record DDR2417 matched fanout timings and full PCB results"
+          git -C report push origin HEAD:refs/heads/analysis/ddr2417-geometry-first
+          python3 - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          sha=subprocess.check_output(['git','-C','report','rev-parse','HEAD'],text=True).strip()
+          print('PUBLISHED_DDR2417_EVIDENCE',json.dumps({'commit':sha,'branch':'analysis/ddr2417-geometry-first','svg':'https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/'+sha+'/all-boards.svg','zipSha256':hashlib.sha256(Path('report/circuits-and-results.zip').read_bytes()).hexdigest()}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ddr2417-complete-evidence
+          path: |
+            report/circuits-and-results.zip
+            report/analysis.json
+            report/all-boards.svg
+          retention-days: 30
