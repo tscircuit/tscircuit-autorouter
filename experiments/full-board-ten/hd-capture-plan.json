@@ -1,0 +1,78 @@
+{
+  "purpose": "diagnostic replay of previous published3230 phase inputs under latest published3234 autorouter; not a fresh whole-board baseline",
+  "runtimeController": "13889f2abbe8201e23fe90d9a04ee26d0445d06e",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineSeconds": 960,
+  "routingSourceOverrides": false,
+  "solverOptions": {
+    "capacityDepth": null,
+    "targetMinCapacity": null,
+    "cacheProvider": null,
+    "effort": null
+  },
+  "undefinedOptionKeys": [
+    "capacityDepth",
+    "targetMinCapacity",
+    "effort"
+  ],
+  "cases": {
+    "h616": {
+      "targetRoot": "source_net_115",
+      "phase": "other_signals",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14372457413,
+        "name": "full-board-h616-published-spaced-1",
+        "size_in_bytes": 3989494,
+        "digest": "sha256:e6080d2879df15bc1f2633f70862366285232a7cba5747d2696823a532524b74",
+        "workflow_run": {
+          "id": 44179934754,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3230-20261117",
+          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
+        }
+      },
+      "files": {
+        "phase-4-input.srj.json.gz": {
+          "sha256": "1570a142ed767cfa749b1c52a7eb418a3d5d08cffe47deb84807d04d32fc1c9d",
+          "bytes": 470892,
+          "payloadSha256": "1ecf1f73f23e61bc0ba4c0f5e6060c1f90b8e5ac691c512ebfc5a38475452e1f"
+        },
+        "progress.json": {
+          "sha256": "c509706821a97192245996d21af2f67b1e086cabeb0908df9f12cb767bc6b815",
+          "bytes": 11040
+        }
+      }
+    },
+    "icepi": {
+      "targetRoot": "source_net_15",
+      "phase": "other_signals",
+      "cohort": "spaced",
+      "artifact": {
+        "id": 14371524871,
+        "name": "full-board-icepi-published-spaced-1",
+        "size_in_bytes": 11571008,
+        "digest": "sha256:7beb25978e38f050743649da26d05e6a768e65f4799f9fc2abab71d35bd3784a",
+        "workflow_run": {
+          "id": 44179934754,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3230-20261117",
+          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
+        }
+      },
+      "files": {
+        "phase-4-input.srj.json.gz": {
+          "sha256": "bf47f206b0491b30d1904fc0ff0b58bfe0e32c98c309b2e854cd1957385f6e9f",
+          "bytes": 1391572,
+          "payloadSha256": "9857be9efd71635ab6e582f42d7efbbe2f9a85fcc813933dbb6dd2746781f821"
+        },
+        "progress.json": {
+          "sha256": "eacbb54e08c62f10862d120975f43848b7d21e42cd99e84b0144cebfd97313f8",
+          "bytes": 10917
+        }
+      }
+    }
+  }
+}
