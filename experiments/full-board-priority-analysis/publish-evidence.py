@@ -66,6 +66,17 @@ if sys.argv[1]=='prepare':
         (target/'input-checksums.json').write_text(json.dumps(hashes,indent=2))
     shutil.copytree(Path('captures/candidate/geometry2417-paired-native'),ROOT/'paired/icepi')
     shutil.copytree(Path('captures/imx6'),ROOT/'paired/imx6')
+    # The benchmark uploads raw reports before its compact log export is built.
+    # Reconstruct that export from the preserved reports and exact trace bytes.
+    for board in ['icepi','imx6']:
+        folder=ROOT/'paired'/board
+        comparison=[]
+        for path in sorted(folder.rglob('report.json')):
+            report=json.loads(path.read_text())
+            comparison.append({'trial':path.parent.parent.name,'revision':path.parent.name,'elapsedMs':report['elapsedMs'],'inputSha256':report['inputSha256'],'copperSha256':hashlib.sha256((path.parent/'best-traces.json').read_bytes()).hexdigest(),'bestPartial':report['bestPartial'],'copperDrc':report['copperDrc'],'failed':report['failed'],'solved':report['solved'],'error':report['error'],'iterations':report['iterations']})
+        assert len(comparison)==6
+        (folder/'comparison.json').write_text(json.dumps(comparison,indent=2))
+
     shutil.copytree(Path('captures/baseline/published2417-native-profile'),ROOT/'baseline/native-profile')
     profile=ROOT/'baseline/native-profile/fanout.cpuprofile';raw=profile.read_bytes();Path(str(profile)+'.gz').write_bytes(gzip.compress(raw,compresslevel=9,mtime=0));profile.unlink()
     (profile.parent/'profile-sha256.json').write_text(json.dumps({'uncompressedBytes':len(raw),'uncompressedSha256':hashlib.sha256(raw).hexdigest()},indent=2))
@@ -97,6 +108,7 @@ if sys.argv[1]=='prepare':
     sys.exit(0)
 
 pairs={name:matched_summary(name) for name in ['icepi','imx6']}
+assert read_json('baseline/native-profile/report.json')['inputSha256']==pairs['icepi']['inputSha256']
 assert all(row['medianReductionPercent']>0 for row in pairs.values())
 rows=[]
 for board,title in BOARDS.items():
