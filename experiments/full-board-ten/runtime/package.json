@@ -21,7 +21,7 @@
     "css-select": "5.1.0",
     "jscad-fiber": "^0.0.93",
     "minicssgrid": "^0.0.9",
-    "circuit-json": "0.0.551",
+    "circuit-json": "0.0.552",
     "s-expression": "^3.1.1",
     "jscad-planner": "^0.0.21",
     "@dagrejs/dagre": "^2.0.4",
@@ -32,7 +32,7 @@
     "calculate-elbow": "^0.0.12",
     "performance-now": "^2.1.0",
     "@flatten-js/core": "^1.6.2",
-    "@tscircuit/props": "^0.0.732",
+    "@tscircuit/props": "^0.0.735",
     "connectivity-map": "^1.0.1",
     "@tscircuit/checks": "^0.0.279",
     "calculate-packing": "^0.0.90",
@@ -41,7 +41,7 @@
     "@tscircuit/alphabet": "0.0.25",
     "@tscircuit/krt-wasm": "^0.1.1",
     "@tscircuit/miniflex": "^0.0.4",
-    "@tscircuit/runframe": "^0.0.3277",
+    "@tscircuit/runframe": "^0.0.3283",
     "circuit-json-to-bpc": "^0.0.13",
     "@tscircuit/matchpack": "^0.0.100",
     "@tscircuit/soup-util": "^0.0.41",
@@ -74,9 +74,9 @@
     "@jscad/modeling": "^2.13.0",
     "react-reconciler": "^0.32.0",
     "@tscircuit/mm": "0.0.9",
-    "tscircuit": "0.0.3230",
-    "@tscircuit/core": "0.0.2407",
-    "@tscircuit/eval": "0.0.1801",
-    "@tscircuit/capacity-autorouter": "0.0.1121"
+    "tscircuit": "0.0.3234",
+    "@tscircuit/core": "0.0.2414",
+    "@tscircuit/eval": "0.0.1807",
+    "@tscircuit/capacity-autorouter": "0.0.1127"
   }
 }
