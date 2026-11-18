@@ -1,0 +1,140 @@
+{
+  "qualificationReady": true,
+  "status": "Qualified diagnostic capture; root verifies this commit and owns the only push/launch",
+  "branch": "bench/pending-access-phase2-3236-20261118",
+  "workflow": ".github/workflows/bus-phase2-diagnostic.yml",
+  "question": "After the first native byte1 child solves under520dd, capture the second child input before its first step and its prepared lane input after exactly one ordinary step.",
+  "scope": "Replay one authenticated captured candidate phase with bounded diagnostic observations. No fresh full-board routing, completion improvement, performance or dynamic neutrality claim. The replay has its own900s diagnostic window; it is not limited to the time remaining after byte0 in the full-board run.",
+  "source": {
+    "runtimeControllerCommit": "1557bd914a3344e51c35a7b3ef6d996511b9a5e8",
+    "sourceCandidateCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9",
+    "sourceLibTree": "9d184f5ab67c296fb7f429f06576c3d8c6474c31",
+    "sourcePatchSha256": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
+    "sourceMappingSha256": "2360dcc29d123f85ec3ae33bf1aaccef4be9752432879040a23656adb9b902b2",
+    "candidateCoreSha256": "a02e5e4378214bd37bb0bdb2a59ec681b0ef400a58d553038755250f08875176",
+    "publishedPackages": {
+      "main": "0.0.3236",
+      "core": "0.0.2418",
+      "eval": "0.0.1811",
+      "autorouter": "0.0.1129",
+      "bus": "0.0.62",
+      "publishedCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+      "candidateCoreSha256": "a02e5e4378214bd37bb0bdb2a59ec681b0ef400a58d553038755250f08875176"
+    },
+    "adapter": "Existing getBusLanesInputFromSrj from this exact Core bundle",
+    "pipeline": "Existing BusLanesPipelineSolver, native options {}",
+    "runtimeGraph": "Reuse frozen published3236 bootstrap/locks and qualified pending-access overlay; every unrelated package, source case and dependency remains unchanged."
+  },
+  "input": {
+    "artifact": {
+      "id": 14477591408,
+      "node_id": "MDg6QXJ0aWZhY3QxNDQ3NzU5MTQwOA==",
+      "name": "pending-access-butterstick-spaced-candidate-1",
+      "size_in_bytes": 6833224,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14477591408",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14477591408/zip",
+      "expired": false,
+      "digest": "sha256:8d972ebedd99315b460b46616d22a74a4c88299af139725cc62f40c688df74c0",
+      "created_at": "2026-11-18T22:27:55Z",
+      "updated_at": "2026-11-18T22:27:55Z",
+      "expires_at": "2026-11-25T22:27:54Z",
+      "workflow_run": {
+        "id": 44406679839,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/pending-access-3236-20261118",
+        "head_sha": "1557bd914a3344e51c35a7b3ef6d996511b9a5e8"
+      }
+    },
+    "members": {
+      "results/butterstick/spaced/phase-2-input.srj.json.gz": {
+        "path": "results/butterstick/spaced/phase-2-input.srj.json.gz",
+        "bytes": 2062367,
+        "sha256": "8c570d59a95204509b2645716ba409ca65d70b4e664dc6092141099b0168c702",
+        "jsonSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272"
+      },
+      "results/butterstick/spaced/progress.json": {
+        "path": "results/butterstick/spaced/progress.json",
+        "bytes": 12131,
+        "sha256": "ed58b0fa99339c4c8e4b70380d742304d3790b54ccd9c1b9733b81c65a7b52aa"
+      }
+    },
+    "rawSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272",
+    "obstacles": 1720,
+    "retainedTraces": 16,
+    "retainedVias": 16,
+    "connections": 8,
+    "terminals": 24,
+    "connectionOrder": [
+      "source_net_270",
+      "source_net_271",
+      "source_net_273",
+      "source_net_278",
+      "source_net_279",
+      "source_net_281",
+      "source_net_308",
+      "source_net_309"
+    ],
+    "transformations": "Only exact native Core adapter; hash raw and adapted input before/after. No reordering, geometry or policy changes, and no byte0 reroute."
+  },
+  "recommendedExecution": {
+    "worker": "blacksmith-8vcpu-ubuntu-2404-arm",
+    "bun": "1.4.3",
+    "jobs": 1,
+    "lanes": [
+      "geometry-capture"
+    ],
+    "softCaptureMs": 900000,
+    "hardCaptureSeconds": 960,
+    "workflowTimeoutMinutes": 30,
+    "productionRoutingBudgetOverrides": false,
+    "controlLaneExecuted": false,
+    "stopCondition": "External driver stops immediately after the ordinary first child2 step supplies its prepared lane input, or when the first child fails;900/960 are emergency guards only.",
+    "externalDiagnosticWindowMs": 900000,
+    "fullBoardRemainingBudgetEquivalent": false,
+    "parentFullBoardPhase2StartedMs": 232287.84429399998,
+    "parentFullBoardNominalRemainingMs": 667712.155706
+  },
+  "geometryCapture": {
+    "targetChildId": 2,
+    "requiredSolvedChildId": 1,
+    "expectedInputSha256": null,
+    "captureTiming": "Save child2 pristine input before its first _step; execute the original step once unchanged, retain prepared lane input/options, then stop externally.",
+    "retained": [
+      "child1-accepted-proof.json",
+      "child2-input.srj.json.gz",
+      "solved-child1-output.srj.json.gz",
+      "child2-geometry-proof.json",
+      "child2-lane-input.srj.json.gz",
+      "child2-lane-parameters.json"
+    ],
+    "geometryAssumption": "No historical child2 input hash, exact trace-count expectation or target-net-only diagnosis is imposed on the new source."
+  },
+  "compactEvidence": {
+    "always": [
+      "input-proof.json",
+      "instrumentation-proof.json",
+      "start-proof.json",
+      "report.json or checkpoint.json",
+      "observation-proof.json",
+      "compressed phase2 input",
+      "published/candidate/restored runtime manifests",
+      "source mapping and overlay/restore proofs"
+    ],
+    "conditional": "Retain solved child1 and child2 geometry only if actually reached; report first-child failure, soft capture and interrupted capture separately.",
+    "storageGoal": "Bounded summaries and static captured inputs; no full Core bundle, raster or repeated grid dumps."
+  },
+  "neutralityChecks": [
+    "Original qualified Core entry and frozen dependency graph unchanged before/after",
+    "Raw input/native adapter/options and production routing budgets unchanged",
+    "Observer errors and routing WASM attempts absent",
+    "Observation hooks do not query geometry or invoke a search solely for reporting"
+  ],
+  "interpretation": [
+    "An observed successful child is not an independently validated full-board completion result.",
+    "First-child failure or missing child2 at an external deadline is a diagnostic outcome, not a successful geometry capture.",
+    "This source may change child1 output and child2 geometry; retain actual hashes without requiring historical geometry.",
+    "No all-ten run, source fix selection, routing improvement or repeatable speedup is established by this capture.",
+    "A900s fresh phase diagnostic window exceeds the parent full-board time remaining at byte1. Phase outcomes and timings cannot be treated as a same-budget full-board gain."
+  ]
+}
