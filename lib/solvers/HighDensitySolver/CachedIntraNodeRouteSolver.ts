@@ -8,6 +8,7 @@ import { CachableSolver, CacheProvider } from "lib/cache/types"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import { serializeIntraNodeCacheKey } from "./serializeIntraNodeCacheKey"
 
 type CachedSolvedIntraNodeRouteSolver =
   | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
@@ -24,8 +25,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 8 validates shortcut candidates and grid paths against fixed pads.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 8
+// Version 9 shares the fixed-pad digest between portfolio candidates.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 9
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -167,16 +168,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
-      padObstacles: this.padObstacles.map((obstacle) => ({
-        obstacleId: obstacle.obstacleId,
-        center: obstacle.center,
-        width: obstacle.width,
-        height: obstacle.height,
-        shape: obstacle.shape,
-        ccwRotationDegrees: obstacle.ccwRotationDegrees,
-        zLayers: obstacle.__zLayers,
-        connectedTo: obstacle.connectedTo,
-      })),
+      padObstacles: this.padObstaclesCacheKey,
       normalizedConnections,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(
@@ -189,21 +181,7 @@ export class CachedIntraNodeRouteSolver
     }
 
     // Tags retain special numbers and optional values without string collisions.
-    const serializedKeyData = JSON.stringify(
-      keyData,
-      (_key: string, value: unknown): unknown => {
-        if (typeof value === "number" && !Number.isFinite(value)) {
-          return `n:${value.toString()}`
-        }
-        if (
-          typeof value === "string" &&
-          (value === "u:" || value.startsWith("n:") || value.startsWith("s:"))
-        ) {
-          return `s:${value}`
-        }
-        return value === undefined ? "u:" : value
-      },
-    )
+    const serializedKeyData = serializeIntraNodeCacheKey(keyData)
     const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 

@@ -491,7 +491,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    if (this.doesSegmentIntersectPad({ start: node, end: node }, isVia)) {
+    if (
+      this.padObstacles.length > 0 &&
+      this.doesSegmentIntersectPad({ start: node, end: node }, isVia)
+    ) {
       return true
     }
 
@@ -532,6 +535,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ): boolean {
     const parent = node.parent
     if (
+      this.padObstacles.length > 0 &&
       this.doesSegmentIntersectPad(
         { start: parent ?? node, end: node },
         parent !== null && parent.z !== node.z,

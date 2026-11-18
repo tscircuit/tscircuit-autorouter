@@ -3,7 +3,6 @@ import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -77,6 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   padObstacles: SingleHighDensityRouteSolver["padObstacles"]
+  padObstaclesCacheKey: string
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -126,40 +126,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
-    const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
-    const copperReach = Math.max(this.traceWidth, this.viaDiameter) / 2
-    this.padObstacles = (params.obstacles ?? [])
-      .filter((obstacle) => {
-        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout)
-          return false
-        let halfWidth = obstacle.width / 2
-        let halfHeight = obstacle.height / 2
-        if (obstacle.ccwRotationDegrees) {
-          // A diagonal bound conservatively covers every rotation.
-          const diagonalRadius = Math.hypot(obstacle.width, obstacle.height) / 2
-          halfWidth = diagonalRadius
-          halfHeight = diagonalRadius
-        }
-        return (
-          obstacle.center.x + halfWidth + copperReach >= bounds.minX &&
-          obstacle.center.x - halfWidth - copperReach <= bounds.maxX &&
-          obstacle.center.y + halfHeight + copperReach >= bounds.minY &&
-          obstacle.center.y - halfHeight - copperReach <= bounds.maxY
-        )
-      })
-      .map((obstacle) => ({
-        ...obstacle,
-        __zLayers:
-          obstacle.__zLayers ??
-          obstacle.zLayers ??
-          obstacle.layers.map((layer) =>
-            mapLayerNameToZ(layer, params.layerCount ?? 2),
-          ),
-      }))
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
-      precomputeIntraNodeRouteParams(nodeWithPortPoints)
+      precomputeIntraNodeRouteParams(params)
+    this.padObstacles = precomputedParams.padObstacles
+    this.padObstaclesCacheKey = precomputedParams.padObstaclesCacheKey
     this.rootConnectionNameByConnectionName = new Map(
       precomputedParams.rootConnectionNameByConnectionName,
     )

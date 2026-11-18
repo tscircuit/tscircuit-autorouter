@@ -1,5 +1,10 @@
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import objectHash from "object-hash"
+import { serializeIntraNodeCacheKey } from "./serializeIntraNodeCacheKey"
 
 export type IntraNodeConnectionPoint = { x: number; y: number; z: number }
 
@@ -10,12 +15,24 @@ export type PrecomputedIntraNodeRouteParams = {
   >
   rootConnectionNameByConnectionName: ReadonlyMap<string, string>
   minDistBetweenEnteringPoints: number
+  padObstacles: (Obstacle & { __zLayers: number[] })[]
+  padObstaclesCacheKey: string
 }
 
-/** Fixed node topology is shared by the candidates in one portfolio attempt. */
-export const precomputeIntraNodeRouteParams = (
-  node: NodeWithPortPoints,
-): PrecomputedIntraNodeRouteParams => {
+/** Fixed topology and pads are shared within one portfolio attempt. */
+export const precomputeIntraNodeRouteParams = ({
+  nodeWithPortPoints,
+  obstacles = [],
+  traceWidth = 0.15,
+  viaDiameter = 0.3,
+  layerCount = 2,
+}: {
+  nodeWithPortPoints: NodeWithPortPoints
+  obstacles?: Obstacle[]
+  traceWidth?: number
+  viaDiameter?: number
+  layerCount?: number
+}): PrecomputedIntraNodeRouteParams => {
   const connectionPointsByName = new Map<string, IntraNodeConnectionPoint[]>()
   const rootConnectionNameByConnectionName = new Map<string, string>()
   const seenPointsByConnectionName = new Map<string, Set<string>>()
@@ -25,7 +42,7 @@ export const precomputeIntraNodeRouteParams = (
     x,
     y,
     z,
-  } of node.portPoints) {
+  } of nodeWithPortPoints.portPoints) {
     if (rootConnectionName) {
       rootConnectionNameByConnectionName.set(connectionName, rootConnectionName)
     }
@@ -43,9 +60,54 @@ export const precomputeIntraNodeRouteParams = (
     seenPoints.add(key)
     points.push({ x, y, z: layer })
   }
+  const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+  const copperReach = Math.max(traceWidth, viaDiameter) / 2
+  const padObstacles = obstacles
+    .filter((obstacle) => {
+      if (!obstacle.componentId || obstacle.isFanoutSourceKeepout)
+        return false
+      let halfWidth = obstacle.width / 2
+      let halfHeight = obstacle.height / 2
+      if (obstacle.ccwRotationDegrees) {
+        // A diagonal bound conservatively covers every rotation.
+        const diagonalRadius = Math.hypot(obstacle.width, obstacle.height) / 2
+        halfWidth = diagonalRadius
+        halfHeight = diagonalRadius
+      }
+      return (
+        obstacle.center.x + halfWidth + copperReach >= bounds.minX &&
+        obstacle.center.x - halfWidth - copperReach <= bounds.maxX &&
+        obstacle.center.y + halfHeight + copperReach >= bounds.minY &&
+        obstacle.center.y - halfHeight - copperReach <= bounds.maxY
+      )
+    })
+    .map((obstacle) => ({
+      ...obstacle,
+      __zLayers:
+        obstacle.__zLayers ??
+        obstacle.zLayers ??
+        obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
+    }))
+  const padObstaclesCacheKey = objectHash(
+    serializeIntraNodeCacheKey(
+      padObstacles.map((obstacle) => ({
+        obstacleId: obstacle.obstacleId,
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        shape: obstacle.shape,
+        ccwRotationDegrees: obstacle.ccwRotationDegrees,
+        zLayers: obstacle.__zLayers,
+        connectedTo: obstacle.connectedTo,
+      })),
+    ),
+  )
   return {
     connectionPointsByName,
     rootConnectionNameByConnectionName,
-    minDistBetweenEnteringPoints: getMinDistBetweenEnteringPoints(node),
+    minDistBetweenEnteringPoints:
+      getMinDistBetweenEnteringPoints(nodeWithPortPoints),
+    padObstacles,
+    padObstaclesCacheKey,
   }
 }
