@@ -845,6 +845,11 @@
     "sha256": "64dc4195196c816fb4245da481f82aa654666d41025d753fda1868bdbd2f44ab"
   },
   {
+    "path": "fix-ci.json",
+    "bytes": 3160,
+    "sha256": "bdb7873633a1dc7174d8b9213028fb93433b4f802799ef6613943d8e3f937111"
+  },
+  {
     "path": "focused/after.svg",
     "bytes": 48410,
     "sha256": "ce82875d0af98f5b1992fdd87fd03b7bffc417a1990ddb5a509b077851beff54"
@@ -1205,6 +1210,11 @@
     "sha256": "36238a3697f17d7d543d7a0e0907235aa9203a3174d54fe1dd79e8e0d9b5dab0"
   },
   {
+    "path": "repro-ci.json",
+    "bytes": 3744,
+    "sha256": "3dc8c53b0b04cbcc18ae376aab9e3dac323ff145cd2ac09b1116a6e446447b3e"
+  },
+  {
     "path": "sources/assess.ts",
     "bytes": 6646,
     "sha256": "1add97ef0ab06d3ec1aac28f94814d890bde5e0b3f3b505cd7a83210b9bde3e6"
@@ -1401,8 +1411,8 @@
   },
   {
     "path": "workflows/ddr2417-publish-evidence.yml",
-    "bytes": 4184,
-    "sha256": "c12746491304a4c564016a408f0e07e487732e4cabf3e4adb4aa3ec2b7dedfad"
+    "bytes": 6190,
+    "sha256": "4c99a7139dbf0d16b7e3e05edf012ed84858d019551a54588fcd9b31687f2beb"
   },
   {
     "path": "workflows/ddr2417-published-baseline.yml",
@@ -1421,8 +1431,8 @@
   },
   {
     "path": "workflows/publish-evidence.py",
-    "bytes": 25215,
-    "sha256": "6384fb3a0606c6d63e9a972c5949cf1e55fa86cacb147ec770143e74663dd11b"
+    "bytes": 25408,
+    "sha256": "74b17cba2618e188adbdf7a190ee40851ecf85cd85d41b7d7e594cd01be34076"
   },
   {
     "path": "workflows/render-published-evidence.ts",

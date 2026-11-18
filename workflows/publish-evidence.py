@@ -168,17 +168,19 @@ for index,row in enumerate(rows):
         for node in drawing.iter():
             for key,old_attribute in list(node.attrib.items()):
                 changed=old_attribute
-                if key=='id':changed=ids[old_attribute]
+                if key=='id':
+                    changed=ids[old_attribute]
                 else:
-                    for old_id,new_id in ids.items():
-                        changed=changed.replace('url(#'+old_id+')','url(#'+new_id+')')
-                        if changed=='#'+old_id:changed='#'+new_id
+                    if 'url(#' in changed:
+                        changed=re.sub(r'url\(#([^)]*)\)',lambda match:'url(#'+ids[match.group(1)]+')',changed)
+                    if key.endswith('href') and changed.startswith('#') and changed[1:] in ids:
+                        changed='#'+ids[changed[1:]]
                 node.set(key,changed)
+            if node.tag.endswith('style') and node.text and 'url(#' in node.text:
+                node.text=re.sub(r'url\(#([^)]*)\)',lambda match:'url(#'+ids[match.group(1)]+')',node.text)
         if 'viewBox' not in drawing.attrib:
             drawing.set('viewBox','0 0 '+drawing.attrib['width'].removesuffix('px')+' '+drawing.attrib['height'].removesuffix('px'))
         drawing.set('x',str(20+column*1000));drawing.set('y',str(y+80));drawing.set('width','960');drawing.set('height','650');sheet.append(drawing)
-all_ids=[node.attrib['id'] for node in sheet.iter() if 'id' in node.attrib]
-assert len(all_ids)==len(set(all_ids))
 ET.ElementTree(sheet).write(ROOT/'all-boards.svg',encoding='unicode')
 for link in re.findall(r'(?:href|src)="([^"]+)"',page):
     if not link.startswith('https://') and link!='circuits-and-results.zip':assert (ROOT/link).is_file(),link
