@@ -25,7 +25,9 @@ test("BeaglePlay DDR4 retains only the controller and RAM", () => {
     const metadata = pad.circuitJsonMetadata
     expect(metadata?.source_component_name).toBe(pad.componentId)
     expect(metadata?.source_port_name).toBeTruthy()
-    ballIds.add(`${metadata?.source_component_name}.${metadata?.source_port_name}`)
+    ballIds.add(
+      `${metadata?.source_component_name}.${metadata?.source_port_name}`,
+    )
   }
   expect(ballIds.size).toBe(521)
 
