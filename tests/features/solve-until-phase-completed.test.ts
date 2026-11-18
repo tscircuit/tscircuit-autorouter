@@ -47,7 +47,7 @@ beforeAll((): void => {
   for (const wait of waits) expect(wait.after).toEqual(terminalState)
 })
 
-test.failing(
+test(
   "completion during a phase wait and repeated waits report the unreached phase",
   (): void => {
     const error = new Error(

@@ -1,3 +1,4 @@
+import { stepUntilPhase } from "lib/utils/stepUntilPhase"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -882,10 +883,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
-      this.step()
-    }
+  solveUntilPhase(phase: string): void {
+    stepUntilPhase(this, phase)
   }
 
   getCurrentPhase(): string {

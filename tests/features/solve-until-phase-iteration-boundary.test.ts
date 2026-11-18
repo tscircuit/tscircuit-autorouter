@@ -47,7 +47,7 @@ beforeAll((): void => {
   }
 })
 
-test.failing(
+test(
   "phase entry cannot hide an iteration failure, including repeated waits",
   (): void => {
     expect(
