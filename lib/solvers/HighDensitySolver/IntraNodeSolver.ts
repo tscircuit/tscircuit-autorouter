@@ -76,7 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
-  obstacles: SingleHighDensityRouteSolver["obstacles"]
+  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -127,8 +127,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
-    this.obstacles = (params.obstacles ?? [])
+    this.padObstacles = (params.obstacles ?? [])
       .filter((obstacle) => {
+        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
         // The diagonal radius also covers rotated rectangles.
         const radius =
           Math.hypot(obstacle.width, obstacle.height) / 2 + this.traceWidth / 2
@@ -268,7 +269,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
         : this.solvedRoutes,
-      obstacles: this.obstacles,
+      padObstacles: this.padObstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),

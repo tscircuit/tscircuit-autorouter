@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 7 checks physical obstacles before accepting diagonal shortcuts.
+// Version 7 checks component pads before accepting diagonal shortcuts.
 const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
 
 export class CachedIntraNodeRouteSolver
@@ -167,7 +167,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
-      obstacles: this.obstacles.map((obstacle) => ({
+      padObstacles: this.padObstacles.map((obstacle) => ({
         center: obstacle.center,
         width: obstacle.width,
         height: obstacle.height,

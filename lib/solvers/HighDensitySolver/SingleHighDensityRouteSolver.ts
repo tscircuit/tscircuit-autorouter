@@ -13,7 +13,12 @@ import {
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { applyToPoint, compose, rotateDEG, translate } from "transformation-matrix"
+import {
+  applyToPoint,
+  compose,
+  rotateDEG,
+  translate,
+} from "transformation-matrix"
 import { BaseSolver } from "../BaseSolver"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
@@ -46,7 +51,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   obstacleRoutes: HighDensityIntraNodeRoute[]
-  obstacles: (Obstacle & { __zLayers: number[] })[]
+  padObstacles: (Obstacle & { __zLayers: number[] })[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
   boundsCenter: { x: number; y: number }
@@ -117,7 +122,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     rootConnectionName?: string
     regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
-    obstacles?: SingleHighDensityRouteSolver["obstacles"]
+    padObstacles?: SingleHighDensityRouteSolver["padObstacles"]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
     A: { x: number; y: number; z: number }
@@ -150,7 +155,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
-    this.obstacles = opts.obstacles ?? []
+    this.padObstacles = opts.padObstacles ?? []
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -257,9 +262,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  private doesShortcutOverlapObstacle(): boolean {
+  private doesShortcutOverlapPad(): boolean {
     const { A, B } = this
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of this.padObstacles) {
       if (!obstacle.__zLayers.includes(A.z)) continue
       if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) continue
       let distanceToObstacle: number
@@ -327,7 +332,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         x: (A.x + B.x) / 2,
         y: (A.y + B.y) / 2,
       }) &&
-      this.doesShortcutOverlapObstacle()
+      this.doesShortcutOverlapPad()
     ) {
       // Preserve the edge ports and use the same inset as the grid search.
       const inset = this.obstacleMargin / 2
