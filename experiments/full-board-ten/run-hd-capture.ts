@@ -375,6 +375,10 @@ const summary = {
 const diagnostic = { summary, attempts: retainedAttempts, blobs }
 const diagnosticBytes = Buffer.from(JSON.stringify(diagnostic))
 const compressedDiagnostic = gzipSync(diagnosticBytes, { level: 9 })
+if (pipeline.solved && !executionError && !captureError) {
+  const output = Buffer.from(JSON.stringify(pipeline.getOutputSimpleRouteJson()))
+  writeFileSync(resolve(outputDirectory, "phase-output.srj.json.gz"), gzipSync(output, { level: 9 }))
+}
 writeFileSync(resolve(outputDirectory, "hd-capture.json.gz"), compressedDiagnostic)
 writeFileSync(resolve(outputDirectory, "summary.json"), JSON.stringify({ ...summary, captureSha256: sha(diagnosticBytes), captureGzipSha256: sha(compressedDiagnostic), captureGzipBytes: compressedDiagnostic.length }, null, 2) + "\n")
 console.log(JSON.stringify({ ...summary, phaseTransitions: undefined }, null, 2))
