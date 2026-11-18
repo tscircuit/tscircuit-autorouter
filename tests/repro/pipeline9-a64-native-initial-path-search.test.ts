@@ -49,10 +49,8 @@ test("A64 native DDR initial path search", async (): Promise<void> => {
     ),
   )
   expect(initialSearch.problem.routeCount).toBe(77)
-  expect(initialSearch.failed).toBe(true)
-  expect(initialSearch.error).toContain("ran out of iterations")
-  expect(initialSearch.state.candidateQueue.length).toBeGreaterThan(0)
-  expect(plannedRoutes.size).toBeLessThan(initialSearch.problem.routeCount)
+  expect(initialSearch.solved).toBe(true)
+  expect(plannedRoutes.size).toBe(initialSearch.problem.routeCount)
   const graphics: GraphicsObject = convertSrjToGraphicsObject(input)
   const plan = initialSearch.preview()
   graphics.lines = [...(graphics.lines ?? []), ...(plan.lines ?? [])]
