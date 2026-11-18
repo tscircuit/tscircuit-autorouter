@@ -2302,6 +2302,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.exactRepairParams,
       hdRoutes: this.combinedOutput,
       inputHdRoutes: this.traceContactInputHdRoutes,
+      tracePairDrcEvaluator: this.cachedReferenceDrcEvaluator!,
       deferTraceContactGuard: false,
     })
     this.activeSubSolver = this.traceContactRepairSolver

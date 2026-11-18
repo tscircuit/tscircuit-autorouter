@@ -75,7 +75,8 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 
   const multilayerObstacles = obstacles.filter(
     (obstacle) =>
-      (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+      (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1 ||
+      Boolean(obstacle.circuitJsonMetadata?.pcb_via_id),
   )
   const connectedObstaclesByConnectionName = new Map<
     string,

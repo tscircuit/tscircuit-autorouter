@@ -6,6 +6,8 @@ import type {
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
+import { getConnectionPointLayers } from "lib/types"
+import type { PcbPortId } from "lib/utils/getExistingViaInPadByPcbPortId"
 import {
   getAssignableViaAvailableZ,
   getAssignableViaId,
@@ -161,6 +163,7 @@ export function buildHyperGraph(params: {
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
+  existingViaInPadByPcbPortId?: ReadonlyMap<PcbPortId, Obstacle>
 }): {
   graph: HyperGraphHg
   connections: ConnectionHgWithSimpleRouteConnection[]
@@ -251,18 +254,44 @@ export function buildHyperGraph(params: {
     layerCount: params.layerCount,
   })
 
-  for (const connection of params.simpleRouteJsonConnections) {
+  for (const originalConnection of params.simpleRouteJsonConnections) {
+    // Only graph endpoints gain this access. Plane escape planning keeps the
+    // original terminal layers and its existing connectivity decisions.
+    const connection = params.existingViaInPadByPcbPortId?.size
+      ? {
+          ...originalConnection,
+          pointsToConnect: originalConnection.pointsToConnect.map((point) => {
+            const via = point.pcb_port_id
+              ? params.existingViaInPadByPcbPortId!.get(point.pcb_port_id)
+              : undefined
+            if (!via) return point
+            const { layer, ...terminal } = point
+            return {
+              ...terminal,
+              layers: [
+                ...new Set([...getConnectionPointLayers(point), ...via.layers]),
+              ],
+            }
+          }),
+        }
+      : originalConnection
     const [startPoint, endPoint] = connection.pointsToConnect
 
     const startRegion = selectConnectionPointRegion({
       graph,
       point: startPoint,
       layerCount: params.layerCount,
+      existingViaInPad: startPoint.pcb_port_id
+        ? params.existingViaInPadByPcbPortId?.get(startPoint.pcb_port_id)
+        : undefined,
     })
     const endRegion = selectConnectionPointRegion({
       graph,
       point: endPoint,
       layerCount: params.layerCount,
+      existingViaInPad: endPoint.pcb_port_id
+        ? params.existingViaInPadByPcbPortId?.get(endPoint.pcb_port_id)
+        : undefined,
     })
 
     assertDefined(
