@@ -470,7 +470,8 @@ export class TraceWidthSolver extends BaseSolver {
         continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
       // Keep conservative pad bounds until the width-refinement pass.
-      const useCircularGeometry = obstacle.isNonPlatedHole || this.refiningWidths
+      const useCircularGeometry =
+        obstacle.isNonPlatedHole || this.refiningWidths
       const obstacleGeometry = { ...obstacle }
       if (!useCircularGeometry) obstacleGeometry.shape = undefined
       const physicalClearance = getSegmentToObstacleDistance({

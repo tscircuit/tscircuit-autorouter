@@ -130,7 +130,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     const copperReach = Math.max(this.traceWidth, this.viaDiameter) / 2
     this.padObstacles = (params.obstacles ?? [])
       .filter((obstacle) => {
-        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
+        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout)
+          return false
         let halfWidth = obstacle.width / 2
         let halfHeight = obstacle.height / 2
         if (obstacle.ccwRotationDegrees) {

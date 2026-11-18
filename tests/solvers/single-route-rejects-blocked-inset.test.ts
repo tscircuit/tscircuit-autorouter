@@ -34,7 +34,11 @@ test("uses the search when an inset shortcut still intersects an obstacle", (): 
   for (const obstacle of obstacles) {
     for (let index = 1; index < route.length; index++) {
       expect(
-        pointToSegmentDistance(obstacle.center, route[index - 1]!, route[index]!),
+        pointToSegmentDistance(
+          obstacle.center,
+          route[index - 1]!,
+          route[index]!,
+        ),
       ).toBeGreaterThanOrEqual(obstacle.diameter / 2 + 0.05 - 1e-6)
     }
   }

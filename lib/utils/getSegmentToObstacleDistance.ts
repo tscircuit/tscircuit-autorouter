@@ -4,7 +4,12 @@ import {
   segmentToCircleMinDistance,
 } from "@tscircuit/math-utils"
 import type { Obstacle } from "lib/types"
-import { applyToPoint, compose, rotateDEG, translate } from "transformation-matrix"
+import {
+  applyToPoint,
+  compose,
+  rotateDEG,
+  translate,
+} from "transformation-matrix"
 
 type ObstacleGeometry = Pick<
   Obstacle,

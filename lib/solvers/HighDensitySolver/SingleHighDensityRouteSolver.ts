@@ -1,4 +1,8 @@
-import { distance, doSegmentsIntersect, type Point3 } from "@tscircuit/math-utils"
+import {
+  distance,
+  doSegmentsIntersect,
+  type Point3,
+} from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
@@ -146,16 +150,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
     const rootConnectionName = this.rootConnectionName ?? this.connectionName
-    this.padObstacles = (opts.padObstacles ?? []).filter((obstacle): boolean => {
-      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
-      if (
-        obstacle.obstacleId &&
-        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-      ) {
-        return false
-      }
-      return true
-    })
+    this.padObstacles = (opts.padObstacles ?? []).filter(
+      (obstacle): boolean => {
+        if (isObstacleConnectedToRoute(obstacle, this, this.connMap))
+          return false
+        if (
+          obstacle.obstacleId &&
+          this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+        ) {
+          return false
+        }
+        return true
+      },
+    )
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
