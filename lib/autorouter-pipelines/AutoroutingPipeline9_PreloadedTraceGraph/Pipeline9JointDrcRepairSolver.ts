@@ -2316,14 +2316,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       // after the search has finished.
       const outputErrors = getPipeline9DrcErrors(evaluate, output)
       if (outputErrors.length > 0) {
-        const regionalErrors = getPipeline9DrcErrors(evaluate, regionalCandidate)
+        const regionalErrors = getPipeline9DrcErrors(
+          evaluate,
+          regionalCandidate,
+        )
         if (
           isPipeline9DrcPriorityImprovement({
             currentErrors: outputErrors,
             candidateErrors: regionalErrors,
           }) &&
-          this.traceContactGuard.getNewContactPairs(regionalCandidate).length ===
-            0
+          this.traceContactGuard.getNewContactPairs(regionalCandidate)
+            .length === 0
         ) {
           output = regionalCandidate
           this.stats.finalDrcIssueCount = regionalErrors.length
