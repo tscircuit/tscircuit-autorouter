@@ -1,6 +1,6 @@
 from pathlib import Path
 from collections import Counter
-import gzip,hashlib,html,json,shutil,statistics,subprocess,sys,xml.etree.ElementTree as ET,zipfile
+import gzip,hashlib,html,json,re,shutil,statistics,subprocess,sys,xml.etree.ElementTree as ET,zipfile
 
 ROOT=Path('report')
 BOARDS={'orangecrab':'OrangeCrab rev 0.2.1 ECP5 DDR3','h616':'Allwinner H616 Devboard DDR3','butterstick':'ButterStick r1.0','glider':'Glider mainboard','imx6':'i.MX6 Demo Board','icepi':'iCE/Pi CM0 SBC'}
@@ -22,6 +22,7 @@ def matched_summary(board: str) -> dict:
     assert len(rows)==6 and len({row['inputSha256'] for row in rows})==1
     assert len({row['copperSha256'] for row in rows})==1
     assert all(row['copperDrc']['valid'] for row in rows)
+    assert len({row['iterations'] for row in rows})==1
     result={}
     for phase in ['before','after']:
         selected=[row for row in rows if row['revision']==phase]
@@ -149,8 +150,26 @@ for index,row in enumerate(rows):
     label=ET.SubElement(sheet,'{'+NS+'}text',x='30',y=str(y+25),fill='#0f172a',style='font:22px sans-serif');label.text=row['title']+' — best first fanout '+str(row['before']['bestRouted'])+'/'+str(row['before']['requested'])+' → '+str(row['after']['bestRouted'])+'/'+str(row['after']['requested'])
     for column,phase in enumerate(['baseline','candidate']):
         label=ET.SubElement(sheet,'{'+NS+'}text',x=str(30+column*1000),y=str(y+62),fill='#475569',style='font:18px sans-serif');label.text=phase.title()+': no newly accepted traces or vias'
-        drawing=ET.fromstring((ROOT/'pcb'/phase/(row['board']+'.svg')).read_text());drawing.set('x',str(20+column*1000));drawing.set('y',str(y+80));drawing.set('width','960');drawing.set('height','650');sheet.append(drawing)
+        drawing=ET.fromstring((ROOT/'pcb'/phase/(row['board']+'.svg')).read_text())
+        prefix=phase+'-'+row['board']+'-'
+        ids={node.attrib['id']:prefix+node.attrib['id'] for node in drawing.iter() if 'id' in node.attrib}
+        for node in drawing.iter():
+            for key,old_attribute in list(node.attrib.items()):
+                changed=old_attribute
+                if key=='id':changed=ids[old_attribute]
+                else:
+                    for old_id,new_id in ids.items():
+                        changed=changed.replace('url(#'+old_id+')','url(#'+new_id+')')
+                        if changed=='#'+old_id:changed='#'+new_id
+                node.set(key,changed)
+        if 'viewBox' not in drawing.attrib:
+            drawing.set('viewBox','0 0 '+drawing.attrib['width'].removesuffix('px')+' '+drawing.attrib['height'].removesuffix('px'))
+        drawing.set('x',str(20+column*1000));drawing.set('y',str(y+80));drawing.set('width','960');drawing.set('height','650');sheet.append(drawing)
+all_ids=[node.attrib['id'] for node in sheet.iter() if 'id' in node.attrib]
+assert len(all_ids)==len(set(all_ids))
 ET.ElementTree(sheet).write(ROOT/'all-boards.svg',encoding='unicode')
+for link in re.findall(r'(?:href|src)="([^"]+)"',page):
+    if not link.startswith('https://') and link!='circuits-and-results.zip':assert (ROOT/link).is_file(),link
 for path in ROOT.rglob('*.svg'):
     text=path.read_text();ET.fromstring(text);assert 'NaN' not in text and 'Infinity' not in text
 manifest=[{'path':str(p.relative_to(ROOT)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(ROOT.rglob('*')) if p.is_file() and p.name not in ['circuits-and-results.zip','file-manifest.json']]
