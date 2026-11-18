@@ -41,7 +41,7 @@ jobs:
           marker="const clampNodeToBounds = (node: MutableNode, bounds: Bounds) => {"
           assert s.count(marker)==1
           out=p.with_suffix(".clamp-private.ts")
-          out.write_text(s.replace(marker,marker+"\\n  if (node.fixed) return"))
+          out.write_text(s.replace(marker,marker+"\n  if (node.fixed) return"))
           out.replace(p)
           PY
       - name: Compare native physical checks with SRJ evaluation
