@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 2,
+  "repository": "tscircuit/bus-lanes-solver",
+  "upstreamCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+  "bunVersion": "1.3.2",
+  "nodeMajor": 22,
+  "runner": "ubuntu-latest",
+  "stages": [
+    {
+      "name": "format",
+      "command": [
+        "node_modules/.bin/biome",
+        "format"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "timeoutSeconds": 900
+    },
+    {
+      "name": "package",
+      "command": [
+        "bun",
+        "run",
+        "test:package"
+      ],
+      "timeoutSeconds": 1200
+    }
+  ],
+  "source": {
+    "base": {
+      "commit": "202b034659fb96bad44d11b8190f4044b675116f",
+      "tree": "8a3bffe5ae40bf4af45bed8f591d18bf34c2d712",
+      "libTree": "1f4182a7661dc7740756705301ca7d54bc5b6ca2",
+      "patch": "base.patch.gz",
+      "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressedPatchSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "patchBytes": 0,
+      "compressedPatchBytes": 20
+    },
+    "head": {
+      "commit": "8dfe935be7de1f2798221fef6de5117303d2fedf",
+      "tree": "0101b7f02e989f636acb06e9ef9b24713a49f433",
+      "libTree": "4693f0858d39a65a185f393f98ddd28931b0f904",
+      "patch": "head.patch.gz",
+      "patchSha256": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
+      "compressedPatchSha256": "e0c0d46aeb9f0be7a5227dc9f30769f25663dfa235f919f52875c609970f5028",
+      "patchBytes": 3554,
+      "compressedPatchBytes": 1211
+    }
+  },
+  "routingBenchmarksEnabled": false,
+  "dependencyPolicy": "Reuse the authenticated frozen lock and declared package from successful run44400989150 (lock originally resolved in44383532139). Fresh cache, frozen install only, no dependency re-resolution. Require prior installed package metadata, report historical full-file fingerprint equality separately, and share one unchanged node_modules tree between clean202b and nearest-package head8dfe935. No inherited local dependencies or source overrides.",
+  "packageSha256": "20445e0a1416e641b6e7bcddf7d13eb198756bb19e1b6e1df1d9110382fd7d35",
+  "declaredPackage": {
+    "name": "@tscircuit/bus-lanes-solver",
+    "version": "0.0.62",
+    "type": "module",
+    "module": "dist/index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+      "dist"
+    ],
+    "scripts": {
+      "test": "bun test",
+      "typecheck": "tsc --noEmit",
+      "format": "biome format --write .",
+      "format:check": "biome format .",
+      "start": "cosmos",
+      "build:site": "cosmos-export",
+      "build": "tsup && dts-bundle-generator --config dts-bundle.config.json",
+      "test:package": "bun run build && bun scripts/check-package.ts",
+      "benchmark:shared-pairs": "bun scripts/benchmark-am3352-shared-pairs.ts"
+    },
+    "devDependencies": {
+      "@biomejs/biome": "2.5.15",
+      "@flatten-js/core": "1.6.2",
+      "@tscircuit/alphabet": "0.0.25",
+      "@tscircuit/am3352-fanout-generator": "github:tscircuit/fanout-solver#e202cef0a97f59bb9a72357e8eeb5e9f1349529e",
+      "@tscircuit/checks": "0.0.264",
+      "@tscircuit/circuit-json-util": "0.0.119",
+      "@tscircuit/fanout-solver": "github:tscircuit/fanout-solver#1c726cc7cfdd2ce0c93b928a133b918d301dcdf4",
+      "@tscircuit/math-utils": "^0.0.38",
+      "@tscircuit/solver-utils": "^0.0.21",
+      "@types/bun": "latest",
+      "@types/react": "^19",
+      "@types/react-dom": "^19",
+      "bun-match-svg": "0.0.17",
+      "circuit-json": "0.0.538",
+      "circuit-json-to-connectivity-map": "^0.0.30",
+      "circuit-to-svg": "0.0.453",
+      "dts-bundle-generator": "^9.5.1",
+      "format-si-unit": "^0.0.14",
+      "graphics-debug": "^0.0.95",
+      "react": "^19",
+      "react-cosmos": "^7.0.0",
+      "react-cosmos-plugin-vite": "^7.0.0",
+      "react-dom": "^19",
+      "schematic-symbols": "0.0.248",
+      "transformation-matrix": "^3.1.0",
+      "tsup": "^8.5.0",
+      "typescript": "5.9.3",
+      "vite": "^7.3.0",
+      "yalps": "0.6.4"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/tscircuit/bus-lanes-solver.git"
+    },
+    "publishConfig": {
+      "registry": "https://npm.pkg.github.com"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "overrides": {
+      "typescript": "5.9.3"
+    }
+  },
+  "unchangedBuildContracts": {
+    "package.json": "20445e0a1416e641b6e7bcddf7d13eb198756bb19e1b6e1df1d9110382fd7d35",
+    "bunfig.toml": "64a8ce5ffa24407b70511ad48e0beea97b671074a2cdf908e049dfa981c07462",
+    "tsconfig.json": "dffe0485e0cc6dc125a60b2df0411733c28258cdf062caa7ee46e768603b57fb",
+    "tsconfig.build.json": "21f36897fa31d6f917e6e43c1c265deb4c2542529effad7c7d1d3aa77e82782f",
+    "tsup.config.ts": "887dd446923c20423c77bc98bbf65de2165698990cd2d8da5b8b4ea6a59a3a1a",
+    "dts-bundle.config.json": "2a0ccc282950be8626d7f1f463bf5123233f4afee36572ea61eff37b4f4117dc",
+    "scripts/check-package.ts": "c3ada33321078d69746a245bb38cf35abdf35b7006af544efc438deabea1ba3f",
+    "biome.json": "3bd4cf2a1f416a63701a1776aa77c1e8c64aa54161a80e41db3c866e5d6f05f1"
+  },
+  "experiment": "nearest-package-clean-source-build",
+  "nodeVersion": "22.23.4",
+  "branch": "bench/nearest-package-build-3236-20261118",
+  "workflow": ".github/workflows/nearest-package-build-qualification.yml",
+  "changedSourceFiles": {
+    "lib/route-multi-terminal-buses.ts": {
+      "beforeSha256": "d2f523d4fd33e28129888f6a2734b377daa5e3efaa9e3ec15e34ec36200980f6",
+      "afterSha256": "702fb915faa663f594ea7eaea6999bf7f069c6f209e336f86a05ce3a84fff743"
+    }
+  },
+  "frozenDependencies": {
+    "sourceRunId": 44400989150,
+    "sourceControllerCommit": "7210659a6551a5148fd31d9b61287ec2c80aafe2",
+    "sourceArtifactId": 14472481240,
+    "sourceArtifactSha256": "5e2c26857106e5f4ac67746b4d5c3bebb2c2561293f501f529515abd612aac00",
+    "lockResolutionRunId": 44383532139,
+    "lockFile": "frozen.bun.lock",
+    "lockSha256": "dd20183f1c5d9752a89a57abf585e4d38c9eb57ad15d2a5fb0880d42a3d0d0bc",
+    "referenceFile": "dependency-files-reference.json",
+    "referenceFileSha256": "42c235d8ef211cf542ef616b1bc2ecca57ac044f496177d4ef2f613c8d96f947",
+    "expectedInstalledFingerprint": {
+      "sha256": "2218aecaac16863102f6cfdd819cba05eee1302768b727ed6a42f5f7d2bc233e",
+      "entries": 11167,
+      "regularFileBytes": 646618148
+    }
+  },
+  "scope": "Read-only formatting of the one changed source file, complete-tree TypeScript (lib/pages/tests/vite config), ESM and DTS build/validation, and isolated public Node/browser/TypeScript consumers. No routing, source edits, tests added, dependency changes, pending guidance, branch-via, eligibility gate, or grid-bounds patches. Native benefit remains unqualified.",
+  "frozenControllerFiles": {
+    ".github/workflows/nearest-package-build-qualification.yml": "ea5774b3fa104326842b9145343edfc5db8341a4d8eff7bb45c57f165bbe554b",
+    "experiments/nearest-package-build-qualification/base.patch.gz": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+    "experiments/nearest-package-build-qualification/dependency-files-reference.json": "42c235d8ef211cf542ef616b1bc2ecca57ac044f496177d4ef2f613c8d96f947",
+    "experiments/nearest-package-build-qualification/frozen.bun.lock": "dd20183f1c5d9752a89a57abf585e4d38c9eb57ad15d2a5fb0880d42a3d0d0bc",
+    "experiments/nearest-package-build-qualification/head.patch.gz": "e0c0d46aeb9f0be7a5227dc9f30769f25663dfa235f919f52875c609970f5028",
+    "experiments/nearest-package-build-qualification/run-qualification.py": "520c4bd17c7324f0725de5171cc9231ec99250597427e0968ba1b07c9256da0a"
+  },
+  "formatFilesByLane": {
+    "base": [
+      "lib/route-multi-terminal-buses.ts"
+    ],
+    "head": [
+      "lib/route-multi-terminal-buses.ts"
+    ]
+  },
+  "productionRevision": {
+    "commit": "8dfe935be7de1f2798221fef6de5117303d2fedf",
+    "libTree": "4693f0858d39a65a185f393f98ddd28931b0f904",
+    "patchSha256": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
+    "changedFiles": [
+      "lib/route-multi-terminal-buses.ts"
+    ],
+    "testFilesChanged": false
+  }
+}
