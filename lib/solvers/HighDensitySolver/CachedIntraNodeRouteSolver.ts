@@ -154,6 +154,20 @@ export class CachedIntraNodeRouteSolver
         }))
       : undefined
 
+    this.precomputedParams.padObstaclesCacheKey ??= objectHash(
+      serializeIntraNodeCacheKey(
+        this.padObstacles.map((obstacle) => ({
+          obstacleId: obstacle.obstacleId,
+          center: obstacle.center,
+          width: obstacle.width,
+          height: obstacle.height,
+          shape: obstacle.shape,
+          ccwRotationDegrees: obstacle.ccwRotationDegrees,
+          zLayers: obstacle.__zLayers,
+          connectedTo: obstacle.connectedTo,
+        })),
+      ),
+    )
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
       node: {
@@ -168,7 +182,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
-      padObstacles: this.padObstaclesCacheKey,
+      padObstacles: this.precomputedParams.padObstaclesCacheKey,
       normalizedConnections,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(

@@ -3,8 +3,6 @@ import type { Obstacle } from "lib/types/srj-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import objectHash from "object-hash"
-import { serializeIntraNodeCacheKey } from "./serializeIntraNodeCacheKey"
 
 export type IntraNodeConnectionPoint = { x: number; y: number; z: number }
 
@@ -16,7 +14,7 @@ export type PrecomputedIntraNodeRouteParams = {
   rootConnectionNameByConnectionName: ReadonlyMap<string, string>
   minDistBetweenEnteringPoints: number
   padObstacles: (Obstacle & { __zLayers: number[] })[]
-  padObstaclesCacheKey: string
+  padObstaclesCacheKey?: string
 }
 
 /** Fixed topology and pads are shared within one portfolio attempt. */
@@ -88,26 +86,11 @@ export const precomputeIntraNodeRouteParams = ({
         obstacle.zLayers ??
         obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
     }))
-  const padObstaclesCacheKey = objectHash(
-    serializeIntraNodeCacheKey(
-      padObstacles.map((obstacle) => ({
-        obstacleId: obstacle.obstacleId,
-        center: obstacle.center,
-        width: obstacle.width,
-        height: obstacle.height,
-        shape: obstacle.shape,
-        ccwRotationDegrees: obstacle.ccwRotationDegrees,
-        zLayers: obstacle.__zLayers,
-        connectedTo: obstacle.connectedTo,
-      })),
-    ),
-  )
   return {
     connectionPointsByName,
     rootConnectionNameByConnectionName,
     minDistBetweenEnteringPoints:
       getMinDistBetweenEnteringPoints(nodeWithPortPoints),
     padObstacles,
-    padObstaclesCacheKey,
   }
 }
