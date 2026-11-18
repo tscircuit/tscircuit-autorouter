@@ -23,12 +23,14 @@ export const precomputeIntraNodeRouteParams = ({
   traceWidth = 0.15,
   viaDiameter = 0.3,
   layerCount = 2,
+  obstacleMargin = 0.15,
 }: {
   nodeWithPortPoints: NodeWithPortPoints
   obstacles?: Obstacle[]
   traceWidth?: number
   viaDiameter?: number
   layerCount?: number
+  obstacleMargin?: number
 }): PrecomputedIntraNodeRouteParams => {
   const connectionPointsByName = new Map<string, IntraNodeConnectionPoint[]>()
   const rootConnectionNameByConnectionName = new Map<string, string>()
@@ -58,7 +60,7 @@ export const precomputeIntraNodeRouteParams = ({
     points.push({ x, y, z: layer })
   }
   const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
-  const copperReach = Math.max(traceWidth, viaDiameter) / 2
+  const copperReach = Math.max(traceWidth, viaDiameter) / 2 + obstacleMargin
   const padObstacles = obstacles
     .filter((obstacle) => {
       if (!obstacle.componentId || obstacle.isFanoutSourceKeepout)
