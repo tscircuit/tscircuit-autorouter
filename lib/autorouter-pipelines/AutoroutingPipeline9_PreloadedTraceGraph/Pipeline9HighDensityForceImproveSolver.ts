@@ -19,6 +19,8 @@ type ForceImproveConstructorParams = ReturnType<
 >[0] & { inputSrj: SimpleRouteJson }
 type ViaClearanceViolationKey = string
 
+const CLEARANCE_COMPARISON_EPSILON = 1e-8
+
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
@@ -103,7 +105,9 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       (violation) =>
         violation.kind === "via" &&
         this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
-        violation.severity > (originalSeverityByKey.get(violation.key) ?? 0),
+        violation.severity >
+          (originalSeverityByKey.get(violation.key) ?? 0) +
+            CLEARANCE_COMPARISON_EPSILON,
     )
     if (!worsensViaClearance) return
     // A node's routes move together; accepting only some can introduce peer shorts.
